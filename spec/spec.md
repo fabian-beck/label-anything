@@ -241,8 +241,9 @@ data, IEND before IDAT and a CRC mismatch in a critical chunk are errors; ancill
 chunks with a bad CRC or content are ignored (the first valid `tRNS` before IDAT
 counts). Only the first IDAT sequence is read; it must be followed by a complete chunk
 header (length and type). The zlib header is checked, Adler-32 is not, and compressed
-data beyond the image is ignored. Images whose expanded samples (`w·h·` bytes per pixel
-after the expansion above) exceed 512 MiB are rejected before the image data is read.
+data beyond the image is ignored. An image whose expanded size (`w·h` times the bytes
+per pixel after the expansion above, 2 per 16-bit sample) exceeds 512 MiB is rejected
+(`limit_exceeded`) before its data is read.
 JPEG and WebP are decoded where a decoder is available (Rust: `image`; TypeScript:
 `createImageBitmap`); their pixels may differ between decoders.
 
@@ -282,9 +283,9 @@ b = 0.0259040371·l' + 0.7827717662·m' − 0.8086757660·s'
 ```
 
 `cbrt` is deterministic: `±0`, `±∞` and NaN are returned unchanged and `cbrt(−x) =
-−cbrt(x)`; for `x > 0` take the unique `k` with `m = x·8^k ∈ [1/8, 1)` (exact), start
-from `y = ((0.5921815819·m − 1.385919418)·m + 1.458110692)·m + 0.3408421562`, apply three
-Newton steps `y = y − ((y·y)·y − m) / ((3·y)·y)` and return `y·2^(−k)` (exact; within
+−cbrt(x)`; for `x > 0` take the unique `k` with `u = x·8^k ∈ [1/8, 1)` (exact), start
+from `y = ((0.5921815819·u − 1.385919418)·u + 1.458110692)·u + 0.3408421562`, apply three
+Newton steps `y = y − ((y·y)·y − u) / ((3·y)·y)` and return `y·2^(−k)` (exact; within
 1 ulp). The OKLab distance is `sqrt((ΔL·ΔL + Δa·Δa) + Δb·Δb)`.
 
 **Pixel values.**
@@ -325,8 +326,8 @@ but `cov > 0` (§4.1). Cells partially outside the raster simply receive less.
 **Dilation** (`ink` only): a 3×3 maximum filter applied `ink.dilate` times to the
 quantized grid, cells outside the grid ignored.
 
-Inconsistent geometry (scale or cell not finite and > 0, non-finite offsets) yields
-zero coverage.
+Inconsistent geometry (scale or cell not finite and > 0, non-finite offsets or grid
+origin) yields zero coverage.
 
 ### 4.7 Distance transform
 

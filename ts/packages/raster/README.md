@@ -91,8 +91,9 @@ Errors are `RasterError`s with a stable `code`, shared with Rust: `invalid_base6
 
 `process` is O(pixels + cells): per-colour results are memoized, the area averaging is
 separable and streams raster rows through a small ring of grid rows, and dilation is
-O(cells). On a 2048×2048 raster with 2 px cells (Node 22, one core of a 2.1 GHz Xeon),
-`ink` takes about 30 ms on line art and about 120 ms on photographic content with
-~860 000 distinct colours (dominated by exact OKLab evaluations). Run
-`node packages/raster/bench/bench.mjs` (after building) to measure; it prints the same
-coverage checksums as `cargo run --release -p label-anything-raster --example bench`.
+O(cells). On a 2048×2048 raster with 2 px cells (Node 22, 2.1 GHz Xeon, shared machine),
+`ink` takes about 22–30 ms on line art and about 110–140 ms on photographic content with
+~860 000 distinct colours (dominated by the exact OKLab evaluations); `alpha` and `cost`
+take 30–40 ms, `saliency` about 230–250 ms. Run `node packages/raster/bench/bench.mjs`
+(after building) to measure; it prints the same coverage checksums as
+`cargo run --release -p label-anything-raster --example bench`.
