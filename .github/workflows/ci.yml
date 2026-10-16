@@ -80,6 +80,8 @@ jobs:
       - run: npm ci
       - name: Type-check and build
         run: npm run build
+      - name: Conformance (place cases, TypeScript core)
+        run: npm run conformance
       - name: Rust CLI (the real engine for the JS helpers' integration tests)
         run: cargo build --release --manifest-path rust/Cargo.toml -p label-anything-cli
       - name: Tests (incl. conformance, Rust parity fixtures and the JS helpers)
@@ -90,6 +92,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -103,6 +109,8 @@ jobs:
         run: node tools/codegen.mjs --check
       - name: Place conformance cases
         run: python3 tools/conformance/make_place_cases.py --check
+      - name: Parity fixtures (Rust results the TypeScript core must reproduce)
+        run: cargo run --release --manifest-path rust/Cargo.toml -p label-anything --example place_oracle -- --check
       - name: Text conformance cases
         run: python3 tools/text/gen_text_cases.py --check
       - name: Schema cross-check (Python jsonschema)
