@@ -1,0 +1,37 @@
+[package]
+name = "label-anything-py"
+description = "Python binding of Label Anything (label placement): the PyO3 extension module label_anything._native."
+readme = "README.md"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+# published to PyPI as `label-anything` (see pyproject.toml), not to crates.io
+publish = false
+
+[lib]
+name = "_native"
+crate-type = ["cdylib"]
+# The extension module has no Rust tests (they live in tests/*.py) and must not be linked
+# into a test executable: Python symbols are resolved by the interpreter at import time.
+test = false
+doctest = false
+
+[features]
+default = ["decode"]
+# PNG/JPEG/WebP raster backgrounds (raw RGBA buffers always work)
+decode = ["label-anything/decode"]
+
+[dependencies]
+# `extension-module` keeps plain `cargo build --workspace` from linking libpython (maturin
+# sets PYO3_BUILD_EXTENSION_MODULE itself); abi3-py39: one wheel for CPython >= 3.9.
+pyo3 = { workspace = true, features = ["abi3-py39", "extension-module"] }
+label-anything = { workspace = true }
+# only for `geom::Rect` in `Env::extra_cost` (not re-exported by the facade)
+la-core = { workspace = true }
+serde_json = { workspace = true }
