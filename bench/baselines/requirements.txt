@@ -1,0 +1,18 @@
+# Python baselines of the benchmark (textalloc, adjustText), on top of bench/requirements.txt.
+# Exact versions, transitive dependencies included. Licenses: textalloc MIT, adjustText MIT,
+# matplotlib PSF-style (matplotlib license), contourpy BSD-3-Clause, cycler BSD-3-Clause,
+# kiwisolver BSD-3-Clause, packaging Apache-2.0/BSD-2-Clause, pyparsing MIT, python-dateutil
+# Apache-2.0/BSD-3-Clause, six MIT, tqdm MPL-2.0/MIT. Benchmark tooling only: nothing here is
+# distributed with Label Anything.
+#   bench/.venv/bin/pip install -r bench/requirements.txt -r bench/baselines/requirements.txt
+textalloc==1.2.4
+adjustText==1.4.0
+matplotlib==3.11.2
+contourpy==1.4.0
+cycler==0.12.1
+kiwisolver==1.5.1
+packaging==26.3
+pyparsing==3.3.3
+python-dateutil==2.9.0.post0
+six==1.17.0
+tqdm==4.70.1

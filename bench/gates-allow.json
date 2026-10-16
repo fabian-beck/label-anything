@@ -1,0 +1,4 @@
+{
+  "$comment": "Accepted metric regressions for the release gate (bench/gates.py, bench/run.py --gate). Each entry: metric (a summary key of bench/report.py METRICS / SEQ_METRICS), scenario, optional config and solver (fnmatch patterns, default *), the ADR that justifies the change (docs/adr/<adr>-*.md; entries without an existing ADR are ignored) and a reason. Example: {\"metric\": \"placed_rate\", \"scenario\": \"05-airports\", \"config\": \"*\", \"solver\": \"rust\", \"adr\": \"0018\", \"reason\": \"...\"}",
+  "allow": []
+}

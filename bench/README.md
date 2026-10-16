@@ -14,12 +14,20 @@ bench/
   scenarios/NN-*/  fetch.py, build.py, README.md, LICENSE.md (+ data helpers, polygons.json)
   eval/            evaluator package + CLI (python -m bench.eval) + tests/
   solvers/         built-in baselines: naive, greedy
+  baselines/       third-party baselines: textalloc, adjustText, vega-label, ggrepel (adapters,
+                   pinned toolchains, README.md with methods and emulations, tests/)
+  perf/            performance targets: problem generator + timing (python -m bench.perf)
   render.py        problem + result (+ background) -> SVG / PNG
   run.py           runner -> bench-report/results.json + index.html
+  report.py        the report: tables, images, runtime plots, diff, parity, perf, gates
+  gates.py         release gates (python -m bench.gates); gates-allow.json = ADR-backed exceptions
+  tests/           tests of the report, gates, perf generator and runner
+  Dockerfile       one image with every toolchain (docker-run.sh is its entrypoint)
   validate_problems.py
   requirements.txt
   data/            fetched third-party data (gitignored, never committed)
   out/problems/    generated problems, truths, backgrounds (gitignored, reproducible)
+  out/perf/        generated performance-target problems (gitignored, reproducible)
 ```
 
 ## Quick start
@@ -30,7 +38,10 @@ bench/.venv/bin/python -m bench.scenarios fetch          # download + verify SHA
 bench/.venv/bin/python -m bench.scenarios build          # write bench/out/problems/ (~12 min, see below)
 bench/.venv/bin/python bench/validate_problems.py       # JSON Schema 2020-12 + size budgets
 bench/.venv/bin/python bench/run.py --suite quick       # naive + greedy baselines -> bench-report/
-bench/.venv/bin/python -m pytest bench/eval/tests      # evaluator unit tests
+bench/.venv/bin/python -m pytest bench/eval/tests bench/baselines/tests bench/tests   # tests
+# third-party baselines (optional): bench/baselines/README.md
+bench/.venv/bin/pip install -r bench/baselines/requirements.txt && npm ci --prefix bench/baselines
+sudo bench/baselines/install-r.sh                        # R + ggrepel (Ubuntu 24.04; --cran elsewhere)
 ```
 
 Run from the repository root. Single scenarios: `python -m bench.scenarios build 05` (or
@@ -41,14 +52,24 @@ which is cached (later builds: ≈ 2 minutes, dominated by the Cora force layout
 
 **Engine runs.** Build the Rust CLI (`cargo build --release --manifest-path
 rust/Cargo.toml -p label-anything-cli`) and the TypeScript packages (`npm run build`,
-which includes the `label-anything-ts` CLI), then:
+which includes the `label-anything-ts` CLI) and pass them as solvers; `--engine` adds the
+Rust CLI as `rust` together with its debug overlay, `--baselines` adds every baseline (see
+*Baselines*):
 
 ```sh
+bench/.venv/bin/python bench/run.py --suite quick --engine rust/target/release/label-anything \
+    --baselines --perf                                  # Rust + all baselines + performance targets
 bench/.venv/bin/python bench/run.py --suite full \
     --solver naive --solver greedy \
     --solver 'rust=rust/target/release/label-anything place {problem} -o {result}' \
     --solver 'ts=node ts/packages/cli/dist/main.js place {problem} -o {result}'
+rust/target/release/label-anything bench --baselines --perf -o bench-report   # the same via the CLI
 ```
+
+`label-anything bench [--suite quick|full] [--baselines] [--perf] [--gate] [--previous P]
+[--runs N] [-o DIR] [-- ARGS]` runs `bench/run.py` with the binary itself as the `rust` solver,
+using `bench/.venv`'s interpreter when present (or `$LA_BENCH_PYTHON`); arguments after `--` are
+passed on unchanged.
 
 **Evaluate one result.** `python -m bench.eval problem.json result.json [--truth t.json]
 [--summary] [-o metrics.json]` (the truth defaults to `<problem>.truth.json`).
@@ -66,7 +87,9 @@ bench/out/problems/<scenario>/<config>.truth.json    exact geometry of every obs
 bench/out/problems/<scenario>/<config>.bg.svg|.png   background for rendering
 bench/out/problems/<scenario>/scenario.json          manifest: configs (quick flag, size, files), sources
 bench/out/problems/11-stability/<seq>/f000…f029.json + sequence.json
-bench-report/results.json, index.html, results/<solver>/…, metrics/<solver>/…, img/<solver>/…
+bench/out/perf/scatter-200.json, scatter-2000.json, raster-2048.json   performance-target problems
+bench-report/results.json, index.html, results/<solver>/…, metrics/<solver>/…, img/<solver>/…,
+             overlay/<solver>/… (engine debug overlays), plots/runtime-{engine,wall}.svg
 ```
 
 **truth.json** (every config; `bench/common/truth.py`) — `{"version": 1, "canvas": [W, H],
@@ -205,25 +228,131 @@ Pillow (2× supersampling); no LGPL rasterizer is involved.
 ## Runner
 
 `bench/run.py` discovers problems from the scenario manifests, runs every solver
-`--runs` times (default 7; runtime median and p95 by nearest rank, wall time and
-`stats.runtime_ms`), checks determinism (identical placements across runs), evaluates the
-last result (with the truth), renders PNGs (`--svg`: also SVGs; `--no-render`: none) and
-writes `bench-report/results.json` and a static `bench-report/index.html` (per-scenario
-tables and images side by side, each image linked to its metrics JSON; sequence table).
-Solvers: built-in `naive` and `greedy`, or `NAME=COMMAND` with `{problem}` and `{result}`
-placeholders (`--timeout` seconds per run, default 600). Sequences are solved frame by
-frame; frame t+1 gets `warm_start.placements` = frame t's placements with each box shifted
-by its anchor's movement. `--suite quick` = configs marked `quick` (one small config per
-scenario) + the quick sequence; `--suite full` = everything; `--scenario` restricts to
-scenario ids.
+`--runs` times (default 7; baselines `--baseline-runs` times, default 1; runtime median and
+p95 by nearest rank, wall time and `stats.runtime_ms`), checks determinism (identical
+placements across runs), evaluates the last result (with the truth), renders PNGs (`--svg`:
+also SVGs; `--no-render`: none) and writes `bench-report/results.json` and the static report
+`bench-report/index.html` (see *Report*). Solvers: the built-in baselines `naive`, `greedy`,
+`textalloc`, `adjusttext`, `vega-label`, `ggrepel` (`--baselines` = all of them), or
+`NAME=COMMAND` with `{problem}` and `{result}` placeholders (`--timeout` seconds per run,
+default 600); `--engine PATH` adds `rust=PATH place {problem} -o {result}`. Solvers named
+`rust`, `wasm` or `ts` (optionally `-suffix`) are the Label Anything implementations: they
+get the performance targets, the parity table and the release gates. `--overlay
+NAME=COMMAND` (`{problem}`, `{result}`, `{svg}`) renders the engine's debug overlay (cost
+grids, candidates) from one extra untimed run; `--engine` sets it up for `rust` with `place
+--debug-svg`. Sequences are solved frame by frame; frame t+1 gets `warm_start.placements` =
+frame t's placements with each box shifted by its anchor's movement. `--suite quick` =
+configs marked `quick` (one small config per scenario) + the quick sequence; `--suite full` =
+everything; `--scenario` restricts to scenario ids. Further flags: `--perf` (performance
+targets), `--previous OLD/results.json` (changes), `--gate` (release gates, implies `--perf`;
+the exit code reflects them), `--require-baselines` (a missing toolchain is an error instead
+of a skip). Without `--gate` the exit code is 1 when any solver failed on any problem ("n/a"
+is not a failure).
 
-Baselines (they exist so the pipeline is testable without the engine and as reference
-rows): `naive` puts every label top-right of its true shape (area anchors: internal at the
+## Baselines
+
+`naive` and `greedy` exist so the pipeline is testable without the engine and as reference
+rows: `naive` puts every label top-right of its true shape (area anchors: internal at the
 pole) without collision handling; `greedy` processes items in the reference priority order
 and takes the first position of the item's position order (area anchors: their pole
 first) that stays in the label area and is free of placed labels, other marks and hard
 vector/raster classes. It always uses the adjacent model (no leaders, no degradation, it
 ignores `models`) and does not parse SVG backgrounds.
+
+The third-party baselines of brief §8.3 — **textalloc**, **adjustText**, **vega-label** (Vega's
+label transform, headless in Node) and **ggrepel** (R; final positions read from the drawn grob
+tree after `grid.force()`) — live in `bench/baselines/` with pinned toolchains
+(`requirements.txt`, `package.json` + `package-lock.json`, `install-r.sh`). Each adapter
+translates a problem into the tool's native input in canvas pixel coordinates, hands the tool
+the problem's own label boxes (spec §5 measurement, padding included) and the items in priority
+order, and converts the tool's output back into a result; features a tool cannot express are
+emulated (raster masks as cells or pixel runs, SVG backgrounds as their truth geometry, lines
+as sampled points, soft costs as hard obstacles) or reported "n/a", and every emulation is
+listed in the result's `warnings` and marked ≈ in the report. Methods, parameters, the
+emulation table and the ggrepel extraction: `bench/baselines/README.md`. A baseline whose
+toolchain is missing is skipped with a message.
+
+## Performance targets
+
+`bench/perf/` turns the targets of brief §5.8 into deterministic problems and measurements:
+
+| problem | what | Rust | WASM | TS |
+|---|---|---|---|---|
+| `scatter-200` | 200 labels + 10k obstacle points, 800×600, preset scatter, greedy | ≤ 15 ms | ≤ 30 ms | ≤ 60 ms |
+| `scatter-2000` | 2,000 labels + 100k obstacle points, 1920×1080, greedy | ≤ 120 ms | ≤ 250 ms | ≤ 600 ms |
+| `raster-2048` | 2048² synthetic raster background, ink mode: `stats.phases_ms.prepare` | ≤ 25 ms | ≤ 60 ms | ≤ 150 ms |
+
+Items are `{"id": "i<k>", "anchor": {"type": "point", "x", "y"}, "label": {"type": "text", "text":
+"Label <k>"}}` with anchors (and obstacle points, one vector layer `{"class": "points", "r":
+1.5}`) uniform in [10, w − 10] × [10, h − 10] from SplitMix64 with fixed seeds, rounded to 0.01 px,
+so any implementation can regenerate byte-identical files; the raster is drawn without randomness
+(grid lines, stripes, discs, a gradient band) and passed as raw RGBA, so no image codec is timed.
+The measured value is the median over the runs of the engine's own timing (`stats.runtime_ms`,
+or `stats.phases_ms.prepare`), not the process wall time, which process start-up dominates.
+
+```sh
+bench/.venv/bin/python -m bench.perf --engine rust/target/release/label-anything --runs 7
+bench/.venv/bin/python -m bench.perf --solver 'ts=node ts/packages/cli/dist/main.js place {problem} -o {result}'
+bench/.venv/bin/python -m bench.perf generate bench/out/perf      # the problems only
+```
+
+## Report
+
+`bench-report/index.html` (static, no external scripts) and `results.json` contain:
+
+* a **summary** per solver (problems run / n/a / failed, mean placed rate, hard violations,
+  ambiguity, inversions, summed runtimes);
+* the **performance-target table** (median, target, ratio, every run) and the **release-gate**
+  summary when evaluated;
+* **runtime vs. problem size**: log–log small multiples — one panel for the Label Anything
+  implementations and one per baseline against the reference implementation — for the
+  engine-reported and the wall-clock runtime, inline and as `plots/runtime-*.svg`, with a
+  table view;
+* **implementation parity**: per problem the deltas of every metric between `rust` and `ts` /
+  `wasm`, and whether the placements are identical;
+* **changes vs. the previous release** (`--previous`): every changed metric, regressions beyond
+  2 % (relative; any change away from 0 counts; direction per metric) highlighted, runtimes
+  excluded;
+* per scenario: the metric table (Label Anything rows bold, baseline emulations marked ≈ with the
+  details in the tooltip, n/a rows with the reason) and the renderings side by side — every
+  solver drawn by `bench/render.py`, plus the engine's debug overlay;
+* the stability sequences and the baseline methods with the versions that ran.
+
+`python -m bench.report bench-report/results.json [--previous OLD/results.json] [--gate]` rebuilds
+the analyses and `index.html` of an existing run without solving anything again. Comparisons
+happen at the precision `results.json` stores (6 decimals), so a stored run and a fresh one
+with identical results show no change.
+
+## Release gates
+
+`--gate` (or `python -m bench.gates results.json [--previous OLD/results.json]` on an existing run)
+fails unless, for the Label Anything solvers, every problem was solved with **0 hard violations**,
+**no metric regressed by more than 2 %** against `--previous` (skipped, not failed, without it),
+and the **performance targets** were measured and met. Accepted regressions are listed in
+`bench/gates-allow.json` (`metric`, `scenario`, optional `config` / `solver` patterns, `adr`,
+`reason`); an entry counts only if `docs/adr/<adr>-*.md` exists. The summary is printed and
+stored in `results.json` (`gate`). Release procedure: `docs/benchmark.md`.
+
+## Docker and CI
+
+`bench/Dockerfile` builds one image with every toolchain — Python 3.13 with the bench and
+baseline requirements, Node 22 with the vega-label lockfile, R 4.3.3 with ggrepel 0.9.5 /
+ggplot2 3.4.4 (Ubuntu 24.04 packages), a JDK for scenario 01 and Rust for the engine CLI:
+
+```sh
+docker build -f bench/Dockerfile -t label-anything-bench .
+docker run --rm -v la-bench-data:/la/bench/data -v la-bench-out:/la/bench/out \
+    -v "$PWD/bench-report:/la/bench-report" label-anything-bench                    # quick suite
+docker run --rm -v la-bench-data:/la/bench/data -v la-bench-out:/la/bench/out \
+    -v "$PWD/bench-report:/la/bench-report" label-anything-bench --suite full --runs 7 --gate
+```
+
+The entrypoint (`bench/docker-run.sh`) fetches the data, builds the scenarios once per volume and
+runs `bench/run.py --suite quick --engine … --baselines --require-baselines --perf` plus the
+given arguments. In CI, the `bench` job runs the quick suite with the engine on pull requests
+(full suite on tags); the `baselines` job (tags, manual dispatch, weekly) runs the quick suite
+with the engine and every baseline plus the performance targets, uploads the report and, on
+tags, checks the release gates.
 
 ## Determinism and reproducibility
 

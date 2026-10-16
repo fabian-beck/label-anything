@@ -1,0 +1,15 @@
+# Build context of bench/Dockerfile (docker build -f bench/Dockerfile .): the repository without
+# local environments, build outputs, fetched data and reports.
+.git
+.claude
+**/node_modules
+**/.venv
+**/__pycache__
+**/*.pyc
+rust/target
+ts/packages/*/dist
+bindings/java/target
+bench/data
+bench/out
+bench-report
+scratch
