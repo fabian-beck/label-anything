@@ -3,6 +3,8 @@
 
 pub mod opts;
 
+use std::sync::Arc;
+
 use crate::env::{Env, FontSpec, Geom, RasterMode, RasterOpts, RgbaImage, SvgDoc};
 use crate::geom::path;
 use crate::geom::shape::Shape;
@@ -279,7 +281,8 @@ pub struct Model {
     pub to_px: Affine,
     pub items: Vec<Item>,
     /// Vector obstacles by class (problem vector layers and SVG geometry).
-    pub vector: Vec<(String, Prim)>,
+    /// Vector obstacle primitives with their class (names shared between primitives).
+    pub vector: Vec<(Arc<str>, Prim)>,
     pub rasters: Vec<RasterSrc>,
     pub avoid_label: serde_json::Map<String, Value>,
     pub avoid_leader: serde_json::Map<String, Value>,
@@ -704,13 +707,23 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     }
 
     // --- vector obstacles ---
-    let mut vector: Vec<(String, Prim)> = Vec::new();
+    let mut vector: Vec<(Arc<str>, Prim)> = Vec::new();
+    // one shared name per class (primitives come by the thousand)
+    let mut class_names: Vec<Arc<str>> = Vec::new();
+    let mut intern = |name: &str| -> Arc<str> {
+        if let Some(a) = class_names.iter().find(|a| &***a == name) {
+            return a.clone();
+        }
+        let a: Arc<str> = Arc::from(name);
+        class_names.push(a.clone());
+        a
+    };
     for layer in lookup(problem, "obstacles.vector")
         .and_then(|v| v.as_array())
         .into_iter()
         .flatten()
     {
-        let class = layer["class"].as_str().unwrap_or("ink").to_string();
+        let class = intern(layer["class"].as_str().unwrap_or("ink"));
         let r = source_opt(layer, "obstacles.vector", "r")
             .as_f64()
             .unwrap_or(2.0);
@@ -878,7 +891,7 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
             .classify(&rules, &default_class, &used_svg_ids)
             .map_err(|(ri, m)| err(format!("{ptr}/classes/{ri}/selector"), "pattern", m))?;
         for (class, g) in geoms {
-            vector.push((class, geom_to_prim(g)));
+            vector.push((intern(&class), geom_to_prim(g)));
         }
     }
 

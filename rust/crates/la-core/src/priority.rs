@@ -123,7 +123,7 @@ fn knn_gaps(model: &Model, k: usize) -> Vec<f64> {
         .map(|(i, it)| (it.anchor, eq_radius(it), Some(i)))
         .collect();
     for (c, p) in &model.vector {
-        if c == "points" {
+        if &**c == "points" {
             if let Prim::Disc { c, r } = p {
                 pts.push((*c, *r, None));
             }

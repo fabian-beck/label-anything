@@ -59,11 +59,31 @@ export function distanceTransform(g: GridSpec, occupied: (i: number) => boolean)
   const d = new Float64Array(n);
   const v = new Int32Array(n);
   const z = new Float64Array(n + 1);
-  // columns
-  for (let c = 0; c < cols; c++) {
-    for (let r = 0; r < rows; r++) f[r] = grid[r * cols + c]!;
-    dt1d(f, rows, d, v, z);
-    for (let r = 0; r < rows; r++) grid[r * cols + c] = d[r]!;
+  // columns: the squared distance to the nearest occupied cell of the column, by a
+  // downward and an upward sweep over the rows (the 1-D transform of this binary input:
+  // the same exact integers; columns without an occupied cell stay INF, which the row
+  // pass treats like the envelope's >= 1e20 values). Mirrors the Rust sweeps.
+  const near = new Int32Array(cols).fill(-1);
+  for (let r = 0; r < rows; r++) {
+    const o = r * cols;
+    for (let c = 0; c < cols; c++) {
+      if (grid[o + c] === 0) near[c] = r;
+      else if (near[c]! >= 0) {
+        const dr = r - near[c]!;
+        grid[o + c] = dr * dr;
+      }
+    }
+  }
+  near.fill(-1);
+  for (let r = rows - 1; r >= 0; r--) {
+    const o = r * cols;
+    for (let c = 0; c < cols; c++) {
+      if (grid[o + c] === 0) near[c] = r;
+      else if (near[c]! >= 0) {
+        const dr = near[c]! - r;
+        if (dr * dr < grid[o + c]!) grid[o + c] = dr * dr;
+      }
+    }
   }
   // rows
   for (let r = 0; r < rows; r++) {

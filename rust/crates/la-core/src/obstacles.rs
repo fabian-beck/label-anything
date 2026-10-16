@@ -176,7 +176,9 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
     // class names
     let mut names: BTreeSet<String> = BTreeSet::new();
     for (c, _) in &model.vector {
-        names.insert(c.clone());
+        if !names.contains(&**c) {
+            names.insert(c.to_string());
+        }
     }
     let mut raster_cov: Vec<(String, Vec<u8>)> = Vec::new();
     let rgrid = la_raster::GridSpec {
@@ -232,8 +234,15 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
     // rasterize vector primitives per class into masks, collect exact prims
     let mut masks: Vec<Option<MaskRaster>> = (0..classes.len()).map(|_| None).collect();
     let mut prims = Vec::new();
+    // consecutive primitives mostly share their class (and its name)
+    let mut last: Option<(&std::sync::Arc<str>, Option<usize>)> = None;
     for (cname, prim) in &model.vector {
-        let Some(ci) = class_of(cname, &classes) else {
+        let ci = match last {
+            Some((n, ci)) if std::sync::Arc::ptr_eq(n, cname) => ci,
+            _ => class_of(cname, &classes),
+        };
+        last = Some((cname, ci));
+        let Some(ci) = ci else {
             continue;
         };
         let c = &classes[ci];

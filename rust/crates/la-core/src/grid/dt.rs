@@ -55,14 +55,35 @@ pub fn distance_transform(g: &GridSpec, occupied: impl Fn(usize) -> bool) -> Vec
     let mut d = vec![0.0; n];
     let mut v = vec![0usize; n];
     let mut z = vec![0.0; n + 1];
-    // columns
-    for c in 0..cols {
-        for r in 0..rows {
-            f[r] = grid[r * cols + c];
+    // columns: the squared distance to the nearest occupied cell of the column, by a
+    // downward and an upward sweep over the rows (the 1-D transform of this binary
+    // input: the same exact integers; columns without an occupied cell stay INF, which
+    // the row pass treats like the envelope's ≥ 1e20 values)
+    const NONE: usize = usize::MAX;
+    let mut near = vec![NONE; cols];
+    for r in 0..rows {
+        let row = &mut grid[r * cols..(r + 1) * cols];
+        for (c, cell) in row.iter_mut().enumerate() {
+            if *cell == 0.0 {
+                near[c] = r;
+            } else if near[c] != NONE {
+                let dr = (r - near[c]) as f64;
+                *cell = dr * dr;
+            }
         }
-        dt1d(&f[..rows], &mut d[..rows], &mut v, &mut z);
-        for r in 0..rows {
-            grid[r * cols + c] = d[r];
+    }
+    near.fill(NONE);
+    for r in (0..rows).rev() {
+        let row = &mut grid[r * cols..(r + 1) * cols];
+        for (c, cell) in row.iter_mut().enumerate() {
+            if *cell == 0.0 {
+                near[c] = r;
+            } else if near[c] != NONE {
+                let dr = (near[c] - r) as f64;
+                if dr * dr < *cell {
+                    *cell = dr * dr;
+                }
+            }
         }
     }
     // rows
@@ -190,6 +211,68 @@ mod tests {
                     best * 2.0
                 );
             }
+        }
+    }
+
+    /// The two-pass parabola-envelope transform (columns, then rows) the column sweeps
+    /// replace: identical results on random binary grids.
+    #[test]
+    fn column_sweeps_equal_the_envelope_pass() {
+        fn reference(g: &GridSpec, occ: &[bool]) -> Vec<f64> {
+            let (cols, rows) = (g.cols, g.rows);
+            let mut grid: Vec<f64> = occ.iter().map(|&o| if o { 0.0 } else { INF }).collect();
+            let n = cols.max(rows);
+            let (mut f, mut d) = (vec![0.0; n], vec![0.0; n]);
+            let (mut v, mut z) = (vec![0usize; n], vec![0.0; n + 1]);
+            for c in 0..cols {
+                for r in 0..rows {
+                    f[r] = grid[r * cols + c];
+                }
+                dt1d(&f[..rows], &mut d[..rows], &mut v, &mut z);
+                for r in 0..rows {
+                    grid[r * cols + c] = d[r];
+                }
+            }
+            for r in 0..rows {
+                f[..cols].copy_from_slice(&grid[r * cols..(r + 1) * cols]);
+                dt1d(&f[..cols], &mut d[..cols], &mut v, &mut z);
+                for c in 0..cols {
+                    let sq = d[c];
+                    grid[r * cols + c] = if sq >= INF * 0.5 {
+                        1e9
+                    } else {
+                        sq.sqrt() * g.cell
+                    };
+                }
+            }
+            grid
+        }
+        let mut x = 0x2545_F491_4F6C_DD1Du64;
+        let mut next = move || {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x
+        };
+        for case in 0..300 {
+            let cols = 1 + (next() % 160) as usize;
+            let rows = 1 + (next() % 160) as usize;
+            // densities from empty to full, and long free columns (rows up to 160)
+            let density = [0, 1, 2, 5, 20, 50, 90, 100][case % 8];
+            let occ: Vec<bool> = (0..cols * rows).map(|_| (next() % 100) < density).collect();
+            let g = GridSpec {
+                ox: 0.0,
+                oy: 0.0,
+                cell: 2.5,
+                cols,
+                rows,
+            };
+            let got = distance_transform(&g, |i| occ[i]);
+            assert_eq!(
+                got,
+                reference(&g, &occ),
+                "case {case}: {cols} x {rows}, {density} %"
+            );
         }
     }
 
