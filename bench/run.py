@@ -124,7 +124,8 @@ def digest(res: dict) -> str:
     return hashlib.sha256(json.dumps(keep, sort_keys=True).encode()).hexdigest()[:16]
 
 
-def run_problem(solver: Solver, prob_entry: dict, out: Path, runs: int, timeout: float, do_render: bool) -> dict:
+def run_problem(solver: Solver, prob_entry: dict, out: Path, runs: int, timeout: float, do_render: bool,
+                svg: bool = False) -> dict:
     problem = read_json(prob_entry["path"])
     rel = Path(prob_entry["scenario"]) / prob_entry["config"]
     res_path = out / "results" / solver.name / rel.with_suffix(".json")
@@ -164,6 +165,11 @@ def run_problem(solver: Solver, prob_entry: dict, out: Path, runs: int, timeout:
         img.parent.mkdir(parents=True, exist_ok=True)
         render.render_png(problem, res, prob_entry["background_png"]).save(img, optimize=True)
         entry["image"] = str(img.relative_to(out))
+        if svg:
+            sp = img.with_suffix(".svg")
+            href = os.path.relpath(out / "fonts" / "NotoSans-Regular.ttf", sp.parent)
+            sp.write_text(render.render_svg(problem, res, font_href=href), encoding="utf-8")
+            entry["svg"] = str(sp.relative_to(out))
     return entry
 
 
@@ -277,8 +283,10 @@ def write_html(out: Path, report: dict) -> Path:
             o.append(f"<h3>{html.escape(cfg)}</h3><div class='imgs'>")
             for r in sorted((r for r in rows if r["config"] == cfg), key=lambda r: solvers.index(r["solver"])):
                 if r.get("image"):
+                    link = f" · <a href='{html.escape(r['svg'])}'>SVG</a>" if r.get("svg") else ""
                     o.append(f"<figure><img loading='lazy' src='{html.escape(r['image'])}' alt=''>"
-                             f"<figcaption>{html.escape(r['solver'])}</figcaption></figure>")
+                             f"<figcaption>{html.escape(r['solver'])} · <a href='{html.escape(r['metrics'])}'>"
+                             f"metrics</a>{link}</figcaption></figure>")
             o.append("</div>")
     if report.get("sequences"):
         o.append("<h2>Stability sequences</h2><table><tr><th class='l'>sequence</th><th class='l'>solver</th>"
@@ -318,6 +326,7 @@ def main(argv=None) -> int:
     ap.add_argument("--problems", default=str(paths.PROBLEMS))
     ap.add_argument("--out", default=str(paths.REPORT))
     ap.add_argument("--no-render", action="store_true")
+    ap.add_argument("--svg", action="store_true", help="also write SVG renderings next to the PNGs")
     ap.add_argument("--timeout", type=float, default=600.0, help="seconds per external solver run")
     a = ap.parse_args(argv)
     out = Path(a.out)
@@ -335,7 +344,7 @@ def main(argv=None) -> int:
     for p in problems:
         for s in solvers:
             t0 = time.time()
-            r = run_problem(s, p, out, a.runs, a.timeout, not a.no_render)
+            r = run_problem(s, p, out, a.runs, a.timeout, not a.no_render, a.svg)
             report["results"].append(r)
             msg = r.get("error") or (f"placed {r['summary']['placed']}/{r['summary']['total']}, "
                                      f"hard {r['summary']['hard_violations']}, "

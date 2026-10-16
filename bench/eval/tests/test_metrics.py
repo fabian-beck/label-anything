@@ -162,6 +162,20 @@ def test_removal_test_respects_keys_and_blocking():
     assert m["priority"]["inversions"] == 1
 
 
+def test_removal_test_uses_only_the_items_candidates():
+    # "lo" sits right below a wall of hard 'block' rects on its right side; only 'left' is free.
+    items = [item("lo", 100, 50)]
+    obstacles = {"vector": [{"class": "block", "rects": [[103, 0, 97, 100]]}]}
+    prob = problem(items, avoid={"label": {"block": "hard"}}, obstacles=obstacles)
+    assert evaluate(prob, result([omitted("lo")]))["priority"]["inversions"] == 1      # 'left' is free
+    prob["placement"] = {"position_order": ["right", "top-right", "bottom-right"]}
+    m = evaluate(prob, result([omitted("lo")]))
+    assert m["priority"]["inversions"] == 0                                           # right side is blocked
+    prob["placement"] = {"models": ["distant"]}
+    m = evaluate(prob, result([omitted("lo")]))
+    assert m["priority"]["inversions"] == 0 and m["priority"]["removal_untestable"] == 1
+
+
 def test_coverage_satisfaction():
     items = [item("a1", 40, 50, attrs={"cat": "a"}), item("a2", 100, 50, attrs={"cat": "a"}),
              item("b1", 160, 50, attrs={"cat": "b"})]

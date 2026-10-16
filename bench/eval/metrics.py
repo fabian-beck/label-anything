@@ -16,7 +16,8 @@ from dataclasses import dataclass, field
 
 from ..common import geom, spec
 from ..common.geom import Box, GridIndex, Point
-from ..common.model import (DIRECTIONS, PERCEPTUAL, Item, Problem, adjacent_box, load_problem)
+from ..common.model import (DIRECTIONS, PERCEPTUAL, Item, Problem, adjacent_box, load_problem,
+                            position_order)
 from . import classes as clsmod
 from . import priority as pr
 
@@ -373,8 +374,10 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     inversions = None
     inversion_ids: list[str] = []
     if removal_test:
-        inversion_ids = _removal_test(prob, placed, infos, classes, hard_classes, tol)
+        inversion_ids, untestable_ids = _removal_test(prob, placed, infos, classes, hard_classes, tol)
         inversions = len(inversion_ids)
+    else:
+        untestable_ids = []
     cov_metrics = None
     cg = pr.coverage_groups(prob)
     if cg:
@@ -451,6 +454,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
         "priority": {"rank_source": rank_source, "prefix_length": prefix, "prefix_rate": prefix / n if n else None,
                      "ndcg_at_k": ndcg, "k": n_placed, "inversions": inversions,
                      "inversion_examples": inversion_ids[:max_list],
+                     "removal_untestable": len(untestable_ids),
                      "reported_inversions": stats.get("priority_inversions"), "coverage": cov_metrics,
                      "placed_weighted": placed_weighted},
         "text": text_deg,
@@ -491,16 +495,22 @@ def summary(m: dict) -> dict:
 
 
 def _candidate_positions(it: Item) -> list[tuple[str, Box]]:
+    """Candidates of the removal test that the item may actually use: the fixed adjacent positions of
+    its position order (when the ``adjacent`` model is enabled; an explicit list restricts them, spec
+    §6.1) and, for area anchors, the pole of inaccessibility (unless ``internal: never``)."""
     w, h = it.label.w, it.label.h
     out = []
     if it.anchor_type == "area":
-        c = it.area.inner_center()
-        out.append(("internal", Box(c[0] - w / 2, c[1] - h / 2, c[0] + w / 2, c[1] + h / 2)))
+        if it.internal != "never":
+            c = it.area.inner_center()
+            out.append(("internal", Box(c[0] - w / 2, c[1] - h / 2, c[0] + w / 2, c[1] + h / 2)))
         shape = it.dot
     else:
         shape = it.shape
-    for s in SIDES:
-        out.append((s, adjacent_box(shape, it.offset, w, h, s)))
+    if "adjacent" in (it.models or ["adjacent"]):
+        for s in position_order(it.position_order):
+            if s in DIRECTIONS:
+                out.append((s, adjacent_box(shape, it.offset, w, h, s)))
     return out
 
 
@@ -538,11 +548,15 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
                 seg_index.insert(len(seg_list), Box(min(a[0], b[0]), min(a[1], b[1]), max(a[0], b[0]), max(a[1], b[1])))
                 seg_list.append((k, a, b))
     out = []
+    untestable = []
     for it in prob.items:
         if it.id in placed_ids:
             continue
         kh = keys[it.id]
-        for _side, b in _candidate_positions(it):
+        cands = _candidate_positions(it)
+        if not cands:
+            untestable.append(it.id)
+        for _side, b in cands:
             g = b.grow(tol)
             if area is not None and edge_hard and not area.contains_box(b):
                 continue
@@ -572,7 +586,7 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
             if ok:
                 out.append(it.id)
                 break
-    return out
+    return out, untestable
 
 
 def evaluate_files(problem_path: str, result_path: str, truth_path: str | None = None, **kw) -> dict:
