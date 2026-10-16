@@ -147,8 +147,8 @@ export class Obstacles {
   otherItemsCovered(i: number, r: Rect): number {
     const all = this.itemsSat.coveredArea(this.grid, r);
     if (all <= 0) return 0;
-    const [g, s] = this.own[i]!;
-    return maxf(all - s.coveredArea(g, r), 0);
+    const own = this.own[i]!;
+    return maxf(all - own[1].coveredArea(own[0], r), 0);
   }
 
   /**
@@ -187,7 +187,8 @@ export function prepare(model: Model, minFont: number): Obstacles {
   const grid = GridSpec.covering(model.extent, cell);
   // class names
   const nameSet = new Set<string>();
-  for (const [c] of model.vector) nameSet.add(c);
+  const vector = model.vector;
+  for (let k = 0; k < vector.length; k++) nameSet.add(vector[k]![0]);
   const rasterCov: [string, Uint8Array][] = [];
   const rgrid = { originX: grid.ox, originY: grid.oy, cell: grid.cell, cols: grid.cols, rows: grid.rows };
   for (const r of model.rasters) {
@@ -219,8 +220,10 @@ export function prepare(model: Model, minFont: number): Obstacles {
   // rasterize vector primitives per class into masks, collect exact prims
   const masks: (MaskRaster | null)[] = classes.map(() => null);
   const prims: [number, Prim][] = [];
-  for (const [cname, prim] of model.vector) {
-    const ci = classIndex.get(cname);
+  for (let k = 0; k < vector.length; k++) {
+    const e = vector[k]!;
+    const prim = e[1];
+    const ci = classIndex.get(e[0]);
     if (ci === undefined) continue;
     const c = classes[ci]!;
     if (c.label.isIgnore() && c.leader.isIgnore() && c.buffer === 0) continue;
@@ -278,7 +281,7 @@ export function prepare(model: Model, minFont: number): Obstacles {
   const extArea = maxf(model.extent.area(), 1);
   const indexCell = clampf(Math.sqrt(extArea / nItems), 16, 128);
   const primIndex = new StaticIndex(
-    prims.map(([, p]) => primBbox(p)),
+    prims.map((e) => primBbox(e[1])),
     model.extent,
     indexCell,
   );
@@ -292,7 +295,11 @@ export function prepare(model: Model, minFont: number): Obstacles {
   const own: [GridSpec, Sat][] = [];
   for (const it of model.items) {
     allItems.shape(it.shape);
-    const [c0, c1, r0, r1] = grid.cellRange(it.shape.bbox().inflate(cell));
+    const cr = grid.cellRange(it.shape.bbox().inflate(cell));
+    const c0 = cr[0];
+    const c1 = cr[1];
+    const r0 = cr[2];
+    const r1 = cr[3];
     const local = new GridSpec(grid.ox + c0 * cell, grid.oy + r0 * cell, cell, c1 - c0 > 1 ? c1 - c0 : 1, r1 - r0 > 1 ? r1 - r0 : 1);
     const m = new MaskRaster(local);
     m.shape(it.shape);

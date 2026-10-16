@@ -54,6 +54,8 @@ export class Occupancy {
   private sat: Uint32Array | null = null;
   /** Scratch window of {@link blocked}. */
   private readonly win = newWindow();
+  /** Scratch box of {@link blocked} and {@link window}. */
+  private readonly box = new Float64Array(4);
 
   constructor(extent: Rect) {
     // about 1M cells at most, and never finer than 2 px
@@ -141,12 +143,17 @@ export class Occupancy {
 
   /** Whether any occupied cell center lies strictly inside `r`. */
   blocked(r: Rect): boolean {
-    return this.windowXY(r.x0, r.y0, r.x1, r.y1, this.win) && this.blockedIn(this.win);
+    const b = this.box;
+    b[0] = r.x0;
+    b[1] = r.y0;
+    b[2] = r.x1;
+    b[3] = r.y1;
+    return this.windowBox(b, this.win) && this.blockedIn(this.win);
   }
 
-  /** {@link blocked} of the rectangle `[x0, x1] × [y0, y1]`. */
-  blockedXY(x0: number, y0: number, x1: number, y1: number): boolean {
-    return this.windowXY(x0, y0, x1, y1, this.win) && this.blockedIn(this.win);
+  /** {@link blocked} of the box `[b[0], b[2]] × [b[1], b[3]]`. */
+  blockedBox(b: Float64Array): boolean {
+    return this.windowBox(b, this.win) && this.blockedIn(this.win);
   }
 
   /**
@@ -154,19 +161,41 @@ export class Occupancy {
    * Grids with the same cells ({@link sameCells}) can share a window.
    */
   window(r: Rect, w: Window): boolean {
-    return this.windowXY(r.x0, r.y0, r.x1, r.y1, w);
+    const b = this.box;
+    b[0] = r.x0;
+    b[1] = r.y0;
+    b[2] = r.x1;
+    b[3] = r.y1;
+    return this.windowBox(b, w);
   }
 
-  /** {@link window} of the rectangle `[x0, x1] × [y0, y1]`. */
-  windowXY(x0: number, y0: number, x1: number, y1: number, w: Window): boolean {
-    this.span(this.ox, this.cols, x0, x1);
-    const c0 = SPAN[0]!;
-    const c1 = SPAN[1]!;
-    if (c0 >= c1) return false;
-    this.span(this.oy, this.rows, y0, y1);
-    const r0 = SPAN[0]!;
-    const r1 = SPAN[1]!;
-    if (r0 >= r1) return false;
+  /**
+   * {@link window} of the box `[b[0], b[2]] × [b[1], b[3]]`. The box comes in a typed
+   * array (hot callers: the candidate filter) and the spans of {@link span} are computed
+   * inline, so that no coordinate is passed as a (boxed) argument.
+   */
+  windowBox(b: Float64Array, w: Window): boolean {
+    const inv = this.invCell;
+    // columns: span(ox, cols, b[0], b[2])
+    const tx0 = clampf((b[0]! + OCC_MARGIN - this.ox) * inv - 0.5, -4.5e15, 4.5e15);
+    const tx1 = clampf((b[2]! - OCC_MARGIN - this.ox) * inv - 0.5, -4.5e15, 4.5e15);
+    const ix0 = tx0 === tx0 ? Math.trunc(tx0) : 0;
+    const fx = ix0 - (ix0 > tx0 ? 1 : 0) + 1;
+    const c0 = fx > 0 ? fx : 0;
+    const ix1 = tx1 === tx1 ? Math.trunc(tx1) : 0;
+    const lx = ix1 + (ix1 < tx1 ? 1 : 0);
+    const c1 = lx < this.cols ? lx : this.cols;
+    if (c1 <= c0) return false;
+    // rows: span(oy, rows, b[1], b[3])
+    const ty0 = clampf((b[1]! + OCC_MARGIN - this.oy) * inv - 0.5, -4.5e15, 4.5e15);
+    const ty1 = clampf((b[3]! - OCC_MARGIN - this.oy) * inv - 0.5, -4.5e15, 4.5e15);
+    const iy0 = ty0 === ty0 ? Math.trunc(ty0) : 0;
+    const fy = iy0 - (iy0 > ty0 ? 1 : 0) + 1;
+    const r0 = fy > 0 ? fy : 0;
+    const iy1 = ty1 === ty1 ? Math.trunc(ty1) : 0;
+    const ly = iy1 + (iy1 < ty1 ? 1 : 0);
+    const r1 = ly < this.rows ? ly : this.rows;
+    if (r1 <= r0) return false;
     w[0] = c0;
     w[1] = c1;
     w[2] = r0;

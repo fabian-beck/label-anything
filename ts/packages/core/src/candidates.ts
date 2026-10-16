@@ -10,7 +10,7 @@ import { P, Rect, bboxOf, distPointSegXY } from "./geom/index.js";
 import { polylabel } from "./geom/polygon.js";
 import { Shape, shapesOverlap } from "./geom/shape.js";
 import type { Variant } from "./labels.js";
-import { cmpF64, len2d, maxf, minf, signEps, sinCosDeg } from "./math.js";
+import { cmpF64, len2d, maxf, minf, signEps, sinCosDegInto } from "./math.js";
 import {
   InternalPolicy,
   type Item,
@@ -235,18 +235,33 @@ export function labelShape(rect: Rect, shape: LabelShape): Shape | null {
 
 /** Screen direction for an angle in degrees (counter-clockwise on screen, 0 = right). */
 export function dirOf(angleDeg: number): P {
-  const [s, c] = sinCosDeg(angleDeg);
-  return new P(c, -s);
+  sinCosDegInto(angleDeg, SC);
+  return new P(SC[1]!, -SC[0]!);
 }
 
-/** Output of {@link touchCenterXY}: `[x, y]`. */
+/** Scratch `[sin, cos]` of {@link dirOf}. */
+const SC = new Float64Array(2);
+
+/** Output of {@link touchCenterAt}: `[x, y]`. */
 const TC = new Float64Array(2);
+/**
+ * Inputs `[o, hw, hh]` of {@link touchCenterAt} and the C-space paths (constant per label
+ * variant; in a typed array because doubles passed to calls that are not inlined are
+ * boxed, one allocation each).
+ */
+const TC_ARGS = new Float64Array(3);
 
 /**
- * {@link touchCenter} for the direction `(dx, dy)`, into {@link TC}: the operations of
- * `supportInflated` and `signDir`, without allocating for circles (the common mark).
+ * {@link touchCenter} for the direction `d` and the offset and half sizes in
+ * {@link TC_ARGS}, into {@link TC}: the operations of `supportInflated` and `signDir`,
+ * without allocating for circles (the common mark).
  */
-function touchCenterXY(shape: Shape, o: number, dx: number, dy: number, hw: number, hh: number): void {
+function touchCenterAt(shape: Shape, d: P): void {
+  const o = TC_ARGS[0]!;
+  const hw = TC_ARGS[1]!;
+  const hh = TC_ARGS[2]!;
+  const dx = d.x;
+  const dy = d.y;
   const l = len2d(dx, dy);
   const nx = l > 0 ? dx / l : 0;
   const ny = l > 0 ? dy / l : 0;
@@ -256,7 +271,7 @@ function touchCenterXY(shape: Shape, o: number, dx: number, dy: number, hw: numb
     px = shape.c.x + nx * shape.r;
     py = shape.c.y + ny * shape.r;
   } else {
-    const p = shape.support(new P(dx, dy));
+    const p = shape.support(d);
     px = p.x;
     py = p.y;
   }
@@ -266,7 +281,10 @@ function touchCenterXY(shape: Shape, o: number, dx: number, dy: number, hw: numb
 
 /** Label center touching `S ⊕ o` in direction `d` (spec §6.1). */
 export function touchCenter(shape: Shape, o: number, d: P, hw: number, hh: number): P {
-  touchCenterXY(shape, o, d.x, d.y, hw, hh);
+  TC_ARGS[0] = o;
+  TC_ARGS[1] = hw;
+  TC_ARGS[2] = hh;
+  touchCenterAt(shape, d);
   return new P(TC[0]!, TC[1]!);
 }
 
@@ -345,10 +363,17 @@ export function warm(model: Model, item: Item, vi: number, v: Variant, rect: Rec
 }
 
 /**
- * Decides whether a label box `[x0, x1] × [y0, y1]` of variant `vi` is created (the
+ * Decides whether the label box in {@link KEEP_BOX} of variant `vi` is created (the
  * candidate filter of `Solve.generateMode`; see there).
  */
-export type KeepFn = (vi: number, x0: number, y0: number, x1: number, y1: number) => boolean;
+export type KeepFn = (vi: number) => boolean;
+
+/**
+ * The label box `[x0, y0, x1, y1]` a {@link KeepFn} decides on; the generators write it
+ * before each call. (A typed array instead of arguments: coordinates passed to a call
+ * that is not inlined would be boxed, one allocation each.)
+ */
+export const KEEP_BOX = new Float64Array(4);
 
 /**
  * Adjacent and slider candidates of one variant. With `keep`, boxes it rejects are not
@@ -371,11 +396,14 @@ export function adjacent(
   const push = needsPushIn(shape);
   const positions = item.positions;
   const it = item.index;
+  const kb = KEEP_BOX;
   if (Models.has(models, Models.ADJACENT)) {
     for (let r = 0; r < positions.length; r++) {
       const p = positions[r]!;
-      const d = POS_DIRS[posAngularIndex(p)]!;
-      touchCenterXY(shape, o, d.x, d.y, hw, hh);
+      TC_ARGS[0] = o;
+      TC_ARGS[1] = hw;
+      TC_ARGS[2] = hh;
+      touchCenterAt(shape, POS_DIRS[posAngularIndex(p)]!);
       let cx = TC[0]!;
       let cy = TC[1]!;
       if (push) {
@@ -387,7 +415,13 @@ export function adjacent(
       const y0 = cy - hh;
       const x1 = cx + hw;
       const y1 = cy + hh;
-      if (keep !== null && !keep(vi, x0, y0, x1, y1)) continue;
+      if (keep !== null) {
+        kb[0] = x0;
+        kb[1] = y0;
+        kb[2] = x1;
+        kb[3] = y1;
+        if (!keep(vi)) continue;
+      }
       out.push(new Cand(it, vi, v.level, Kind.Adjacent, p, r, new Rect(x0, y0, x1, y1)));
     }
   }
@@ -398,8 +432,11 @@ export function adjacent(
     const ra = positions.indexOf(a);
     const rb = positions.indexOf(b);
     if (ra < 0 || rb < 0) continue;
-    const n = cspacePathInto(shape, o, hw, hh, k);
-    const m = samplePathInto(n, sliderPerGap, shape, o, hw, hh);
+    TC_ARGS[0] = o;
+    TC_ARGS[1] = hw;
+    TC_ARGS[2] = hh;
+    const n = cspacePathInto(shape, k);
+    const m = samplePathInto(n, sliderPerGap, shape);
     for (let j = 0; j < m; j++) {
       const t = (j + 1) / (sliderPerGap + 1);
       const rank = ra + (rb - ra) * t + 0.25;
@@ -415,7 +452,13 @@ export function adjacent(
       const y0 = cy - hh;
       const x1 = cx + hw;
       const y1 = cy + hh;
-      if (keep !== null && !keep(vi, x0, y0, x1, y1)) continue;
+      if (keep !== null) {
+        kb[0] = x0;
+        kb[1] = y0;
+        kb[2] = x1;
+        kb[3] = y1;
+        if (!keep(vi)) continue;
+      }
       out.push(new Cand(it, vi, v.level, Kind.Slider, side, rank, new Rect(x0, y0, x1, y1)));
     }
   }
@@ -491,15 +534,15 @@ let SP_X = new Float64Array(64);
 let SP_Y = new Float64Array(64);
 
 /**
- * Boundary of `(S ⊕ o) ⊕ (−B)` over gap `k` (between two fixed positions), into the
- * `CS_*` arrays; returns the number of vertices.
+ * Boundary of `(S ⊕ o) ⊕ (−B)` over gap `k` (between two fixed positions; `o` and the
+ * half sizes of `B` in {@link TC_ARGS}), into the `CS_*` arrays; returns the number of
+ * vertices.
  */
-function cspacePathInto(shape: Shape, o: number, hw: number, hh: number, k: number): number {
+function cspacePathInto(shape: Shape, k: number): number {
   const t = gapTable(k);
   let n = 0;
   for (let j = 0; j < t.phis.length; j++) {
-    const d = t.dirs[j]!;
-    touchCenterXY(shape, o, d.x, d.y, hw, hh);
+    touchCenterAt(shape, t.dirs[j]!);
     const px = TC[0]!;
     const py = TC[1]!;
     // verts.last().p.dist(p) < 1e-12
@@ -512,18 +555,8 @@ function cspacePathInto(shape: Shape, o: number, hw: number, hh: number, k: numb
     n++;
   }
   for (let i = 0; i + 1 < n; i++) {
-    let dx: number;
-    let dy: number;
-    if (CS_IDX[i + 1] === CS_IDX[i]! + 1) {
-      const m = t.mids[CS_IDX[i]!]!;
-      dx = m.x;
-      dy = m.y;
-    } else {
-      const m = dirOf((CS_PHI[i]! + CS_PHI[i + 1]!) * 0.5);
-      dx = m.x;
-      dy = m.y;
-    }
-    touchCenterXY(shape, o, dx, dy, hw, hh);
+    const m = CS_IDX[i + 1] === CS_IDX[i]! + 1 ? t.mids[CS_IDX[i]!]! : dirOf((CS_PHI[i]! + CS_PHI[i + 1]!) * 0.5);
+    touchCenterAt(shape, m);
     CS_STRAIGHT[i] = distPointSegXY(TC[0]!, TC[1]!, CS_X[i]!, CS_Y[i]!, CS_X[i + 1]!, CS_Y[i + 1]!) <= 1e-9 ? 1 : 0;
   }
   return n;
@@ -533,7 +566,7 @@ function cspacePathInto(shape: Shape, o: number, hw: number, hh: number, k: numb
  * `k` samples at equal arc length of the path of {@link cspacePathInto} (`n` vertices),
  * excluding the endpoints, into `SP_X`/`SP_Y`; returns their number.
  */
-function samplePathInto(n: number, k: number, shape: Shape, o: number, hw: number, hh: number): number {
+function samplePathInto(n: number, k: number, shape: Shape): number {
   if (n < 2) return 0;
   CS_CUM[0] = 0;
   for (let i = 1; i < n; i++) CS_CUM[i] = CS_CUM[i - 1]! + len2d(CS_X[i - 1]! - CS_X[i]!, CS_Y[i - 1]! - CS_Y[i]!);
@@ -557,8 +590,7 @@ function samplePathInto(n: number, k: number, shape: Shape, o: number, hw: numbe
       sy[j - 1] = CS_Y[seg]! + (CS_Y[seg + 1]! - CS_Y[seg]!) * t;
     } else {
       // c_at(shape, o, hw, hh, phi)
-      const d = dirOf(CS_PHI[seg]! + (CS_PHI[seg + 1]! - CS_PHI[seg]!) * t);
-      touchCenterXY(shape, o, d.x, d.y, hw, hh);
+      touchCenterAt(shape, dirOf(CS_PHI[seg]! + (CS_PHI[seg + 1]! - CS_PHI[seg]!) * t));
       sx[j - 1] = TC[0]!;
       sy[j - 1] = TC[1]!;
     }
@@ -568,7 +600,10 @@ function samplePathInto(n: number, k: number, shape: Shape, o: number, hw: numbe
 
 /** Boundary of `(S ⊕ o) ⊕ (−B)` over gap `k` (between two fixed positions). */
 export function cspacePath(shape: Shape, o: number, hw: number, hh: number, k: number): CVertex[] {
-  const n = cspacePathInto(shape, o, hw, hh, k);
+  TC_ARGS[0] = o;
+  TC_ARGS[1] = hw;
+  TC_ARGS[2] = hh;
+  const n = cspacePathInto(shape, k);
   const out: CVertex[] = [];
   for (let i = 0; i < n; i++) out.push({ p: new P(CS_X[i]!, CS_Y[i]!), phi: CS_PHI[i]!, straightNext: CS_STRAIGHT[i] === 1 });
   return out;
@@ -583,7 +618,10 @@ export function samplePath(path: readonly CVertex[], k: number, shape: Shape, o:
     CS_PHI[i] = path[i]!.phi;
     CS_STRAIGHT[i] = path[i]!.straightNext ? 1 : 0;
   }
-  const m = samplePathInto(n, k, shape, o, hw, hh);
+  TC_ARGS[0] = o;
+  TC_ARGS[1] = hw;
+  TC_ARGS[2] = hh;
+  const m = samplePathInto(n, k, shape);
   const out: P[] = [];
   for (let j = 0; j < m; j++) out.push(new P(SP_X[j]!, SP_Y[j]!));
   return out;

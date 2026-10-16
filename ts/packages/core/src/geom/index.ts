@@ -276,6 +276,12 @@ export class Affine {
     return new P(m[0] * p.x + m[2] * p.y + m[4], m[1] * p.x + m[3] * p.y + m[5]);
   }
 
+  /** Image of the point `(x, y)` ({@link apply}). */
+  applyXY(x: number, y: number): P {
+    const m = this.m;
+    return new P(m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]);
+  }
+
   /** `self ∘ other` (apply `self` first, then `after`). */
   then(after: Affine): Affine {
     const a = this.m;

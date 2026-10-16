@@ -9,7 +9,7 @@
  * @module
  */
 
-export { cbrt, exp, ln, ln1p, roundHalfAway, sinCosDeg } from "./detmath.js";
+export { cbrt, exp, ln, ln1p, roundHalfAway, sinCosDeg, sinCosDegInto } from "./detmath.js";
 
 /** 2^63 = `i64::MAX as f64` (the saturation value of `as i64`). */
 const I64_LIMIT = 9223372036854775808;

@@ -107,8 +107,8 @@ export class Evaluator {
           if (c.labelOverlapsShape(sj)) acc.violate(BLOCK_ITEMS, false, 0);
         } else if (om.kind === "partial") {
           if (c.labelOverlapsShape(sj)) {
-            const [g, s] = obs.own[i]!;
-            const frac = s.coveredArea(g, r) / maxf(sj.area(), 1e-9);
+            const own = obs.own[i]!;
+            const frac = own[1].coveredArea(own[0], r) / maxf(sj.area(), 1e-9);
             if (frac > om.f) acc.violate(BLOCK_ITEMS, false, 0);
           }
         }

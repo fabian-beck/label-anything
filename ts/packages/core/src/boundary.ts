@@ -9,7 +9,7 @@
  * @module
  */
 
-import { Cand, type KeepFn, Kind, Leader, SIDE_BOUNDARY } from "./candidates.js";
+import { Cand, KEEP_BOX, type KeepFn, Kind, Leader, SIDE_BOUNDARY } from "./candidates.js";
 import { P, Rect } from "./geom/index.js";
 import type { Variant } from "./labels.js";
 import { leaderStart } from "./leaders.js";
@@ -183,7 +183,12 @@ export function boundaryCandidates(
             py = y1 - v.h;
           }
         }
-        if (!keep(vi, rx0, ry0, rx1, ry1)) continue;
+        const kb = KEEP_BOX;
+        kb[0] = rx0;
+        kb[1] = ry0;
+        kb[2] = rx1;
+        kb[3] = ry1;
+        if (!keep(vi)) continue;
         const rect = new Rect(rx0, ry0, rx1, ry1);
         const port = new P(px, py);
         const start = leaderStart(model, item, port);

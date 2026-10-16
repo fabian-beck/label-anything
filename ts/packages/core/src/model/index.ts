@@ -659,7 +659,14 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
     const width = asF64(sourceOpt(layer, "obstacles.vector", "width")) ?? 1;
     const evenOdd = asStr(sourceOpt(layer, "obstacles.vector", "fill_rule")) === "evenodd";
     const pv = get(layer, "points");
-    for (const p of pointsOf(pv === undefined ? null : pv)) vector.push([cls, { kind: "disc", c: toPx.apply(p), r }]);
+    // pointsOf(pv) mapped through toPx, without the intermediate points
+    if (Array.isArray(pv)) {
+      for (const q of pv) {
+        const x = asF64(at(q, 0));
+        const y = asF64(at(q, 1));
+        if (x !== null && y !== null) vector.push([cls, { kind: "disc", c: toPx.applyXY(x, y), r }]);
+      }
+    }
     for (const c of itemsOf(get(layer, "circles"))) {
       const x = asF64(at(c, 0)) ?? 0;
       const y = asF64(at(c, 1)) ?? 0;

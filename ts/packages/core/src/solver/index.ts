@@ -8,6 +8,7 @@
 import { boundaryCandidates } from "../boundary.js";
 import {
   Cand,
+  KEEP_BOX,
   Kind,
   type KeepFn,
   adjacent,
@@ -152,11 +153,12 @@ export class Solve {
     const win = this.window;
     let dropped = 0;
     // `keep` serves non-internal candidates only (internal labels sit on their mark)
-    const keep: KeepFn = (vi, x0, y0, x1, y1) => {
+    const box = KEEP_BOX;
+    const keep: KeepFn = (vi) => {
       if (!(quick || itemOcc !== null) || !isRectShape(variants[vi]!.shape)) return true;
-      const w = occ.windowXY(x0, y0, x1, y1, win);
+      const w = occ.windowBox(box, win);
       if (itemOcc !== null) {
-        const hit = shared ? w && itemOcc.blockedIn(win) : itemOcc.blockedXY(x0, y0, x1, y1);
+        const hit = shared ? w && itemOcc.blockedIn(win) : itemOcc.blockedBox(box);
         if (hit) {
           dropped += 1;
           return false;

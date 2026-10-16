@@ -5,23 +5,55 @@
  * @module
  */
 
-import { Cand, type KeepFn, Kind, Leader, SIDE_DISTANT, dirOf } from "./candidates.js";
+import { Cand, KEEP_BOX, type KeepFn, Kind, Leader, SIDE_DISTANT, dirOf } from "./candidates.js";
 import { P, Rect } from "./geom/index.js";
 import type { Variant } from "./labels.js";
-import { cmpF64, maxf, minf, signEps } from "./math.js";
+import { clampf, cmpF64, len2d, maxf, minf, signEps } from "./math.js";
 import { Attach, type Item, LeaderStyle, type Model, Port } from "./model/index.js";
 import type { Obstacles } from "./obstacles.js";
 import { IdList } from "./spatial.js";
 
 /** Leader start on the item for direction `d` (boundary + gap, center or tip). */
 export function leaderStart(model: Model, item: Item, toward: P): P {
+  LS[0] = toward.x;
+  LS[1] = toward.y;
+  if (leaderStartIn(model, item)) return item.shape.reference();
+  return new P(LS[0]!, LS[1]!);
+}
+
+/** In/out point of {@link leaderStartIn}: `[x, y]`. */
+const LS = new Float64Array(2);
+
+/**
+ * {@link leaderStart} toward the point in {@link LS}, which it replaces by the start (the
+ * same operations, without allocating or passing coordinates as arguments). Returns true
+ * when the start is the item's reference point.
+ */
+function leaderStartIn(model: Model, item: Item): boolean {
   let attach = model.leaders.attach;
   if (attach === Attach.Auto) attach = item.tip ? Attach.Tip : Attach.Boundary;
   const refp = item.shape.reference();
-  if (attach === Attach.Tip || attach === Attach.Center) return refp;
-  const d = toward.sub(refp).norm();
-  if (d.len2() === 0) return refp;
-  return item.shape.boundaryPoint(d).add(d.mul(item.len.anchorGap));
+  if (attach !== Attach.Tip && attach !== Attach.Center) {
+    // d = (toward - refp).norm()
+    const vx = LS[0]! - refp.x;
+    const vy = LS[1]! - refp.y;
+    const l = len2d(vx, vy);
+    const dx = l > 0 ? vx / l : 0;
+    const dy = l > 0 ? vy / l : 0;
+    if (dx * dx + dy * dy !== 0) {
+      // boundary_point(d) + d * anchor_gap
+      LS[0] = dx;
+      LS[1] = dy;
+      item.shape.boundaryPointIn(LS);
+      const gap = item.len.anchorGap;
+      LS[0] = LS[0]! + dx * gap;
+      LS[1] = LS[1]! + dy * gap;
+      return false;
+    }
+  }
+  LS[0] = refp.x;
+  LS[1] = refp.y;
+  return true;
 }
 
 /** Output of {@link attachCenter}: the label center `[x, y]`. */
@@ -98,6 +130,7 @@ export function distant(
   const style = model.leaders.style;
   const port = model.leaders.port;
   const it = item.index;
+  const kb = KEEP_BOX;
   const push = (rect: Rect, pts: P[], ring: number): void => {
     let l = new Leader(pts, style);
     if (l.len < len.leaderMin || l.len > len.leaderMax + 1e-9) return;
@@ -127,36 +160,57 @@ export function distant(
         fl.member = mi;
         c.leaders.push(fl);
       }
-    } else c.leaders.push(l);
+    } else c.leaders = [l];
     out.push(c);
   };
-  for (const [, d] of dirs) {
-    const start = leaderStart(model, item, item.shape.reference().add(d));
+  const ref = item.shape.reference();
+  for (let di = 0; di < dirs.length; di++) {
+    const d = dirs[di]![1];
+    const dx = d.x;
+    const dy = d.y;
+    // start = leader_start(item.shape.reference() + d), as scalars; the point itself is
+    // only built for kept candidates
+    LS[0] = ref.x + dx;
+    LS[1] = ref.y + dy;
+    const startAtRef = leaderStartIn(model, item);
+    const sx0 = LS[0]!;
+    const sy0 = LS[1]!;
+    let start: P | null = null;
     for (let k = 0; k < rings; k++) {
       const r = rings === 1 ? len.minDistance : len.minDistance + ((len.maxDistance - len.minDistance) * k) / (rings - 1);
       if (r <= 0) continue;
       // t = start + d * r
-      const tx = start.x + d.x * r;
-      const ty = start.y + d.y * r;
+      const tx = sx0 + dx * r;
+      const ty = sy0 + dy * r;
       switch (style) {
         case LeaderStyle.Elbow: {
           const run = 0.75 * em;
-          const sx = d.x >= 0 ? 1 : -1;
+          const sx = dx >= 0 ? 1 : -1;
           const px = tx + sx * run;
           const cx = px + sx * hw;
-          if (keep(vi, cx - hw, ty - hh, cx + hw, ty + hh)) {
+          kb[0] = cx - hw;
+          kb[1] = ty - hh;
+          kb[2] = cx + hw;
+          kb[3] = ty + hh;
+          if (keep(vi)) {
+            start ??= startAtRef ? ref : new P(sx0, sy0);
             push(new Rect(cx - hw, ty - hh, cx + hw, ty + hh), [start, new P(tx, ty), new P(px, ty)], k);
           }
           break;
         }
         case LeaderStyle.Orthogonal: {
-          attachCenter(tx, ty, d.x, d.y, hw, hh, Port.SideCenter);
+          attachCenter(tx, ty, dx, dy, hw, hh, Port.SideCenter);
           const cx = AC[0]!;
           const cy = AC[1]!;
-          if (!keep(vi, cx - hw, cy - hh, cx + hw, cy + hh)) continue;
+          kb[0] = cx - hw;
+          kb[1] = cy - hh;
+          kb[2] = cx + hw;
+          kb[3] = cy + hh;
+          if (!keep(vi)) continue;
+          start ??= startAtRef ? ref : new P(sx0, sy0);
           const rect = new Rect(cx - hw, cy - hh, cx + hw, cy + hh);
           const portPt = new P(tx, ty);
-          if (Math.abs(d.x) < 1e-9 || Math.abs(d.y) < 1e-9) push(rect, [start, portPt], k);
+          if (Math.abs(dx) < 1e-9 || Math.abs(dy) < 1e-9) push(rect, [start, portPt], k);
           else {
             // po: vertical then horizontal into the side-center port
             const bend = new P(start.x, portPt.y);
@@ -165,16 +219,21 @@ export function distant(
           break;
         }
         case LeaderStyle.Curved: {
-          attachCenter(tx, ty, d.x, d.y, hw, hh, port);
+          attachCenter(tx, ty, dx, dy, hw, hh, port);
           const cx = AC[0]!;
           const cy = AC[1]!;
-          if (!keep(vi, cx - hw, cy - hh, cx + hw, cy + hh)) continue;
+          kb[0] = cx - hw;
+          kb[1] = cy - hh;
+          kb[2] = cx + hw;
+          kb[3] = cy + hh;
+          if (!keep(vi)) continue;
+          start ??= startAtRef ? ref : new P(sx0, sy0);
           const rect = new Rect(cx - hw, cy - hh, cx + hw, cy + hh);
           const p0 = rect.closestPoint(start);
           const s0 = leaderStart(model, item, p0);
           const portPt = rect.closestPoint(s0);
           // straight and two bows; the flattened curve is the collision geometry
-          for (const bow of [0, 0.3, -0.3]) {
+          for (const bow of BOWS) {
             const pts = curvePoints(s0, portPt, bow);
             const ctrl = curveControl(s0, portPt, bow);
             const before = out.length;
@@ -190,19 +249,32 @@ export function distant(
           break;
         }
         default: {
-          attachCenter(tx, ty, d.x, d.y, hw, hh, port);
+          attachCenter(tx, ty, dx, dy, hw, hh, port);
           const cx = AC[0]!;
           const cy = AC[1]!;
-          if (!keep(vi, cx - hw, cy - hh, cx + hw, cy + hh)) continue;
-          const rect = new Rect(cx - hw, cy - hh, cx + hw, cy + hh);
-          let portPt = new P(tx, ty);
-          let s0 = start;
+          const x0 = cx - hw;
+          const y0 = cy - hh;
+          const x1 = cx + hw;
+          const y1 = cy + hh;
+          kb[0] = x0;
+          kb[1] = y0;
+          kb[2] = x1;
+          kb[3] = y1;
+          if (!keep(vi)) continue;
+          const rect = new Rect(x0, y0, x1, y1);
           if (style === LeaderStyle.Straight && port === Port.Nearest) {
-            portPt = rect.closestPoint(start);
-            s0 = leaderStart(model, item, portPt);
-            portPt = rect.closestPoint(s0);
+            // port = rect.closest_point(start); s0 = leader_start(port);
+            // port = rect.closest_point(s0)
+            LS[0] = clampf(sx0, x0, x1);
+            LS[1] = clampf(sy0, y0, y1);
+            const s0AtRef = leaderStartIn(model, item);
+            const s0x = LS[0]!;
+            const s0y = LS[1]!;
+            push(rect, [s0AtRef ? ref : new P(s0x, s0y), new P(clampf(s0x, x0, x1), clampf(s0y, y0, y1))], k);
+          } else {
+            start ??= startAtRef ? ref : new P(sx0, sy0);
+            push(rect, [start, new P(tx, ty)], k);
           }
-          push(rect, [s0, portPt], k);
         }
       }
     }
@@ -210,7 +282,12 @@ export function distant(
   // free-space seeds: local maxima of the distance transform near the item
   if (model.placement.freeSpaceSeeds && obs.dt.length > 0) {
     for (const seed of freeSpaceSeeds(obs, item, hh)) {
-      if (!keep(vi, seed.x - hw, seed.y - hh, seed.x + hw, seed.y + hh)) continue;
+      kb[0] = seed.x - hw;
+      kb[1] = seed.y - hh;
+      kb[2] = seed.x + hw;
+      kb[3] = seed.y + hh;
+      if (!keep(vi)) continue;
+      if (style === LeaderStyle.Angles || style === LeaderStyle.Elbow) continue; // angle-restricted styles only use their rays
       const rect = Rect.fromCenter(seed, hw, hh);
       const start0 = leaderStart(model, item, seed);
       const portPt = rect.closestPoint(start0);
@@ -221,11 +298,13 @@ export function distant(
         pts =
           Math.abs(bend.x - portPt.x) < 1e-9 || Math.abs(bend.y - start.y) < 1e-9 ? [start, portPt] : [start, bend, portPt];
       } else pts = [start, portPt];
-      if (style === LeaderStyle.Angles || style === LeaderStyle.Elbow) continue; // angle-restricted styles only use their rays
       push(rect, pts, rings);
     }
   }
 }
+
+/** Bows of the curved leader style: straight, then one to each side. */
+const BOWS = [0, 0.3, -0.3];
 
 const SEED_IDS = new IdList();
 
