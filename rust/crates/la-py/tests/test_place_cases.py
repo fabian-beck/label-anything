@@ -22,6 +22,23 @@ DEFAULT_MARK = {"shape": "circle", "r": 2.0}
 Seg = Tuple[Tuple[float, float], Tuple[float, float]]
 
 
+def underline_at_port(p: Dict[str, Any]) -> bool:
+    """The leader has an underline (baseline port) that starts at the leader's end, on a
+    side edge of the box, runs horizontally inside the box below its vertical middle."""
+    leader = p.get("leader") or {}
+    pts, u, box = leader.get("points") or [], leader.get("underline") or [], p.get("box") or {}
+    if not pts or len(u) < 2 or not box:
+        return False
+    (ex, ey), (ax, ay), (bx, by) = pts[-1], u[0], u[1]
+    x, y, w, h = box["x"], box["y"], box["w"], box["h"]
+
+    def near(s: float, t: float) -> bool:
+        return abs(s - t) <= 1e-6
+
+    return (near(ex, ax) and near(ey, ay) and near(ay, by) and (near(ax, x) or near(ax, x + w))
+            and y + h * 0.5 < ay < y + h and x - 1e-6 <= bx <= x + w + 1e-6)
+
+
 def px(v: Any, em: float) -> float:
     if isinstance(v, (int, float)):
         return float(v)
@@ -81,6 +98,10 @@ def check(problem: Dict[str, Any], exp: Dict[str, Any]) -> List[str]:
         got = bool(segments(by_id[i])) if i in by_id else False
         if got != want:
             f.append(f"has_leader.{i}: expected {want}, got {got}")
+    for i, want in exp.get("underline", {}).items():
+        got = underline_at_port(by_id[i]) if i in by_id else False
+        if got != want:
+            f.append(f"underline.{i}: expected {want}, got {got}")
     for i, want in exp.get("text_lines", {}).items():
         got = by_id.get(i, {}).get("text", {}).get("lines")
         if got != want:

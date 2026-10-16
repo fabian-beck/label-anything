@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import Any, Optional, Union
 
 from . import _native
@@ -72,6 +73,20 @@ def solve(
     return Result(json.loads(out), problem, raster=raster)
 
 
+def _path_text(text: str) -> Optional[Path]:
+    """A string naming a file rather than holding problem JSON: problem JSON is an
+    object, so its text starts with ``{``; anything else is read as a path. Raises
+    ``FileNotFoundError`` when no such file exists (the text is neither)."""
+    if text.lstrip().startswith("{"):
+        return None
+    path = Path(text)
+    if not path.is_file():
+        raise FileNotFoundError(
+            f"a problem string must be JSON text (an object) or the path of a JSON file: no file {text!r}"
+        )
+    return path
+
+
 def _load(problem: ProblemLike) -> JSONDict:
     if isinstance(problem, Problem):
         return problem.build()
@@ -83,6 +98,9 @@ def _load(problem: ProblemLike) -> JSONDict:
             from_file: JSONDict = json.load(f)
             return from_file
     if isinstance(problem, str):
+        path = _path_text(problem)
+        if path is not None:
+            return _load(path)
         try:
             parsed: Any = json.loads(problem)
         except json.JSONDecodeError as e:
@@ -133,7 +151,7 @@ def place_problem(
 
 def validate(problem: ProblemLike) -> Report:
     """Validate a problem; returns a :class:`Report` (never raises for invalid problems)."""
-    if isinstance(problem, str) and not isinstance(problem, os.PathLike):
+    if isinstance(problem, str) and _path_text(problem) is None:
         text = problem
     else:
         try:

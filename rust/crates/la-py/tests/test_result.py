@@ -110,3 +110,24 @@ def test_groups_and_parts() -> None:
     c = res["c"]
     assert c.placed and len(c.parts) == 2
     assert c.parts[1]["text"]["lines"] == ["Server"]
+
+
+def test_problem_path_strings(tmp_path) -> None:
+    import json as _json
+
+    import label_anything as la
+
+    problem = {"canvas": {"width": 200, "height": 100},
+               "items": [{"id": "a", "anchor": {"type": "point", "x": 100, "y": 50},
+                          "label": {"type": "text", "text": "A"}}]}
+    f = tmp_path / "problem.json"
+    f.write_text(_json.dumps(problem), encoding="utf-8")
+    # a string that is not JSON text is the path of a JSON file
+    assert len(la.place_problem(str(f)).placed) == len(la.place_problem(problem).placed) == 1
+    assert la.validate(str(f)).valid
+    try:
+        la.place_problem(str(tmp_path / "missing.json"))
+    except FileNotFoundError as e:
+        assert "missing.json" in str(e)
+    else:
+        raise AssertionError("expected FileNotFoundError")
