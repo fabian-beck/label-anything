@@ -1,0 +1,1324 @@
+{
+  "kind": "parity",
+  "problem_file": "../problems/priority-attrs.json",
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "c0",
+        "placed": true,
+        "box": {
+          "x": 589.914,
+          "y": 321.55600000000004,
+          "w": 39.37200000000007,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class0"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            35.772
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 1,
+          "score": 0.24482758620689654,
+          "rank": 6,
+          "terms": {
+            "cbo": 0.0,
+            "label_size": -0.031034482758620693,
+            "outlierness": 0.27586206896551724
+          }
+        }
+      },
+      {
+        "id": "c1",
+        "placed": true,
+        "box": {
+          "x": 297.814,
+          "y": 393.55600000000004,
+          "w": 39.37199999999996,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class1"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            35.772
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.12413793103448276,
+          "rank": 29,
+          "terms": {
+            "cbo": 0.08620689655172414,
+            "label_size": -0.031034482758620693,
+            "outlierness": 0.06896551724137931
+          }
+        }
+      },
+      {
+        "id": "c2",
+        "placed": true,
+        "box": {
+          "x": 571.014,
+          "y": 159.05599999999998,
+          "w": 39.37200000000007,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class2"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            35.772
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.6413793103448276,
+          "rank": 24,
+          "terms": {
+            "cbo": 0.15517241379310345,
+            "label_size": -0.031034482758620693,
+            "outlierness": 0.5172413793103449
+          }
+        }
+      },
+      {
+        "id": "c3",
+        "placed": true,
+        "box": {
+          "x": 706.814,
+          "y": 382.956,
+          "w": 39.37200000000007,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class3"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            35.772
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 1,
+          "score": 0.5896551724137931,
+          "rank": 3,
+          "terms": {
+            "cbo": 0.22413793103448276,
+            "label_size": -0.031034482758620693,
+            "outlierness": 0.39655172413793105
+          }
+        }
+      },
+      {
+        "id": "c4",
+        "placed": true,
+        "box": {
+          "x": 733.914,
+          "y": 296.6,
+          "w": 39.37200000000007,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "bottom",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class4"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            35.772
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.19999999999999998,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.7103448275862069,
+          "rank": 21,
+          "terms": {
+            "cbo": 0.29310344827586204,
+            "label_size": -0.031034482758620693,
+            "outlierness": 0.4482758620689655
+          }
+        }
+      },
+      {
+        "id": "c5",
+        "placed": true,
+        "box": {
+          "x": 244.29999999999998,
+          "y": 378.928,
+          "w": 39.371999999999986,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class5"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            35.772
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.12499999999999928,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.36551724137931035,
+          "rank": 26,
+          "terms": {
+            "cbo": 0.3620689655172414,
+            "label_size": -0.031034482758620693,
+            "outlierness": 0.034482758620689655
+          }
+        }
+      },
+      {
+        "id": "c6",
+        "placed": true,
+        "box": {
+          "x": 308.5,
+          "y": 432.12800000000004,
+          "w": 39.37199999999996,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class6"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            35.772
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.125,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 1,
+          "score": 0.5896551724137931,
+          "rank": 4,
+          "terms": {
+            "cbo": 0.43103448275862066,
+            "label_size": -0.031034482758620693,
+            "outlierness": 0.1896551724137931
+          }
+        }
+      },
+      {
+        "id": "c7",
+        "placed": true,
+        "box": {
+          "x": 583.014,
+          "y": 250.15600000000003,
+          "w": 39.37200000000007,
+          "h": 19.94399999999999
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class7"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            35.772
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.7793103448275862,
+          "rank": 18,
+          "terms": {
+            "cbo": 0.5,
+            "label_size": -0.031034482758620693,
+            "outlierness": 0.3103448275862069
+          }
+        }
+      },
+      {
+        "id": "c8",
+        "placed": true,
+        "box": {
+          "x": 252.91400000000002,
+          "y": 309.55600000000004,
+          "w": 39.371999999999986,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class8"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            35.772
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.2275862068965517,
+          "rank": 28,
+          "terms": {
+            "cbo": 0.06896551724137931,
+            "label_size": -0.031034482758620693,
+            "outlierness": 0.1896551724137931
+          }
+        }
+      },
+      {
+        "id": "c9",
+        "placed": true,
+        "box": {
+          "x": 637.8,
+          "y": 344.62800000000004,
+          "w": 39.37200000000007,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class9"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            35.772
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.125,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 1,
+          "score": 0.21034482758620687,
+          "rank": 7,
+          "terms": {
+            "cbo": 0.13793103448275862,
+            "label_size": -0.031034482758620693,
+            "outlierness": 0.10344827586206896
+          }
+        }
+      },
+      {
+        "id": "c10",
+        "placed": true,
+        "box": {
+          "x": 572.7819999999999,
+          "y": 115.25599999999997,
+          "w": 46.236000000000104,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class10"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.693103448275862,
+          "rank": 23,
+          "terms": {
+            "cbo": 0.20689655172413793,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.6206896551724138
+          }
+        }
+      },
+      {
+        "id": "c11",
+        "placed": true,
+        "box": {
+          "x": 85.20000000000002,
+          "y": 177.028,
+          "w": 46.23599999999999,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class11"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.12500000000000033,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.8827586206896552,
+          "rank": 14,
+          "terms": {
+            "cbo": 0.27586206896551724,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.7413793103448276
+          }
+        }
+      },
+      {
+        "id": "c12",
+        "placed": true,
+        "box": {
+          "x": 516.982,
+          "y": 370.05600000000004,
+          "w": 46.236000000000104,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class12"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 1,
+          "score": 0.5551724137931034,
+          "rank": 5,
+          "terms": {
+            "cbo": 0.3448275862068966,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.3448275862068966
+          }
+        }
+      },
+      {
+        "id": "c13",
+        "placed": true,
+        "box": {
+          "x": 21.082,
+          "y": 149.25599999999997,
+          "w": 46.23600000000001,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class13"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.1413793103448275,
+          "rank": 11,
+          "terms": {
+            "cbo": 0.41379310344827586,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.8620689655172413
+          }
+        }
+      },
+      {
+        "id": "c14",
+        "placed": true,
+        "box": {
+          "x": 696.582,
+          "y": 35.756,
+          "w": 46.236000000000104,
+          "h": 19.944000000000003
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class14"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.313793103448276,
+          "rank": 10,
+          "terms": {
+            "cbo": 0.4827586206896552,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.9655172413793104
+          }
+        }
+      },
+      {
+        "id": "c15",
+        "placed": true,
+        "box": {
+          "x": 195.382,
+          "y": 336.75600000000003,
+          "w": 46.23599999999999,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class15"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 1,
+          "score": 0.1586206896551724,
+          "rank": 8,
+          "terms": {
+            "cbo": 0.05172413793103448,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.2413793103448276
+          }
+        }
+      },
+      {
+        "id": "c16",
+        "placed": true,
+        "box": {
+          "x": 285.382,
+          "y": 128.55599999999998,
+          "w": 46.23599999999999,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class16"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.8827586206896552,
+          "rank": 15,
+          "terms": {
+            "cbo": 0.1206896551724138,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.896551724137931
+          }
+        }
+      },
+      {
+        "id": "c17",
+        "placed": true,
+        "box": {
+          "x": 25.881999999999998,
+          "y": 63.155999999999985,
+          "w": 46.236,
+          "h": 19.94400000000001
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class17"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0551724137931033,
+          "rank": 12,
+          "terms": {
+            "cbo": 0.1896551724137931,
+            "label_size": -0.13448275862068967,
+            "outlierness": 1.0
+          }
+        }
+      },
+      {
+        "id": "c18",
+        "placed": true,
+        "box": {
+          "x": 643.1819999999999,
+          "y": 286.05600000000004,
+          "w": 46.236000000000104,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class18"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 1,
+          "score": 0.12413793103448276,
+          "rank": 9,
+          "terms": {
+            "cbo": 0.25862068965517243,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.0
+          }
+        }
+      },
+      {
+        "id": "c19",
+        "placed": true,
+        "box": {
+          "x": 414.682,
+          "y": 248.15600000000003,
+          "w": 46.23599999999999,
+          "h": 19.94399999999999
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class19"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.7448275862068965,
+          "rank": 20,
+          "terms": {
+            "cbo": 0.3275862068965517,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.5517241379310345
+          }
+        }
+      },
+      {
+        "id": "c20",
+        "placed": true,
+        "box": {
+          "x": 307.082,
+          "y": 346.35600000000005,
+          "w": 46.23599999999999,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class20"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.39999999999999997,
+          "rank": 25,
+          "terms": {
+            "cbo": 0.39655172413793105,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.13793103448275862
+          }
+        }
+      },
+      {
+        "id": "c21",
+        "placed": true,
+        "box": {
+          "x": 112.582,
+          "y": 517.556,
+          "w": 46.23599999999999,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class21"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 1,
+          "score": 1.1241379310344828,
+          "rank": 0,
+          "terms": {
+            "cbo": 0.46551724137931033,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.7931034482758621
+          }
+        }
+      },
+      {
+        "id": "c22",
+        "placed": true,
+        "box": {
+          "x": 494.58200000000005,
+          "y": 31.656,
+          "w": 46.23600000000005,
+          "h": 19.944000000000003
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class22"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.8310344827586207,
+          "rank": 17,
+          "terms": {
+            "cbo": 0.034482758620689655,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.9310344827586207
+          }
+        }
+      },
+      {
+        "id": "c23",
+        "placed": true,
+        "box": {
+          "x": 719.882,
+          "y": 242.156,
+          "w": 46.236000000000104,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class23"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.36551724137931035,
+          "rank": 27,
+          "terms": {
+            "cbo": 0.10344827586206896,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.39655172413793105
+          }
+        }
+      },
+      {
+        "id": "c24",
+        "placed": true,
+        "box": {
+          "x": 305.482,
+          "y": 493.55600000000004,
+          "w": 46.23599999999999,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class24"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 1,
+          "score": 0.7275862068965517,
+          "rank": 1,
+          "terms": {
+            "cbo": 0.1724137931034483,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.6896551724137931
+          }
+        }
+      },
+      {
+        "id": "c25",
+        "placed": true,
+        "box": {
+          "x": 26.881999999999998,
+          "y": 355.35600000000005,
+          "w": 46.236,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class25"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.8482758620689655,
+          "rank": 16,
+          "terms": {
+            "cbo": 0.2413793103448276,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.7413793103448276
+          }
+        }
+      },
+      {
+        "id": "c26",
+        "placed": true,
+        "box": {
+          "x": 50.782000000000004,
+          "y": 289.75600000000003,
+          "w": 46.236,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class26"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.7620689655172413,
+          "rank": 19,
+          "terms": {
+            "cbo": 0.3103448275862069,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.5862068965517241
+          }
+        }
+      },
+      {
+        "id": "c27",
+        "placed": true,
+        "box": {
+          "x": 605.5,
+          "y": 488.028,
+          "w": 46.236000000000104,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class27"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.125,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 1,
+          "score": 0.7275862068965517,
+          "rank": 2,
+          "terms": {
+            "cbo": 0.3793103448275862,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.4827586206896552
+          }
+        }
+      },
+      {
+        "id": "c28",
+        "placed": true,
+        "box": {
+          "x": 535.6819999999999,
+          "y": 469.25600000000003,
+          "w": 46.236000000000104,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class28"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.9689655172413792,
+          "rank": 13,
+          "terms": {
+            "cbo": 0.4482758620689655,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.6551724137931034
+          }
+        }
+      },
+      {
+        "id": "c29",
+        "placed": true,
+        "box": {
+          "x": 231.482,
+          "y": 145.65599999999998,
+          "w": 46.23600000000002,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Class29"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            42.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.7103448275862069,
+          "rank": 22,
+          "terms": {
+            "cbo": 0.017241379310344827,
+            "label_size": -0.13448275862068967,
+            "outlierness": 0.8275862068965517
+          }
+        }
+      }
+    ],
+    "stats": {
+      "placed": 30,
+      "total": 30,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 10000,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 1137,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 2.0250000000000004,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 267,
+        "rows": 200,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

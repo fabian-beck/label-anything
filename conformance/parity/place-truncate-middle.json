@@ -1,0 +1,100 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 400,
+      "height": 200
+    },
+    "items": [
+      {
+        "id": "t",
+        "anchor": {
+          "type": "point",
+          "x": 200,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "org.example.package.ClassName",
+          "wrap": {
+            "max_width": 90,
+            "max_lines": 1
+          },
+          "truncate": "middle"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "t",
+        "placed": true,
+        "box": {
+          "x": 155.876,
+          "y": 76.05599999999998,
+          "w": 88.24799999999999,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "org.ex…sName"
+          ],
+          "used": "truncated",
+          "truncated": true,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            84.648
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.55,
+        "degrade_steps": [
+          "truncate"
+        ],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 1,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 40,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.55,
+      "degraded": {
+        "truncated": 1
+      },
+      "grid": {
+        "cell": 3.0,
+        "cols": 134,
+        "rows": 67,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

@@ -1,0 +1,608 @@
+/**
+ * Label measurement and label variants (spec §5.1–5.4); port of
+ * `rust/crates/la-core/src/labels.rs`.
+ *
+ * TypeScript has no full OpenType shaping (spec §5.2): texts that would need it are
+ * measured with simple shaping unless the host measures them.
+ *
+ * @module
+ */
+
+import {
+  FontBook,
+  balancedWrap,
+  extraWrapVariants,
+  truncateEnd,
+  truncateMiddle,
+  wrapVariants,
+  type WrapOptions,
+} from "@label-anything/text";
+import { type Env, envReadFile } from "./env.js";
+import { P, Rect } from "./geom/index.js";
+import { fmtFixed } from "./json.js";
+import { maxf } from "./math.js";
+import {
+  FixedKind,
+  type FontSel,
+  type Item,
+  type LabelShape,
+  type Model,
+  type PartSpec,
+  type Step,
+  type TextSpec,
+  dataUrlBytes,
+} from "./model/index.js";
+
+let BUNDLED: FontBook | null = null;
+
+/** The bundled font book (parsed once). */
+export function bundledFonts(): FontBook {
+  BUNDLED ??= FontBook.withBundled();
+  return BUNDLED;
+}
+
+/** A font-loading failure: the pointer of the font file and a message. */
+export class FontError extends Error {
+  readonly pointer: string;
+  constructor(pointer: string, message: string) {
+    super(message);
+    this.name = "FontError";
+    this.pointer = pointer;
+  }
+}
+
+/**
+ * Load the font files referenced by the items into a font book (bundled fonts first).
+ * Returns null when no item references a font file. Font families named `default` that
+ * carry a file are renamed so they never shadow the bundled font for other labels.
+ * Throws {@link FontError}.
+ */
+export function userFonts(model: Model, env: Env): FontBook | null {
+  let book: FontBook | null = null;
+  const loaded: [file: string, family: string][] = [];
+  for (let i = 0; i < model.items.length; i++) {
+    const item = model.items[i]!;
+    const fonts: FontSel[] = [item.font];
+    const label = item.label;
+    if (label.kind === "text") fonts.push(label.spec.font);
+    else if (label.kind === "composite") {
+      for (const p of label.parts) if (p.kind === "text") fonts.push(p.spec.font);
+    }
+    for (const f of fonts) {
+      const file = f.file;
+      if (file === null) continue;
+      const known = loaded.find(([fl]) => fl === file);
+      if (known !== undefined) {
+        f.family = known[1];
+        continue;
+      }
+      const ptr = `/items/${i}/label/font/file`;
+      let bytes: Uint8Array;
+      if (file.startsWith("data:")) {
+        const b = dataUrlBytes(file);
+        if (b === null) throw new FontError(ptr, "invalid data URL");
+        bytes = b;
+      } else {
+        try {
+          bytes = envReadFile(env, file);
+        } catch (e) {
+          throw new FontError(ptr, e instanceof Error ? e.message : String(e));
+        }
+      }
+      const family = asciiEqIgnoreCase(f.family, "default") ? `user-font-${loaded.length}` : f.family;
+      book ??= FontBook.withBundled();
+      try {
+        book.register(family, f.weight, f.italic, bytes);
+      } catch (e) {
+        throw new FontError(ptr, e instanceof Error ? e.message : String(e));
+      }
+      f.family = family;
+      loaded.push([file, family]);
+    }
+  }
+  return book;
+}
+
+function asciiEqIgnoreCase(a: string, b: string): boolean {
+  const lower = (s: string): string => s.replace(/[A-Z]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 32));
+  return a.length === b.length && lower(a) === lower(b);
+}
+
+/** Text measurement with the host callback first, then the font book. */
+export class Measurer {
+  constructor(
+    readonly fonts: FontBook,
+    readonly env: Env,
+    /** "auto" | "simple" | "full" (full shaping is not available in TypeScript). */
+    readonly shaping: string,
+  ) {}
+
+  width(font: FontSel, scale: number, text: string): number {
+    const spec = font.spec(scale);
+    if (this.env.measure) {
+      const m = this.env.measure(text, spec);
+      if (m !== null && m !== undefined) return m.width;
+    }
+    const f = this.fonts.font(this.fonts.resolve(font.family, font.weight, font.italic));
+    return f.width(text, spec.size);
+  }
+
+  /** `[ascent, descent]` in px, both positive. */
+  vmetrics(font: FontSel, scale: number): [number, number] {
+    const spec = font.spec(scale);
+    if (this.env.measure) {
+      const m = this.env.measure("", spec);
+      if (m !== null && m !== undefined) return [m.ascent, m.descent];
+    }
+    const f = this.fonts.font(this.fonts.resolve(font.family, font.weight, font.italic));
+    const upm = f.unitsPerEm;
+    return [(f.ascender * spec.size) / upm, (-f.descender * spec.size) / upm];
+  }
+}
+
+/** Resolved text of a variant. */
+export interface TextLayout {
+  lines: string[];
+  widths: number[];
+  /** Baseline of each line relative to the box top. */
+  baselines: number[];
+  xOffset: number;
+  fontSize: number;
+  scale: number;
+  /** "original", "alternative:N", "truncated", "group" */
+  used: string;
+  truncated: boolean;
+}
+
+/** Rust's derived `PartialEq` of `TextLayout`. */
+export function textLayoutEq(a: TextLayout, b: TextLayout): boolean {
+  return (
+    arrEq(a.lines, b.lines) &&
+    arrEq(a.widths, b.widths) &&
+    arrEq(a.baselines, b.baselines) &&
+    a.xOffset === b.xOffset &&
+    a.fontSize === b.fontSize &&
+    a.scale === b.scale &&
+    a.used === b.used &&
+    a.truncated === b.truncated
+  );
+}
+
+function arrEq<T>(a: readonly T[], b: readonly T[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+
+export const PartKind = { Text: 0, Icon: 1, Box: 2 } as const;
+export type PartKind = (typeof PartKind)[keyof typeof PartKind];
+
+const PART_NAMES = ["text", "icon", "box"] as const;
+
+/** `PartKind::name`. */
+export function partKindName(k: PartKind): string {
+  return PART_NAMES[k];
+}
+
+/** A part of a composite label, relative to the label box's top-left corner. */
+export interface PartLayout {
+  kind: PartKind;
+  rect: Rect;
+  text: TextLayout | null;
+}
+
+/** One concrete label shape (spec §5.4). */
+export class Variant {
+  constructor(
+    /** Box size including padding. */
+    public w: number,
+    public h: number,
+    /** Degradation level: 0 = normal, k = created by ladder step k-1. */
+    public level: number,
+    /** Shape penalty (multiplied by `weights.shape`). */
+    public penalty: number,
+    public text: TextLayout | null,
+    public parts: PartLayout[],
+    public shape: LabelShape,
+    /** Degradation steps this variant embodies (for `degrade_steps`). */
+    public steps: string[],
+    public scale: number,
+  ) {}
+
+  lines(): number {
+    return this.text !== null ? this.text.lines.length : 1;
+  }
+}
+
+const RECT_SHAPE: LabelShape = { kind: "rect" };
+
+/** Build a text variant from lines. */
+function textVariant(
+  m: Measurer,
+  spec: TextSpec,
+  pad: number,
+  scale: number,
+  lines: string[],
+  used: string,
+  truncated: boolean,
+): Variant {
+  const [asc, desc] = m.vmetrics(spec.font, scale);
+  const size = spec.font.size * scale;
+  const pitch = spec.font.lineHeight * size;
+  const widths = lines.map((l) => m.width(spec.font, scale, l));
+  let wmax = 0;
+  for (const w of widths) wmax = maxf(wmax, w);
+  const n = lines.length > 1 ? lines.length : 1;
+  const contentH = asc + desc + (n - 1) * pitch;
+  const p = pad * scale;
+  const baselines: number[] = [];
+  for (let i = 0; i < n; i++) baselines.push(p + asc + i * pitch);
+  return new Variant(
+    wmax + 2 * p,
+    contentH + 2 * p,
+    0,
+    0,
+    { lines, widths, baselines, xOffset: p, fontSize: size, scale, used, truncated },
+    [],
+    RECT_SHAPE,
+    [],
+    scale,
+  );
+}
+
+function toWrapOpts(spec: TextSpec, scale: number): WrapOptions | null {
+  const w = spec.wrap;
+  if (w === null) return null;
+  return {
+    maxWidth: w.maxWidth !== null ? w.maxWidth * scale : null,
+    maxLines: w.maxLines,
+    balance: w.balance,
+    truncate: spec.truncate,
+  };
+}
+
+/** Normal-level variants of one text (original or alternative). */
+function textVariants(m: Measurer, spec: TextSpec, text: string, pad: number, scale: number, used: string): Variant[] {
+  if (spec.explicit !== null) {
+    const [w, h, lines] = spec.explicit;
+    const p = pad * scale;
+    const nl = lines.length > 1 ? lines.length : 1;
+    const lineH = (h * scale) / nl;
+    const baselines: number[] = [];
+    for (let i = 0; i < nl; i++) baselines.push(p + lineH * (i + 0.8));
+    return [
+      new Variant(
+        w * scale + 2 * p,
+        h * scale + 2 * p,
+        0,
+        0,
+        {
+          lines: lines.slice(),
+          widths: new Array<number>(nl).fill(w * scale),
+          baselines,
+          xOffset: p,
+          fontSize: spec.font.size * scale,
+          scale,
+          used,
+          truncated: false,
+        },
+        [],
+        RECT_SHAPE,
+        [],
+        scale,
+      ),
+    ];
+  }
+  const measure = (s: string): number => m.width(spec.font, scale, s);
+  const opts = toWrapOpts(spec, scale);
+  if (opts === null) return [textVariant(m, spec, pad, scale, [text], used, false)];
+  return wrapVariants(text, opts, measure).map((tv) => {
+    const u = tv.truncated ? "truncated" : used;
+    const v = textVariant(m, spec, pad, scale, tv.lines, u, tv.truncated);
+    v.penalty += 0.25 * (v.lines() - 1) + (tv.truncated ? 1 : 0);
+    if (v.lines() > 1) v.steps.push("wrap");
+    if (tv.truncated) v.steps.push("truncate");
+    return v;
+  });
+}
+
+function sameLines(v: Variant, lines: readonly string[]): boolean {
+  return v.text !== null && arrEq(v.text.lines, lines);
+}
+
+/** Variants for the `wrap` ladder step. */
+function extraWrap(
+  m: Measurer,
+  spec: TextSpec,
+  text: string,
+  pad: number,
+  scale: number,
+  used: string,
+  wrapMaxLines: number,
+): Variant[] {
+  if (spec.explicit !== null) return [];
+  const measure = (s: string): number => m.width(spec.font, scale, s);
+  let normalMax: number;
+  const w = spec.wrap;
+  if (w !== null) {
+    // lines beyond the normal variants, up to max_lines
+    const opts = toWrapOpts(spec, scale)!;
+    const normal = wrapVariants(text, opts, measure);
+    let have = 1;
+    if (normal.length > 0) {
+      have = 0;
+      for (const v of normal) if (v.lines.length > have) have = v.lines.length;
+    }
+    const out: Variant[] = [];
+    for (let n = have + 1; n <= w.maxLines; n++) {
+      const lines = balancedWrap(text, n, opts.maxWidth, measure);
+      if (lines.length > have && !out.some((v) => sameLines(v, lines))) {
+        const v = textVariant(m, spec, pad, scale, lines, used, false);
+        v.penalty += 0.25 * (v.lines() - 1);
+        v.steps.push("wrap");
+        out.push(v);
+      }
+    }
+    return out;
+  } else normalMax = wrapMaxLines;
+  return extraWrapVariants(text, normalMax, measure).map((tv) => {
+    const v = textVariant(m, spec, pad, scale, tv.lines, used, tv.truncated);
+    v.penalty += 0.25 * (v.lines() - 1);
+    v.steps.push("wrap");
+    return v;
+  });
+}
+
+/** Truncated single-line variants for the `truncate` ladder step. */
+function truncated(m: Measurer, spec: TextSpec, text: string, pad: number, scale: number): Variant[] {
+  if (spec.explicit !== null) return [];
+  const measure = (s: string): number => m.width(spec.font, scale, s);
+  const full = measure(text);
+  const mw = spec.wrap !== null ? spec.wrap.maxWidth : null;
+  const target = mw !== null ? mw * scale : full * 0.6;
+  if (target >= full) return [];
+  const out: Variant[] = [];
+  const candidates = [[truncateEnd(text, target, measure)], truncateMiddle(text, target, 1, measure)];
+  for (const lines of candidates) {
+    if (!out.some((v) => sameLines(v, lines))) {
+      const v = textVariant(m, spec, pad, scale, lines, "truncated", true);
+      v.penalty += 1;
+      v.steps.push("truncate");
+      out.push(v);
+    }
+  }
+  return out;
+}
+
+function fixedVariant(kind: FixedKind, w: number, h: number, shape: LabelShape, pad: number, scale: number): Variant {
+  const p = pad * scale;
+  let s: LabelShape;
+  switch (shape.kind) {
+    case "polygon":
+      s = { kind: "polygon", pts: shape.pts.map((q) => q.mul(scale).add(new P(p, p))) };
+      break;
+    case "rounded":
+      s = { kind: "rounded", r: shape.r * scale };
+      break;
+    default:
+      s = shape;
+  }
+  // The collision shape is relative to the padded box: a circle icon becomes the
+  // circle inscribed in the box, a rounded box keeps its radius grown by the padding.
+  if (s.kind === "rounded") s = { kind: "rounded", r: s.r + p };
+  return new Variant(
+    w * scale + 2 * p,
+    h * scale + 2 * p,
+    0,
+    0,
+    null,
+    [{ kind: kind === FixedKind.Icon ? PartKind.Icon : PartKind.Box, rect: new Rect(p, p, p + w * scale, p + h * scale), text: null }],
+    s,
+    [],
+    scale,
+  );
+}
+
+function compositeVariant(
+  m: Measurer,
+  row: boolean,
+  gap: number,
+  align: string,
+  parts: readonly PartSpec[],
+  pad: number,
+  scale: number,
+): Variant {
+  // measure parts
+  const sizes: [number, number, [TextSpec, number] | null][] = [];
+  for (const part of parts) {
+    if (part.kind === "text") {
+      const t = part.spec;
+      const [asc, desc] = m.vmetrics(t.font, scale);
+      const w = m.width(t.font, scale, t.text);
+      sizes.push([w, asc + desc, [t, asc]]);
+    } else sizes.push([part.w * scale, part.h * scale, null]);
+  }
+  const g = gap * scale;
+  const p = pad * scale;
+  let main = 0;
+  let cross = 0;
+  for (let i = 0; i < sizes.length; i++) {
+    const [w, h] = sizes[i]!;
+    const a = row ? w : h;
+    const b = row ? h : w;
+    main += a + (i > 0 ? g : 0);
+    cross = maxf(cross, b);
+  }
+  const outParts: PartLayout[] = [];
+  let cursor = 0;
+  for (let i = 0; i < sizes.length; i++) {
+    const [w, h, t] = sizes[i]!;
+    const spec = parts[i]!;
+    if (i > 0) cursor += g;
+    const a = row ? w : h;
+    const b = row ? h : w;
+    const off = align === "start" ? 0 : align === "end" ? cross - b : (cross - b) * 0.5;
+    const x = row ? p + cursor : p + off;
+    const y = row ? p + off : p + cursor;
+    const rect = new Rect(x, y, x + w, y + h);
+    const text: TextLayout | null =
+      t !== null
+        ? {
+            lines: [t[0].text],
+            widths: [w],
+            baselines: [y + t[1]],
+            xOffset: x,
+            fontSize: t[0].font.size * scale,
+            scale,
+            used: "original",
+            truncated: false,
+          }
+        : null;
+    const kind = spec.kind === "text" ? PartKind.Text : spec.fixed === FixedKind.Icon ? PartKind.Icon : PartKind.Box;
+    outParts.push({ kind, rect, text });
+    cursor += a;
+  }
+  const w = row ? main : cross;
+  const h = row ? cross : main;
+  return new Variant(w + 2 * p, h + 2 * p, 0, 0, null, outParts, RECT_SHAPE, [], scale);
+}
+
+/** Normal (level-0) variants of an item. */
+export function baseVariants(m: Measurer, item: Item): Variant[] {
+  return variantsAtScale(m, item, 1, false);
+}
+
+function variantsAtScale(m: Measurer, item: Item, scale: number, withAlternatives: boolean): Variant[] {
+  const pad = item.len.padding;
+  const label = item.label;
+  switch (label.kind) {
+    case "text": {
+      const spec = label.spec;
+      const v = textVariants(m, spec, spec.text, pad, scale, "original");
+      if (withAlternatives) {
+        spec.alternatives.forEach((alt, k) => {
+          for (const a of textVariants(m, spec, alt, pad, scale, `alternative:${k}`)) {
+            a.penalty += 0.5 * (k + 1);
+            a.steps.unshift("alternatives");
+            v.push(a);
+          }
+        });
+      }
+      return v;
+    }
+    case "fixed":
+      return [fixedVariant(label.fixed, label.w, label.h, label.shape, pad, scale)];
+    case "composite":
+      return [compositeVariant(m, label.row, label.gap, label.align, label.parts, pad, scale)];
+  }
+}
+
+/** Variants added by one ladder step, given the variants that exist so far. */
+export function ladderVariants(
+  m: Measurer,
+  item: Item,
+  step: Step,
+  existing: readonly Variant[],
+  minScale: number,
+  wrapMaxLines: number,
+): Variant[] {
+  const pad = item.len.padding;
+  const dedup = (out: Variant[]): Variant[] => {
+    const res: Variant[] = [];
+    const isDup = (e: Variant, v: Variant): boolean =>
+      e.text !== null && v.text !== null && textLayoutEq(e.text, v.text) && e.w === v.w && e.h === v.h;
+    for (const v of out) {
+      if (!existing.some((e) => isDup(e, v)) && !res.some((e) => isDup(e, v))) res.push(v);
+    }
+    return res;
+  };
+  const label = item.label;
+  switch (step.kind) {
+    case "alternatives": {
+      if (label.kind !== "text") return [];
+      const spec = label.spec;
+      const out: Variant[] = [];
+      spec.alternatives.forEach((alt, k) => {
+        for (const a of textVariants(m, spec, alt, pad, 1, `alternative:${k}`)) {
+          a.penalty += 0.5 * (k + 1);
+          a.steps.unshift("alternatives");
+          out.push(a);
+        }
+      });
+      return dedup(out);
+    }
+    case "wrap": {
+      if (label.kind !== "text") return [];
+      const spec = label.spec;
+      const out = extraWrap(m, spec, spec.text, pad, 1, "original", wrapMaxLines);
+      spec.alternatives.forEach((alt, k) => {
+        const used = `alternative:${k}`;
+        if (existing.some((e) => e.text !== null && e.text.used === used)) {
+          for (const a of extraWrap(m, spec, alt, pad, 1, used, wrapMaxLines)) {
+            a.penalty += 0.5 * (k + 1);
+            a.steps.unshift("alternatives");
+            out.push(a);
+          }
+        }
+      });
+      return dedup(out);
+    }
+    case "truncate": {
+      if (label.kind !== "text") return [];
+      return dedup(truncated(m, label.spec, label.spec.text, pad, 1));
+    }
+    case "shrink": {
+      const f = step.f;
+      const out: Variant[] = [];
+      let s = f;
+      let k = 0;
+      while (s >= minScale - 1e-12 && s < 1 && k < 8) {
+        for (const e of existing) {
+          if (e.scale !== 1) continue;
+          const v = rescale(m, item, e, s);
+          if (v !== null) {
+            v.penalty = e.penalty + 2 * (1 - s);
+            v.steps = e.steps.slice();
+            v.steps.push(`shrink:${trimFloat(s)}`);
+            out.push(v);
+          }
+        }
+        s *= f;
+        k += 1;
+      }
+      return dedup(out);
+    }
+    default:
+      return [];
+  }
+}
+
+function trimFloat(x: number): string {
+  return fmtFixed(x, 4).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+/** The same variant at another font scale. */
+function rescale(m: Measurer, item: Item, v: Variant, s: number): Variant | null {
+  const pad = item.len.padding;
+  const label = item.label;
+  switch (label.kind) {
+    case "text": {
+      const t = v.text;
+      if (t === null) return null;
+      const spec = label.spec;
+      if (spec.explicit !== null) return textVariants(m, spec, spec.text, pad, s, t.used)[0] ?? null;
+      return textVariant(m, spec, pad, s, t.lines.slice(), t.used, t.truncated);
+    }
+    case "fixed":
+      return fixedVariant(label.fixed, label.w, label.h, label.shape, pad, s);
+    case "composite":
+      return compositeVariant(m, label.row, label.gap, label.align, label.parts, pad, s);
+  }
+}
+
+/** Label area in em² of the first variant (priority term `label_size`). */
+export function labelSizeEm2(item: Item, variants: readonly Variant[]): number {
+  const em = item.em();
+  const v = variants[0];
+  return v !== undefined ? (v.w * v.h) / (em * em) : 0;
+}

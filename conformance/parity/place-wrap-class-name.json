@@ -1,0 +1,105 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 400,
+      "height": 200
+    },
+    "items": [
+      {
+        "id": "c",
+        "anchor": {
+          "type": "point",
+          "x": 200,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "org.example.package.ClassName",
+          "wrap": {
+            "max_width": 90,
+            "max_lines": 3
+          }
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "c",
+        "placed": true,
+        "box": {
+          "x": 161.21,
+          "y": 47.256,
+          "w": 77.57999999999998,
+          "h": 48.744
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "org.example.",
+            "package.",
+            "ClassName"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628,
+            29.028,
+            43.428
+          ],
+          "line_widths": [
+            73.98,
+            50.376,
+            62.748
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.3,
+        "degrade_steps": [
+          "wrap"
+        ],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 1,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 40,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.3,
+      "degraded": {
+        "wrapped": 1
+      },
+      "grid": {
+        "cell": 3.0,
+        "cols": 134,
+        "rows": 67,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

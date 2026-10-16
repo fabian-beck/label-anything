@@ -1,0 +1,362 @@
+{
+  "kind": "parity",
+  "problem_file": "../problems/bubbles.json",
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "c0",
+        "placed": true,
+        "box": {
+          "x": 182.078,
+          "y": 240.028,
+          "w": 35.843999999999994,
+          "h": 19.94399999999999
+        },
+        "anchor_side": "internal",
+        "model": "internal",
+        "text": {
+          "lines": [
+            "China"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            32.244
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.0,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 0,
+          "terms": {
+            "pop": 1.0
+          }
+        }
+      },
+      {
+        "id": "c1",
+        "placed": true,
+        "box": {
+          "x": 403.854,
+          "y": 210.028,
+          "w": 32.29200000000003,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "internal",
+        "model": "internal",
+        "text": {
+          "lines": [
+            "India"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            28.692
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.0,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.8571428571428571,
+          "rank": 1,
+          "terms": {
+            "pop": 0.8571428571428571
+          }
+        }
+      },
+      {
+        "id": "c2",
+        "placed": true,
+        "box": {
+          "x": 546.686,
+          "y": 330.05600000000004,
+          "w": 26.62799999999993,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "USA"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            23.028
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.7142857142857143,
+          "rank": 2,
+          "terms": {
+            "pop": 0.7142857142857143
+          }
+        }
+      },
+      {
+        "id": "c3",
+        "placed": true,
+        "box": {
+          "x": 570.258,
+          "y": 78.05599999999998,
+          "w": 59.483999999999924,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Indonesia"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            55.884
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.5714285714285714,
+          "rank": 3,
+          "terms": {
+            "pop": 0.5714285714285714
+          }
+        }
+      },
+      {
+        "id": "c4",
+        "placed": true,
+        "box": {
+          "x": 102.66,
+          "y": 386.05600000000004,
+          "w": 34.68000000000001,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Brazil"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            31.08
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.42857142857142855,
+          "rank": 4,
+          "terms": {
+            "pop": 0.42857142857142855
+          }
+        }
+      },
+      {
+        "id": "c5",
+        "placed": true,
+        "box": {
+          "x": 307.59,
+          "y": 402.05600000000004,
+          "w": 44.82000000000005,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Iceland"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            41.22
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 7,
+          "terms": {
+            "pop": 0.0
+          }
+        }
+      },
+      {
+        "id": "c6",
+        "placed": true,
+        "box": {
+          "x": 632.312,
+          "y": 424.05600000000004,
+          "w": 35.375999999999976,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Malta"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            31.776
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.14285714285714285,
+          "rank": 6,
+          "terms": {
+            "pop": 0.14285714285714285
+          }
+        }
+      },
+      {
+        "id": "c7",
+        "placed": true,
+        "box": {
+          "x": 74.22,
+          "y": 59.05599999999999,
+          "w": 31.560000000000002,
+          "h": 19.94400000000001
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Chile"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            27.96
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.2857142857142857,
+          "rank": 5,
+          "terms": {
+            "pop": 0.2857142857142857
+          }
+        }
+      }
+    ],
+    "stats": {
+      "placed": 8,
+      "total": 8,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 3200,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 322,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.3,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 234,
+        "rows": 167,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}
