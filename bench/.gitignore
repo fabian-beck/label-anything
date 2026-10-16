@@ -1,7 +1,9 @@
 # Local virtual environment (see bench/README.md)
 .venv/
 # Fetched third-party data and generated problems are reproducible; never commit them.
-# (No trailing slash: a worktree may symlink them to a shared checkout.)
+data/
+out/
+# (also when a worktree symlinks them to a shared checkout)
 /data
 /out
 .pytest_cache/
