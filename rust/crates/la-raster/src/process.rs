@@ -136,7 +136,7 @@ impl Setup {
         &self,
         img: &Rgba,
         k: usize,
-        mut per_pixel: impl FnMut(&mut Resampler<'_>, usize, usize, &[u8]),
+        mut per_pixel: impl FnMut(&mut Resampler<'_>, usize, usize, &[u8; 4]),
     ) -> Vec<Vec<u8>> {
         let mut res = self.resampler(k);
         let stride = self.w * 4;
@@ -144,9 +144,9 @@ impl Setup {
             if !res.begin_row(py) {
                 continue;
             }
-            let row = &img.data[py * stride..(py + 1) * stride];
-            for px in self.cols.lo..self.cols.hi {
-                per_pixel(&mut res, px, py, &row[px * 4..px * 4 + 4]);
+            let row = &img.data[py * stride + self.cols.lo * 4..py * stride + self.cols.hi * 4];
+            for (i, p) in row.as_chunks::<4>().0.iter().enumerate() {
+                per_pixel(&mut res, self.cols.lo + i, py, p);
             }
             res.end_row(py);
         }
@@ -185,14 +185,14 @@ impl ColorMemo {
     }
 }
 
-#[inline]
-fn pack(p: &[u8]) -> u32 {
-    u32::from_le_bytes([p[0], p[1], p[2], p[3]])
+#[inline(always)]
+fn pack(p: &[u8; 4]) -> u32 {
+    u32::from_le_bytes(*p)
 }
 
 /// Composites a pixel over `bg` (8-bit result, see [`Mode`]).
-#[inline]
-fn over(p: &[u8], bg: [u8; 3]) -> [u8; 3] {
+#[inline(always)]
+fn over(p: &[u8; 4], bg: [u8; 3]) -> [u8; 3] {
     let a = p[3];
     if a == 255 {
         [p[0], p[1], p[2]]
@@ -206,8 +206,8 @@ fn over(p: &[u8], bg: [u8; 3]) -> [u8; 3] {
 }
 
 /// `2126·R + 7152·G + 722·B` of the pixel composited over white (`0..=2 550 000`).
-#[inline]
-fn luma_numerator(p: &[u8]) -> u32 {
+#[inline(always)]
+fn luma_numerator(p: &[u8; 4]) -> u32 {
     let [r, g, b] = over(p, [255, 255, 255]);
     2126 * u32::from(r) + 7152 * u32::from(g) + 722 * u32::from(b)
 }
@@ -277,9 +277,9 @@ pub fn process(
             let grids = setup.run(img, 1, |res, px, _, p| {
                 let n = luma_numerator(p);
                 let numerator = if invert { n } else { LUMA_DENOM - n };
-                let v = f64::from(numerator) / f64::from(LUMA_DENOM);
-                if v != 0.0 {
-                    res.add(0, px, v);
+                // v = 0 exactly when the numerator is 0 (zero values add nothing).
+                if numerator != 0 {
+                    res.add(0, px, f64::from(numerator) / f64::from(LUMA_DENOM));
                 }
             });
             single(take_first(grids))
@@ -366,7 +366,7 @@ fn classmap(
     }
     let bg_lab = srgb_to_oklab(bg);
     let pal_lab: Vec<[f64; 3]> = palette.iter().map(|(rgb, _)| srgb_to_oklab(*rgb)).collect();
-    let label_of = |p: &[u8]| -> u32 {
+    let label_of = |p: &[u8; 4]| -> u32 {
         let lab = srgb_to_oklab(over(p, bg));
         if oklab_distance(&lab, &bg_lab) <= ink_threshold {
             return NONE;
@@ -418,7 +418,13 @@ fn classmap(
 /// divisions and the averaging are rounded.
 fn saliency(setup: &Setup, img: &Rgba) -> Vec<u8> {
     let (w, h) = (setup.w, setup.h);
-    let n: Vec<u32> = img.data.chunks_exact(4).map(luma_numerator).collect();
+    let n: Vec<u32> = img
+        .data
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .map(luma_numerator)
+        .collect();
     // Horizontal 5-sums, clamped to the image (≤ 5 · 2 550 000).
     let mut hs = vec![0u32; w * h];
     for y in 0..h {

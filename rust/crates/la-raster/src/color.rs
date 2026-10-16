@@ -58,13 +58,41 @@ const CBRT_C3: f64 = 0.5921815819;
 /// 5. Result `y · s` (exact).
 ///
 /// Within 1 ulp of the correctly rounded cube root (tested).
+#[inline(always)]
 pub(crate) fn cbrt(x: f64) -> f64 {
     if x == 0.0 || !x.is_finite() {
         return x;
     }
+    let (m, s) = reduce_cbrt(x.abs());
+    let mut y = ((CBRT_C3 * m + CBRT_C2) * m + CBRT_C1) * m + CBRT_C0;
+    y -= (y * y * y - m) / (3.0 * y * y);
+    y -= (y * y * y - m) / (3.0 * y * y);
+    y -= (y * y * y - m) / (3.0 * y * y);
+    let r = y * s;
     if x < 0.0 {
-        return -cbrt(-x);
+        -r
+    } else {
+        r
     }
+}
+
+/// The exact range reduction of [`cbrt`] for finite `x > 0`: the unique `m = x · 8^j ∈
+/// [1/8, 1)` and `s = 2^−j`. Normal inputs read `j` off the exponent (no data-dependent
+/// loop); this is bit-identical to scaling by 8 or 1/8 step by step (all products are
+/// exact), which [`reduce_cbrt_stepwise`] does and the TypeScript code does.
+#[inline(always)]
+fn reduce_cbrt(x: f64) -> (f64, f64) {
+    let e = ((x.to_bits() >> 52) & 0x7ff) as i32 - 1023; // x ∈ [2^e, 2^(e+1)) if normal
+    if !(-1000..=1000).contains(&e) {
+        return reduce_cbrt_stepwise(x);
+    }
+    let j = (-e - 1).div_euclid(3);
+    let pow2 = |k: i32| f64::from_bits(((k + 1023) as u64) << 52);
+    (x * pow2(3 * j), pow2(-j))
+}
+
+/// Step-by-step version of [`reduce_cbrt`] (used for subnormal and huge inputs).
+fn reduce_cbrt_stepwise(x: f64) -> (f64, f64) {
     let mut m = x;
     let mut s = 1.0;
     while m < 0.125 {
@@ -75,11 +103,7 @@ pub(crate) fn cbrt(x: f64) -> f64 {
         m *= 0.125;
         s *= 2.0;
     }
-    let mut y = ((CBRT_C3 * m + CBRT_C2) * m + CBRT_C1) * m + CBRT_C0;
-    y -= (y * y * y - m) / (3.0 * y * y);
-    y -= (y * y * y - m) / (3.0 * y * y);
-    y -= (y * y * y - m) / (3.0 * y * y);
-    y * s
+    (m, s)
 }
 
 /// Converts an 8-bit sRGB colour to OKLab `[L, a, b]` (Björn Ottosson's published
@@ -94,6 +118,7 @@ pub(crate) fn cbrt(x: f64) -> f64 {
 /// * `L = 0.2104542553·l' + 0.7936177850·m' − 0.0040720468·s'`,
 ///   `a = 1.9779984951·l' − 2.4285922050·m' + 0.4505937099·s'`,
 ///   `b = 0.0259040371·l' + 0.7827717662·m' − 0.8086757660·s'`.
+#[inline]
 pub fn srgb_to_oklab(rgb: [u8; 3]) -> [f64; 3] {
     let r = SRGB_TO_LINEAR[rgb[0] as usize];
     let g = SRGB_TO_LINEAR[rgb[1] as usize];
@@ -219,6 +244,40 @@ mod tests {
         for x in [f64::MIN_POSITIVE, 5e-324, 1e-300, 1e300, f64::MAX] {
             assert!(ulps(cbrt(x), x.cbrt()) <= 2.0, "{x}");
         }
+    }
+
+    #[test]
+    fn range_reduction_matches_stepwise() {
+        let mut state = 0x9E37_79B9_7F4A_7C15u64;
+        let check = |x: f64| {
+            let (m, s) = reduce_cbrt(x);
+            let (m2, s2) = reduce_cbrt_stepwise(x);
+            assert_eq!(
+                (m.to_bits(), s.to_bits()),
+                (m2.to_bits(), s2.to_bits()),
+                "{x:e}"
+            );
+            assert!((0.125..1.0).contains(&m), "{x:e}");
+        };
+        for _ in 0..1_000_000 {
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            // Random positive finite doubles over the whole exponent range.
+            let bits = (state >> 1) & 0x7FEF_FFFF_FFFF_FFFF;
+            check(f64::from_bits(bits.max(1)));
+        }
+        for k in -1074..1024 {
+            let p = 2f64.powi(k);
+            for x in [p, p * 1.5, p * (2.0 - f64::EPSILON)] {
+                if x.is_finite() && x > 0.0 {
+                    check(x);
+                }
+            }
+        }
+        check(f64::MAX);
+        check(f64::MIN_POSITIVE);
+        check(5e-324);
     }
 
     #[test]

@@ -93,6 +93,52 @@ pub(crate) struct Axis {
     pub(crate) hi: usize,
     /// Largest `last cell − first cell + 1` of any pixel.
     pub(crate) span: usize,
+    /// The same weights in two-cell form, if every pixel overlaps at most two adjacent
+    /// cells (pixels no wider than a cell): pixel `i` adds `w0[i]` to cell `c0[i]` and
+    /// `w1[i]` to cell `c0[i] + 1` (0 when there is no second cell; adding `+0.0` to a
+    /// non-negative sum leaves it unchanged, so this is identical to the general form).
+    two: Option<TwoCells>,
+}
+
+#[derive(Debug)]
+struct TwoCells {
+    c0: Vec<u32>,
+    w0: Vec<f64>,
+    w1: Vec<f64>,
+}
+
+impl TwoCells {
+    fn from_pairs(offs: &[usize], cells: &[u32], weights: &[f64]) -> Option<Self> {
+        let n = offs.len() - 1;
+        let mut c0 = Vec::with_capacity(n);
+        let mut w0 = Vec::with_capacity(n);
+        let mut w1 = Vec::with_capacity(n);
+        let mut prev = 0u32;
+        for i in 0..n {
+            let (a, b) = (offs[i], offs[i + 1]);
+            match b - a {
+                0 => {
+                    c0.push(prev);
+                    w0.push(0.0);
+                    w1.push(0.0);
+                }
+                1 => {
+                    prev = cells[a];
+                    c0.push(prev);
+                    w0.push(weights[a]);
+                    w1.push(0.0);
+                }
+                2 if cells[a + 1] == cells[a] + 1 => {
+                    prev = cells[a];
+                    c0.push(prev);
+                    w0.push(weights[a]);
+                    w1.push(weights[a + 1]);
+                }
+                _ => return None,
+            }
+        }
+        Some(Self { c0, w0, w1 })
+    }
 }
 
 impl Axis {
@@ -156,6 +202,7 @@ impl Axis {
         if hi == 0 {
             lo = 0;
         }
+        let two = TwoCells::from_pairs(&offs, &cells, &weights);
         Self {
             offs,
             cells,
@@ -163,6 +210,7 @@ impl Axis {
             lo,
             hi,
             span,
+            two,
         }
     }
 
@@ -174,14 +222,15 @@ impl Axis {
 }
 
 /// Quantizes a coverage fraction: `q = floor(cov·255 + 1/2)` clamped to 255; a positive
-/// coverage never quantizes to 0 (it becomes 1).
+/// coverage never quantizes to 0 (it becomes 1). (`t as u8` truncates, which equals
+/// `floor` for `1 ≤ t < 255`.)
 #[inline]
 pub(crate) fn quantize(cov: f64) -> u8 {
-    let q = (cov * 255.0 + 0.5).floor();
-    if q >= 255.0 {
+    let t = cov * 255.0 + 0.5;
+    if t >= 255.0 {
         255
-    } else if q >= 1.0 {
-        q as u8
+    } else if t >= 1.0 {
+        t as u8
     } else if cov > 0.0 {
         1
     } else {
@@ -190,6 +239,7 @@ pub(crate) fn quantize(cov: f64) -> u8 {
 }
 
 const NO_ROW: usize = usize::MAX;
+const NO_PX: usize = usize::MAX;
 
 /// Streams raster rows (ascending) into `k` coverage grids with exactly the summation order
 /// of the module documentation. Only the grid rows touched by the current raster row are
@@ -204,9 +254,11 @@ pub(crate) struct Resampler<'a> {
     /// `cap × k × gcols` accumulators; slot `gy % cap` holds grid row `slot_row[slot]`.
     acc: Vec<f64>,
     slot_row: Vec<usize>,
-    /// `k × gcols` horizontal sums of the current raster row, and their dirty ranges.
+    /// `k` rows of `gcols + 1` horizontal sums of the current raster row (one padding cell
+    /// for the two-cell form), and per class the first and last pixel added to them.
     h: Vec<f64>,
-    dirty: Vec<(usize, usize)>,
+    first_px: Vec<usize>,
+    last_px: Vec<usize>,
     out: Vec<Vec<u8>>,
     /// Grid rows below this one are final.
     next_final: usize,
@@ -230,8 +282,9 @@ impl<'a> Resampler<'a> {
             cap,
             acc: vec![0.0; cap * k * gcols],
             slot_row: vec![NO_ROW; cap],
-            h: vec![0.0; k * gcols],
-            dirty: vec![(usize::MAX, 0); k],
+            h: vec![0.0; k * (gcols + 1)],
+            first_px: vec![NO_PX; k],
+            last_px: vec![0; k],
             out: vec![vec![0; gcols * grows]; k],
             next_final: 0,
         }
@@ -253,49 +306,81 @@ impl<'a> Resampler<'a> {
     }
 
     /// Adds value `v` of pixel `px` to class `class` (`h += v · w`).
-    #[inline]
+    #[inline(always)]
     pub(crate) fn add(&mut self, class: usize, px: usize, v: f64) {
-        let (a, b) = self.cols.range(px);
-        if a == b {
-            return;
+        let stride = self.gcols + 1;
+        let h = &mut self.h[class * stride..(class + 1) * stride];
+        if let Some(two) = &self.cols.two {
+            let c = two.c0[px] as usize;
+            h[c] += v * two.w0[px];
+            h[c + 1] += v * two.w1[px];
+        } else {
+            let (a, b) = self.cols.range(px);
+            if a == b {
+                return;
+            }
+            for (&cell, &w) in self.cols.cells[a..b].iter().zip(&self.cols.weights[a..b]) {
+                h[cell as usize] += v * w;
+            }
         }
-        let base = class * self.gcols;
-        for t in a..b {
-            self.h[base + self.cols.cells[t] as usize] += v * self.cols.weights[t];
-        }
-        self.mark_dirty(class, a, b);
+        self.note(class, px);
     }
 
     /// Adds value 1 of pixel `px` to class `class` (`h += w`; identical to `add(.., 1.0)`).
-    #[inline]
+    #[inline(always)]
     pub(crate) fn add_one(&mut self, class: usize, px: usize) {
-        let (a, b) = self.cols.range(px);
-        if a == b {
-            return;
+        let stride = self.gcols + 1;
+        let h = &mut self.h[class * stride..(class + 1) * stride];
+        if let Some(two) = &self.cols.two {
+            let c = two.c0[px] as usize;
+            h[c] += two.w0[px];
+            h[c + 1] += two.w1[px];
+        } else {
+            let (a, b) = self.cols.range(px);
+            if a == b {
+                return;
+            }
+            for (&cell, &w) in self.cols.cells[a..b].iter().zip(&self.cols.weights[a..b]) {
+                h[cell as usize] += w;
+            }
         }
-        let base = class * self.gcols;
-        for t in a..b {
-            self.h[base + self.cols.cells[t] as usize] += self.cols.weights[t];
-        }
-        self.mark_dirty(class, a, b);
+        self.note(class, px);
     }
 
-    #[inline]
-    fn mark_dirty(&mut self, class: usize, a: usize, b: usize) {
-        let d = &mut self.dirty[class];
-        d.0 = d.0.min(self.cols.cells[a] as usize);
-        d.1 = d.1.max(self.cols.cells[b - 1] as usize + 1);
+    /// Records that pixel `px` (ascending within a row) touched class `class`.
+    #[inline(always)]
+    fn note(&mut self, class: usize, px: usize) {
+        if self.first_px[class] == NO_PX {
+            self.first_px[class] = px;
+        }
+        self.last_px[class] = px;
+    }
+
+    /// The cells `lo..hi` of class `class` that the current row may have touched.
+    fn dirty(&self, class: usize) -> (usize, usize) {
+        let (first, last) = (self.first_px[class], self.last_px[class]);
+        if let Some(two) = &self.cols.two {
+            let lo = two.c0[first] as usize;
+            (lo, (two.c0[last] as usize + 2).min(self.gcols))
+        } else {
+            let lo = self.cols.cells[self.cols.offs[first]] as usize;
+            (
+                lo,
+                self.cols.cells[self.cols.offs[last + 1] - 1] as usize + 1,
+            )
+        }
     }
 
     /// Ends raster row `py`: `cov[gy][gx] += wy · h[gx]` for its grid rows, then clears `h`.
     pub(crate) fn end_row(&mut self, py: usize) {
         let (a, b) = self.rows.range(py);
+        let stride = self.gcols + 1;
         for class in 0..self.k {
-            let (lo, hi) = self.dirty[class];
-            if lo >= hi {
+            if self.first_px[class] == NO_PX {
                 continue;
             }
-            let hrow = class * self.gcols;
+            let (lo, hi) = self.dirty(class);
+            let hrow = class * stride;
             for t in a..b {
                 let gy = self.rows.cells[t] as usize;
                 let wy = self.rows.weights[t];
@@ -314,8 +399,9 @@ impl<'a> Resampler<'a> {
                     *c += wy * v;
                 }
             }
-            self.h[hrow + lo..hrow + hi].fill(0.0);
-            self.dirty[class] = (usize::MAX, 0);
+            // Clear the touched cells, including the padding cell of the two-cell form.
+            self.h[hrow + lo..hrow + stride.min(hi + 1)].fill(0.0);
+            self.first_px[class] = NO_PX;
         }
     }
 
@@ -347,7 +433,7 @@ impl<'a> Resampler<'a> {
     }
 }
 
-/// Clamped sliding-window maximum of radius `r` over `line` into `res`.
+/// Clamped sliding-window maximum of radius `r` over `line` into `res` (O(n) for any `r`).
 fn window_max(line: &[u8], r: usize, res: &mut [u8], dq: &mut [usize]) {
     let n = line.len();
     let (mut head, mut tail, mut next) = (0usize, 0usize, 0usize);
@@ -370,15 +456,69 @@ fn window_max(line: &[u8], r: usize, res: &mut [u8], dq: &mut [usize]) {
     }
 }
 
+/// One clamped 3-wide maximum along every row, in place.
+fn max3_rows(grid: &mut [u8], cols: usize, tmp: &mut [u8]) {
+    if cols < 2 {
+        return;
+    }
+    for row in grid.chunks_exact_mut(cols) {
+        tmp.copy_from_slice(row);
+        row[0] = tmp[0].max(tmp[1]);
+        for x in 1..cols - 1 {
+            row[x] = tmp[x - 1].max(tmp[x]).max(tmp[x + 1]);
+        }
+        row[cols - 1] = tmp[cols - 2].max(tmp[cols - 1]);
+    }
+}
+
+/// One clamped 3-tall maximum along every column, in place, processed row by row.
+fn max3_cols(grid: &mut [u8], cols: usize, rows: usize, prev: &mut [u8], cur: &mut [u8]) {
+    if rows < 2 {
+        return;
+    }
+    prev.copy_from_slice(&grid[..cols]);
+    for y in 0..rows {
+        let start = y * cols;
+        cur.copy_from_slice(&grid[start..start + cols]);
+        let (head, tail) = grid.split_at_mut(start + cols);
+        let row = &mut head[start..];
+        if y + 1 < rows {
+            let next = &tail[..cols];
+            for x in 0..cols {
+                row[x] = prev[x].max(cur[x]).max(next[x]);
+            }
+        } else {
+            for x in 0..cols {
+                row[x] = prev[x].max(cur[x]);
+            }
+        }
+        prev.copy_from_slice(cur);
+    }
+}
+
+/// Radii up to this use repeated 3-tap passes; larger ones the O(cells) deque.
+const DILATE_PASSES_MAX: usize = 8;
+
 /// Applies a 3×3 maximum filter `times` times (cells outside the grid are ignored).
 ///
-/// Equivalent to one clamped `(2t+1)×(2t+1)` window maximum, computed separably in
-/// O(cells) regardless of `times`.
+/// Equivalent to one clamped `(2t+1)×(2t+1)` window maximum, computed separably (rows,
+/// then columns); maxima are exact, so every strategy gives the same result.
 pub(crate) fn dilate(grid: &mut [u8], cols: usize, rows: usize, times: u32) {
     if times == 0 || cols == 0 || rows == 0 {
         return;
     }
     let r = (times as usize).min(cols.max(rows));
+    if r <= DILATE_PASSES_MAX {
+        let mut a = vec![0u8; cols];
+        let mut b = vec![0u8; cols];
+        for _ in 0..r {
+            max3_rows(grid, cols, &mut a);
+        }
+        for _ in 0..r {
+            max3_cols(grid, cols, rows, &mut a, &mut b);
+        }
+        return;
+    }
     let n = cols.max(rows);
     let mut line = vec![0u8; n];
     let mut res = vec![0u8; n];
@@ -455,7 +595,7 @@ mod tests {
                 }
             })
             .collect();
-        for times in 0..9 {
+        for times in [0, 1, 2, 3, 5, 8, 9, 12, 40] {
             let mut fast = grid.clone();
             dilate(&mut fast, cols, rows, times);
             let mut naive = grid.clone();

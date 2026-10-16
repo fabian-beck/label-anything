@@ -112,9 +112,11 @@ function lumaNumerator(d: Uint8Array | Uint8ClampedArray, o: number): number {
   return 2126 * composite(d[o]!, 255, a) + 7152 * composite(d[o + 1]!, 255, a) + 722 * composite(d[o + 2]!, 255, a);
 }
 
+/** All-zero coverage for invalid input: `cols × rows` cells, or none for an invalid grid. */
 function zeros(grid: GridSpec): Uint8Array {
+  const count = (n: number): boolean => Number.isInteger(n) && n >= 0;
   const n = grid.cols * grid.rows;
-  return new Uint8Array(Number.isSafeInteger(n) && n >= 0 ? n : 0);
+  return new Uint8Array(count(grid.cols) && count(grid.rows) && Number.isSafeInteger(n) ? n : 0);
 }
 
 /**
@@ -156,6 +158,15 @@ export function process(
   }
 }
 
+/**
+ * A view of the pixels as packed 32-bit keys (one load per pixel) when the data is 4-byte
+ * aligned, else `null`. Keys only memoize per-colour results, so their byte order does
+ * not matter; channel values are always read from the bytes.
+ */
+function keyView(d: Uint8Array | Uint8ClampedArray): Int32Array | null {
+  return (d.byteOffset & 3) === 0 ? new Int32Array(d.buffer, d.byteOffset, d.length >> 2) : null;
+}
+
 function ink(s: Setup, img: Rgba, bg: Rgb, threshold: number): Uint8Array {
   const bgLab = new Float64Array(3);
   oklabInto(bg[0], bg[1], bg[2], bgLab);
@@ -164,16 +175,17 @@ function ink(s: Setup, img: Rgba, bg: Rgb, threshold: number): Uint8Array {
   const { keys, vals } = memo;
   const res = new Resampler(s.cols, s.rows, s.gcols, s.grows, 1);
   const d = img.data;
-  const stride = s.w * 4;
+  const u32 = keyView(d);
   const pxLo = s.cols.lo;
   const pxHi = s.cols.hi;
   let lastKey = 0.5; // never equals an int32 key
   let lastInk = false;
   for (let py = s.rows.lo; py < s.rows.hi; py++) {
     if (!res.beginRow(py)) continue;
-    let o = py * stride + pxLo * 4;
-    for (let px = pxLo; px < pxHi; px++, o += 4) {
-      const key = d[o]! | (d[o + 1]! << 8) | (d[o + 2]! << 16) | (d[o + 3]! << 24);
+    let i = py * s.w + pxLo;
+    for (let px = pxLo; px < pxHi; px++, i++) {
+      const o = i * 4;
+      const key = u32 !== null ? u32[i]! : d[o]! | (d[o + 1]! << 8) | (d[o + 2]! << 16) | (d[o + 3]! << 24);
       if (key !== lastKey) {
         lastKey = key;
         const slot = ColorMemo.slot(key);
@@ -202,8 +214,8 @@ function alpha(s: Setup, img: Rgba, threshold: number): Uint8Array {
   const d = img.data;
   for (let py = s.rows.lo; py < s.rows.hi; py++) {
     if (!res.beginRow(py)) continue;
-    const row = py * s.w * 4;
-    for (let px = s.cols.lo; px < s.cols.hi; px++) if (table[d[row + px * 4 + 3]!] === 1) res.addOne(0, px);
+    let o = (py * s.w + s.cols.lo) * 4 + 3;
+    for (let px = s.cols.lo; px < s.cols.hi; px++, o += 4) if (table[d[o]!] === 1) res.addOne(0, px);
     res.endRow(py);
   }
   return res.finish()[0]!;
@@ -214,11 +226,11 @@ function cost(s: Setup, img: Rgba, invert: boolean): Uint8Array {
   const d = img.data;
   for (let py = s.rows.lo; py < s.rows.hi; py++) {
     if (!res.beginRow(py)) continue;
-    const row = py * s.w * 4;
-    for (let px = s.cols.lo; px < s.cols.hi; px++) {
-      const n = lumaNumerator(d, row + px * 4);
-      const v = (invert ? n : LUMA_DENOM - n) / LUMA_DENOM;
-      if (v !== 0) res.add(0, px, v);
+    let o = (py * s.w + s.cols.lo) * 4;
+    for (let px = s.cols.lo; px < s.cols.hi; px++, o += 4) {
+      const n = lumaNumerator(d, o);
+      const numerator = invert ? n : LUMA_DENOM - n;
+      if (numerator !== 0) res.add(0, px, numerator / LUMA_DENOM);
     }
     res.endRow(py);
   }
@@ -269,13 +281,15 @@ function classmap(
   const { keys, vals } = memo;
   const res = new Resampler(s.cols, s.rows, s.gcols, s.grows, classes.length);
   const d = img.data;
+  const u32 = keyView(d);
   let lastKey = 0.5;
   let lastLabel = NONE;
   for (let py = s.rows.lo; py < s.rows.hi; py++) {
     if (!res.beginRow(py)) continue;
-    let o = py * s.w * 4 + s.cols.lo * 4;
-    for (let px = s.cols.lo; px < s.cols.hi; px++, o += 4) {
-      const key = d[o]! | (d[o + 1]! << 8) | (d[o + 2]! << 16) | (d[o + 3]! << 24);
+    let i = py * s.w + s.cols.lo;
+    for (let px = s.cols.lo; px < s.cols.hi; px++, i++) {
+      const o = i * 4;
+      const key = u32 !== null ? u32[i]! : d[o]! | (d[o + 1]! << 8) | (d[o + 2]! << 16) | (d[o + 3]! << 24);
       if (key !== lastKey) {
         lastKey = key;
         const slot = ColorMemo.slot(key);
