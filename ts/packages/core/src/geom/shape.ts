@@ -27,6 +27,7 @@ import {
   distSegRectXY,
   orientXY,
   rectDistPointXY,
+  sampleRangeInRect,
   segCrossProperXY,
   segSegDistXY,
 } from "./index.js";
@@ -113,6 +114,19 @@ export abstract class ShapeBase {
   bbox(): Rect {
     const s = this as unknown as Shape;
     return s.kind === "polygon" ? s.poly.bbox : s.bb;
+  }
+
+  /**
+   * A rectangle containing every point that `contains` accepts: the bounding box, except
+   * for degenerate ellipses, which `signedDistance` treats as discs.
+   */
+  containsBound(): Rect {
+    const s = this as unknown as Shape;
+    if (s.kind === "ellipse" && (s.rx <= 0 || s.ry <= 0)) {
+      const m = maxf(s.rx, s.ry);
+      return Rect.fromCenter(s.c, m, m);
+    }
+    return this.bbox();
   }
 
   /** Area of the shape. */
@@ -298,7 +312,9 @@ export abstract class ShapeBase {
     if (len <= 0) return 0;
     const n = toIndex(maxf(Math.ceil(len / maxf(step, 0.25)), 1));
     let inside = 0;
-    for (let k = 0; k < n; k++) {
+    // only the samples that can fall inside the shape (the margin absorbs rounding)
+    const [k0, k1] = sampleRangeInRect(a, b, n, this.containsBound().inflate(1));
+    for (let k = k0; k < k1; k++) {
       const t = (k + 0.5) / n;
       if (this.containsXY(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)) inside += 1;
     }
