@@ -2,7 +2,7 @@
 //! primitive indexes and the distance transform of the static hard classes.
 
 use crate::geom::{dist_point_seg, dist_seg_rect, polygon, seg_overlaps_rect, Rect, EPS, P};
-use crate::grid::dt::distance_transform;
+use crate::grid::dt::{distance_transform, dt_maxima};
 use crate::grid::raster::MaskRaster;
 use crate::grid::{GridSpec, Sat};
 use crate::index::StaticIndex;
@@ -326,41 +326,6 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         leader_area: model.leader_area,
         index_cell,
     }
-}
-
-/// Local maxima of the distance transform with clearance ≥ `min_v` (plateaus keep their
-/// first cell in row-major order).
-fn dt_maxima(g: &GridSpec, dt: &[f64], min_v: f64) -> Vec<(P, f64, usize, usize)> {
-    let mut out = Vec::new();
-    for r in 0..g.rows {
-        for c in 0..g.cols {
-            let v = dt[r * g.cols + c];
-            if v < min_v || v >= 1e9 {
-                continue;
-            }
-            let mut is_max = true;
-            'n: for dr in -1i64..=1 {
-                for dc in -1i64..=1 {
-                    if dr == 0 && dc == 0 {
-                        continue;
-                    }
-                    let (rr, cc) = (r as i64 + dr, c as i64 + dc);
-                    if rr < 0 || cc < 0 || rr >= g.rows as i64 || cc >= g.cols as i64 {
-                        continue;
-                    }
-                    let w = dt[rr as usize * g.cols + cc as usize];
-                    if w > v || (w == v && (dr < 0 || (dr == 0 && dc < 0))) {
-                        is_max = false;
-                        break 'n;
-                    }
-                }
-            }
-            if is_max {
-                out.push((g.cell_center(c, r), v, c, r));
-            }
-        }
-    }
-    out
 }
 
 fn rasterize_prim(m: &mut MaskRaster, p: &Prim) {
