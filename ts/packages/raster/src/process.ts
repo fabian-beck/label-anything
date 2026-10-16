@@ -314,12 +314,26 @@ function classmap(
   return out;
 }
 
-/** Saliency on exact integer luma numerators (see the Rust implementation). */
+/**
+ * Saliency on exact integer luma numerators (see the Rust implementation). Rows are
+ * processed with precomputed clamped neighbour indices; every sum is an exact integer, so
+ * the loop structure does not affect the result.
+ */
 function saliency(s: Setup, img: Rgba): Uint8Array {
   const { w, h } = s;
   const d = img.data;
   const n = new Int32Array(w * h);
   for (let i = 0; i < w * h; i++) n[i] = lumaNumerator(d, i * 4);
+  // Clamped neighbours and 5-wide window bounds per column.
+  const xm = new Int32Array(w);
+  const xp = new Int32Array(w);
+  const kx = new Int32Array(w);
+  for (let x = 0; x < w; x++) {
+    xm[x] = x > 0 ? x - 1 : 0;
+    xp[x] = x + 1 < w ? x + 1 : w - 1;
+    kx[x] = Math.min(x + 2, w - 1) - Math.max(x - 2, 0) + 1;
+  }
+  // Horizontal 5-sums, clamped to the image.
   const hs = new Int32Array(w * h);
   for (let y = 0; y < h; y++) {
     const r = y * w;
@@ -330,40 +344,48 @@ function saliency(s: Setup, img: Rgba): Uint8Array {
       hs[r + x] = sum;
     }
   }
-  let g = 0;
-  let c = 0;
-  const gc = (x: number, y: number): void => {
-    const xm = x > 0 ? x - 1 : 0;
-    const xp = x + 1 < w ? x + 1 : w - 1;
+  const gRow = new Float64Array(w);
+  const cRow = new Float64Array(w);
+  const box = new Int32Array(w);
+  /** G and C of every pixel of row `y` into gRow / cRow. */
+  const row = (y: number): void => {
     const ym = (y > 0 ? y - 1 : 0) * w;
     const yc = y * w;
     const yp = (y + 1 < h ? y + 1 : h - 1) * w;
-    const gx = n[ym + xp]! + 2 * n[yc + xp]! + n[yp + xp]! - (n[ym + xm]! + 2 * n[yc + xm]! + n[yp + xm]!);
-    const gy = n[yp + xm]! + 2 * n[yp + x]! + n[yp + xp]! - (n[ym + xm]! + 2 * n[ym + x]! + n[ym + xp]!);
-    g = Math.sqrt(gx * gx + gy * gy);
     const y0 = y > 2 ? y - 2 : 0;
     const y1 = y + 2 < h ? y + 2 : h - 1;
-    let sum = 0;
-    for (let yy = y0; yy <= y1; yy++) sum += hs[yy * w + x]!;
-    const k = (Math.min(x + 2, w - 1) - Math.max(x - 2, 0) + 1) * (y1 - y0 + 1);
-    c = Math.abs(k * n[yc + x]! - sum) / k;
+    const ky = y1 - y0 + 1;
+    box.set(hs.subarray(y0 * w, y0 * w + w));
+    for (let yy = y0 + 1; yy <= y1; yy++) {
+      const o = yy * w;
+      for (let x = 0; x < w; x++) box[x] += hs[o + x]!;
+    }
+    for (let x = 0; x < w; x++) {
+      const a = xm[x]!;
+      const b = xp[x]!;
+      const gx = n[ym + b]! + 2 * n[yc + b]! + n[yp + b]! - (n[ym + a]! + 2 * n[yc + a]! + n[yp + a]!);
+      const gy = n[yp + a]! + 2 * n[yp + x]! + n[yp + b]! - (n[ym + a]! + 2 * n[ym + x]! + n[ym + b]!);
+      gRow[x] = Math.sqrt(gx * gx + gy * gy);
+      const k = kx[x]! * ky;
+      cRow[x] = Math.abs(k * n[yc + x]! - box[x]!) / k;
+    }
   };
   let maxG = 0;
   let maxC = 0;
   for (let y = 0; y < h; y++) {
+    row(y);
     for (let x = 0; x < w; x++) {
-      gc(x, y);
-      if (g > maxG) maxG = g;
-      if (c > maxC) maxC = c;
+      if (gRow[x]! > maxG) maxG = gRow[x]!;
+      if (cRow[x]! > maxC) maxC = cRow[x]!;
     }
   }
   const res = new Resampler(s.cols, s.rows, s.gcols, s.grows, 1);
   for (let py = s.rows.lo; py < s.rows.hi; py++) {
     if (!res.beginRow(py)) continue;
+    row(py);
     for (let px = s.cols.lo; px < s.cols.hi; px++) {
-      gc(px, py);
-      const tg = maxG > 0 ? g / maxG : 0;
-      const tc = maxC > 0 ? c / maxC : 0;
+      const tg = maxG > 0 ? gRow[px]! / maxG : 0;
+      const tc = maxC > 0 ? cRow[px]! / maxC : 0;
       const v = (tg + tc) / 2;
       if (v !== 0) res.add(0, px, v);
     }

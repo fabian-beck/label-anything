@@ -414,6 +414,65 @@ fn classmap(
         .collect()
 }
 
+/// Per-row Sobel magnitude `G` and local contrast `C` of the saliency mode, computed on
+/// the integer luma numerators with precomputed clamped neighbours. Every sum is an exact
+/// integer, so the loop structure does not affect the result.
+struct SaliencyRows<'a> {
+    n: &'a [u32],
+    hs: &'a [u32],
+    w: usize,
+    h: usize,
+    xm: Vec<usize>,
+    xp: Vec<usize>,
+    kx: Vec<i64>,
+    sums: Vec<i64>,
+    g: Vec<f64>,
+    c: Vec<f64>,
+}
+
+impl<'a> SaliencyRows<'a> {
+    fn new(n: &'a [u32], hs: &'a [u32], w: usize, h: usize) -> Self {
+        Self {
+            n,
+            hs,
+            w,
+            h,
+            xm: (0..w).map(|x| x.saturating_sub(1)).collect(),
+            xp: (0..w).map(|x| (x + 1).min(w - 1)).collect(),
+            kx: (0..w)
+                .map(|x| ((x + 2).min(w - 1) - x.saturating_sub(2) + 1) as i64)
+                .collect(),
+            sums: vec![0; w],
+            g: vec![0.0; w],
+            c: vec![0.0; w],
+        }
+    }
+
+    /// Fills `g` and `c` for row `y`.
+    fn compute(&mut self, y: usize) {
+        let (w, h) = (self.w, self.h);
+        let at = |i: usize| i64::from(self.n[i]);
+        let ym = y.saturating_sub(1) * w;
+        let yc = y * w;
+        let yp = (y + 1).min(h - 1) * w;
+        let (y0, y1) = (y.saturating_sub(2), (y + 2).min(h - 1));
+        let ky = (y1 - y0 + 1) as i64;
+        for (x, s) in self.sums.iter_mut().enumerate() {
+            *s = (y0..=y1).map(|yy| i64::from(self.hs[yy * w + x])).sum();
+        }
+        for x in 0..w {
+            let (a, b) = (self.xm[x], self.xp[x]);
+            let gx = (at(ym + b) + 2 * at(yc + b) + at(yp + b))
+                - (at(ym + a) + 2 * at(yc + a) + at(yp + a));
+            let gy = (at(yp + a) + 2 * at(yp + x) + at(yp + b))
+                - (at(ym + a) + 2 * at(ym + x) + at(ym + b));
+            self.g[x] = ((gx * gx + gy * gy) as f64).sqrt();
+            let k = self.kx[x] * ky;
+            self.c[x] = (k * at(yc + x) - self.sums[x]).unsigned_abs() as f64 / k as f64;
+        }
+    }
+}
+
 /// Saliency (spec §4.6) on the integer luma numerators `n = 2126·R + 7152·G + 722·B`
 /// (composited over white): all sums are exact integers, so only the final `sqrt`,
 /// divisions and the averaging are rounded.
@@ -434,26 +493,11 @@ fn saliency(setup: &Setup, img: &Rgba) -> Vec<u8> {
             hs[y * w + x] = row[x.saturating_sub(2)..=(x + 2).min(w - 1)].iter().sum();
         }
     }
-    let gc = |x: usize, y: usize| -> (f64, f64) {
-        let at = |xx: usize, yy: usize| i64::from(n[yy * w + xx]);
-        let (xm, xp) = (x.saturating_sub(1), (x + 1).min(w - 1));
-        let (ym, yp) = (y.saturating_sub(1), (y + 1).min(h - 1));
-        let gx =
-            (at(xp, ym) + 2 * at(xp, y) + at(xp, yp)) - (at(xm, ym) + 2 * at(xm, y) + at(xm, yp));
-        let gy =
-            (at(xm, yp) + 2 * at(x, yp) + at(xp, yp)) - (at(xm, ym) + 2 * at(x, ym) + at(xp, ym));
-        let g = ((gx * gx + gy * gy) as f64).sqrt();
-        let (y0, y1) = (y.saturating_sub(2), (y + 2).min(h - 1));
-        let s: i64 = (y0..=y1).map(|yy| i64::from(hs[yy * w + x])).sum();
-        let kx = (x + 2).min(w - 1) - x.saturating_sub(2) + 1;
-        let k = (kx * (y1 - y0 + 1)) as i64;
-        let c = (k * at(x, y) - s).unsigned_abs() as f64 / k as f64;
-        (g, c)
-    };
+    let mut rows = SaliencyRows::new(&n, &hs, w, h);
     let (mut max_g, mut max_c) = (0.0f64, 0.0f64);
     for y in 0..h {
-        for x in 0..w {
-            let (g, c) = gc(x, y);
+        rows.compute(y);
+        for (&g, &c) in rows.g.iter().zip(&rows.c) {
             if g > max_g {
                 max_g = g;
             }
@@ -462,10 +506,14 @@ fn saliency(setup: &Setup, img: &Rgba) -> Vec<u8> {
             }
         }
     }
+    let mut current = usize::MAX;
     let grids = setup.run(img, 1, |res, px, py, _| {
-        let (g, c) = gc(px, py);
-        let tg = if max_g > 0.0 { g / max_g } else { 0.0 };
-        let tc = if max_c > 0.0 { c / max_c } else { 0.0 };
+        if py != current {
+            rows.compute(py);
+            current = py;
+        }
+        let tg = if max_g > 0.0 { rows.g[px] / max_g } else { 0.0 };
+        let tc = if max_c > 0.0 { rows.c[px] / max_c } else { 0.0 };
         let v = (tg + tc) / 2.0;
         if v != 0.0 {
             res.add(0, px, v);
