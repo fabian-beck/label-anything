@@ -320,13 +320,24 @@ class CellHeap {
  *
  * Deterministic: the queue is ordered by (potential, insertion index).
  */
+/** Starting cells of {@link polylabel} at most (beyond, the cells grow). */
+export const POLYLABEL_START_CELLS = 4096;
+
+/** Refinement iterations of {@link polylabel}: `clamp(POLYLABEL_EDGE_WORK / edges, 256, 100000)`. */
+export const POLYLABEL_EDGE_WORK = 50_000_000;
+
 export function polylabel(rings: readonly Ring[], evenOdd: boolean, precision: number): [P, number] {
   const bb = bboxOf(rings.length > 0 ? rings[0]! : []);
   if (bb.isEmpty()) return [new P(0, 0), 0];
   const w = bb.w();
   const h = bb.h();
-  const cell = minf(w, h);
+  let cell = minf(w, h);
   if (cell <= 0) return [bb.center(), 0];
+  // at most about POLYLABEL_START_CELLS starting cells (extreme aspect ratios); a cell
+  // larger than the short side leaves one row of max(w, h) / cell cells
+  if ((w / cell) * (h / cell) > POLYLABEL_START_CELLS) {
+    cell = maxf(Math.sqrt((w * h) / POLYLABEL_START_CELLS), maxf(w, h) / POLYLABEL_START_CELLS);
+  }
   const sdist = (p: P): number => {
     const d = distBoundaryXY(rings, p.x, p.y);
     return containsXY(rings, evenOdd, p.x, p.y) ? d : -d;
@@ -355,10 +366,14 @@ export function polylabel(rings: readonly Ring[], evenOdd: boolean, precision: n
   let best = mk(centroid, 0, Infinity);
   const bc = mk(bb.center(), 0, Infinity);
   if (bc.d > best.d) best = bc;
+  // bounded work: each iteration evaluates 4 cells, each O(edges)
+  let edges = 0;
+  for (const r of rings) edges += r.length;
+  const maxIterations = Math.min(Math.max(Math.trunc(POLYLABEL_EDGE_WORK / Math.max(edges, 1)), 256), 100_000);
   let iterations = 0;
   for (let c = queue.pop(); c !== null; c = queue.pop()) {
     iterations += 1;
-    if (iterations > 100_000) break;
+    if (iterations > maxIterations) break;
     if (c.d > best.d) best = c;
     if (c.max - best.d <= precision) continue;
     const h2 = c.h * 0.5;

@@ -2,7 +2,7 @@
 //! candidates live in `leaders.rs` / `boundary.rs`).
 
 use crate::geom::shape::{sign_dir, Shape};
-use crate::geom::{dist_point_seg, polygon, Rect, P};
+use crate::geom::{dist_point_seg, Rect, P};
 use crate::labels::Variant;
 use crate::math::{maxf, sin_cos_deg};
 use crate::model::opts::{InternalPolicy, LeaderStyle, Models, Pos};
@@ -645,10 +645,7 @@ pub fn internal(item: &Item, vi: usize, v: &Variant, rank: f64, out: &mut Vec<Ca
     let shape = &item.shape;
     let mut centers = vec![shape.reference()];
     match shape {
-        Shape::Polygon(p) => {
-            let (pole, _) = polygon::polylabel(&p.rings, p.even_odd, 0.5);
-            centers.insert(0, pole);
-        }
+        Shape::Polygon(_) => centers.insert(0, item.pole()),
         _ => centers.insert(0, shape.bbox().center()),
     }
     for c in centers {

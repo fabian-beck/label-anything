@@ -125,11 +125,35 @@ impl Obstacles {
     }
 }
 
-/// Choose the grid cell size (spec §4.1).
+/// Most grid cells (spec §4.1): enough for any practical canvas, and SAT sums of `u8`
+/// coverage stay exact (below 2³² / 255 ≈ 16.8 M cells).
+pub const MAX_GRID_CELLS: f64 = 16_000_000.0;
+
+/// Number of cells of the grid covering the model extent with cell size `c`.
+pub fn grid_cells(model: &Model, c: f64) -> f64 {
+    maxf((model.extent.w() / c).ceil(), 1.0) * maxf((model.extent.h() / c).ceil(), 1.0)
+}
+
+/// Choose the grid cell size (spec §4.1): `solver.grid_cell`, else `clamp(min_font / 4,
+/// 1, 4)` grown (by factors of 1.25) until the grid has at most [`MAX_GRID_CELLS`] cells.
+/// The extent must be finite; an explicit cell size may exceed the cell limit (checked
+/// by the caller).
 pub fn grid_cell(model: &Model, min_font: f64) -> f64 {
     match model.grid_cell {
         Some(c) if c > 0.0 => c,
-        _ => (min_font / 4.0).clamp(1.0, 4.0),
+        _ => {
+            let mut c = (min_font / 4.0).clamp(1.0, 4.0);
+            if grid_cells(model, c) > MAX_GRID_CELLS {
+                c = maxf(
+                    c,
+                    (model.extent.w() * model.extent.h() / MAX_GRID_CELLS).sqrt(),
+                );
+                while grid_cells(model, c) > MAX_GRID_CELLS {
+                    c *= 1.25;
+                }
+            }
+            c
+        }
     }
 }
 

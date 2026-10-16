@@ -187,6 +187,15 @@ pub fn dist_rect(rings: &[Vec<P>], even_odd: bool, bbox: &Rect, r: &Rect) -> f64
     m
 }
 
+/// Starting cells of [`polylabel`] at most (beyond, the cells grow; normal shapes have
+/// far fewer: one per `min(w, h)` square of the bounding box).
+pub const POLYLABEL_START_CELLS: f64 = 4096.0;
+
+/// Refinement iterations of [`polylabel`] at most: `clamp(POLYLABEL_EDGE_WORK / edges,
+/// 256, 100 000)`, so that huge polygons stay fast (polygons of up to 500 edges get the
+/// full 100 000).
+pub const POLYLABEL_EDGE_WORK: usize = 50_000_000;
+
 /// Polylabel: the pole of inaccessibility (point inside the polygon farthest from its
 /// boundary), with the given precision. Returns the point and its distance.
 ///
@@ -198,9 +207,17 @@ pub fn polylabel(rings: &[Vec<P>], even_odd: bool, precision: f64) -> (P, f64) {
     }
     let w = bb.w();
     let h = bb.h();
-    let cell = minf(w, h);
+    let mut cell = minf(w, h);
     if cell <= 0.0 {
         return (bb.center(), 0.0);
+    }
+    // at most about POLYLABEL_START_CELLS starting cells (extreme aspect ratios); a
+    // cell larger than the short side leaves one row of max(w, h) / cell cells
+    if (w / cell) * (h / cell) > POLYLABEL_START_CELLS {
+        cell = maxf(
+            (w * h / POLYLABEL_START_CELLS).sqrt(),
+            maxf(w, h) / POLYLABEL_START_CELLS,
+        );
     }
     let sdist = |p: P| -> f64 {
         let d = dist_boundary(rings, p);
@@ -266,10 +283,13 @@ pub fn polylabel(rings: &[Vec<P>], even_odd: bool, precision: f64) -> (P, f64) {
     if bc.d > best.d {
         best = bc;
     }
+    // bounded work: each iteration evaluates 4 cells, each O(edges)
+    let edges: usize = rings.iter().map(|r| r.len()).sum();
+    let max_iterations = (POLYLABEL_EDGE_WORK / edges.max(1)).clamp(256, 100_000);
     let mut iterations = 0usize;
     while let Some(c) = queue.pop() {
         iterations += 1;
-        if iterations > 100_000 {
+        if iterations > max_iterations {
             break;
         }
         if c.d > best.d {
