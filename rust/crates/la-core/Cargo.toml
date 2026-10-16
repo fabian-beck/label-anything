@@ -21,3 +21,4 @@ serde_json = { workspace = true }
 rayon = { workspace = true, optional = true }
 la-expr = { workspace = true }
 regex-lite = { workspace = true }
+la-text = { workspace = true }

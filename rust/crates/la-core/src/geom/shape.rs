@@ -228,12 +228,22 @@ impl Shape {
         match self {
             Shape::Circle { c, r: rad } => maxf(r.dist_point(*c) - rad, 0.0),
             Shape::Polygon(p) => polygon::dist_rect(&p.rings, p.even_odd, &p.bbox, r),
-            _ => {
+            Shape::RoundRect { c, hw, hh, r: rad, cos, sin } => {
+                let inner = rotated_rect_corners(*c, hw - rad, hh - rad, *cos, *sin);
+                maxf(convex_poly_rect_distance(&inner, r) - rad, 0.0)
+            }
+            Shape::Ellipse { .. } => {
                 if self.overlaps_rect(r) {
                     return 0.0;
                 }
-                let outline = self.outline();
-                convex_poly_rect_distance(&outline, r)
+                // The signed distance to a convex set is convex along a segment, so a
+                // ternary search per rectangle edge finds the exact minimum.
+                let k = r.corners();
+                let mut m = f64::INFINITY;
+                for i in 0..4 {
+                    m = minf(m, min_dist_on_segment(self, k[i], k[(i + 1) % 4]));
+                }
+                maxf(m, 0.0)
             }
         }
     }
@@ -405,6 +415,22 @@ impl Shape {
             }
         }
     }
+}
+
+/// Minimum signed distance from the points of segment `ab` to a convex shape.
+fn min_dist_on_segment(s: &Shape, a: P, b: P) -> f64 {
+    let (mut lo, mut hi) = (0.0f64, 1.0f64);
+    for _ in 0..60 {
+        let m1 = lo + (hi - lo) / 3.0;
+        let m2 = hi - (hi - lo) / 3.0;
+        if s.signed_distance(a.lerp(b, m1)) <= s.signed_distance(a.lerp(b, m2)) {
+            hi = m2;
+        } else {
+            lo = m1;
+        }
+    }
+    let t = (lo + hi) * 0.5;
+    minf(s.signed_distance(a.lerp(b, t)), minf(s.signed_distance(a), s.signed_distance(b)))
 }
 
 /// 1 / cos(π / n): factor for a circumscribed regular n-gon.

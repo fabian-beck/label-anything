@@ -44,6 +44,7 @@ name = "label-anything-core"
 version = "0.1.0"
 dependencies = [
  "label-anything-expr",
+ "label-anything-text",
  "rayon",
  "regex-lite",
  "serde",
