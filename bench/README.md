@@ -39,6 +39,9 @@ bench/.venv/bin/python -m bench.scenarios build          # write bench/out/probl
 bench/.venv/bin/python bench/validate_problems.py       # JSON Schema 2020-12 + size budgets
 bench/.venv/bin/python bench/run.py --suite quick       # naive + greedy baselines -> bench-report/
 bench/.venv/bin/python -m pytest bench/eval/tests bench/baselines/tests bench/tests   # tests
+# third-party baselines (optional): bench/baselines/README.md
+bench/.venv/bin/pip install -r bench/baselines/requirements.txt && npm ci --prefix bench/baselines
+sudo bench/baselines/install-r.sh                        # R + ggrepel (Ubuntu 24.04; --cran elsewhere)
 ```
 
 Run from the repository root. Single scenarios: `python -m bench.scenarios build 05` (or
