@@ -531,7 +531,7 @@ bug; the offending lower-key label is removed and the item reported as omitted.
   | `round_half_away(x)` | nearest integer, halves away from zero (C `round`); **not** JS `Math.round` and not `floor(x + 0.5)` (wrong for 0.49999999999999994) |
 
   NaN results are the canonical quiet NaN (a conformance check accepts any NaN). Not
-  normative but measured (`conformance/math/README.md`): the error is below 0.54 ulp for
+  normative but measured (`conformance/math/README.md`): the error is below 0.55 ulp for
   every function (subnormal results: one more ulp), and `det_math` agrees with glibc and
   V8 within 2 ulp.
 * Random numbers: PCG32 (PCG-XSH-RR 64/32), `step()`: `state = state ·

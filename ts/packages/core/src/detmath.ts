@@ -8,8 +8,9 @@
  * Conformance vectors with the exact output bits: `conformance/math/`. See
  * `spec/spec.md` §10.4 for the definitions and special cases.
  *
- * Accuracy (max error vs. the exact result, measured with mpmath): ln, ln1p, cbrt,
- * atan2Deg ≤ 0.5004 ulp; exp, pow ≤ 0.52 ulp; sinCosDeg ≤ 0.54 ulp; rounding exact.
+ * Accuracy (max error vs. the exact result, measured with mpmath on 10^6 samples per
+ * function): ln, ln1p, cbrt 0.5000 ulp; atan2Deg 0.5022; exp 0.5232; pow 0.5241;
+ * sinCosDeg 0.5379; rounding exact.
  *
  * @module
  */

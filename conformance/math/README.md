@@ -99,10 +99,10 @@ per function plus the vectors here):
 | function | max error | method |
 |---|---|---|
 | `ln`, `ln_1p` | 0.5000 | 47-entry table of ln(j/64), atanh series, all in double-double |
-| `exp` | 0.515 | Cody–Waite reduction, 1 + hi + r²/2 exact, Taylor tail |
-| `pow` | 0.514 | double-double `ln`, exact product, `exp` with tail; integer y by double-double repeated squaring |
-| `sin_cos_deg` | 0.533 | exact reduction in degrees, double-double π/180, Taylor kernels |
-| `atan2_deg` | 0.5004 | 9-point table of atan(j/8)°, Taylor series in double-double |
+| `exp` | 0.5232 | Cody–Waite reduction, 1 + hi + r²/2 exact, Taylor tail |
+| `pow` | 0.5241 | double-double `ln`, exact product, `exp` with tail; integer y by double-double repeated squaring |
+| `sin_cos_deg` | 0.5379 | exact reduction in degrees, double-double π/180, Taylor kernels |
+| `atan2_deg` | 0.5022 | 9-point table of atan(j/8)°, Taylor series in double-double |
 | `cbrt` | 0.5000 | cubic start, two Newton steps, exact-residual correction |
 | `floor`, `ceil`, `trunc`, `round_half_away` | exact | |
 

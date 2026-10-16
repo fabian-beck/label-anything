@@ -14,10 +14,10 @@
 //! | function | max error vs. exact | method |
 //! |---|---|---|
 //! | [`ln`], [`ln_1p`] | 0.5000 | 47-entry table of ln(j/64) + atanh series, double-double |
-//! | [`exp`] | 0.515 | Cody–Waite reduction, `1 + hi + r²/2` exact, Taylor tail |
-//! | [`pow`] | 0.514 | `exp(y·ln x)` in double-double; integer `y` by double-double repeated squaring |
-//! | [`sin_cos_deg`] | 0.533 | exact reduction in degrees, double-double radians, Taylor kernels |
-//! | [`atan2_deg`] | 0.5004 | 9-point table of atan(j/8)° + Taylor series, double-double |
+//! | [`exp`] | 0.5232 | Cody–Waite reduction, `1 + hi + r²/2` exact, Taylor tail |
+//! | [`pow`] | 0.5241 | `exp(y·ln x)` in double-double; integer `y` by double-double repeated squaring |
+//! | [`sin_cos_deg`] | 0.5379 | exact reduction in degrees, double-double radians, Taylor kernels |
+//! | [`atan2_deg`] | 0.5022 | 9-point table of atan(j/8)° + Taylor series, double-double |
 //! | [`cbrt`] | 0.5000 | cubic start, two Newton steps, exact-residual correction |
 //! | [`floor`], [`ceil`], [`trunc`], [`round_half_away`] | exact | |
 //!
@@ -281,7 +281,7 @@ fn exp_core(x: f64, xt: f64) -> f64 {
 
 /// `e^x`. Overflow gives `+inf`, underflow `+0` (gradual underflow for subnormal
 /// results); `exp(-inf) = +0`, `exp(+inf) = +inf`, `exp(NaN) = NaN`.
-/// Max error 0.515 ulp (measured).
+/// Max error 0.5232 ulp (measured).
 pub fn exp(x: f64) -> f64 {
     if x.is_nan() {
         return f64::NAN;
@@ -381,7 +381,7 @@ fn pow_pos(ax: f64, y: f64) -> f64 {
 /// Integer `y` with `|y| ≤ 2^30` is computed by double-double repeated squaring (so
 /// negative bases work and `pow(x, 2) = x·x`); all other cases as `e^(y·ln|x|)` with
 /// the logarithm and the product in double-double, the sign taken from the parity of
-/// `y`. Max error 0.514 ulp (measured); results in the subnormal
+/// `y`. Max error 0.5241 ulp (measured); results in the subnormal
 /// range may be off by one more ulp (double rounding).
 pub fn pow(x: f64, y: f64) -> f64 {
     if y == 0.0 || x == 1.0 {
@@ -505,7 +505,7 @@ fn sc_kernel(t: f64) -> (f64, f64) {
 /// `sin_cos_deg(45) = (√½, √½)` with `√½ = sqrt(0.5)`, `sin_cos_deg(30) = (0.5, sqrt(0.75))`.
 /// Zeros: `cos` is never `-0`; `sin(±0) = ±0` and `sin(k·180°)` is `+0` for `k > 0` and
 /// `-0` for `k < 0` (as IEEE `sinPi`). Non-finite input gives `(NaN, NaN)`.
-/// Max error 0.533 ulp (measured).
+/// Max error 0.5379 ulp (measured).
 pub fn sin_cos_deg(deg: f64) -> (f64, f64) {
     if !deg.is_finite() {
         return (f64::NAN, f64::NAN);
@@ -588,7 +588,7 @@ fn atan_ratio_deg(n: f64, d: f64) -> (f64, f64) {
 /// C99 `atan2` (signed zeros, infinities): `atan2_deg(±0, +0) = ±0`,
 /// `atan2_deg(±0, -0) = ±180`, `atan2_deg(±0, x<0) = ±180`, `atan2_deg(y>0, ±0) = 90`,
 /// `atan2_deg(±inf, +inf) = ±45`, `atan2_deg(±inf, -inf) = ±135`, NaN in → NaN out.
-/// Exact for `|y| = |x|` (±45°, ±135°) and on the axes. Max error 0.5004 ulp
+/// Exact for `|y| = |x|` (±45°, ±135°) and on the axes. Max error 0.5022 ulp
 /// (results below 1e-269° may be off by one more ulp).
 pub fn atan2_deg(y: f64, x: f64) -> f64 {
     if x.is_nan() || y.is_nan() {
