@@ -542,7 +542,11 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         );
         // decoding errors keep the raster crate's code when it is `unsupported`
         let raster_err = |at: String, e: la_raster::RasterError| {
-            let code = if e.kind == la_raster::RasterErrorKind::Unsupported { "unsupported" } else { "invalid_value" };
+            let code = if e.kind == la_raster::RasterErrorKind::Unsupported {
+                "unsupported"
+            } else {
+                "invalid_value"
+            };
             err(at, code, format!("{} ({})", e.message, e.code()))
         };
         let img = if let Some(rgba) = src.get("rgba") {
@@ -555,7 +559,9 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
             if s.starts_with("data:") || looks_base64(s) {
                 la_raster::decode_source(s).map_err(|e| raster_err(format!("{ptr}/source"), e))?
             } else {
-                let bytes = env.read_file(s).map_err(|m| err(format!("{ptr}/source"), "invalid_value", m))?;
+                let bytes = env
+                    .read_file(s)
+                    .map_err(|m| err(format!("{ptr}/source"), "invalid_value", m))?;
                 la_raster::decode(&bytes).map_err(|e| raster_err(format!("{ptr}/source"), e))?
             }
         };

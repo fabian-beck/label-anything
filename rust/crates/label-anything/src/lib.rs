@@ -61,7 +61,16 @@ impl NativeEnv {
     }
 }
 
+/// The SVG backend compiled into this build (`None` until `label-anything-svg` is wired
+/// in). Bindings with their own [`Env`] (WASM, Python) delegate `Env::svg` to it.
+pub fn svg_backend() -> Option<&'static dyn SvgBackend> {
+    None
+}
+
 impl Env for NativeEnv {
+    fn svg(&self) -> Option<&dyn SvgBackend> {
+        svg_backend()
+    }
     fn read_file(&self, path: &str) -> Result<Vec<u8>, String> {
         if !self.allow_files {
             return Err(format!("file access disabled ({path})"));

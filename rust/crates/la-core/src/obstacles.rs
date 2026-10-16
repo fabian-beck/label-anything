@@ -128,9 +128,18 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         names.insert(c.clone());
     }
     let mut raster_cov: Vec<(String, Vec<u8>)> = Vec::new();
-    let rgrid = la_raster::GridSpec { origin_x: grid.ox, origin_y: grid.oy, cell: grid.cell, cols: grid.cols, rows: grid.rows };
+    let rgrid = la_raster::GridSpec {
+        origin_x: grid.ox,
+        origin_y: grid.oy,
+        cell: grid.cell,
+        cols: grid.cols,
+        rows: grid.rows,
+    };
     for r in &model.rasters {
-        let place = la_raster::RasterPlacement { scale: r.opts.scale, offset: [r.opts.offset.x, r.opts.offset.y] };
+        let place = la_raster::RasterPlacement {
+            scale: r.opts.scale,
+            offset: [r.opts.offset.x, r.opts.offset.y],
+        };
         for cc in la_raster::process(&r.img, &r.opts.mode, &r.opts.class, &place, &rgrid) {
             if cc.class != "ignore" && cc.coverage.len() == grid.cells() {
                 names.insert(cc.class.clone());

@@ -71,10 +71,10 @@ pub trait SvgBackend {
     ) -> Result<Box<dyn SvgDoc>, String>;
 }
 
-/// RGBA8 image, row-major, straight alpha (from `label-anything-raster`).
-pub use la_raster::Rgba as RgbaImage;
 /// Raster processing mode with its parameters (spec §4.6).
 pub use la_raster::Mode as RasterMode;
+/// RGBA8 image, row-major, straight alpha (from `label-anything-raster`).
+pub use la_raster::Rgba as RgbaImage;
 
 /// Resolved options of one raster source.
 #[derive(Clone, Debug, PartialEq)]

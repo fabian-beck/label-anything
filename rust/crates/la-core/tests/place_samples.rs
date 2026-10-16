@@ -19,9 +19,7 @@ fn problems() -> Vec<(String, Value)> {
                 serde_json::from_str(&std::fs::read_to_string(&p).unwrap()).unwrap(),
             )
         })
-        .filter(|(_, p): &(String, Value)| {
-            p.pointer("/obstacles/svg").is_none()
-        })
+        .filter(|(_, p): &(String, Value)| p.pointer("/obstacles/svg").is_none())
         .collect()
 }
 
