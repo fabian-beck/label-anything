@@ -66,6 +66,8 @@ pub struct Solve<'a> {
     pub level_done: Vec<u8>,
     /// Level-0 distant candidates not generated yet (they are created on demand).
     pub distant_pending: Vec<bool>,
+    /// The warm-start candidate of each item (see `Solve::generate_warm`).
+    pub warm_cand: Vec<Option<u32>>,
     /// Directions of distant candidates (see `leaders::distant_dirs`).
     pub distant_dirs: Vec<(f64, crate::geom::P)>,
     pub iterations: u64,
@@ -109,6 +111,7 @@ impl<'a> Solve<'a> {
             steps_tried: vec![Vec::new(); n],
             level_done: vec![0; n],
             distant_pending: vec![false; n],
+            warm_cand: vec![None; n],
             distant_dirs: crate::leaders::distant_dirs(model),
             iterations: 0,
             time_guard_hit: false,
@@ -321,6 +324,7 @@ impl<'a> Solve<'a> {
             let m = self.models[i];
             self.distant_pending[i] = m.has(Models::DISTANT);
             self.generate(i, &vis, Models(m.0 & !Models::DISTANT), 0);
+            self.generate_warm(i);
         }
         // auto preset: enable distant labels when crowded
         if let Some((frac, crowded_models)) = self.model.auto_crowded {
@@ -356,6 +360,36 @@ impl<'a> Solve<'a> {
             &self.model.extent,
             self.obs.index_cell,
         );
+    }
+
+    /// The warm-start box of item `i` as an extra level-0 candidate (kept when statically
+    /// feasible), for the variant of the same size.
+    fn generate_warm(&mut self, i: usize) {
+        let item = &self.model.items[i];
+        let Some(Some(b)) = self.model.warm.get(&item.id) else {
+            return;
+        };
+        if matches!(self.model.group_of.get(i), Some(Some(r)) if *r != i) {
+            return;
+        }
+        let Some(vi) = self.variants[i]
+            .iter()
+            .position(|v| (v.w - b.w()).abs() <= 0.5 && (v.h - b.h()).abs() <= 0.5)
+        else {
+            return;
+        };
+        let v = &self.variants[i][vi];
+        let Some(mut c) = candidates::warm(self.model, item, vi, v, *b) else {
+            return;
+        };
+        c.level = 0;
+        c.lshape = candidates::label_shape(&c.rect, &v.shape);
+        Evaluator::new(self.model, self.obs, self.env).eval(&mut c, v, None);
+        if c.feasible {
+            self.warm_cand[i] = Some(self.cands.len() as u32);
+            self.by_item[i].push(self.cands.len() as u32);
+            self.cands.push(c);
+        }
     }
 
     /// Generate the pending level-0 distant candidates of item `i` (once).

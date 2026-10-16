@@ -152,6 +152,20 @@ pub fn run(s: &mut Solve) {
             }
             continue;
         }
+        // warm start: labels placed in the previous solve keep their position when it is
+        // still free (stability first; within one band, so priority is unaffected)
+        if s.model.weights.stability > 0.0 {
+            for &i in &band {
+                if g.done[i] || g.sets[i].is_some() {
+                    continue;
+                }
+                let Some(c) = s.warm_cand[i] else { continue };
+                if g.alive[c as usize] && cap_allows(s, &s.cands[c as usize]) {
+                    commit(s, &mut g, i, c, false);
+                    g.done[i] = true;
+                }
+            }
+        }
         // level-0 pass, most constrained first
         g.heap.clear();
         g.band_key = Some(key);
