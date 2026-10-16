@@ -40,6 +40,30 @@ const fn decode_table() -> [u8; 256] {
 
 static TABLE: [u8; 256] = decode_table();
 
+/// `TABLE` values shifted into place for the fast path: quantum position `k` holds the
+/// sextet at bit `18 − 6k`; non-alphabet characters have bit 31 set.
+const fn shifted_table(k: u32) -> [u32; 256] {
+    let t = decode_table();
+    let mut s = [0u32; 256];
+    let mut i = 0;
+    while i < 256 {
+        s[i] = if t[i] < 64 {
+            (t[i] as u32) << (18 - 6 * k)
+        } else {
+            1 << 31
+        };
+        i += 1;
+    }
+    s
+}
+
+static SHIFTED: [[u32; 256]; 4] = [
+    shifted_table(0),
+    shifted_table(1),
+    shifted_table(2),
+    shifted_table(3),
+];
+
 fn b64_error(message: String) -> RasterError {
     RasterError::new(RasterErrorKind::InvalidBase64, message)
 }
@@ -54,32 +78,33 @@ fn b64_error(message: String) -> RasterError {
 pub fn decode_base64(input: &str) -> Result<Vec<u8>, RasterError> {
     let bytes = input.as_bytes();
     // fast path: leading whole quanta of four alphabet characters (no whitespace or
-    // padding), three bytes at a time
+    // padding), three bytes at a time; the general decoder continues from the first
+    // other character
     let mut out = vec![0u8; bytes.len() / 4 * 3 + 3];
     let mut o = 0;
     let mut i = 0;
-    for q in bytes.chunks_exact(4) {
-        let (a, b, c, d) = (
-            TABLE[q[0] as usize],
-            TABLE[q[1] as usize],
-            TABLE[q[2] as usize],
-            TABLE[q[3] as usize],
-        );
-        if (a | b | c | d) >= 64 {
+    let [t0, t1, t2, t3] = &SHIFTED;
+    for (q, dst) in bytes.chunks_exact(4).zip(out.chunks_exact_mut(3)) {
+        let v = t0[q[0] as usize] | t1[q[1] as usize] | t2[q[2] as usize] | t3[q[3] as usize];
+        if v >> 31 != 0 {
             break;
         }
-        let v = u32::from(a) << 18 | u32::from(b) << 12 | u32::from(c) << 6 | u32::from(d);
-        out[o..o + 3].copy_from_slice(&[(v >> 16) as u8, (v >> 8) as u8, v as u8]);
+        dst.copy_from_slice(&(v << 8).to_be_bytes()[..3]);
         o += 3;
         i += 4;
     }
     out.truncate(o);
-    // general path for the rest
+    decode_from(bytes, i, out)
+}
+
+/// The general decoder (all rules above), from byte `start` (a quantum boundary) on,
+/// appending to `out`.
+fn decode_from(bytes: &[u8], start: usize, mut out: Vec<u8>) -> Result<Vec<u8>, RasterError> {
     let mut acc: u32 = 0;
     let mut nbits: u32 = 0;
-    let mut chars: usize = i;
+    let mut chars: usize = start;
     let mut pad: usize = 0;
-    for (pos, &c) in bytes.iter().enumerate().skip(i) {
+    for (pos, &c) in bytes.iter().enumerate().skip(start) {
         let v = TABLE[c as usize];
         match v {
             SKIP => continue,
@@ -211,6 +236,65 @@ mod tests {
         assert_eq!(decode_base64("TWFuTQ").unwrap(), b"ManM");
         assert_eq!(decode_base64("TWFu TW\nFu").unwrap(), b"ManMan");
         assert_eq!(decode_base64("TWFuTWFu\n").unwrap(), b"ManMan");
+    }
+
+    #[test]
+    fn fast_path_agrees_with_the_general_decoder() {
+        // random data, encoded and then mutated (whitespace, padding, URL-safe and
+        // invalid characters): the fast path must not change any result
+        let mut x = 0x9E37_79B9_7F4A_7C15u64;
+        let mut next = move || {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x
+        };
+        const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        for _ in 0..4000 {
+            let n = (next() % 40) as usize;
+            let data: Vec<u8> = (0..n).map(|_| next() as u8).collect();
+            let mut text = Vec::new();
+            for q in data.chunks(3) {
+                let v = q
+                    .iter()
+                    .enumerate()
+                    .fold(0u32, |v, (k, &b)| v | u32::from(b) << (16 - 8 * k));
+                for k in 0..4 {
+                    text.push(if k <= q.len() {
+                        ALPHABET[(v >> (18 - 6 * k) & 63) as usize]
+                    } else {
+                        b'='
+                    });
+                }
+            }
+            assert_eq!(
+                decode_base64(std::str::from_utf8(&text).unwrap()).unwrap(),
+                data
+            );
+            for _ in 0..(next() % 3) {
+                if text.is_empty() {
+                    break;
+                }
+                let at = (next() % text.len() as u64) as usize;
+                text[at] = match next() % 5 {
+                    0 => b'=',
+                    1 => b' ',
+                    2 => b'-',
+                    3 => b'*',
+                    _ => ALPHABET[(next() % 64) as usize],
+                };
+            }
+            let text = std::str::from_utf8(&text).unwrap();
+            let general = decode_from(text.as_bytes(), 0, Vec::new());
+            assert_eq!(
+                decode_base64(text).ok(),
+                general.as_ref().ok().cloned(),
+                "{text:?}"
+            );
+            if let (Err(a), Err(b)) = (decode_base64(text), general) {
+                assert_eq!(a.message, b.message, "{text:?}");
+            }
+        }
     }
 
     #[test]
