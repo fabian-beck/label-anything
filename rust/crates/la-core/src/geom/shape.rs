@@ -152,6 +152,18 @@ impl Shape {
         }
     }
 
+    /// A rectangle containing every point that `contains` accepts: the bounding box,
+    /// except for degenerate ellipses, which `signed_distance` treats as discs.
+    pub fn contains_bound(&self) -> Rect {
+        match self {
+            Shape::Ellipse { c, rx, ry, .. } if *rx <= 0.0 || *ry <= 0.0 => {
+                let m = maxf(*rx, *ry);
+                Rect::from_center(*c, m, m)
+            }
+            _ => self.bbox(),
+        }
+    }
+
     /// Area of the shape.
     pub fn area(&self) -> f64 {
         match self {
@@ -384,7 +396,10 @@ impl Shape {
         }
         let n = maxf((len / maxf(step, 0.25)).ceil(), 1.0) as usize;
         let mut inside = 0usize;
-        for k in 0..n {
+        // only the samples that can fall inside the shape (the margin absorbs rounding)
+        let bound = self.contains_bound().inflate(1.0);
+        let (k0, k1) = super::sample_range_in_rect(a, b, n, &bound);
+        for k in k0..k1 {
             let t = (k as f64 + 0.5) / n as f64;
             if self.contains(a.lerp(b, t)) {
                 inside += 1;

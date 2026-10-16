@@ -1,0 +1,17 @@
+{
+  "name": "@label-anything/cli",
+  "version": "0.1.0",
+  "description": "Command-line interface of Label Anything on the pure TypeScript engine: place, validate, render (Node).",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "label-anything-ts": "./dist/main.js" },
+  "main": "./dist/main.js",
+  "types": "./dist/main.d.ts",
+  "exports": { ".": { "types": "./dist/main.d.ts", "import": "./dist/main.js" } },
+  "files": ["dist", "src"],
+  "repository": { "type": "git", "url": "https://github.com/fabian-beck/label-anything", "directory": "ts/packages/cli" },
+  "keywords": ["label placement", "labeling", "visualization", "leader lines", "cli"],
+  "engines": { "node": ">=18" },
+  "scripts": { "build": "tsc -b", "test": "vitest run" },
+  "dependencies": { "@label-anything/core": "0.1.0" }
+}

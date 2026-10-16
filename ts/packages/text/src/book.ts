@@ -36,6 +36,8 @@ const asciiLower = (s: string): string => s.replace(/[A-Z]/g, (c) => String.from
 export class FontBook {
   private readonly fonts: Font[] = [];
   private readonly entries: Entry[] = [];
+  /** Memo of {@link resolve} (cleared by {@link register}). */
+  private readonly resolved = new Map<string, FontId>();
 
   private constructor() {}
 
@@ -63,6 +65,7 @@ export class FontBook {
   /** Parses `data` (see {@link Font.fromBytes}) and registers it. */
   register(family: string, weight: number, italic: boolean, data: Uint8Array): FontId {
     const font = Font.fromBytes(data);
+    this.resolved.clear();
     const id = this.fonts.length;
     this.fonts.push(font);
     this.entries.push({ family, weight, italic, font: id });
@@ -71,6 +74,15 @@ export class FontBook {
 
   /** The font for a request (see the class docs). Throws if the book is empty. */
   resolve(family: string, weight: number, italic: boolean): FontId {
+    const key = `${weight}\u0000${italic ? 1 : 0}\u0000${family}`;
+    const memo = this.resolved.get(key);
+    if (memo !== undefined) return memo;
+    const id = this.resolveUncached(family, weight, italic);
+    this.resolved.set(key, id);
+    return id;
+  }
+
+  private resolveUncached(family: string, weight: number, italic: boolean): FontId {
     const has = (name: string): boolean => this.entries.some((e) => asciiLower(e.family) === asciiLower(name));
     let name = family;
     if (!has(name)) {

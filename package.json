@@ -9,7 +9,7 @@
     "bindings/js-extras"
   ],
   "scripts": {
-    "build": "tsc -b ts/packages/text ts/packages/svg ts/packages/raster ts/packages/core bindings/js-extras",
+    "build": "tsc -b ts/packages/text ts/packages/svg ts/packages/raster ts/packages/core ts/packages/cli ts/packages/wasm-adapter bindings/js-extras",
     "test": "vitest run",
     "typecheck": "tsc -b --noEmit ts/packages/core",
     "conformance": "node ts/packages/core/dist/conformance/run.js conformance"

@@ -1,0 +1,1680 @@
+{
+  "kind": "parity",
+  "problem_file": "../problems/weighted-coverage.json",
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "w0",
+        "placed": true,
+        "box": {
+          "x": 506.142,
+          "y": 269.956,
+          "w": 34.71599999999995,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 0"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            31.116
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 39,
+          "terms": {
+            "traffic": 0.0
+          }
+        }
+      },
+      {
+        "id": "w1",
+        "placed": true,
+        "box": {
+          "x": 264.4,
+          "y": 133.028,
+          "w": 34.71600000000001,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 1"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            31.116
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.125,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.37373737373737376,
+          "rank": 24,
+          "terms": {
+            "traffic": 0.37373737373737376
+          }
+        }
+      },
+      {
+        "id": "w2",
+        "placed": true,
+        "box": {
+          "x": 134.2,
+          "y": 294.528,
+          "w": 34.71600000000001,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 2"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            31.116
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.27266666666666595,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.7474747474747475,
+          "rank": 9,
+          "terms": {
+            "traffic": 0.7474747474747475
+          }
+        }
+      },
+      {
+        "id": "w3",
+        "placed": true,
+        "box": {
+          "x": 63.842,
+          "y": 318.55600000000004,
+          "w": 34.71600000000001,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 3"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            31.116
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.1111111111111111,
+          "rank": 34,
+          "terms": {
+            "traffic": 0.1111111111111111
+          }
+        }
+      },
+      {
+        "id": "w4",
+        "placed": true,
+        "box": {
+          "x": 147.142,
+          "y": 69.256,
+          "w": 34.71600000000001,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 4"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            31.116
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.04999999999999965,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.48484848484848486,
+          "rank": 19,
+          "terms": {
+            "traffic": 0.48484848484848486
+          }
+        }
+      },
+      {
+        "id": "w5",
+        "placed": true,
+        "box": {
+          "x": 213.74272722987305,
+          "y": 143.69999999999854,
+          "w": 34.71600000000001,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "bottom",
+        "model": "slider",
+        "text": {
+          "lines": [
+            "City 5"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            31.116
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.29374999999996376,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.8585858585858586,
+          "rank": 6,
+          "terms": {
+            "traffic": 0.8585858585858586
+          }
+        }
+      },
+      {
+        "id": "w6",
+        "placed": true,
+        "box": {
+          "x": 237.042,
+          "y": 168.356,
+          "w": 34.71599999999998,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 6"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            31.116
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.4428922889341116,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.2222222222222222,
+          "rank": 30,
+          "terms": {
+            "traffic": 0.2222222222222222
+          }
+        }
+      },
+      {
+        "id": "w7",
+        "placed": true,
+        "box": {
+          "x": 112.44272722987307,
+          "y": 334.4999999999985,
+          "w": 34.71600000000001,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "bottom",
+        "model": "slider",
+        "text": {
+          "lines": [
+            "City 7"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            31.116
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.29374999999996304,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.5959595959595959,
+          "rank": 15,
+          "terms": {
+            "traffic": 0.5959595959595959
+          }
+        }
+      },
+      {
+        "id": "w8",
+        "placed": true,
+        "box": {
+          "x": 96.9,
+          "y": 37.528,
+          "w": 34.71600000000001,
+          "h": 19.944000000000003
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 8"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            31.116
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.125,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "reserved": true,
+          "score": 0.9696969696969697,
+          "rank": 1,
+          "terms": {
+            "traffic": 0.9696969696969697
+          }
+        }
+      },
+      {
+        "id": "w9",
+        "placed": true,
+        "box": {
+          "x": 466.542,
+          "y": 21.656,
+          "w": 34.71600000000001,
+          "h": 19.944000000000003
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 9"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            31.116
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.3333333333333333,
+          "rank": 26,
+          "terms": {
+            "traffic": 0.3333333333333333
+          }
+        }
+      },
+      {
+        "id": "w10",
+        "placed": true,
+        "box": {
+          "x": 431.1284271247462,
+          "y": 110.02842712474617,
+          "w": 41.58000000000004,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "bottom-right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 10"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.42500000000000004,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.7070707070707071,
+          "rank": 11,
+          "terms": {
+            "traffic": 0.7070707070707071
+          }
+        }
+      },
+      {
+        "id": "w11",
+        "placed": true,
+        "box": {
+          "x": 185.9999999999984,
+          "y": 112.80592722987308,
+          "w": 41.579999999999984,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "right",
+        "model": "slider",
+        "text": {
+          "lines": [
+            "City 11"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.18874999999996023,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0707070707070707,
+          "rank": 36,
+          "terms": {
+            "traffic": 0.0707070707070707
+          }
+        }
+      },
+      {
+        "id": "w12",
+        "placed": true,
+        "box": {
+          "x": 235.6,
+          "y": 210.128,
+          "w": 41.58000000000001,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 12"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.125,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.4444444444444444,
+          "rank": 21,
+          "terms": {
+            "traffic": 0.4444444444444444
+          }
+        }
+      },
+      {
+        "id": "w13",
+        "placed": true,
+        "box": {
+          "x": 408.60999999999996,
+          "y": 74.856,
+          "w": 41.58000000000004,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 13"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.04999999999999965,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "reserved": true,
+          "score": 0.8181818181818182,
+          "rank": 5,
+          "terms": {
+            "traffic": 0.8181818181818182
+          }
+        }
+      },
+      {
+        "id": "w14",
+        "placed": true,
+        "box": {
+          "x": 362.6,
+          "y": 82.52799999999999,
+          "w": 41.58000000000004,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 14"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.125,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.18181818181818182,
+          "rank": 32,
+          "terms": {
+            "traffic": 0.18181818181818182
+          }
+        }
+      },
+      {
+        "id": "w15",
+        "placed": true,
+        "box": {
+          "x": 205.5200000000016,
+          "y": 189.55007277012692,
+          "w": 41.579999999999984,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "left",
+        "model": "slider",
+        "text": {
+          "lines": [
+            "City 15"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.5787499999999592,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.5555555555555556,
+          "rank": 17,
+          "terms": {
+            "traffic": 0.5555555555555556
+          }
+        }
+      },
+      {
+        "id": "w16",
+        "placed": true,
+        "box": {
+          "x": 369.6,
+          "y": 345.928,
+          "w": 41.58000000000004,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 16"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.125,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "reserved": true,
+          "score": 0.9292929292929293,
+          "rank": 3,
+          "terms": {
+            "traffic": 0.9292929292929293
+          }
+        }
+      },
+      {
+        "id": "w17",
+        "placed": true,
+        "box": {
+          "x": 91.71000000000001,
+          "y": 126.45599999999999,
+          "w": 41.579999999999984,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 17"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.29292929292929293,
+          "rank": 28,
+          "terms": {
+            "traffic": 0.29292929292929293
+          }
+        }
+      },
+      {
+        "id": "w18",
+        "placed": true,
+        "box": {
+          "x": 336.51,
+          "y": 48.456,
+          "w": 41.58000000000004,
+          "h": 19.944000000000003
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 18"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.6666666666666666,
+          "rank": 13,
+          "terms": {
+            "traffic": 0.6666666666666666
+          }
+        }
+      },
+      {
+        "id": "w19",
+        "placed": true,
+        "box": {
+          "x": 373.31999999999994,
+          "y": 111.928,
+          "w": 41.58000000000004,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "left",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 19"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.27499999999999997,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.030303030303030304,
+          "rank": 38,
+          "terms": {
+            "traffic": 0.030303030303030304
+          }
+        }
+      },
+      {
+        "id": "w20",
+        "placed": true,
+        "box": {
+          "x": 225.51000000000002,
+          "y": 86.756,
+          "w": 41.58000000000001,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 20"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.04999999999999965,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.40404040404040403,
+          "rank": 23,
+          "terms": {
+            "traffic": 0.40404040404040403
+          }
+        }
+      },
+      {
+        "id": "w21",
+        "placed": true,
+        "box": {
+          "x": 152.9999999999984,
+          "y": 315.3500727701269,
+          "w": 41.579999999999984,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "right",
+        "model": "slider",
+        "text": {
+          "lines": [
+            "City 21"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.20374999999996019,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.7777777777777778,
+          "rank": 8,
+          "terms": {
+            "traffic": 0.7777777777777778
+          }
+        }
+      },
+      {
+        "id": "w22",
+        "placed": true,
+        "box": {
+          "x": 481.51,
+          "y": 197.15599999999998,
+          "w": 41.58000000000004,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 22"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.1414141414141414,
+          "rank": 33,
+          "terms": {
+            "traffic": 0.1414141414141414
+          }
+        }
+      },
+      {
+        "id": "w23",
+        "placed": true,
+        "box": {
+          "x": 69.00999999999999,
+          "y": 159.356,
+          "w": 41.58000000000001,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 23"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.12021638802139706,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.5151515151515151,
+          "rank": 18,
+          "terms": {
+            "traffic": 0.5151515151515151
+          }
+        }
+      },
+      {
+        "id": "w24",
+        "placed": true,
+        "box": {
+          "x": 389.01,
+          "y": 175.55599999999998,
+          "w": 41.58000000000004,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 24"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "reserved": true,
+          "score": 0.8888888888888888,
+          "rank": 4,
+          "terms": {
+            "traffic": 0.8888888888888888
+          }
+        }
+      },
+      {
+        "id": "w25",
+        "placed": true,
+        "box": {
+          "x": 276.52,
+          "y": 338.728,
+          "w": 41.58000000000004,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "left",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 25"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.27499999999999997,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.25252525252525254,
+          "rank": 29,
+          "terms": {
+            "traffic": 0.25252525252525254
+          }
+        }
+      },
+      {
+        "id": "w26",
+        "placed": true,
+        "box": {
+          "x": 493.00999999999993,
+          "y": 307.55600000000004,
+          "w": 41.579999999999984,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 26"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.6262626262626263,
+          "rank": 14,
+          "terms": {
+            "traffic": 0.6262626262626263
+          }
+        }
+      },
+      {
+        "id": "w27",
+        "placed": true,
+        "box": {
+          "x": 39.52432722987307,
+          "y": 24.456000000001403,
+          "w": 41.57999999999999,
+          "h": 19.944000000000003
+        },
+        "anchor_side": "top",
+        "model": "slider",
+        "text": {
+          "lines": [
+            "City 27"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.15874999999996484,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "reserved": true,
+          "score": 1.0,
+          "rank": 0,
+          "terms": {
+            "traffic": 1.0
+          }
+        }
+      },
+      {
+        "id": "w28",
+        "placed": true,
+        "box": {
+          "x": 49.910000000000004,
+          "y": 281.35600000000005,
+          "w": 41.580000000000005,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 28"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.36363636363636365,
+          "rank": 25,
+          "terms": {
+            "traffic": 0.36363636363636365
+          }
+        }
+      },
+      {
+        "id": "w29",
+        "placed": true,
+        "box": {
+          "x": 453.6,
+          "y": 140.128,
+          "w": 41.58000000000004,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 29"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.125,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.7373737373737373,
+          "rank": 10,
+          "terms": {
+            "traffic": 0.7373737373737373
+          }
+        }
+      },
+      {
+        "id": "w30",
+        "placed": true,
+        "box": {
+          "x": 324.51,
+          "y": 108.19999999999999,
+          "w": 41.58000000000004,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "bottom",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 30"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.19999999999999965,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.10101010101010101,
+          "rank": 35,
+          "terms": {
+            "traffic": 0.10101010101010101
+          }
+        }
+      },
+      {
+        "id": "w31",
+        "placed": true,
+        "box": {
+          "x": 106.50999999999999,
+          "y": 264.15600000000006,
+          "w": 41.58000000000001,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 31"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.47474747474747475,
+          "rank": 20,
+          "terms": {
+            "traffic": 0.47474747474747475
+          }
+        }
+      },
+      {
+        "id": "w32",
+        "placed": true,
+        "box": {
+          "x": 389.60999999999996,
+          "y": 152.2,
+          "w": 41.58000000000004,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "bottom",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 32"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.19999999999999998,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.8484848484848485,
+          "rank": 7,
+          "terms": {
+            "traffic": 0.8484848484848485
+          }
+        }
+      },
+      {
+        "id": "w33",
+        "placed": true,
+        "box": {
+          "x": 385.60999999999996,
+          "y": 32.455999999999996,
+          "w": 41.58000000000004,
+          "h": 19.944000000000003
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 33"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.21212121212121213,
+          "rank": 31,
+          "terms": {
+            "traffic": 0.21212121212121213
+          }
+        }
+      },
+      {
+        "id": "w34",
+        "placed": true,
+        "box": {
+          "x": 453.6,
+          "y": 345.728,
+          "w": 41.58000000000004,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 34"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.125,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.5858585858585859,
+          "rank": 16,
+          "terms": {
+            "traffic": 0.5858585858585859
+          }
+        }
+      },
+      {
+        "id": "w35",
+        "placed": true,
+        "box": {
+          "x": 439.81,
+          "y": 311.55600000000004,
+          "w": 41.58000000000004,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 35"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "reserved": true,
+          "score": 0.9595959595959596,
+          "rank": 2,
+          "terms": {
+            "traffic": 0.9595959595959596
+          }
+        }
+      },
+      {
+        "id": "w36",
+        "placed": true,
+        "box": {
+          "x": 264.79999999999677,
+          "y": 188.87214554025383,
+          "w": 41.58000000000004,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "right",
+        "model": "slider",
+        "text": {
+          "lines": [
+            "City 36"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.263749999999919,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.32323232323232326,
+          "rank": 27,
+          "terms": {
+            "traffic": 0.32323232323232326
+          }
+        }
+      },
+      {
+        "id": "w37",
+        "placed": true,
+        "box": {
+          "x": 321.10999999999996,
+          "y": 319.85600000000005,
+          "w": 41.58000000000004,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 37"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.14166666666666866,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.696969696969697,
+          "rank": 12,
+          "terms": {
+            "traffic": 0.696969696969697
+          }
+        }
+      },
+      {
+        "id": "w38",
+        "placed": true,
+        "box": {
+          "x": 163.9,
+          "y": 337.62800000000004,
+          "w": 41.579999999999984,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 38"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.125,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.06060606060606061,
+          "rank": 37,
+          "terms": {
+            "traffic": 0.06060606060606061
+          }
+        }
+      },
+      {
+        "id": "w39",
+        "placed": true,
+        "box": {
+          "x": 124.31,
+          "y": 220.25599999999997,
+          "w": 41.579999999999984,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "City 39"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            37.98
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.43434343434343436,
+          "rank": 22,
+          "terms": {
+            "traffic": 0.43434343434343436
+          }
+        }
+      }
+    ],
+    "stats": {
+      "placed": 40,
+      "total": 40,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 10000,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 1276,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 6.133692010288532,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 200,
+        "rows": 134,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

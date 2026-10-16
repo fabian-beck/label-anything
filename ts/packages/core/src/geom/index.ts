@@ -13,7 +13,7 @@
  * @module
  */
 
-import { clampf, len2d, maxf, minf } from "../math.js";
+import { clampf, len2d, maxf, minf, toIndex } from "../math.js";
 
 /** Geometric tolerance in pixels. Touching within this distance is not an overlap. */
 export const EPS = 1e-6;
@@ -276,6 +276,12 @@ export class Affine {
     return new P(m[0] * p.x + m[2] * p.y + m[4], m[1] * p.x + m[3] * p.y + m[5]);
   }
 
+  /** Image of the point `(x, y)` ({@link apply}). */
+  applyXY(x: number, y: number): P {
+    const m = this.m;
+    return new P(m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]);
+  }
+
   /** `self ∘ other` (apply `self` first, then `after`). */
   then(after: Affine): Affine {
     const a = this.m;
@@ -402,6 +408,20 @@ export function segLenInRect(a: P, b: P, r: Rect): number {
  * last successful clip (overwritten by the next call).
  */
 export const CLIP = new Float64Array(2);
+
+/**
+ * Index range `[k0, k1)` (a superset, by two samples on each side) of the samples
+ * `a + (b − a)·(k + 0.5)/n`, `k < n`, that can lie in the closed rectangle `r`; empty
+ * when `ab` misses `r`. Mirrors `sample_range_in_rect`.
+ */
+export function sampleRangeInRect(a: P, b: P, n: number, r: Rect): [number, number] {
+  if (!clipSegRectXY(a.x, a.y, b.x, b.y, r.x0, r.y0, r.x1, r.y1)) return [0, 0];
+  const k0f = Math.floor(CLIP[0]! * n - 0.5) - 2;
+  const k1f = Math.ceil(CLIP[1]! * n - 0.5) + 3;
+  const k0 = k0f > 0 ? Math.min(toIndex(k0f), n) : 0;
+  const k1 = k1f > 0 ? Math.min(toIndex(k1f), n) : 0;
+  return [k0, Math.max(k1, k0)];
+}
 
 /** Liang–Barsky clipping: the parameter interval `[t0, t1]` of `ab` inside `r`. */
 export function clipSegRect(a: P, b: P, r: Rect): [number, number] | null {

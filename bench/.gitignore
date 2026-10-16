@@ -3,5 +3,10 @@
 # Fetched third-party data and generated problems are reproducible; never commit them.
 data/
 out/
+# (also when a worktree symlinks them to a shared checkout)
+/data
+/out
 .pytest_cache/
 __pycache__/
+# npm install of the vega-label baseline (bench/baselines/package-lock.json is committed)
+node_modules/

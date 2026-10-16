@@ -1,0 +1,524 @@
+{
+  "kind": "parity",
+  "problem_file": "../problems/presets-map.json",
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "poi0",
+        "placed": true,
+        "box": {
+          "x": 155.1142135623731,
+          "y": 68.2417864376269,
+          "w": 63.05200000000002,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top-right",
+        "model": "adjacent",
+        "parts": [
+          {
+            "type": "icon",
+            "box": {
+              "x": 156.9142135623731,
+              "y": 73.2137864376269,
+              "w": 10.0,
+              "h": 10.000000000000014
+            }
+          },
+          {
+            "type": "text",
+            "box": {
+              "x": 166.9142135623731,
+              "y": 70.0417864376269,
+              "w": 49.452,
+              "h": 16.34400000000001
+            },
+            "text": {
+              "lines": [
+                "Museum"
+              ],
+              "used": "original",
+              "truncated": false,
+              "baseline_offsets": [
+                12.828
+              ],
+              "line_widths": [
+                49.452
+              ],
+              "x_offset": 0.0,
+              "font_size": 12.0,
+              "font_family": "default",
+              "font_weight": 400,
+              "scale": 1.0
+            }
+          }
+        ],
+        "leader": null,
+        "cost": 0.0499999999999999,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 0,
+          "terms": {
+            "rank": 1.0
+          }
+        }
+      },
+      {
+        "id": "poi1",
+        "placed": true,
+        "box": {
+          "x": 307.7142135623731,
+          "y": 166.84178643762687,
+          "w": 38.81200000000001,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top-right",
+        "model": "adjacent",
+        "parts": [
+          {
+            "type": "icon",
+            "box": {
+              "x": 309.51421356237313,
+              "y": 171.81378643762687,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "type": "text",
+            "box": {
+              "x": 319.51421356237313,
+              "y": 168.64178643762688,
+              "w": 25.21199999999999,
+              "h": 16.343999999999994
+            },
+            "text": {
+              "lines": [
+                "Café"
+              ],
+              "used": "original",
+              "truncated": false,
+              "baseline_offsets": [
+                12.828
+              ],
+              "line_widths": [
+                25.212
+              ],
+              "x_offset": 0.0,
+              "font_size": 12.0,
+              "font_family": "default",
+              "font_weight": 400,
+              "scale": 1.0
+            }
+          }
+        ],
+        "leader": null,
+        "cost": 0.05401416117315601,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.8571428571428571,
+          "rank": 1,
+          "terms": {
+            "rank": 0.8571428571428571
+          }
+        }
+      },
+      {
+        "id": "poi2",
+        "placed": true,
+        "box": {
+          "x": 494.3297864376269,
+          "y": 338.9142135623731,
+          "w": 53.355999999999995,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "bottom-left",
+        "model": "adjacent",
+        "parts": [
+          {
+            "type": "icon",
+            "box": {
+              "x": 496.12978643762693,
+              "y": 343.8862135623731,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "type": "text",
+            "box": {
+              "x": 506.12978643762693,
+              "y": 340.7142135623731,
+              "w": 39.75600000000003,
+              "h": 16.343999999999994
+            },
+            "text": {
+              "lines": [
+                "Station"
+              ],
+              "used": "original",
+              "truncated": false,
+              "baseline_offsets": [
+                12.828
+              ],
+              "line_widths": [
+                39.756
+              ],
+              "x_offset": 0.0,
+              "font_size": 12.0,
+              "font_family": "default",
+              "font_weight": 400,
+              "scale": 1.0
+            }
+          }
+        ],
+        "leader": null,
+        "cost": 0.27500000000000036,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.7142857142857143,
+          "rank": 2,
+          "terms": {
+            "rank": 0.7142857142857143
+          }
+        }
+      },
+      {
+        "id": "poi3",
+        "placed": true,
+        "box": {
+          "x": 219.21421356237312,
+          "y": 138.4417864376269,
+          "w": 38.95600000000002,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top-right",
+        "model": "adjacent",
+        "parts": [
+          {
+            "type": "icon",
+            "box": {
+              "x": 221.01421356237313,
+              "y": 143.4137864376269,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "type": "text",
+            "box": {
+              "x": 231.01421356237313,
+              "y": 140.2417864376269,
+              "w": 25.355999999999995,
+              "h": 16.343999999999994
+            },
+            "text": {
+              "lines": [
+                "Park"
+              ],
+              "used": "original",
+              "truncated": false,
+              "baseline_offsets": [
+                12.828
+              ],
+              "line_widths": [
+                25.356
+              ],
+              "x_offset": 0.0,
+              "font_size": 12.0,
+              "font_family": "default",
+              "font_weight": 400,
+              "scale": 1.0
+            }
+          }
+        ],
+        "leader": null,
+        "cost": 0.0500000000000004,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.5714285714285714,
+          "rank": 3,
+          "terms": {
+            "rank": 0.5714285714285714
+          }
+        }
+      },
+      {
+        "id": "poi4",
+        "placed": true,
+        "box": {
+          "x": 430.01421356237313,
+          "y": 171.4417864376269,
+          "w": 52.888000000000034,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top-right",
+        "model": "adjacent",
+        "parts": [
+          {
+            "type": "icon",
+            "box": {
+              "x": 431.81421356237314,
+              "y": 176.4137864376269,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "type": "text",
+            "box": {
+              "x": 441.81421356237314,
+              "y": 173.2417864376269,
+              "w": 39.287999999999954,
+              "h": 16.343999999999994
+            },
+            "text": {
+              "lines": [
+                "Library"
+              ],
+              "used": "original",
+              "truncated": false,
+              "baseline_offsets": [
+                12.828
+              ],
+              "line_widths": [
+                39.288
+              ],
+              "x_offset": 0.0,
+              "font_size": 12.0,
+              "font_family": "default",
+              "font_weight": 400,
+              "scale": 1.0
+            }
+          }
+        ],
+        "leader": null,
+        "cost": 0.0500000000000004,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.42857142857142855,
+          "rank": 4,
+          "terms": {
+            "rank": 0.42857142857142855
+          }
+        }
+      },
+      {
+        "id": "poi5",
+        "placed": true,
+        "box": {
+          "x": 343.7142135623731,
+          "y": 231.1142135623731,
+          "w": 52.384000000000015,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "bottom-right",
+        "model": "adjacent",
+        "parts": [
+          {
+            "type": "icon",
+            "box": {
+              "x": 345.51421356237313,
+              "y": 236.0862135623731,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "type": "text",
+            "box": {
+              "x": 355.51421356237313,
+              "y": 232.9142135623731,
+              "w": 38.78399999999999,
+              "h": 16.343999999999994
+            },
+            "text": {
+              "lines": [
+                "Bakery"
+              ],
+              "used": "original",
+              "truncated": false,
+              "baseline_offsets": [
+                12.828
+              ],
+              "line_widths": [
+                38.784
+              ],
+              "x_offset": 0.0,
+              "font_size": 12.0,
+              "font_family": "default",
+              "font_weight": 400,
+              "scale": 1.0
+            }
+          }
+        ],
+        "leader": null,
+        "cost": 0.2000000000000004,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.2857142857142857,
+          "rank": 5,
+          "terms": {
+            "rank": 0.2857142857142857
+          }
+        }
+      },
+      {
+        "id": "poi6",
+        "placed": true,
+        "box": {
+          "x": 308.7142135623731,
+          "y": 284.5417864376269,
+          "w": 34.98400000000004,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top-right",
+        "model": "adjacent",
+        "parts": [
+          {
+            "type": "icon",
+            "box": {
+              "x": 310.51421356237313,
+              "y": 289.5137864376269,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "type": "text",
+            "box": {
+              "x": 320.51421356237313,
+              "y": 286.3417864376269,
+              "w": 21.384000000000015,
+              "h": 16.343999999999994
+            },
+            "text": {
+              "lines": [
+                "Zoo"
+              ],
+              "used": "original",
+              "truncated": false,
+              "baseline_offsets": [
+                12.828
+              ],
+              "line_widths": [
+                21.384
+              ],
+              "x_offset": 0.0,
+              "font_size": 12.0,
+              "font_family": "default",
+              "font_weight": 400,
+              "scale": 1.0
+            }
+          }
+        ],
+        "leader": null,
+        "cost": 0.06494029980291006,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.14285714285714285,
+          "rank": 6,
+          "terms": {
+            "rank": 0.14285714285714285
+          }
+        }
+      },
+      {
+        "id": "poi7",
+        "placed": true,
+        "box": {
+          "x": 490.6057864376269,
+          "y": 265.8417864376269,
+          "w": 50.98000000000002,
+          "h": 19.94399999999996
+        },
+        "anchor_side": "top-left",
+        "model": "adjacent",
+        "parts": [
+          {
+            "type": "icon",
+            "box": {
+              "x": 492.4057864376269,
+              "y": 270.8137864376269,
+              "w": 10.0,
+              "h": 10.0
+            }
+          },
+          {
+            "type": "text",
+            "box": {
+              "x": 502.4057864376269,
+              "y": 267.64178643762693,
+              "w": 37.38000000000005,
+              "h": 16.343999999999994
+            },
+            "text": {
+              "lines": [
+                "Bridge"
+              ],
+              "used": "original",
+              "truncated": false,
+              "baseline_offsets": [
+                12.828
+              ],
+              "line_widths": [
+                37.38
+              ],
+              "x_offset": 0.0,
+              "font_size": 12.0,
+              "font_family": "default",
+              "font_weight": 400,
+              "scale": 1.0
+            }
+          }
+        ],
+        "leader": null,
+        "cost": 0.1250000000000004,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 7,
+          "terms": {
+            "rank": 0.0
+          }
+        }
+      }
+    ],
+    "stats": {
+      "placed": 8,
+      "total": 8,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 3200,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 289,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.8689544609760678,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 200,
+        "rows": 134,
+        "classes": [
+          "lines"
+        ]
+      }
+    },
+    "debug_svg": null
+  }
+}

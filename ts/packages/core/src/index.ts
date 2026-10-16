@@ -1,8 +1,10 @@
 /**
  * @label-anything/core — pure TypeScript implementation of Label Anything.
  *
- * The solver entry points (`place`, `validate`, `renderDebugSvg`) follow the API in
- * `api.ts`; they are added as the port of the Rust core lands (docs/dev/porting.md).
+ * `place`, `validate` and `renderDebugSvg` follow the API in `api.ts`; the solver is a
+ * line-by-line port of the Rust core (docs/dev/porting.md) and makes the same decisions
+ * for the same iteration counts. `placeWith(env, problem)` solves with a custom
+ * {@link Env} (clock, files, callbacks, SVG backend).
  */
 export type {
   CandidateInfo,
@@ -18,3 +20,32 @@ export type {
   ValidationReport,
 } from "./api.js";
 export { PlaceError } from "./api.js";
+export { VERSION } from "./version.js";
+export { place, validate, renderDebugSvg, type BudgetProfile } from "./place.js";
+export { BasicEnv, BUILTIN_SVG, type Env, type Geom, type SvgBackend, type SvgDoc } from "./env.js";
+
+import type { LabelResult, ValidationReport } from "./api.js";
+import type { Env } from "./env.js";
+import { PlaceError } from "./api.js";
+import { placeReported, placeWith as placeWithImpl, type BudgetProfile } from "./place.js";
+import { Issue } from "./validate.js";
+
+/**
+ * Solve a problem (an object) with a custom environment. Throws `PlaceError` if the
+ * problem is invalid. `profile: "rust"` uses the Rust core's per-implementation
+ * constants (default time budget and moves per ms), for parity tests.
+ */
+export function placeWith(env: Env, problem: unknown, profile: BudgetProfile = "ts"): LabelResult {
+  return placeWithImpl(problem, env, profile) as unknown as LabelResult;
+}
+
+/**
+ * Solve a problem whose validation report (from {@link validate}) is already known; its
+ * warnings are passed through to the result. Throws `PlaceError` if the report is not
+ * valid or the problem cannot be prepared.
+ */
+export function placeValidated(env: Env, problem: unknown, report: ValidationReport, profile: BudgetProfile = "ts"): LabelResult {
+  if (!report.valid) throw new PlaceError(report.errors);
+  const warnings = report.warnings.map((w) => new Issue(w.pointer ?? "", w.code, w.message));
+  return placeReported(problem, env, warnings, profile) as unknown as LabelResult;
+}

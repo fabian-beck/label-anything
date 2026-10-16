@@ -15,13 +15,60 @@ hard-constraint guarantees never do.
 | `x.rs` | `x.ts` |
 | `dir/mod.rs` | `dir/index.ts` |
 | `index.rs` (spatial index) | `spatial.ts` |
-| `lib.rs` (pipeline) | `place.ts`; public exports in `index.ts` |
+| `lib.rs` (pipeline) | `place.ts` (`placeValidated`, `place`, `validate`, `renderDebugSvg`); public exports in `index.ts` |
+| `env.rs` (`Env`, `NativeEnv` without files) | `env.ts` (`Env` with optional members, `BasicEnv`, `BUILTIN_SVG`); `place.ts` maps `PlaceOptions` to an `Env` |
+| `model/mod.rs`, `model/opts.rs` | `model/index.ts`, `model/opts.ts` |
+| `labels.rs`, `priority.rs`, `obstacles.rs`, `candidates.rs`, `leaders.rs`, `boundary.rs`, `cost.rs`, `result.rs` | same names `.ts` |
+| `grid/occupancy.rs` | `grid/occupancy.ts` (32-bit row words instead of 64-bit; same cells and answers) |
+| `solver/{mod,state,greedy,local,exact,repair,verify}.rs` | `solver/{index,state,greedy,local,exact,repair,verify}.ts` |
+| `la-render/src/lib.rs` (debug SVG) | `render.ts` |
+| `la-cli` (`place`, `validate`, `render`) | `ts/packages/cli` (`label-anything-ts`) |
 | `generated/spec_data.rs` | `generated/spec-data.ts` (by `tools/codegen.mjs`) |
 | `#[cfg(test)] mod tests` in `x.rs` | `test/x.test.ts` (same test names) |
+| `tests/random_problems.rs` | `test/random-problems.test.ts` (same generator and seeds) |
 
 `detmath.ts`, `pcg.ts` and `expr/` mirror `la-expr` (`det_math`, `Pcg32`, the expression
 language). Text measurement comes from `@label-anything/text`, raster modes from
-`@label-anything/raster`, SVG geometry from `@label-anything/svg`.
+`@label-anything/raster`, SVG geometry from `@label-anything/svg`. `json.ts` holds the
+`serde_json` accessors (`as_f64`, `as_u64`, …) and Rust's float formatting (`Display`,
+`{:.N}` with ties to even).
+
+### Deliberate differences
+
+* **Per-implementation constants.** `solver.time_budget_ms` defaults to 250 in
+  TypeScript (Rust: 100) and local search runs 40 moves per ms of budget (Rust: 100),
+  ADR 0007. `placeWith(…, "rust")` (`BudgetProfile`) uses the Rust values, so that the
+  parity tests run the same iteration counts.
+* **Candidate filter before construction.** Rust builds the adjacent, slider, distant
+  and boundary candidates of a variant and then drops those that `keep` rejects
+  (occupancy pre-filter, ADR 0015). The port calls the same `keep` on the same boxes in
+  the same order, but before it builds the candidate (`KeepFn`, box in `KEEP_BOX`), so
+  rejected boxes cost no allocation.
+* **Lazy obstacle structures.** The exact primitive list and index (queried only for
+  hard classes) and the item-mark coverages (`itemsSat`, per-item `own`; used only by
+  soft item costs, item buffers and partial own-mark policies) are built on first use,
+  from the same inputs in the same order.
+* **Early-exit scans.** `State.firstConflict` walks `DynIndex.scanStart/scanNext`, which
+  yield the ids of `query` in the same order, and stops at the first conflict.
+  `DynIndex` creates its buckets on first insert (a 4096 × 4096 grid of empty arrays
+  costs seconds of garbage collection in JavaScript).
+* **Deferred occupancy marks.** Only candidate generation reads the placed-label
+  occupancy grid, so `State` logs placed and removed boxes and applies them when the grid
+  is read (a box placed and removed in between cancels out): local search, exact search
+  and repair do not mark it at all. The free-space seeds near an item are collected once
+  per item, not once per variant. Frozen occupancy grids scan their bitset for small
+  windows (cheaper than the summed-area table's cache misses in V8).
+* `Cand.bbox()` is cached; the measurer caches fonts; `FontBook.resolve` is memoized.
+
+### Parity
+
+`conformance/parity/` holds the Rust result of every conformance problem, solved
+without a clock (`cargo run --release -p label-anything --example place_oracle`; CI
+checks it is current). `test/parity.test.ts` solves each problem with `BasicEnv` (no
+clock) and the Rust budget profile and requires a bit-identical result (except the
+timing fields and the implementation name); `test/random-problems.test.ts` compares 40
+random problems (`LA_RANDOM_PARITY`) with the Rust CLI (`label-anything place -
+--no-clock`) when `rust/target/release/label-anything` exists.
 
 ## Names
 
@@ -88,8 +135,15 @@ forms of its predicates for such loops (`distPointSegXY`, `segSegDistXY`,
 `segOverlapsRectXY`, `Shape.signedDistanceXY`, `MaskRaster.discXY`, …): same operations,
 no `P` arguments. In V8, doubles passed to or returned from a call that is not inlined
 are boxed, so keep the innermost helpers small and call them from a single site in a
-loop rather than from several unrolled ones. `ts/packages/core/bench/geom-bench.mjs`
-(against `rust/crates/la-core/examples/geom_bench.rs`) times the geometry hot paths.
+loop rather than from several unrolled ones. Where a hot call cannot be kept small
+(the candidate filter, leader starts, touch centers), pass coordinates in a module-level
+`Float64Array` (`KEEP_BOX`, `LS`, `TC_ARGS`) instead of as arguments, and avoid array
+destructuring (`const [a, b] = t`, `for (const [k, v] of list)`) on per-element paths:
+unless the JIT removes it, it allocates an iterator per use.
+`ts/packages/core/bench/geom-bench.mjs` (against
+`rust/crates/la-core/examples/geom_bench.rs`) times the geometry hot paths and
+`ts/packages/core/bench/place-bench.mjs` the whole `place` on the brief's performance
+problems (`--write <dir>` writes them for the Rust CLI).
 
 ## Tests
 

@@ -399,6 +399,22 @@ pub fn clip_seg_rect(a: P, b: P, r: &Rect) -> Option<(f64, f64)> {
     }
 }
 
+/// Index range `k0..k1` (a superset, by two samples on each side) of the samples
+/// `a + (b − a)·(k + 0.5)/n`, `k < n`, that can lie in the closed rectangle `r`; empty
+/// when `ab` misses `r`. Lets sampling loops skip samples that cannot count, so their
+/// work is bounded by the part of the segment inside `r`.
+pub fn sample_range_in_rect(a: P, b: P, n: usize, r: &Rect) -> (usize, usize) {
+    let Some((t0, t1)) = clip_seg_rect(a, b, r) else {
+        return (0, 0);
+    };
+    let nf = n as f64;
+    let k0 = (t0 * nf - 0.5).floor() - 2.0;
+    let k1 = (t1 * nf - 0.5).ceil() + 3.0;
+    let k0 = if k0 > 0.0 { (k0 as usize).min(n) } else { 0 };
+    let k1 = if k1 > 0.0 { (k1 as usize).min(n) } else { 0 };
+    (k0, k1.max(k0))
+}
+
 /// Segment `ab` passes through the interior of `r` (shrunk by `EPS`).
 pub fn seg_overlaps_rect(a: P, b: P, r: &Rect) -> bool {
     let inner = r.inflate(-EPS);
