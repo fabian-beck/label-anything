@@ -259,6 +259,17 @@ pub struct Model {
     pub warm: BTreeMap<String, Option<Rect>>,
     pub warnings: Vec<Issue>,
     pub preset_name: String,
+    /// Groups of items sharing one label: (representative, members incl. the representative).
+    pub groups: Vec<(usize, Vec<usize>)>,
+    /// For each item: the representative of its group (itself for representatives).
+    pub group_of: Vec<Option<usize>>,
+}
+
+impl Model {
+    /// Members of the group represented by `rep` (empty if `rep` is not a representative).
+    pub fn group_members(&self, rep: usize) -> &[usize] {
+        self.groups.iter().find(|g| g.0 == rep).map(|g| g.1.as_slice()).unwrap_or(&[])
+    }
 }
 
 /// A model-building failure (the problem passed validation but cannot be solved).
@@ -381,6 +392,61 @@ pub fn base64_decode(s: &str) -> Option<Vec<u8>> {
 
 /// Build the model. `problem` must have passed `validate`.
 pub fn build(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
+    let mut m = build_raw(problem, env)?;
+    resolve_groups(&mut m);
+    Ok(m)
+}
+
+/// Merge items sharing a `group` id into one label (spec §5.7 "groups"): the first member
+/// (input order) represents the group; its mark becomes the convex hull of all member
+/// marks, its anchor their centroid, and its text lists the distinct member texts.
+fn resolve_groups(m: &mut Model) {
+    let n = m.items.len();
+    m.group_of = vec![None; n];
+    let mut by_name: BTreeMap<String, Vec<usize>> = BTreeMap::new();
+    for it in &m.items {
+        if let Some(g) = &it.group {
+            by_name.entry(g.clone()).or_default().push(it.index);
+        }
+    }
+    let mut groups: Vec<(usize, Vec<usize>)> = by_name.into_values().filter(|v| v.len() >= 2).map(|v| (v[0], v)).collect();
+    groups.sort_by_key(|g| g.0);
+    for (rep, members) in &groups {
+        let mut pts: Vec<P> = Vec::new();
+        let mut centroid = P::new(0.0, 0.0);
+        for &k in members {
+            pts.extend(m.items[k].shape.outline());
+            centroid = centroid + m.items[k].anchor;
+            m.group_of[k] = Some(*rep);
+        }
+        centroid = centroid * (1.0 / members.len() as f64);
+        let hull = polygon::convex_hull(&pts);
+        let shape = if hull.len() >= 3 { Shape::polygon(vec![hull], false, centroid) } else { Shape::circle(centroid, 2.0) };
+        let texts: Vec<String> = {
+            let mut t: Vec<String> = Vec::new();
+            for &k in members {
+                let s = m.items[k].label.text();
+                if !s.is_empty() && !t.contains(&s) {
+                    t.push(s);
+                }
+            }
+            t
+        };
+        let r = &mut m.items[*rep];
+        r.anchor = centroid;
+        r.shape = shape;
+        r.tip = false;
+        if let LabelSpec::Text(t) = &mut r.label {
+            if texts.len() > 1 && t.explicit.is_none() {
+                t.text = texts.join(", ");
+                t.alternatives.clear();
+            }
+        }
+    }
+    m.groups = groups;
+}
+
+fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     let o = Opts::new(problem);
     let mut warnings = Vec::new();
     let default_font = FontSel {
@@ -681,6 +747,8 @@ pub fn build(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         warm,
         warnings,
         preset_name: o.preset_name.clone(),
+        groups: Vec::new(),
+        group_of: Vec::new(),
     })
 }
 

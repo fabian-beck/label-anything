@@ -100,7 +100,20 @@ pub fn distant(model: &Model, obs: &Obstacles, item: &Item, vi: usize, v: &Varia
             }
         }
         let mut c = Cand::new(it, vi as u16, v.level, Kind::Distant, Side::Distant, 8.0 + ring as f64 * 0.5, rect);
-        c.leaders.push(l);
+        let members = model.group_members(item.index);
+        if members.len() >= 2 {
+            // fan leaders: one per member, all ending at the label's port
+            let port_pt = l.port;
+            for &mi in members {
+                let mem = &model.items[mi];
+                let s0 = leader_start(model, mem, port_pt);
+                let mut fl = Leader::new(vec![s0, rect.closest_point(s0)], style);
+                fl.member = Some(mi as u32);
+                c.leaders.push(fl);
+            }
+        } else {
+            c.leaders.push(l);
+        }
         out.push(c);
     };
     for &theta in &directions(model) {

@@ -98,6 +98,9 @@ impl<'a> Solve<'a> {
 
     /// Generate and evaluate candidates for `variants[vi_range]` of item `i` with `models`.
     pub fn generate(&mut self, i: usize, vis: &[usize], models: Models, level: u8) -> Vec<u32> {
+        if matches!(self.model.group_of.get(i), Some(Some(r)) if *r != i) {
+            return vec![];
+        }
         self.generate_mode(i, vis, models, level, false)
     }
 

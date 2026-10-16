@@ -372,6 +372,11 @@ pub fn compute(model: &Model, variants: &[Vec<Variant>], env: &dyn Env) -> Prior
             prio[i].key = best;
         }
     }
+    // a group label carries the best key of its members
+    for (rep, members) in &model.groups {
+        let best = members.iter().map(|&i| prio[i].key).min().unwrap_or(prio[*rep].key);
+        prio[*rep].key = best;
+    }
     Priorities { prio, order, n_keys: level + 1 }
 }
 

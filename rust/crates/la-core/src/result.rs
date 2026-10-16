@@ -193,6 +193,13 @@ pub fn build(s: &mut Solve, ver: &Verification, phases: &[(&str, f64)], runtime_
                 }
                 m.insert("degrade_steps".into(), json!(steps));
                 m.insert("priority".into(), priority_json(s, i));
+                let members = model.group_members(i);
+                if members.len() >= 2 {
+                    m.insert("members".into(), json!(members.iter().map(|&k| model.items[k].id.clone()).collect::<Vec<_>>()));
+                    if let Some(t) = m.get_mut("text") {
+                        t["used"] = json!("group");
+                    }
+                }
                 if model.output.item_shape {
                     m.insert("item_shape".into(), shape_json(&item.shape));
                 }

@@ -78,6 +78,15 @@ pub fn run(s: &mut Solve) {
             g.live[s.cands[k].item as usize] += 1;
         }
     }
+    // non-representative group members are labeled by their representative
+    for i in 0..n {
+        if let Some(r) = s.model.group_of.get(i).copied().flatten() {
+            if r != i {
+                g.done[i] = true;
+                s.reasons[i] = Some(Reason::Grouped);
+            }
+        }
+    }
     for (si, set) in crate::priority::keep_with_sets(s.model).into_iter().enumerate() {
         for &i in &set {
             g.sets[i] = Some(si);
