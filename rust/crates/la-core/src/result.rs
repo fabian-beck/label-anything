@@ -349,6 +349,7 @@ pub fn build(
         "seed": model.solver.seed,
         "iterations": s.iterations,
         "time_guard_hit": s.time_guard_hit,
+        "cancelled": s.cancelled,
         "candidates": s.cands.len(),
         "omission_order": omitted.iter().map(|&i| model.items[i].id.clone()).collect::<Vec<_>>(),
         "priority_inversions": ver.priority_inversions,

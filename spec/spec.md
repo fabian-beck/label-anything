@@ -796,6 +796,16 @@ soft) are uncrossed by exchanging label positions when that shortens the total l
 length; then all hard constraints are re-verified exactly. A violation found here is a
 bug; the offending lower-key label is removed and the item reported as omitted.
 
+### 10.3a Cancellation and progress
+
+Hosts may cancel a solve (a cancellation token, an `AbortSignal`). The solver polls the
+request at every priority band and every 64 items of the greedy pass, every 256
+local-search moves and every 4,096 exact-search nodes. Once cancelled it stops improving:
+the greedy pass places no further items (they are reported as `budget_exhausted`), the
+searches keep their best state, and repair and verification still run, so the result
+is valid; `stats.cancelled` is `true`. Progress is reported per greedy band and every
+256 local-search moves as `(phase, fraction)`.
+
 ### 10.4 Determinism
 
 * No iteration over hash containers in decisions; stable sorts with total comparators.

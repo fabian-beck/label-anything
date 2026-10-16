@@ -161,6 +161,10 @@ export interface Stats {
    * The wall-clock guard stopped a phase early (result may then depend on machine speed).
    */
   time_guard_hit?: boolean;
+  /**
+   * The host cancelled the solve (cancellation token / AbortSignal); the result is the best valid state found so far, and items not yet processed are reported as budget_exhausted.
+   */
+  cancelled?: boolean;
   candidates?: number;
   omission_order: string[];
   priority_inversions: number;

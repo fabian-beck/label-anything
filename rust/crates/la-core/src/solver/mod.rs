@@ -70,6 +70,8 @@ pub struct Solve<'a> {
     pub distant_dirs: Vec<(f64, crate::geom::P)>,
     pub iterations: u64,
     pub time_guard_hit: bool,
+    /// The host cancelled the solve (sticky once seen; see [`Solve::poll_cancel`]).
+    pub cancelled: bool,
     pub start_ms: f64,
 }
 
@@ -110,6 +112,7 @@ impl<'a> Solve<'a> {
             distant_dirs: crate::leaders::distant_dirs(model),
             iterations: 0,
             time_guard_hit: false,
+            cancelled: false,
             start_ms,
         }
     }
@@ -432,5 +435,14 @@ impl<'a> Solve<'a> {
 
     pub fn now(&self) -> f64 {
         self.env.now_ms()
+    }
+
+    /// Poll the host's cancellation request (`Env::cancelled`); once set it stays set.
+    /// The solver then stops improving and returns the best valid state so far.
+    pub fn poll_cancel(&mut self) -> bool {
+        if !self.cancelled && self.env.cancelled() {
+            self.cancelled = true;
+        }
+        self.cancelled
     }
 }

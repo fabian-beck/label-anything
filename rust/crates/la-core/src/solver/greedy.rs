@@ -128,8 +128,11 @@ pub fn run(s: &mut Solve) {
             band.push(order[r]);
             r += 1;
         }
-        if s.time_guard_hit || (s.now() - s.start_ms > budget_guard && s.now() > 0.0) {
-            s.time_guard_hit = true;
+        s.env
+            .progress("greedy", (r - band.len()) as f64 / order.len() as f64);
+        let cancelled = s.poll_cancel();
+        if cancelled || s.time_guard_hit || (s.now() - s.start_ms > budget_guard && s.now() > 0.0) {
+            s.time_guard_hit |= !cancelled;
             for &i in &band {
                 if !g.done[i] {
                     g.done[i] = true;
@@ -158,9 +161,14 @@ pub fn run(s: &mut Solve) {
                     .push((Reverse(g.live[i]), Reverse(s.pri.prio[i].rank), i));
             }
         }
+        let mut popped = 0usize;
         while let Some((Reverse(cnt), _, i)) = g.heap.pop() {
             if g.done[i] || g.tried0[i] || cnt != g.live[i] {
                 continue;
+            }
+            popped += 1;
+            if popped % 64 == 0 && s.poll_cancel() {
+                break;
             }
             if !process_unit(s, &mut g, i, false) && !g.done[i] {
                 g.tried0[i] = true;
@@ -171,8 +179,16 @@ pub fn run(s: &mut Solve) {
         // ladder pass in total order
         deferred.sort_by_key(|&i| s.pri.prio[i].rank);
         for i in deferred {
-            if !g.done[i] {
+            if !g.done[i] && !s.poll_cancel() {
                 process_unit(s, &mut g, i, true);
+            }
+        }
+        if s.cancelled {
+            for &i in &band {
+                if !g.done[i] && s.state.placed[i].is_none() {
+                    g.done[i] = true;
+                    s.reasons[i] = Some(Reason::BudgetExhausted);
+                }
             }
         }
     }

@@ -29,8 +29,18 @@ impl Rng {
 }
 
 const WORDS: [&str; 12] = [
-    "Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta", "Iota", "Kappa",
-    "org.example.Name", "A much longer label",
+    "Alpha",
+    "Beta",
+    "Gamma",
+    "Delta",
+    "Epsilon",
+    "Zeta",
+    "Eta",
+    "Theta",
+    "Iota",
+    "Kappa",
+    "org.example.Name",
+    "A much longer label",
 ];
 
 fn problem(seed: u64) -> Value {
@@ -75,7 +85,10 @@ fn problem(seed: u64) -> Value {
         {"class": "walls", "rects": (0..r.below(4)).map(|_| json!([r.range(0.0, w), r.range(0.0, h), r.range(5.0, 60.0), r.range(5.0, 60.0)])).collect::<Vec<_>>()}
     ]});
     if r.below(3) == 0 {
-        obstacles["vector"].as_array_mut().unwrap().push(json!({"class": "lines",
+        obstacles["vector"]
+            .as_array_mut()
+            .unwrap()
+            .push(json!({"class": "lines",
             "polylines": [[[0.0, r.range(0.0, h)], [w, r.range(0.0, h)]]], "width": 1.5}));
     }
     let models = match r.below(4) {
@@ -120,5 +133,10 @@ fn random_problems_keep_the_guarantees() {
             failures.push(format!("seed {seed}: not deterministic"));
         }
     }
-    assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.join("\n"));
+    assert!(
+        failures.is_empty(),
+        "{} failures:\n{}",
+        failures.len(),
+        failures.join("\n")
+    );
 }
