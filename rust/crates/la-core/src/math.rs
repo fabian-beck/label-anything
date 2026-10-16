@@ -42,20 +42,23 @@ pub fn clampf(v: f64, lo: f64, hi: f64) -> f64 {
     }
 }
 
-/// Minimum of two floats (no NaN handling needed: inputs are finite).
+/// Minimum of two floats. A NaN operand is ignored, as in `f64::min`; on ties (`-0`
+/// and `+0`) `a` is returned. The TypeScript `minf` is the same function, and the port
+/// uses it for `f64::min` too, so both must ignore NaN in either position.
 #[inline]
 pub fn minf(a: f64, b: f64) -> f64 {
-    if b < a {
+    if b < a || a.is_nan() {
         b
     } else {
         a
     }
 }
 
-/// Maximum of two floats.
+/// Maximum of two floats. A NaN operand is ignored, as in `f64::max`; on ties `a` is
+/// returned.
 #[inline]
 pub fn maxf(a: f64, b: f64) -> f64 {
-    if b > a {
+    if b > a || a.is_nan() {
         b
     } else {
         a
@@ -86,4 +89,36 @@ pub fn cmp_f64(a: f64, b: f64) -> std::cmp::Ordering {
             std::cmp::Ordering::Less
         }
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn minf_maxf_ignore_nan() {
+        let nan = f64::NAN;
+        assert_eq!(minf(nan, 1.0), 1.0);
+        assert_eq!(minf(1.0, nan), 1.0);
+        assert_eq!(maxf(nan, 1.0), 1.0);
+        assert_eq!(maxf(1.0, nan), 1.0);
+        assert!(minf(nan, nan).is_nan() && maxf(nan, nan).is_nan());
+        assert_eq!(minf(2.0, -3.0), -3.0);
+        assert_eq!(maxf(2.0, -3.0), 2.0);
+        assert_eq!(minf(f64::NEG_INFINITY, 0.0), f64::NEG_INFINITY);
+        // ties keep the first operand
+        assert!(minf(-0.0, 0.0).is_sign_negative() && minf(0.0, -0.0).is_sign_positive());
+        assert!(maxf(-0.0, 0.0).is_sign_negative() && maxf(0.0, -0.0).is_sign_positive());
+    }
+
+    #[test]
+    fn cmp_f64_orders_nan_last() {
+        use std::cmp::Ordering::*;
+        assert_eq!(cmp_f64(1.0, 2.0), Less);
+        assert_eq!(cmp_f64(-0.0, 0.0), Equal);
+        assert_eq!(cmp_f64(f64::NAN, 1.0), Greater);
+        assert_eq!(cmp_f64(1.0, f64::NAN), Less);
+        assert_eq!(cmp_f64(f64::NAN, f64::NAN), Equal);
+        assert_eq!(cmp_f64(f64::INFINITY, f64::NAN), Less);
+    }
 }

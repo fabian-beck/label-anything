@@ -11,6 +11,36 @@ use crate::math::{maxf, minf};
 
 const TOUCH: u32 = 1 << 16;
 
+/// [`MaskRaster::touch_segment`] clips segments to the grid grown by this many cells.
+pub const TOUCH_MARGIN: f64 = 2.0;
+
+/// Clip the segment `(c0, o0)–(c1, o1)` to the slab `lo <= c <= hi` of its first
+/// coordinate; false when it lies outside. A clipped endpoint gets `c` exactly on the
+/// bound and `o` interpolated from the unclipped endpoints, so precision is not lost for
+/// endpoints far away (unlike clipping by a line parameter). Endpoints inside the slab
+/// are left unchanged.
+fn clip_slab(c0: &mut f64, o0: &mut f64, c1: &mut f64, o1: &mut f64, lo: f64, hi: f64) -> bool {
+    let (a0, b0, a1, b1) = (*c0, *o0, *c1, *o1);
+    if (a0 < lo && a1 < lo) || (a0 > hi && a1 > hi) {
+        return false;
+    }
+    if a0 < lo {
+        *o0 = b0 + (b1 - b0) * ((lo - a0) / (a1 - a0));
+        *c0 = lo;
+    } else if a0 > hi {
+        *o0 = b0 + (b1 - b0) * ((hi - a0) / (a1 - a0));
+        *c0 = hi;
+    }
+    if a1 < lo {
+        *o1 = b1 + (b0 - b1) * ((lo - a1) / (a0 - a1));
+        *c1 = lo;
+    } else if a1 > hi {
+        *o1 = b1 + (b0 - b1) * ((hi - a1) / (a0 - a1));
+        *c1 = hi;
+    }
+    true
+}
+
 /// Accumulates the union of primitives of one class.
 pub struct MaskRaster {
     pub spec: GridSpec,
@@ -103,9 +133,25 @@ impl MaskRaster {
     }
 
     /// Mark all cells crossed by segment `ab` (supercover DDA).
+    ///
+    /// The walk visits every cell between the endpoints, so the parts of the segment more
+    /// than [`TOUCH_MARGIN`] cells outside the grid are clipped off first (otherwise
+    /// geometry far outside the grid would take unbounded time and overflow the cell
+    /// coordinates). Segments with a non-finite endpoint touch nothing.
     pub fn touch_segment(&mut self, a: P, b: P) {
-        let (u0, v0) = self.spec.to_cell(a);
-        let (u1, v1) = self.spec.to_cell(b);
+        let (mut u0, mut v0) = self.spec.to_cell(a);
+        let (mut u1, mut v1) = self.spec.to_cell(b);
+        if !(u0.is_finite() && v0.is_finite() && u1.is_finite() && v1.is_finite()) {
+            return;
+        }
+        let lo = -TOUCH_MARGIN;
+        let hx = self.spec.cols as f64 + TOUCH_MARGIN;
+        let hy = self.spec.rows as f64 + TOUCH_MARGIN;
+        if !clip_slab(&mut u0, &mut v0, &mut u1, &mut v1, lo, hx)
+            || !clip_slab(&mut v0, &mut u0, &mut v1, &mut u1, lo, hy)
+        {
+            return;
+        }
         let cols = self.spec.cols as i64;
         let rows = self.spec.rows as i64;
         let mut cx = crate::math::floor_fast(u0) as i64;
@@ -478,6 +524,42 @@ mod tests {
         m.polygon(&[outer, rev], false);
         let a = total(&m.into_coverage());
         assert!((a - 300.0).abs() < 25.0, "{a}");
+    }
+
+    #[test]
+    fn far_outside_segments_are_clipped() {
+        // Segments reaching far outside the grid used to walk every cell up to their
+        // endpoints (unbounded time, i64 overflow); now they are clipped first and touch
+        // the same cells as their part near the grid.
+        let touched = |segs: &[(P, P)]| {
+            let mut m = MaskRaster::new(g(10, 10, 1.0));
+            for &(a, b) in segs {
+                m.touch_segment(a, b);
+            }
+            m.into_coverage()
+        };
+        let far = touched(&[
+            (P::new(-1e15, 5.5), P::new(1e15, 5.5)),
+            (P::new(3.5, -1e300), P::new(3.5, 1e300)),
+            (P::new(-1e12, -1e12 + 0.5), P::new(1e12, 1e12 + 0.5)),
+        ]);
+        let near = touched(&[
+            (P::new(-1.5, 5.5), P::new(11.5, 5.5)),
+            (P::new(3.5, -1.5), P::new(3.5, 11.5)),
+            (P::new(-1.75, -1.25), P::new(11.75, 12.25)),
+        ]);
+        assert_eq!(far, near);
+        for c in 0..10 {
+            assert_eq!(far[5 * 10 + c], 1, "col {c}");
+            assert_eq!(far[c * 10 + 3], 1, "row {c}");
+        }
+        // entirely outside, or with a non-finite endpoint: nothing
+        let none = touched(&[
+            (P::new(-1e9, -5.0), P::new(1e9, -5.0)),
+            (P::new(f64::NEG_INFINITY, 5.0), P::new(5.0, 5.0)),
+            (P::new(f64::NAN, 5.0), P::new(5.0, 5.0)),
+        ]);
+        assert!(none.iter().all(|&v| v == 0));
     }
 
     #[test]
