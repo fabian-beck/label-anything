@@ -20,6 +20,7 @@
 pub use la_core::env::{
     self, Env, FontSpec, Geom, RasterMode, RasterOpts, RgbaImage, SvgBackend, SvgDoc, TextMetrics,
 };
+pub use la_core::geom::{Rect, P};
 pub use la_core::validate::{Issue, Report};
 pub use la_core::{model, PlaceError, VERSION};
 pub use la_render as render;

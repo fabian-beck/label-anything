@@ -22,3 +22,9 @@ parallel = ["la-core/parallel"]
 la-core = { workspace = true }
 la-render = { workspace = true }
 serde_json = { workspace = true }
+
+[dev-dependencies]
+la-core = { workspace = true }
+la-svg = { workspace = true }
+la-raster = { workspace = true, features = ["decode"] }
+resvg = { version = "0.48", default-features = false, features = ["text"] }

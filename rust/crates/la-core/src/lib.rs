@@ -134,6 +134,30 @@ pub fn place_validated(
     if !min_font.is_finite() {
         min_font = m.default_em;
     }
+    // the grids cover the working extent: it must be finite and not too finely divided
+    let (ew, eh) = (m.extent.w(), m.extent.h());
+    if !(ew.is_finite() && eh.is_finite()) {
+        return Err(PlaceError {
+            errors: vec![Issue::new(
+                "",
+                "limit",
+                format!("the working extent ({ew} × {eh} px) is not finite"),
+            )],
+        });
+    }
+    let cells = obstacles::grid_cells(&m, obstacles::grid_cell(&m, min_font));
+    if cells > obstacles::MAX_GRID_CELLS {
+        return Err(PlaceError {
+            errors: vec![Issue::new(
+                "/solver/grid_cell",
+                "limit",
+                format!(
+                    "the grid would have {cells} cells (at most {}): use a larger solver.grid_cell",
+                    obstacles::MAX_GRID_CELLS
+                ),
+            )],
+        });
+    }
     let obs = obstacles::prepare(&m, min_font);
     let pri = priority::compute(&m, &variants, env);
     let t1 = env.now_ms();

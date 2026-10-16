@@ -48,6 +48,7 @@ language). Text measurement comes from `@label-anything/text`, raster modes from
 | trait | `interface` (optional methods for defaulted trait methods) |
 | `BTreeMap<String, T>` / `BTreeSet<String>` | `Map` / `Set`, **iterated in sorted key order** with `cmpStr` |
 | `HashMap` | `Map` (never iterate it for decisions) |
+| `&mut Vec<u32>` result buffers of index queries | `IdList` (`spatial.ts`), reused across queries |
 
 ## Arithmetic (determinism)
 
@@ -82,7 +83,13 @@ The TypeScript targets are in the brief (§5.8): 200 labels + 10k points ≤ 60 
 2,000 labels + 100k points ≤ 600 ms. Hot loops (candidate evaluation, SAT queries,
 spatial index scans, rasterization) must not allocate: no closures, spreads,
 `Array.map` or temporary objects per candidate; reuse scratch typed arrays. Prefer
-struct-of-arrays where the Rust code uses flat arrays.
+struct-of-arrays where the Rust code uses flat arrays. The geometry kernel offers scalar
+forms of its predicates for such loops (`distPointSegXY`, `segSegDistXY`,
+`segOverlapsRectXY`, `Shape.signedDistanceXY`, `MaskRaster.discXY`, …): same operations,
+no `P` arguments. In V8, doubles passed to or returned from a call that is not inlined
+are boxed, so keep the innermost helpers small and call them from a single site in a
+loop rather than from several unrolled ones. `ts/packages/core/bench/geom-bench.mjs`
+(against `rust/crates/la-core/examples/geom_bench.rs`) times the geometry hot paths.
 
 ## Tests
 

@@ -1,0 +1,7 @@
+# Local virtual environment (see bench/README.md)
+.venv/
+# Fetched third-party data and generated problems are reproducible; never commit them.
+data/
+out/
+.pytest_cache/
+__pycache__/

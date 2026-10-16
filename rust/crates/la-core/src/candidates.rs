@@ -2,7 +2,7 @@
 //! candidates live in `leaders.rs` / `boundary.rs`).
 
 use crate::geom::shape::{sign_dir, Shape};
-use crate::geom::{dist_point_seg, polygon, Rect, P};
+use crate::geom::{dist_point_seg, Rect, P};
 use crate::labels::Variant;
 use crate::math::{maxf, sin_cos_deg};
 use crate::model::opts::{InternalPolicy, LeaderStyle, Models, Pos};
@@ -288,6 +288,72 @@ fn push_in(shape: &Shape, o: f64, c: P, hw: f64, hh: f64) -> P {
         }
     }
     c - d * lo
+}
+
+/// The warm-start box of an item as a candidate of variant `vi` (whose size must match),
+/// so that an unchanged position costs no stability penalty (spec §8): a slider-kind
+/// candidate on the side its center points to when it touches the inflated mark (gap
+/// ≤ offset + 1 px), else a distant candidate with a straight leader (straight style
+/// only, within the leader length limits). `None` when neither applies.
+pub fn warm(
+    model: &crate::model::Model,
+    item: &Item,
+    vi: usize,
+    v: &Variant,
+    rect: Rect,
+) -> Option<Cand> {
+    let it = item.index as u32;
+    let gap = item.shape.dist_rect(&rect);
+    if gap < -1e-6 || item.shape.overlaps_rect(&rect) {
+        return None; // on the own mark: internal candidates cover that
+    }
+    let refp = item.shape.reference();
+    if gap <= item.len.offset + 1.0 {
+        let d = rect.center() - refp;
+        if d.len2() == 0.0 {
+            return None;
+        }
+        // nearest of the item's allowed positions by direction
+        let mut best: Option<(f64, Pos, f64)> = None;
+        for (rank, &p) in item.positions.iter().enumerate() {
+            let pd = pos_dirs()[p.angular_index()];
+            let dot = (pd.x * d.x + pd.y * d.y) / d.len2().sqrt();
+            if best.map(|b| dot > b.0).unwrap_or(true) {
+                best = Some((dot, p, rank as f64));
+            }
+        }
+        let (_, pos, rank) = best?;
+        return Some(Cand::new(
+            it,
+            vi as u16,
+            v.level,
+            Kind::Slider,
+            Side::Pos(pos),
+            rank + 0.25,
+            rect,
+        ));
+    }
+    if model.leaders.style != crate::model::opts::LeaderStyle::Straight {
+        return None;
+    }
+    let port = rect.closest_point(refp);
+    let start = crate::leaders::leader_start(model, item, port);
+    let port = rect.closest_point(start);
+    let l = Leader::new(vec![start, port], model.leaders.style);
+    if l.len < item.len.leader_min || l.len > item.len.leader_max + 1e-9 {
+        return None;
+    }
+    let mut c = Cand::new(
+        it,
+        vi as u16,
+        v.level,
+        Kind::Distant,
+        Side::Distant,
+        8.0,
+        rect,
+    );
+    c.leaders.push(l);
+    Some(c)
 }
 
 /// Adjacent and slider candidates of one variant.
@@ -579,10 +645,7 @@ pub fn internal(item: &Item, vi: usize, v: &Variant, rank: f64, out: &mut Vec<Ca
     let shape = &item.shape;
     let mut centers = vec![shape.reference()];
     match shape {
-        Shape::Polygon(p) => {
-            let (pole, _) = polygon::polylabel(&p.rings, p.even_odd, 0.5);
-            centers.insert(0, pole);
-        }
+        Shape::Polygon(_) => centers.insert(0, item.pole()),
         _ => centers.insert(0, shape.bbox().center()),
     }
     for c in centers {

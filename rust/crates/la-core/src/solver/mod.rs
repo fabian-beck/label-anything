@@ -66,10 +66,17 @@ pub struct Solve<'a> {
     pub level_done: Vec<u8>,
     /// Level-0 distant candidates not generated yet (they are created on demand).
     pub distant_pending: Vec<bool>,
+    /// Candidates of each item dropped during generation because their box covers an item
+    /// mark (reported as `items` among the blocking classes).
+    pub static_dropped: Vec<u32>,
+    /// The warm-start candidate of each item (see `Solve::generate_warm`).
+    pub warm_cand: Vec<Option<u32>>,
     /// Directions of distant candidates (see `leaders::distant_dirs`).
     pub distant_dirs: Vec<(f64, crate::geom::P)>,
     pub iterations: u64,
     pub time_guard_hit: bool,
+    /// The host cancelled the solve (sticky once seen; see [`Solve::poll_cancel`]).
+    pub cancelled: bool,
     pub start_ms: f64,
 }
 
@@ -107,9 +114,12 @@ impl<'a> Solve<'a> {
             steps_tried: vec![Vec::new(); n],
             level_done: vec![0; n],
             distant_pending: vec![false; n],
+            warm_cand: vec![None; n],
+            static_dropped: vec![0; n],
             distant_dirs: crate::leaders::distant_dirs(model),
             iterations: 0,
             time_guard_hit: false,
+            cancelled: false,
             start_ms,
         }
     }
@@ -167,8 +177,29 @@ impl<'a> Solve<'a> {
             && self.state.max_placed_key().is_some_and(|k| k <= key_i);
         let state = &self.state;
         let variants = &self.variants[i];
+        let item_occ = self.obs.item_occ.as_ref();
+        let occ = state.occupancy();
+        // both grids cover the model extent with the same cells: one window serves both
+        let shared = item_occ.is_none_or(|o| o.same_cells(occ));
+        let dropped = std::cell::Cell::new(0u32);
+        // `keep` serves non-internal candidates only (internal labels sit on their mark)
         let keep = |vi: usize, r: &Rect| {
-            !(quick && candidates::is_rect_shape(&variants[vi].shape) && state.quick_blocked(r))
+            if !(quick || item_occ.is_some()) || !candidates::is_rect_shape(&variants[vi].shape) {
+                return true;
+            }
+            let w = occ.window(r);
+            if let Some(o) = item_occ {
+                let hit = if shared {
+                    w.is_some_and(|w| o.blocked_in(&w))
+                } else {
+                    o.blocked(r)
+                };
+                if hit {
+                    dropped.set(dropped.get() + 1);
+                    return false;
+                }
+            }
+            !(quick && state.n_placed > 0 && w.is_some_and(|w| occ.blocked_in(&w)))
         };
         let mut fresh: Vec<Cand> = Vec::new();
         for &vi in vis {
@@ -210,10 +241,10 @@ impl<'a> Solve<'a> {
                     candidates::internal(item, vi, v, rank, &mut fresh);
                 }
             }
-            if quick {
+            if quick || item_occ.is_some() {
                 let mut w = start;
                 for r in start..fresh.len() {
-                    if keep(vi, &fresh[r].rect) {
+                    if fresh[r].kind == Kind::Internal || keep(vi, &fresh[r].rect) {
                         fresh.swap(w, r);
                         w += 1;
                     }
@@ -238,6 +269,7 @@ impl<'a> Solve<'a> {
                 self.model, self.obs, item, variants, vis, &keep, &mut fresh,
             );
         }
+        self.static_dropped[i] += dropped.get();
         for c in &mut fresh {
             c.level = level;
             c.lshape = candidates::label_shape(&c.rect, &variants[c.variant as usize].shape);
@@ -318,6 +350,7 @@ impl<'a> Solve<'a> {
             let m = self.models[i];
             self.distant_pending[i] = m.has(Models::DISTANT);
             self.generate(i, &vis, Models(m.0 & !Models::DISTANT), 0);
+            self.generate_warm(i);
         }
         // auto preset: enable distant labels when crowded
         if let Some((frac, crowded_models)) = self.model.auto_crowded {
@@ -353,6 +386,36 @@ impl<'a> Solve<'a> {
             &self.model.extent,
             self.obs.index_cell,
         );
+    }
+
+    /// The warm-start box of item `i` as an extra level-0 candidate (kept when statically
+    /// feasible), for the variant of the same size.
+    fn generate_warm(&mut self, i: usize) {
+        let item = &self.model.items[i];
+        let Some(Some(b)) = self.model.warm.get(&item.id) else {
+            return;
+        };
+        if matches!(self.model.group_of.get(i), Some(Some(r)) if *r != i) {
+            return;
+        }
+        let Some(vi) = self.variants[i]
+            .iter()
+            .position(|v| (v.w - b.w()).abs() <= 0.5 && (v.h - b.h()).abs() <= 0.5)
+        else {
+            return;
+        };
+        let v = &self.variants[i][vi];
+        let Some(mut c) = candidates::warm(self.model, item, vi, v, *b) else {
+            return;
+        };
+        c.level = 0;
+        c.lshape = candidates::label_shape(&c.rect, &v.shape);
+        Evaluator::new(self.model, self.obs, self.env).eval(&mut c, v, None);
+        if c.feasible {
+            self.warm_cand[i] = Some(self.cands.len() as u32);
+            self.by_item[i].push(self.cands.len() as u32);
+            self.cands.push(c);
+        }
     }
 
     /// Generate the pending level-0 distant candidates of item `i` (once).
@@ -432,5 +495,14 @@ impl<'a> Solve<'a> {
 
     pub fn now(&self) -> f64 {
         self.env.now_ms()
+    }
+
+    /// Poll the host's cancellation request (`Env::cancelled`); once set it stays set.
+    /// The solver then stops improving and returns the best valid state so far.
+    pub fn poll_cancel(&mut self) -> bool {
+        if !self.cancelled && self.env.cancelled() {
+            self.cancelled = true;
+        }
+        self.cancelled
     }
 }

@@ -28,11 +28,11 @@ implementations (Rust and TypeScript) that follow one language-neutral spec.
 ```sh
 # Rust
 cd rust && cargo test --workspace && cargo clippy --workspace -- -D warnings
-# TypeScript
-cd ts && npm ci && npm run build && npm test
+# TypeScript and the JavaScript helpers (npm workspace at the repository root)
+npm ci && npm run build && npm test
 # Conformance (both)
 cd rust && cargo test -p label-anything --test conformance
-cd ts && npm run conformance
+npm run conformance
 # Schema cross-check
 python3 conformance/check_schema.py
 ```

@@ -1,0 +1,24 @@
+{
+  "name": "label-anything-workspace",
+  "private": true,
+  "description": "npm workspace of Label Anything: the TypeScript packages (ts/packages) and the JavaScript helpers (bindings/js-extras).",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "ts/packages/*",
+    "bindings/js-extras"
+  ],
+  "scripts": {
+    "build": "tsc -b ts/packages/text ts/packages/svg ts/packages/raster ts/packages/core ts/packages/wasm-adapter bindings/js-extras",
+    "test": "vitest run",
+    "typecheck": "tsc -b --noEmit ts/packages/core",
+    "conformance": "node ts/packages/core/dist/conformance/run.js conformance"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "fast-check": "^3.23.0",
+    "json-schema-to-typescript": "^15.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
