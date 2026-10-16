@@ -72,9 +72,16 @@ describe("base64 and data URLs", () => {
     expect(text(decodeBase64(" T W\nF u\r\n"))).toBe("Man");
     expect(decodeBase64("-_-_")).toEqual(decodeBase64("+/+/"));
     expect(decodeBase64("")).toEqual(new Uint8Array(0));
+    // the fast path (whole quanta) hands over to the general decoder mid-input
+    expect(text(decodeBase64("TWFuTWFu"))).toBe("ManMan");
+    expect(text(decodeBase64("TWFuTWE="))).toBe("ManMa");
+    expect(text(decodeBase64("TWFuTWE"))).toBe("ManMa");
+    expect(text(decodeBase64("TWFuTQ"))).toBe("ManM");
+    expect(text(decodeBase64("TWFu TW\nFu"))).toBe("ManMan");
+    expect(text(decodeBase64("TWFuTWFu\n"))).toBe("ManMan");
   });
   it("rejects malformed base64", () => {
-    for (const s of ["T", "TQ=", "TQ===", "TQ==TQ==", "TWFu=", "TW*u", "TWFuT", "é", "TWFĀ"]) {
+    for (const s of ["T", "TQ=", "TQ===", "TQ==TQ==", "TWFu=", "TW*u", "TWFuT", "é", "TWFĀ", "TWFuTWFuT", "TWFuTW*u", "TWFuTQ==TWFu", "TWFuTWFĀ"]) {
       expect(() => decodeBase64(s), s).toThrow(RasterError);
       try {
         decodeBase64(s);

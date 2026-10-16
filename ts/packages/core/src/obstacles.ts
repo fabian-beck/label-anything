@@ -141,15 +141,39 @@ export class Obstacles {
     public itemOcc: Occupancy | null,
     /** The item shapes (for {@link itemsSat} and {@link own}). */
     private readonly itemShapes: readonly Shape[],
-    /** Distance (px) from each cell center to the nearest static hard obstacle. */
-    public dt: Float64Array,
-    /** Local maxima of the distance transform: (cell center, clearance, col, row). */
-    public seeds: Seed[],
-    public seedIndex: StaticIndex,
+    /** Computes the free space ({@link dt}, {@link seeds}, {@link seedIndex}). */
+    private readonly freeSource: () => FreeSpace,
     public labelArea: Rect | null,
     public leaderArea: Rect | null,
     public indexCell: number,
   ) {}
+
+  private free: FreeSpace | null = null;
+
+  /**
+   * The distance transform of the static hard obstacles, its maxima and their index:
+   * only free-space seeds of distant candidates need them, so they are computed on first
+   * use (Rust `Obstacles::free_space`).
+   */
+  private freeSpace(): FreeSpace {
+    if (this.free === null) this.free = this.freeSource();
+    return this.free;
+  }
+
+  /** Distance (px) from each cell center to the nearest static hard obstacle. */
+  get dt(): Float64Array {
+    return this.freeSpace().dt;
+  }
+
+  /** Local maxima of the distance transform: (cell center, clearance, col, row). */
+  get seeds(): Seed[] {
+    return this.freeSpace().seeds;
+  }
+
+  /** Index of {@link seeds}. */
+  get seedIndex(): StaticIndex {
+    return this.freeSpace().seedIndex;
+  }
 
   /**
    * Exact vector primitives (class index, primitive), in model order. Only hard classes
@@ -415,7 +439,32 @@ export function prepare(model: Model, minFont: number): Obstacles {
     occ.freeze();
     itemOcc = occ.isEmpty() ? null : occ;
   }
-  // distance transform of static hard obstacles (incl. items and outside the label area)
+  // distance transform of static hard obstacles (incl. items and outside the label area),
+  // computed on first use
+  const freeSource = (): FreeSpace => freeSpace(model, grid, classes, dynamic, indexCell);
+  return new Obstacles(
+    grid,
+    classes,
+    dynamic,
+    { vector, at: primAt, cls: primCls, n: nPrims, extent: model.extent },
+    itemIndex,
+    itemOcc,
+    model.items.map((it) => it.shape),
+    freeSource,
+    model.labelArea,
+    model.leaderArea,
+    indexCell,
+  );
+}
+
+/** The distance transform, its maxima and their index (Rust `free_space`). */
+interface FreeSpace {
+  dt: Float64Array;
+  seeds: Seed[];
+  seedIndex: StaticIndex;
+}
+
+function freeSpace(model: Model, grid: GridSpec, classes: Class[], dynamic: Dynamic, indexCell: number): FreeSpace {
   const hardMask = new MaskRaster(grid);
   if (dynamic.labelItems.isHard()) for (const it of model.items) hardMask.shape(it.shape);
   const hardCov = hardMask.intoCoverage();
@@ -440,21 +489,7 @@ export function prepare(model: Model, minFont: number): Obstacles {
     model.extent,
     indexCell * 2,
   );
-  return new Obstacles(
-    grid,
-    classes,
-    dynamic,
-    { vector, at: primAt, cls: primCls, n: nPrims, extent: model.extent },
-    itemIndex,
-    itemOcc,
-    model.items.map((it) => it.shape),
-    dt,
-    seeds,
-    seedIndex,
-    model.labelArea,
-    model.leaderArea,
-    indexCell,
-  );
+  return { dt, seeds, seedIndex };
 }
 
 function rasterizePrim(m: MaskRaster, p: Prim): void {

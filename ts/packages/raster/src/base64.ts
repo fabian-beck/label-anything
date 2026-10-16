@@ -25,6 +25,22 @@ const TABLE: Uint8Array = (() => {
   return t;
 })();
 
+/** Bit set by {@link SHIFTED} for characters outside the alphabet. */
+const FAST_INVALID = 1 << 24;
+
+/**
+ * `TABLE` values shifted into place for the fast path: quantum position `k` holds the
+ * sextet at bit `18 − 6k`; other characters have {@link FAST_INVALID} set.
+ */
+const SHIFTED: Int32Array[] = [0, 1, 2, 3].map((k) => {
+  const t = new Int32Array(256);
+  for (let c = 0; c < 256; c++) {
+    const v = TABLE[c]!;
+    t[c] = v < 64 ? v << (18 - 6 * k) : FAST_INVALID;
+  }
+  return t;
+});
+
 /**
  * Decodes base64 text (standard or URL-safe alphabet, padding optional, ASCII
  * whitespace ignored). Throws a {@link RasterError} with code `invalid_base64`.
@@ -32,12 +48,34 @@ const TABLE: Uint8Array = (() => {
 export function decodeBase64(input: string): Uint8Array {
   const n = input.length;
   const out = new Uint8Array(Math.floor((n * 3) / 4) + 3);
+  // fast path: leading whole quanta of four alphabet characters (no whitespace or
+  // padding), three bytes at a time; the general decoder continues from the first other
+  // character (mirrors the Rust decoder)
+  const t0 = SHIFTED[0]!;
+  const t1 = SHIFTED[1]!;
+  const t2 = SHIFTED[2]!;
+  const t3 = SHIFTED[3]!;
+  const whole = n - (n % 4);
+  let start = 0;
   let o = 0;
+  for (; start < whole; start += 4) {
+    const c0 = input.charCodeAt(start);
+    const c1 = input.charCodeAt(start + 1);
+    const c2 = input.charCodeAt(start + 2);
+    const c3 = input.charCodeAt(start + 3);
+    if ((c0 | c1 | c2 | c3) > 0xff) break;
+    const v = t0[c0]! | t1[c1]! | t2[c2]! | t3[c3]!;
+    if (v >= FAST_INVALID) break;
+    out[o] = v >> 16;
+    out[o + 1] = (v >> 8) & 0xff;
+    out[o + 2] = v & 0xff;
+    o += 3;
+  }
   let acc = 0;
   let nbits = 0;
-  let chars = 0;
+  let chars = start;
   let pad = 0;
-  for (let pos = 0; pos < n; pos++) {
+  for (let pos = start; pos < n; pos++) {
     const c = input.charCodeAt(pos);
     const v = c < 256 ? TABLE[c]! : INVALID;
     if (v === SKIP) continue;
