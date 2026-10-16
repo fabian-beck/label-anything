@@ -68,7 +68,13 @@ fn finish(c: &mut Cand, acc: Acc) {
 
 impl<'a> Evaluator<'a> {
     pub fn new(model: &'a Model, obs: &'a Obstacles, env: &'a dyn Env) -> Evaluator<'a> {
-        Evaluator { model, obs, env, buf: Vec::new(), buf2: Vec::new() }
+        Evaluator {
+            model,
+            obs,
+            env,
+            buf: Vec::new(),
+            buf2: Vec::new(),
+        }
     }
 
     /// Fill `c.cost`, `c.feasible`, `c.relaxed`, `c.relax_cost`, `c.blocked_*`.
@@ -83,14 +89,23 @@ impl<'a> Evaluator<'a> {
         let w = &model.weights;
         let dy = &obs.dynamic;
         let soft_w = model.degrade.soft_overlap_weight;
-        let mut acc = Acc { cost: 0.0, feasible: true, relaxed: true, relax_cost: 0.0, blocked: None, breakdown };
+        let mut acc = Acc {
+            cost: 0.0,
+            feasible: true,
+            relaxed: true,
+            relax_cost: 0.0,
+            blocked: None,
+            breakdown,
+        };
 
         // 1. label area (canvas_edge)
         if let Some(la) = obs.label_area {
             if !la.contains_rect(&r) {
                 match dy.label_edge {
                     AvoidW::Hard => acc.violate(Block::Edge, false, 0.0),
-                    AvoidW::Soft(wt) => acc.add("canvas_edge", wt * (area - la.overlap_area(&r)) / area),
+                    AvoidW::Soft(wt) => {
+                        acc.add("canvas_edge", wt * (area - la.overlap_area(&r)) / area)
+                    }
                     AvoidW::Ignore => {}
                 }
             }
@@ -101,7 +116,11 @@ impl<'a> Evaluator<'a> {
         // 2. items (exact); one query serves the buffer ring and the ambiguity term
         let ring = r.inflate(item.len.buffer);
         let gap_guess = item.len.offset + 0.5 * em;
-        let reach = if item.len.buffer > gap_guess { item.len.buffer } else { gap_guess };
+        let reach = if item.len.buffer > gap_guess {
+            item.len.buffer
+        } else {
+            gap_guess
+        };
         self.buf.clear();
         obs.item_index.query(&r.inflate(reach), &mut self.buf);
         for &j in &self.buf {
@@ -130,11 +149,8 @@ impl<'a> Evaluator<'a> {
                 }
                 continue;
             }
-            if c.label_overlaps_shape(sj) {
-                match dy.label_items {
-                    AvoidW::Hard => acc.violate(Block::Items, false, 0.0),
-                    _ => {}
-                }
+            if c.label_overlaps_shape(sj) && matches!(dy.label_items, AvoidW::Hard) {
+                acc.violate(Block::Items, false, 0.0);
             }
         }
         if let AvoidW::Soft(wt) = dy.label_items {
@@ -143,7 +159,10 @@ impl<'a> Evaluator<'a> {
         // the ring only sees other items when the item query found any besides the own
         if dy.buffer_items > 0.0 && self.buf.iter().any(|&j| j as usize != i) {
             let ring_area = maxf(ring.area() - area, 1e-9);
-            let cov = maxf(obs.other_items_covered(i, &ring) - obs.other_items_covered(i, &r), 0.0);
+            let cov = maxf(
+                obs.other_items_covered(i, &ring) - obs.other_items_covered(i, &r),
+                0.0,
+            );
             acc.add("buffer:items", dy.buffer_items * cov / ring_area);
         }
         if !acc.relaxed {
@@ -183,7 +202,10 @@ impl<'a> Evaluator<'a> {
             }
             if cl.buffer > 0.0 && sat.any(&obs.grid, &ring) {
                 let ring_area = maxf(ring.area() - area, 1e-9);
-                let cov = maxf(sat.covered_area(&obs.grid, &ring) - sat.covered_area(&obs.grid, &r), 0.0);
+                let cov = maxf(
+                    sat.covered_area(&obs.grid, &ring) - sat.covered_area(&obs.grid, &r),
+                    0.0,
+                );
                 acc.add(&format!("buffer:{}", cl.name), cl.buffer * cov / ring_area);
             }
         }
@@ -200,7 +222,11 @@ impl<'a> Evaluator<'a> {
         // 5. position
         acc.add("position", w.position * c.rank / 8.0);
         // 6. distance from own shape
-        let gap = if c.kind == Kind::Internal { 0.0 } else { item.shape.dist_rect(&r) };
+        let gap = if c.kind == Kind::Internal {
+            0.0
+        } else {
+            item.shape.dist_rect(&r)
+        };
         if c.leaders.is_empty() {
             acc.add("distance", w.distance * gap / em);
         }
@@ -208,7 +234,10 @@ impl<'a> Evaluator<'a> {
         acc.add("shape", w.shape * v.penalty);
         // 8. edge proximity
         if let Some(la) = obs.label_area {
-            let d = minf(minf(r.x0 - la.x0, la.x1 - r.x1), minf(r.y0 - la.y0, la.y1 - r.y1));
+            let d = minf(
+                minf(r.x0 - la.x0, la.x1 - r.x1),
+                minf(r.y0 - la.y0, la.y1 - r.y1),
+            );
             acc.add("edge", w.edge * maxf(0.0, 1.0 - maxf(d, 0.0) / em));
         }
         // 9. ambiguity (the item query above covers the reach of adjacent labels)
@@ -231,7 +260,10 @@ impl<'a> Evaluator<'a> {
         }
         // 11. host cost
         if self.env.has_cost_callback() {
-            acc.add("user", self.env.extra_cost(&item.id, &r, !c.leaders.is_empty()));
+            acc.add(
+                "user",
+                self.env.extra_cost(&item.id, &r, !c.leaders.is_empty()),
+            );
         }
         finish(c, acc)
     }
@@ -273,11 +305,16 @@ impl<'a> Evaluator<'a> {
         let own = maxf(self.model.items[i].shape.signed_distance(p), 0.0);
         let reach = 2.0 * em;
         self.buf.clear();
-        self.obs.item_index.query(&Rect::from_center(p, reach, reach), &mut self.buf);
+        self.obs
+            .item_index
+            .query(&Rect::from_center(p, reach, reach), &mut self.buf);
         let mut d_other = f64::INFINITY;
         for &j in &self.buf {
             if j as usize != i {
-                d_other = minf(d_other, maxf(self.model.items[j as usize].shape.signed_distance(p), 0.0));
+                d_other = minf(
+                    d_other,
+                    maxf(self.model.items[j as usize].shape.signed_distance(p), 0.0),
+                );
             }
         }
         if d_other < reach && d_other < own {
@@ -295,7 +332,10 @@ impl<'a> Evaluator<'a> {
         let w = &model.weights;
         let dy = &obs.dynamic;
         let hw = model.leaders.width * 0.5;
-        acc.add("leader", w.leader + w.leader_length * l.len / em + w.bends * l.bends as f64);
+        acc.add(
+            "leader",
+            w.leader + w.leader_length * l.len / em + w.bends * l.bends as f64,
+        );
         // leaders stay on the canvas
         if let Some(ca) = obs.leader_area {
             if !l.pts.iter().all(|p| ca.contains_point(*p)) {
@@ -306,11 +346,13 @@ impl<'a> Evaluator<'a> {
         let n_main = l.pts.len().saturating_sub(1);
         for (k, &(a, b)) in segs.iter().enumerate() {
             // not through the own shape (skip a tiny start piece for tips/boundary starts)
-            let a2 = if k == 0 { a.lerp(b, minf(0.5 / maxf(a.dist(b), 1e-9), 0.5)) } else { a };
-            if !item.tip || k > 0 {
-                if item.shape.dist_segment(a2, b) <= EPS {
-                    acc.violate(Block::Items, false, 0.0);
-                }
+            let a2 = if k == 0 {
+                a.lerp(b, minf(0.5 / maxf(a.dist(b), 1e-9), 0.5))
+            } else {
+                a
+            };
+            if (!item.tip || k > 0) && item.shape.dist_segment(a2, b) <= EPS {
+                acc.violate(Block::Items, false, 0.0);
             }
             // not into the own label except at the port (underline is on the label edge)
             if k < n_main && crate::geom::seg_overlaps_rect(a, b, &own_rect.inflate(-0.5)) {
@@ -340,7 +382,11 @@ impl<'a> Evaluator<'a> {
                 }
                 AvoidW::Soft(wt) => {
                     if dmin < clearance {
-                        let f = if clearance > 0.0 { 1.0 - dmin / clearance } else { 1.0 };
+                        let f = if clearance > 0.0 {
+                            1.0 - dmin / clearance
+                        } else {
+                            1.0
+                        };
                         acc.add("leader:items", wt * f);
                     }
                 }
@@ -359,17 +405,30 @@ impl<'a> Evaluator<'a> {
                     } else if cl.has_prims {
                         if !prim_ids_loaded {
                             self.buf2.clear();
-                            obs.prim_index.query(&l.bbox().inflate(hw + 1.0), &mut self.buf2);
+                            obs.prim_index
+                                .query(&l.bbox().inflate(hw + 1.0), &mut self.buf2);
                             prim_ids_loaded = true;
                         }
                         hit = self.buf2.iter().any(|&p| {
                             let (pc, prim) = &obs.prims[p as usize];
-                            *pc == ci && segs.iter().any(|&(a, b)| prim.dist_segment(a, b) < hw - EPS || (hw <= EPS && prim.dist_segment(a, b) <= EPS))
+                            *pc == ci
+                                && segs.iter().any(|&(a, b)| {
+                                    prim.dist_segment(a, b) < hw - EPS
+                                        || (hw <= EPS && prim.dist_segment(a, b) <= EPS)
+                                })
                         });
                     }
                     if hit {
-                        let extra: f64 = segs.iter().map(|&(a, b)| obs.covered_len(sat, a, b)).sum::<f64>() / maxf(l.len, 1e-9);
-                        acc.violate(Block::Class(ci as u16), cl.relaxable, model.degrade.soft_overlap_weight * extra);
+                        let extra: f64 = segs
+                            .iter()
+                            .map(|&(a, b)| obs.covered_len(sat, a, b))
+                            .sum::<f64>()
+                            / maxf(l.len, 1e-9);
+                        acc.violate(
+                            Block::Class(ci as u16),
+                            cl.relaxable,
+                            model.degrade.soft_overlap_weight * extra,
+                        );
                     }
                 }
                 AvoidW::Soft(wt) => {

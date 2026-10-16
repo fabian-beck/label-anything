@@ -17,7 +17,9 @@
 //! assert_eq!(result["stats"]["hard_violations"], 0);
 //! ```
 
-pub use la_core::env::{self, Env, FontSpec, Geom, RasterBackend, RgbaImage, SvgBackend, SvgDoc, TextMetrics};
+pub use la_core::env::{
+    self, Env, FontSpec, Geom, RasterBackend, RgbaImage, SvgBackend, SvgDoc, TextMetrics,
+};
 pub use la_core::validate::{Issue, Report};
 pub use la_core::{model, PlaceError, VERSION};
 pub use la_render as render;
@@ -52,7 +54,10 @@ impl NativeEnv {
         NativeEnv::default()
     }
     pub fn with_base_dir(dir: impl Into<PathBuf>) -> NativeEnv {
-        NativeEnv { base_dir: Some(dir.into()), ..NativeEnv::default() }
+        NativeEnv {
+            base_dir: Some(dir.into()),
+            ..NativeEnv::default()
+        }
     }
 }
 
@@ -93,13 +98,19 @@ pub fn place(problem: &Value) -> Result<Value, PlaceError> {
 pub fn place_with(problem: &Value, env: &dyn Env) -> Result<Value, PlaceError> {
     let report = validate(problem);
     if !report.valid {
-        return Err(PlaceError { errors: report.errors });
+        return Err(PlaceError {
+            errors: report.errors,
+        });
     }
     place_validated(problem, env, report)
 }
 
 /// Solve a problem whose validation report is already known (must be valid).
-pub fn place_validated(problem: &Value, env: &dyn Env, report: Report) -> Result<Value, PlaceError> {
+pub fn place_validated(
+    problem: &Value,
+    env: &dyn Env,
+    report: Report,
+) -> Result<Value, PlaceError> {
     let (mut result, debug) = la_core::place_validated(problem, env, report.warnings)?;
     if let Some(d) = debug {
         let model = la_core::model::build(problem, env).ok();
@@ -117,7 +128,8 @@ pub fn place_json(problem: &str) -> Result<String, String> {
 
 pub fn place_json_with(problem: &str, env: &dyn Env) -> Result<String, String> {
     let v: Value = serde_json::from_str(problem).map_err(|e| {
-        serde_json::to_string(&vec![Issue::new("", "parse", format!("invalid JSON: {e}"))]).unwrap_or_default()
+        serde_json::to_string(&vec![Issue::new("", "parse", format!("invalid JSON: {e}"))])
+            .unwrap_or_default()
     })?;
     match place_with(&v, env) {
         Ok(r) => Ok(serde_json::to_string(&r).unwrap_or_default()),

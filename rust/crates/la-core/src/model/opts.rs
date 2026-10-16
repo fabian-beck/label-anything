@@ -74,7 +74,16 @@ impl Pos {
         (self.angle() / 45.0) as usize
     }
     pub fn from_angular_index(i: usize) -> Pos {
-        [Pos::Right, Pos::TopRight, Pos::Top, Pos::TopLeft, Pos::Left, Pos::BottomLeft, Pos::Bottom, Pos::BottomRight][i % 8]
+        [
+            Pos::Right,
+            Pos::TopRight,
+            Pos::Top,
+            Pos::TopLeft,
+            Pos::Left,
+            Pos::BottomLeft,
+            Pos::Bottom,
+            Pos::BottomRight,
+        ][i % 8]
     }
 }
 
@@ -232,7 +241,11 @@ pub struct LeaderOpts {
 
 impl LeaderOpts {
     pub fn from(o: &Opts) -> LeaderOpts {
-        let mut angles: Vec<f64> = o.numbers("leaders.angles").into_iter().map(|a| a.rem_euclid(360.0)).collect();
+        let mut angles: Vec<f64> = o
+            .numbers("leaders.angles")
+            .into_iter()
+            .map(|a| a.rem_euclid(360.0))
+            .collect();
         angles.sort_by(|a, b| crate::math::cmp_f64(*a, *b));
         angles.dedup();
         LeaderOpts {
@@ -408,7 +421,11 @@ impl DegradeOpts {
     pub fn from(o: &Opts) -> DegradeOpts {
         DegradeOpts {
             min_scale: o.f64("degrade_options.min_scale"),
-            wrap_max_lines: o.get("degrade_options.wrap_max_lines").as_u64().unwrap_or(3).max(1) as usize,
+            wrap_max_lines: o
+                .get("degrade_options.wrap_max_lines")
+                .as_u64()
+                .unwrap_or(3)
+                .max(1) as usize,
             soft_overlap_weight: o.f64("degrade_options.soft_overlap_weight"),
         }
     }
@@ -439,8 +456,16 @@ impl PlacementOpts {
         PlacementOpts {
             slider_per_gap: o.get("placement.slider_per_quadrant").as_u64().unwrap_or(4) as usize,
             k_distant: o.get("placement.k_distant").as_u64().unwrap_or(24) as usize,
-            distant_rings: o.get("placement.distant_rings").as_u64().unwrap_or(4).max(1) as usize,
-            distant_directions: o.get("placement.distant_directions").as_u64().unwrap_or(16).max(4) as usize,
+            distant_rings: o
+                .get("placement.distant_rings")
+                .as_u64()
+                .unwrap_or(4)
+                .max(1) as usize,
+            distant_directions: o
+                .get("placement.distant_directions")
+                .as_u64()
+                .unwrap_or(16)
+                .max(4) as usize,
             free_space_seeds: o.bool("placement.free_space_seeds"),
             internal_circle_ratio: o.f64("placement.internal_circle_ratio"),
             prune_factor: o.f64("placement.prune_factor").max(1.0),

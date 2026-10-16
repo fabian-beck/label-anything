@@ -20,7 +20,13 @@ impl GridSpec {
     pub fn covering(extent: &Rect, cell: f64) -> GridSpec {
         let cols = ((extent.w() / cell).ceil() as usize).max(1);
         let rows = ((extent.h() / cell).ceil() as usize).max(1);
-        GridSpec { ox: extent.x0, oy: extent.y0, cell, cols, rows }
+        GridSpec {
+            ox: extent.x0,
+            oy: extent.y0,
+            cell,
+            cols,
+            rows,
+        }
     }
     #[inline]
     pub fn cells(&self) -> usize {
@@ -41,7 +47,10 @@ impl GridSpec {
     /// Canvas center of cell (col, row).
     #[inline]
     pub fn cell_center(&self, col: usize, row: usize) -> P {
-        P::new(self.ox + (col as f64 + 0.5) * self.cell, self.oy + (row as f64 + 0.5) * self.cell)
+        P::new(
+            self.ox + (col as f64 + 0.5) * self.cell,
+            self.oy + (row as f64 + 0.5) * self.cell,
+        )
     }
     /// The extent covered by the grid.
     pub fn extent(&self) -> Rect {
@@ -118,7 +127,12 @@ impl Sat {
                 cur[c + 1] = prev[c + 1].wrapping_add(row_sum);
             }
         }
-        Sat { cols, rows, data, nonempty }
+        Sat {
+            cols,
+            rows,
+            data,
+            nonempty,
+        }
     }
 
     #[inline]
@@ -132,7 +146,10 @@ impl Sat {
         if c1 <= c0 || r1 <= r0 {
             return 0;
         }
-        self.at(c1, r1).wrapping_sub(self.at(c0, r1)).wrapping_sub(self.at(c1, r0)).wrapping_add(self.at(c0, r0))
+        self.at(c1, r1)
+            .wrapping_sub(self.at(c0, r1))
+            .wrapping_sub(self.at(c1, r0))
+            .wrapping_add(self.at(c0, r0))
     }
 
     /// Value of one cell.
@@ -227,7 +244,11 @@ fn axis_parts(a: f64, b: f64, n: usize) -> [(usize, usize, f64); 3] {
     }
     let first = (i0, i0 + 1, (i0 + 1) as f64 - a);
     let mid = (i0 + 1, i1, 1.0);
-    let last = if i1 < n && b > bf { (i1, i1 + 1, b - bf) } else { none };
+    let last = if i1 < n && b > bf {
+        (i1, i1 + 1, b - bf)
+    } else {
+        none
+    };
     [first, mid, last]
 }
 
@@ -252,7 +273,13 @@ mod tests {
     use super::*;
 
     fn spec(cols: usize, rows: usize, cell: f64) -> GridSpec {
-        GridSpec { ox: 0.0, oy: 0.0, cell, cols, rows }
+        GridSpec {
+            ox: 0.0,
+            oy: 0.0,
+            cell,
+            cols,
+            rows,
+        }
     }
 
     #[test]

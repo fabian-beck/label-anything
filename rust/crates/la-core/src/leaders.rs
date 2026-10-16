@@ -72,7 +72,14 @@ fn directions(model: &Model) -> Vec<f64> {
 }
 
 /// Distant candidates of one variant.
-pub fn distant(model: &Model, obs: &Obstacles, item: &Item, vi: usize, v: &Variant, out: &mut Vec<Cand>) {
+pub fn distant(
+    model: &Model,
+    obs: &Obstacles,
+    item: &Item,
+    vi: usize,
+    v: &Variant,
+    out: &mut Vec<Cand>,
+) {
     let hw = v.w * 0.5;
     let hh = v.h * 0.5;
     let em = item.em();
@@ -92,14 +99,26 @@ pub fn distant(model: &Model, obs: &Obstacles, item: &Item, vi: usize, v: &Varia
                 let x0 = rect.x0 + t.x_offset;
                 let x1 = x0 + t.widths[0];
                 let end = *l.pts.last().unwrap();
-                let (near, far) = if (end.x - x0).abs() <= (end.x - x1).abs() { (x0, x1) } else { (x1, x0) };
+                let (near, far) = if (end.x - x0).abs() <= (end.x - x1).abs() {
+                    (x0, x1)
+                } else {
+                    (x1, x0)
+                };
                 let last = l.pts.len() - 1;
                 l.pts[last] = P::new(near, y);
                 l = Leader::new(l.pts, style);
                 l.underline = Some((P::new(near, y), P::new(far, y)));
             }
         }
-        let mut c = Cand::new(it, vi as u16, v.level, Kind::Distant, Side::Distant, 8.0 + ring as f64 * 0.5, rect);
+        let mut c = Cand::new(
+            it,
+            vi as u16,
+            v.level,
+            Kind::Distant,
+            Side::Distant,
+            8.0 + ring as f64 * 0.5,
+            rect,
+        );
         let members = model.group_members(item.index);
         if members.len() >= 2 {
             // fan leaders: one per member, all ending at the label's port
@@ -120,7 +139,12 @@ pub fn distant(model: &Model, obs: &Obstacles, item: &Item, vi: usize, v: &Varia
         let d = dir_of(theta);
         let start = leader_start(model, item, item.shape.reference() + d);
         for k in 0..rings {
-            let r = if rings == 1 { len.min_distance } else { len.min_distance + (len.max_distance - len.min_distance) * k as f64 / (rings - 1) as f64 };
+            let r = if rings == 1 {
+                len.min_distance
+            } else {
+                len.min_distance
+                    + (len.max_distance - len.min_distance) * k as f64 / (rings - 1) as f64
+            };
             if r <= 0.0 {
                 continue;
             }
@@ -212,7 +236,8 @@ pub fn free_space_seeds(obs: &Obstacles, item: &Item, hh: f64) -> Vec<P> {
     let reach = item.len.max_distance + bb.w().max(bb.h()) * 0.5;
     let c = item.shape.reference();
     let mut ids = Vec::new();
-    obs.seed_index.query(&Rect::from_center(c, reach, reach), &mut ids);
+    obs.seed_index
+        .query(&Rect::from_center(c, reach, reach), &mut ids);
     let mut seeds: Vec<(f64, usize, usize, P)> = Vec::new();
     for id in ids {
         let (p, v, col, row) = obs.seeds[id as usize];
@@ -221,7 +246,11 @@ pub fn free_space_seeds(obs: &Obstacles, item: &Item, hh: f64) -> Vec<P> {
             seeds.push((v - 0.01 * dd, col, row, p));
         }
     }
-    seeds.sort_by(|a, b| crate::math::cmp_f64(b.0, a.0).then(a.2.cmp(&b.2)).then(a.1.cmp(&b.1)));
+    seeds.sort_by(|a, b| {
+        crate::math::cmp_f64(b.0, a.0)
+            .then(a.2.cmp(&b.2))
+            .then(a.1.cmp(&b.1))
+    });
     seeds.truncate(8);
     seeds.into_iter().map(|s| s.3).collect()
 }
@@ -243,7 +272,10 @@ pub fn curve_points(a: P, b: P, bow: f64) -> Vec<P> {
         .map(|k| {
             let t = k as f64 / 8.0;
             let u = 1.0 - t;
-            P::new(u * u * a.x + 2.0 * u * t * c.x + t * t * b.x, u * u * a.y + 2.0 * u * t * c.y + t * t * b.y)
+            P::new(
+                u * u * a.x + 2.0 * u * t * c.x + t * t * b.x,
+                u * u * a.y + 2.0 * u * t * c.y + t * t * b.y,
+            )
         })
         .collect()
 }

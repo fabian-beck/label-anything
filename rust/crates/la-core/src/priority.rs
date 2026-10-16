@@ -55,15 +55,28 @@ fn eval(expr: &la_expr::Expr, item: &Item, attrs: &la_expr::Value) -> la_expr::V
 }
 
 /// Raw values of a built-in term.
-fn builtin_values(name: &str, k: usize, model: &Model, variants: &[Vec<Variant>]) -> Vec<Option<f64>> {
+fn builtin_values(
+    name: &str,
+    k: usize,
+    model: &Model,
+    variants: &[Vec<Variant>],
+) -> Vec<Option<f64>> {
     let n = model.items.len();
     match name {
         "input_order" => (0..n).map(|i| Some((n - i) as f64)).collect(),
-        "label_size" => (0..n).map(|i| Some(crate::labels::label_size_em2(&model.items[i], &variants[i]))).collect(),
+        "label_size" => (0..n)
+            .map(|i| Some(crate::labels::label_size_em2(&model.items[i], &variants[i])))
+            .collect(),
         "mark_size" => model.items.iter().map(|it| Some(it.shape.area())).collect(),
         "centrality" => {
-            let f = model.focus.unwrap_or_else(|| model.canvas.unwrap_or(model.extent).center());
-            model.items.iter().map(|it| Some(-it.anchor.dist(f))).collect()
+            let f = model
+                .focus
+                .unwrap_or_else(|| model.canvas.unwrap_or(model.extent).center());
+            model
+                .items
+                .iter()
+                .map(|it| Some(-it.anchor.dist(f)))
+                .collect()
         }
         "degree" => model
             .items
@@ -103,7 +116,12 @@ fn eq_radius(it: &Item) -> f64 {
 /// k-th nearest-neighbour gap distance of every item among all item marks and the
 /// `points`-class discs (spec §4.4 `outlierness`).
 fn knn_gaps(model: &Model, k: usize) -> Vec<f64> {
-    let mut pts: Vec<(P, f64, Option<usize>)> = model.items.iter().enumerate().map(|(i, it)| (it.anchor, eq_radius(it), Some(i))).collect();
+    let mut pts: Vec<(P, f64, Option<usize>)> = model
+        .items
+        .iter()
+        .enumerate()
+        .map(|(i, it)| (it.anchor, eq_radius(it), Some(i)))
+        .collect();
     for (c, p) in &model.vector {
         if c == "points" {
             if let Prim::Disc { c, r } = p {
@@ -112,9 +130,14 @@ fn knn_gaps(model: &Model, k: usize) -> Vec<f64> {
         }
     }
     let bbox = crate::geom::bbox_of(&pts.iter().map(|p| p.0).collect::<Vec<_>>());
-    let cell = maxf((bbox.area() / maxf(pts.len() as f64, 1.0)).sqrt() * 2.0, 1.0);
+    let cell = maxf(
+        (bbox.area() / maxf(pts.len() as f64, 1.0)).sqrt() * 2.0,
+        1.0,
+    );
     let ix = crate::index::StaticIndex::new(
-        pts.iter().map(|(c, r, _)| crate::geom::Rect::from_center(*c, *r, *r)).collect(),
+        pts.iter()
+            .map(|(c, r, _)| crate::geom::Rect::from_center(*c, *r, *r))
+            .collect(),
         &bbox.inflate(1.0),
         cell,
     );
@@ -125,7 +148,10 @@ fn knn_gaps(model: &Model, k: usize) -> Vec<f64> {
         let ri = eq_radius(it);
         let mut radius = cell;
         loop {
-            ix.query(&crate::geom::Rect::from_center(it.anchor, radius, radius), &mut buf);
+            ix.query(
+                &crate::geom::Rect::from_center(it.anchor, radius, radius),
+                &mut buf,
+            );
             gaps.clear();
             for &j in &buf {
                 let (c, r, idx) = pts[j as usize];
@@ -141,7 +167,11 @@ fn knn_gaps(model: &Model, k: usize) -> Vec<f64> {
                 break;
             }
             if radius > maxf(bbox.w(), bbox.h()) * 2.0 + 1.0 {
-                out.push(if gaps.len() >= k { gaps[k - 1] } else { gaps.last().copied().unwrap_or(maxf(bbox.w(), bbox.h())) });
+                out.push(if gaps.len() >= k {
+                    gaps[k - 1]
+                } else {
+                    gaps.last().copied().unwrap_or(maxf(bbox.w(), bbox.h()))
+                });
                 break;
             }
             radius *= 2.0;
@@ -170,7 +200,11 @@ fn transform(v: f64, t: &str) -> Option<f64> {
 
 /// Normalize values across items (spec §9.1). Missing values become 0.
 pub fn normalize(vals: &[Option<f64>], how: &str) -> Vec<f64> {
-    let present: Vec<(usize, f64)> = vals.iter().enumerate().filter_map(|(i, v)| v.map(|x| (i, x))).collect();
+    let present: Vec<(usize, f64)> = vals
+        .iter()
+        .enumerate()
+        .filter_map(|(i, v)| v.map(|x| (i, x)))
+        .collect();
     let mut out = vec![0.0; vals.len()];
     match how {
         "none" => {
@@ -222,7 +256,12 @@ pub fn compute(model: &Model, variants: &[Vec<Variant>], env: &dyn Env) -> Prior
         .and_then(|t| t.as_array())
         .into_iter()
         .flatten()
-        .filter_map(|r| Some((la_expr::parse(r.get("where")?.as_str()?).ok()?, r.get("tier")?.as_i64()?)))
+        .filter_map(|r| {
+            Some((
+                la_expr::parse(r.get("where")?.as_str()?).ok()?,
+                r.get("tier")?.as_i64()?,
+            ))
+        })
         .collect();
     let mut tiers: Vec<i64> = model
         .items
@@ -230,7 +269,11 @@ pub fn compute(model: &Model, variants: &[Vec<Variant>], env: &dyn Env) -> Prior
         .enumerate()
         .map(|(i, it)| {
             it.explicit_tier.unwrap_or_else(|| {
-                tier_rules.iter().find(|(e, _)| la_expr::truthy(&eval(e, it, &attrs[i]))).map(|r| r.1).unwrap_or(0)
+                tier_rules
+                    .iter()
+                    .find(|(e, _)| la_expr::truthy(&eval(e, it, &attrs[i])))
+                    .map(|r| r.1)
+                    .unwrap_or(0)
             })
         })
         .collect();
@@ -250,23 +293,45 @@ pub fn compute(model: &Model, variants: &[Vec<Variant>], env: &dyn Env) -> Prior
     } else if let Some(terms) = pv.get("terms").and_then(|t| t.as_array()) {
         for term in terms {
             let weight = term.get("weight").and_then(|w| w.as_f64()).unwrap_or(1.0);
-            let how = term.get("normalize").and_then(|w| w.as_str()).unwrap_or("rank");
-            let tr = term.get("transform").and_then(|w| w.as_str()).unwrap_or("none");
-            let (name, raw): (String, Vec<Option<f64>>) = if let Some(b) = term.get("builtin").and_then(|b| b.as_str()) {
-                let k = term.get("k").and_then(|k| k.as_u64()).unwrap_or(5) as usize;
-                (b.to_string(), builtin_values(b, k, model, variants))
-            } else if let Some(a) = term.get("attr").and_then(|a| a.as_str()) {
-                (a.to_string(), model.items.iter().map(|it| it.attrs.get(a).and_then(attr_number)).collect())
-            } else if let Some(src) = term.get("expr").and_then(|e| e.as_str()) {
-                let vals = match la_expr::parse(src) {
-                    Ok(e) => model.items.iter().enumerate().map(|(i, it)| la_expr::term_number(&eval(&e, it, &attrs[i]))).collect(),
-                    Err(_) => vec![None; n],
+            let how = term
+                .get("normalize")
+                .and_then(|w| w.as_str())
+                .unwrap_or("rank");
+            let tr = term
+                .get("transform")
+                .and_then(|w| w.as_str())
+                .unwrap_or("none");
+            let (name, raw): (String, Vec<Option<f64>>) =
+                if let Some(b) = term.get("builtin").and_then(|b| b.as_str()) {
+                    let k = term.get("k").and_then(|k| k.as_u64()).unwrap_or(5) as usize;
+                    (b.to_string(), builtin_values(b, k, model, variants))
+                } else if let Some(a) = term.get("attr").and_then(|a| a.as_str()) {
+                    (
+                        a.to_string(),
+                        model
+                            .items
+                            .iter()
+                            .map(|it| it.attrs.get(a).and_then(attr_number))
+                            .collect(),
+                    )
+                } else if let Some(src) = term.get("expr").and_then(|e| e.as_str()) {
+                    let vals = match la_expr::parse(src) {
+                        Ok(e) => model
+                            .items
+                            .iter()
+                            .enumerate()
+                            .map(|(i, it)| la_expr::term_number(&eval(&e, it, &attrs[i])))
+                            .collect(),
+                        Err(_) => vec![None; n],
+                    };
+                    (src.to_string(), vals)
+                } else {
+                    continue;
                 };
-                (src.to_string(), vals)
-            } else {
-                continue;
-            };
-            let transformed: Vec<Option<f64>> = raw.into_iter().map(|v| v.and_then(|x| transform(x, tr)).filter(|x| x.is_finite())).collect();
+            let transformed: Vec<Option<f64>> = raw
+                .into_iter()
+                .map(|v| v.and_then(|x| transform(x, tr)).filter(|x| x.is_finite()))
+                .collect();
             let norm = normalize(&transformed, how);
             for i in 0..n {
                 let c = weight * norm[i];
@@ -306,8 +371,15 @@ pub fn compute(model: &Model, variants: &[Vec<Variant>], env: &dyn Env) -> Prior
     // coverage reservation
     let mut reserved = vec![false; n];
     if let Some(cov) = pv.get("coverage").filter(|c| c.is_object()) {
-        if let Some(e) = cov.get("by").and_then(|b| b.as_str()).and_then(|s| la_expr::parse(s).ok()) {
-            let m = cov.get("min_per_group").and_then(|m| m.as_u64()).unwrap_or(1) as usize;
+        if let Some(e) = cov
+            .get("by")
+            .and_then(|b| b.as_str())
+            .and_then(|s| la_expr::parse(s).ok())
+        {
+            let m = cov
+                .get("min_per_group")
+                .and_then(|m| m.as_u64())
+                .unwrap_or(1) as usize;
             let mut order: Vec<usize> = (0..n).collect();
             let none = vec![false; n];
             order.sort_by(|&a, &b| cmp_items(a, b, &none));
@@ -351,8 +423,14 @@ pub fn compute(model: &Model, variants: &[Vec<Variant>], env: &dyn Env) -> Prior
     for (r, &i) in order.iter().enumerate() {
         if r > 0 {
             let p = order[r - 1];
-            let same_class = prio[p].required == prio[i].required && prio[p].tier == prio[i].tier && prio[p].reserved == prio[i].reserved;
-            let same_band = if model.band > 0.0 { scores[i] >= band_start - model.band } else { scores[i] == scores[p] };
+            let same_class = prio[p].required == prio[i].required
+                && prio[p].tier == prio[i].tier
+                && prio[p].reserved == prio[i].reserved;
+            let same_band = if model.band > 0.0 {
+                scores[i] >= band_start - model.band
+            } else {
+                scores[i] == scores[p]
+            };
             if !(same_class && same_band) {
                 level += 1;
                 band_start = scores[i];
@@ -374,10 +452,18 @@ pub fn compute(model: &Model, variants: &[Vec<Variant>], env: &dyn Env) -> Prior
     }
     // a group label carries the best key of its members
     for (rep, members) in &model.groups {
-        let best = members.iter().map(|&i| prio[i].key).min().unwrap_or(prio[*rep].key);
+        let best = members
+            .iter()
+            .map(|&i| prio[i].key)
+            .min()
+            .unwrap_or(prio[*rep].key);
         prio[*rep].key = best;
     }
-    Priorities { prio, order, n_keys: level + 1 }
+    Priorities {
+        prio,
+        order,
+        n_keys: level + 1,
+    }
 }
 
 /// All-or-none sets (each with ≥ 2 members), members in input order.
@@ -399,7 +485,11 @@ pub fn keep_with_sets(model: &Model) -> Vec<Vec<usize>> {
         r
     }
     let mut by_name: std::collections::BTreeMap<&str, usize> = std::collections::BTreeMap::new();
-    let ids: std::collections::BTreeMap<&str, usize> = model.items.iter().map(|it| (it.id.as_str(), it.index)).collect();
+    let ids: std::collections::BTreeMap<&str, usize> = model
+        .items
+        .iter()
+        .map(|it| (it.id.as_str(), it.index))
+        .collect();
     let mut involved = vec![false; n];
     for it in &model.items {
         match &it.keep_with {
@@ -426,8 +516,8 @@ pub fn keep_with_sets(model: &Model) -> Vec<Vec<usize>> {
         }
     }
     let mut sets: std::collections::BTreeMap<usize, Vec<usize>> = std::collections::BTreeMap::new();
-    for i in 0..n {
-        if involved[i] {
+    for (i, &inv) in involved.iter().enumerate().take(n) {
+        if inv {
             let r = find(&mut parent, i);
             sets.entry(r).or_default().push(i);
         }
@@ -442,7 +532,10 @@ mod tests {
     #[test]
     fn rank_normalization_with_ties_and_missing() {
         let v = normalize(&[Some(3.0), Some(1.0), None, Some(3.0), Some(2.0)], "rank");
-        assert_eq!(v, vec![(2.0 + 3.0) / 2.0 / 3.0, 0.0, 0.0, 2.5 / 3.0, 1.0 / 3.0]);
+        assert_eq!(
+            v,
+            vec![(2.0 + 3.0) / 2.0 / 3.0, 0.0, 0.0, 2.5 / 3.0, 1.0 / 3.0]
+        );
         let m = normalize(&[Some(2.0), Some(4.0), None], "minmax");
         assert_eq!(m, vec![0.0, 1.0, 0.0]);
     }

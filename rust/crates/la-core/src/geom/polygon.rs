@@ -238,7 +238,13 @@ pub fn polylabel(rings: &[Vec<P>], even_odd: bool, precision: f64) -> (P, f64) {
     let sqrt2 = std::f64::consts::SQRT_2;
     let mk = |c: P, h: f64, seq: u64| -> Cell {
         let d = sdist(c);
-        Cell { c, h, d, max: d + h * sqrt2, seq }
+        Cell {
+            c,
+            h,
+            d,
+            max: d + h * sqrt2,
+            seq,
+        }
     };
     let mut seq = 0u64;
     let mut queue = std::collections::BinaryHeap::new();
@@ -335,7 +341,12 @@ mod tests {
     use super::*;
 
     fn square(x: f64, y: f64, s: f64) -> Vec<P> {
-        vec![P::new(x, y), P::new(x + s, y), P::new(x + s, y + s), P::new(x, y + s)]
+        vec![
+            P::new(x, y),
+            P::new(x + s, y),
+            P::new(x + s, y + s),
+            P::new(x, y + s),
+        ]
     }
 
     #[test]
@@ -365,12 +376,39 @@ mod tests {
     fn rect_tests() {
         let poly = vec![square(0.0, 0.0, 10.0)];
         let bb = Rect::xywh(0.0, 0.0, 10.0, 10.0);
-        assert!(overlaps_rect(&poly, false, &bb, &Rect::xywh(5.0, 5.0, 10.0, 10.0)));
-        assert!(!overlaps_rect(&poly, false, &bb, &Rect::xywh(10.0, 0.0, 5.0, 5.0)));
-        assert!(overlaps_rect(&poly, false, &bb, &Rect::xywh(2.0, 2.0, 1.0, 1.0)));
-        assert!(contains_rect(&poly, false, &Rect::xywh(2.0, 2.0, 3.0, 3.0), 0.5));
-        assert!(!contains_rect(&poly, false, &Rect::xywh(8.0, 2.0, 3.0, 3.0), 0.0));
-        assert!((dist_rect(&poly, false, &bb, &Rect::xywh(13.0, 0.0, 2.0, 2.0)) - 3.0).abs() < 1e-12);
+        assert!(overlaps_rect(
+            &poly,
+            false,
+            &bb,
+            &Rect::xywh(5.0, 5.0, 10.0, 10.0)
+        ));
+        assert!(!overlaps_rect(
+            &poly,
+            false,
+            &bb,
+            &Rect::xywh(10.0, 0.0, 5.0, 5.0)
+        ));
+        assert!(overlaps_rect(
+            &poly,
+            false,
+            &bb,
+            &Rect::xywh(2.0, 2.0, 1.0, 1.0)
+        ));
+        assert!(contains_rect(
+            &poly,
+            false,
+            &Rect::xywh(2.0, 2.0, 3.0, 3.0),
+            0.5
+        ));
+        assert!(!contains_rect(
+            &poly,
+            false,
+            &Rect::xywh(8.0, 2.0, 3.0, 3.0),
+            0.0
+        ));
+        assert!(
+            (dist_rect(&poly, false, &bb, &Rect::xywh(13.0, 0.0, 2.0, 2.0)) - 3.0).abs() < 1e-12
+        );
     }
 
     #[test]
@@ -390,7 +428,7 @@ mod tests {
             P::new(20.0, 100.0),
             P::new(0.0, 100.0),
         ];
-        let (p, d) = polylabel(&[l.clone()], false, 0.5);
+        let (p, d) = polylabel(std::slice::from_ref(&l), false, 0.5);
         assert!(contains(&[l], false, p));
         assert!(d >= 9.0);
     }

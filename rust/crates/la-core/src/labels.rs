@@ -16,7 +16,10 @@ pub fn bundled_fonts() -> &'static FontBook {
 /// Load the font files referenced by the items into a font book (bundled fonts first).
 /// Returns `None` when no item references a font file. Font families named `default` that
 /// carry a file are renamed so they never shadow the bundled font for other labels.
-pub fn user_fonts(model: &mut crate::model::Model, env: &dyn Env) -> Result<Option<FontBook>, (String, String)> {
+pub fn user_fonts(
+    model: &mut crate::model::Model,
+    env: &dyn Env,
+) -> Result<Option<FontBook>, (String, String)> {
     use crate::model::{LabelSpec, PartSpec};
     let mut book: Option<FontBook> = None;
     let mut loaded: Vec<(String, String)> = Vec::new(); // (file, family)
@@ -41,13 +44,24 @@ pub fn user_fonts(model: &mut crate::model::Model, env: &dyn Env) -> Result<Opti
                 continue;
             }
             let bytes = if file.starts_with("data:") {
-                crate::model::data_url_bytes(&file).ok_or_else(|| (format!("/items/{i}/label/font/file"), "invalid data URL".to_string()))?
+                crate::model::data_url_bytes(&file).ok_or_else(|| {
+                    (
+                        format!("/items/{i}/label/font/file"),
+                        "invalid data URL".to_string(),
+                    )
+                })?
             } else {
-                env.read_file(&file).map_err(|e| (format!("/items/{i}/label/font/file"), e))?
+                env.read_file(&file)
+                    .map_err(|e| (format!("/items/{i}/label/font/file"), e))?
             };
-            let family = if f.family.eq_ignore_ascii_case("default") { format!("user-font-{}", loaded.len()) } else { f.family.clone() };
+            let family = if f.family.eq_ignore_ascii_case("default") {
+                format!("user-font-{}", loaded.len())
+            } else {
+                f.family.clone()
+            };
             let b = book.get_or_insert_with(FontBook::with_bundled);
-            b.register(&family, f.weight, f.italic, bytes).map_err(|e| (format!("/items/{i}/label/font/file"), format!("{e:?}")))?;
+            b.register(&family, f.weight, f.italic, bytes)
+                .map_err(|e| (format!("/items/{i}/label/font/file"), format!("{e:?}")))?;
             f.family = family.clone();
             loaded.push((file, family));
         }
@@ -69,7 +83,9 @@ impl<'a> Measurer<'a> {
         if let Some(m) = self.env.measure(text, &spec) {
             return m.width;
         }
-        let f = self.fonts.font(self.fonts.resolve(&font.family, font.weight, font.italic));
+        let f = self
+            .fonts
+            .font(self.fonts.resolve(&font.family, font.weight, font.italic));
         let full = match self.shaping {
             "full" => true,
             "auto" => la_text::needs_complex_shaping(text),
@@ -88,9 +104,14 @@ impl<'a> Measurer<'a> {
         if let Some(m) = self.env.measure("", &spec) {
             return (m.ascent, m.descent);
         }
-        let f = self.fonts.font(self.fonts.resolve(&font.family, font.weight, font.italic));
+        let f = self
+            .fonts
+            .font(self.fonts.resolve(&font.family, font.weight, font.italic));
         let upm = f.units_per_em() as f64;
-        (f.ascender() as f64 * spec.size / upm, -(f.descender() as f64) * spec.size / upm)
+        (
+            f.ascender() as f64 * spec.size / upm,
+            -(f.descender() as f64) * spec.size / upm,
+        )
     }
 }
 
@@ -159,11 +180,22 @@ impl Variant {
 }
 
 /// Build a text variant from lines.
-fn text_variant(m: &Measurer, spec: &TextSpec, pad: f64, scale: f64, lines: Vec<String>, used: &str, truncated: bool) -> Variant {
+fn text_variant(
+    m: &Measurer,
+    spec: &TextSpec,
+    pad: f64,
+    scale: f64,
+    lines: Vec<String>,
+    used: &str,
+    truncated: bool,
+) -> Variant {
     let (asc, desc) = m.vmetrics(&spec.font, scale);
     let size = spec.font.size * scale;
     let pitch = spec.font.line_height * size;
-    let widths: Vec<f64> = lines.iter().map(|l| m.width(&spec.font, scale, l)).collect();
+    let widths: Vec<f64> = lines
+        .iter()
+        .map(|l| m.width(&spec.font, scale, l))
+        .collect();
     let mut wmax = 0.0;
     for &w in &widths {
         wmax = maxf(wmax, w);
@@ -177,7 +209,16 @@ fn text_variant(m: &Measurer, spec: &TextSpec, pad: f64, scale: f64, lines: Vec<
         h: content_h + 2.0 * p,
         level: 0,
         penalty: 0.0,
-        text: Some(TextLayout { lines, widths, baselines, x_offset: p, font_size: size, scale, used: used.to_string(), truncated }),
+        text: Some(TextLayout {
+            lines,
+            widths,
+            baselines,
+            x_offset: p,
+            font_size: size,
+            scale,
+            used: used.to_string(),
+            truncated,
+        }),
         parts: vec![],
         shape: LabelShape::Rect,
         steps: vec![],
@@ -199,12 +240,21 @@ fn to_wrap_opts(spec: &TextSpec, scale: f64) -> Option<WrapOptions> {
 }
 
 /// Normal-level variants of one text (original or alternative).
-fn text_variants(m: &Measurer, spec: &TextSpec, text: &str, pad: f64, scale: f64, used: &str) -> Vec<Variant> {
+fn text_variants(
+    m: &Measurer,
+    spec: &TextSpec,
+    text: &str,
+    pad: f64,
+    scale: f64,
+    used: &str,
+) -> Vec<Variant> {
     if let Some((w, h, lines)) = &spec.explicit {
         let p = pad * scale;
         let n = lines.len().max(1) as f64;
         let line_h = h * scale / n;
-        let baselines = (0..lines.len().max(1)).map(|i| p + line_h * (i as f64 + 0.8)).collect();
+        let baselines = (0..lines.len().max(1))
+            .map(|i| p + line_h * (i as f64 + 0.8))
+            .collect();
         return vec![Variant {
             w: w * scale + 2.0 * p,
             h: h * scale + 2.0 * p,
@@ -228,7 +278,15 @@ fn text_variants(m: &Measurer, spec: &TextSpec, text: &str, pad: f64, scale: f64
     }
     let measure = |s: &str| m.width(&spec.font, scale, s);
     match to_wrap_opts(spec, scale) {
-        None => vec![text_variant(m, spec, pad, scale, vec![text.to_string()], used, false)],
+        None => vec![text_variant(
+            m,
+            spec,
+            pad,
+            scale,
+            vec![text.to_string()],
+            used,
+            false,
+        )],
         Some(opts) => la_text::wrap_variants(text, &opts, &measure)
             .into_iter()
             .map(|tv| {
@@ -248,7 +306,15 @@ fn text_variants(m: &Measurer, spec: &TextSpec, text: &str, pad: f64, scale: f64
 }
 
 /// Variants for the `wrap` ladder step.
-fn extra_wrap(m: &Measurer, spec: &TextSpec, text: &str, pad: f64, scale: f64, used: &str, wrap_max_lines: usize) -> Vec<Variant> {
+fn extra_wrap(
+    m: &Measurer,
+    spec: &TextSpec,
+    text: &str,
+    pad: f64,
+    scale: f64,
+    used: &str,
+    wrap_max_lines: usize,
+) -> Vec<Variant> {
     if spec.explicit.is_some() {
         return vec![];
     }
@@ -262,7 +328,11 @@ fn extra_wrap(m: &Measurer, spec: &TextSpec, text: &str, pad: f64, scale: f64, u
             let mut out = Vec::new();
             for n in (have + 1)..=w.max_lines {
                 let lines = la_text::balanced_wrap(text, n, opts.max_width, &measure);
-                if lines.len() > have && !out.iter().any(|v: &Variant| v.text.as_ref().map(|t| &t.lines) == Some(&lines)) {
+                if lines.len() > have
+                    && !out
+                        .iter()
+                        .any(|v: &Variant| v.text.as_ref().map(|t| &t.lines) == Some(&lines))
+                {
                     let mut v = text_variant(m, spec, pad, scale, lines, used, false);
                     v.penalty += 0.25 * (v.lines() as f64 - 1.0);
                     v.steps.push("wrap".into());
@@ -291,13 +361,24 @@ fn truncated(m: &Measurer, spec: &TextSpec, text: &str, pad: f64, scale: f64) ->
     }
     let measure = |s: &str| m.width(&spec.font, scale, s);
     let full = measure(text);
-    let target = spec.wrap.as_ref().and_then(|w| w.max_width).map(|x| x * scale).unwrap_or(full * 0.6);
+    let target = spec
+        .wrap
+        .as_ref()
+        .and_then(|w| w.max_width)
+        .map(|x| x * scale)
+        .unwrap_or(full * 0.6);
     if target >= full {
         return vec![];
     }
     let mut out = Vec::new();
-    for lines in [vec![la_text::truncate_end(text, target, &measure)], la_text::truncate_middle(text, target, 1, &measure)] {
-        if !out.iter().any(|v: &Variant| v.text.as_ref().map(|t| &t.lines) == Some(&lines)) {
+    for lines in [
+        vec![la_text::truncate_end(text, target, &measure)],
+        la_text::truncate_middle(text, target, 1, &measure),
+    ] {
+        if !out
+            .iter()
+            .any(|v: &Variant| v.text.as_ref().map(|t| &t.lines) == Some(&lines))
+        {
             let mut v = text_variant(m, spec, pad, scale, lines, "truncated", true);
             v.penalty += 1.0;
             v.steps.push("truncate".into());
@@ -307,10 +388,21 @@ fn truncated(m: &Measurer, spec: &TextSpec, text: &str, pad: f64, scale: f64) ->
     out
 }
 
-fn fixed_variant(kind: FixedKind, w: f64, h: f64, shape: &LabelShape, pad: f64, scale: f64) -> Variant {
+fn fixed_variant(
+    kind: FixedKind,
+    w: f64,
+    h: f64,
+    shape: &LabelShape,
+    pad: f64,
+    scale: f64,
+) -> Variant {
     let p = pad * scale;
     let shape = match shape {
-        LabelShape::Polygon(pts) => LabelShape::Polygon(pts.iter().map(|q| *q * scale + crate::geom::P::new(p, p)).collect()),
+        LabelShape::Polygon(pts) => LabelShape::Polygon(
+            pts.iter()
+                .map(|q| *q * scale + crate::geom::P::new(p, p))
+                .collect(),
+        ),
         LabelShape::Rounded(r) => LabelShape::Rounded(r * scale),
         s => s.clone(),
     };
@@ -321,7 +413,11 @@ fn fixed_variant(kind: FixedKind, w: f64, h: f64, shape: &LabelShape, pad: f64, 
         penalty: 0.0,
         text: None,
         parts: vec![PartLayout {
-            kind: if kind == FixedKind::Icon { PartKind::Icon } else { PartKind::Box },
+            kind: if kind == FixedKind::Icon {
+                PartKind::Icon
+            } else {
+                PartKind::Box
+            },
             rect: Rect::new(p, p, p + w * scale, p + h * scale),
             text: None,
         }],
@@ -336,7 +432,15 @@ fn fixed_variant(kind: FixedKind, w: f64, h: f64, shape: &LabelShape, pad: f64, 
     }
 }
 
-fn composite_variant(m: &Measurer, row: bool, gap: f64, align: &str, parts: &[PartSpec], pad: f64, scale: f64) -> Variant {
+fn composite_variant(
+    m: &Measurer,
+    row: bool,
+    gap: f64,
+    align: &str,
+    parts: &[PartSpec],
+    pad: f64,
+    scale: f64,
+) -> Variant {
     // measure parts
     let mut sizes = Vec::with_capacity(parts.len());
     for part in parts {
@@ -369,7 +473,11 @@ fn composite_variant(m: &Measurer, row: bool, gap: f64, align: &str, parts: &[Pa
             "end" => cross - b,
             _ => (cross - b) * 0.5,
         };
-        let (x, y) = if row { (p + cursor, p + off) } else { (p + off, p + cursor) };
+        let (x, y) = if row {
+            (p + cursor, p + off)
+        } else {
+            (p + off, p + cursor)
+        };
         let rect = Rect::new(x, y, x + w, y + h);
         let text = t.map(|(ts, asc)| TextLayout {
             lines: vec![ts.text.clone()],
@@ -383,7 +491,10 @@ fn composite_variant(m: &Measurer, row: bool, gap: f64, align: &str, parts: &[Pa
         });
         let kind = match spec {
             PartSpec::Text(_) => PartKind::Text,
-            PartSpec::Fixed { kind: FixedKind::Icon, .. } => PartKind::Icon,
+            PartSpec::Fixed {
+                kind: FixedKind::Icon,
+                ..
+            } => PartKind::Icon,
             PartSpec::Fixed { .. } => PartKind::Box,
         };
         out_parts.push(PartLayout { kind, rect, text });
@@ -408,14 +519,21 @@ pub fn base_variants(m: &Measurer, item: &Item) -> Vec<Variant> {
     variants_at_scale(m, item, 1.0, false)
 }
 
-fn variants_at_scale(m: &Measurer, item: &Item, scale: f64, with_alternatives: bool) -> Vec<Variant> {
+fn variants_at_scale(
+    m: &Measurer,
+    item: &Item,
+    scale: f64,
+    with_alternatives: bool,
+) -> Vec<Variant> {
     let pad = item.len.padding;
     match &item.label {
         LabelSpec::Text(spec) => {
             let mut v = text_variants(m, spec, &spec.text, pad, scale, "original");
             if with_alternatives {
                 for (k, alt) in spec.alternatives.iter().enumerate() {
-                    for mut a in text_variants(m, spec, alt, pad, scale, &format!("alternative:{k}")) {
+                    for mut a in
+                        text_variants(m, spec, alt, pad, scale, &format!("alternative:{k}"))
+                    {
                         a.penalty += 0.5 * (k as f64 + 1.0);
                         a.steps.insert(0, "alternatives".into());
                         v.push(a);
@@ -424,19 +542,36 @@ fn variants_at_scale(m: &Measurer, item: &Item, scale: f64, with_alternatives: b
             }
             v
         }
-        LabelSpec::Fixed { kind, w, h, shape } => vec![fixed_variant(*kind, *w, *h, shape, pad, scale)],
-        LabelSpec::Composite { row, gap, align, parts } => vec![composite_variant(m, *row, *gap, align, parts, pad, scale)],
+        LabelSpec::Fixed { kind, w, h, shape } => {
+            vec![fixed_variant(*kind, *w, *h, shape, pad, scale)]
+        }
+        LabelSpec::Composite {
+            row,
+            gap,
+            align,
+            parts,
+        } => vec![composite_variant(m, *row, *gap, align, parts, pad, scale)],
     }
 }
 
 /// Variants added by one ladder step, given the variants that exist so far.
-pub fn ladder_variants(m: &Measurer, item: &Item, step: &crate::model::opts::Step, existing: &[Variant], min_scale: f64, wrap_max_lines: usize) -> Vec<Variant> {
+pub fn ladder_variants(
+    m: &Measurer,
+    item: &Item,
+    step: &crate::model::opts::Step,
+    existing: &[Variant],
+    min_scale: f64,
+    wrap_max_lines: usize,
+) -> Vec<Variant> {
     use crate::model::opts::Step;
     let pad = item.len.padding;
     let dedup = |out: Vec<Variant>| -> Vec<Variant> {
         let mut res: Vec<Variant> = Vec::new();
         for v in out {
-            let dup = existing.iter().chain(res.iter()).any(|e| e.text.is_some() && e.text == v.text && e.w == v.w && e.h == v.h);
+            let dup = existing
+                .iter()
+                .chain(res.iter())
+                .any(|e| e.text.is_some() && e.text == v.text && e.w == v.w && e.h == v.h);
             if !dup {
                 res.push(v);
             }
@@ -458,8 +593,21 @@ pub fn ladder_variants(m: &Measurer, item: &Item, step: &crate::model::opts::Ste
         (Step::Wrap, LabelSpec::Text(spec)) => {
             let mut out = extra_wrap(m, spec, &spec.text, pad, 1.0, "original", wrap_max_lines);
             for (k, alt) in spec.alternatives.iter().enumerate() {
-                if existing.iter().any(|e| e.text.as_ref().map(|t| t.used == format!("alternative:{k}")).unwrap_or(false)) {
-                    for mut a in extra_wrap(m, spec, alt, pad, 1.0, &format!("alternative:{k}"), wrap_max_lines) {
+                if existing.iter().any(|e| {
+                    e.text
+                        .as_ref()
+                        .map(|t| t.used == format!("alternative:{k}"))
+                        .unwrap_or(false)
+                }) {
+                    for mut a in extra_wrap(
+                        m,
+                        spec,
+                        alt,
+                        pad,
+                        1.0,
+                        &format!("alternative:{k}"),
+                        wrap_max_lines,
+                    ) {
                         a.penalty += 0.5 * (k as f64 + 1.0);
                         a.steps.insert(0, "alternatives".into());
                         out.push(a);
@@ -503,17 +651,35 @@ fn rescale(m: &Measurer, item: &Item, v: &Variant, s: f64) -> Option<Variant> {
         LabelSpec::Text(spec) => {
             let t = v.text.as_ref()?;
             if spec.explicit.is_some() {
-                return text_variants(m, spec, &spec.text, pad, s, &t.used).into_iter().next();
+                return text_variants(m, spec, &spec.text, pad, s, &t.used)
+                    .into_iter()
+                    .next();
             }
-            Some(text_variant(m, spec, pad, s, t.lines.clone(), &t.used, t.truncated))
+            Some(text_variant(
+                m,
+                spec,
+                pad,
+                s,
+                t.lines.clone(),
+                &t.used,
+                t.truncated,
+            ))
         }
         LabelSpec::Fixed { kind, w, h, shape } => Some(fixed_variant(*kind, *w, *h, shape, pad, s)),
-        LabelSpec::Composite { row, gap, align, parts } => Some(composite_variant(m, *row, *gap, align, parts, pad, s)),
+        LabelSpec::Composite {
+            row,
+            gap,
+            align,
+            parts,
+        } => Some(composite_variant(m, *row, *gap, align, parts, pad, s)),
     }
 }
 
 /// Label area in em² of the first variant (priority term `label_size`).
 pub fn label_size_em2(item: &Item, variants: &[Variant]) -> f64 {
     let em = item.em();
-    variants.first().map(|v| v.w * v.h / (em * em)).unwrap_or(0.0)
+    variants
+        .first()
+        .map(|v| v.w * v.h / (em * em))
+        .unwrap_or(0.0)
 }

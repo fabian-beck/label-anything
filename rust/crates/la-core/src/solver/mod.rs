@@ -1,9 +1,9 @@
 //! Solver pipeline (spec §10): candidates → greedy with ladder → local search →
 //! verification.
 
+pub mod exact;
 pub mod greedy;
 pub mod local;
-pub mod exact;
 pub mod repair;
 pub mod state;
 pub mod verify;
@@ -72,7 +72,15 @@ pub struct Solve<'a> {
 
 impl<'a> Solve<'a> {
     #[allow(clippy::too_many_arguments)]
-    pub fn new(model: &'a Model, obs: &'a Obstacles, env: &'a dyn Env, pri: &'a Priorities, measurer: Measurer<'a>, variants: Vec<Vec<Variant>>, start_ms: f64) -> Solve<'a> {
+    pub fn new(
+        model: &'a Model,
+        obs: &'a Obstacles,
+        env: &'a dyn Env,
+        pri: &'a Priorities,
+        measurer: Measurer<'a>,
+        variants: Vec<Vec<Variant>>,
+        start_ms: f64,
+    ) -> Solve<'a> {
         let n = model.items.len();
         Solve {
             model,
@@ -110,27 +118,69 @@ impl<'a> Solve<'a> {
         if self.cands[cid as usize].evaluated {
             return;
         }
-        let mut c = std::mem::replace(&mut self.cands[cid as usize], Cand::new(0, 0, 0, Kind::Adjacent, candidates::Side::Internal, 0.0, crate::geom::Rect::EMPTY));
+        let mut c = std::mem::replace(
+            &mut self.cands[cid as usize],
+            Cand::new(
+                0,
+                0,
+                0,
+                Kind::Adjacent,
+                candidates::Side::Internal,
+                0.0,
+                crate::geom::Rect::EMPTY,
+            ),
+        );
         let v = &self.variants[c.item as usize][c.variant as usize];
         Evaluator::new(self.model, self.obs, self.env).eval(&mut c, v, None);
         self.cands[cid as usize] = c;
     }
 
     /// `lazy`: skip static evaluation and pruning (ladder candidates; see `ensure_eval`).
-    pub fn generate_mode(&mut self, i: usize, vis: &[usize], models: Models, level: u8, lazy: bool) -> Vec<u32> {
+    pub fn generate_mode(
+        &mut self,
+        i: usize,
+        vis: &[usize],
+        models: Models,
+        level: u8,
+        lazy: bool,
+    ) -> Vec<u32> {
         let item = &self.model.items[i];
         let mut fresh: Vec<Cand> = Vec::new();
         for &vi in vis {
             let v = &self.variants[i][vi];
             if item.area.is_some() {
                 // area anchors: internal candidates first; external ones around the dot
-                if let Some(rank) = candidates::internal_rank(item, v, models, self.model.placement.internal_circle_ratio) {
+                if let Some(rank) = candidates::internal_rank(
+                    item,
+                    v,
+                    models,
+                    self.model.placement.internal_circle_ratio,
+                ) {
                     candidates::internal(item, vi, v, rank, &mut fresh);
                 }
-                candidates::adjacent(item, vi, v, self.model.placement.slider_per_gap, models, &mut fresh);
+                candidates::adjacent(
+                    item,
+                    vi,
+                    v,
+                    self.model.placement.slider_per_gap,
+                    models,
+                    &mut fresh,
+                );
             } else {
-                candidates::adjacent(item, vi, v, self.model.placement.slider_per_gap, models, &mut fresh);
-                if let Some(rank) = candidates::internal_rank(item, v, models, self.model.placement.internal_circle_ratio) {
+                candidates::adjacent(
+                    item,
+                    vi,
+                    v,
+                    self.model.placement.slider_per_gap,
+                    models,
+                    &mut fresh,
+                );
+                if let Some(rank) = candidates::internal_rank(
+                    item,
+                    v,
+                    models,
+                    self.model.placement.internal_circle_ratio,
+                ) {
                     candidates::internal(item, vi, v, rank, &mut fresh);
                 }
             }
@@ -139,11 +189,19 @@ impl<'a> Solve<'a> {
             }
         }
         if models.has(Models::BOUNDARY) {
-            crate::boundary::boundary_candidates(self.model, self.obs, item, &self.variants[i], vis, &mut fresh);
+            crate::boundary::boundary_candidates(
+                self.model,
+                self.obs,
+                item,
+                &self.variants[i],
+                vis,
+                &mut fresh,
+            );
         }
         for c in &mut fresh {
             c.level = level;
-            c.lshape = candidates::label_shape(&c.rect, &self.variants[i][c.variant as usize].shape);
+            c.lshape =
+                candidates::label_shape(&c.rect, &self.variants[i][c.variant as usize].shape);
         }
         if lazy {
             let mut ids = Vec::with_capacity(fresh.len());
@@ -163,18 +221,27 @@ impl<'a> Solve<'a> {
         let kd = self.model.placement.k_distant;
         let mut keep = vec![true; fresh.len()];
         for &vi in vis {
-            let mut ds: Vec<usize> = (0..fresh.len()).filter(|&k| fresh[k].variant as usize == vi && fresh[k].kind == Kind::Distant).collect();
+            let mut ds: Vec<usize> = (0..fresh.len())
+                .filter(|&k| fresh[k].variant as usize == vi && fresh[k].kind == Kind::Distant)
+                .collect();
             ds.sort_by(|&a, &b| {
                 let ka = (!fresh[a].feasible, fresh[a].cost);
                 let kb = (!fresh[b].feasible, fresh[b].cost);
-                ka.0.cmp(&kb.0).then(crate::math::cmp_f64(ka.1, kb.1)).then(a.cmp(&b))
+                ka.0.cmp(&kb.0)
+                    .then(crate::math::cmp_f64(ka.1, kb.1))
+                    .then(a.cmp(&b))
             });
             for &k in ds.iter().skip(kd) {
                 keep[k] = false;
             }
         }
         // prune expensive feasible candidates
-        let best = fresh.iter().zip(&keep).filter(|(c, k)| **k && c.feasible).map(|(c, _)| c.cost).fold(f64::INFINITY, f64::min);
+        let best = fresh
+            .iter()
+            .zip(&keep)
+            .filter(|(c, k)| **k && c.feasible)
+            .map(|(c, _)| c.cost)
+            .fold(f64::INFINITY, f64::min);
         if best.is_finite() {
             let lim = self.model.placement.prune_factor * best.abs() + 1.0 + best.min(0.0);
             for (k, c) in fresh.iter().enumerate() {
@@ -207,10 +274,13 @@ impl<'a> Solve<'a> {
         // auto preset: enable distant labels when crowded
         if let Some((frac, crowded_models)) = self.model.auto_crowded {
             let lacking = (0..n)
-                .filter(|&i| !self.by_item[i].iter().any(|&c| {
-                    let c = &self.cands[c as usize];
-                    c.feasible && matches!(c.kind, Kind::Adjacent | Kind::Slider | Kind::Internal)
-                }))
+                .filter(|&i| {
+                    !self.by_item[i].iter().any(|&c| {
+                        let c = &self.cands[c as usize];
+                        c.feasible
+                            && matches!(c.kind, Kind::Adjacent | Kind::Slider | Kind::Internal)
+                    })
+                })
                 .count();
             if n > 0 && lacking as f64 > frac * n as f64 {
                 for i in 0..n {
@@ -230,7 +300,11 @@ impl<'a> Solve<'a> {
             }
         }
         self.n_level0 = self.cands.len();
-        self.cand_ix = StaticIndex::new(self.cands.iter().map(|c| c.bbox()).collect(), &self.model.extent, self.obs.index_cell);
+        self.cand_ix = StaticIndex::new(
+            self.cands.iter().map(|c| c.bbox()).collect(),
+            &self.model.extent,
+            self.obs.index_cell,
+        );
     }
 
     /// Generate the pending level-0 distant candidates of item `i` (once).
@@ -239,7 +313,9 @@ impl<'a> Solve<'a> {
             return vec![];
         }
         self.distant_pending[i] = false;
-        let vis: Vec<usize> = (0..self.variants[i].len()).filter(|&v| self.variants[i][v].level == 0).collect();
+        let vis: Vec<usize> = (0..self.variants[i].len())
+            .filter(|&v| self.variants[i][v].level == 0)
+            .collect();
         self.generate(i, &vis, Models(Models::DISTANT), 0)
     }
 
@@ -255,14 +331,25 @@ impl<'a> Solve<'a> {
     pub fn ladder_candidates(&mut self, i: usize, si: usize) -> Vec<u32> {
         let level = (si + 1) as u8;
         if self.level_done[i] >= level {
-            return self.by_item[i].iter().copied().filter(|&c| self.cands[c as usize].level == level).collect();
+            return self.by_item[i]
+                .iter()
+                .copied()
+                .filter(|&c| self.cands[c as usize].level == level)
+                .collect();
         }
         self.level_done[i] = level;
         let step = self.model.ladder[si];
         let item = &self.model.items[i];
         match step {
             Step::Alternatives | Step::Wrap | Step::Truncate | Step::Shrink(_) => {
-                let new = labels::ladder_variants(&self.measurer, item, &step, &self.variants[i], self.model.degrade.min_scale, self.model.degrade.wrap_max_lines);
+                let new = labels::ladder_variants(
+                    &self.measurer,
+                    item,
+                    &step,
+                    &self.variants[i],
+                    self.model.degrade.min_scale,
+                    self.model.degrade.wrap_max_lines,
+                );
                 if new.is_empty() {
                     return vec![];
                 }

@@ -21,13 +21,18 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 #[derive(Parser)]
-#[command(name = "label-anything", version, about = "Label placement engine: place labels and leaders avoiding obstacles, with priority-driven omission.")]
+#[command(
+    name = "label-anything",
+    version,
+    about = "Label placement engine: place labels and leaders avoiding obstacles, with priority-driven omission."
+)]
 struct Cli {
     #[command(subcommand)]
     cmd: Cmd,
 }
 
 #[derive(Subcommand)]
+#[allow(clippy::large_enum_variant)] // parsed once per process
 enum Cmd {
     /// Solve a problem (JSON) or build one from a CSV of anchors.
     Place {
@@ -115,7 +120,9 @@ enum Cmd {
 fn read_input(path: &str) -> Result<String, String> {
     if path == "-" {
         let mut s = String::new();
-        std::io::stdin().read_to_string(&mut s).map_err(|e| format!("stdin: {e}"))?;
+        std::io::stdin()
+            .read_to_string(&mut s)
+            .map_err(|e| format!("stdin: {e}"))?;
         Ok(s)
     } else {
         std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))
@@ -125,14 +132,19 @@ fn read_input(path: &str) -> Result<String, String> {
 fn write_output(path: &str, data: &str) -> Result<(), String> {
     if path == "-" {
         let mut out = std::io::stdout().lock();
-        out.write_all(data.as_bytes()).and_then(|_| out.write_all(b"\n")).map_err(|e| e.to_string())
+        out.write_all(data.as_bytes())
+            .and_then(|_| out.write_all(b"\n"))
+            .map_err(|e| e.to_string())
     } else {
         std::fs::write(path, data).map_err(|e| format!("{path}: {e}"))
     }
 }
 
 fn env_for(path: Option<&str>) -> NativeEnv {
-    match path.filter(|p| *p != "-").and_then(|p| Path::new(p).parent().map(|d| d.to_path_buf())) {
+    match path
+        .filter(|p| *p != "-")
+        .and_then(|p| Path::new(p).parent().map(|d| d.to_path_buf()))
+    {
         Some(d) if !d.as_os_str().is_empty() => NativeEnv::with_base_dir(d),
         _ => NativeEnv::new(),
     }
@@ -140,7 +152,16 @@ fn env_for(path: Option<&str>) -> NativeEnv {
 
 fn print_report(r: &Report) {
     for e in &r.errors {
-        eprintln!("error   {} [{}] {}", if e.pointer.is_empty() { "/" } else { &e.pointer }, e.code, e.message);
+        eprintln!(
+            "error   {} [{}] {}",
+            if e.pointer.is_empty() {
+                "/"
+            } else {
+                &e.pointer
+            },
+            e.code,
+            e.message
+        );
     }
     for w in &r.warnings {
         eprintln!("warning {} [{}] {}", w.pointer, w.code, w.message);
@@ -183,18 +204,29 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
             let (mut p, env) = match (&problem, &anchors) {
                 (Some(path), None) => {
                     let text = read_input(path)?;
-                    let v: Value = serde_json::from_str(&text).map_err(|e| format!("{path}: invalid JSON: {e}"))?;
+                    let v: Value = serde_json::from_str(&text)
+                        .map_err(|e| format!("{path}: invalid JSON: {e}"))?;
                     (v, env_for(Some(path)))
                 }
                 (None, Some(csv_path)) => {
-                    let opts = csv::CsvOpts { x_col, y_col, labels_col, id_col, priority_col };
+                    let opts = csv::CsvOpts {
+                        x_col,
+                        y_col,
+                        labels_col,
+                        id_col,
+                        priority_col,
+                    };
                     let v = csv::problem_from_csv(csv_path, &opts)?;
                     (v, NativeEnv::new())
                 }
-                (Some(_), Some(_)) => return Err("give either a problem file or --anchors, not both".into()),
+                (Some(_), Some(_)) => {
+                    return Err("give either a problem file or --anchors, not both".into())
+                }
                 (None, None) => return Err("missing problem file (or --anchors)".into()),
             };
-            let obj = p.as_object_mut().ok_or("the problem must be a JSON object")?;
+            let obj = p
+                .as_object_mut()
+                .ok_or("the problem must be a JSON object")?;
             if let Some(t) = time {
                 obj.entry("solver").or_insert(json!({}))["time_budget_ms"] = json!(t);
             }
@@ -206,20 +238,32 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
             }
             if let Some(m) = max_labels {
                 let pr = obj.entry("priority").or_insert(json!({}));
-                pr.as_object_mut().ok_or("priority must be an object")?.entry("budget").or_insert(json!({}))["max_labels"] = json!(m);
+                pr.as_object_mut()
+                    .ok_or("priority must be an object")?
+                    .entry("budget")
+                    .or_insert(json!({}))["max_labels"] = json!(m);
             }
             if let Some(ps) = preset {
                 obj.insert("preset".into(), json!(ps));
             }
             if let Some(fs) = font_size {
-                obj.entry("defaults").or_insert(json!({})).as_object_mut().ok_or("defaults must be an object")?.entry("font").or_insert(json!({}))["size"] = json!(fs);
+                obj.entry("defaults")
+                    .or_insert(json!({}))
+                    .as_object_mut()
+                    .ok_or("defaults must be an object")?
+                    .entry("font")
+                    .or_insert(json!({}))["size"] = json!(fs);
             }
             if let Some(c) = canvas {
                 let (w, h) = c.split_once(['x', 'X']).ok_or("--canvas must be WxH")?;
                 obj.insert("canvas".into(), json!({"width": w.parse::<f64>().map_err(|e| e.to_string())?, "height": h.parse::<f64>().map_err(|e| e.to_string())?}));
             }
             if let Some(bg) = background {
-                let ext = bg.extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
+                let ext = bg
+                    .extension()
+                    .and_then(|e| e.to_str())
+                    .unwrap_or("")
+                    .to_ascii_lowercase();
                 let path = bg.to_string_lossy().into_owned();
                 let o = obj.entry("obstacles").or_insert(json!({}));
                 if ext == "svg" {
@@ -236,20 +280,32 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
                 print_report(&report);
                 return Ok(ExitCode::from(1));
             }
-            let mut result = label_anything::place_validated(&p, &env, report).map_err(|e| e.to_string())?;
+            let mut result =
+                label_anything::place_validated(&p, &env, report).map_err(|e| e.to_string())?;
             if let Some(path) = debug_svg {
                 if let Some(svg) = result.get("debug_svg").and_then(|s| s.as_str()) {
                     std::fs::write(&path, svg).map_err(|e| format!("{}: {e}", path.display()))?;
                 }
                 result["debug_svg"] = Value::Null;
             }
-            let text = if pretty { serde_json::to_string_pretty(&result) } else { serde_json::to_string(&result) }.map_err(|e| e.to_string())?;
+            let text = if pretty {
+                serde_json::to_string_pretty(&result)
+            } else {
+                serde_json::to_string(&result)
+            }
+            .map_err(|e| e.to_string())?;
             write_output(&output, &text)?;
             Ok(ExitCode::SUCCESS)
         }
-        Cmd::Render { problem, result, output } => {
-            let p: Value = serde_json::from_str(&read_input(&problem)?).map_err(|e| format!("{problem}: {e}"))?;
-            let r: Value = serde_json::from_str(&read_input(&result)?).map_err(|e| format!("{result}: {e}"))?;
+        Cmd::Render {
+            problem,
+            result,
+            output,
+        } => {
+            let p: Value = serde_json::from_str(&read_input(&problem)?)
+                .map_err(|e| format!("{problem}: {e}"))?;
+            let r: Value = serde_json::from_str(&read_input(&result)?)
+                .map_err(|e| format!("{result}: {e}"))?;
             let env = env_for(Some(&problem));
             let svg = label_anything::render_svg(&p, &r, &env);
             if output.ends_with(".png") {
@@ -262,19 +318,39 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
             let text = read_input(&problem)?;
             let report = match serde_json::from_str::<Value>(&text) {
                 Ok(v) => label_anything::validate(&v),
-                Err(e) => Report { valid: false, errors: vec![label_anything::Issue::new("", "parse", format!("invalid JSON: {e}"))], warnings: vec![] },
+                Err(e) => Report {
+                    valid: false,
+                    errors: vec![label_anything::Issue::new(
+                        "",
+                        "parse",
+                        format!("invalid JSON: {e}"),
+                    )],
+                    warnings: vec![],
+                },
             };
             if json {
-                println!("{}", serde_json::to_string_pretty(&report).unwrap_or_default());
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&report).unwrap_or_default()
+                );
             } else {
                 print_report(&report);
                 if report.valid {
                     eprintln!("valid");
                 }
             }
-            Ok(if report.valid { ExitCode::SUCCESS } else { ExitCode::from(1) })
+            Ok(if report.valid {
+                ExitCode::SUCCESS
+            } else {
+                ExitCode::from(1)
+            })
         }
-        Cmd::Bench { suite, baselines, output, repo } => {
+        Cmd::Bench {
+            suite,
+            baselines,
+            output,
+            repo,
+        } => {
             let root = match repo {
                 Some(r) => r,
                 None => {
@@ -291,12 +367,22 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
             };
             let exe = std::env::current_exe().map_err(|e| e.to_string())?;
             let mut cmd = std::process::Command::new("python3");
-            cmd.arg(root.join("bench/run.py")).arg("--suite").arg(&suite).arg("--out").arg(&output).arg("--engine").arg(exe);
+            cmd.arg(root.join("bench/run.py"))
+                .arg("--suite")
+                .arg(&suite)
+                .arg("--out")
+                .arg(&output)
+                .arg("--engine")
+                .arg(exe);
             if baselines {
                 cmd.arg("--baselines");
             }
             let status = cmd.status().map_err(|e| format!("python3: {e}"))?;
-            Ok(if status.success() { ExitCode::SUCCESS } else { ExitCode::from(1) })
+            Ok(if status.success() {
+                ExitCode::SUCCESS
+            } else {
+                ExitCode::from(1)
+            })
         }
         Cmd::Serve { port, host } => serve(&host, port),
     }
@@ -308,8 +394,11 @@ fn serve(host: &str, port: u16) -> Result<ExitCode, String> {
     for mut req in server.incoming_requests() {
         let mut body = String::new();
         let _ = req.as_reader().read_to_string(&mut body);
-        let json_header = tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).expect("static header");
-        let cors = tiny_http::Header::from_bytes(&b"Access-Control-Allow-Origin"[..], &b"*"[..]).expect("static header");
+        let json_header =
+            tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..])
+                .expect("static header");
+        let cors = tiny_http::Header::from_bytes(&b"Access-Control-Allow-Origin"[..], &b"*"[..])
+            .expect("static header");
         let (status, text) = match (req.method(), req.url()) {
             (tiny_http::Method::Post, "/place") => match label_anything::place_json(&body) {
                 Ok(r) => (200, r),
@@ -324,7 +413,10 @@ fn serve(host: &str, port: u16) -> Result<ExitCode, String> {
             }
             _ => (404, json!({"error": "not found"}).to_string()),
         };
-        let resp = tiny_http::Response::from_string(text).with_status_code(status).with_header(json_header).with_header(cors);
+        let resp = tiny_http::Response::from_string(text)
+            .with_status_code(status)
+            .with_header(json_header)
+            .with_header(cors);
         let _ = req.respond(resp);
     }
     Ok(ExitCode::SUCCESS)

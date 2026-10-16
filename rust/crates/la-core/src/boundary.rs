@@ -62,28 +62,58 @@ pub fn boundary_leader(model: &Model, item: &Item, side: u8, port: P) -> Leader 
 
 /// A boundary candidate of variant `vi` whose label center coordinate along the side is
 /// `pos` (y for left/right, x for top/bottom).
-pub fn slot_candidate(model: &Model, area: &Rect, item: &Item, vi: usize, v: &Variant, side: u8, pos: f64, rank: f64) -> Cand {
+#[allow(clippy::too_many_arguments)]
+pub fn slot_candidate(
+    model: &Model,
+    area: &Rect,
+    item: &Item,
+    vi: usize,
+    v: &Variant,
+    side: u8,
+    pos: f64,
+    rank: f64,
+) -> Cand {
     let margin = item.len.boundary_margin;
     let (hw, hh) = (v.w * 0.5, v.h * 0.5);
     let (rect, port) = match side {
         0 => {
             let x0 = area.x0 + margin;
-            (Rect::new(x0, pos - hh, x0 + v.w, pos + hh), P::new(x0 + v.w, pos))
+            (
+                Rect::new(x0, pos - hh, x0 + v.w, pos + hh),
+                P::new(x0 + v.w, pos),
+            )
         }
         1 => {
             let x1 = area.x1 - margin;
-            (Rect::new(x1 - v.w, pos - hh, x1, pos + hh), P::new(x1 - v.w, pos))
+            (
+                Rect::new(x1 - v.w, pos - hh, x1, pos + hh),
+                P::new(x1 - v.w, pos),
+            )
         }
         2 => {
             let y0 = area.y0 + margin;
-            (Rect::new(pos - hw, y0, pos + hw, y0 + v.h), P::new(pos, y0 + v.h))
+            (
+                Rect::new(pos - hw, y0, pos + hw, y0 + v.h),
+                P::new(pos, y0 + v.h),
+            )
         }
         _ => {
             let y1 = area.y1 - margin;
-            (Rect::new(pos - hw, y1 - v.h, pos + hw, y1), P::new(pos, y1 - v.h))
+            (
+                Rect::new(pos - hw, y1 - v.h, pos + hw, y1),
+                P::new(pos, y1 - v.h),
+            )
         }
     };
-    let mut c = Cand::new(item.index as u32, vi as u16, v.level, Kind::Boundary, Side::Boundary, rank, rect);
+    let mut c = Cand::new(
+        item.index as u32,
+        vi as u16,
+        v.level,
+        Kind::Boundary,
+        Side::Boundary,
+        rank,
+        rect,
+    );
     c.bside = side;
     let l = boundary_leader(model, item, side, port);
     if l.len > 0.0 {
@@ -93,8 +123,17 @@ pub fn slot_candidate(model: &Model, area: &Rect, item: &Item, vi: usize, v: &Va
 }
 
 /// Boundary candidates for the given variants.
-pub fn boundary_candidates(model: &Model, obs: &Obstacles, item: &Item, variants: &[Variant], vis: &[usize], out: &mut Vec<Cand>) {
-    let Some(area) = obs.label_area.or(model.canvas) else { return };
+pub fn boundary_candidates(
+    model: &Model,
+    obs: &Obstacles,
+    item: &Item,
+    variants: &[Variant],
+    vis: &[usize],
+    out: &mut Vec<Cand>,
+) {
+    let Some(area) = obs.label_area.or(model.canvas) else {
+        return;
+    };
     let margin = item.len.boundary_margin;
     let style = model.leaders.style;
     let it = item.index as u32;
@@ -157,7 +196,15 @@ pub fn boundary_candidates(model: &Model, obs: &Obstacles, item: &Item, variants
                     }
                     _ => vec![start, port],
                 };
-                let mut c = Cand::new(it, vi as u16, v.level, Kind::Boundary, Side::Boundary, 9.0 + k as f64 * 0.25, rect);
+                let mut c = Cand::new(
+                    it,
+                    vi as u16,
+                    v.level,
+                    Kind::Boundary,
+                    Side::Boundary,
+                    9.0 + k as f64 * 0.25,
+                    rect,
+                );
                 c.bside = side_code(side);
                 let l = Leader::new(pts, style);
                 if l.len > 0.0 {

@@ -49,10 +49,18 @@ fn path_of(points: &[P], close: bool) -> String {
 
 fn shape_svg(s: &Shape, style: &str) -> String {
     match s {
-        Shape::Circle { c, r } => format!(r#"<circle cx="{}" cy="{}" r="{}" {style}/>"#, f(c.x), f(c.y), f(r.max(0.75))),
+        Shape::Circle { c, r } => format!(
+            r#"<circle cx="{}" cy="{}" r="{}" {style}/>"#,
+            f(c.x),
+            f(c.y),
+            f(r.max(0.75))
+        ),
         Shape::Polygon(p) => {
             let d: String = p.rings.iter().map(|r| path_of(r, true)).collect();
-            format!(r#"<path d="{d}" fill-rule="{}" {style}/>"#, if p.even_odd { "evenodd" } else { "nonzero" })
+            format!(
+                r#"<path d="{d}" fill-rule="{}" {style}/>"#,
+                if p.even_odd { "evenodd" } else { "nonzero" }
+            )
         }
         _ => format!(r#"<path d="{}" {style}/>"#, path_of(&s.outline(), true)),
     }
@@ -78,8 +86,16 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
         let mut r = Rect::EMPTY;
         for p in result["placements"].as_array().into_iter().flatten() {
             if let Some(b) = p.get("box") {
-                let (x, y) = (b["x"].as_f64().unwrap_or(0.0), b["y"].as_f64().unwrap_or(0.0));
-                r = r.union(&Rect::xywh(x, y, b["w"].as_f64().unwrap_or(0.0), b["h"].as_f64().unwrap_or(0.0)));
+                let (x, y) = (
+                    b["x"].as_f64().unwrap_or(0.0),
+                    b["y"].as_f64().unwrap_or(0.0),
+                );
+                r = r.union(&Rect::xywh(
+                    x,
+                    y,
+                    b["w"].as_f64().unwrap_or(0.0),
+                    b["h"].as_f64().unwrap_or(0.0),
+                ));
             }
         }
         if let Some(m) = model {
@@ -101,10 +117,24 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
         f(vb.w()),
         f(vb.h())
     );
-    let _ = write!(s, r##"<rect id="background" x="{}" y="{}" width="{}" height="{}" fill="#ffffff"/>"##, f(vb.x0), f(vb.y0), f(vb.w()), f(vb.h()));
+    let _ = write!(
+        s,
+        r##"<rect id="background" x="{}" y="{}" width="{}" height="{}" fill="#ffffff"/>"##,
+        f(vb.x0),
+        f(vb.y0),
+        f(vb.w()),
+        f(vb.h())
+    );
     if let Some(m) = model {
         if let Some(la) = m.label_area {
-            let _ = write!(s, r##"<rect id="label-area" x="{}" y="{}" width="{}" height="{}" fill="none" stroke="#cccccc" stroke-dasharray="4 3"/>"##, f(la.x0), f(la.y0), f(la.w()), f(la.h()));
+            let _ = write!(
+                s,
+                r##"<rect id="label-area" x="{}" y="{}" width="{}" height="{}" fill="none" stroke="#cccccc" stroke-dasharray="4 3"/>"##,
+                f(la.x0),
+                f(la.y0),
+                f(la.w()),
+                f(la.h())
+            );
         }
     }
     // heatmaps
@@ -114,7 +144,9 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
                 continue;
             }
             let (r, g, b) = PALETTE[k % PALETTE.len()];
-            let png = png_rgba(d.grid.cols as u32, d.grid.rows as u32, |i| [r, g, b, cov[i]]);
+            let png = png_rgba(d.grid.cols as u32, d.grid.rows as u32, |i| {
+                [r, g, b, cov[i]]
+            });
             let _ = write!(
                 s,
                 r#"<g id="heatmap-{}" opacity="0.45"><title>cost grid: {}</title><image x="{}" y="{}" width="{}" height="{}" preserveAspectRatio="none" style="image-rendering:pixelated" href="data:image/png;base64,{}"/></g>"#,
@@ -135,17 +167,38 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
             let t = format!("<title>{}</title>", esc(class));
             match p {
                 Prim::Disc { c, r } => {
-                    let _ = write!(s, r##"<circle cx="{}" cy="{}" r="{}" fill="#9e9e9e">{t}</circle>"##, f(c.x), f(c.y), f(r.max(0.5)));
+                    let _ = write!(
+                        s,
+                        r##"<circle cx="{}" cy="{}" r="{}" fill="#9e9e9e">{t}</circle>"##,
+                        f(c.x),
+                        f(c.y),
+                        f(r.max(0.5))
+                    );
                 }
                 Prim::Rect(r) => {
-                    let _ = write!(s, r##"<rect x="{}" y="{}" width="{}" height="{}" fill="#bdbdbd">{t}</rect>"##, f(r.x0), f(r.y0), f(r.w()), f(r.h()));
+                    let _ = write!(
+                        s,
+                        r##"<rect x="{}" y="{}" width="{}" height="{}" fill="#bdbdbd">{t}</rect>"##,
+                        f(r.x0),
+                        f(r.y0),
+                        f(r.w()),
+                        f(r.h())
+                    );
                 }
                 Prim::Polygon { rings, .. } => {
                     let d: String = rings.iter().map(|r| path_of(r, true)).collect();
-                    let _ = write!(s, r##"<path d="{d}" fill="#e0e0e0" stroke="#9e9e9e" stroke-width="0.5">{t}</path>"##);
+                    let _ = write!(
+                        s,
+                        r##"<path d="{d}" fill="#e0e0e0" stroke="#9e9e9e" stroke-width="0.5">{t}</path>"##
+                    );
                 }
                 Prim::Polyline { points, hw, closed } => {
-                    let _ = write!(s, r##"<path d="{}" fill="none" stroke="#9e9e9e" stroke-width="{}">{t}</path>"##, path_of(points, *closed), f((hw * 2.0).max(0.5)));
+                    let _ = write!(
+                        s,
+                        r##"<path d="{}" fill="none" stroke="#9e9e9e" stroke-width="{}">{t}</path>"##,
+                        path_of(points, *closed),
+                        f((hw * 2.0).max(0.5))
+                    );
                 }
                 Prim::Shape(sh) => s.push_str(&shape_svg(sh, r##"fill="#bdbdbd""##)),
             }
@@ -156,7 +209,15 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
     if let Some(d) = debug {
         s.push_str(r#"<g id="candidates" opacity="0.25" fill="none" stroke-width="0.5">"#);
         for (_, r, ok) in d.candidates.iter().take(50_000) {
-            let _ = write!(s, r##"<rect x="{}" y="{}" width="{}" height="{}" stroke="{}"/>"##, f(r.x0), f(r.y0), f(r.w()), f(r.h()), if *ok { "#2e7d32" } else { "#c62828" });
+            let _ = write!(
+                s,
+                r##"<rect x="{}" y="{}" width="{}" height="{}" stroke="{}"/>"##,
+                f(r.x0),
+                f(r.y0),
+                f(r.w()),
+                f(r.h()),
+                if *ok { "#2e7d32" } else { "#c62828" }
+            );
         }
         s.push_str("</g>");
     }
@@ -165,9 +226,15 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
         s.push_str(r#"<g id="items">"#);
         for it in &m.items {
             if let Some(a) = &it.area {
-                s.push_str(&shape_svg(&a.shape, r##"fill="#bbdefb" fill-opacity="0.5" stroke="#1565c0" stroke-width="0.75""##));
+                s.push_str(&shape_svg(
+                    &a.shape,
+                    r##"fill="#bbdefb" fill-opacity="0.5" stroke="#1565c0" stroke-width="0.75""##,
+                ));
             }
-            s.push_str(&shape_svg(&it.shape, r##"fill="#1565c0" fill-opacity="0.35" stroke="#0d47a1" stroke-width="0.75""##));
+            s.push_str(&shape_svg(
+                &it.shape,
+                r##"fill="#1565c0" fill-opacity="0.35" stroke="#0d47a1" stroke-width="0.75""##,
+            ));
         }
         s.push_str("</g>");
     }
@@ -175,26 +242,61 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
     let mut leaders = String::new();
     let mut labels = String::new();
     let mut unplaced = String::new();
-    for (k, p) in result["placements"].as_array().into_iter().flatten().enumerate() {
+    for (k, p) in result["placements"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .enumerate()
+    {
         let id = p["id"].as_str().unwrap_or("");
         if p["placed"].as_bool() == Some(true) {
             let b = &p["box"];
-            let (x, y, w, h) = (b["x"].as_f64().unwrap_or(0.0), b["y"].as_f64().unwrap_or(0.0), b["w"].as_f64().unwrap_or(0.0), b["h"].as_f64().unwrap_or(0.0));
-            let mut ls: Vec<&Value> = p.get("leaders").and_then(|l| l.as_array()).map(|a| a.iter().collect()).unwrap_or_default();
+            let (x, y, w, h) = (
+                b["x"].as_f64().unwrap_or(0.0),
+                b["y"].as_f64().unwrap_or(0.0),
+                b["w"].as_f64().unwrap_or(0.0),
+                b["h"].as_f64().unwrap_or(0.0),
+            );
+            let mut ls: Vec<&Value> = p
+                .get("leaders")
+                .and_then(|l| l.as_array())
+                .map(|a| a.iter().collect())
+                .unwrap_or_default();
             if ls.is_empty() {
                 if let Some(l) = p.get("leader").filter(|l| l.is_object()) {
                     ls.push(l);
                 }
             }
             for l in ls {
-                let pts: Vec<P> = l["points"].as_array().into_iter().flatten().filter_map(|q| Some(P::new(q.get(0)?.as_f64()?, q.get(1)?.as_f64()?))).collect();
-                let _ = write!(leaders, r##"<path d="{}" fill="none" stroke="#424242" stroke-width="1"/>"##, path_of(&pts, false));
+                let pts: Vec<P> = l["points"]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .filter_map(|q| Some(P::new(q.get(0)?.as_f64()?, q.get(1)?.as_f64()?)))
+                    .collect();
+                let _ = write!(
+                    leaders,
+                    r##"<path d="{}" fill="none" stroke="#424242" stroke-width="1"/>"##,
+                    path_of(&pts, false)
+                );
                 if let Some(u) = l.get("underline").and_then(|u| u.as_array()) {
-                    let pts: Vec<P> = u.iter().filter_map(|q| Some(P::new(q.get(0)?.as_f64()?, q.get(1)?.as_f64()?))).collect();
-                    let _ = write!(leaders, r##"<path d="{}" fill="none" stroke="#424242" stroke-width="1"/>"##, path_of(&pts, false));
+                    let pts: Vec<P> = u
+                        .iter()
+                        .filter_map(|q| Some(P::new(q.get(0)?.as_f64()?, q.get(1)?.as_f64()?)))
+                        .collect();
+                    let _ = write!(
+                        leaders,
+                        r##"<path d="{}" fill="none" stroke="#424242" stroke-width="1"/>"##,
+                        path_of(&pts, false)
+                    );
                 }
                 if let Some(first) = pts.first() {
-                    let _ = write!(leaders, r##"<circle cx="{}" cy="{}" r="1.2" fill="#424242"/>"##, f(first.x), f(first.y));
+                    let _ = write!(
+                        leaders,
+                        r##"<circle cx="{}" cy="{}" r="1.2" fill="#424242"/>"##,
+                        f(first.x),
+                        f(first.y)
+                    );
                 }
             }
             let title = format!(
@@ -218,7 +320,12 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
                 let size = t["font_size"].as_f64().unwrap_or(12.0);
                 let weight = t["font_weight"].as_i64().unwrap_or(400);
                 let xo = t["x_offset"].as_f64().unwrap_or(0.0);
-                for (line, base) in t["lines"].as_array().into_iter().flatten().zip(t["baseline_offsets"].as_array().into_iter().flatten()) {
+                for (line, base) in t["lines"]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .zip(t["baseline_offsets"].as_array().into_iter().flatten())
+                {
                     let _ = write!(
                         out,
                         r##"<text x="{}" y="{}" font-size="{}" font-weight="{}" fill="#212121">{}</text>"##,
@@ -233,9 +340,19 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
             if let Some(t) = p.get("text") {
                 draw_text(t, x, y, &mut labels);
             }
-            for part in p.get("parts").and_then(|v| v.as_array()).into_iter().flatten() {
+            for part in p
+                .get("parts")
+                .and_then(|v| v.as_array())
+                .into_iter()
+                .flatten()
+            {
                 let pb = &part["box"];
-                let (px, py, pw, ph) = (pb["x"].as_f64().unwrap_or(0.0), pb["y"].as_f64().unwrap_or(0.0), pb["w"].as_f64().unwrap_or(0.0), pb["h"].as_f64().unwrap_or(0.0));
+                let (px, py, pw, ph) = (
+                    pb["x"].as_f64().unwrap_or(0.0),
+                    pb["y"].as_f64().unwrap_or(0.0),
+                    pb["w"].as_f64().unwrap_or(0.0),
+                    pb["h"].as_f64().unwrap_or(0.0),
+                );
                 match part["type"].as_str() {
                     Some("text") => {
                         if let Some(t) = part.get("text") {
@@ -243,7 +360,14 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
                         }
                     }
                     _ => {
-                        let _ = write!(labels, r##"<rect x="{}" y="{}" width="{}" height="{}" fill="#6a1b9a" fill-opacity="0.6"/>"##, f(px), f(py), f(pw), f(ph));
+                        let _ = write!(
+                            labels,
+                            r##"<rect x="{}" y="{}" width="{}" height="{}" fill="#6a1b9a" fill-opacity="0.6"/>"##,
+                            f(px),
+                            f(py),
+                            f(pw),
+                            f(ph)
+                        );
                     }
                 }
             }
@@ -255,8 +379,22 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
                     "{} unplaced: {} (blocking: {}; blocked by: {})",
                     id,
                     p["reason"].as_str().unwrap_or(""),
-                    p["blocking"].as_array().map(|a| a.iter().filter_map(|x| x.as_str()).collect::<Vec<_>>().join(", ")).unwrap_or_default(),
-                    p["blocked_by"].as_array().map(|a| a.iter().filter_map(|x| x.as_str()).collect::<Vec<_>>().join(", ")).unwrap_or_default()
+                    p["blocking"]
+                        .as_array()
+                        .map(|a| a
+                            .iter()
+                            .filter_map(|x| x.as_str())
+                            .collect::<Vec<_>>()
+                            .join(", "))
+                        .unwrap_or_default(),
+                    p["blocked_by"]
+                        .as_array()
+                        .map(|a| a
+                            .iter()
+                            .filter_map(|x| x.as_str())
+                            .collect::<Vec<_>>()
+                            .join(", "))
+                        .unwrap_or_default()
                 );
                 let _ = write!(
                     unplaced,
@@ -275,7 +413,10 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
             }
         }
     }
-    let _ = write!(s, r#"<g id="leaders">{leaders}</g><g id="labels">{labels}</g><g id="unplaced">{unplaced}</g>"#);
+    let _ = write!(
+        s,
+        r#"<g id="leaders">{leaders}</g><g id="labels">{labels}</g><g id="unplaced">{unplaced}</g>"#
+    );
     let st = &result["stats"];
     let _ = write!(
         s,
@@ -302,7 +443,11 @@ fn crc32(data: &[u8]) -> u32 {
     for (n, t) in table.iter_mut().enumerate() {
         let mut c = n as u32;
         for _ in 0..8 {
-            c = if c & 1 != 0 { 0xEDB8_8320 ^ (c >> 1) } else { c >> 1 };
+            c = if c & 1 != 0 {
+                0xEDB8_8320 ^ (c >> 1)
+            } else {
+                c >> 1
+            };
         }
         *t = c;
     }
@@ -368,11 +513,21 @@ pub fn base64(data: &[u8]) -> String {
     const T: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut s = String::with_capacity(data.len().div_ceil(3) * 4);
     for c in data.chunks(3) {
-        let n = (c[0] as u32) << 16 | (*c.get(1).unwrap_or(&0) as u32) << 8 | *c.get(2).unwrap_or(&0) as u32;
+        let n = (c[0] as u32) << 16
+            | (*c.get(1).unwrap_or(&0) as u32) << 8
+            | *c.get(2).unwrap_or(&0) as u32;
         s.push(T[(n >> 18) as usize & 63] as char);
         s.push(T[(n >> 12) as usize & 63] as char);
-        s.push(if c.len() > 1 { T[(n >> 6) as usize & 63] as char } else { '=' });
-        s.push(if c.len() > 2 { T[n as usize & 63] as char } else { '=' });
+        s.push(if c.len() > 1 {
+            T[(n >> 6) as usize & 63] as char
+        } else {
+            '='
+        });
+        s.push(if c.len() > 2 {
+            T[n as usize & 63] as char
+        } else {
+            '='
+        });
     }
     s
 }

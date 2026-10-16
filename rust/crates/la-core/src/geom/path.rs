@@ -28,13 +28,18 @@ struct Lexer<'a> {
 
 impl<'a> Lexer<'a> {
     fn skip_ws(&mut self) {
-        while self.i < self.s.len() && (self.s[self.i].is_ascii_whitespace() || self.s[self.i] == b',') {
+        while self.i < self.s.len()
+            && (self.s[self.i].is_ascii_whitespace() || self.s[self.i] == b',')
+        {
             self.i += 1;
         }
     }
     fn peek_cmd(&mut self) -> Option<u8> {
         self.skip_ws();
-        self.s.get(self.i).copied().filter(|c| c.is_ascii_alphabetic() && *c != b'e' && *c != b'E')
+        self.s
+            .get(self.i)
+            .copied()
+            .filter(|c| c.is_ascii_alphabetic() && *c != b'e' && *c != b'E')
     }
     fn at_number(&mut self) -> bool {
         self.skip_ws();
@@ -61,7 +66,10 @@ impl<'a> Lexer<'a> {
             }
         }
         if digits == 0 {
-            return Err(PathError { offset: start, message: "expected a number".into() });
+            return Err(PathError {
+                offset: start,
+                message: "expected a number".into(),
+            });
         }
         if j < s.len() && (s[j] == b'e' || s[j] == b'E') {
             let mut k = j + 1;
@@ -81,7 +89,10 @@ impl<'a> Lexer<'a> {
             .ok()
             .and_then(|t| t.parse::<f64>().ok())
             .filter(|v| v.is_finite())
-            .ok_or(PathError { offset: start, message: "invalid number".into() })
+            .ok_or(PathError {
+                offset: start,
+                message: "invalid number".into(),
+            })
     }
     fn flag(&mut self) -> Result<bool, PathError> {
         self.skip_ws();
@@ -94,7 +105,10 @@ impl<'a> Lexer<'a> {
                 self.i += 1;
                 Ok(true)
             }
-            _ => Err(PathError { offset: self.i, message: "expected an arc flag (0 or 1)".into() }),
+            _ => Err(PathError {
+                offset: self.i,
+                message: "expected an arc flag (0 or 1)".into(),
+            }),
         }
     }
 }
@@ -102,7 +116,10 @@ impl<'a> Lexer<'a> {
 /// Parse and flatten SVG path data with the given tolerance (px).
 pub fn flatten(d: &str, tol: f64) -> Result<Vec<SubPath>, PathError> {
     let tol = if tol > 0.0 { tol } else { 0.25 };
-    let mut lx = Lexer { s: d.as_bytes(), i: 0 };
+    let mut lx = Lexer {
+        s: d.as_bytes(),
+        i: 0,
+    };
     let mut out: Vec<SubPath> = Vec::new();
     let mut cur: Vec<P> = Vec::new();
     let mut pos = P::new(0.0, 0.0);
@@ -112,7 +129,10 @@ pub fn flatten(d: &str, tol: f64) -> Result<Vec<SubPath>, PathError> {
     let mut cmd: Option<u8> = None;
     let finish = |cur: &mut Vec<P>, out: &mut Vec<SubPath>, closed: bool| {
         if cur.len() >= 2 || (closed && !cur.is_empty()) {
-            out.push(SubPath { points: std::mem::take(cur), closed });
+            out.push(SubPath {
+                points: std::mem::take(cur),
+                closed,
+            });
         } else {
             cur.clear();
         }
@@ -124,7 +144,10 @@ pub fn flatten(d: &str, tol: f64) -> Result<Vec<SubPath>, PathError> {
         } else if lx.i >= lx.s.len() {
             break;
         } else if !lx.at_number() || cmd.is_none() {
-            return Err(PathError { offset: lx.i, message: "expected a path command".into() });
+            return Err(PathError {
+                offset: lx.i,
+                message: "expected a path command".into(),
+            });
         }
         let c = cmd.unwrap_or(b'M');
         let rel = c.is_ascii_lowercase();
@@ -234,7 +257,12 @@ pub fn flatten(d: &str, tol: f64) -> Result<Vec<SubPath>, PathError> {
                 cmd = None;
                 continue;
             }
-            _ => return Err(PathError { offset: lx.i.saturating_sub(1), message: format!("unknown path command '{}'", c as char) }),
+            _ => {
+                return Err(PathError {
+                    offset: lx.i.saturating_sub(1),
+                    message: format!("unknown path command '{}'", c as char),
+                })
+            }
         }
         last_cmd = c;
     }
@@ -284,7 +312,17 @@ fn cubic(out: &mut Vec<P>, p0: P, p1: P, p2: P, p3: P, tol: f64, depth: u32) {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn arc(out: &mut Vec<P>, p0: P, rx: f64, ry: f64, rot_deg: f64, large: bool, sweep: bool, p1: P, tol: f64) {
+fn arc(
+    out: &mut Vec<P>,
+    p0: P,
+    rx: f64,
+    ry: f64,
+    rot_deg: f64,
+    large: bool,
+    sweep: bool,
+    p1: P,
+    tol: f64,
+) {
     if p0 == p1 {
         return;
     }
@@ -311,7 +349,11 @@ fn arc(out: &mut Vec<P>, p0: P, rx: f64, ry: f64, rot_deg: f64, large: bool, swe
     let ry2 = ry * ry;
     let num = rx2 * ry2 - rx2 * y1p * y1p - ry2 * x1p * x1p;
     let den = rx2 * y1p * y1p + ry2 * x1p * x1p;
-    let mut coef = if den > 0.0 && num > 0.0 { (num / den).sqrt() } else { 0.0 };
+    let mut coef = if den > 0.0 && num > 0.0 {
+        (num / den).sqrt()
+    } else {
+        0.0
+    };
     if large == sweep {
         coef = -coef;
     }
@@ -344,7 +386,10 @@ fn arc(out: &mut Vec<P>, p0: P, rx: f64, ry: f64, rot_deg: f64, large: bool, swe
         let (s, c) = sin_cos_deg(t);
         let x = rx * c;
         let y = ry * s;
-        push_pt(out, P::new(cos_r * x - sin_r * y + cx, sin_r * x + cos_r * y + cy));
+        push_pt(
+            out,
+            P::new(cos_r * x - sin_r * y + cx, sin_r * x + cos_r * y + cy),
+        );
     }
 }
 

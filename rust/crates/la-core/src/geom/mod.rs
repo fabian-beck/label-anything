@@ -168,11 +168,21 @@ impl Rect {
     }
     #[inline]
     pub fn union(&self, o: &Rect) -> Rect {
-        Rect::new(minf(self.x0, o.x0), minf(self.y0, o.y0), maxf(self.x1, o.x1), maxf(self.y1, o.y1))
+        Rect::new(
+            minf(self.x0, o.x0),
+            minf(self.y0, o.y0),
+            maxf(self.x1, o.x1),
+            maxf(self.y1, o.y1),
+        )
     }
     #[inline]
     pub fn add_point(&self, p: P) -> Rect {
-        Rect::new(minf(self.x0, p.x), minf(self.y0, p.y), maxf(self.x1, p.x), maxf(self.y1, p.y))
+        Rect::new(
+            minf(self.x0, p.x),
+            minf(self.y0, p.y),
+            maxf(self.x1, p.x),
+            maxf(self.y1, p.y),
+        )
     }
     /// Interiors overlap by more than `EPS` in both axes.
     #[inline]
@@ -186,7 +196,12 @@ impl Rect {
     }
     #[inline]
     pub fn intersection(&self, o: &Rect) -> Rect {
-        Rect::new(maxf(self.x0, o.x0), maxf(self.y0, o.y0), minf(self.x1, o.x1), minf(self.y1, o.y1))
+        Rect::new(
+            maxf(self.x0, o.x0),
+            maxf(self.y0, o.y0),
+            minf(self.x1, o.x1),
+            minf(self.y1, o.y1),
+        )
     }
     #[inline]
     pub fn overlap_area(&self, o: &Rect) -> f64 {
@@ -205,7 +220,10 @@ impl Rect {
     /// `o` lies inside `self` (with tolerance `EPS`).
     #[inline]
     pub fn contains_rect(&self, o: &Rect) -> bool {
-        o.x0 >= self.x0 - EPS && o.x1 <= self.x1 + EPS && o.y0 >= self.y0 - EPS && o.y1 <= self.y1 + EPS
+        o.x0 >= self.x0 - EPS
+            && o.x1 <= self.x1 + EPS
+            && o.y0 >= self.y0 - EPS
+            && o.y1 <= self.y1 + EPS
     }
     /// Distance from a point to the rectangle (0 inside).
     #[inline]
@@ -249,7 +267,10 @@ impl Affine {
     #[inline]
     pub fn apply(&self, p: P) -> P {
         let m = &self.0;
-        P::new(m[0] * p.x + m[2] * p.y + m[4], m[1] * p.x + m[3] * p.y + m[5])
+        P::new(
+            m[0] * p.x + m[2] * p.y + m[4],
+            m[1] * p.x + m[3] * p.y + m[5],
+        )
     }
     /// `self ∘ other` (apply `other` first).
     pub fn then(&self, after: &Affine) -> Affine {
@@ -312,7 +333,8 @@ pub fn seg_cross_proper(a: P, b: P, c: P, d: P) -> bool {
     let d2 = orient(c, d, b);
     let d3 = orient(a, b, c);
     let d4 = orient(a, b, d);
-    ((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0)) && ((d3 > 0.0 && d4 < 0.0) || (d3 < 0.0 && d4 > 0.0))
+    ((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0))
+        && ((d3 > 0.0 && d4 < 0.0) || (d3 < 0.0 && d4 > 0.0))
 }
 
 /// Minimum distance between segments `ab` and `cd` (0 if they intersect).
@@ -340,7 +362,12 @@ pub fn clip_seg_rect(a: P, b: P, r: &Rect) -> Option<(f64, f64)> {
     let dy = b.y - a.y;
     let mut t0 = 0.0f64;
     let mut t1 = 1.0f64;
-    let checks = [(-dx, a.x - r.x0), (dx, r.x1 - a.x), (-dy, a.y - r.y0), (dy, r.y1 - a.y)];
+    let checks = [
+        (-dx, a.x - r.x0),
+        (dx, r.x1 - a.x),
+        (-dy, a.y - r.y0),
+        (dy, r.y1 - a.y),
+    ];
     for (p, q) in checks {
         if p == 0.0 {
             if q < 0.0 {
@@ -379,7 +406,9 @@ pub fn seg_overlaps_rect(a: P, b: P, r: &Rect) -> bool {
         return false;
     }
     match clip_seg_rect(a, b, &inner) {
-        Some((t0, t1)) => (t1 - t0) * a.dist(b) > EPS || inner.contains_point(a.lerp(b, (t0 + t1) * 0.5)),
+        Some((t0, t1)) => {
+            (t1 - t0) * a.dist(b) > EPS || inner.contains_point(a.lerp(b, (t0 + t1) * 0.5))
+        }
         None => false,
     }
 }
@@ -423,10 +452,25 @@ mod tests {
 
     #[test]
     fn segment_distances() {
-        let d = seg_seg_dist(P::new(0.0, 0.0), P::new(10.0, 0.0), P::new(0.0, 3.0), P::new(10.0, 3.0));
+        let d = seg_seg_dist(
+            P::new(0.0, 0.0),
+            P::new(10.0, 0.0),
+            P::new(0.0, 3.0),
+            P::new(10.0, 3.0),
+        );
         assert!((d - 3.0).abs() < 1e-12);
-        assert!(seg_cross_proper(P::new(0.0, 0.0), P::new(10.0, 10.0), P::new(0.0, 10.0), P::new(10.0, 0.0)));
-        assert!(!seg_cross_proper(P::new(0.0, 0.0), P::new(5.0, 5.0), P::new(5.0, 5.0), P::new(10.0, 0.0)));
+        assert!(seg_cross_proper(
+            P::new(0.0, 0.0),
+            P::new(10.0, 10.0),
+            P::new(0.0, 10.0),
+            P::new(10.0, 0.0)
+        ));
+        assert!(!seg_cross_proper(
+            P::new(0.0, 0.0),
+            P::new(5.0, 5.0),
+            P::new(5.0, 5.0),
+            P::new(10.0, 0.0)
+        ));
     }
 
     #[test]
@@ -435,8 +479,15 @@ mod tests {
         let l = seg_len_in_rect(P::new(-5.0, 5.0), P::new(15.0, 5.0), &r);
         assert!((l - 10.0).abs() < 1e-12);
         assert!(seg_overlaps_rect(P::new(-5.0, 5.0), P::new(15.0, 5.0), &r));
-        assert!(!seg_overlaps_rect(P::new(-5.0, 10.0), P::new(15.0, 10.0), &r));
-        assert_eq!(dist_seg_rect(P::new(12.0, -5.0), P::new(12.0, 15.0), &r), 2.0);
+        assert!(!seg_overlaps_rect(
+            P::new(-5.0, 10.0),
+            P::new(15.0, 10.0),
+            &r
+        ));
+        assert_eq!(
+            dist_seg_rect(P::new(12.0, -5.0), P::new(12.0, 15.0), &r),
+            2.0
+        );
     }
 
     #[test]

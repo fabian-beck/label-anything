@@ -87,7 +87,10 @@ pub fn run(s: &mut Solve) {
             }
         }
     }
-    for (si, set) in crate::priority::keep_with_sets(s.model).into_iter().enumerate() {
+    for (si, set) in crate::priority::keep_with_sets(s.model)
+        .into_iter()
+        .enumerate()
+    {
         for &i in &set {
             g.sets[i] = Some(si);
         }
@@ -147,7 +150,8 @@ pub fn run(s: &mut Solve) {
         g.heap.clear();
         for &i in &band {
             if !g.done[i] {
-                g.heap.push((Reverse(g.live[i]), Reverse(s.pri.prio[i].rank), i));
+                g.heap
+                    .push((Reverse(g.live[i]), Reverse(s.pri.prio[i].rank), i));
             }
         }
         while let Some((Reverse(cnt), _, i)) = g.heap.pop() {
@@ -324,7 +328,8 @@ fn commit(s: &mut Solve, g: &mut Greedy, i: usize, c: u32, relaxed: bool) {
             g.alive[k] = false;
             g.live[j] -= 1;
             if !g.done[j] {
-                g.heap.push((Reverse(g.live[j]), Reverse(s.pri.prio[j].rank), j));
+                g.heap
+                    .push((Reverse(g.live[j]), Reverse(s.pri.prio[j].rank), j));
             }
         }
     }
@@ -361,10 +366,16 @@ fn best_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<u32> {
     let (buffer, clearance) = (item.len.buffer, item.len.clearance);
     let lw = s.model.leaders.width;
     let mut scored: Vec<(f64, u32)> = Vec::new();
-    let ids: Vec<u32> = s.by_item[i].iter().copied().filter(|&c| (c as usize) < s.n_level0 && g.alive[c as usize]).collect();
+    let ids: Vec<u32> = s.by_item[i]
+        .iter()
+        .copied()
+        .filter(|&c| (c as usize) < s.n_level0 && g.alive[c as usize])
+        .collect();
     for c in ids {
         let cand = &s.cands[c as usize];
-        let d = s.state.dynamic_cost(cand, &s.cands, s.obs, buffer, clearance, lw, i);
+        let d = s
+            .state
+            .dynamic_cost(cand, &s.cands, s.obs, buffer, clearance, lw, i);
         scored.push((cand.cost + d, c));
     }
     // on-demand distant candidates: only when they could beat the best adjacent one
@@ -373,13 +384,23 @@ fn best_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<u32> {
         s.ensure_distant(i);
     }
     let mut scratch = Vec::new();
-    let late: Vec<u32> = s.by_item[i].iter().copied().filter(|&c| (c as usize) >= s.n_level0 && s.cands[c as usize].level == 0 && s.cands[c as usize].feasible).collect();
+    let late: Vec<u32> = s.by_item[i]
+        .iter()
+        .copied()
+        .filter(|&c| {
+            (c as usize) >= s.n_level0
+                && s.cands[c as usize].level == 0
+                && s.cands[c as usize].feasible
+        })
+        .collect();
     for c in late {
         let cand = s.cands[c as usize].clone();
         if !s.state.is_free(&cand, &s.cands, s.obs, i, &mut scratch) {
             continue;
         }
-        let d = s.state.dynamic_cost(&cand, &s.cands, s.obs, buffer, clearance, lw, i);
+        let d = s
+            .state
+            .dynamic_cost(&cand, &s.cands, s.obs, buffer, clearance, lw, i);
         scored.push((cand.cost + d, c));
     }
     if scored.is_empty() {
@@ -446,13 +467,20 @@ fn best_free(s: &mut Solve, ids: &[u32], relaxed: bool) -> Option<(u32, bool)> {
     for &c in ids {
         if !s.cands[c as usize].evaluated {
             let cand = s.cands[c as usize].clone();
-            if !s.state.is_free(&cand, &s.cands, s.obs, cand.item as usize, &mut scratch) {
+            if !s
+                .state
+                .is_free(&cand, &s.cands, s.obs, cand.item as usize, &mut scratch)
+            {
                 continue;
             }
             s.ensure_eval(c);
         }
         let cand = &s.cands[c as usize];
-        let usable = if relaxed { !cand.feasible && cand.relaxed } else { cand.feasible };
+        let usable = if relaxed {
+            !cand.feasible && cand.relaxed
+        } else {
+            cand.feasible
+        };
         if !usable {
             continue;
         }
@@ -462,9 +490,20 @@ fn best_free(s: &mut Solve, ids: &[u32], relaxed: bool) -> Option<(u32, bool)> {
         if !s.state.is_free(&cand, &s.cands, s.obs, i, &mut scratch) {
             continue;
         }
-        let d = s.state.dynamic_cost(&cand, &s.cands, s.obs, item.len.buffer, item.len.clearance, s.model.leaders.width, i);
+        let d = s.state.dynamic_cost(
+            &cand,
+            &s.cands,
+            s.obs,
+            item.len.buffer,
+            item.len.clearance,
+            s.model.leaders.width,
+            i,
+        );
         let total = cand.cost + d + if relaxed { cand.relax_cost } else { 0.0 };
-        if best.map(|b| total < b.0 || (total == b.0 && c < b.1)).unwrap_or(true) {
+        if best
+            .map(|b| total < b.0 || (total == b.0 && c < b.1))
+            .unwrap_or(true)
+        {
             best = Some((total, c));
         }
     }
@@ -475,7 +514,9 @@ fn best_free(s: &mut Solve, ids: &[u32], relaxed: bool) -> Option<(u32, bool)> {
 fn evict_lower(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<(u32, bool)> {
     let key_i = s.pri.prio[i].key;
     let ids = s.by_item[i].clone();
-    let mut best: Option<((usize, f64, f64), u32, Vec<u32>)> = None;
+    // (eviction rank, candidate, evicted items)
+    type Choice = ((usize, f64, f64), u32, Vec<u32>);
+    let mut best: Option<Choice> = None;
     let mut confl = Vec::new();
     for c in ids {
         s.ensure_eval(c);
@@ -487,7 +528,10 @@ fn evict_lower(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<(u32, bool)> {
         if confl.is_empty() {
             continue; // would have been chosen already
         }
-        if !confl.iter().all(|&j| s.pri.prio[j as usize].key > key_i && !s.model.items[j as usize].required) {
+        if !confl
+            .iter()
+            .all(|&j| s.pri.prio[j as usize].key > key_i && !s.model.items[j as usize].required)
+        {
             continue;
         }
         let gain: f64 = confl.iter().map(|&j| s.pri.prio[j as usize].gain).sum();
@@ -496,7 +540,9 @@ fn evict_lower(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<(u32, bool)> {
             None => true,
             Some((b, bc, _)) => {
                 score.0 < b.0
-                    || (score.0 == b.0 && (score.1 < b.1 || (score.1 == b.1 && (score.2 < b.2 || (score.2 == b.2 && c < *bc)))))
+                    || (score.0 == b.0
+                        && (score.1 < b.1
+                            || (score.1 == b.1 && (score.2 < b.2 || (score.2 == b.2 && c < *bc)))))
             }
         };
         if better {

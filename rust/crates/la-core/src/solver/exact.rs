@@ -48,7 +48,10 @@ struct Search<'a> {
 
 impl Search<'_> {
     fn objective(&self, prio: &[f64], cost: f64) -> Obj {
-        Obj { prio: prio.to_vec(), cost }
+        Obj {
+            prio: prio.to_vec(),
+            cost,
+        }
     }
 
     fn dfs(&mut self, k: usize, prio: &mut Vec<f64>, cost: f64, prefix_alive: bool) {
@@ -80,7 +83,13 @@ impl Search<'_> {
         let list = self.cands[i].clone();
         if self.mode != Omission::Prefix || prefix_alive {
             for c in list {
-                let ok = self.chosen.iter().flatten().all(|&o| !self.conflicts.get(&c).map(|v| v.binary_search(&o).is_ok()).unwrap_or(false));
+                let ok = self.chosen.iter().flatten().all(|&o| {
+                    !self
+                        .conflicts
+                        .get(&c)
+                        .map(|v| v.binary_search(&o).is_ok())
+                        .unwrap_or(false)
+                });
                 if !ok {
                     continue;
                 }
@@ -96,14 +105,25 @@ impl Search<'_> {
             }
         }
         // leave item i unplaced
-        self.dfs(k + 1, prio, cost, prefix_alive && self.mode != Omission::Prefix);
+        self.dfs(
+            k + 1,
+            prio,
+            cost,
+            prefix_alive && self.mode != Omission::Prefix,
+        );
     }
 }
 
 /// Run the exact search with a node budget. Returns whether the solution changed.
 pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
     let n = s.model.items.len();
-    let order: Vec<usize> = s.pri.order.iter().copied().filter(|&i| !matches!(s.reasons[i], Some(Reason::Grouped) | Some(Reason::KeepWith))).collect();
+    let order: Vec<usize> = s
+        .pri
+        .order
+        .iter()
+        .copied()
+        .filter(|&i| !matches!(s.reasons[i], Some(Reason::Grouped) | Some(Reason::KeepWith)))
+        .collect();
     // candidates: evaluated feasible ones (evaluate lazily generated ones)
     let all: Vec<u32> = (0..s.cands.len() as u32).collect();
     for &c in &all {
@@ -113,8 +133,14 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
     }
     let mut cands: Vec<Vec<u32>> = vec![Vec::new(); n];
     for &i in &order {
-        let mut v: Vec<u32> = s.by_item[i].iter().copied().filter(|&c| s.cands[c as usize].feasible).collect();
-        v.sort_by(|&a, &b| crate::math::cmp_f64(s.cands[a as usize].cost, s.cands[b as usize].cost).then(a.cmp(&b)));
+        let mut v: Vec<u32> = s.by_item[i]
+            .iter()
+            .copied()
+            .filter(|&c| s.cands[c as usize].feasible)
+            .collect();
+        v.sort_by(|&a, &b| {
+            crate::math::cmp_f64(s.cands[a as usize].cost, s.cands[b as usize].cost).then(a.cmp(&b))
+        });
         v.truncate(24);
         cands[i] = v;
     }
@@ -123,7 +149,8 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
         return false;
     }
     let dy = s.obs.dynamic;
-    let mut conflicts: std::collections::BTreeMap<u32, Vec<u32>> = std::collections::BTreeMap::new();
+    let mut conflicts: std::collections::BTreeMap<u32, Vec<u32>> =
+        std::collections::BTreeMap::new();
     for (x, &a) in pool.iter().enumerate() {
         for &b in &pool[x + 1..] {
             let (ca, cb) = (&s.cands[a as usize], &s.cands[b as usize]);
@@ -141,7 +168,11 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
     }
     // priority slots per omission mode
     let (slot, n_slots, weight): (Vec<usize>, usize, Vec<f64>) = match s.model.omission {
-        Omission::Strict => (s.pri.prio.iter().map(|p| p.key).collect(), s.pri.n_keys, vec![1.0; n]),
+        Omission::Strict => (
+            s.pri.prio.iter().map(|p| p.key).collect(),
+            s.pri.n_keys,
+            vec![1.0; n],
+        ),
         Omission::Prefix => (vec![0; n], 1, vec![1.0; n]),
         Omission::Weighted => {
             // one slot per (required, tier, reserved) class, in priority order
@@ -153,13 +184,30 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
                     classes.push(c);
                 }
             }
-            let slot = s.pri.prio.iter().map(|p| classes.iter().position(|c| *c == (p.required, p.tier, p.reserved)).unwrap_or(0)).collect();
-            (slot, classes.len(), s.pri.prio.iter().map(|p| p.weight).collect())
+            let slot = s
+                .pri
+                .prio
+                .iter()
+                .map(|p| {
+                    classes
+                        .iter()
+                        .position(|c| *c == (p.required, p.tier, p.reserved))
+                        .unwrap_or(0)
+                })
+                .collect();
+            (
+                slot,
+                classes.len(),
+                s.pri.prio.iter().map(|p| p.weight).collect(),
+            )
         }
     };
     let costs: Vec<f64> = s.cands.iter().map(|c| c.cost).collect();
     let cost_fn = |c: u32| costs[c as usize];
-    let min_cost: Vec<f64> = cands.iter().map(|v| v.first().map(|&c| costs[c as usize]).unwrap_or(0.0)).collect();
+    let min_cost: Vec<f64> = cands
+        .iter()
+        .map(|v| v.first().map(|&c| costs[c as usize]).unwrap_or(0.0))
+        .collect();
     // incumbent: the current solution
     let mut inc_prio = vec![0.0; n_slots];
     let mut inc_cost = 0.0;
@@ -172,7 +220,10 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
         }
     }
     if s.model.omission == Omission::Prefix {
-        inc_prio[0] = order.iter().take_while(|&&i| s.state.placed[i].is_some()).count() as f64;
+        inc_prio[0] = order
+            .iter()
+            .take_while(|&&i| s.state.placed[i].is_some())
+            .count() as f64;
     }
     let mut search = Search {
         order: order.clone(),
@@ -185,7 +236,10 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
         cost: &cost_fn,
         mode: s.model.omission,
         chosen: vec![None; n],
-        best: Obj { prio: inc_prio, cost: inc_cost },
+        best: Obj {
+            prio: inc_prio,
+            cost: inc_cost,
+        },
         best_choice: chosen.clone(),
         nodes: 0,
         max_nodes,

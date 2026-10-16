@@ -28,13 +28,13 @@ fn dt1d(f: &[f64], d: &mut [f64], v: &mut [usize], z: &mut [f64]) {
         z[k + 1] = f64::INFINITY;
     }
     k = 0;
-    for q in 0..n {
+    for (q, dq_out) in d.iter_mut().enumerate().take(n) {
         while z[k + 1] < q as f64 {
             k += 1;
         }
         let p = v[k];
         let dq = q as f64 - p as f64;
-        d[q] = dq * dq + f[p];
+        *dq_out = dq * dq + f[p];
     }
 }
 
@@ -70,7 +70,11 @@ pub fn distance_transform(g: &GridSpec, occupied: impl Fn(usize) -> bool) -> Vec
         dt1d(&f[..cols], &mut d[..cols], &mut v, &mut z);
         for c in 0..cols {
             let sq = d[c];
-            grid[r * cols + c] = if sq >= INF * 0.5 { 1e9 } else { sq.sqrt() * g.cell };
+            grid[r * cols + c] = if sq >= INF * 0.5 {
+                1e9
+            } else {
+                sq.sqrt() * g.cell
+            };
         }
     }
     grid
@@ -82,7 +86,13 @@ mod tests {
 
     #[test]
     fn matches_brute_force() {
-        let g = GridSpec { ox: 0.0, oy: 0.0, cell: 2.0, cols: 13, rows: 9 };
+        let g = GridSpec {
+            ox: 0.0,
+            oy: 0.0,
+            cell: 2.0,
+            cols: 13,
+            rows: 9,
+        };
         let occ: Vec<bool> = (0..g.cells()).map(|i| i % 17 == 3 || i == 50).collect();
         let dt = distance_transform(&g, |i| occ[i]);
         for r in 0..g.rows {
@@ -97,14 +107,24 @@ mod tests {
                     }
                 }
                 let v = dt[r * g.cols + c];
-                assert!((v - best * 2.0).abs() < 1e-9, "({c},{r}) {v} vs {}", best * 2.0);
+                assert!(
+                    (v - best * 2.0).abs() < 1e-9,
+                    "({c},{r}) {v} vs {}",
+                    best * 2.0
+                );
             }
         }
     }
 
     #[test]
     fn empty_grid_is_far() {
-        let g = GridSpec { ox: 0.0, oy: 0.0, cell: 1.0, cols: 4, rows: 3 };
+        let g = GridSpec {
+            ox: 0.0,
+            oy: 0.0,
+            cell: 1.0,
+            cols: 4,
+            rows: 3,
+        };
         let dt = distance_transform(&g, |_| false);
         assert!(dt.iter().all(|&v| v >= 1e9));
     }

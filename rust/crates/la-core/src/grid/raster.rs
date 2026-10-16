@@ -21,7 +21,11 @@ pub struct MaskRaster {
 
 impl MaskRaster {
     pub fn new(spec: GridSpec) -> MaskRaster {
-        MaskRaster { spec, mask: vec![0; spec.cells()], step: spec.cell / 4.0 }
+        MaskRaster {
+            spec,
+            mask: vec![0; spec.cells()],
+            step: spec.cell / 4.0,
+        }
     }
 
     #[inline]
@@ -110,10 +114,30 @@ impl MaskRaster {
         let ey = v1.floor() as i64;
         let dx = u1 - u0;
         let dy = v1 - v0;
-        let stepx: i64 = if dx > 0.0 { 1 } else if dx < 0.0 { -1 } else { 0 };
-        let stepy: i64 = if dy > 0.0 { 1 } else if dy < 0.0 { -1 } else { 0 };
-        let tdx = if dx != 0.0 { (1.0 / dx).abs() } else { f64::INFINITY };
-        let tdy = if dy != 0.0 { (1.0 / dy).abs() } else { f64::INFINITY };
+        let stepx: i64 = if dx > 0.0 {
+            1
+        } else if dx < 0.0 {
+            -1
+        } else {
+            0
+        };
+        let stepy: i64 = if dy > 0.0 {
+            1
+        } else if dy < 0.0 {
+            -1
+        } else {
+            0
+        };
+        let tdx = if dx != 0.0 {
+            (1.0 / dx).abs()
+        } else {
+            f64::INFINITY
+        };
+        let tdy = if dy != 0.0 {
+            (1.0 / dy).abs()
+        } else {
+            f64::INFINITY
+        };
         let mut tmx = if dx > 0.0 {
             ((cx + 1) as f64 - u0) / dx
         } else if dx < 0.0 {
@@ -376,7 +400,13 @@ mod tests {
     use super::*;
 
     fn g(cols: usize, rows: usize, cell: f64) -> GridSpec {
-        GridSpec { ox: 0.0, oy: 0.0, cell, cols, rows }
+        GridSpec {
+            ox: 0.0,
+            oy: 0.0,
+            cell,
+            cols,
+            rows,
+        }
     }
 
     fn total(cov: &[u8]) -> f64 {
@@ -426,8 +456,18 @@ mod tests {
 
     #[test]
     fn polygon_rules() {
-        let outer = vec![P::new(0.0, 0.0), P::new(20.0, 0.0), P::new(20.0, 20.0), P::new(0.0, 20.0)];
-        let hole = vec![P::new(5.0, 5.0), P::new(15.0, 5.0), P::new(15.0, 15.0), P::new(5.0, 15.0)];
+        let outer = vec![
+            P::new(0.0, 0.0),
+            P::new(20.0, 0.0),
+            P::new(20.0, 20.0),
+            P::new(0.0, 20.0),
+        ];
+        let hole = vec![
+            P::new(5.0, 5.0),
+            P::new(15.0, 5.0),
+            P::new(15.0, 15.0),
+            P::new(5.0, 15.0),
+        ];
         let mut m = MaskRaster::new(g(20, 20, 1.0));
         m.polygon(&[outer.clone(), hole.clone()], true);
         let a = total(&m.into_coverage());

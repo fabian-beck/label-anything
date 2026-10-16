@@ -86,11 +86,23 @@ impl Leader {
         }
         let bends = pts.len().saturating_sub(2) as u8;
         let port = *pts.last().unwrap_or(&P::new(0.0, 0.0));
-        Leader { pts, port, style, bends, len, underline: None, curve: None, member: None }
+        Leader {
+            pts,
+            port,
+            style,
+            bends,
+            len,
+            underline: None,
+            curve: None,
+            member: None,
+        }
     }
     /// Segments including the underline.
     pub fn segments(&self) -> impl Iterator<Item = (P, P)> + '_ {
-        self.pts.windows(2).map(|w| (w[0], w[1])).chain(self.underline.iter().copied())
+        self.pts
+            .windows(2)
+            .map(|w| (w[0], w[1]))
+            .chain(self.underline.iter().copied())
     }
     pub fn bbox(&self) -> Rect {
         let mut r = crate::geom::bbox_of(&self.pts);
@@ -139,11 +151,24 @@ pub fn label_shape(rect: &Rect, shape: &crate::model::LabelShape) -> Option<Box<
     match shape {
         LabelShape::Rect => None,
         LabelShape::Rounded(r) if *r <= 0.0 => None,
-        LabelShape::Rounded(r) => Some(Box::new(Shape::rect(rect.center(), rect.w(), rect.h(), *r, 0.0))),
-        LabelShape::Circle => Some(Box::new(Shape::circle(rect.center(), rect.w().min(rect.h()) * 0.5))),
+        LabelShape::Rounded(r) => Some(Box::new(Shape::rect(
+            rect.center(),
+            rect.w(),
+            rect.h(),
+            *r,
+            0.0,
+        ))),
+        LabelShape::Circle => Some(Box::new(Shape::circle(
+            rect.center(),
+            rect.w().min(rect.h()) * 0.5,
+        ))),
         LabelShape::Polygon(pts) if pts.len() >= 3 => {
             let o = P::new(rect.x0, rect.y0);
-            Some(Box::new(Shape::polygon(vec![pts.iter().map(|q| *q + o).collect()], false, rect.center())))
+            Some(Box::new(Shape::polygon(
+                vec![pts.iter().map(|q| *q + o).collect()],
+                false,
+                rect.center(),
+            )))
         }
         _ => None,
     }
@@ -172,7 +197,15 @@ impl Cand {
 }
 
 impl Cand {
-    pub fn new(item: u32, variant: u16, level: u8, kind: Kind, side: Side, rank: f64, rect: Rect) -> Cand {
+    pub fn new(
+        item: u32,
+        variant: u16,
+        level: u8,
+        kind: Kind,
+        side: Side,
+        rank: f64,
+        rect: Rect,
+    ) -> Cand {
         Cand {
             item,
             variant,
@@ -247,18 +280,44 @@ fn push_in(shape: &Shape, o: f64, c: P, hw: f64, hh: f64) -> P {
 }
 
 /// Adjacent and slider candidates of one variant.
-pub fn adjacent(item: &Item, vi: usize, v: &Variant, slider_per_gap: usize, models: Models, out: &mut Vec<Cand>) {
+pub fn adjacent(
+    item: &Item,
+    vi: usize,
+    v: &Variant,
+    slider_per_gap: usize,
+    models: Models,
+    out: &mut Vec<Cand>,
+) {
     let hw = v.w * 0.5;
     let hh = v.h * 0.5;
     let o = item.len.offset;
     let shape = &item.shape;
-    let ranks: Vec<(Pos, f64)> = item.positions.iter().enumerate().map(|(r, p)| (*p, r as f64)).collect();
+    let ranks: Vec<(Pos, f64)> = item
+        .positions
+        .iter()
+        .enumerate()
+        .map(|(r, p)| (*p, r as f64))
+        .collect();
     let rank_of = |p: Pos| ranks.iter().find(|(q, _)| *q == p).map(|x| x.1);
     let it = item.index as u32;
     if models.has(Models::ADJACENT) {
         for &(p, r) in &ranks {
-            let c = push_in(shape, o, touch_center(shape, o, dir_of(p.angle()), hw, hh), hw, hh);
-            out.push(Cand::new(it, vi as u16, v.level, Kind::Adjacent, Side::Pos(p), r, Rect::from_center(c, hw, hh)));
+            let c = push_in(
+                shape,
+                o,
+                touch_center(shape, o, dir_of(p.angle()), hw, hh),
+                hw,
+                hh,
+            );
+            out.push(Cand::new(
+                it,
+                vi as u16,
+                v.level,
+                Kind::Adjacent,
+                Side::Pos(p),
+                r,
+                Rect::from_center(c, hw, hh),
+            ));
         }
     }
     if !models.has(Models::SLIDER) || slider_per_gap == 0 {
@@ -267,16 +326,29 @@ pub fn adjacent(item: &Item, vi: usize, v: &Variant, slider_per_gap: usize, mode
     for k in 0..8 {
         let a = Pos::from_angular_index(k);
         let b = Pos::from_angular_index(k + 1);
-        let (Some(ra), Some(rb)) = (rank_of(a), rank_of(b)) else { continue };
+        let (Some(ra), Some(rb)) = (rank_of(a), rank_of(b)) else {
+            continue;
+        };
         let fa = a.angle();
         let fb = if k == 7 { 360.0 } else { b.angle() };
         let path = cspace_path(shape, o, hw, hh, fa, fb);
-        for (j, c) in sample_path(&path, slider_per_gap, shape, o, hw, hh).into_iter().enumerate() {
+        for (j, c) in sample_path(&path, slider_per_gap, shape, o, hw, hh)
+            .into_iter()
+            .enumerate()
+        {
             let t = (j + 1) as f64 / (slider_per_gap + 1) as f64;
             let rank = ra + (rb - ra) * t + 0.25;
             let side = if t < 0.5 { a } else { b };
             let c = push_in(shape, o, c, hw, hh);
-            out.push(Cand::new(it, vi as u16, v.level, Kind::Slider, Side::Pos(side), rank, Rect::from_center(c, hw, hh)));
+            out.push(Cand::new(
+                it,
+                vi as u16,
+                v.level,
+                Kind::Slider,
+                Side::Pos(side),
+                rank,
+                Rect::from_center(c, hw, hh),
+            ));
         }
     }
 }
@@ -326,7 +398,11 @@ fn cspace_path(shape: &Shape, o: f64, hw: f64, hh: f64, fa: f64, fb: f64) -> Vec
                 continue;
             }
         }
-        verts.push(CVertex { p, phi, straight_next: true });
+        verts.push(CVertex {
+            p,
+            phi,
+            straight_next: true,
+        });
     }
     for i in 0..verts.len().saturating_sub(1) {
         let (a, b) = (verts[i], verts[i + 1]);
@@ -359,7 +435,11 @@ fn sample_path(path: &[CVertex], k: usize, shape: &Shape, o: f64, hw: f64, hh: f
         let a = path[seg];
         let b = path[seg + 1];
         let len = cum[seg + 1] - cum[seg];
-        let t = if len > 0.0 { (target - cum[seg]) / len } else { 0.0 };
+        let t = if len > 0.0 {
+            (target - cum[seg]) / len
+        } else {
+            0.0
+        };
         if a.straight_next {
             out.push(a.p.lerp(b.p, t));
         } else {
@@ -408,9 +488,19 @@ pub fn internal(item: &Item, vi: usize, v: &Variant, rank: f64, out: &mut Vec<Ca
     let it = item.index as u32;
     let push = |c: P, out: &mut Vec<Cand>| {
         let r = Rect::from_center(c, hw, hh);
-        let dup = out.iter().any(|x| x.item == it && x.variant == vi as u16 && x.kind == Kind::Internal && x.rect == r);
+        let dup = out.iter().any(|x| {
+            x.item == it && x.variant == vi as u16 && x.kind == Kind::Internal && x.rect == r
+        });
         if !dup {
-            out.push(Cand::new(it, vi as u16, v.level, Kind::Internal, Side::Internal, rank, r));
+            out.push(Cand::new(
+                it,
+                vi as u16,
+                v.level,
+                Kind::Internal,
+                Side::Internal,
+                rank,
+                r,
+            ));
         }
     };
     if let Some(area) = &item.area {
@@ -482,7 +572,10 @@ mod tests {
     fn adjacent_rect_matches_bbox_positions() {
         let s = Shape::rect(P::new(0.0, 0.0), 40.0, 20.0, 0.0, 0.0);
         let c = touch_center(&s, 0.0, dir_of(45.0), 10.0, 5.0);
-        assert!((c.x - 30.0).abs() < 1e-12 && (c.y + 15.0).abs() < 1e-12, "{c:?}");
+        assert!(
+            (c.x - 30.0).abs() < 1e-12 && (c.y + 15.0).abs() < 1e-12,
+            "{c:?}"
+        );
         let c = touch_center(&s, 0.0, dir_of(90.0), 10.0, 5.0);
         assert!(c.x.abs() < 1e-12 && (c.y + 15.0).abs() < 1e-12, "{c:?}");
     }
@@ -494,7 +587,13 @@ mod tests {
             Shape::ellipse(P::new(0.0, 0.0), 20.0, 8.0, 25.0),
             Shape::rect(P::new(0.0, 0.0), 30.0, 12.0, 3.0, 17.0),
             Shape::polygon(
-                vec![vec![P::new(-20.0, -10.0), P::new(20.0, -15.0), P::new(5.0, 0.0), P::new(25.0, 12.0), P::new(-15.0, 10.0)]],
+                vec![vec![
+                    P::new(-20.0, -10.0),
+                    P::new(20.0, -15.0),
+                    P::new(5.0, 0.0),
+                    P::new(25.0, 12.0),
+                    P::new(-15.0, 10.0),
+                ]],
                 false,
                 P::new(0.0, 0.0),
             ),

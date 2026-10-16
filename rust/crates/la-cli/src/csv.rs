@@ -58,18 +58,32 @@ pub fn parse(text: &str) -> Vec<Vec<String>> {
 pub fn problem_from_csv(path: &Path, o: &CsvOpts) -> Result<Value, String> {
     let text = std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
     let rows = parse(&text);
-    let Some((header, data)) = rows.split_first() else { return Err("empty CSV".into()) };
+    let Some((header, data)) = rows.split_first() else {
+        return Err("empty CSV".into());
+    };
     let col = |name: &str| header.iter().position(|h| h.trim() == name);
     let xi = col(&o.x_col).ok_or_else(|| format!("CSV has no column '{}'", o.x_col))?;
     let yi = col(&o.y_col).ok_or_else(|| format!("CSV has no column '{}'", o.y_col))?;
     let li = col(&o.labels_col).ok_or_else(|| format!("CSV has no column '{}'", o.labels_col))?;
-    let idi = o.id_col.as_deref().map(|c| col(c).ok_or_else(|| format!("CSV has no column '{c}'"))).transpose()?;
-    let pi = o.priority_col.as_deref().map(|c| col(c).ok_or_else(|| format!("CSV has no column '{c}'"))).transpose()?;
+    let idi = o
+        .id_col
+        .as_deref()
+        .map(|c| col(c).ok_or_else(|| format!("CSV has no column '{c}'")))
+        .transpose()?;
+    let pi = o
+        .priority_col
+        .as_deref()
+        .map(|c| col(c).ok_or_else(|| format!("CSV has no column '{c}'")))
+        .transpose()?;
     let mut items = Vec::new();
     for (r, row) in data.iter().enumerate() {
         let get = |i: usize| row.get(i).map(|s| s.trim()).unwrap_or("");
-        let x: f64 = get(xi).parse().map_err(|_| format!("row {}: invalid x '{}'", r + 2, get(xi)))?;
-        let y: f64 = get(yi).parse().map_err(|_| format!("row {}: invalid y '{}'", r + 2, get(yi)))?;
+        let x: f64 = get(xi)
+            .parse()
+            .map_err(|_| format!("row {}: invalid x '{}'", r + 2, get(xi)))?;
+        let y: f64 = get(yi)
+            .parse()
+            .map_err(|_| format!("row {}: invalid y '{}'", r + 2, get(yi)))?;
         let mut attrs = serde_json::Map::new();
         for (k, h) in header.iter().enumerate() {
             if k == xi || k == yi || k == li {

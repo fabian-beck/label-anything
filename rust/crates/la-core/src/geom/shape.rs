@@ -18,9 +18,22 @@ pub enum Shape {
     /// Disc. `r = 0` is a bare point.
     Circle { c: P, r: f64 },
     /// Ellipse with semi-axes `rx`, `ry`, rotated by (cos, sin) clockwise on screen.
-    Ellipse { c: P, rx: f64, ry: f64, cos: f64, sin: f64 },
+    Ellipse {
+        c: P,
+        rx: f64,
+        ry: f64,
+        cos: f64,
+        sin: f64,
+    },
     /// Rectangle with half sizes and corner radius, rotated about its center.
-    RoundRect { c: P, hw: f64, hh: f64, r: f64, cos: f64, sin: f64 },
+    RoundRect {
+        c: P,
+        hw: f64,
+        hh: f64,
+        r: f64,
+        cos: f64,
+        sin: f64,
+    },
     /// Polygon (possibly concave, with holes) with an explicit reference point.
     Polygon(Box<PolyShape>),
 }
@@ -40,13 +53,22 @@ impl PolyShape {
         let all: Vec<P> = rings.iter().flatten().copied().collect();
         let hull = polygon::convex_hull(&all);
         let bbox = bbox_of(&all);
-        PolyShape { rings, even_odd, hull, bbox, reference }
+        PolyShape {
+            rings,
+            even_odd,
+            hull,
+            bbox,
+            reference,
+        }
     }
 }
 
 /// Unit-ish direction helpers for the 8 fixed positions (screen coordinates, y down).
 pub fn sign_dir(d: P) -> (f64, f64) {
-    (crate::math::sign_eps(d.x, 1e-12), crate::math::sign_eps(d.y, 1e-12))
+    (
+        crate::math::sign_eps(d.x, 1e-12),
+        crate::math::sign_eps(d.y, 1e-12),
+    )
 }
 
 impl Shape {
@@ -61,7 +83,13 @@ impl Shape {
         if (rx - ry).abs() <= 0.0 {
             return Shape::Circle { c, r: rx };
         }
-        Shape::Ellipse { c, rx: maxf(rx, 0.0), ry: maxf(ry, 0.0), cos, sin }
+        Shape::Ellipse {
+            c,
+            rx: maxf(rx, 0.0),
+            ry: maxf(ry, 0.0),
+            cos,
+            sin,
+        }
     }
 
     /// Rectangle centered at `c` with optional corner radius and rotation (degrees).
@@ -70,7 +98,14 @@ impl Shape {
         let hh = maxf(h, 0.0) * 0.5;
         let r = clampf(corner_radius, 0.0, minf(hw, hh));
         let (sin, cos) = sin_cos_deg(rotation_deg);
-        Shape::RoundRect { c, hw, hh, r, cos, sin }
+        Shape::RoundRect {
+            c,
+            hw,
+            hh,
+            r,
+            cos,
+            sin,
+        }
     }
 
     pub fn polygon(rings: Vec<Vec<P>>, even_odd: bool, reference: P) -> Shape {
@@ -89,13 +124,26 @@ impl Shape {
     pub fn bbox(&self) -> Rect {
         match self {
             Shape::Circle { c, r } => Rect::from_center(*c, *r, *r),
-            Shape::Ellipse { c, rx, ry, cos, sin } => {
+            Shape::Ellipse {
+                c,
+                rx,
+                ry,
+                cos,
+                sin,
+            } => {
                 // half extents of a rotated ellipse
                 let hx = len2d(rx * cos, ry * sin);
                 let hy = len2d(rx * sin, ry * cos);
                 Rect::from_center(*c, hx, hy)
             }
-            Shape::RoundRect { c, hw, hh, cos, sin, .. } => {
+            Shape::RoundRect {
+                c,
+                hw,
+                hh,
+                cos,
+                sin,
+                ..
+            } => {
                 let hx = (hw * cos).abs() + (hh * sin).abs();
                 let hy = (hw * sin).abs() + (hh * cos).abs();
                 Rect::from_center(*c, hx, hy)
@@ -109,7 +157,9 @@ impl Shape {
         match self {
             Shape::Circle { r, .. } => std::f64::consts::PI * r * r,
             Shape::Ellipse { rx, ry, .. } => std::f64::consts::PI * rx * ry,
-            Shape::RoundRect { hw, hh, r, .. } => 4.0 * hw * hh - (4.0 - std::f64::consts::PI) * r * r,
+            Shape::RoundRect { hw, hh, r, .. } => {
+                4.0 * hw * hh - (4.0 - std::f64::consts::PI) * r * r
+            }
             Shape::Polygon(p) => polygon::area(&p.rings, p.even_odd),
         }
     }
@@ -126,7 +176,13 @@ impl Shape {
         let dn = d.norm();
         match self {
             Shape::Circle { c, r } => *c + dn * *r,
-            Shape::Ellipse { c, rx, ry, cos, sin } => {
+            Shape::Ellipse {
+                c,
+                rx,
+                ry,
+                cos,
+                sin,
+            } => {
                 let l = dn.unrotate(*cos, *sin);
                 let ax = rx * rx * l.x;
                 let ay = ry * ry * l.y;
@@ -136,11 +192,21 @@ impl Shape {
                 }
                 *c + P::new(ax / den, ay / den).rotate(*cos, *sin)
             }
-            Shape::RoundRect { c, hw, hh, r, cos, sin } => {
+            Shape::RoundRect {
+                c,
+                hw,
+                hh,
+                r,
+                cos,
+                sin,
+            } => {
                 let l = dn.unrotate(*cos, *sin);
                 let iw = hw - r;
                 let ih = hh - r;
-                let (sx, sy) = (crate::math::sign_eps(l.x, 1e-9), crate::math::sign_eps(l.y, 1e-9));
+                let (sx, sy) = (
+                    crate::math::sign_eps(l.x, 1e-9),
+                    crate::math::sign_eps(l.y, 1e-9),
+                );
                 let q = P::new(sx * iw, sy * ih) + l * *r;
                 *c + q.rotate(*cos, *sin)
             }
@@ -163,11 +229,24 @@ impl Shape {
     pub fn signed_distance(&self, p: P) -> f64 {
         match self {
             Shape::Circle { c, r } => p.dist(*c) - r,
-            Shape::Ellipse { c, rx, ry, cos, sin } => {
+            Shape::Ellipse {
+                c,
+                rx,
+                ry,
+                cos,
+                sin,
+            } => {
                 let l = (p - *c).unrotate(*cos, *sin);
                 ellipse_signed_distance(l, *rx, *ry)
             }
-            Shape::RoundRect { c, hw, hh, r, cos, sin } => {
+            Shape::RoundRect {
+                c,
+                hw,
+                hh,
+                r,
+                cos,
+                sin,
+            } => {
                 let l = (p - *c).unrotate(*cos, *sin);
                 let qx = l.x.abs() - (hw - r);
                 let qy = l.y.abs() - (hh - r);
@@ -195,7 +274,13 @@ impl Shape {
                 }
                 r.dist_point(*c) < rad - EPS
             }
-            Shape::Ellipse { c, rx, ry, cos, sin } => {
+            Shape::Ellipse {
+                c,
+                rx,
+                ry,
+                cos,
+                sin,
+            } => {
                 if !self.bbox().overlaps(r) {
                     return false;
                 }
@@ -208,7 +293,14 @@ impl Shape {
                 }
                 convex_quad_overlaps_unit_disc(&quad, EPS / maxf(minf(*rx, *ry), EPS))
             }
-            Shape::RoundRect { c, hw, hh, r: rad, cos, sin } => {
+            Shape::RoundRect {
+                c,
+                hw,
+                hh,
+                r: rad,
+                cos,
+                sin,
+            } => {
                 if !self.bbox().overlaps(r) {
                     return false;
                 }
@@ -228,7 +320,14 @@ impl Shape {
         match self {
             Shape::Circle { c, r: rad } => maxf(r.dist_point(*c) - rad, 0.0),
             Shape::Polygon(p) => polygon::dist_rect(&p.rings, p.even_odd, &p.bbox, r),
-            Shape::RoundRect { c, hw, hh, r: rad, cos, sin } => {
+            Shape::RoundRect {
+                c,
+                hw,
+                hh,
+                r: rad,
+                cos,
+                sin,
+            } => {
                 let inner = rotated_rect_corners(*c, hw - rad, hh - rad, *cos, *sin);
                 maxf(convex_poly_rect_distance(&inner, r) - rad, 0.0)
             }
@@ -250,7 +349,8 @@ impl Shape {
 
     /// Segment `ab` passes within `clearance` of the shape (interior when 0).
     pub fn near_segment(&self, a: P, b: P, clearance: f64) -> bool {
-        self.dist_segment(a, b) < clearance - EPS || (clearance <= 0.0 && self.dist_segment(a, b) < -EPS)
+        self.dist_segment(a, b) < clearance - EPS
+            || (clearance <= 0.0 && self.dist_segment(a, b) < -EPS)
     }
 
     /// Signed-ish distance between segment `ab` and the shape: 0 if they intersect,
@@ -299,7 +399,13 @@ impl Shape {
         let o = self.reference();
         match self {
             Shape::Circle { c, r } => *c + d * *r,
-            Shape::Ellipse { c, rx, ry, cos, sin } => {
+            Shape::Ellipse {
+                c,
+                rx,
+                ry,
+                cos,
+                sin,
+            } => {
                 let l = d.unrotate(*cos, *sin);
                 let den = (l.x * l.x) / (rx * rx) + (l.y * l.y) / (ry * ry);
                 if den <= 0.0 {
@@ -354,7 +460,13 @@ impl Shape {
                     })
                     .collect()
             }
-            Shape::Ellipse { c, rx, ry, cos, sin } => {
+            Shape::Ellipse {
+                c,
+                rx,
+                ry,
+                cos,
+                sin,
+            } => {
                 let k = 1.0 / cos_half_step(CURVE_SEGMENTS);
                 (0..CURVE_SEGMENTS)
                     .map(|i| {
@@ -363,7 +475,14 @@ impl Shape {
                     })
                     .collect()
             }
-            Shape::RoundRect { c, hw, hh, r, cos, sin } => {
+            Shape::RoundRect {
+                c,
+                hw,
+                hh,
+                r,
+                cos,
+                sin,
+            } => {
                 if *r <= 0.0 {
                     return rotated_rect_corners(*c, *hw, *hh, *cos, *sin).to_vec();
                 }
@@ -373,7 +492,12 @@ impl Shape {
                 let ih = hh - r;
                 let mut pts = Vec::with_capacity(4 * (per + 1));
                 // corners: (+,+) 0..90, (-,+) 90..180, (-,-) 180..270, (+,-) 270..360
-                let centers = [P::new(iw, ih), P::new(-iw, ih), P::new(-iw, -ih), P::new(iw, -ih)];
+                let centers = [
+                    P::new(iw, ih),
+                    P::new(-iw, ih),
+                    P::new(-iw, -ih),
+                    P::new(iw, -ih),
+                ];
                 for (q, cc) in centers.iter().enumerate() {
                     for j in 0..=per {
                         let a = 90.0 * q as f64 + 90.0 * j as f64 / per as f64;
@@ -392,12 +516,39 @@ impl Shape {
     pub fn translated(&self, d: P) -> Shape {
         match self {
             Shape::Circle { c, r } => Shape::Circle { c: *c + d, r: *r },
-            Shape::Ellipse { c, rx, ry, cos, sin } => Shape::Ellipse { c: *c + d, rx: *rx, ry: *ry, cos: *cos, sin: *sin },
-            Shape::RoundRect { c, hw, hh, r, cos, sin } => {
-                Shape::RoundRect { c: *c + d, hw: *hw, hh: *hh, r: *r, cos: *cos, sin: *sin }
-            }
+            Shape::Ellipse {
+                c,
+                rx,
+                ry,
+                cos,
+                sin,
+            } => Shape::Ellipse {
+                c: *c + d,
+                rx: *rx,
+                ry: *ry,
+                cos: *cos,
+                sin: *sin,
+            },
+            Shape::RoundRect {
+                c,
+                hw,
+                hh,
+                r,
+                cos,
+                sin,
+            } => Shape::RoundRect {
+                c: *c + d,
+                hw: *hw,
+                hh: *hh,
+                r: *r,
+                cos: *cos,
+                sin: *sin,
+            },
             Shape::Polygon(p) => Shape::polygon(
-                p.rings.iter().map(|r| r.iter().map(|q| *q + d).collect()).collect(),
+                p.rings
+                    .iter()
+                    .map(|r| r.iter().map(|q| *q + d).collect())
+                    .collect(),
                 p.even_odd,
                 p.reference + d,
             ),
@@ -423,7 +574,9 @@ pub fn shapes_overlap(a: &Shape, b: &Shape) -> bool {
         return false;
     }
     match (a, b) {
-        (Shape::Circle { c, r }, other) | (other, Shape::Circle { c, r }) => other.signed_distance(*c) < r - EPS,
+        (Shape::Circle { c, r }, other) | (other, Shape::Circle { c, r }) => {
+            other.signed_distance(*c) < r - EPS
+        }
         _ => {
             let ra = a.outline_rings();
             let rb = b.outline_rings();
@@ -440,8 +593,12 @@ pub fn shapes_overlap(a: &Shape, b: &Shape) -> bool {
                 }
             }
             // no crossing edges: one may contain the other
-            let inside = |s: &Shape, rings: &[Vec<P>]| rings.iter().flatten().any(|p| s.signed_distance(*p) < -EPS);
-            inside(a, &rb) || inside(b, &ra) || (a.signed_distance(b.reference()) < -EPS && b.contains(b.reference()))
+            let inside = |s: &Shape, rings: &[Vec<P>]| {
+                rings.iter().flatten().any(|p| s.signed_distance(*p) < -EPS)
+            };
+            inside(a, &rb)
+                || inside(b, &ra)
+                || (a.signed_distance(b.reference()) < -EPS && b.contains(b.reference()))
         }
     }
 }
@@ -459,7 +616,10 @@ fn min_dist_on_segment(s: &Shape, a: P, b: P) -> f64 {
         }
     }
     let t = (lo + hi) * 0.5;
-    minf(s.signed_distance(a.lerp(b, t)), minf(s.signed_distance(a), s.signed_distance(b)))
+    minf(
+        s.signed_distance(a.lerp(b, t)),
+        minf(s.signed_distance(a), s.signed_distance(b)),
+    )
 }
 
 /// 1 / cos(π / n): factor for a circumscribed regular n-gon.
@@ -695,7 +855,12 @@ mod tests {
 
     #[test]
     fn polygon_support_flat_side_centers_on_reference() {
-        let sq = vec![P::new(0.0, 0.0), P::new(10.0, 0.0), P::new(10.0, 10.0), P::new(0.0, 10.0)];
+        let sq = vec![
+            P::new(0.0, 0.0),
+            P::new(10.0, 0.0),
+            P::new(10.0, 10.0),
+            P::new(0.0, 10.0),
+        ];
         let s = Shape::polygon(vec![sq], false, P::new(3.0, 5.0));
         let p = s.support(P::new(0.0, -1.0));
         assert!((p.x - 3.0).abs() < 1e-12 && p.y.abs() < 1e-12);
@@ -746,7 +911,15 @@ mod tests {
         let big = Shape::rect(P::new(0.0, 0.0), 100.0, 100.0, 5.0, 0.0);
         let small = Shape::rect(P::new(1.0, 1.0), 2.0, 2.0, 0.0, 30.0);
         assert!(shapes_overlap(&big, &small));
-        let tri = Shape::polygon(vec![vec![P::new(20.0, 20.0), P::new(30.0, 20.0), P::new(25.0, 28.0)]], false, P::new(25.0, 22.0));
+        let tri = Shape::polygon(
+            vec![vec![
+                P::new(20.0, 20.0),
+                P::new(30.0, 20.0),
+                P::new(25.0, 28.0),
+            ]],
+            false,
+            P::new(25.0, 22.0),
+        );
         assert!(!shapes_overlap(&small, &tri));
     }
 

@@ -27,7 +27,11 @@ impl AvoidW {
             Value::String(s) if s == "ignore" => Some(AvoidW::Ignore),
             Value::Number(n) => {
                 let w = n.as_f64().unwrap_or(0.0);
-                Some(if w > 0.0 { AvoidW::Soft(w) } else { AvoidW::Ignore })
+                Some(if w > 0.0 {
+                    AvoidW::Soft(w)
+                } else {
+                    AvoidW::Ignore
+                })
             }
             _ => None,
         }
@@ -141,9 +145,17 @@ pub fn prepare(model: &Model, env: &dyn Env, min_font: f64) -> Obstacles {
     names.remove("leaders");
     names.remove("canvas_edge");
     let pol = |map: &serde_json::Map<String, Value>, k: &str| -> AvoidW {
-        AvoidW::parse(map.get(k)).or_else(|| AvoidW::parse(map.get("*"))).unwrap_or(AvoidW::Soft(1.0))
+        AvoidW::parse(map.get(k))
+            .or_else(|| AvoidW::parse(map.get("*")))
+            .unwrap_or(AvoidW::Soft(1.0))
     };
-    let buf = |k: &str| model.avoid_buffer.get(k).and_then(|v| v.as_f64()).unwrap_or(0.0);
+    let buf = |k: &str| {
+        model
+            .avoid_buffer
+            .get(k)
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0)
+    };
     let mut classes: Vec<Class> = names
         .iter()
         .map(|n| Class {
@@ -162,7 +174,9 @@ pub fn prepare(model: &Model, env: &dyn Env, min_font: f64) -> Obstacles {
     let mut masks: Vec<Option<MaskRaster>> = (0..classes.len()).map(|_| None).collect();
     let mut prims = Vec::new();
     for (cname, prim) in &model.vector {
-        let Some(ci) = class_of(cname, &classes) else { continue };
+        let Some(ci) = class_of(cname, &classes) else {
+            continue;
+        };
         let c = &classes[ci];
         if c.label == AvoidW::Ignore && c.leader == AvoidW::Ignore && c.buffer == 0.0 {
             continue;
@@ -179,10 +193,14 @@ pub fn prepare(model: &Model, env: &dyn Env, min_font: f64) -> Obstacles {
     }
     // merge raster coverage (max with vector coverage)
     for (cname, cov) in raster_cov {
-        let Some(ci) = class_of(&cname, &classes) else { continue };
+        let Some(ci) = class_of(&cname, &classes) else {
+            continue;
+        };
         classes[ci].has_raster = true;
         let merged: Vec<u8> = match &classes[ci].sat {
-            Some(s) => (0..grid.cells()).map(|i| s.cell(i % grid.cols, i / grid.cols).max(cov[i])).collect(),
+            Some(s) => (0..grid.cells())
+                .map(|i| s.cell(i % grid.cols, i / grid.cols).max(cov[i]))
+                .collect(),
             None => cov,
         };
         classes[ci].sat = Some(Sat::from_coverage(grid.cols, grid.rows, &merged));
@@ -190,13 +208,19 @@ pub fn prepare(model: &Model, env: &dyn Env, min_font: f64) -> Obstacles {
     // dynamic/reserved policies
     let own_mark = match model.avoid_label.get("own_mark") {
         Some(Value::String(s)) if s == "ignore" => OwnMark::Ignore,
-        Some(Value::String(s)) if s.starts_with("partial:") => OwnMark::Partial(s[8..].parse().unwrap_or(0.0)),
+        Some(Value::String(s)) if s.starts_with("partial:") => {
+            OwnMark::Partial(s[8..].parse().unwrap_or(0.0))
+        }
         _ => OwnMark::Hard,
     };
     let dynamic = Dynamic {
         label_labels: pol(&model.avoid_label, "labels"),
         label_items: pol(&model.avoid_label, "items"),
-        label_edge: if model.label_area.is_some() { pol(&model.avoid_label, "canvas_edge") } else { AvoidW::Ignore },
+        label_edge: if model.label_area.is_some() {
+            pol(&model.avoid_label, "canvas_edge")
+        } else {
+            AvoidW::Ignore
+        },
         leader_leaders: pol(&model.avoid_leader, "leaders"),
         leader_labels: pol(&model.avoid_leader, "labels"),
         leader_items: pol(&model.avoid_leader, "items"),
@@ -209,8 +233,16 @@ pub fn prepare(model: &Model, env: &dyn Env, min_font: f64) -> Obstacles {
     let n_items = model.items.len().max(1) as f64;
     let ext_area = maxf(model.extent.area(), 1.0);
     let index_cell = (ext_area / n_items).sqrt().clamp(16.0, 128.0);
-    let prim_index = StaticIndex::new(prims.iter().map(|(_, p)| p.bbox()).collect(), &model.extent, index_cell);
-    let item_index = StaticIndex::new(model.items.iter().map(|it| it.shape.bbox()).collect(), &model.extent, index_cell);
+    let prim_index = StaticIndex::new(
+        prims.iter().map(|(_, p)| p.bbox()).collect(),
+        &model.extent,
+        index_cell,
+    );
+    let item_index = StaticIndex::new(
+        model.items.iter().map(|it| it.shape.bbox()).collect(),
+        &model.extent,
+        index_cell,
+    );
     // items coverage (global and per item)
     let mut all_items = MaskRaster::new(grid);
     let mut own = Vec::with_capacity(model.items.len());
@@ -226,7 +258,10 @@ pub fn prepare(model: &Model, env: &dyn Env, min_font: f64) -> Obstacles {
         };
         let mut m = MaskRaster::new(local);
         m.shape(&it.shape);
-        own.push((local, Sat::from_coverage(local.cols, local.rows, &m.into_coverage())));
+        own.push((
+            local,
+            Sat::from_coverage(local.cols, local.rows, &m.into_coverage()),
+        ));
     }
     let items_sat = Sat::from_coverage(grid.cols, grid.rows, &all_items.into_coverage());
     // distance transform of static hard obstacles (incl. items and outside the label area)
@@ -237,7 +272,9 @@ pub fn prepare(model: &Model, env: &dyn Env, min_font: f64) -> Obstacles {
         }
     }
     let hard_cov = hard_mask.into_coverage();
-    let hard_classes: Vec<usize> = (0..classes.len()).filter(|&i| classes[i].label.is_hard()).collect();
+    let hard_classes: Vec<usize> = (0..classes.len())
+        .filter(|&i| classes[i].label.is_hard())
+        .collect();
     let la = model.label_area;
     let dt = distance_transform(&grid, |i| {
         if hard_cov[i] > 0 {
@@ -257,7 +294,14 @@ pub fn prepare(model: &Model, env: &dyn Env, min_font: f64) -> Obstacles {
         }
     });
     let seeds = dt_maxima(&grid, &dt, model.default_em * 0.4);
-    let seed_index = StaticIndex::new(seeds.iter().map(|s| Rect::from_center(s.0, 0.0, 0.0)).collect(), &model.extent, index_cell * 2.0);
+    let seed_index = StaticIndex::new(
+        seeds
+            .iter()
+            .map(|s| Rect::from_center(s.0, 0.0, 0.0))
+            .collect(),
+        &model.extent,
+        index_cell * 2.0,
+    );
     Obstacles {
         grid,
         classes,
@@ -315,7 +359,9 @@ fn rasterize_prim(m: &mut MaskRaster, p: &Prim) {
     match p {
         Prim::Disc { c, r } => m.disc(*c, *r),
         Prim::Rect(r) => m.rect(r.x0, r.y0, r.x1, r.y1),
-        Prim::Polygon { rings, even_odd, .. } => m.polygon(rings, *even_odd),
+        Prim::Polygon {
+            rings, even_odd, ..
+        } => m.polygon(rings, *even_odd),
         Prim::Polyline { points, hw, closed } => {
             let n = points.len();
             if n == 1 {
@@ -344,7 +390,11 @@ impl Prim {
                 }
             }
             Prim::Rect(b) => b.overlaps(r),
-            Prim::Polygon { rings, even_odd, bbox } => polygon::overlaps_rect(rings, *even_odd, bbox, r),
+            Prim::Polygon {
+                rings,
+                even_odd,
+                bbox,
+            } => polygon::overlaps_rect(rings, *even_odd, bbox, r),
             Prim::Polyline { points, hw, closed } => {
                 let n = points.len();
                 let segs = n.saturating_sub(1) + if *closed && n > 2 { 1 } else { 0 };
@@ -370,8 +420,11 @@ impl Prim {
         match self {
             Prim::Disc { c, r } => maxf(dist_point_seg(*c, a, b) - r, 0.0),
             Prim::Rect(rect) => dist_seg_rect(a, b, rect),
-            Prim::Polygon { rings, even_odd, .. } => {
-                if polygon::contains(rings, *even_odd, a) || polygon::contains(rings, *even_odd, b) {
+            Prim::Polygon {
+                rings, even_odd, ..
+            } => {
+                if polygon::contains(rings, *even_odd, a) || polygon::contains(rings, *even_odd, b)
+                {
                     return 0.0;
                 }
                 let mut m = f64::INFINITY;
@@ -385,7 +438,10 @@ impl Prim {
                 let segs = n.saturating_sub(1) + if *closed && n > 2 { 1 } else { 0 };
                 let mut m = f64::INFINITY;
                 for i in 0..segs {
-                    m = minf(m, crate::geom::seg_seg_dist(a, b, points[i], points[(i + 1) % n]));
+                    m = minf(
+                        m,
+                        crate::geom::seg_seg_dist(a, b, points[i], points[(i + 1) % n]),
+                    );
                 }
                 if n == 1 {
                     m = dist_point_seg(points[0], a, b);

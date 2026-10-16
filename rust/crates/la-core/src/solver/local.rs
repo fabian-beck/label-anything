@@ -24,7 +24,15 @@ fn item_cost(s: &mut Solve, i: usize, c: u32) -> f64 {
     let item = &s.model.items[i];
     let cand = &s.cands[c as usize];
     let relax = if !cand.feasible { cand.relax_cost } else { 0.0 };
-    let d = s.state.dynamic_cost(cand, &s.cands, s.obs, item.len.buffer, item.len.clearance, s.model.leaders.width, i);
+    let d = s.state.dynamic_cost(
+        cand,
+        &s.cands,
+        s.obs,
+        item.len.buffer,
+        item.len.clearance,
+        s.model.leaders.width,
+        i,
+    );
     cand.cost + relax + d
 }
 
@@ -49,7 +57,11 @@ fn place(s: &mut Solve, i: usize, c: u32) {
 
 pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
     let n = s.model.items.len();
-    let mut st = LocalStats { iterations: 0, accepted: 0, inserted: 0 };
+    let mut st = LocalStats {
+        iterations: 0,
+        accepted: 0,
+        inserted: 0,
+    };
     if n == 0 || iterations == 0 {
         return st;
     }
@@ -69,7 +81,9 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
     let mut probes: Vec<f64> = Vec::new();
     for _ in 0..50 {
         let i = rng.next_below(n as u32) as usize;
-        let Some(cur) = s.state.placed[i] else { continue };
+        let Some(cur) = s.state.placed[i] else {
+            continue;
+        };
         let list = &s.by_item[i];
         if list.len() < 2 {
             continue;
@@ -85,7 +99,11 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
         }
     }
     probes.sort_by(|a, b| crate::math::cmp_f64(*a, *b));
-    let t0 = probes.get(probes.len() / 2).copied().unwrap_or(0.1).max(1e-6);
+    let t0 = probes
+        .get(probes.len() / 2)
+        .copied()
+        .unwrap_or(0.1)
+        .max(1e-6);
     let ln_ratio = crate::math::ln(1e-3);
     let mut scratch: Vec<u32> = Vec::new();
     // best-so-far: the cheapest state seen since the last priority improvement
@@ -105,17 +123,35 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
         if r < 0.2 && any_unplaced {
             // insertion (ejection chain)
             let u = match mode {
-                Omission::Prefix => s.pri.order.iter().copied().find(|&i| s.state.placed[i].is_none()),
+                Omission::Prefix => s
+                    .pri
+                    .order
+                    .iter()
+                    .copied()
+                    .find(|&i| s.state.placed[i].is_none()),
                 _ => {
                     // pick an unplaced item, biased to higher priority: two draws, keep the better
                     let a = rng.next_below(n as u32) as usize;
                     let b = rng.next_below(n as u32) as usize;
-                    let pick = if s.pri.prio[a].rank < s.pri.prio[b].rank { a } else { b };
-                    if s.state.placed[pick].is_none() { Some(pick) } else { None }
+                    let pick = if s.pri.prio[a].rank < s.pri.prio[b].rank {
+                        a
+                    } else {
+                        b
+                    };
+                    if s.state.placed[pick].is_none() {
+                        Some(pick)
+                    } else {
+                        None
+                    }
                 }
             };
             let Some(u) = u else { continue };
-            if sets[u] || matches!(s.reasons[u], Some(Reason::KeepWith) | Some(Reason::Grouped) | Some(Reason::BudgetExhausted)) {
+            if sets[u]
+                || matches!(
+                    s.reasons[u],
+                    Some(Reason::KeepWith) | Some(Reason::Grouped) | Some(Reason::BudgetExhausted)
+                )
+            {
                 continue;
             }
             if let Some(m) = s.model.max_labels {
@@ -136,7 +172,9 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
         }
         // relocate or swap
         let i = rng.next_below(n as u32) as usize;
-        let Some(cur_c) = s.state.placed[i] else { continue };
+        let Some(cur_c) = s.state.placed[i] else {
+            continue;
+        };
         let list_len = s.by_item[i].len();
         if list_len < 2 {
             continue;
@@ -218,8 +256,8 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
         for i in 0..n {
             s.state.unplace(i, &s.cands);
         }
-        for i in 0..n {
-            if let Some(c) = snapshot[i] {
+        for (i, c) in snapshot.iter().enumerate().take(n) {
+            if let Some(c) = *c {
                 place(s, i, c);
             }
         }
@@ -275,7 +313,14 @@ impl Tx {
 /// Try to place unplaced item `u`: directly, by relocating blockers (ejection chain of
 /// depth ≤ 3), or — when the omission mode allows it — by evicting blockers whose removal
 /// improves the priority objective.
-fn try_insert(s: &mut Solve, u: usize, soft_ok: bool, sets: &[bool], rng: &mut Pcg32, scratch: &mut Vec<u32>) -> bool {
+fn try_insert(
+    s: &mut Solve,
+    u: usize,
+    soft_ok: bool,
+    sets: &[bool],
+    rng: &mut Pcg32,
+    scratch: &mut Vec<u32>,
+) -> bool {
     let ids: Vec<u32> = s.by_item[u].clone();
     let mut scored: Vec<(f64, u32)> = Vec::new();
     for &c in &ids {
@@ -283,11 +328,18 @@ fn try_insert(s: &mut Solve, u: usize, soft_ok: bool, sets: &[bool], rng: &mut P
             continue;
         }
         let cand = &s.cands[c as usize];
-        scored.push((cand.cost + if cand.feasible { 0.0 } else { cand.relax_cost }, c));
+        scored.push((
+            cand.cost + if cand.feasible { 0.0 } else { cand.relax_cost },
+            c,
+        ));
     }
     scored.sort_by(|a, b| crate::math::cmp_f64(a.0, b.0).then(a.1.cmp(&b.1)));
     let tries = scored.len().min(12);
-    let offset = if tries > 0 { rng.next_below(tries as u32) as usize } else { 0 };
+    let offset = if tries > 0 {
+        rng.next_below(tries as u32) as usize
+    } else {
+        0
+    };
     let key_u = s.pri.prio[u].key;
     let mode = s.model.omission;
     for t in 0..tries {
@@ -308,7 +360,10 @@ fn try_insert(s: &mut Solve, u: usize, soft_ok: bool, sets: &[bool], rng: &mut P
         }
         // ejection chain: relocate the blockers (they stay placed)
         let mut tx = Tx::default();
-        let saved: Vec<(usize, u32)> = blockers.iter().map(|&j| (j, s.state.placed[j].unwrap())).collect();
+        let saved: Vec<(usize, u32)> = blockers
+            .iter()
+            .map(|&j| (j, s.state.placed[j].unwrap()))
+            .collect();
         for &(j, _) in &saved {
             tx.unplace(s, j);
         }
@@ -326,13 +381,25 @@ fn try_insert(s: &mut Solve, u: usize, soft_ok: bool, sets: &[bool], rng: &mut P
         tx.rollback(s);
         // eviction (priority-improving): strict → all blockers have strictly lower keys;
         // weighted → same tier and the weights improve
-        let evictable = blockers.iter().all(|&j| !sets[j] && !s.model.items[j].required)
+        let evictable = blockers
+            .iter()
+            .all(|&j| !sets[j] && !s.model.items[j].required)
             && match mode {
                 Omission::Strict => blockers.iter().all(|&j| s.pri.prio[j].key > key_u),
                 Omission::Weighted => {
-                    let tier_u = (s.pri.prio[u].required, s.pri.prio[u].tier, s.pri.prio[u].reserved);
-                    blockers.iter().all(|&j| (s.pri.prio[j].required, s.pri.prio[j].tier, s.pri.prio[j].reserved) <= tier_u)
-                        && blockers.iter().map(|&j| s.pri.prio[j].weight).sum::<f64>() < s.pri.prio[u].weight
+                    let tier_u = (
+                        s.pri.prio[u].required,
+                        s.pri.prio[u].tier,
+                        s.pri.prio[u].reserved,
+                    );
+                    blockers.iter().all(|&j| {
+                        (
+                            s.pri.prio[j].required,
+                            s.pri.prio[j].tier,
+                            s.pri.prio[j].reserved,
+                        ) <= tier_u
+                    }) && blockers.iter().map(|&j| s.pri.prio[j].weight).sum::<f64>()
+                        < s.pri.prio[u].weight
                 }
                 Omission::Prefix => false,
             };
@@ -350,18 +417,30 @@ fn try_insert(s: &mut Solve, u: usize, soft_ok: bool, sets: &[bool], rng: &mut P
 }
 
 fn cap_full(s: &Solve) -> bool {
-    s.model.max_labels.map(|m| s.state.n_placed >= m).unwrap_or(false)
+    s.model
+        .max_labels
+        .map(|m| s.state.n_placed >= m)
+        .unwrap_or(false)
 }
 
 fn cap_full_after_insert(s: &Solve) -> bool {
-    s.model.max_labels.map(|m| s.state.n_placed > m).unwrap_or(false)
+    s.model
+        .max_labels
+        .map(|m| s.state.n_placed > m)
+        .unwrap_or(false)
 }
 
 /// Make room under the label cap by evicting the lowest-priority placed label, if it has
 /// a strictly lower key than `u`.
 fn evict_one_lower(s: &mut Solve, u: usize, sets: &[bool], tx: &mut Tx) -> bool {
     let key_u = s.pri.prio[u].key;
-    let worst = s.pri.order.iter().rev().copied().find(|&j| s.state.placed[j].is_some());
+    let worst = s
+        .pri
+        .order
+        .iter()
+        .rev()
+        .copied()
+        .find(|&j| s.state.placed[j].is_some());
     match worst {
         Some(j) if s.pri.prio[j].key > key_u && !sets[j] && !s.model.items[j].required => {
             tx.unplace(s, j);
@@ -374,7 +453,14 @@ fn evict_one_lower(s: &mut Solve, u: usize, sets: &[bool], tx: &mut Tx) -> bool 
 
 /// Re-place item `j` (currently unplaced, previously at `old`) at another free candidate;
 /// if none is free, relocate one of its blockers recursively (`depth` levels).
-fn relocate_chain(s: &mut Solve, j: usize, old: u32, depth: u32, soft_ok: bool, tx: &mut Tx) -> bool {
+fn relocate_chain(
+    s: &mut Solve,
+    j: usize,
+    old: u32,
+    depth: u32,
+    soft_ok: bool,
+    tx: &mut Tx,
+) -> bool {
     let list = s.by_item[j].clone();
     let mut best: Option<(f64, u32)> = None;
     for &k in &list {

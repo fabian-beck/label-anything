@@ -22,7 +22,11 @@ pub struct Issue {
 
 impl Issue {
     pub fn new(pointer: impl Into<String>, code: &str, message: impl Into<String>) -> Issue {
-        Issue { pointer: pointer.into(), code: code.to_string(), message: message.into() }
+        Issue {
+            pointer: pointer.into(),
+            code: code.to_string(),
+            message: message.into(),
+        }
     }
 }
 
@@ -35,11 +39,14 @@ pub struct Report {
 }
 
 /// Reserved obstacle classes.
-pub const RESERVED_CLASSES: [&str; 6] = ["items", "labels", "leaders", "canvas_edge", "ink", "text"];
+pub const RESERVED_CLASSES: [&str; 6] =
+    ["items", "labels", "leaders", "canvas_edge", "ink", "text"];
 
 fn schema() -> &'static Value {
     static S: OnceLock<Value> = OnceLock::new();
-    S.get_or_init(|| serde_json::from_str(PROBLEM_SCHEMA_JSON).expect("embedded schema is valid JSON"))
+    S.get_or_init(|| {
+        serde_json::from_str(PROBLEM_SCHEMA_JSON).expect("embedded schema is valid JSON")
+    })
 }
 
 /// Escape one JSON-pointer reference token (RFC 6901).
@@ -70,16 +77,30 @@ pub fn validate_str(text: &str) -> Report {
 
 /// Validate a problem value.
 pub fn validate(problem: &Value) -> Report {
-    let interp = Interp { root: schema(), regexes: RefCell::new(BTreeMap::new()) };
+    let interp = Interp {
+        root: schema(),
+        regexes: RefCell::new(BTreeMap::new()),
+    };
     let mut errors = Vec::new();
-    interp.check(schema(), problem, &Path::Root(""), false, false, &mut Sink::Collect(&mut errors));
+    interp.check(
+        schema(),
+        problem,
+        &Path::Root(""),
+        false,
+        false,
+        &mut Sink::Collect(&mut errors),
+    );
     let mut warnings = Vec::new();
     semantic(problem, &mut errors, &mut warnings);
     errors.sort();
     errors.dedup_by(|a, b| a.pointer == b.pointer && a.code == b.code);
     warnings.sort();
     warnings.dedup_by(|a, b| a.pointer == b.pointer && a.code == b.code);
-    Report { valid: errors.is_empty(), errors, warnings }
+    Report {
+        valid: errors.is_empty(),
+        errors,
+        warnings,
+    }
 }
 
 // ---------------------------------------------------------------------------------------
@@ -147,9 +168,13 @@ fn type_is(t: &str, v: &Value) -> bool {
 fn json_eq(a: &Value, b: &Value) -> bool {
     match (a, b) {
         (Value::Number(x), Value::Number(y)) => x.as_f64() == y.as_f64(),
-        (Value::Array(x), Value::Array(y)) => x.len() == y.len() && x.iter().zip(y).all(|(p, q)| json_eq(p, q)),
+        (Value::Array(x), Value::Array(y)) => {
+            x.len() == y.len() && x.iter().zip(y).all(|(p, q)| json_eq(p, q))
+        }
         (Value::Object(x), Value::Object(y)) => {
-            x.len() == y.len() && x.iter().all(|(k, v)| y.get(k).map(|w| json_eq(v, w)).unwrap_or(false))
+            x.len() == y.len()
+                && x.iter()
+                    .all(|(k, v)| y.get(k).map(|w| json_eq(v, w)).unwrap_or(false))
         }
         _ => a == b,
     }
@@ -158,7 +183,10 @@ fn json_eq(a: &Value, b: &Value) -> bool {
 fn short(v: &Value) -> String {
     let s = v.to_string();
     if s.len() > 60 {
-        format!("{}…", &s[..s.char_indices().nth(57).map(|c| c.0).unwrap_or(s.len())])
+        format!(
+            "{}…",
+            &s[..s.char_indices().nth(57).map(|c| c.0).unwrap_or(s.len())]
+        )
     } else {
         s
     }
@@ -195,7 +223,11 @@ impl<'s> Interp<'s> {
     fn resolve(&self, r: &str) -> Option<&'s Value> {
         let mut cur = self.root;
         for tok in r.strip_prefix("#/")?.split('/') {
-            cur = if tok.contains('~') { cur.get(tok.replace("~1", "/").replace("~0", "~"))? } else { cur.get(tok)? };
+            cur = if tok.contains('~') {
+                cur.get(tok.replace("~1", "/").replace("~0", "~"))?
+            } else {
+                cur.get(tok)?
+            };
         }
         Some(cur)
     }
@@ -223,13 +255,28 @@ impl<'s> Interp<'s> {
     /// Property names evaluated by `s` at `v` (for `unevaluatedProperties`); `v` is valid.
     fn evaluated_of<'v>(&self, s: &'s Value, v: &'v Value, unit: bool) -> Vec<&'v str> {
         let mut sink_vec = Vec::new();
-        self.check(s, v, &Path::Root(""), unit, true, &mut Sink::Collect(&mut sink_vec))
+        self.check(
+            s,
+            v,
+            &Path::Root(""),
+            unit,
+            true,
+            &mut Sink::Collect(&mut sink_vec),
+        )
     }
 
     /// Check `v` against schema `s`. When `collect` is set, returns the property names
     /// evaluated at this location (for `unevaluatedProperties`). In `Quick` mode returns
     /// as soon as anything fails.
-    fn check<'v>(&self, s: &'s Value, v: &'v Value, ptr: &Path, unit: bool, collect: bool, sink: &mut Sink) -> Vec<&'v str> {
+    fn check<'v>(
+        &self,
+        s: &'s Value,
+        v: &'v Value,
+        ptr: &Path,
+        unit: bool,
+        collect: bool,
+        sink: &mut Sink,
+    ) -> Vec<&'v str> {
         let mut evaluated: Vec<&'v str> = Vec::new();
         let o = match s {
             Value::Bool(true) => return evaluated,
@@ -263,7 +310,11 @@ impl<'s> Interp<'s> {
                 sink.err(ptr, "type", || {
                     let want = match t {
                         Value::String(t) => t.clone(),
-                        Value::Array(ts) => ts.iter().filter_map(|t| t.as_str()).collect::<Vec<_>>().join(" or "),
+                        Value::Array(ts) => ts
+                            .iter()
+                            .filter_map(|t| t.as_str())
+                            .collect::<Vec<_>>()
+                            .join(" or "),
                         _ => String::new(),
                     };
                     format!("expected {want}, got {}", type_name(v))
@@ -293,7 +344,12 @@ impl<'s> Interp<'s> {
         match v {
             Value::Number(n) => {
                 let x = n.as_f64().unwrap_or(0.0);
-                for (kw, msg) in [("minimum", ">="), ("maximum", "<="), ("exclusiveMinimum", ">"), ("exclusiveMaximum", "<")] {
+                for (kw, msg) in [
+                    ("minimum", ">="),
+                    ("maximum", "<="),
+                    ("exclusiveMinimum", ">"),
+                    ("exclusiveMaximum", "<"),
+                ] {
                     if let Some(m) = o.get(kw).and_then(|m| m.as_f64()) {
                         let bad = match kw {
                             "minimum" => x < m,
@@ -310,7 +366,9 @@ impl<'s> Interp<'s> {
             Value::String(st) => {
                 if let Some(m) = o.get("minLength").and_then(|m| m.as_u64()) {
                     if (st.chars().count() as u64) < m {
-                        sink.err(ptr, "length", || format!("must have at least {m} characters"));
+                        sink.err(ptr, "length", || {
+                            format!("must have at least {m} characters")
+                        });
                     }
                 }
                 if let Some(Value::String(p)) = o.get("pattern") {
@@ -318,7 +376,10 @@ impl<'s> Interp<'s> {
                         let code = if unit { "unit" } else { "pattern" };
                         sink.err(ptr, code, || {
                             if unit {
-                                format!("invalid length {}: use a number (px) or <number>px|pt|em", short(v))
+                                format!(
+                                    "invalid length {}: use a number (px) or <number>px|pt|em",
+                                    short(v)
+                                )
                             } else {
                                 format!("{} does not match {p}", short(v))
                             }
@@ -384,7 +445,9 @@ impl<'s> Interp<'s> {
                 if let Some(Value::Array(req)) = o.get("required") {
                     for r in req.iter().filter_map(|r| r.as_str()) {
                         if !m.contains_key(r) {
-                            sink.err(&Path::Key(ptr, r), "required", || format!("missing required property '{r}'"));
+                            sink.err(&Path::Key(ptr, r), "required", || {
+                                format!("missing required property '{r}'")
+                            });
                         }
                     }
                 }
@@ -411,7 +474,9 @@ impl<'s> Interp<'s> {
                             continue;
                         }
                         if ap == &Value::Bool(false) {
-                            sink.err(&Path::Key(ptr, k), "unknown_property", || format!("unknown property '{k}'"));
+                            sink.err(&Path::Key(ptr, k), "unknown_property", || {
+                                format!("unknown property '{k}'")
+                            });
                         } else {
                             self.check(ap, val, &Path::Key(ptr, k), false, false, sink);
                         }
@@ -425,7 +490,14 @@ impl<'s> Interp<'s> {
                 }
                 if let Some(pn) = o.get("propertyNames") {
                     for k in m.keys() {
-                        self.check(pn, &Value::String(k.clone()), &Path::Key(ptr, k), false, false, sink);
+                        self.check(
+                            pn,
+                            &Value::String(k.clone()),
+                            &Path::Key(ptr, k),
+                            false,
+                            false,
+                            sink,
+                        );
                         if sink.failed() {
                             return evaluated;
                         }
@@ -434,9 +506,16 @@ impl<'s> Interp<'s> {
                 if let Some(Value::Object(dr)) = o.get("dependentRequired") {
                     for (k, deps) in dr {
                         if m.contains_key(k) {
-                            for d in deps.as_array().into_iter().flatten().filter_map(|d| d.as_str()) {
+                            for d in deps
+                                .as_array()
+                                .into_iter()
+                                .flatten()
+                                .filter_map(|d| d.as_str())
+                            {
                                 if !m.contains_key(d) {
-                                    sink.err(&Path::Key(ptr, d), "required", || format!("'{d}' is required when '{k}' is given"));
+                                    sink.err(&Path::Key(ptr, d), "required", || {
+                                        format!("'{d}' is required when '{k}' is given")
+                                    });
                                 }
                             }
                         }
@@ -460,16 +539,25 @@ impl<'s> Interp<'s> {
             }
         }
         if let Some(Value::Array(any)) = o.get("anyOf") {
-            let valid: Vec<usize> = (0..any.len()).filter(|&k| self.valid(&any[k], v, unit)).collect();
+            let valid: Vec<usize> = (0..any.len())
+                .filter(|&k| self.valid(&any[k], v, unit))
+                .collect();
             if valid.is_empty() {
                 if let Sink::Collect(_) = sink {
                     let p = ptr.render();
                     if required_only(any) {
                         let first = any[0]["required"][0].as_str().unwrap_or("");
                         let names = required_names(any);
-                        sink.push(Issue::new(ptr_join(&p, first), "required", format!("one of {names} is required")));
+                        sink.push(Issue::new(
+                            ptr_join(&p, first),
+                            "required",
+                            format!("one of {names} is required"),
+                        ));
                     } else {
-                        let results = any.iter().map(|sub| self.errors_of(sub, v, ptr, unit)).collect();
+                        let results = any
+                            .iter()
+                            .map(|sub| self.errors_of(sub, v, ptr, unit))
+                            .collect();
                         for e in best_alternative(results, &p) {
                             sink.push(e);
                         }
@@ -485,7 +573,9 @@ impl<'s> Interp<'s> {
             }
         }
         if let Some(Value::Array(one)) = o.get("oneOf") {
-            let valid: Vec<usize> = (0..one.len()).filter(|&k| self.valid(&one[k], v, unit)).collect();
+            let valid: Vec<usize> = (0..one.len())
+                .filter(|&k| self.valid(&one[k], v, unit))
+                .collect();
             match valid.len() {
                 1 => {
                     if need {
@@ -496,9 +586,16 @@ impl<'s> Interp<'s> {
                     if let Sink::Collect(_) = sink {
                         let p = ptr.render();
                         if required_only(one) {
-                            sink.push(Issue::new(p, "exclusive", format!("exactly one of {} is required", required_names(one))));
+                            sink.push(Issue::new(
+                                p,
+                                "exclusive",
+                                format!("exactly one of {} is required", required_names(one)),
+                            ));
                         } else {
-                            let results = one.iter().map(|sub| self.errors_of(sub, v, ptr, unit)).collect();
+                            let results = one
+                                .iter()
+                                .map(|sub| self.errors_of(sub, v, ptr, unit))
+                                .collect();
                             for e in best_alternative(results, &p) {
                                 sink.push(e);
                             }
@@ -552,7 +649,9 @@ impl<'s> Interp<'s> {
                     continue;
                 }
                 if up == &Value::Bool(false) {
-                    sink.err(&Path::Key(ptr, k), "unknown_property", || format!("unknown property '{k}'"));
+                    sink.err(&Path::Key(ptr, k), "unknown_property", || {
+                        format!("unknown property '{k}'")
+                    });
                 } else {
                     self.check(up, val, &Path::Key(ptr, k), false, false, sink);
                 }
@@ -574,14 +673,23 @@ impl<'s> Interp<'s> {
 }
 
 fn required_only(alts: &[Value]) -> bool {
-    alts.iter().all(|a| a.as_object().map(|o| o.len() == 1 && o.contains_key("required")).unwrap_or(false))
+    alts.iter().all(|a| {
+        a.as_object()
+            .map(|o| o.len() == 1 && o.contains_key("required"))
+            .unwrap_or(false)
+    })
 }
 
 fn required_names(alts: &[Value]) -> String {
     let names: Vec<String> = alts
         .iter()
         .map(|a| {
-            let r: Vec<&str> = a["required"].as_array().into_iter().flatten().filter_map(|x| x.as_str()).collect();
+            let r: Vec<&str> = a["required"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|x| x.as_str())
+                .collect();
             r.join("+")
         })
         .collect();
@@ -596,10 +704,10 @@ fn best_alternative(results: Vec<Vec<Issue>>, ptr: &str) -> Vec<Issue> {
     let mut best: Option<((u8, u8, usize), Vec<Issue>)> = None;
     for errs in results {
         let root_type = errs.iter().any(|e| e.pointer == ptr && e.code == "type") as u8;
-        let disc = errs
-            .iter()
-            .any(|e| (e.pointer == disc_type || e.pointer == disc_shape) && (e.code == "const" || e.code == "enum"))
-            as u8;
+        let disc = errs.iter().any(|e| {
+            (e.pointer == disc_type || e.pointer == disc_shape)
+                && (e.code == "const" || e.code == "enum")
+        }) as u8;
         let score = (root_type, disc, errs.len());
         if best.as_ref().map(|b| score < b.0).unwrap_or(true) {
             best = Some((score, errs));
@@ -621,7 +729,11 @@ fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
             if it.pointer("/anchor/type").and_then(|t| t.as_str()) == Some("line") {
                 let base = format!("/items/{i}/anchor");
                 errors.retain(|e| e.pointer != base && !e.pointer.starts_with(&format!("{base}/")));
-                errors.push(Issue::new(format!("{base}/type"), "unsupported", "anchor type 'line' is reserved for v2"));
+                errors.push(Issue::new(
+                    format!("{base}/type"),
+                    "unsupported",
+                    "anchor type 'line' is reserved for v2",
+                ));
             }
         }
     }
@@ -634,7 +746,11 @@ fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
                 None => (i.to_string(), format!("/items/{i}")),
             };
             if let Some(&first) = ids.get(&id) {
-                errors.push(Issue::new(ptr, "duplicate_id", format!("id '{id}' is already used by item {first}")));
+                errors.push(Issue::new(
+                    ptr,
+                    "duplicate_id",
+                    format!("id '{id}' is already used by item {first}"),
+                ));
             } else {
                 ids.insert(id, i);
             }
@@ -644,7 +760,11 @@ fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
                 for (j, r) in kw.iter().enumerate() {
                     if let Some(r) = r.as_str() {
                         if !ids.contains_key(r) {
-                            errors.push(Issue::new(format!("/items/{i}/keep_with/{j}"), "unknown_ref", format!("unknown item id '{r}'")));
+                            errors.push(Issue::new(
+                                format!("/items/{i}/keep_with/{j}"),
+                                "unknown_ref",
+                                format!("unknown item id '{r}'"),
+                            ));
                         }
                     }
                 }
@@ -653,8 +773,14 @@ fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
             let label = it.get("label");
             let check_poly = |lab: Option<&Value>, base: String, errors: &mut Vec<Issue>| {
                 if let Some(l) = lab {
-                    if l.get("shape").and_then(|s| s.as_str()) == Some("polygon") && l.get("polygon").is_none() {
-                        errors.push(Issue::new(format!("{base}/polygon"), "required", "shape 'polygon' needs 'polygon' points"));
+                    if l.get("shape").and_then(|s| s.as_str()) == Some("polygon")
+                        && l.get("polygon").is_none()
+                    {
+                        errors.push(Issue::new(
+                            format!("{base}/polygon"),
+                            "required",
+                            "shape 'polygon' needs 'polygon' points",
+                        ));
                     }
                 }
             };
@@ -678,7 +804,11 @@ fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
                         a += x0 * y1 - x1 * y0;
                     }
                     if pts.len() >= 3 && a.abs() < 1e-12 {
-                        errors.push(Issue::new(format!("/items/{i}/anchor/polygon"), "invalid_value", "area polygon has zero area"));
+                        errors.push(Issue::new(
+                            format!("/items/{i}/anchor/polygon"),
+                            "invalid_value",
+                            "area polygon has zero area",
+                        ));
                     }
                 }
             }
@@ -688,7 +818,11 @@ fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
     let check_expr = |ptr: String, v: Option<&Value>, errors: &mut Vec<Issue>| {
         if let Some(Value::String(src)) = v {
             if let Err(e) = la_expr::parse(src) {
-                errors.push(Issue::new(ptr, e.code, format!("{} (at {})", e.message, e.offset)));
+                errors.push(Issue::new(
+                    ptr,
+                    e.code,
+                    format!("{} (at {})", e.message, e.offset),
+                ));
             }
         }
     };
@@ -703,13 +837,22 @@ fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
                 check_expr(format!("/priority/terms/{i}/expr"), t.get("expr"), errors);
             }
         }
-        check_expr("/priority/coverage/by".into(), pr.pointer("/coverage/by"), errors);
+        check_expr(
+            "/priority/coverage/by".into(),
+            pr.pointer("/coverage/by"),
+            errors,
+        );
     }
     // y_axis "up" needs a canvas height (explicit or from a background)
     if root.get("y_axis").and_then(|v| v.as_str()) == Some("up") && root.get("canvas").is_none() {
-        let has_bg = p.pointer("/obstacles/raster").is_some() || p.pointer("/obstacles/svg").is_some();
+        let has_bg =
+            p.pointer("/obstacles/raster").is_some() || p.pointer("/obstacles/svg").is_some();
         if !has_bg {
-            errors.push(Issue::new("/canvas", "required", "y_axis 'up' needs a canvas (or a background) to flip y"));
+            errors.push(Issue::new(
+                "/canvas",
+                "required",
+                "y_axis 'up' needs a canvas (or a background) to flip y",
+            ));
         }
     }
     // unknown classes in avoid → warnings
@@ -718,7 +861,10 @@ fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
         for section in ["label", "leader", "buffer"] {
             if let Some(Value::Object(m)) = av.get(section) {
                 for k in m.keys() {
-                    if k == "*" || (section == "label" && k == "own_mark") || known.contains(k.as_str()) {
+                    if k == "*"
+                        || (section == "label" && k == "own_mark")
+                        || known.contains(k.as_str())
+                    {
                         continue;
                     }
                     warnings.push(Issue::new(
@@ -733,7 +879,11 @@ fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
             for (i, k) in rel.iter().enumerate() {
                 if let Some(k) = k.as_str() {
                     if !known.contains(k) {
-                        warnings.push(Issue::new(format!("/avoid/relaxable/{i}"), "unknown_class", format!("class '{k}' is not produced by any obstacle source")));
+                        warnings.push(Issue::new(
+                            format!("/avoid/relaxable/{i}"),
+                            "unknown_class",
+                            format!("class '{k}' is not produced by any obstacle source"),
+                        ));
                     }
                 }
             }
@@ -744,7 +894,10 @@ fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
 /// Classes produced by the problem's obstacle sources, plus reserved classes.
 fn known_classes(root: &Map<String, Value>) -> BTreeSet<String> {
     let mut k: BTreeSet<String> = RESERVED_CLASSES.iter().map(|s| s.to_string()).collect();
-    let preset = root.get("preset").and_then(|p| p.as_str()).unwrap_or("auto");
+    let preset = root
+        .get("preset")
+        .and_then(|p| p.as_str())
+        .unwrap_or("auto");
     if let Some(obs) = root.get("obstacles") {
         if let Some(Value::Array(layers)) = obs.get("vector") {
             for l in layers {
@@ -811,12 +964,17 @@ mod tests {
     use serde_json::json;
 
     fn codes(r: &Report) -> Vec<(String, String)> {
-        r.errors.iter().map(|e| (e.pointer.clone(), e.code.clone())).collect()
+        r.errors
+            .iter()
+            .map(|e| (e.pointer.clone(), e.code.clone()))
+            .collect()
     }
 
     #[test]
     fn minimal_problem_is_valid() {
-        let r = validate(&json!({"items": [{"anchor": {"type": "point", "x": 1, "y": 2}, "label": {"type": "text", "text": "A"}}]}));
+        let r = validate(
+            &json!({"items": [{"anchor": {"type": "point", "x": 1, "y": 2}, "label": {"type": "text", "text": "A"}}]}),
+        );
         assert!(r.valid, "{:?}", r.errors);
     }
 
@@ -833,14 +991,38 @@ mod tests {
             "frobnicate": 1
         }));
         let c = codes(&r);
-        assert!(c.contains(&("/canvas/width".into(), "range".into())), "{c:?}");
-        assert!(c.contains(&("/items/0/anchor/y".into(), "required".into())), "{c:?}");
-        assert!(c.contains(&("/items/1/id".into(), "duplicate_id".into())), "{c:?}");
-        assert!(c.contains(&("/items/1/anchor/mark/w".into(), "unknown_property".into())), "{c:?}");
-        assert!(c.contains(&("/items/1/label/padding".into(), "unit".into())), "{c:?}");
-        assert!(c.contains(&("/items/2/anchor/type".into(), "unsupported".into())), "{c:?}");
-        assert!(c.contains(&("/items/2/label/height".into(), "required".into())), "{c:?}");
-        assert!(c.contains(&("/frobnicate".into(), "unknown_property".into())), "{c:?}");
+        assert!(
+            c.contains(&("/canvas/width".into(), "range".into())),
+            "{c:?}"
+        );
+        assert!(
+            c.contains(&("/items/0/anchor/y".into(), "required".into())),
+            "{c:?}"
+        );
+        assert!(
+            c.contains(&("/items/1/id".into(), "duplicate_id".into())),
+            "{c:?}"
+        );
+        assert!(
+            c.contains(&("/items/1/anchor/mark/w".into(), "unknown_property".into())),
+            "{c:?}"
+        );
+        assert!(
+            c.contains(&("/items/1/label/padding".into(), "unit".into())),
+            "{c:?}"
+        );
+        assert!(
+            c.contains(&("/items/2/anchor/type".into(), "unsupported".into())),
+            "{c:?}"
+        );
+        assert!(
+            c.contains(&("/items/2/label/height".into(), "required".into())),
+            "{c:?}"
+        );
+        assert!(
+            c.contains(&("/frobnicate".into(), "unknown_property".into())),
+            "{c:?}"
+        );
         assert_eq!(r.warnings[0].code, "unknown_class");
     }
 
@@ -850,7 +1032,10 @@ mod tests {
             "items": [],
             "obstacles": {"svg": {"source": "<svg/>", "path": "x.svg"}}
         }));
-        assert_eq!(codes(&r), vec![("/obstacles/svg".to_string(), "exclusive".to_string())]);
+        assert_eq!(
+            codes(&r),
+            vec![("/obstacles/svg".to_string(), "exclusive".to_string())]
+        );
     }
 
     #[test]

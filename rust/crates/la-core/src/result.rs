@@ -13,14 +13,20 @@ fn pt(p: crate::geom::P) -> Value {
 
 fn leader_json(l: &Leader, s: &Solve) -> Value {
     let mut m = Map::new();
-    m.insert("points".into(), Value::Array(l.pts.iter().map(|p| pt(*p)).collect()));
+    m.insert(
+        "points".into(),
+        Value::Array(l.pts.iter().map(|p| pt(*p)).collect()),
+    );
     m.insert("style".into(), json!(l.style.name()));
     m.insert("port".into(), pt(l.port));
     if let Some((a, b)) = l.underline {
         m.insert("underline".into(), json!([[a.x, a.y], [b.x, b.y]]));
     }
     if let Some(c) = l.curve {
-        m.insert("curve".into(), json!([[c[0].x, c[0].y], [c[1].x, c[1].y], [c[2].x, c[2].y]]));
+        m.insert(
+            "curve".into(),
+            json!([[c[0].x, c[0].y], [c[1].x, c[1].y], [c[2].x, c[2].y]]),
+        );
     }
     if let Some(mem) = l.member {
         m.insert("member".into(), json!(s.model.items[mem as usize].id));
@@ -51,7 +57,10 @@ fn parts_json(v: &Variant, c: &Cand, family: &str, weight: u16) -> Value {
                 let r = p.rect.translate(crate::geom::P::new(c.rect.x0, c.rect.y0));
                 let mut m = Map::new();
                 m.insert("type".into(), json!(p.kind.name()));
-                m.insert("box".into(), json!({"x": r.x0, "y": r.y0, "w": r.w(), "h": r.h()}));
+                m.insert(
+                    "box".into(),
+                    json!({"x": r.x0, "y": r.y0, "w": r.w(), "h": r.h()}),
+                );
                 if let Some(t) = &p.text {
                     let mut tj = text_json(t, family, weight);
                     // part baselines are relative to the label box; report them relative to the part
@@ -102,7 +111,13 @@ fn priority_json(s: &Solve, i: usize) -> Value {
 }
 
 /// Build the result JSON.
-pub fn build(s: &mut Solve, ver: &Verification, phases: &[(&str, f64)], runtime_ms: f64, strategy: &str) -> Value {
+pub fn build(
+    s: &mut Solve,
+    ver: &Verification,
+    phases: &[(&str, f64)],
+    runtime_ms: f64,
+    strategy: &str,
+) -> Value {
     let model = s.model;
     let n = model.items.len();
     let mut placements = Vec::with_capacity(n);
@@ -119,7 +134,10 @@ pub fn build(s: &mut Solve, ver: &Verification, phases: &[(&str, f64)], runtime_
                 let c = s.cands[cid as usize].clone();
                 let v = s.variants[i][c.variant as usize].clone();
                 m.insert("placed".into(), json!(true));
-                m.insert("box".into(), json!({"x": c.rect.x0, "y": c.rect.y0, "w": c.rect.w(), "h": c.rect.h()}));
+                m.insert(
+                    "box".into(),
+                    json!({"x": c.rect.x0, "y": c.rect.y0, "w": c.rect.w(), "h": c.rect.h()}),
+                );
                 m.insert("anchor_side".into(), json!(c.side.name()));
                 m.insert("model".into(), json!(c.kind.name()));
                 let fam = item.font.family.clone();
@@ -138,11 +156,26 @@ pub fn build(s: &mut Solve, ver: &Verification, phases: &[(&str, f64)], runtime_
                     }
                     _ => {
                         m.insert("leader".into(), leader_json(&c.leaders[0], s));
-                        m.insert("leaders".into(), Value::Array(c.leaders.iter().map(|l| leader_json(l, s)).collect()));
+                        m.insert(
+                            "leaders".into(),
+                            Value::Array(c.leaders.iter().map(|l| leader_json(l, s)).collect()),
+                        );
                     }
                 }
-                let dynamic = s.state.dynamic_cost(&c, &s.cands, s.obs, item.len.buffer, item.len.clearance, model.leaders.width, i);
-                let relax = if s.state.relaxed[i] { c.relax_cost } else { 0.0 };
+                let dynamic = s.state.dynamic_cost(
+                    &c,
+                    &s.cands,
+                    s.obs,
+                    item.len.buffer,
+                    item.len.clearance,
+                    model.leaders.width,
+                    i,
+                );
+                let relax = if s.state.relaxed[i] {
+                    c.relax_cost
+                } else {
+                    0.0
+                };
                 let cost = c.cost + dynamic + relax;
                 total_cost += cost;
                 m.insert("cost".into(), json!(cost));
@@ -168,7 +201,9 @@ pub fn build(s: &mut Solve, ver: &Verification, phases: &[(&str, f64)], runtime_
                 }
                 if c.level > 0 {
                     let st = model.ladder[c.level as usize - 1].name();
-                    if !steps.contains(&st) && (st == "distant" || st == "boundary" || st == "evict_lower") {
+                    if !steps.contains(&st)
+                        && (st == "distant" || st == "boundary" || st == "evict_lower")
+                    {
                         steps.push(st);
                     }
                 }
@@ -195,7 +230,13 @@ pub fn build(s: &mut Solve, ver: &Verification, phases: &[(&str, f64)], runtime_
                 m.insert("priority".into(), priority_json(s, i));
                 let members = model.group_members(i);
                 if members.len() >= 2 {
-                    m.insert("members".into(), json!(members.iter().map(|&k| model.items[k].id.clone()).collect::<Vec<_>>()));
+                    m.insert(
+                        "members".into(),
+                        json!(members
+                            .iter()
+                            .map(|&k| model.items[k].id.clone())
+                            .collect::<Vec<_>>()),
+                    );
                     if let Some(t) = m.get_mut("text") {
                         t["used"] = json!("group");
                     }
@@ -225,7 +266,8 @@ pub fn build(s: &mut Solve, ver: &Verification, phases: &[(&str, f64)], runtime_
                 let reason = s.reasons[i].unwrap_or(crate::solver::Reason::OmittedByPriority);
                 m.insert("reason".into(), json!(reason.name()));
                 // blocking classes, most frequent first
-                let mut counts: std::collections::BTreeMap<String, usize> = std::collections::BTreeMap::new();
+                let mut counts: std::collections::BTreeMap<String, usize> =
+                    std::collections::BTreeMap::new();
                 let mut blockers: Vec<u32> = Vec::new();
                 let mut feas: Vec<(f64, u32)> = Vec::new();
                 for &cid in &s.by_item[i] {
@@ -242,7 +284,11 @@ pub fn build(s: &mut Solve, ver: &Verification, phases: &[(&str, f64)], runtime_
                     s.state.conflicts(&c, &s.cands, s.obs, i, &mut buf);
                     for &j in &buf {
                         let jc = &s.cands[s.state.placed[j as usize].unwrap() as usize];
-                        let key = if jc.rect.overlaps(&c.rect) { "labels" } else { "leaders" };
+                        let key = if jc.rect.overlaps(&c.rect) {
+                            "labels"
+                        } else {
+                            "leaders"
+                        };
                         *counts.entry(key.into()).or_insert(0) += 1;
                         if !blockers.contains(&j) {
                             blockers.push(j);
@@ -251,9 +297,18 @@ pub fn build(s: &mut Solve, ver: &Verification, phases: &[(&str, f64)], runtime_
                 }
                 let mut cv: Vec<(String, usize)> = counts.into_iter().collect();
                 cv.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
-                m.insert("blocking".into(), json!(cv.into_iter().map(|x| x.0).collect::<Vec<_>>()));
+                m.insert(
+                    "blocking".into(),
+                    json!(cv.into_iter().map(|x| x.0).collect::<Vec<_>>()),
+                );
                 blockers.sort_by_key(|&j| s.pri.prio[j as usize].rank);
-                m.insert("blocked_by".into(), json!(blockers.iter().map(|&j| model.items[j as usize].id.clone()).collect::<Vec<_>>()));
+                m.insert(
+                    "blocked_by".into(),
+                    json!(blockers
+                        .iter()
+                        .map(|&j| model.items[j as usize].id.clone())
+                        .collect::<Vec<_>>()),
+                );
                 m.insert("priority".into(), priority_json(s, i));
                 if !s.steps_tried[i].is_empty() {
                     m.insert("degrade_steps".into(), json!(s.steps_tried[i]));
@@ -268,10 +323,15 @@ pub fn build(s: &mut Solve, ver: &Verification, phases: &[(&str, f64)], runtime_
     // stats
     let placed = s.state.n_placed;
     let gain_all: f64 = s.pri.prio.iter().map(|p| p.gain).sum();
-    let gain_placed: f64 = (0..n).filter(|&i| s.state.placed[i].is_some()).map(|i| s.pri.prio[i].gain).sum();
+    let gain_placed: f64 = (0..n)
+        .filter(|&i| s.state.placed[i].is_some())
+        .map(|i| s.pri.prio[i].gain)
+        .sum();
     let mut omitted: Vec<usize> = (0..n).filter(|&i| s.state.placed[i].is_none()).collect();
     omitted.sort_by_key(|&i| std::cmp::Reverse(s.pri.prio[i].rank));
-    let required_placed = (0..n).filter(|&i| model.items[i].required).all(|i| s.state.placed[i].is_some());
+    let required_placed = (0..n)
+        .filter(|&i| model.items[i].required)
+        .all(|i| s.state.placed[i].is_some());
     let mut phases_m = Map::new();
     for (k, v) in phases {
         phases_m.insert((*k).to_string(), json!(v));
@@ -347,10 +407,23 @@ pub fn shape_json(s: &crate::geom::shape::Shape) -> Value {
     use crate::geom::shape::Shape;
     match s {
         Shape::Circle { c, r } => json!({"shape": "circle", "x": c.x, "y": c.y, "r": r}),
-        Shape::Ellipse { c, rx, ry, cos, sin } => {
+        Shape::Ellipse {
+            c,
+            rx,
+            ry,
+            cos,
+            sin,
+        } => {
             json!({"shape": "ellipse", "x": c.x, "y": c.y, "rx": rx, "ry": ry, "rotation": la_expr::det_math::atan2_deg(*sin, *cos)})
         }
-        Shape::RoundRect { c, hw, hh, r, cos, sin } => json!({
+        Shape::RoundRect {
+            c,
+            hw,
+            hh,
+            r,
+            cos,
+            sin,
+        } => json!({
             "shape": "rect", "x": c.x, "y": c.y, "w": hw * 2.0, "h": hh * 2.0, "corner_radius": r,
             "rotation": la_expr::det_math::atan2_deg(*sin, *cos)
         }),

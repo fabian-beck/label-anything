@@ -20,7 +20,13 @@ impl Buckets {
         let cell = if cell > 0.0 { cell } else { 32.0 };
         let cols = ((extent.w() / cell).ceil() as usize).clamp(1, 4096);
         let rows = ((extent.h() / cell).ceil() as usize).clamp(1, 4096);
-        Buckets { ox: extent.x0, oy: extent.y0, cell, cols, rows }
+        Buckets {
+            ox: extent.x0,
+            oy: extent.y0,
+            cell,
+            cols,
+            rows,
+        }
     }
     #[inline]
     fn range(&self, r: &Rect) -> (usize, usize, usize, usize) {
@@ -37,7 +43,12 @@ impl Buckets {
                 v as usize
             }
         };
-        (cl(c0, self.cols), cl(c1, self.cols), cl(r0, self.rows), cl(r1, self.rows))
+        (
+            cl(c0, self.cols),
+            cl(c1, self.cols),
+            cl(r0, self.rows),
+            cl(r1, self.rows),
+        )
     }
 }
 
@@ -85,7 +96,13 @@ impl StaticIndex {
             }
         }
         let n = boxes.len();
-        StaticIndex { b, offsets: counts, ids, boxes, stamp: std::cell::RefCell::new((vec![0; n], 0)) }
+        StaticIndex {
+            b,
+            offsets: counts,
+            ids,
+            boxes,
+            stamp: std::cell::RefCell::new((vec![0; n], 0)),
+        }
     }
 
     pub fn len(&self) -> usize {
@@ -152,7 +169,13 @@ pub struct DynIndex {
 impl DynIndex {
     pub fn new(extent: &Rect, cell: f64) -> DynIndex {
         let b = Buckets::new(extent, cell);
-        DynIndex { b, buckets: vec![Vec::new(); b.cols * b.rows], boxes: Vec::new(), stamp: Vec::new(), gen: 0 }
+        DynIndex {
+            b,
+            buckets: vec![Vec::new(); b.cols * b.rows],
+            boxes: Vec::new(),
+            stamp: Vec::new(),
+            gen: 0,
+        }
     }
 
     /// Insert with an explicit id (ids are small integers chosen by the caller).
@@ -173,7 +196,9 @@ impl DynIndex {
     }
 
     pub fn remove(&mut self, id: u32) {
-        let Some(Some(r)) = self.boxes.get(id as usize).copied() else { return };
+        let Some(Some(r)) = self.boxes.get(id as usize).copied() else {
+            return;
+        };
         let (c0, c1, r0, r1) = self.b.range(&r);
         for row in r0..=r1 {
             for col in c0..=c1 {
@@ -231,7 +256,11 @@ mod tests {
 
     #[test]
     fn static_query() {
-        let boxes = vec![Rect::xywh(0.0, 0.0, 10.0, 10.0), Rect::xywh(50.0, 50.0, 5.0, 5.0), Rect::xywh(5.0, 5.0, 100.0, 2.0)];
+        let boxes = vec![
+            Rect::xywh(0.0, 0.0, 10.0, 10.0),
+            Rect::xywh(50.0, 50.0, 5.0, 5.0),
+            Rect::xywh(5.0, 5.0, 100.0, 2.0),
+        ];
         let ix = StaticIndex::new(boxes, &Rect::xywh(0.0, 0.0, 200.0, 200.0), 16.0);
         let mut out = Vec::new();
         ix.query(&Rect::xywh(8.0, 8.0, 1.0, 1.0), &mut out);

@@ -66,15 +66,26 @@ pub struct Opts {
 
 impl Opts {
     pub fn new(problem: &Value) -> Opts {
-        let preset_name = problem.get("preset").and_then(|p| p.as_str()).unwrap_or_else(|| {
-            defaults().get("preset").and_then(|p| p.as_str()).unwrap_or("auto")
-        });
+        let preset_name = problem
+            .get("preset")
+            .and_then(|p| p.as_str())
+            .unwrap_or_else(|| {
+                defaults()
+                    .get("preset")
+                    .and_then(|p| p.as_str())
+                    .unwrap_or("auto")
+            });
         let preset = preset(preset_name);
         let merged = match preset.and_then(|p| p.get("options")) {
             Some(opts) => deep_merge(opts, problem),
             None => problem.clone(),
         };
-        Opts { merged, preset_name: preset_name.to_string(), preset, implementation: "rust" }
+        Opts {
+            merged,
+            preset_name: preset_name.to_string(),
+            preset,
+            implementation: "rust",
+        }
     }
 
     /// The explicitly given value (problem or preset) at `key`.
@@ -111,11 +122,18 @@ impl Opts {
     pub fn strings(&self, key: &str) -> Vec<String> {
         self.get(key)
             .as_array()
-            .map(|a| a.iter().filter_map(|s| s.as_str().map(str::to_string)).collect())
+            .map(|a| {
+                a.iter()
+                    .filter_map(|s| s.as_str().map(str::to_string))
+                    .collect()
+            })
             .unwrap_or_default()
     }
     pub fn numbers(&self, key: &str) -> Vec<f64> {
-        self.get(key).as_array().map(|a| a.iter().filter_map(|s| s.as_f64()).collect()).unwrap_or_default()
+        self.get(key)
+            .as_array()
+            .map(|a| a.iter().filter_map(|s| s.as_f64()).collect())
+            .unwrap_or_default()
     }
 
     /// A class-keyed map: the default map overlaid with the given map, per key.
@@ -164,7 +182,10 @@ mod tests {
         let p = json!({"preset": "scatter", "placement": {"offset": 5}, "items": []});
         let o = Opts::new(&p);
         assert_eq!(o.f64("placement.offset"), 5.0);
-        assert_eq!(o.strings("placement.models"), vec!["adjacent", "slider", "distant"]);
+        assert_eq!(
+            o.strings("placement.models"),
+            vec!["adjacent", "slider", "distant"]
+        );
         assert_eq!(o.f64("solver.time_budget_ms"), 100.0);
         let m = o.map("avoid.label");
         assert_eq!(m["points"], json!(0.3));

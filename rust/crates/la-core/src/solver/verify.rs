@@ -42,8 +42,22 @@ pub fn verify(s: &mut Solve) -> Verification {
             s.state.conflicts(&cand, &s.cands, s.obs, i, &mut buf);
             for &j in &buf {
                 let j = j as usize;
-                let lose = if s.pri.prio[i].rank > s.pri.prio[j].rank { i } else { j };
-                worst = Some(worst.map(|w| if s.pri.prio[lose].rank > s.pri.prio[w].rank { lose } else { w }).unwrap_or(lose));
+                let lose = if s.pri.prio[i].rank > s.pri.prio[j].rank {
+                    i
+                } else {
+                    j
+                };
+                worst = Some(
+                    worst
+                        .map(|w| {
+                            if s.pri.prio[lose].rank > s.pri.prio[w].rank {
+                                lose
+                            } else {
+                                w
+                            }
+                        })
+                        .unwrap_or(lose),
+                );
             }
         }
         match worst {
@@ -69,7 +83,11 @@ pub fn verify(s: &mut Solve) -> Verification {
                 continue;
             }
             let crosses = ci.leaders.iter().any(|la| {
-                la.segments().any(|(p, q)| cj.leaders.iter().any(|lb| lb.segments().any(|(r, t)| seg_intersects(p, q, r, t))))
+                la.segments().any(|(p, q)| {
+                    cj.leaders
+                        .iter()
+                        .any(|lb| lb.segments().any(|(r, t)| seg_intersects(p, q, r, t)))
+                })
             });
             if crosses {
                 v.leader_crossings += 1;
@@ -84,9 +102,16 @@ pub fn verify(s: &mut Solve) -> Verification {
 pub fn inversions(s: &mut Solve) -> usize {
     let n = s.model.items.len();
     if s.model.omission == Omission::Prefix {
-        let first_omitted = s.pri.order.iter().position(|&i| s.state.placed[i].is_none());
+        let first_omitted = s
+            .pri
+            .order
+            .iter()
+            .position(|&i| s.state.placed[i].is_none());
         return match first_omitted {
-            Some(r) => s.pri.order[r..].iter().filter(|&&i| s.state.placed[i].is_some()).count(),
+            Some(r) => s.pri.order[r..]
+                .iter()
+                .filter(|&&i| s.state.placed[i].is_some())
+                .count(),
             None => 0,
         };
     }
@@ -111,7 +136,10 @@ pub fn inversions(s: &mut Solve) -> usize {
             if cand.evaluated && !(cand.feasible || (soft_ok && cand.relaxed)) {
                 continue;
             }
-            if s.state.first_conflict(&cand, &s.cands, s.obs, h, |j| keys[j] <= key_h).is_some() {
+            if s.state
+                .first_conflict(&cand, &s.cands, s.obs, h, |j| keys[j] <= key_h)
+                .is_some()
+            {
                 continue;
             }
             s.ensure_eval(c);

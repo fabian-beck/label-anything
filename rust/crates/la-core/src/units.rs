@@ -22,15 +22,8 @@ impl Length {
     /// Parse `"12px"`, `"9pt"`, `"0.3em"`.
     pub fn parse(s: &str) -> Option<Length> {
         let s = s.trim();
-        let (num, unit) = if let Some(n) = s.strip_suffix("px") {
-            (n, "px")
-        } else if let Some(n) = s.strip_suffix("pt") {
-            (n, "pt")
-        } else if let Some(n) = s.strip_suffix("em") {
-            (n, "em")
-        } else {
-            return None;
-        };
+        let unit = ["px", "pt", "em"].into_iter().find(|u| s.ends_with(u))?;
+        let num = &s[..s.len() - unit.len()];
         if num.is_empty() || num.contains(|c: char| !(c.is_ascii_digit() || c == '.' || c == '-')) {
             return None;
         }
@@ -67,6 +60,9 @@ mod tests {
         assert_eq!(Length::parse(".5em").unwrap().px(10.0), 5.0);
         assert_eq!(Length::parse("3 px"), None);
         assert_eq!(Length::parse("3"), None);
-        assert_eq!(Length::from_value(&serde_json::json!(4)), Some(Length::Px(4.0)));
+        assert_eq!(
+            Length::from_value(&serde_json::json!(4)),
+            Some(Length::Px(4.0))
+        );
     }
 }

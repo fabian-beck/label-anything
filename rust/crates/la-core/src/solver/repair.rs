@@ -124,7 +124,16 @@ fn total_cost(s: &mut Solve, items: &[usize]) -> f64 {
         if let Some(c) = s.state.placed[i] {
             let it = &s.model.items[i];
             let cand = &s.cands[c as usize];
-            t += cand.cost + s.state.dynamic_cost(cand, &s.cands, s.obs, it.len.buffer, it.len.clearance, s.model.leaders.width, i);
+            t += cand.cost
+                + s.state.dynamic_cost(
+                    cand,
+                    &s.cands,
+                    s.obs,
+                    it.len.buffer,
+                    it.len.clearance,
+                    s.model.leaders.width,
+                    i,
+                );
         }
     }
     t
@@ -133,17 +142,32 @@ fn total_cost(s: &mut Solve, items: &[usize]) -> f64 {
 /// Re-stack the boundary labels of each side jointly; keep the result when every label
 /// stays feasible and the total cost drops.
 pub fn boundary_pass(s: &mut Solve) {
-    let Some(area) = slot_area(s.model, s.obs) else { return };
+    let Some(area) = slot_area(s.model, s.obs) else {
+        return;
+    };
     let n = s.model.items.len();
     for side in 0u8..4 {
         let members: Vec<usize> = (0..n)
-            .filter(|&i| s.state.placed[i].map(|c| s.cands[c as usize].kind == Kind::Boundary && s.cands[c as usize].bside == side).unwrap_or(false))
+            .filter(|&i| {
+                s.state.placed[i]
+                    .map(|c| {
+                        s.cands[c as usize].kind == Kind::Boundary
+                            && s.cands[c as usize].bside == side
+                    })
+                    .unwrap_or(false)
+            })
             .collect();
         if members.len() < 2 {
             continue;
         }
         let horizontal_side = side <= 1;
-        let key = |i: usize| if horizontal_side { s.model.items[i].anchor.y } else { s.model.items[i].anchor.x };
+        let key = |i: usize| {
+            if horizontal_side {
+                s.model.items[i].anchor.y
+            } else {
+                s.model.items[i].anchor.x
+            }
+        };
         let mut order = members.clone();
         order.sort_by(|&a, &b| crate::math::cmp_f64(key(a), key(b)).then(a.cmp(&b)));
         let sizes: Vec<f64> = order
@@ -158,17 +182,32 @@ pub fn boundary_pass(s: &mut Solve) {
             })
             .collect();
         let gap = s.model.items[order[0]].len.boundary_gap;
-        let (lo, hi) = if horizontal_side { (area.y0, area.y1) } else { (area.x0, area.x1) };
+        let (lo, hi) = if horizontal_side {
+            (area.y0, area.y1)
+        } else {
+            (area.x0, area.x1)
+        };
         let positions: Vec<f64> = if s.model.placement.boundary.spread {
             let k = order.len() as f64;
-            (0..order.len()).map(|j| lo + (hi - lo) * (j as f64 + 0.5) / k).collect()
+            (0..order.len())
+                .map(|j| lo + (hi - lo) * (j as f64 + 0.5) / k)
+                .collect()
         } else {
             let desired: Vec<f64> = order.iter().map(|&i| key(i)).collect();
-            let gaps: Vec<f64> = (1..order.len()).map(|j| (sizes[j - 1] + sizes[j]) * 0.5 + gap).collect();
-            stack(&desired, &gaps, lo + sizes[0] * 0.5, hi - sizes[sizes.len() - 1] * 0.5)
+            let gaps: Vec<f64> = (1..order.len())
+                .map(|j| (sizes[j - 1] + sizes[j]) * 0.5 + gap)
+                .collect();
+            stack(
+                &desired,
+                &gaps,
+                lo + sizes[0] * 0.5,
+                hi - sizes[sizes.len() - 1] * 0.5,
+            )
         };
         // assignment: straight leaders → min total length; otherwise keep the order
-        let assign: Vec<usize> = if s.model.leaders.style == LeaderStyle::Straight || s.model.leaders.style == LeaderStyle::Angles {
+        let assign: Vec<usize> = if s.model.leaders.style == LeaderStyle::Straight
+            || s.model.leaders.style == LeaderStyle::Angles
+        {
             let m = order.len();
             let cost: Vec<Vec<f64>> = order
                 .iter()
@@ -177,9 +216,15 @@ pub fn boundary_pass(s: &mut Solve) {
                     (0..m)
                         .map(|j| {
                             let p = if horizontal_side {
-                                crate::geom::P::new(if side == 0 { area.x0 } else { area.x1 }, positions[j])
+                                crate::geom::P::new(
+                                    if side == 0 { area.x0 } else { area.x1 },
+                                    positions[j],
+                                )
                             } else {
-                                crate::geom::P::new(positions[j], if side == 2 { area.y0 } else { area.y1 })
+                                crate::geom::P::new(
+                                    positions[j],
+                                    if side == 2 { area.y0 } else { area.y1 },
+                                )
                             };
                             a.dist(p)
                         })
@@ -191,14 +236,26 @@ pub fn boundary_pass(s: &mut Solve) {
             (0..order.len()).collect()
         };
         // build the new candidates
-        let old: Vec<(usize, u32)> = order.iter().map(|&i| (i, s.state.placed[i].unwrap())).collect();
+        let old: Vec<(usize, u32)> = order
+            .iter()
+            .map(|&i| (i, s.state.placed[i].unwrap()))
+            .collect();
         let before = total_cost(s, &order);
         let mut fresh: Vec<(usize, Cand)> = Vec::new();
         for (k, &i) in order.iter().enumerate() {
             let oc = &s.cands[s.state.placed[i].unwrap() as usize];
             let vi = oc.variant as usize;
             let v = &s.variants[i][vi];
-            let mut c = slot_candidate(s.model, &area, &s.model.items[i], vi, v, side, positions[assign[k]], oc.rank);
+            let mut c = slot_candidate(
+                s.model,
+                &area,
+                &s.model.items[i],
+                vi,
+                v,
+                side,
+                positions[assign[k]],
+                oc.rank,
+            );
             c.level = oc.level;
             c.lshape = crate::candidates::label_shape(&c.rect, &v.shape);
             let mut ev = Evaluator::new(s.model, s.obs, s.env);
@@ -252,17 +309,27 @@ pub fn uncross(s: &mut Solve) {
     for _round in 0..50 {
         let mut improved = false;
         'pairs: for i in 0..n {
-            let Some(ci) = s.state.placed[i] else { continue };
+            let Some(ci) = s.state.placed[i] else {
+                continue;
+            };
             if s.cands[ci as usize].leaders.is_empty() {
                 continue;
             }
             for j in (i + 1)..n {
-                let Some(cj) = s.state.placed[j] else { continue };
+                let Some(cj) = s.state.placed[j] else {
+                    continue;
+                };
                 let (a, b) = (&s.cands[ci as usize], &s.cands[cj as usize]);
                 if b.leaders.is_empty() || !a.bbox().touches(&b.bbox()) {
                     continue;
                 }
-                let cross = a.leaders.iter().any(|la| la.segments().any(|(p, q)| b.leaders.iter().any(|lb| lb.segments().any(|(r, t)| seg_intersects(p, q, r, t)))));
+                let cross = a.leaders.iter().any(|la| {
+                    la.segments().any(|(p, q)| {
+                        b.leaders
+                            .iter()
+                            .any(|lb| lb.segments().any(|(r, t)| seg_intersects(p, q, r, t)))
+                    })
+                });
                 if !cross {
                     continue;
                 }
@@ -270,8 +337,15 @@ pub fn uncross(s: &mut Solve) {
                 let len_before = a.leaders[0].len + b.leaders[0].len;
                 let ni = moved_to(s, i, ci, b.rect.center());
                 let nj = moved_to(s, j, cj, a.rect.center());
-                let (Some(ni), Some(nj)) = (ni, nj) else { continue };
-                if ni.leaders.is_empty() || nj.leaders.is_empty() || ni.leaders[0].len + nj.leaders[0].len >= len_before - 1e-9 || !ni.feasible || !nj.feasible {
+                let (Some(ni), Some(nj)) = (ni, nj) else {
+                    continue;
+                };
+                if ni.leaders.is_empty()
+                    || nj.leaders.is_empty()
+                    || ni.leaders[0].len + nj.leaders[0].len >= len_before - 1e-9
+                    || !ni.feasible
+                    || !nj.feasible
+                {
                     continue;
                 }
                 s.state.unplace(i, &s.cands);
@@ -295,8 +369,10 @@ pub fn uncross(s: &mut Solve) {
                     }
                     s.state.unplace(i, &s.cands);
                 }
-                s.state.place(i, ci, &s.cands, !s.cands[ci as usize].feasible);
-                s.state.place(j, cj, &s.cands, !s.cands[cj as usize].feasible);
+                s.state
+                    .place(i, ci, &s.cands, !s.cands[ci as usize].feasible);
+                s.state
+                    .place(j, cj, &s.cands, !s.cands[cj as usize].feasible);
             }
         }
         if !improved {
@@ -317,7 +393,13 @@ fn moved_to(s: &Solve, i: usize, from: u32, center: crate::geom::P) -> Option<Ca
     let start = crate::leaders::leader_start(s.model, item, rect.center());
     let port = rect.closest_point(start);
     let start = crate::leaders::leader_start(s.model, item, port);
-    c.leaders.push(crate::candidates::Leader::new(vec![start, rect.closest_point(start)], f.leaders.first().map(|l| l.style).unwrap_or(LeaderStyle::Straight)));
+    c.leaders.push(crate::candidates::Leader::new(
+        vec![start, rect.closest_point(start)],
+        f.leaders
+            .first()
+            .map(|l| l.style)
+            .unwrap_or(LeaderStyle::Straight),
+    ));
     let mut ev = Evaluator::new(s.model, s.obs, s.env);
     ev.eval(&mut c, v, None);
     Some(c)
@@ -340,7 +422,11 @@ mod tests {
 
     #[test]
     fn hungarian_min_cost() {
-        let c = vec![vec![4.0, 1.0, 3.0], vec![2.0, 0.0, 5.0], vec![3.0, 2.0, 2.0]];
+        let c = vec![
+            vec![4.0, 1.0, 3.0],
+            vec![2.0, 0.0, 5.0],
+            vec![3.0, 2.0, 2.0],
+        ];
         let a = hungarian(&c);
         let total: f64 = a.iter().enumerate().map(|(i, &j)| c[i][j]).sum();
         assert_eq!(total, 5.0);
