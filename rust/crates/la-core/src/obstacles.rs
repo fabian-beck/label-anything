@@ -97,6 +97,10 @@ pub struct Obstacles {
     pub prim_index: StaticIndex,
     /// Item marks.
     pub item_index: StaticIndex,
+    /// Cells inside item marks, when labels may overlap no mark at all (`label_items`
+    /// and the own-mark policy hard): quick, exact rejection of non-internal label boxes
+    /// during candidate generation.
+    pub item_occ: Option<crate::grid::occupancy::Occupancy>,
     /// Coverage of all item marks, and of each item's own mark on an aligned local grid
     /// (to exclude the own mark from `items` costs).
     pub items_sat: Sat,
@@ -282,6 +286,15 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         ));
     }
     let items_sat = Sat::from_coverage(grid.cols, grid.rows, &all_items.into_coverage());
+    let item_occ = if dynamic.label_items.is_hard() && dynamic.own_mark == OwnMark::Hard {
+        let mut occ = crate::grid::occupancy::Occupancy::new(&model.extent);
+        for it in &model.items {
+            occ.mark_shape(&it.shape);
+        }
+        (!occ.is_empty()).then_some(occ)
+    } else {
+        None
+    };
     // distance transform of static hard obstacles (incl. items and outside the label area)
     let mut hard_mask = MaskRaster::new(grid);
     if dynamic.label_items.is_hard() {
@@ -327,6 +340,7 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         prims,
         prim_index,
         item_index,
+        item_occ,
         items_sat,
         own,
         dt,

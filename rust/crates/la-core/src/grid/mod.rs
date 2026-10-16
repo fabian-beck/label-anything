@@ -1,6 +1,7 @@
 //! Per-class coverage grids with summed-area tables (spec §4.1, ADR 0005).
 
 pub mod dt;
+pub mod occupancy;
 pub mod raster;
 
 use crate::geom::{Rect, P};

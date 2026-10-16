@@ -278,6 +278,9 @@ pub fn build(
                         feas.push((c.cost, cid));
                     }
                 }
+                if s.static_dropped[i] > 0 {
+                    *counts.entry("items".into()).or_insert(0) += s.static_dropped[i] as usize;
+                }
                 feas.sort_by(|a, b| crate::math::cmp_f64(a.0, b.0).then(a.1.cmp(&b.1)));
                 for &(_, cid) in feas.iter().take(5) {
                     let c = s.cands[cid as usize].clone();
