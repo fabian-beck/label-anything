@@ -61,7 +61,7 @@ export interface Placement {
    */
   blocking?: string[];
   /**
-   * Placed items of higher or equal key occupying this item's space.
+   * Placed items whose label or leader conflicts with this item's best feasible candidates (spec §9).
    */
   blocked_by?: string[];
   /**

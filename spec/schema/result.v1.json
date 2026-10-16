@@ -143,7 +143,7 @@
         "priority": { "$ref": "#/$defs/priorityInfo" },
         "reason": { "enum": ["omitted_by_priority", "no_feasible_candidate", "budget_exhausted", "keep_with", "grouped"] },
         "blocking": { "type": "array", "items": { "type": "string" }, "description": "Hard classes that rejected candidates, most frequent first." },
-        "blocked_by": { "type": "array", "items": { "type": "string" }, "description": "Placed items of higher or equal key occupying this item's space." },
+        "blocked_by": { "type": "array", "items": { "type": "string" }, "description": "Placed items whose label or leader conflicts with this item's best feasible candidates (spec §9)." },
         "item_shape": { "type": "object", "description": "Resolved item geometry in canvas px (only with output.item_shape)." },
         "displacement": { "type": "number", "description": "Distance moved relative to warm_start (px)." }
       }
