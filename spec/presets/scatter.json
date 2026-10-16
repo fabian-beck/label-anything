@@ -12,7 +12,9 @@
   },
   "svg_classes": [
     { "selector": ":background", "class": "ignore" },
-    { "selector": "text", "class": "text" },
+    { "selector": "[id^='patch_'] > path[style='fill: #ffffff']", "class": "ignore" },
+    { "selector": "text, [id^='text_'] *, [id^='legend_'] *", "class": "text" },
+    { "selector": "[id^='xtick_'] *, [id^='ytick_'] *", "class": "ink" },
     { "selector": "circle, ellipse, rect:small, use:small, path:small", "class": "points" },
     { "selector": "path, line, polyline, polygon", "class": "lines" },
     { "selector": "*", "class": "ink" }

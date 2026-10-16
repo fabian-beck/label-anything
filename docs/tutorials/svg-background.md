@@ -41,7 +41,8 @@ the **first matching rule** decides its class. Elements no rule matches get
 * Tick labels, the title and the axis title are `text`, hard by default.
 * `circle.point` matches every dot, including the outliers.
 
-Selectors are a CSS subset: type, `.class`, `#id`, `[attr]`, `[attr=value]`, `*`,
+Selectors are a CSS subset: type, `.class`, `#id`, `[attr]`, `[attr=value]` and the
+prefix, suffix and substring forms `[attr^=value]`, `[attr$=value]`, `[attr*=value]`, `*`,
 descendant (space) and child (`>`) combinators, comma lists, and four pseudo-classes:
 `:small` (bounding box ≤ 16 px in both directions), `:background`, `:filled` and
 `:unfilled`. Anything else is a validation error (`pattern`). The full rules — viewports,

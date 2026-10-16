@@ -169,7 +169,7 @@ export const DEFAULTS: Readonly<Record<string, unknown>> = {
 /** Presets (spec/presets/*.json). */
 export const PRESETS: Readonly<Record<string, PresetData>> = {
   "auto": {
-    "description": "Zero-config: avoid items and labels; classify SVG/raster backgrounds; enable distant labels with leaders only when the plot is crowded.",
+    "description": "Zero-config: avoid items and labels; classify SVG/raster backgrounds (matplotlib SVGs too: texts drawn as glyphs in text_N groups and legends are text, tick marks ink, the white axes background ignored); enable distant labels with leaders only when the plot is crowded.",
     "options": {
       "placement": {
         "models": [
@@ -195,8 +195,16 @@ export const PRESETS: Readonly<Record<string, PresetData>> = {
         "class": "ignore"
       },
       {
-        "selector": "text",
+        "selector": "[id^='patch_'] > path[style='fill: #ffffff']",
+        "class": "ignore"
+      },
+      {
+        "selector": "text, [id^='text_'] *, [id^='legend_'] *",
         "class": "text"
+      },
+      {
+        "selector": "[id^='xtick_'] *, [id^='ytick_'] *",
+        "class": "ink"
       },
       {
         "selector": "circle, ellipse, rect:small, use:small, path:small",
@@ -436,8 +444,16 @@ export const PRESETS: Readonly<Record<string, PresetData>> = {
         "class": "ignore"
       },
       {
-        "selector": "text",
+        "selector": "[id^='patch_'] > path[style='fill: #ffffff']",
+        "class": "ignore"
+      },
+      {
+        "selector": "text, [id^='text_'] *, [id^='legend_'] *",
         "class": "text"
+      },
+      {
+        "selector": "[id^='xtick_'] *, [id^='ytick_'] *",
+        "class": "ink"
       },
       {
         "selector": "circle, ellipse, rect:small, use:small, path:small",

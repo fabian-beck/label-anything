@@ -1,7 +1,7 @@
 {
   "kind": "svg",
   "name": "matplotlib-like figure (preset auto)",
-  "description": "matplotlib structure: figure patch (100 % of the canvas, :background → ignore), axes patch (77 % → not background: 'path' → lines), scatter markers as <use> of a <defs> path (use:small → points), tick marks and glyphs as <use> (small → points), a line and a spine (path → lines). pt units: 460.8pt = 614.4 px. Marker circles r = 4 px are flattened with tolerance 0.02.",
+  "description": "matplotlib structure: figure patch (100 % of the canvas, :background → ignore), white axes patch (77 %; [id^='patch_'] > path[style='fill: #ffffff'] → ignore), scatter markers as <use> of a <defs> path (use:small → points), a tick mark as <use> in an xtick group (→ ink), a text drawn as glyph <use> in a text_N group (→ text), a line and a spine (path → lines). pt units: 460.8pt = 614.4 px. Marker circles r = 4 px are flattened with tolerance 0.02.",
   "preset": "auto",
   "tolerance": 0.02,
   "svg": [
@@ -71,31 +71,47 @@
     "height": 460.8,
     "classes": {
       "points": {
-        "count": 12,
-        "polygons": 6,
-        "polylines": 6,
-        "fill_area": 253.150329,
-        "stroke_length": 130.330373,
+        "count": 10,
+        "polygons": 5,
+        "polylines": 5,
+        "fill_area": 249.715476,
+        "stroke_length": 125.461919,
         "stroke_width": [
-          1.066667,
+          1.333333,
           1.333333
         ],
         "bbox": [
-          94.2,
+          94.443636,
           76.0,
-          416.466667,
-          353.573333
+          416.223031,
+          214.341819
         ]
       },
       "lines": {
-        "count": 3,
-        "polygons": 1,
+        "count": 2,
+        "polygons": 0,
         "polylines": 2,
-        "fill_area": 168949.18656,
+        "fill_area": 0,
         "stroke_length": 698.933441,
         "stroke_width": [
           1.066667,
           2.0
+        ]
+      },
+      "text": {
+        "count": 1,
+        "polygons": 1,
+        "polylines": 0,
+        "fill_area": 1.822917
+      },
+      "ink": {
+        "count": 1,
+        "polygons": 0,
+        "polylines": 1,
+        "stroke_length": 4.666667,
+        "stroke_width": [
+          1.066667,
+          1.066667
         ]
       }
     }

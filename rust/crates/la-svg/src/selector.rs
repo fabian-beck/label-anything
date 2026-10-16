@@ -6,7 +6,8 @@
 //! ```text
 //! list      = complex ("," complex)*
 //! complex   = compound (combinator compound)*          combinator = ws+ | ws* ">" ws*
-//! compound  = (type | "*")? (".class" | "#id" | "[attr]" | "[attr=value]" | ":pseudo")*
+//! compound  = (type | "*")? (".class" | "#id" | "[attr]" | "[attr op value]" | ":pseudo")*
+//! op        = "=" | "^=" | "$=" | "*="       (exact, prefix, suffix, substring)
 //! pseudo    = small | background | filled | unfilled    (class rules and marks only)
 //! ```
 //!
@@ -40,10 +41,21 @@ pub(crate) enum Pseudo {
     Unfilled,
 }
 
+/// Attribute value test: `=` exact, `^=` prefix, `$=` suffix, `*=` substring (as in CSS,
+/// an empty value never matches with the last three).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum AttrOp {
+    Equals,
+    Prefix,
+    Suffix,
+    Contains,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct AttrSel {
     pub name: String,
-    pub value: Option<String>,
+    /// `None` for `[attr]` (presence).
+    pub value: Option<(AttrOp, String)>,
 }
 
 #[derive(Clone, Debug, PartialEq, Default)]
@@ -297,8 +309,20 @@ impl P<'_> {
                 self.i += 1;
                 Ok(AttrSel { name, value: None })
             }
-            Some(b'=') => {
+            Some(c @ (b'=' | b'^' | b'$' | b'*')) => {
+                let op = match c {
+                    b'=' => AttrOp::Equals,
+                    b'^' => AttrOp::Prefix,
+                    b'$' => AttrOp::Suffix,
+                    _ => AttrOp::Contains,
+                };
                 self.i += 1;
+                if op != AttrOp::Equals {
+                    if self.peek() != Some(b'=') {
+                        return Err(self.err("expected '=' after the attribute operator"));
+                    }
+                    self.i += 1;
+                }
                 self.skip_ws();
                 let value = match self.peek() {
                     Some(q @ (b'"' | b'\'')) => {
@@ -347,15 +371,15 @@ impl P<'_> {
                         self.i += 1;
                         Ok(AttrSel {
                             name,
-                            value: Some(value),
+                            value: Some((op, value)),
                         })
                     }
                     None => Err(self.err("expected ']'")),
                     Some(_) => Err(self.err("expected ']' (attribute flags are not supported)")),
                 }
             }
-            Some(b'~' | b'|' | b'^' | b'$' | b'*') => {
-                Err(self.err("only the '=' attribute operator is supported"))
+            Some(b'~' | b'|') => {
+                Err(self.err("only the '=', '^=', '$=' and '*=' attribute operators are supported"))
             }
             None => Err(self.err("expected ']'")),
             Some(_) => Err(self.err("unexpected character in attribute selector")),
@@ -428,8 +452,14 @@ fn compound_matches(c: &Compound, els: &[Element], i: usize, ctx: &MatchContext)
         match el.attr(&a.name) {
             None => return false,
             Some(v) => {
-                if let Some(want) = &a.value {
-                    if v != want {
+                if let Some((op, want)) = &a.value {
+                    let ok = match op {
+                        AttrOp::Equals => v == want,
+                        AttrOp::Prefix => !want.is_empty() && v.starts_with(want.as_str()),
+                        AttrOp::Suffix => !want.is_empty() && v.ends_with(want.as_str()),
+                        AttrOp::Contains => !want.is_empty() && v.contains(want.as_str()),
+                    };
+                    if !ok {
                         return false;
                     }
                 }

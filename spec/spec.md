@@ -267,11 +267,13 @@ and selectors see that element, never the referenced ones.
 preset's `svg_classes`) whose selector matches the element they are attributed to, else
 by `default_class`; class `ignore` drops them. Selector subset (also for `from_svg`):
 type selectors (case-sensitive), `*`, `.class`, `#id`, `[attr]`, `[attr=value]` (value
-quoted or not, exact match), compound selectors (`circle.outlier[data-k=1]`), descendant
-(whitespace) and child (`>`) combinators, comma lists, CSS escapes, and the pseudo-classes
+quoted or not, exact match), `[attr^=value]`, `[attr$=value]`, `[attr*=value]` (prefix,
+suffix, substring; an empty value matches nothing), compound selectors
+(`circle.outlier[data-k=1]`), descendant (whitespace) and child (`>`) combinators, comma
+lists, CSS escapes, and the pseudo-classes
 `:small` (element bbox ≤ 16 px in both dimensions), `:background` (bbox ≥ 90 % of the
 canvas in both dimensions), `:filled` and `:unfilled`. Anything else (sibling
-combinators, other attribute operators or flags, other pseudo-classes and
+combinators, the `~=` and `|=` operators, attribute flags, other pseudo-classes and
 pseudo-elements) is a `pattern` error.
 
 `auto_mark_items: true`: items with `svg_id` take their mark geometry from that SVG

@@ -21,8 +21,16 @@ const MAX_COMPOUNDS = 64;
 export type SelectorMode = "css" | "rules";
 export type Pseudo = "small" | "background" | "filled" | "unfilled";
 
+/**
+ * Attribute value test: `=` exact, `^=` prefix, `$=` suffix, `*=` substring (as in CSS,
+ * an empty value never matches with the last three). Mirrors `AttrOp`.
+ */
+export type AttrOp = "=" | "^=" | "$=" | "*=";
+
 export interface AttrSel {
   name: string;
+  /** `null` for `[attr]` (presence). */
+  op: AttrOp | null;
   value: string | null;
 }
 
@@ -222,10 +230,15 @@ class P {
     const x = this.peek();
     if (x === 0x5d) {
       this.i++;
-      return { name, value: null };
+      return { name, op: null, value: null };
     }
-    if (x === 0x3d) {
+    if (x === 0x3d || x === 0x5e || x === 0x24 || x === 0x2a) {
+      const op: AttrOp = x === 0x3d ? "=" : x === 0x5e ? "^=" : x === 0x24 ? "$=" : "*=";
       this.i++;
+      if (op !== "=") {
+        if (this.peek() !== 0x3d) throw this.err("expected '=' after the attribute operator");
+        this.i++;
+      }
       this.skipWs();
       let value = "";
       const q = this.peek();
@@ -254,13 +267,13 @@ class P {
       const z = this.peek();
       if (z === 0x5d) {
         this.i++;
-        return { name, value };
+        return { name, op, value };
       }
       if (z === -1) throw this.err("expected ']'");
       throw this.err("expected ']' (attribute flags are not supported)");
     }
-    if (x === 0x7e || x === 0x7c || x === 0x5e || x === 0x24 || x === 0x2a) {
-      throw this.err("only the '=' attribute operator is supported");
+    if (x === 0x7e || x === 0x7c) {
+      throw this.err("only the '=', '^=', '$=' and '*=' attribute operators are supported");
     }
     if (x === -1) throw this.err("expected ']'");
     throw this.err("unexpected character in attribute selector");
@@ -312,7 +325,7 @@ function compoundMatches(c: Compound, els: readonly Element[], i: number, ctx: M
   for (const a of c.attrs) {
     const v = attrOf(el, a.name);
     if (v === undefined) return false;
-    if (a.value !== null && v !== a.value) return false;
+    if (a.value !== null && !attrMatches(a.op, v, a.value)) return false;
   }
   for (const p of c.pseudos) {
     const b = el.bbox;
@@ -372,4 +385,18 @@ export function complexMatches(sel: Complex, els: readonly Element[], i: number,
 export function selectorMatches(sel: Selector, els: readonly Element[], i: number, ctx: MatchContext): boolean {
   for (const c of sel.selectors) if (complexMatches(c, els, i, ctx)) return true;
   return false;
+}
+
+/** Whether attribute value `v` passes the test `op want` (see {@link AttrOp}). */
+function attrMatches(op: AttrOp | null, v: string, want: string): boolean {
+  switch (op) {
+    case "^=":
+      return want.length > 0 && v.startsWith(want);
+    case "$=":
+      return want.length > 0 && v.endsWith(want);
+    case "*=":
+      return want.length > 0 && v.includes(want);
+    default:
+      return v === want;
+  }
 }

@@ -1,7 +1,7 @@
 {
   "kind": "svg",
   "name": "selector syntax errors",
-  "description": "Syntax errors are reported with code 'pattern' by classify and select; valid selectors with comma lists, child/descendant combinators, attribute selectors and * select primitives of the matching elements and their descendants, each once.",
+  "description": "Syntax errors are reported with code 'pattern' by classify and select; valid selectors with comma lists, child/descendant combinators, attribute selectors (=, ^=, $=, *=; an empty value never matches with the last three) and * select primitives of the matching elements and their descendants, each once.",
   "tolerance": 0.1,
   "classes": [
     {
@@ -124,6 +124,42 @@
       {
         "selector": "svg",
         "count": 3
+      },
+      {
+        "selector": "[x|=y]",
+        "error": "pattern"
+      },
+      {
+        "selector": "[x^y]",
+        "error": "pattern"
+      },
+      {
+        "selector": "[data-k^='2']",
+        "count": 1
+      },
+      {
+        "selector": "[id^=r]",
+        "count": 1
+      },
+      {
+        "selector": "[class$=k]",
+        "count": 1
+      },
+      {
+        "selector": "[class*=r]",
+        "count": 2
+      },
+      {
+        "selector": "[class*='']",
+        "count": 0
+      },
+      {
+        "selector": "[id^='']",
+        "count": 0
+      },
+      {
+        "selector": "[class=gr]",
+        "count": 0
       },
       {
         "selector": "path",
