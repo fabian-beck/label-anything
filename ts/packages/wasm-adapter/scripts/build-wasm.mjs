@@ -3,16 +3,22 @@
  * Builds the Rust core (rust/crates/la-wasm) to WebAssembly and generates the
  * wasm-bindgen glue into ../wasm (label_anything.js, label_anything_bg.wasm, snippets/).
  *
- *   node scripts/build-wasm.mjs [--features decode] [--opt-level s|z|1|2|3] [--keep-names]
+ *   node scripts/build-wasm.mjs [--no-default-features] [--features a,b]
+ *                               [--opt-level s] [--core-opt-level 3] [--keep-names]
+ *
+ * The default build has full shaping, SVG backgrounds and PNG/JPEG/WebP decoding
+ * (cargo feature `decode`); `--no-default-features` leaves out the image decoders.
  *
  * Needs the `wasm32-unknown-unknown` Rust target and `wasm-bindgen-cli` with exactly the
  * version of the `wasm-bindgen` crate in rust/Cargo.lock
  * (`cargo install wasm-bindgen-cli --version <that version>`).
  *
- * The build uses its own Cargo profile (`wasm-release`: fat LTO, one codegen unit, opt-level
- * "s"), passed with `--config`, so it never invalidates the native release artifacts.
- * opt-level "s" is about 13 % smaller than 3 (gzip) for a few percent of speed;
- * wasm-opt is not used because it does not reduce the gzip size of this module.
+ * The build uses its own Cargo profile (`wasm-release`: fat LTO, one codegen unit),
+ * passed with `--config`, so it never invalidates the native release artifacts. Code is
+ * optimized for size (opt-level "s") except the solver crate label-anything-core
+ * (opt-level 3): that is as fast as opt-level 3 everywhere (within noise) for 8 % more
+ * gzip than "s" everywhere, which is 9-16 % slower. wasm-opt is not used: it does not
+ * reduce the gzip size of this module. docs/bindings/wasm.md lists the variants.
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
@@ -25,7 +31,9 @@ function option(name, fallback) {
   return i >= 0 && i + 1 < args.length ? args[i + 1] : fallback;
 }
 const features = option("--features", "");
+const noDefault = args.includes("--no-default-features");
 const optLevel = option("--opt-level", "s");
+const coreOptLevel = option("--core-opt-level", "3");
 const keepNames = args.includes("--keep-names");
 
 const pkgDir = fileURLToPath(new URL("../", import.meta.url));
@@ -54,6 +62,7 @@ if (!locked || cli !== locked) {
   process.exit(1);
 }
 
+const tomlLevel = (level) => (/^\d$/.test(level) ? level : JSON.stringify(level));
 const profile = "wasm-release";
 const cargoArgs = [
   "build",
@@ -70,8 +79,11 @@ const cargoArgs = [
   "--config",
   `profile.${profile}.codegen-units=1`,
   "--config",
-  `profile.${profile}.opt-level=${/^\d$/.test(optLevel) ? optLevel : JSON.stringify(optLevel)}`,
+  `profile.${profile}.opt-level=${tomlLevel(optLevel)}`,
+  "--config",
+  `profile.${profile}.package.label-anything-core.opt-level=${tomlLevel(coreOptLevel)}`,
 ];
+if (noDefault) cargoArgs.push("--no-default-features");
 if (features) cargoArgs.push("--features", features);
 run("cargo", cargoArgs, { cwd: rustDir });
 
@@ -103,5 +115,6 @@ const raw = statSync(wasm).size;
 const gz = gzipSync(readFileSync(wasm), { level: 9 }).length;
 console.log(
   `label_anything_bg.wasm: ${(raw / 1024).toFixed(0)} KiB raw, ${(gz / 1024).toFixed(0)} KiB gzip ` +
-    `(features: ${features || "default"}, opt-level ${optLevel})`,
+    `(features: ${[noDefault ? "no-default" : "default", features].filter(Boolean).join(" + ")}, ` +
+    `opt-level ${optLevel}, core ${coreOptLevel})`,
 );
