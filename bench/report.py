@@ -51,6 +51,7 @@ SEQ_METRICS = [
 ]
 META = {k: (label, f, d) for k, label, f, d in METRICS + SEQ_METRICS}
 EPS = 1e-9
+DIGITS = 6  # results.json stores floats with 6 decimals: comparisons happen at that precision
 SERIES = {"rust": "s1", "wasm": "s2", "ts": "s3"}  # categorical slots 1-3 (validated all-pairs)
 IMPL_NAME = {"rust": "Rust", "wasm": "WASM", "ts": "TypeScript"}
 
@@ -86,7 +87,8 @@ def _change(key: str, old, new, threshold: float) -> dict | None:
     if not isinstance(old, (int, float)) or not isinstance(new, (int, float)) or isinstance(old, bool):
         return None
     d = META[key][2]
-    delta = float(new) - float(old)
+    old, new = round(float(old), DIGITS), round(float(new), DIGITS)
+    delta = new - old
     if abs(delta) <= EPS:
         return None
     rel = abs(delta) / abs(old) if abs(old) > EPS else math.inf
@@ -163,7 +165,7 @@ def parity(report: dict) -> dict:
             for k, _l, _f, _d in METRICS:
                 a, b = r["summary"].get(k), q["summary"].get(k)
                 if isinstance(a, (int, float)) and isinstance(b, (int, float)):
-                    deltas[k] = float(b) - float(a)
+                    deltas[k] = round(float(b) - float(a), DIGITS)
                 elif a != b:
                     deltas[k] = None
             rows.append({"scenario": sc, "config": cfg, "identical": r.get("digest") == q.get("digest"),
@@ -177,7 +179,7 @@ def parity(report: dict) -> dict:
             for k, _l, _f, _d in SEQ_METRICS:
                 a, b = s["metrics"].get(k), q["metrics"].get(k)
                 if isinstance(a, (int, float)) and isinstance(b, (int, float)):
-                    deltas[k] = float(b) - float(a)
+                    deltas[k] = round(float(b) - float(a), DIGITS)
             rows.append({"scenario": sc, "config": name, "sequence": True, "deltas": deltas,
                          "identical": s.get("digest") is not None and s.get("digest") == q.get("digest")})
         maxabs = {}
@@ -743,3 +745,49 @@ def write_html(out: Path, report: dict, plots: dict | None = None) -> Path:
     p = out / "index.html"
     p.write_text("\n".join(o) + "\n", encoding="utf-8")
     return p
+
+
+def main(argv=None) -> int:
+    """Rebuild the analyses and index.html of an existing run (no solver is run again)."""
+    import argparse
+
+    from .common.jsonio import read_json, write_json
+
+    ap = argparse.ArgumentParser(prog="python -m bench.report",
+                                 description="Rebuild bench-report/index.html from an existing results.json: "
+                                             "parity, plots, optionally the changes against --previous and the "
+                                             "release gates (exit 1 when they fail).")
+    ap.add_argument("results", help="results.json of the run (index.html is written next to it)")
+    ap.add_argument("--previous", help="results.json of the previous release")
+    ap.add_argument("--gate", action="store_true", help="evaluate the release gates")
+    ap.add_argument("--gates-allow", help="allow-list of accepted regressions (default bench/gates-allow.json)")
+    ap.add_argument("--threshold", type=float, default=0.02)
+    a = ap.parse_args(argv)
+    path = Path(a.results)
+    out = path.parent
+    report = read_json(path)
+    previous = read_json(a.previous) if a.previous else None
+    if previous is not None:
+        report["diff"] = compare(previous, report, a.threshold)
+    report["parity"] = parity(report)
+    gate = None
+    if a.gate:
+        from . import gates
+
+        allow, problems = gates.load_allow(a.gates_allow)
+        gate = gates.check(report, previous, allow, problems, a.threshold)
+        report["gate"] = gate
+    report["plots"] = write_plots(out, report)
+    write_json(path, report, nd=DIGITS, indent=1)
+    page = write_html(out, report, report["plots"])
+    print(f"wrote {path} and {page}")
+    if gate is not None:
+        from . import gates
+
+        print("\n".join(gates.summary_lines(gate)))
+        return 0 if gate["passed"] else 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

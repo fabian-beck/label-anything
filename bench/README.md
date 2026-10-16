@@ -316,6 +316,11 @@ bench/.venv/bin/python -m bench.perf generate bench/out/perf      # the problems
   solver drawn by `bench/render.py`, plus the engine's debug overlay;
 * the stability sequences and the baseline methods with the versions that ran.
 
+`python -m bench.report bench-report/results.json [--previous OLD/results.json] [--gate]` rebuilds
+the analyses and `index.html` of an existing run without solving anything again. Comparisons
+happen at the precision `results.json` stores (6 decimals), so a stored run and a fresh one
+with identical results show no change.
+
 ## Release gates
 
 `--gate` (or `python -m bench.gates results.json [--previous OLD/results.json]` on an existing run)

@@ -99,6 +99,10 @@ def test_compare_flags_regressions_by_direction_and_threshold():
     assert st[("c2", "soft_coverage_mean")] == "improvement"  # lower is better
     assert d["regressions"] == 2 and d["improvements"] == 1
     assert report.compare(prev, prev)["rows"] == []
+    # results.json keeps 6 decimals: a value read back must equal the unrounded one it was written from
+    stored = rep(entry("rust", soft_coverage_mean=0.01027, ambiguity_rate=0.0))
+    live = rep(entry("rust", soft_coverage_mean=0.0102700013, ambiguity_rate=4e-10))
+    assert report.compare(stored, live)["rows"] == []
 
 
 def test_parity_deltas_between_rust_and_ts():
@@ -205,3 +209,8 @@ def test_runner_end_to_end(tmp_path, monkeypatch):
     res = read_json(out / "results.json")
     assert code == 1 and res["diff"]["rows"] == [] and res["gate"]["passed"] is False
     assert json.dumps(res["gate"]).count("not measured") == 1
+    # rebuild the report from the stored results (no solver runs)
+    (out / "index.html").unlink()
+    assert report.main([str(out / "results.json"), "--previous", str(keep)]) == 0
+    assert (out / "index.html").exists() and read_json(out / "results.json")["diff"]["rows"] == []
+    assert report.main([str(out / "results.json"), "--gate"]) == 1
