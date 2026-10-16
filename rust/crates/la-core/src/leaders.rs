@@ -144,6 +144,27 @@ pub fn distant(model: &Model, obs: &Obstacles, item: &Item, vi: usize, v: &Varia
                         push(rect, vec![start, bend, port_pt], k, out);
                     }
                 }
+                LeaderStyle::Curved => {
+                    let t = start + d * r;
+                    let (rect, _) = attach_label(t, d, hw, hh, port);
+                    let port_pt = rect.closest_point(start);
+                    let s0 = leader_start(model, item, port_pt);
+                    let port_pt = rect.closest_point(s0);
+                    // straight and two bows; the flattened curve is the collision geometry
+                    for bow in [0.0, 0.3, -0.3] {
+                        let pts = curve_points(s0, port_pt, bow);
+                        let ctrl = curve_control(s0, port_pt, bow);
+                        let mut c = out.len();
+                        push(rect, pts, k, out);
+                        if out.len() > c {
+                            c = out.len() - 1;
+                            if let Some(l) = out[c].leaders.first_mut() {
+                                l.curve = Some([s0, ctrl, port_pt]);
+                                l.bends = 0;
+                            }
+                        }
+                    }
+                }
                 _ => {
                     let t = start + d * r;
                     let (rect, mut port_pt) = attach_label(t, d, hw, hh, port);
@@ -203,6 +224,28 @@ pub fn free_space_seeds(obs: &Obstacles, item: &Item, hh: f64) -> Vec<P> {
     seeds.sort_by(|a, b| crate::math::cmp_f64(b.0, a.0).then(a.2.cmp(&b.2)).then(a.1.cmp(&b.1)));
     seeds.truncate(8);
     seeds.into_iter().map(|s| s.3).collect()
+}
+
+/// Control point of a quadratic leader bowed by `bow × length` to the left of `a → b`.
+pub fn curve_control(a: P, b: P, bow: f64) -> P {
+    let m = a.lerp(b, 0.5);
+    let d = b - a;
+    m + P::new(-d.y, d.x) * bow
+}
+
+/// Flattened quadratic Bézier (8 segments; straight when `bow` is 0).
+pub fn curve_points(a: P, b: P, bow: f64) -> Vec<P> {
+    if bow == 0.0 {
+        return vec![a, b];
+    }
+    let c = curve_control(a, b, bow);
+    (0..=8)
+        .map(|k| {
+            let t = k as f64 / 8.0;
+            let u = 1.0 - t;
+            P::new(u * u * a.x + 2.0 * u * t * c.x + t * t * b.x, u * u * a.y + 2.0 * u * t * c.y + t * t * b.y)
+        })
+        .collect()
 }
 
 /// Leader length helper for tests.

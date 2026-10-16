@@ -3,6 +3,7 @@
 
 pub mod greedy;
 pub mod local;
+pub mod exact;
 pub mod repair;
 pub mod state;
 pub mod verify;

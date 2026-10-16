@@ -88,6 +88,11 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
     let t0 = probes.get(probes.len() / 2).copied().unwrap_or(0.1).max(1e-6);
     let ln_ratio = crate::math::ln(1e-3);
     let mut scratch: Vec<u32> = Vec::new();
+    // best-so-far: the cheapest state seen since the last priority improvement
+    let mut cur = total(s);
+    let mut best = cur;
+    let mut snapshot: Vec<Option<u32>> = s.state.placed.clone();
+    let mut snap_reasons = s.reasons.clone();
     for it in 0..iterations {
         if it % 256 == 0 && s.env.now_ms() > deadline_ms && deadline_ms > 0.0 {
             s.time_guard_hit = true;
@@ -121,21 +126,26 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
             if try_insert(s, u, soft_ok, &sets, &mut rng, &mut scratch) {
                 st.inserted += 1;
                 st.accepted += 1;
+                // the priority objective improved: this state becomes the new reference
+                cur = total(s);
+                best = cur;
+                snapshot.clone_from(&s.state.placed);
+                snap_reasons.clone_from(&s.reasons);
             }
             continue;
         }
         // relocate or swap
         let i = rng.next_below(n as u32) as usize;
-        let Some(cur) = s.state.placed[i] else { continue };
+        let Some(cur_c) = s.state.placed[i] else { continue };
         let list_len = s.by_item[i].len();
         if list_len < 2 {
             continue;
         }
         let k = s.by_item[i][rng.next_below(list_len as u32) as usize];
-        if k == cur || !usable(s, k, soft_ok) {
+        if k == cur_c || !usable(s, k, soft_ok) {
             continue;
         }
-        let old = item_cost(s, i, cur);
+        let old = item_cost(s, i, cur_c);
         s.state.unplace(i, &s.cands);
         let cand = s.cands[k as usize].clone();
         s.state.conflicts(&cand, &s.cands, s.obs, i, &mut scratch);
@@ -145,8 +155,14 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
             if delta <= 0.0 || rng.next_f64() < exp(-delta / temp) {
                 place(s, i, k);
                 st.accepted += 1;
+                cur += delta;
+                if cur < best - 1e-9 {
+                    best = cur;
+                    snapshot.clone_from(&s.state.placed);
+                    snap_reasons.clone_from(&s.reasons);
+                }
             } else {
-                place(s, i, cur);
+                place(s, i, cur_c);
             }
             continue;
         }
@@ -158,40 +174,69 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
             s.state.unplace(j, &s.cands);
             place(s, i, k);
             let new_i = item_cost(s, i, k);
-            let mut best: Option<(f64, u32)> = None;
+            let mut best_j: Option<(f64, u32)> = None;
             let jlist = s.by_item[j].clone();
             for &kj in jlist.iter() {
                 if kj == jc || !usable(s, kj, soft_ok) || !is_free(s, j, kj) {
                     continue;
                 }
                 let cj = item_cost(s, j, kj);
-                if best.map(|b| cj < b.0).unwrap_or(true) {
-                    best = Some((cj, kj));
+                if best_j.map(|b| cj < b.0).unwrap_or(true) {
+                    best_j = Some((cj, kj));
                 }
             }
-            match best {
+            match best_j {
                 Some((cj, kj)) => {
                     let delta = new_i + cj - old - old_j;
                     if delta <= 0.0 || rng.next_f64() < exp(-delta / temp) {
                         place(s, j, kj);
                         st.accepted += 1;
+                        cur += delta;
+                        if cur < best - 1e-9 {
+                            best = cur;
+                            snapshot.clone_from(&s.state.placed);
+                            snap_reasons.clone_from(&s.reasons);
+                        }
                         continue;
                     }
                     s.state.unplace(i, &s.cands);
-                    place(s, i, cur);
+                    place(s, i, cur_c);
                     place(s, j, jc);
                 }
                 None => {
                     s.state.unplace(i, &s.cands);
-                    place(s, i, cur);
+                    place(s, i, cur_c);
                     place(s, j, jc);
                 }
             }
             continue;
         }
-        place(s, i, cur);
+        place(s, i, cur_c);
+    }
+    // restore the best state if the walk ended above it
+    if snapshot != s.state.placed && total(s) > best + 1e-9 {
+        for i in 0..n {
+            s.state.unplace(i, &s.cands);
+        }
+        for i in 0..n {
+            if let Some(c) = snapshot[i] {
+                place(s, i, c);
+            }
+        }
+        s.reasons = snap_reasons;
     }
     st
+}
+
+/// Total cost of the current placement (static + relaxation + dynamic).
+fn total(s: &mut Solve) -> f64 {
+    let mut t = 0.0;
+    for i in 0..s.model.items.len() {
+        if let Some(c) = s.state.placed[i] {
+            t += item_cost(s, i, c);
+        }
+    }
+    t
 }
 
 /// Undo log for compound moves: every item's state before its first change.

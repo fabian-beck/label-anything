@@ -124,6 +124,14 @@ pub fn place_validated(problem: &Value, env: &dyn Env, warnings: Vec<Issue>) -> 
         if ls.iterations > 0 {
             strategy = "local";
         }
+        // exact search: explicitly requested, or auto with a small instance and a large budget
+        let small = s.cands.len() <= 3000;
+        if m.solver.strategy == Strategy::Exact || (m.solver.strategy == Strategy::Auto && small && budget >= 500.0) {
+            env.progress("exact", 0.0);
+            let max_nodes = (budget * 2000.0).max(10_000.0) as u64;
+            solver::exact::run(&mut s, max_nodes);
+            strategy = "exact";
+        }
     }
     solver::repair::boundary_pass(&mut s);
     solver::repair::uncross(&mut s);
