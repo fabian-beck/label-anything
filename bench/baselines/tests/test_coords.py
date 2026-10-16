@@ -148,6 +148,51 @@ def test_vega_label_isolated_label_takes_the_first_anchor():
     assert res["stats"]["implementation"].startswith("vega-label/")
 
 
+def _ink_png_above(x: float, y: float, w: int = 200, h: int = 100) -> str:
+    """A white raster with a black block right above (x, y): it covers the "top" positions."""
+    import base64
+    import io
+
+    from PIL import Image, ImageDraw
+
+    im = Image.new("RGB", (w, h), (255, 255, 255))
+    ImageDraw.Draw(im).rectangle([x - 30, y - 30, x + 30, y - 8], fill=(0, 0, 0))   # pixel rows y-30 … y-8
+    buf = io.BytesIO()
+    im.save(buf, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
+@pytest.mark.skipif(not have("vega-label"), reason="node / vega / canvas not installed")
+def test_vega_label_avoids_raster_ink_and_lines():
+    from bench.baselines import vega_label_baseline as vl
+
+    ink = {"raster": {"source": _ink_png_above(100, 50), "mode": "ink", "class": "ink"}}
+    res = vl.solve(tiny(obstacles=ink))
+    p = res["placements"][0]
+    assert p["placed"] and p["anchor_side"] == "right"        # "top" is inked: the next anchor wins
+    b = Box.from_dict(p["box"])
+    lab = build_scene(tiny()).labels[0]
+    assert b.x0 == pytest.approx(100.0 + lab.mark_radius + lab.offset) and b.cy == pytest.approx(50.0)
+    assert any("raster" in w["message"] for w in res["warnings"])
+    # a horizontal line through the label's "top" and "right" positions pushes it to "bottom"
+    line = {"vector": [{"class": "lines", "polylines": [[[80, 40], [200, 40]], [[100, 50], [200, 50]]],
+                        "width": 2}]}
+    p = vl.solve(tiny(obstacles=line))["placements"][0]
+    assert p["anchor_side"] == "bottom"
+
+
+@pytest.mark.skipif(not have("textalloc"), reason="textalloc not installed")
+def test_textalloc_avoids_raster_ink():
+    from bench.baselines import textalloc_baseline as ta
+
+    prob = tiny(obstacles={"raster": {"source": _ink_png_above(100, 50, 200, 100), "mode": "ink", "class": "ink"}})
+    p = ta.solve(prob)["placements"][0]
+    b = Box.from_dict(p["box"])
+    ink = Box(70.0, 20.0, 131.0, 43.0)                          # the inked pixels (x 70…130, y 20…42)
+    assert p["placed"] and not b.overlaps(ink)
+    assert p["anchor_side"] != "top-right"                      # its first candidate is inked
+
+
 # ---------------------------------------------------------------------------
 # ggrepel
 # ---------------------------------------------------------------------------
