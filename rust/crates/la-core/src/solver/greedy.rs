@@ -56,6 +56,8 @@ struct Greedy {
     cap_reached: bool,
     /// Largest key level among placed labels (evict_lower needs a lower-key label).
     max_key_placed: usize,
+    /// Key of the band whose level-0 pass is running (only its items enter the heap).
+    band_key: Option<usize>,
 }
 
 pub fn run(s: &mut Solve) {
@@ -72,6 +74,7 @@ pub fn run(s: &mut Solve) {
         set_members: Vec::new(),
         cap_reached: false,
         max_key_placed: 0,
+        band_key: None,
     };
     for k in 0..s.n_level0 {
         if g.alive[k] {
@@ -148,6 +151,7 @@ pub fn run(s: &mut Solve) {
         }
         // level-0 pass, most constrained first
         g.heap.clear();
+        g.band_key = Some(key);
         for &i in &band {
             if !g.done[i] {
                 g.heap
@@ -163,6 +167,7 @@ pub fn run(s: &mut Solve) {
                 deferred.push(i);
             }
         }
+        g.band_key = None;
         // ladder pass in total order
         deferred.sort_by_key(|&i| s.pri.prio[i].rank);
         for i in deferred {
@@ -331,7 +336,9 @@ fn commit(s: &mut Solve, g: &mut Greedy, i: usize, c: u32, relaxed: bool) {
         if pair_conflict(&s.cands[k], &s.cands[c as usize], &dy) {
             g.alive[k] = false;
             g.live[j] -= 1;
-            if !g.done[j] {
+            // re-queue with its new live count, but only within the running band (items
+            // of later bands must not be placed before this band's ladder pass)
+            if !g.done[j] && g.band_key == Some(s.pri.prio[j].key) {
                 g.heap
                     .push((Reverse(g.live[j]), Reverse(s.pri.prio[j].rank), j));
             }
@@ -342,6 +349,22 @@ fn commit(s: &mut Solve, g: &mut Greedy, i: usize, c: u32, relaxed: bool) {
 fn unplace_item(s: &mut Solve, g: &mut Greedy, i: usize) {
     let Some(c) = s.state.placed[i] else { return };
     s.state.unplace(i, &s.cands);
+    // The item's own level-0 candidates were not updated while it was placed (commits
+    // only kill candidates of unplaced items): recompute them against the current state.
+    let mut own_scratch = Vec::new();
+    let mut live = 0;
+    for k in s.by_item[i].clone() {
+        let ku = k as usize;
+        if ku >= s.n_level0 {
+            continue;
+        }
+        let ok = s.cands[ku].feasible
+            && s.state
+                .is_free(&s.cands[ku], &s.cands, s.obs, i, &mut own_scratch);
+        g.alive[ku] = ok;
+        live += ok as u32;
+    }
+    g.live[i] = live;
     // revive level-0 candidates that only conflicted with this label
     let bb = s.cands[c as usize].bbox();
     let mut ids = Vec::new();

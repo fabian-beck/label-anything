@@ -73,7 +73,9 @@ fn seg_cross(a: [f64; 2], b: [f64; 2], c: [f64; 2], d: [f64; 2]) -> bool {
         && ((d3 > 1e-9 && d4 < -1e-9) || (d3 < -1e-9 && d4 > 1e-9))
 }
 
-fn leader_segments(p: &Value) -> Vec<([f64; 2], [f64; 2])> {
+type Segment = ([f64; 2], [f64; 2]);
+
+fn leader_segments(p: &Value) -> Vec<Segment> {
     let mut out = Vec::new();
     let mut ls: Vec<&Value> = Vec::new();
     if let Some(l) = p.get("leader").filter(|l| !l.is_null()) {
@@ -199,7 +201,7 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
                     got[k].as_f64().unwrap_or(f64::NAN),
                     want[k].as_f64().unwrap_or(f64::NAN),
                 );
-                if !((a - b).abs() <= tol) {
+                if (a - b).abs() > tol || a.is_nan() || b.is_nan() {
                     f.push(format!("box.{id}.{k}: expected {b} ± {tol}, got {a}"));
                 }
             }
@@ -231,17 +233,12 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
         .map(|v| v == "hard")
         .unwrap_or(true);
     if leaders_hard {
-        let segs: Vec<(usize, Vec<([f64; 2], [f64; 2])>)> = placed
-            .iter()
-            .enumerate()
-            .map(|(k, p)| (k, leader_segments(p)))
-            .collect();
+        let segs: Vec<Vec<Segment>> = placed.iter().map(|p| leader_segments(p)).collect();
         for i in 0..segs.len() {
             for j in i + 1..segs.len() {
                 let cross = segs[i]
-                    .1
                     .iter()
-                    .any(|&(a, b)| segs[j].1.iter().any(|&(c, d)| seg_cross(a, b, c, d)));
+                    .any(|&(a, b)| segs[j].iter().any(|&(c, d)| seg_cross(a, b, c, d)));
                 if cross {
                     f.push(format!(
                         "leaders of {} and {} cross",
