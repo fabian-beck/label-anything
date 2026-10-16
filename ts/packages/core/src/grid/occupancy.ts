@@ -217,16 +217,19 @@ export class Occupancy {
     const c1 = win[1]!;
     const r0 = win[2]!;
     const r1 = win[3]!;
+    const w0 = c0 >>> 5;
+    const w1 = (c1 - 1) >>> 5;
     const sat = this.sat;
-    if (sat !== null) {
+    // The summed-area table answers in O(1), but its four reads in a table of several MB
+    // miss the cache: for windows of a few words (label boxes) the bitset scan is faster
+    // in V8. Both give the same answer.
+    if (sat !== null && (r1 - r0) * (w1 - w0 + 1) > 24) {
       const s = this.cols + 1;
       const n = sat[r1 * s + c1]! - sat[r0 * s + c1]! - (sat[r1 * s + c0]! - sat[r0 * s + c0]!);
       return n !== 0;
     }
     const stride = this.words;
     const bits = this.bits;
-    const w0 = c0 >>> 5;
-    const w1 = (c1 - 1) >>> 5;
     // bits c0 % 32 .. 31 of the first word and 0 .. (c1 - 1) % 32 of the last one
     const first = -1 << (c0 & 31);
     const last = (-1 >>> (31 - ((c1 - 1) & 31))) | 0;

@@ -81,7 +81,9 @@ describe("occupancy", () => {
     const w = newWindow();
     let hits = 0;
     for (let n = 0; n < 3000; n++) {
-      const r = randomBox(rng, 640, 480);
+      // small boxes (bitset scan) and large ones (the frozen grid's summed-area table)
+      let r = randomBox(rng, 640, 480);
+      if (n % 3 === 0) r = new Rect(r.x0, r.y0, r.x0 + (r.x1 - r.x0) * 6, r.y0 + (r.y1 - r.y0) * 6);
       const a = live.blocked(r);
       expect(frozen.blocked(r)).toBe(a);
       if (live.window(r, w)) expect(frozen.blockedIn(w)).toBe(live.blockedIn(w));
