@@ -209,6 +209,8 @@ pub struct Item {
     pub raw: Value,
     /// Pole of inaccessibility of a polygon mark (computed on first use).
     pub pole: std::sync::OnceLock<P>,
+    /// Support points for adjacent and slider candidates (computed on first use).
+    pub supports: std::sync::OnceLock<Box<crate::candidates::SupportTable>>,
 }
 
 impl Item {
@@ -1577,5 +1579,6 @@ fn build_item(
         svg_id,
         raw: it.clone(),
         pole: std::sync::OnceLock::new(),
+        supports: std::sync::OnceLock::new(),
     })
 }

@@ -130,7 +130,7 @@ pub fn boundary_candidates(
     item: &Item,
     variants: &[Variant],
     vis: &[usize],
-    keep: &dyn Fn(usize, &Rect) -> bool,
+    keep: &impl Fn(usize, &Rect) -> bool,
     out: &mut Vec<Cand>,
 ) {
     let Some(area) = obs.label_area.or(model.canvas) else {

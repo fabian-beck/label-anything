@@ -90,7 +90,7 @@ pub fn distant(
     vi: usize,
     v: &Variant,
     dirs: &[(f64, P)],
-    keep: &dyn Fn(usize, &Rect) -> bool,
+    keep: &impl Fn(usize, &Rect) -> bool,
     out: &mut Vec<Cand>,
 ) {
     let hw = v.w * 0.5;

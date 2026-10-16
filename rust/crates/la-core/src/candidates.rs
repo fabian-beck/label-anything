@@ -261,6 +261,49 @@ pub fn touch_center(shape: &Shape, o: f64, d: P, hw: f64, hh: f64) -> P {
     P::new(s.x + sx * hw, s.y + sy * hh)
 }
 
+/// [`touch_center`] from the support point `s = shape.support_inflated(d, o)`.
+#[inline]
+fn touch_from_support(s: P, d: P, hw: f64, hh: f64) -> P {
+    let (sx, sy) = sign_dir(d);
+    P::new(s.x + sx * hw, s.y + sy * hh)
+}
+
+/// Support points of an item's inflated mark (`S ⊕ o`) in the directions of the fixed
+/// positions and of the gap tables. They do not depend on the label size, so all
+/// variants of the item share them ([`support_table`]).
+#[derive(Clone, Debug)]
+pub struct SupportTable {
+    /// By angular index of the fixed positions.
+    pos: [P; 8],
+    /// Per gap `k`: at `gap_table(k).dirs[j]` and at `gap_table(k).mids[j]`.
+    dirs: [[P; MAX_GAP_VERTS]; 8],
+    mids: [[P; MAX_GAP_VERTS]; 8],
+}
+
+/// The support table of an item (computed once).
+fn support_table(item: &Item) -> &SupportTable {
+    item.supports.get_or_init(|| {
+        let (shape, o) = (&item.shape, item.len.offset);
+        let zero = P::new(0.0, 0.0);
+        let mut t = Box::new(SupportTable {
+            pos: [zero; 8],
+            dirs: [[zero; MAX_GAP_VERTS]; 8],
+            mids: [[zero; MAX_GAP_VERTS]; 8],
+        });
+        for k in 0..8 {
+            t.pos[k] = shape.support_inflated(pos_dirs()[k], o);
+            let g = gap_table(k);
+            for (j, &d) in g.dirs.iter().enumerate() {
+                t.dirs[k][j] = shape.support_inflated(d, o);
+            }
+            for (j, &d) in g.mids.iter().enumerate() {
+                t.mids[k][j] = shape.support_inflated(d, o);
+            }
+        }
+        t
+    })
+}
+
 /// For concave polygons, labels placed against the convex hull are pushed toward the
 /// true shape until they touch it (spec §4.5 rule 1: "a final push-out so the label clears
 /// the inflated shape exactly").
@@ -369,25 +412,25 @@ pub fn adjacent(
     let hh = v.h * 0.5;
     let o = item.len.offset;
     let shape = &item.shape;
-    let ranks: Vec<(Pos, f64)> = item
-        .positions
-        .iter()
-        .enumerate()
-        .map(|(r, p)| (*p, r as f64))
-        .collect();
-    let rank_of = |p: Pos| ranks.iter().find(|(q, _)| *q == p).map(|x| x.1);
+    // rank of each fixed position by angular index (its first occurrence in the order)
+    let mut rank_at = [None; 8];
+    for (r, p) in item.positions.iter().enumerate() {
+        rank_at[p.angular_index()].get_or_insert(r as f64);
+    }
     let it = item.index as u32;
+    let st = support_table(item);
     if models.has(Models::ADJACENT) {
-        for &(p, r) in &ranks {
-            let d = pos_dirs()[p.angular_index()];
-            let c = push_in(shape, o, touch_center(shape, o, d, hw, hh), hw, hh);
+        for (r, &p) in item.positions.iter().enumerate() {
+            let a = p.angular_index();
+            let c = touch_from_support(st.pos[a], pos_dirs()[a], hw, hh);
+            let c = push_in(shape, o, c, hw, hh);
             out.push(Cand::new(
                 it,
                 vi as u16,
                 v.level,
                 Kind::Adjacent,
                 Side::Pos(p),
-                r,
+                r as f64,
                 Rect::from_center(c, hw, hh),
             ));
         }
@@ -395,17 +438,15 @@ pub fn adjacent(
     if !models.has(Models::SLIDER) || slider_per_gap == 0 {
         return;
     }
+    let mut path = [CVertex::ZERO; MAX_GAP_VERTS];
     for k in 0..8 {
         let a = Pos::from_angular_index(k);
         let b = Pos::from_angular_index(k + 1);
-        let (Some(ra), Some(rb)) = (rank_of(a), rank_of(b)) else {
+        let (Some(ra), Some(rb)) = (rank_at[k], rank_at[(k + 1) % 8]) else {
             continue;
         };
-        let path = cspace_path(shape, o, hw, hh, k);
-        for (j, c) in sample_path(&path, slider_per_gap, shape, o, hw, hh)
-            .into_iter()
-            .enumerate()
-        {
+        let n = cspace_path(shape, o, hw, hh, k, Some(st), &mut path);
+        sample_path(&path[..n], slider_per_gap, shape, o, hw, hh, |j, c| {
             let t = (j + 1) as f64 / (slider_per_gap + 1) as f64;
             let rank = ra + (rb - ra) * t + 0.25;
             let side = if t < 0.5 { a } else { b };
@@ -419,7 +460,7 @@ pub fn adjacent(
                 rank,
                 Rect::from_center(c, hw, hh),
             ));
-        }
+        });
     }
 }
 
@@ -431,6 +472,19 @@ struct CVertex {
     phi: f64,
     straight_next: bool,
 }
+
+impl CVertex {
+    const ZERO: CVertex = CVertex {
+        p: P { x: 0.0, y: 0.0 },
+        phi: 0.0,
+        straight_next: false,
+    };
+}
+
+/// Most vertices of the C-space path of one gap (see `gap_table`: the two fixed
+/// positions, the samples between them every `SAMPLE_STEP_DEG`, and the offsets next
+/// to axis directions).
+const MAX_GAP_VERTS: usize = 10;
 
 const SAMPLE_STEP_DEG: f64 = 9.0;
 const EPS_DEG: f64 = 1e-4;
@@ -480,6 +534,7 @@ fn gap_table(k: usize) -> &'static GapTable {
                     phis.push(fb - EPS_DEG);
                 }
                 phis.push(fb);
+                assert!(phis.len() <= MAX_GAP_VERTS);
                 let dirs = phis.iter().map(|&phi| dir_of(phi)).collect();
                 let mids = phis
                     .windows(2)
@@ -491,53 +546,77 @@ fn gap_table(k: usize) -> &'static GapTable {
     })[k]
 }
 
-/// Boundary of `(S ⊕ o) ⊕ (−B)` over gap `k` (between two fixed positions).
-fn cspace_path(shape: &Shape, o: f64, hw: f64, hh: f64, k: usize) -> Vec<CVertex> {
+/// Boundary of `(S ⊕ o) ⊕ (−B)` over gap `k` (between two fixed positions), written to
+/// `verts`; returns the number of vertices.
+#[allow(clippy::too_many_arguments)]
+fn cspace_path(
+    shape: &Shape,
+    o: f64,
+    hw: f64,
+    hh: f64,
+    k: usize,
+    supports: Option<&SupportTable>,
+    verts: &mut [CVertex; MAX_GAP_VERTS],
+) -> usize {
     let t = gap_table(k);
-    let mut verts: Vec<CVertex> = Vec::with_capacity(t.phis.len());
+    let mut n = 0;
     // table index of every kept vertex
-    let mut idx: Vec<usize> = Vec::with_capacity(t.phis.len());
+    let mut idx = [0usize; MAX_GAP_VERTS];
     for (j, &phi) in t.phis.iter().enumerate() {
-        let p = touch_center(shape, o, t.dirs[j], hw, hh);
-        if let Some(last) = verts.last() {
-            if last.p.dist(p) < 1e-12 {
-                continue;
-            }
+        let p = match supports {
+            Some(st) => touch_from_support(st.dirs[k][j], t.dirs[j], hw, hh),
+            None => touch_center(shape, o, t.dirs[j], hw, hh),
+        };
+        if n > 0 && verts[n - 1].p.dist(p) < 1e-12 {
+            continue;
         }
-        verts.push(CVertex {
+        verts[n] = CVertex {
             p,
             phi,
             straight_next: true,
-        });
-        idx.push(j);
-    }
-    for i in 0..verts.len().saturating_sub(1) {
-        let (a, b) = (verts[i], verts[i + 1]);
-        let d = if idx[i + 1] == idx[i] + 1 {
-            t.mids[idx[i]]
-        } else {
-            dir_of((a.phi + b.phi) * 0.5)
         };
-        let mid = touch_center(shape, o, d, hw, hh);
+        idx[n] = j;
+        n += 1;
+    }
+    for i in 0..n.saturating_sub(1) {
+        let (a, b) = (verts[i], verts[i + 1]);
+        let mid = if idx[i + 1] == idx[i] + 1 {
+            let d = t.mids[idx[i]];
+            match supports {
+                Some(st) => touch_from_support(st.mids[k][idx[i]], d, hw, hh),
+                None => touch_center(shape, o, d, hw, hh),
+            }
+        } else {
+            touch_center(shape, o, dir_of((a.phi + b.phi) * 0.5), hw, hh)
+        };
         verts[i].straight_next = dist_point_seg(mid, a.p, b.p) <= 1e-9;
     }
-    verts
+    n
 }
 
-/// `k` samples at equal arc length, excluding the endpoints.
-fn sample_path(path: &[CVertex], k: usize, shape: &Shape, o: f64, hw: f64, hh: f64) -> Vec<P> {
+/// `k` samples at equal arc length, excluding the endpoints: `emit(j, point)` for
+/// `j` in `0..k` (none for degenerate paths).
+#[allow(clippy::too_many_arguments)]
+fn sample_path(
+    path: &[CVertex],
+    k: usize,
+    shape: &Shape,
+    o: f64,
+    hw: f64,
+    hh: f64,
+    mut emit: impl FnMut(usize, P),
+) {
     if path.len() < 2 {
-        return vec![];
+        return;
     }
-    let mut cum = vec![0.0; path.len()];
+    let mut cum = [0.0; MAX_GAP_VERTS];
     for i in 1..path.len() {
         cum[i] = cum[i - 1] + path[i - 1].p.dist(path[i].p);
     }
     let total = cum[path.len() - 1];
     if total <= 1e-9 {
-        return vec![];
+        return;
     }
-    let mut out = Vec::with_capacity(k);
     let mut seg = 0;
     for j in 1..=k {
         let target = total * j as f64 / (k + 1) as f64;
@@ -552,13 +631,15 @@ fn sample_path(path: &[CVertex], k: usize, shape: &Shape, o: f64, hw: f64, hh: f
         } else {
             0.0
         };
-        if a.straight_next {
-            out.push(a.p.lerp(b.p, t));
-        } else {
-            out.push(c_at(shape, o, hw, hh, a.phi + (b.phi - a.phi) * t));
-        }
+        emit(
+            j - 1,
+            if a.straight_next {
+                a.p.lerp(b.p, t)
+            } else {
+                c_at(shape, o, hw, hh, a.phi + (b.phi - a.phi) * t)
+            },
+        );
     }
-    out
 }
 
 /// Whether internal candidates apply to this item, and their rank.
@@ -708,8 +789,14 @@ mod tests {
             ),
         ] {
             for k in 0..8 {
-                let path = cspace_path(&shape, 2.0, 15.0, 6.0, k);
-                for c in sample_path(&path, 6, &shape, 2.0, 15.0, 6.0) {
+                let mut path = [CVertex::ZERO; MAX_GAP_VERTS];
+                let n = cspace_path(&shape, 2.0, 15.0, 6.0, k, None, &mut path);
+                let mut samples = Vec::new();
+                sample_path(&path[..n], 6, &shape, 2.0, 15.0, 6.0, |_, c| {
+                    samples.push(c)
+                });
+                assert_eq!(samples.len(), 6);
+                for c in samples {
                     let c = push_in(&shape, 2.0, c, 15.0, 6.0);
                     let r = Rect::from_center(c, 15.0, 6.0);
                     let g = shape.dist_rect(&r) - 2.0;
