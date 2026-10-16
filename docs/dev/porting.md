@@ -23,6 +23,13 @@ hard-constraint guarantees never do.
 language). Text measurement comes from `@label-anything/text`, raster modes from
 `@label-anything/raster`, SVG geometry from `@label-anything/svg`.
 
+Wrapping and truncation take a `la_text::Measure`: `Measure::Font { font, size }` is a
+`FontMeasure` (`{ font, size }`) in TypeScript, `Measure::Callback(&f)` a plain function.
+`Measurer::wrap_measure` picks the font measure when there is no host measurement
+(`Env::has_measure_callback()` is `false`; in TypeScript: no `PlaceOptions.measure`) and
+shaping is `simple`, or `auto` for a text without complex scripts (ADR 0018). Both measures
+give identical results, so where TypeScript lacks full shaping either choice is correct.
+
 ## Names
 
 * Functions, methods, fields and locals: `snake_case` → `camelCase`
