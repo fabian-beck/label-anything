@@ -1,7 +1,10 @@
 # Local virtual environment (see bench/README.md)
 .venv/
 # Fetched third-party data and generated problems are reproducible; never commit them.
-data/
-out/
+# (No trailing slash: a worktree may symlink them to a shared checkout.)
+/data
+/out
 .pytest_cache/
 __pycache__/
+# npm install of the vega-label baseline (bench/baselines/package-lock.json is committed)
+node_modules/

@@ -1,0 +1,14 @@
+{
+  "name": "label-anything-bench-baselines",
+  "private": true,
+  "description": "Node baseline of the Label Anything benchmark: Vega's label transform (vega-label) run headless. Install with `npm ci --prefix bench/baselines`.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20.9"
+  },
+  "dependencies": {
+    "canvas": "3.2.3",
+    "vega": "6.4.0"
+  }
+}
