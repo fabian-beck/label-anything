@@ -259,7 +259,7 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
     for &i in &order {
         if let Some(c) = best[i] {
             let cand = &s.cands[c as usize];
-            if s.state.is_free(&cand, &s.cands, s.obs, i, &mut scratch) {
+            if s.state.is_free(cand, &s.cands, s.obs, i, &mut scratch) {
                 s.state.place(i, c, &s.cands, false);
                 s.reasons[i] = None;
                 continue;

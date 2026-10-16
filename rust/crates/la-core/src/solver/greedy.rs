@@ -353,7 +353,7 @@ fn unplace_item(s: &mut Solve, g: &mut Greedy, i: usize) {
             continue;
         }
         let cand = &s.cands[k];
-        if s.state.is_free(&cand, &s.cands, s.obs, j, &mut scratch) {
+        if s.state.is_free(cand, &s.cands, s.obs, j, &mut scratch) {
             g.alive[k] = true;
             g.live[j] += 1;
         }
@@ -395,12 +395,12 @@ fn best_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<u32> {
         .collect();
     for c in late {
         let cand = &s.cands[c as usize];
-        if !s.state.is_free(&cand, &s.cands, s.obs, i, &mut scratch) {
+        if !s.state.is_free(cand, &s.cands, s.obs, i, &mut scratch) {
             continue;
         }
         let d = s
             .state
-            .dynamic_cost(&cand, &s.cands, s.obs, buffer, clearance, lw, i);
+            .dynamic_cost(cand, &s.cands, s.obs, buffer, clearance, lw, i);
         scored.push((cand.cost + d, c));
     }
     if scored.is_empty() {
@@ -525,7 +525,7 @@ fn evict_lower(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<(u32, bool)> {
         if !cand.feasible {
             continue;
         }
-        s.state.conflicts(&cand, &s.cands, s.obs, i, &mut confl);
+        s.state.conflicts(cand, &s.cands, s.obs, i, &mut confl);
         if confl.is_empty() {
             continue; // would have been chosen already
         }

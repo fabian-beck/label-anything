@@ -39,7 +39,7 @@ pub fn verify(s: &mut Solve) -> Verification {
         for i in 0..n {
             let Some(c) = s.state.placed[i] else { continue };
             let cand = &s.cands[c as usize];
-            s.state.conflicts(&cand, &s.cands, s.obs, i, &mut buf);
+            s.state.conflicts(cand, &s.cands, s.obs, i, &mut buf);
             for &j in &buf {
                 let j = j as usize;
                 let lose = if s.pri.prio[i].rank > s.pri.prio[j].rank {
@@ -137,7 +137,7 @@ pub fn inversions(s: &mut Solve) -> usize {
                 continue;
             }
             if s.state
-                .first_conflict(&cand, &s.cands, s.obs, h, |j| keys[j] <= key_h)
+                .first_conflict(cand, &s.cands, s.obs, h, |j| keys[j] <= key_h)
                 .is_some()
             {
                 continue;
@@ -147,7 +147,7 @@ pub fn inversions(s: &mut Solve) -> usize {
             if !(cand.feasible || (soft_ok && cand.relaxed)) {
                 continue;
             }
-            s.state.conflicts(&cand, &s.cands, s.obs, h, &mut buf);
+            s.state.conflicts(cand, &s.cands, s.obs, h, &mut buf);
             // placeable once the (strictly) lower-key labels in its way are removed
             if !buf.is_empty() && buf.iter().all(|&j| s.pri.prio[j as usize].key > key_h) {
                 inverted = true;
