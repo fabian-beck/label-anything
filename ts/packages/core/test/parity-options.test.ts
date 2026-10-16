@@ -20,6 +20,16 @@ const HAS_CLI = existsSync(BIN);
 type Obj = Record<string, unknown>;
 const obj = (v: unknown): Obj => (v !== null && typeof v === "object" && !Array.isArray(v) ? (v as Obj) : {});
 
+/**
+ * `p` with at most 1500 local-search moves: without a clock nothing else bounds the
+ * search, and a few sample problems take seconds per variant with the full budget.
+ */
+function bounded(p: Obj): Obj {
+  const solver = obj(p.solver);
+  const it = typeof solver.max_iterations === "number" ? Math.min(solver.max_iterations, 1500) : 1500;
+  return { ...p, solver: { ...solver, max_iterations: it } };
+}
+
 /** `p` with `avoid.<section>` extended by `add`. */
 function withAvoid(p: Obj, section: string, add: Obj): Obj {
   const avoid = obj(p.avoid);
@@ -54,7 +64,7 @@ describe("parity with the Rust core under option changes", () => {
   for (const f of readdirSync(PROBLEMS).filter((f) => f.endsWith(".json")).sort()) {
     for (const [name, change] of VARIANTS) {
       it.skipIf(!HAS_CLI)(`${f}: ${name}`, () => {
-        const p = change(JSON.parse(readFileSync(join(PROBLEMS, f), "utf8")) as Obj);
+        const p = bounded(change(JSON.parse(readFileSync(join(PROBLEMS, f), "utf8")) as Obj));
         expect(validate(p).valid).toBe(true);
         const rust = rustResult(p);
         if (rust === null) return; // an older CLI build without --no-clock
