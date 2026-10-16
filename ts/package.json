@@ -8,10 +8,11 @@
     "packages/text",
     "packages/svg",
     "packages/raster",
-    "packages/core"
+    "packages/core",
+    "packages/wasm-adapter"
   ],
   "scripts": {
-    "build": "tsc -b packages/text packages/svg packages/raster packages/core",
+    "build": "tsc -b packages/text packages/svg packages/raster packages/core packages/wasm-adapter",
     "test": "vitest run",
     "typecheck": "tsc -b --noEmit packages/core",
     "conformance": "node packages/core/dist/conformance/run.js ../conformance"

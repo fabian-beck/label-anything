@@ -17,9 +17,10 @@ publish = false
 crate-type = ["cdylib", "rlib"]
 
 [features]
-# The default build keeps the package small: raw RGBA rasters (`obstacles.raster.rgba`
-# and the `raster` option) always work; encoded images need `decode`.
-default = []
+# Like the native facade: raster `source`s may be PNG/JPEG/WebP. Without `decode` the
+# module is 158 KiB (gzip) smaller; raw RGBA (`obstacles.raster.rgba`, the `raster`
+# option) works either way.
+default = ["decode"]
 # PNG/JPEG/WebP decoding of raster `source`s (the `image` crate).
 decode = ["label-anything/decode"]
 

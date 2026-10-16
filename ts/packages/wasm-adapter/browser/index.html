@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WASM smoke test</title>
+</head>
+<body>
+<p id="status">loading…</p>
+<script type="module">
+  // Loads the package exactly as published (dist/ + wasm/), without a bundler.
+  import { features, init, isInitialized, place, renderDebugSvg, validate, VERSION } from "/dist/index.js";
+
+  async function smoke() {
+    const out = { version: VERSION };
+    try {
+      place({ items: [] });
+    } catch (e) {
+      out.beforeInit = String(e.message);
+    }
+    const t0 = performance.now();
+    await init();
+    out.initMs = performance.now() - t0;
+    out.initialized = isInitialized();
+    out.features = features();
+
+    const problem = await (await fetch("/problems/scatter-basic.json")).json();
+    const r = place(problem);
+    out.placed = r.stats.placed;
+    out.total = r.stats.total;
+    out.hardViolations = r.stats.hard_violations;
+    out.svgStart = renderDebugSvg(problem, r).slice(0, 4);
+    out.valid = validate(problem).valid;
+
+    // host text measurement with a canvas
+    const ctx = document.createElement("canvas").getContext("2d");
+    let measured = 0;
+    const m = place(problem, {
+      measure(text, font) {
+        measured++;
+        ctx.font = `${font.italic ? "italic " : ""}${font.weight} ${font.size}px sans-serif`;
+        const tm = ctx.measureText(text);
+        return { width: tm.width, ascent: tm.fontBoundingBoxAscent, descent: tm.fontBoundingBoxDescent };
+      },
+    });
+    out.measured = measured;
+    out.measuredHardViolations = m.stats.hard_violations;
+
+    // raster background from canvas pixels (ImageData)
+    const canvas = document.createElement("canvas");
+    canvas.width = 80;
+    canvas.height = 60;
+    const c2 = canvas.getContext("2d");
+    c2.fillStyle = "#fff";
+    c2.fillRect(0, 0, 80, 60);
+    c2.fillStyle = "#000";
+    c2.fillRect(10, 10, 30, 20);
+    const pixels = c2.getImageData(0, 0, 80, 60);
+    const blob = {
+      canvas: { width: 80, height: 60 },
+      items: [{ id: "r", anchor: { type: "point", x: 40, y: 30 }, label: { type: "text", text: "Blob" } }],
+      avoid: { label: { ink: "hard" } },
+    };
+    const withRaster = place(blob, { raster: pixels });
+    out.rasterBox = withRaster.placements[0].box;
+    out.rasterHardViolations = withRaster.stats.hard_violations;
+    return out;
+  }
+
+  window.smokeResult = smoke().then(
+    (r) => {
+      document.getElementById("status").textContent = JSON.stringify(r);
+      return r;
+    },
+    (e) => {
+      document.getElementById("status").textContent = `error: ${e}`;
+      return { error: String(e && e.stack ? e.stack : e) };
+    },
+  );
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "name": "@label-anything/wasm",
+  "version": "0.1.0",
+  "description": "Label Anything: host-independent label placement engine (the Rust core compiled to WebAssembly; same API as @label-anything/core).",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "node": "./dist/node.js",
+      "default": "./dist/index.js"
+    },
+    "./label_anything_bg.wasm": "./wasm/label_anything_bg.wasm",
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "src", "wasm"],
+  "sideEffects": false,
+  "repository": { "type": "git", "url": "https://github.com/fabian-beck/label-anything", "directory": "ts/packages/wasm-adapter" },
+  "homepage": "https://github.com/fabian-beck/label-anything/blob/main/docs/bindings/wasm.md",
+  "keywords": ["label placement", "labeling", "visualization", "leader lines", "webassembly", "wasm"],
+  "scripts": {
+    "build": "npm run build:wasm && tsc -b",
+    "build:wasm": "node scripts/build-wasm.mjs",
+    "build:ts": "tsc -b",
+    "test": "vitest run",
+    "test:browser": "tsc -b && playwright test -c browser/playwright.config.mjs",
+    "bench": "node scripts/bench.mjs"
+  },
+  "dependencies": { "@label-anything/core": "0.1.0" },
+  "devDependencies": { "@playwright/test": "1.56.1" }
+}
