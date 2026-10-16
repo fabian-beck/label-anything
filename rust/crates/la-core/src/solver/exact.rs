@@ -60,7 +60,7 @@ impl Search<'_> {
         if self.nodes > self.max_nodes {
             return;
         }
-        if self.nodes % 4096 == 0 && (self.cancel)() {
+        if self.nodes.is_multiple_of(4096) && (self.cancel)() {
             self.max_nodes = self.nodes; // stop: keep the best solution found so far
             return;
         }

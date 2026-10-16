@@ -167,7 +167,7 @@ pub fn run(s: &mut Solve) {
                 continue;
             }
             popped += 1;
-            if popped % 64 == 0 && s.poll_cancel() {
+            if popped.is_multiple_of(64) && s.poll_cancel() {
                 break;
             }
             if !process_unit(s, &mut g, i, false) && !g.done[i] {
