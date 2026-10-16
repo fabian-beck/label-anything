@@ -72,14 +72,16 @@ median engine time in ms (target in parentheses):
 
 Four of the nine targets are met on this machine. The brief sets them for a 2023 laptop, whose
 cores are faster than this VM's, but the gate checks them as measured, on whatever machine runs
-the benchmark. The 2,000-label problem misses in every implementation. Most of its time goes to
-the degradation ladder of the ≈ 1,400 labels that find no room at level 0 (≈ 1,025 of them are
-omitted in the end): their wrapped and shrunk variants get adjacent, slider and distant
-candidates, which are tested against the placed labels, one item after the other. With all
-cores (`--threads 0`) the native engine runs the order-independent phases in parallel (feature
-`parallel`: obstacle rasterization, level-0 candidates, the distance transform): 14.1, 244 and
-21.7 ms on this VM. Numbers from a faster machine are lower; compare numbers from the same
-machine only.
+the benchmark. The 2,000-label problem misses in every implementation. Single-threaded, about
+40 % of its time goes to the degradation ladder of the ≈ 1,400 labels that find no room at
+level 0 (≈ 1,025 of them are omitted in the end): their wrapped and shrunk variants get
+adjacent, slider and distant candidates (about 1.3 million boxes in all), which are tested
+against the item marks and the placed labels, one item after the other. The level-0 pass
+(lookahead) takes about 17 %, preparing the 100k obstacle points 14 %, the level-0 candidates
+10 %. With all cores (`--threads 0`) the native engine runs the order-independent phases in
+parallel (feature `parallel`: obstacle rasterization, level-0 candidates, the distance
+transform): 14.1, 244 and 21.7 ms on this VM. Numbers from a faster machine are lower; compare
+numbers from the same machine only.
 
 ## Milestone acceptance
 
@@ -90,13 +92,15 @@ machine:
 * **M3, leaders: passed.** 0 leader crossings on all 345 solves — every problem and every
   frame of the two scenario-11 sequences, for the full solver and the two greedy variants
   below.
-* **M4, optimization: passed.** On the 36 dense problems (where the greedy pass omits
-  labels), the full solve's `placed_weighted` is 57.6 % above that of the greedy pass alone
-  on average (median 28.2 %; needs 5 %), with no new priority inversions. Greedy is
-  the greedy pass of brief §5.6 without the degradation ladder (`--strategy greedy --degrade
-  omit`), since the brief runs the ladder "at the end of greedy" and counts it to M4.
-* **The local search's own share is small:** +0.7 % on average (median +0.1 %) over the
-  greedy pass *with* the ladder, and even 20 times the iterations add at most 1.7 % (six
+* **M4, optimization: passed against the greedy pass alone.** On the 36 dense problems
+  (where the greedy pass omits labels), the full solve's `placed_weighted` is 57.6 % above
+  that of the greedy pass alone on average (median 28.2 %; needs 5 %), with no new priority
+  inversions. Greedy is the greedy pass of brief §5.6 without the degradation ladder
+  (`--strategy greedy --degrade omit`), since the brief runs the ladder "at the end of
+  greedy" and lists it under M4.
+* **Read with the ladder as part of greedy, M4 is not met:** the local search alone adds
+  +0.7 % on average (median +0.1 %) over the greedy pass *with* the ladder
+  (`--baseline ladder`), and even 20 times the iterations add at most 1.7 % (six
   airport, POI and stress problems tried). With strict priorities the greedy pass and the
   ladder already secure the high-priority labels that dominate `placed_weighted`; the local
   search mostly lowers costs and adds a few low-priority labels.
