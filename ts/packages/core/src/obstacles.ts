@@ -14,6 +14,7 @@ import {
   distPointSegXY,
   distSegRectXY,
   rectDistPointXY,
+  sampleRangeInRect,
   segOverlapsRectXY,
   segSegDistXY,
 } from "./geom/index.js";
@@ -252,8 +253,12 @@ export class Obstacles {
     const step = g.cell;
     const nc = toIndex(Math.ceil(len / step));
     const n = nc > 1 ? nc : 1;
+    // only the samples that can fall on the grid (the others never count; the margin of
+    // one cell absorbs rounding)
+    const area = new Rect(g.ox, g.oy, g.ox + g.cols * step, g.oy + g.rows * step).inflate(step);
+    const [k0, k1] = sampleRangeInRect(a, b, n, area);
     let acc = 0;
-    for (let k = 0; k < n; k++) {
+    for (let k = k0; k < k1; k++) {
       const t = (k + 0.5) / n;
       const px = a.x + (b.x - a.x) * t;
       const py = a.y + (b.y - a.y) * t;
