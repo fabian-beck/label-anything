@@ -4,7 +4,7 @@
  * @minItems 2
  * @maxItems 2
  */
-export type Point = [unknown, unknown];
+export type Point = [number, number];
 
 /**
  * Result of a Label Anything solve, version 1. All coordinates are canvas pixels, origin top-left, y down.

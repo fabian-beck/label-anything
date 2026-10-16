@@ -126,12 +126,32 @@ function tsFonts() {
   return lines.join("\n");
 }
 
+/**
+ * json-schema-to-typescript understands draft-07 tuples (`items: [...]`) but not 2020-12
+ * `prefixItems`, which it types as `[unknown, unknown]`. Rewrite them (types only; the
+ * validators read the real schema).
+ */
+function draft07Tuples(node) {
+  if (Array.isArray(node)) return node.map(draft07Tuples);
+  if (node === null || typeof node !== "object") return node;
+  const out = {};
+  for (const [k, v] of Object.entries(node)) out[k] = draft07Tuples(v);
+  if (Array.isArray(out.prefixItems)) {
+    const rest = out.items;
+    out.items = out.prefixItems;
+    delete out.prefixItems;
+    const closed = rest === false || (out.maxItems !== undefined && out.maxItems === out.items.length);
+    out.additionalItems = closed ? false : rest ?? true;
+  }
+  return out;
+}
+
 async function tsTypes() {
   const require = createRequire(join(root, "ts/package.json"));
   const { compile } = require("json-schema-to-typescript");
   const out = {};
   for (const [name, file] of [["problem", "problem.v1.json"], ["result", "result.v1.json"]]) {
-    const schema = JSON.parse(readFileSync(join(root, "spec/schema", file), "utf8"));
+    const schema = draft07Tuples(JSON.parse(readFileSync(join(root, "spec/schema", file), "utf8")));
     if (name === "problem") {
       // TypeScript requires named properties to match the index signature; widen the
       // index type of avoid.label so `own_mark` (partial:f) type-checks. Validation is
