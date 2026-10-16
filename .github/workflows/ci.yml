@@ -87,6 +87,8 @@ jobs:
       - run: npm ci
       - name: Type-check and build
         run: npm run build
+      - name: Brief example (§6.2), verbatim (@label-anything/core)
+        run: node examples/brief/js_6_2.mjs
       - name: Conformance (place cases, TypeScript core)
         run: npm run conformance
       - name: Rust CLI (the real engine for the JS helpers' integration tests)
@@ -129,8 +131,8 @@ jobs:
         run: cargo build --release --manifest-path rust/Cargo.toml -p label-anything-cli
       - name: Tests in Node
         run: npx vitest run ts/packages/wasm-adapter
-      - name: Brief example (§6.2), verbatim
-        run: node examples/brief/js_6_2.mjs
+      - name: Brief example (§6.2), against @label-anything/wasm
+        run: node examples/brief/js_6_2_wasm.mjs
       - name: Tutorial programs of the docs (JavaScript; browser snippets under jsdom; TypeScript CLI)
         run: |
           python3 examples/tutorials/run.py js

@@ -245,7 +245,7 @@ npm run build:wasm -w @label-anything/wasm   # cargo build + wasm-bindgen into w
 npm run build                                # TypeScript (all packages)
 npx vitest run                               # all packages
 npm run test:browser -w @label-anything/wasm # Playwright + Chromium smoke test
-node examples/brief/js_6_2.mjs               # the brief's §6.2 example, verbatim
+node examples/brief/js_6_2_wasm.mjs          # the brief's §6.2 example with @label-anything/wasm
 ```
 
 The CI job `wasm` (`.github/workflows/ci.yml`) does exactly this on ubuntu-latest with
