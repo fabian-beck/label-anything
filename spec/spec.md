@@ -134,6 +134,12 @@ Cell size `c = solver.grid_cell`, or `auto` = `clamp(min_font_size / 4, 1, 4)` w
 canvas (or the unbounded working extent) with `cols = ceil(W / c)`, `rows = ceil(H / c)`
 cells, origin at the canvas origin (or the extent's top-left).
 
+The grid has at most 16 000 000 cells. When the `auto` cell size would exceed that (a
+canvas of more than about 16 000 × 16 000 px), `c` becomes `max(c, sqrt(W·H / 16·10⁶))`
+and is then multiplied by 1.25 until `cols · rows` fits. An explicit `solver.grid_cell`
+that exceeds the limit, and a working extent that is not finite, are errors
+(code `limit`).
+
 Every class that occurs and is not `ignore` for both labels and leaders gets one
 **coverage grid**: `u8` per cell, `0..255` = fraction of the cell covered (`255` = full).
 A cell touched by geometry never stores 0 (minimum 1), so "any coverage" is

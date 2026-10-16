@@ -331,7 +331,9 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
             let env = env_for(Some(&problem));
             let svg = label_anything::render_svg(&p, &r, &env);
             if output.ends_with(".png") {
-                return Err("PNG output is not available in this build; write .svg instead".into());
+                let png = svg_to_png(&svg)?;
+                std::fs::write(&output, png).map_err(|e| format!("{output}: {e}"))?;
+                return Ok(ExitCode::SUCCESS);
             }
             write_output(&output, &svg)?;
             Ok(ExitCode::SUCCESS)
@@ -442,4 +444,29 @@ fn serve(host: &str, port: u16) -> Result<ExitCode, String> {
         let _ = req.respond(resp);
     }
     Ok(ExitCode::SUCCESS)
+}
+
+/// Rasterize an SVG (the debug overlay) to PNG with the bundled Noto Sans.
+#[cfg(feature = "png")]
+fn svg_to_png(svg: &str) -> Result<Vec<u8>, String> {
+    use resvg::{tiny_skia, usvg};
+    let mut opt = usvg::Options::default();
+    let fonts = opt.fontdb_mut();
+    fonts.load_font_data(include_bytes!("../assets/NotoSans-Regular.ttf").to_vec());
+    fonts.load_font_data(include_bytes!("../assets/NotoSans-Bold.ttf").to_vec());
+    fonts.set_sans_serif_family("Noto Sans");
+    let tree =
+        usvg::Tree::from_str(svg, &opt).map_err(|e| format!("cannot render the SVG: {e}"))?;
+    let size = tree.size().to_int_size();
+    let mut pixmap =
+        tiny_skia::Pixmap::new(size.width(), size.height()).ok_or("the image is empty")?;
+    resvg::render(&tree, tiny_skia::Transform::default(), &mut pixmap.as_mut());
+    pixmap
+        .encode_png()
+        .map_err(|e| format!("cannot encode the PNG: {e}"))
+}
+
+#[cfg(not(feature = "png"))]
+fn svg_to_png(_svg: &str) -> Result<Vec<u8>, String> {
+    Err("PNG output needs the `png` feature of label-anything-cli; write .svg instead".into())
 }
