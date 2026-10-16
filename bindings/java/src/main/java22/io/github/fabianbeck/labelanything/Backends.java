@@ -11,12 +11,17 @@ final class Backends {
 
   private static NativeBackend jni;
   private static NativeBackend ffm;
-  private static NativeBackend selected;
+  private static volatile NativeBackend selected;
 
   private Backends() {}
 
   /** The backend for this JVM (chosen once). */
-  static synchronized NativeBackend get() {
+  static NativeBackend get() {
+    NativeBackend b = selected;
+    return b != null ? b : select();
+  }
+
+  private static synchronized NativeBackend select() {
     if (selected == null) {
       String choice = System.getProperty(PROPERTY, "auto").trim().toLowerCase(java.util.Locale.ROOT);
       selected = switch (choice) {

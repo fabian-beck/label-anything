@@ -129,10 +129,10 @@ final class NativeLibrary {
           ? Files.createDirectories(Paths.get(tmp))
           : Paths.get(System.getProperty("java.io.tmpdir"));
       Path sub = Files.createTempDirectory(dir, "labelanything-");
+      sub.toFile().deleteOnExit(); // registered first: deleted last, after the file
       Path file = sub.resolve(fileName());
       Files.copy(in, file, StandardCopyOption.REPLACE_EXISTING);
       file.toFile().deleteOnExit();
-      sub.toFile().deleteOnExit();
       return file.toAbsolutePath();
     } catch (IOException e) {
       throw new LabelAnythingException("cannot extract " + resource + ": " + e.getMessage(), e);

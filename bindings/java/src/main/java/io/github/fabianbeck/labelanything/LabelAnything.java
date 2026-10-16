@@ -67,6 +67,9 @@ public final class LabelAnything {
   public static ValidationReport validate(String problemJson) {
     Objects.requireNonNull(problemJson, "problemJson");
     NativeBackend.Reply r = Backends.get().validate(problemJson);
+    if (r.code() == LabelAnythingException.ERROR) {
+      check(r); // an internal failure, not a validation report
+    }
     return ValidationReport.parse(r.text());
   }
 
