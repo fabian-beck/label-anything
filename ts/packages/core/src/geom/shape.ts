@@ -199,31 +199,16 @@ export abstract class ShapeBase {
   /** {@link signedDistance} on scalars. */
   signedDistanceXY(px: number, py: number): number {
     const s = this as unknown as Shape;
+    // (the arms are small functions so that this dispatcher stays inlinable)
     switch (s.kind) {
       case "circle":
         return len2d(px - s.c.x, py - s.c.y) - s.r;
-      case "ellipse": {
-        const { c, cos, sin } = s;
-        const dx = px - c.x;
-        const dy = py - c.y;
-        return ellipseSignedDistance(dx * cos + dy * sin, -dx * sin + dy * cos, s.rx, s.ry);
-      }
-      case "roundRect": {
-        const { c, hw, hh, r, cos, sin } = s;
-        const dx = px - c.x;
-        const dy = py - c.y;
-        const lx = dx * cos + dy * sin;
-        const ly = -dx * sin + dy * cos;
-        const qx = Math.abs(lx) - (hw - r);
-        const qy = Math.abs(ly) - (hh - r);
-        const outside = len2d(maxf(qx, 0), maxf(qy, 0));
-        return outside + minf(maxf(qx, qy), 0) - r;
-      }
-      case "polygon": {
-        const ps = s.poly;
-        const d = polygon.distBoundaryXY(ps.rings, px, py);
-        return polygon.containsXY(ps.rings, ps.evenOdd, px, py) ? -d : d;
-      }
+      case "ellipse":
+        return ellipseSd(s, px, py);
+      case "roundRect":
+        return roundRectSd(s, px, py);
+      case "polygon":
+        return polygonSd(s.poly, px, py);
     }
   }
 
@@ -231,38 +216,12 @@ export abstract class ShapeBase {
   overlapsRect(r: Rect): boolean {
     const s = this as unknown as Shape;
     switch (s.kind) {
-      case "circle": {
-        const c = s.c;
-        if (s.r <= EPS) {
-          // a bare point overlaps only if strictly inside: r.inflate(-EPS).contains_point(c)
-          const d = -EPS;
-          return c.x >= r.x0 - d && c.x <= r.x1 + d && c.y >= r.y0 - d && c.y <= r.y1 + d;
-        }
-        return rectDistPointXY(r.x0, r.y0, r.x1, r.y1, c.x, c.y) < s.r - EPS;
-      }
-      case "ellipse": {
-        if (!s.bb.overlaps(r)) return false;
-        // map to the unit circle: the rectangle becomes a parallelogram
-        const { c, rx, ry, cos, sin } = s;
-        for (let i = 0; i < 4; i++) {
-          const kx = i === 0 || i === 3 ? r.x0 : r.x1;
-          const ky = i < 2 ? r.y0 : r.y1;
-          const dx = kx - c.x;
-          const dy = ky - c.y;
-          QA[2 * i] = (dx * cos + dy * sin) / rx;
-          QA[2 * i + 1] = (-dx * sin + dy * cos) / ry;
-        }
-        return convexQuadOverlapsUnitDisc(QA, EPS / maxf(minf(rx, ry), EPS));
-      }
-      case "roundRect": {
-        if (!s.bb.overlaps(r)) return false;
-        // distance between the inner (sharp) rect and `r` < rad
-        if (s.r <= 0) {
-          rectCorners(r, QB);
-          return convexPolygonsOverlap(s.inner, 4, QB, 4, EPS);
-        }
-        return convexPolyRectDistance(s.inner, 4, r) < s.r - EPS;
-      }
+      case "circle":
+        return circleOverlapsRect(s, r);
+      case "ellipse":
+        return ellipseOverlapsRect(s, r);
+      case "roundRect":
+        return roundRectOverlapsRect(s, r);
       case "polygon":
         return polygon.overlapsRect(s.poly.rings, s.poly.evenOdd, s.poly.bbox, r);
     }
@@ -524,6 +483,67 @@ export class PolygonShape extends ShapeBase {
     super();
     this.poly = poly;
   }
+}
+
+// Arms of `ShapeBase.signedDistanceXY` and `ShapeBase.overlapsRect`.
+
+function ellipseSd(s: EllipseShape, px: number, py: number): number {
+  const { c, cos, sin } = s;
+  const dx = px - c.x;
+  const dy = py - c.y;
+  return ellipseSignedDistance(dx * cos + dy * sin, -dx * sin + dy * cos, s.rx, s.ry);
+}
+
+function roundRectSd(s: RoundRectShape, px: number, py: number): number {
+  const { c, hw, hh, r, cos, sin } = s;
+  const dx = px - c.x;
+  const dy = py - c.y;
+  const lx = dx * cos + dy * sin;
+  const ly = -dx * sin + dy * cos;
+  const qx = Math.abs(lx) - (hw - r);
+  const qy = Math.abs(ly) - (hh - r);
+  const outside = len2d(maxf(qx, 0), maxf(qy, 0));
+  return outside + minf(maxf(qx, qy), 0) - r;
+}
+
+function polygonSd(ps: PolyShape, px: number, py: number): number {
+  const d = polygon.distBoundaryXY(ps.rings, px, py);
+  return polygon.containsXY(ps.rings, ps.evenOdd, px, py) ? -d : d;
+}
+
+function circleOverlapsRect(s: CircleShape, r: Rect): boolean {
+  const c = s.c;
+  if (s.r <= EPS) {
+    // a bare point overlaps only if strictly inside: r.inflate(-EPS).contains_point(c)
+    const d = -EPS;
+    return c.x >= r.x0 - d && c.x <= r.x1 + d && c.y >= r.y0 - d && c.y <= r.y1 + d;
+  }
+  return rectDistPointXY(r.x0, r.y0, r.x1, r.y1, c.x, c.y) < s.r - EPS;
+}
+
+function ellipseOverlapsRect(s: EllipseShape, r: Rect): boolean {
+  if (!s.bb.overlaps(r)) return false;
+  // map to the unit circle: the rectangle becomes a parallelogram
+  const { c, rx, ry, cos, sin } = s;
+  for (let i = 0; i < 4; i++) {
+    const kx = i === 0 || i === 3 ? r.x0 : r.x1;
+    const ky = i < 2 ? r.y0 : r.y1;
+    const dx = kx - c.x;
+    const dy = ky - c.y;
+    QA[2 * i] = (dx * cos + dy * sin) / rx;
+    QA[2 * i + 1] = (-dx * sin + dy * cos) / ry;
+  }
+  return convexQuadOverlapsUnitDisc(QA, EPS / maxf(minf(rx, ry), EPS));
+}
+
+function roundRectOverlapsRect(s: RoundRectShape, r: Rect): boolean {
+  if (!s.bb.overlaps(r)) return false;
+  // distance between the inner (sharp) rect and `r` < rad
+  if (s.r <= 0) {
+    rectCorners(r, QB);
+    return convexPolygonsOverlap(s.inner, 4, QB, 4, EPS);
+  }
+  return convexPolyRectDistance(s.inner, 4, r) < s.r - EPS;
 }
 
 /** Interiors of two shapes overlap (touching is allowed). */
@@ -832,24 +852,63 @@ function convexPolygonsOverlap(a: Float64Array, na: number, b: Float64Array, nb:
       const ax = l > 0 ? -ey / l : 0;
       const ay = l > 0 ? ex / l : 0;
       if (ax * ax + ay * ay === 0) continue;
+      if (na === 4 && nb === 4) {
+        // the common case (rectangles), unrolled
+        if (separatedQuads(a, b, ax, ay, eps)) return false;
+        continue;
+      }
+      // amin = minf(amin, s) etc.: the accumulators start at ±inf and only take values
+      // of s that are not NaN, so the NaN branch of minf/maxf can never apply
       let amin = Infinity;
       let amax = -Infinity;
       for (let k = 0; k < na; k++) {
         const s = a[2 * k]! * ax + a[2 * k + 1]! * ay;
-        amin = minf(amin, s);
-        amax = maxf(amax, s);
+        if (s < amin) amin = s;
+        if (s > amax) amax = s;
       }
       let bmin = Infinity;
       let bmax = -Infinity;
       for (let k = 0; k < nb; k++) {
         const s = b[2 * k]! * ax + b[2 * k + 1]! * ay;
-        bmin = minf(bmin, s);
-        bmax = maxf(bmax, s);
+        if (s < bmin) bmin = s;
+        if (s > bmax) bmax = s;
       }
       if (amax <= bmin + eps || bmax <= amin + eps) return false;
     }
   }
   return true;
+}
+
+/**
+ * The projections of two quadrilaterals onto `(ax, ay)` are separated (the body of
+ * {@link convexPolygonsOverlap} for 4 + 4 points, unrolled: same operations, same order).
+ */
+function separatedQuads(a: Float64Array, b: Float64Array, ax: number, ay: number, eps: number): boolean {
+  const s0 = a[0]! * ax + a[1]! * ay;
+  const s1 = a[2]! * ax + a[3]! * ay;
+  const s2 = a[4]! * ax + a[5]! * ay;
+  const s3 = a[6]! * ax + a[7]! * ay;
+  let amin = s0 < Infinity ? s0 : Infinity;
+  let amax = s0 > -Infinity ? s0 : -Infinity;
+  if (s1 < amin) amin = s1;
+  if (s1 > amax) amax = s1;
+  if (s2 < amin) amin = s2;
+  if (s2 > amax) amax = s2;
+  if (s3 < amin) amin = s3;
+  if (s3 > amax) amax = s3;
+  const t0 = b[0]! * ax + b[1]! * ay;
+  const t1 = b[2]! * ax + b[3]! * ay;
+  const t2 = b[4]! * ax + b[5]! * ay;
+  const t3 = b[6]! * ax + b[7]! * ay;
+  let bmin = t0 < Infinity ? t0 : Infinity;
+  let bmax = t0 > -Infinity ? t0 : -Infinity;
+  if (t1 < bmin) bmin = t1;
+  if (t1 > bmax) bmax = t1;
+  if (t2 < bmin) bmin = t2;
+  if (t2 > bmax) bmax = t2;
+  if (t3 < bmin) bmin = t3;
+  if (t3 > bmax) bmax = t3;
+  return amax <= bmin + eps || bmax <= amin + eps;
 }
 
 /** Distance between a convex polygon and a rectangle (0 if overlapping/touching). */

@@ -485,12 +485,24 @@ export function distSegRectXY(
   y1: number,
 ): number {
   if (clipSegRectXY(ax, ay, bx, by, x0, y0, x1, y1)) return 0;
-  // corners top-left, top-right, bottom-right, bottom-left; edges i → i + 1
+  // corners top-left, top-right, bottom-right, bottom-left; edges i → i + 1 (a loop with
+  // one call site, which the JIT can inline)
   let m = Infinity;
-  m = minf(m, segSegDistXY(ax, ay, bx, by, x0, y0, x1, y0));
-  m = minf(m, segSegDistXY(ax, ay, bx, by, x1, y0, x1, y1));
-  m = minf(m, segSegDistXY(ax, ay, bx, by, x1, y1, x0, y1));
-  return minf(m, segSegDistXY(ax, ay, bx, by, x0, y1, x0, y0));
+  for (let i = 0; i < 4; i++) {
+    m = minf(m, segSegDistXY(ax, ay, bx, by, cornerX(i, x0, x1), cornerY(i, y0, y1), cornerX(i + 1, x0, x1), cornerY(i + 1, y0, y1)));
+  }
+  return m;
+}
+
+/** x of corner `i % 4` of a rectangle (top-left, top-right, bottom-right, bottom-left). */
+export function cornerX(i: number, x0: number, x1: number): number {
+  const k = i & 3;
+  return k === 0 || k === 3 ? x0 : x1;
+}
+
+/** y of corner `i % 4` of a rectangle (top-left, top-right, bottom-right, bottom-left). */
+export function cornerY(i: number, y0: number, y1: number): number {
+  return (i & 3) < 2 ? y0 : y1;
 }
 
 /** Bounding box of a point list. */

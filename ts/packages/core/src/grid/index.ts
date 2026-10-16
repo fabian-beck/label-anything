@@ -100,9 +100,11 @@ function clampCeil(v: number, n: number): number {
   return toIndex(Math.ceil(v));
 }
 
-/** Axis parts of {@link Sat.integral}: `[start, end, weight] × 3` per axis. */
-const XS = new Float64Array(9);
-const YS = new Float64Array(9);
+/** Axis parts of {@link Sat.integral}: cells `[start, end)` and weights, 3 per axis. */
+const XI = new Int32Array(6);
+const XW = new Float64Array(3);
+const YI = new Int32Array(6);
+const YW = new Float64Array(3);
 
 /** Summed-area table of a `u8` coverage grid (wrapping `u32`). */
 export class Sat {
@@ -168,18 +170,18 @@ export class Sat {
     const v0 = clamp01((rect.y0 - g.oy) / g.cell, rows);
     const v1 = clamp01((rect.y1 - g.oy) / g.cell, rows);
     if (u1 <= u0 || v1 <= v0) return 0;
-    axisParts(u0, u1, cols, XS);
-    axisParts(v0, v1, rows, YS);
+    axisParts(u0, u1, cols, XI, XW);
+    axisParts(v0, v1, rows, YI, YW);
     let total = 0;
-    for (let j = 0; j < 9; j += 3) {
-      const wy = YS[j + 2]!;
+    for (let j = 0; j < 3; j++) {
+      const wy = YW[j]!;
       if (wy === 0) continue;
-      const ya = YS[j]!;
-      const yb = YS[j + 1]!;
-      for (let i = 0; i < 9; i += 3) {
-        const wx = XS[i + 2]!;
+      const ya = YI[2 * j]!;
+      const yb = YI[2 * j + 1]!;
+      for (let i = 0; i < 3; i++) {
+        const wx = XW[i]!;
         if (wx === 0) continue;
-        const s = this.block(XS[i]!, XS[i + 1]!, ya, yb);
+        const s = this.block(XI[2 * i]!, XI[2 * i + 1]!, ya, yb);
         if (s !== 0) total += wx * wy * s;
       }
     }
@@ -214,32 +216,34 @@ function clamp01(v: number, n: number): number {
 
 /**
  * Split the interval `[a, b]` (cell units, `0 <= a < b <= n`) into up to three parts:
- * the partial first cell, the full interior cells and the partial last cell. Each part is
- * `(start_cell, end_cell_exclusive, weight)` in `out[3k..3k+3]`; unused parts have
- * weight 0.
+ * the partial first cell, the full interior cells and the partial last cell. Part `k` is
+ * cells `[cells[2k], cells[2k + 1])` with weight `w[k]`; unused parts have weight 0
+ * (their cells are stale and never read).
  */
-function axisParts(a: number, b: number, n: number, out: Float64Array): void {
-  out.fill(0);
+function axisParts(a: number, b: number, n: number, cells: Int32Array, w: Float64Array): void {
+  w[0] = 0;
+  w[1] = 0;
+  w[2] = 0;
   const i0 = toIndex(Math.floor(a));
   if (i0 >= n) return;
   const bf = Math.floor(b);
   const i1 = toIndex(bf); // cell containing b, or n when b == n
   if (i1 === i0) {
-    out[0] = i0;
-    out[1] = i0 + 1;
-    out[2] = b - a;
+    cells[0] = i0;
+    cells[1] = i0 + 1;
+    w[0] = b - a;
     return;
   }
-  out[0] = i0;
-  out[1] = i0 + 1;
-  out[2] = i0 + 1 - a;
-  out[3] = i0 + 1;
-  out[4] = i1;
-  out[5] = 1;
+  cells[0] = i0;
+  cells[1] = i0 + 1;
+  w[0] = i0 + 1 - a;
+  cells[2] = i0 + 1;
+  cells[3] = i1;
+  w[1] = 1;
   if (i1 < n && b > bf) {
-    out[6] = i1;
-    out[7] = i1 + 1;
-    out[8] = b - bf;
+    cells[4] = i1;
+    cells[5] = i1 + 1;
+    w[2] = b - bf;
   }
 }
 

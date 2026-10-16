@@ -15,6 +15,8 @@ import {
   P,
   Rect,
   bboxOf,
+  cornerX,
+  cornerY,
   distPointSegXY,
   orientXY,
   segCrossProperXY,
@@ -221,10 +223,11 @@ export function containsRect(rings: readonly Ring[], evenOdd: boolean, r: Rect, 
       const b = ring[(i + 1) % n]!;
       // Any boundary edge entering the rectangle invalidates containment.
       if (segOverlapsRectXY(a.x, a.y, b.x, b.y, x0, y0, x1, y1)) return false;
-      if (segCrossProperXY(a.x, a.y, b.x, b.y, x0, y0, x1, y0)) return false;
-      if (segCrossProperXY(a.x, a.y, b.x, b.y, x1, y0, x1, y1)) return false;
-      if (segCrossProperXY(a.x, a.y, b.x, b.y, x1, y1, x0, y1)) return false;
-      if (segCrossProperXY(a.x, a.y, b.x, b.y, x0, y1, x0, y0)) return false;
+      for (let c = 0; c < 4; c++) {
+        const cx = cornerX(c, x0, x1);
+        const cy = cornerY(c, y0, y1);
+        if (segCrossProperXY(a.x, a.y, b.x, b.y, cx, cy, cornerX(c + 1, x0, x1), cornerY(c + 1, y0, y1))) return false;
+      }
     }
   }
   return true;
@@ -241,10 +244,11 @@ export function distRect(rings: readonly Ring[], evenOdd: boolean, bbox: Rect, r
     for (let i = 0; i < n; i++) {
       const a = ring[i]!;
       const b = ring[(i + 1) % n]!;
-      m = minf(m, segSegDistXY(a.x, a.y, b.x, b.y, x0, y0, x1, y0));
-      m = minf(m, segSegDistXY(a.x, a.y, b.x, b.y, x1, y0, x1, y1));
-      m = minf(m, segSegDistXY(a.x, a.y, b.x, b.y, x1, y1, x0, y1));
-      m = minf(m, segSegDistXY(a.x, a.y, b.x, b.y, x0, y1, x0, y0));
+      for (let c = 0; c < 4; c++) {
+        const cx = cornerX(c, x0, x1);
+        const cy = cornerY(c, y0, y1);
+        m = minf(m, segSegDistXY(a.x, a.y, b.x, b.y, cx, cy, cornerX(c + 1, x0, x1), cornerY(c + 1, y0, y1)));
+      }
     }
   }
   return m;
