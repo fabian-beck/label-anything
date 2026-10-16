@@ -1,6 +1,7 @@
 // Port of the unit tests of rust/crates/la-core/src/index.rs.
 import { describe, expect, it } from "vitest";
 import { Rect } from "../src/geom/index.js";
+import { Pcg32 } from "../src/pcg.js";
 import { DynIndex, IdList, StaticIndex } from "../src/spatial.js";
 
 describe("index", () => {
@@ -61,5 +62,26 @@ describe("index", () => {
     ix.query(Rect.xywh(50, 50, 10, 10), out);
     expect(out.toArray()).toEqual([0]);
     expect(new StaticIndex([], Rect.xywh(0, 0, 1, 1), 1).isEmpty()).toBe(true);
+  });
+
+  // TypeScript only: the early-exit scan of DynIndex yields the ids of `query` in order.
+  it("dynamic_scan_yields_the_query_ids_in_order", () => {
+    const rng = new Pcg32(5);
+    const ix = new DynIndex(Rect.xywh(0, 0, 400, 300), 16);
+    const out = new IdList();
+    const box = (): Rect => Rect.xywh(rng.nextF64() * 420 - 10, rng.nextF64() * 320 - 10, rng.nextF64() * 80, rng.nextF64() * 40);
+    for (let step = 0; step < 3000; step++) {
+      const id = rng.nextU32() % 200;
+      if (rng.nextU32() % 3 === 0) ix.remove(id);
+      else ix.insert(id, box());
+      const q = box();
+      const grow = step % 2 === 0 ? 0 : 2e-6;
+      ix.query(q.inflate(grow), out);
+      const scanned: number[] = [];
+      ix.scanStart(q, grow);
+      for (let j = ix.scanNext(); j >= 0; j = ix.scanNext()) scanned.push(j);
+      expect(scanned).toEqual(out.toArray());
+      expect(ix.scanNext()).toBe(-1);
+    }
   });
 });

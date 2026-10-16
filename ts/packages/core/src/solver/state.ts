@@ -241,10 +241,10 @@ export class State {
     const leHard = dy.leaderLeaders.kind === AvoidKind.Hard;
     const keys = this.keys;
     const bb = c.bbox();
-    const buf = this.buf;
-    this.labelIx.query(bb, buf);
-    for (let q = 0; q < buf.len; q++) {
-      const j = buf.get(q);
+    // scans in query order that stop at the first conflict
+    const lix = this.labelIx;
+    lix.scanStart(bb, 0);
+    for (let j = lix.scanNext(); j >= 0; j = lix.scanNext()) {
       if (j === skip || !(keys[j]! <= keyLimit)) continue;
       const pid = this.placed[j]!;
       if (pid < 0) continue;
@@ -253,10 +253,11 @@ export class State {
       if (lbHard && leadersOverlapRect(c, p.rect)) return j;
     }
     if (this.hasSegs()) {
-      this.segIx.query(bb.inflate(EPS * 2), buf);
+      // segments near bb.inflate(2 EPS)
+      const six = this.segIx;
+      six.scanStart(bb, EPS * 2);
       const r = c.rect;
-      for (let q = 0; q < buf.len; q++) {
-        const s = buf.get(q);
+      for (let s = six.scanNext(); s >= 0; s = six.scanNext()) {
         const j = this.segItem[s]!;
         if (j === skip || !(keys[j]! <= keyLimit)) continue;
         const ax = this.segAx[s]!;

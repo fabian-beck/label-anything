@@ -229,6 +229,9 @@ export class StaticIndex {
   }
 }
 
+/** An empty bucket (end of a scan). */
+const NO_IDS: number[] = [];
+
 /** Dynamic index (placed labels, leader segments). Removal is O(bucket size). */
 export class DynIndex {
   private b: Buckets;
@@ -238,6 +241,15 @@ export class DynIndex {
   private bx: Float64Array;
   private stamp: Uint32Array;
   private gen = 0;
+  /** Scan state ({@link scanStart}): box, bucket range, position. */
+  private readonly sbox = new Float64Array(4);
+  private sc0 = 0;
+  private sc1 = 0;
+  private sr1 = 0;
+  private srow = 0;
+  private scol = 0;
+  private sv: number[] = NO_IDS;
+  private si = 0;
 
   /** An empty index on buckets of size `cell` covering `extent` (at most 4096 × 4096). */
   constructor(extent: Rect, cell: number) {
@@ -346,6 +358,80 @@ export class DynIndex {
           }
         }
       }
+    }
+  }
+
+  /**
+   * Start a scan of the ids whose boxes touch `r` grown by `grow` on every side: the ids
+   * of {@link query} (of `r.inflate(grow)`) in the same order, one at a time from
+   * {@link scanNext}, so that a caller looking for the first match can stop early. One
+   * scan per index at a time; inserts and removals end it.
+   */
+  scanStart(r: Rect, grow: number): void {
+    // r.inflate(grow), then Buckets.range
+    const x0 = r.x0 - grow;
+    const y0 = r.y0 - grow;
+    const x1 = r.x1 + grow;
+    const y1 = r.y1 + grow;
+    const b = this.b;
+    const c0 = clampBucket((x0 - b.ox) / b.cell, b.cols);
+    const c1 = clampBucket((x1 - b.ox) / b.cell, b.cols);
+    const r0 = clampBucket((y0 - b.oy) / b.cell, b.rows);
+    const r1 = clampBucket((y1 - b.oy) / b.cell, b.rows);
+    if (this.stamp.length < this.boxes.length) {
+      const grown = new Uint32Array(this.boxes.length > 2 * this.stamp.length ? this.boxes.length : 2 * this.stamp.length);
+      grown.set(this.stamp);
+      this.stamp = grown;
+    }
+    let gen = (this.gen + 1) >>> 0;
+    if (gen === 0) {
+      this.stamp.fill(0);
+      gen = 1;
+    }
+    this.gen = gen;
+    const sb = this.sbox;
+    sb[0] = x0;
+    sb[1] = y0;
+    sb[2] = x1;
+    sb[3] = y1;
+    this.sc0 = c0;
+    this.sc1 = c1;
+    this.sr1 = r1;
+    this.srow = r0;
+    this.scol = c0;
+    this.sv = this.buckets[r0 * b.cols + c0]!;
+    this.si = 0;
+  }
+
+  /** The next id of the scan started by {@link scanStart}, or -1 when it is done. */
+  scanNext(): number {
+    const stamp = this.stamp;
+    const gen = this.gen;
+    const bx = this.bx;
+    const boxes = this.boxes;
+    const sb = this.sbox;
+    for (;;) {
+      const v = this.sv;
+      while (this.si < v.length) {
+        const id = v[this.si++]!;
+        if (stamp[id] === gen) continue;
+        stamp[id] = gen;
+        if (boxes[id] !== null) {
+          const o = 4 * id;
+          if (bx[o]! <= sb[2]! && sb[0]! <= bx[o + 2]! && bx[o + 1]! <= sb[3]! && sb[1]! <= bx[o + 3]!) return id;
+        }
+      }
+      if (this.scol < this.sc1) this.scol++;
+      else if (this.srow < this.sr1) {
+        this.srow++;
+        this.scol = this.sc0;
+      } else {
+        this.sv = NO_IDS;
+        this.si = 0;
+        return -1;
+      }
+      this.sv = this.buckets[this.srow * this.b.cols + this.scol]!;
+      this.si = 0;
     }
   }
 
