@@ -14,6 +14,7 @@
 """
 from __future__ import annotations
 
+import functools
 import html
 import math
 from pathlib import Path
@@ -291,17 +292,17 @@ def runtime_svg(report: dict, which: str = "engine") -> str | None:
         lx += 22 + 6.5 * len(label)
     lx0, ly0 = math.log10(xs[0]), math.log10(ys[0])
     lx1, ly1 = math.log10(xs[-1]), math.log10(ys[-1])
+    def scale(v: float, lo: float, hi: float, a: float, b: float) -> float:
+        """log10(v) mapped from [lo, hi] (log10 units) to [a, b] (px)."""
+        return a + (math.log10(v) - lo) / (hi - lo) * (b - a)
+
     for k, (title, sub, series) in enumerate(panels):
         ox = (k % cols) * PW
         oy = legend_h + (k // cols) * PH
         x0, x1 = ox + ml, ox + PW - mr
         y0, y1 = oy + PH - mb, oy + mt
-
-        def X(n: float) -> float:
-            return x0 + (math.log10(n) - lx0) / (lx1 - lx0) * (x1 - x0)
-
-        def Y(ms: float) -> float:
-            return y0 - (math.log10(ms) - ly0) / (ly1 - ly0) * (y0 - y1)
+        X = functools.partial(scale, lo=lx0, hi=lx1, a=x0, b=x1)
+        Y = functools.partial(scale, lo=ly0, hi=ly1, a=y0, b=y1)
 
         o.append(f'<text class="title" x="{ox + ml}" y="{oy + 16}">{esc(title)}</text>'
                  f'<text class="sub" x="{ox + ml}" y="{oy + 29}">{esc(sub)}</text>')
@@ -356,7 +357,8 @@ CSS = """
 body{font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;margin:0;padding:20px 16px 48px;color:var(--ink);
 background:var(--bg)}
 main{max-width:1500px;margin:0 auto}a{color:var(--link)}
-h1{font-size:24px;margin:0 0 6px}h2{margin-top:40px;font-size:19px;border-bottom:1px solid var(--line);padding-bottom:4px}
+h1{font-size:24px;margin:0 0 6px}
+h2{margin-top:40px;font-size:19px;border-bottom:1px solid var(--line);padding-bottom:4px}
 h3{font-size:15px;margin:22px 0 6px}.meta,.note{color:var(--ink2)}.small{font-size:12px}
 .scroll{overflow-x:auto;max-width:100%}
 table{border-collapse:collapse;margin:8px 0 16px;background:var(--surface);font-variant-numeric:tabular-nums}
@@ -380,6 +382,14 @@ def _status_cell(passed: bool | None, text_ok="pass", text_bad="FAIL") -> str:
     return f"<td class='l good'>✓ {text_ok}</td>" if passed else f"<td class='l bad'>✗ {text_bad}</td>"
 
 
+def _numbers(rows: list[dict], key: str) -> list[float]:
+    return [r["summary"][key] for r in rows if isinstance(r["summary"].get(key), (int, float))]
+
+
+def _mean(v: list[float]) -> float | None:
+    return sum(v) / len(v) if v else None
+
+
 def _summary_table(report: dict) -> list[str]:
     """One row per solver: aggregates over the problems it ran."""
     o = ["<div class='scroll'><table><tr><th class='l'>solver</th><th class='l'>kind</th><th>problems</th>"
@@ -391,23 +401,18 @@ def _summary_table(report: dict) -> list[str]:
         ok = [r for r in rs if "summary" in r]
         na = sum(1 for r in rs if "skipped" in r)
         er = sum(1 for r in rs if "error" in r)
-
-        def mean(k):
-            v = [r["summary"][k] for r in ok if isinstance(r["summary"].get(k), (int, float))]
-            return sum(v) / len(v) if v else None
-
-        def tot(k):
-            v = [r["summary"][k] for r in ok if isinstance(r["summary"].get(k), (int, float))]
-            return sum(v) if v else None
-        eng = [(r.get("runtime_reported") or {}).get("median") for r in ok]
-        eng = sum(v for v in eng if isinstance(v, (int, float))) if any(isinstance(v, (int, float)) for v in eng) else None
+        engs = [v for v in ((r.get("runtime_reported") or {}).get("median") for r in ok) if isinstance(v, (int, float))]
+        eng = sum(engs) if engs else None
         wall = sum(r["runtime"]["median"] for r in ok) if ok else None
+        hv, inv = _numbers(ok, "hard_violations"), _numbers(ok, "priority_inversions")
         k = kind(s)
         o.append(f"<tr class='{'la' if k == 'label-anything' else ''}'><td class='l solver'>{esc(s)}</td>"
                  f"<td class='l'>{esc(k)}</td><td>{len(ok)}</td><td>{na}</td><td>{er}</td>"
-                 f"<td>{fmt(mean('placed_rate'), '{:.1%}')}</td><td>{fmt(tot('hard_violations'), '{:d}')}</td>"
+                 f"<td>{fmt(_mean(_numbers(ok, 'placed_rate')), '{:.1%}')}</td>"
+                 f"<td>{fmt(sum(hv) if hv else None, '{:d}')}</td>"
                  f"<td>{sum(1 for r in ok if r['summary'].get('hard_violations'))}</td>"
-                 f"<td>{fmt(mean('ambiguity_rate'), '{:.1%}')}</td><td>{fmt(tot('priority_inversions'), '{:d}')}</td>"
+                 f"<td>{fmt(_mean(_numbers(ok, 'ambiguity_rate')), '{:.1%}')}</td>"
+                 f"<td>{fmt(sum(inv) if inv else None, '{:d}')}</td>"
                  f"<td>{fmt(eng, '{:,.1f}')}</td><td>{fmt(wall, '{:,.1f}')}</td></tr>")
     o.append("</table></div>")
     return o
@@ -425,8 +430,9 @@ def _perf_section(perf: dict | None) -> list[str]:
              f"wall time. Machine: {esc(m.get('cpu', '?'))}, {esc(m.get('cores', '?'))} cores, "
              f"{esc(m.get('platform', ''))}. Problems: <code>python -m bench.perf generate</code> "
              "(deterministic).</p>")
-    o.append("<div class='scroll'><table><tr><th class='l'>problem</th><th class='l'>solver</th><th class='l'>metric</th>"
-             "<th>median ms</th><th>target ms</th><th>ratio</th><th>runs (ms)</th><th class='l'>result</th></tr>")
+    o.append("<div class='scroll'><table><tr><th class='l'>problem</th><th class='l'>solver</th>"
+             "<th class='l'>metric</th><th>median ms</th><th>target ms</th><th>ratio</th><th>runs (ms)</th>"
+             "<th class='l'>result</th></tr>")
     for r in perf["rows"]:
         if "median" in r:
             ratio = r["median"] / r["target"] if r["target"] else None
@@ -451,7 +457,8 @@ def _gate_section(gate: dict | None) -> list[str]:
         return o
     o.append(f"<p><b class='{'good' if gate['passed'] else 'bad'}'>"
              f"{'✓ all gates pass' if gate['passed'] else '✗ gates failed'}</b></p>")
-    o.append("<div class='scroll'><table><tr><th class='l'>gate</th><th class='l'>result</th><th class='l'>details</th></tr>")
+    o.append("<div class='scroll'><table><tr><th class='l'>gate</th><th class='l'>result</th>"
+             "<th class='l'>details</th></tr>")
     for c in gate["checks"]:
         res = "<td class='l warn'>– skipped</td>" if c.get("skipped") else _status_cell(c["passed"])
         det = "<br>".join(esc(d) for d in c.get("details", [])[:40])
@@ -568,7 +575,11 @@ def _baseline_note(r: dict) -> str:
     return f"<span class='em' title='{esc(tip)}'>≈ {len(items)}</span>"
 
 
-def _scenario_sections(report: dict, out: Path) -> list[str]:
+def _order(solvers: list[str], name: str) -> int:
+    return solvers.index(name) if name in solvers else len(solvers)
+
+
+def _scenario_sections(report: dict) -> list[str]:
     solvers = report["solvers"]
     by_sc: dict[str, list] = {}
     for r in report["results"]:
@@ -580,7 +591,7 @@ def _scenario_sections(report: dict, out: Path) -> list[str]:
         o.append("<div class='scroll'><table><tr><th class='l'>config</th><th class='l'>solver</th><th>items</th>"
                  + "".join(f"<th>{esc(META[k][0])}</th>" for k in TABLE_COLS)
                  + "<th>engine ms</th><th>wall ms (median / p95)</th><th>det.</th><th class='l'>notes</th></tr>")
-        for r in sorted(rows, key=lambda r: (r["config"], solvers.index(r["solver"]) if r["solver"] in solvers else 99)):
+        for r in sorted(rows, key=lambda r: (r["config"], _order(solvers, r["solver"]))):
             cls = "la" if kind(r["solver"]) == "label-anything" else ""
             head = f"<td class='l'>{esc(r['config'])}</td><td class='l solver'>{esc(r['solver'])}</td>"
             if "skipped" in r:
@@ -607,7 +618,7 @@ def _scenario_sections(report: dict, out: Path) -> list[str]:
         for cfg in sorted({r["config"] for r in rows}):
             o.append(f"<h3>{esc(cfg)}</h3><div class='imgs'>")
             for r in sorted((r for r in rows if r["config"] == cfg),
-                            key=lambda r: solvers.index(r["solver"]) if r["solver"] in solvers else 99):
+                            key=lambda r: _order(solvers, r["solver"])):
                 if r.get("image"):
                     link = f" · <a href='{esc(r['svg'])}'>SVG</a>" if r.get("svg") else ""
                     note = " · ≈ emulation" if (r.get("baseline") or {}).get("emulations") else ""
@@ -721,7 +732,7 @@ def write_html(out: Path, report: dict, plots: dict | None = None) -> Path:
     o += _plots_section(report, plots)
     o += _parity_section(report.get("parity"))
     o += _diff_section(report.get("diff"))
-    o += _scenario_sections(report, out)
+    o += _scenario_sections(report)
     o += _sequence_section(report)
     o += _baselines_section(report)
     o.append("</main></body></html>")

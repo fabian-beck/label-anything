@@ -113,7 +113,8 @@ def check(report: dict, previous: dict | None = None, allow: list[dict] | None =
         for r in regs:
             e = allowed_by(r, allow)
             rel = "from 0" if r["relative"] is None else f"{r['relative']:.1%}"
-            line = f"{r['solver']} {r['scenario']}/{r['config']} {r['metric']}: {r['old']:.6g} -> {r['new']:.6g} ({rel})"
+            line = (f"{r['solver']} {r['scenario']}/{r['config']} {r['metric']}: "
+                    f"{r['old']:.6g} -> {r['new']:.6g} ({rel})")
             if e:
                 det.append(f"allowed by ADR {e['adr']}: {line}")
             else:

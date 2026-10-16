@@ -71,11 +71,6 @@ from bench.solvers import greedy, naive  # noqa: E402
 BUILTIN = {"naive": naive.solve, "greedy": greedy.solve}
 BUILTIN_NAMES = set(BUILTIN) | set(BASELINES)
 ALL_BASELINES = ["naive", "greedy", "textalloc", "adjusttext", "vega-label", "ggrepel"]
-SUMMARY_COLS = [("placed_rate", "placed", "{:.1%}"), ("hard_violations", "hard viol.", "{:d}"),
-                ("leader_crossings", "crossings", "{:d}"), ("ambiguity_rate", "ambig.", "{:.1%}"),
-                ("priority_inversions", "inversions", "{:d}"), ("ndcg_at_k", "NDCG@k", "{:.3f}"),
-                ("adjacent_gap_abs_mean", "gap px", "{:.2f}"), ("position_rank_mean", "pos. rank", "{:.2f}"),
-                ("soft_coverage_mean", "soft cov.", "{:.3f}")]
 fmt = rep.fmt
 
 
@@ -235,7 +230,7 @@ def run_problem(solver: Solver, prob_entry: dict, out: Path, runs: int, timeout:
                   "runtime_reported": metrics["runtime"].get("reported_ms"),
                   "deterministic": metrics["deterministic"], "digest": digests[-1],
                   "implementation": (res.get("stats") or {}).get("implementation")})
-    if solver.is_baseline and solver.kind == "baseline":
+    if solver.kind == "baseline":
         entry["baseline"] = baseline_info(res)
     if do_render:
         img = out / "img" / solver.name / rel.with_suffix(".png")
@@ -378,7 +373,8 @@ def main(argv=None) -> int:
     ap.add_argument("--perf-runs", type=int, default=7, help="runs per performance problem")
     ap.add_argument("--perf-problems", default=str(paths.OUT / "perf"), help="where the perf problems are written")
     ap.add_argument("--previous", help="results.json of the previous release (diff + regression gate)")
-    ap.add_argument("--gate", action="store_true", help="evaluate the release gates (implies --perf); exit 1 on failure")
+    ap.add_argument("--gate", action="store_true",
+                    help="evaluate the release gates (implies --perf); exit 1 on failure")
     ap.add_argument("--gates-allow", help="allow-list of accepted regressions (default bench/gates-allow.json)")
     ap.add_argument("--threshold", type=float, default=0.02, help="relative regression threshold")
     a = ap.parse_args(argv)

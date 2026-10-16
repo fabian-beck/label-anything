@@ -153,7 +153,7 @@ def solve(problem: dict, problem_path=None) -> dict:
                         min_arrow_len=MIN_ARROW_LEN, arrowprops={"arrowstyle": "-", "lw": 0.5})
         runtime = (time.perf_counter() - t0) * 1000.0
         out_boxes, ports = {}, {}
-        for lab, t in zip(scene.labels, texts):
+        for lab, t in zip(scene.labels, texts, strict=True):
             xc, yc = (float(v) for v in t.get_unitless_position())  # centre (ha = va = center)
             box = cv.box_to_canvas(xc - lab.w / 2, yc - lab.h / 2, lab.w, lab.h)
             out_boxes[lab.id] = box

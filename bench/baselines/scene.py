@@ -107,7 +107,7 @@ class RasterMask:
         gy = np.floor(cy / step).astype(np.int64)
         keys = np.unique(gy * 1_000_003 + gx)
         gy, gx = np.divmod(keys, 1_000_003)
-        return [(float(x) * step, float(y) * step, step) for x, y in zip(gx.tolist(), gy.tolist())]
+        return [(float(x) * step, float(y) * step, step) for x, y in zip(gx.tolist(), gy.tolist(), strict=True)]
 
     def runs(self) -> list[tuple[float, float, float, float]]:
         """Exact cover of the mask by horizontal pixel runs: canvas rects (x, y, w, h)."""
@@ -122,7 +122,7 @@ class RasterMask:
                 continue
             ends = np.nonzero(d[row] == -1)[0]
             y = self.offset[1] + row * s
-            for a, b in zip(starts.tolist(), ends.tolist()):
+            for a, b in zip(starts.tolist(), ends.tolist(), strict=True):
                 out.append((self.offset[0] + a * s, y, (b - a) * s, s))
         return out
 
@@ -412,7 +412,7 @@ def clip_start(shape: Shape, a: Point, b: Point) -> Point | None:
 def sample_polyline(points: list[Point], step: float) -> list[Point]:
     """Points every ``step`` px along a polyline (both ends included)."""
     out: list[Point] = []
-    for (x0, y0), (x1, y1) in zip(points, points[1:]):
+    for (x0, y0), (x1, y1) in zip(points, points[1:], strict=False):
         n = max(1, int(math.ceil(math.hypot(x1 - x0, y1 - y0) / step)))
         for k in range(n):
             out.append((x0 + (x1 - x0) * k / n, y0 + (y1 - y0) * k / n))

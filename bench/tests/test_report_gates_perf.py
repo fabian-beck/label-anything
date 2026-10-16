@@ -81,8 +81,8 @@ def entry(solver, config="c1", n=10, digest="d", runtime=5.0, **summary):
 
 
 def rep(*results, solvers=None, **kw):
-    r = {"generated_at": "now", "suite": "quick", "runs": 1, "solvers": solvers or sorted({e["solver"] for e in results}),
-         "results": list(results), "sequences": []}
+    r = {"generated_at": "now", "suite": "quick", "runs": 1,
+         "solvers": solvers or sorted({e["solver"] for e in results}), "results": list(results), "sequences": []}
     r.update(kw)
     return r
 
