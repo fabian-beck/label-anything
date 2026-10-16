@@ -15,9 +15,10 @@
  *
  * The build uses its own Cargo profile (`wasm-release`: fat LTO, one codegen unit),
  * passed with `--config`, so it never invalidates the native release artifacts. Code is
- * optimized for size (opt-level "s") except the solver crate label-anything-core
- * (opt-level 3): that is as fast as opt-level 3 everywhere (within noise) for 8 % more
- * gzip than "s" everywhere, which is 9-16 % slower. wasm-opt is not used: it does not
+ * optimized for size (opt-level "s") except the solver crate label-anything-core and the
+ * raster pipeline label-anything-raster (opt-level 3): that is as fast as opt-level 3
+ * everywhere (within noise) for 8 % more gzip than "s" everywhere, which is 9-16 % slower
+ * (and raster backgrounds 2.3x slower with the raster crate at "s"). wasm-opt is not used: it does not
  * reduce the gzip size of this module. docs/bindings/wasm.md lists the variants.
  */
 import { execFileSync } from "node:child_process";
@@ -82,6 +83,10 @@ const cargoArgs = [
   `profile.${profile}.opt-level=${tomlLevel(optLevel)}`,
   "--config",
   `profile.${profile}.package.label-anything-core.opt-level=${tomlLevel(coreOptLevel)}`,
+  // the raster pipeline (base64, pixel classification) is the hot loop of raster
+  // backgrounds: as fast as the solver
+  "--config",
+  `profile.${profile}.package.label-anything-raster.opt-level=${tomlLevel(coreOptLevel)}`,
 ];
 if (noDefault) cargoArgs.push("--no-default-features");
 if (features) cargoArgs.push("--features", features);

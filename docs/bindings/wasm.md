@@ -149,7 +149,7 @@ Sizes of `label_anything_bg.wasm` (wasm-bindgen output without name section; gzi
 
 | Variant | How to build | raw | gzip | brotli |
 |---|---|---:|---:|---:|
-| **default**: full shaping + SVG + image decoders | `npm run build:wasm` | 2,514 KB | **948 KB** | 703 KB |
+| **default**: full shaping + SVG + image decoders | `npm run build:wasm` | 2,524 KB ³ | **961 KB** ³ | – |
 | lite: no image decoders | `npm run build:wasm -- --no-default-features` | 2,087 KB | 784 KB | 581 KB |
 | default, opt-level "s" everywhere | `npm run build:wasm -- --core-opt-level s` | 2,365 KB | 873 KB | 648 KB |
 | lite, opt-level "s" everywhere | `… -- --no-default-features --core-opt-level s` | 1,938 KB | 711 KB | 527 KB |
@@ -162,15 +162,19 @@ Sizes of `label_anything_bg.wasm` (wasm-bindgen output without name section; gzi
 ¹ Measured with a patched copy of the workspace: full shaping (`la-text/shaping`) and the
 SVG backend (`la-svg`) are compiled into `la-core` unconditionally today. ² At commit
 0e75308, when the default was 943 KB gzip; the differences to the default still hold.
+³ Since the raster crate is compiled at opt-level 3 as well (13 KB gzip more; the other
+rows predate that change).
 
 What the optional parts cost (gzip): full shaping (rustybuzz + ttf-parser, used for
 complex scripts when `text.shaping` is `auto` or `full`) 212 KB, PNG/JPEG/WebP decoding
 164 KB, the SVG backend 66 KB, opt-level 3 for the solver crate 74 KB. The default keeps
 everything the native facade has, so a problem that places natively places here too, and
-stays below 1 MB gzip. It compiles the solver crate (`label-anything-core`) at opt-level 3
-and everything else for size ("s"): that is as fast as opt-level 3 everywhere (which is
-just over 1 MB) and 9–16 % faster than "s" everywhere (A/B on p200, p2000 and the
-local-search sample `priority-prefix.json`). opt-level "z" is 11 % smaller than "s" but
+stays below 1 MB gzip. It compiles the solver crate (`label-anything-core`) and the
+raster pipeline (`label-anything-raster`) at opt-level 3 and everything else for size
+("s"): that is as fast as opt-level 3 everywhere (which is just over 1 MB) and 9–16 %
+faster than "s" everywhere (A/B on p200, p2000 and the local-search sample
+`priority-prefix.json`); with the raster crate at "s", preparing a 2048² raster background
+took 2.3 times as long (88 instead of 38 ms). opt-level "z" is 11 % smaller than "s" but
 about half as fast. `wasm-opt` is not used: it made the module smaller raw, not gzip.
 In browsers, a `measure` callback covers complex scripts without full shaping.
 
