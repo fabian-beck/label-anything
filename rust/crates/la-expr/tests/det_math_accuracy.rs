@@ -273,8 +273,12 @@ fn atan2_deg_vs_std() {
         let y = (rng.next_f64() - 0.5) * 2.0;
         let x = (rng.next_f64() - 0.5) * 2.0;
         let got = det_math::atan2_deg(y, x);
-        st.add(to_radians_dd(got), y.atan2(x), || format!("atan2_deg({y:e}, {x:e})"));
-        naive.add(got, y.atan2(x).to_degrees(), || format!("atan2_deg({y:e}, {x:e})"));
+        st.add(to_radians_dd(got), y.atan2(x), || {
+            format!("atan2_deg({y:e}, {x:e})")
+        });
+        naive.add(got, y.atan2(x).to_degrees(), || {
+            format!("atan2_deg({y:e}, {x:e})")
+        });
         let mut yw = log_uniform(&mut rng, -500.0, 500.0);
         let mut xw = log_uniform(&mut rng, -500.0, 500.0);
         if rng.next_u32() & 1 == 1 {

@@ -15,6 +15,7 @@ Every file is one JSON object with a `kind`:
 | `place/` | `place` | `place(problem)` → properties of the result |
 | `text/` | `text` | text widths (±0.01 px), line breaking, wrapping, truncation |
 | `expr/` | `expr` | expression language results and errors |
+| `math/` | `math` | deterministic math (`det_math`) and PCG32, bit-exact vectors (see `math/README.md`) |
 
 ## `validate` cases
 
@@ -105,10 +106,23 @@ All listed properties must hold; unlisted properties are not checked.
 
 ```jsonc
 { "kind": "expr", "name": "...",
+  "context": { "attrs": { "category": "core" } },   // optional default for all cases
   "cases": [
     { "expr": "attrs.cbo > 10 && attrs.category == 'core'",
       "context": { "attrs": { "cbo": 41, "category": "core" }, "id": "a", "index": 0 },
-      "value": true },
-    { "expr": "attrs.x +", "error": "expr_syntax" }
+      "value": true, "truthy": true, "term": 1 },
+    { "expr": "attrs.x +", "error": "expr_syntax", "offset": 9 }
   ] }
 ```
+
+* `context` fields: `attrs` (any JSON, default `{}`), `id` (default `""`), `index`
+  (default `0`), `text` (default `""`), `priority` and `tier` (number or `null`, default
+  `null`), `x`, `y` (default `0`). A case's `context` overrides the file's field by field.
+* `value`: the exact result. Numbers must be identical bit for bit (`-0.0` ≠ `0`; JSON
+  `-0.0` denotes negative zero), strings, lists and objects structurally.
+* `truthy` (optional): expected truthiness of the value; `term` (optional): expected term
+  value (`number`, booleans as 1/0, `null` = missing).
+* `error`: the parse must fail with this code; `offset` (optional): the error offset in
+  code points. Messages are not compared.
+* `note` is a comment. Runners: `cargo test -p label-anything-expr --test conformance_expr`,
+  `npx vitest run packages/core/test/expr` (from `ts/`).

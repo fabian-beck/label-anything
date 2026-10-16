@@ -88,7 +88,12 @@ fn function_vectors_are_bit_exact() {
             }
             checked += 1;
         }
-        assert!(failures.is_empty(), "{name}: {} mismatches, e.g. {}", failures.len(), failures[0]);
+        assert!(
+            failures.is_empty(),
+            "{name}: {} mismatches, e.g. {}",
+            failures.len(),
+            failures[0]
+        );
     }
     assert!(checked >= 11 * 500, "only {checked} vectors");
 }
@@ -98,7 +103,12 @@ fn pcg32_vectors() {
     let doc = load("pcg32.json");
     for s in doc["streams"].as_array().unwrap() {
         let mut rng = Pcg32::new(hex_u64(&s["seed"]));
-        let want: Vec<u64> = s["next_u32"].as_array().unwrap().iter().map(hex_u64).collect();
+        let want: Vec<u64> = s["next_u32"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(hex_u64)
+            .collect();
         assert_eq!(want.len(), 1000);
         for (i, w) in want.iter().enumerate() {
             assert_eq!(rng.next_u32() as u64, *w, "seed {} output {i}", s["seed"]);
@@ -108,7 +118,11 @@ fn pcg32_vectors() {
         let mut rng = Pcg32::new(hex_u64(&c["seed"]));
         let n = c["n"].as_u64().unwrap() as u32;
         for w in c["values"].as_array().unwrap() {
-            assert_eq!(rng.next_below(n) as u64, w.as_u64().unwrap(), "next_below({n})");
+            assert_eq!(
+                rng.next_below(n) as u64,
+                w.as_u64().unwrap(),
+                "next_below({n})"
+            );
         }
     }
     for c in doc["next_f64"].as_array().unwrap() {
@@ -122,7 +136,12 @@ fn pcg32_vectors() {
         let len = c["len"].as_u64().unwrap() as usize;
         let mut v: Vec<u64> = (0..len as u64).collect();
         rng.shuffle(&mut v);
-        let want: Vec<u64> = c["result"].as_array().unwrap().iter().map(|x| x.as_u64().unwrap()).collect();
+        let want: Vec<u64> = c["result"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|x| x.as_u64().unwrap())
+            .collect();
         assert_eq!(v, want, "shuffle len {len}");
         assert_eq!(rng.next_u32() as u64, hex_u64(&c["next_u32_after"]));
     }
