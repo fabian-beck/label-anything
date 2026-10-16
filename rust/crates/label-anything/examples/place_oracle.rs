@@ -33,6 +33,9 @@ impl Env for Clockless {
     fn now_ms(&self) -> f64 {
         0.0
     }
+    fn has_measure_callback(&self) -> bool {
+        false
+    }
 }
 
 fn read_json(p: &Path) -> Result<Value, String> {

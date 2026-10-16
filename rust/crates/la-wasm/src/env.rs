@@ -287,6 +287,10 @@ impl Env for JsEnv {
         }
     }
 
+    fn has_measure_callback(&self) -> bool {
+        self.measure.is_some()
+    }
+
     fn extra_cost(&self, item_id: &str, bbox: &Rect, leader: bool) -> f64 {
         let Some(f) = &self.cost else { return 0.0 };
         if self.failed.get() {
