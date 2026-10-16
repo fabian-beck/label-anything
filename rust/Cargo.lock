@@ -51,6 +51,9 @@ dependencies = [
 [[package]]
 name = "label-anything-expr"
 version = "0.1.0"
+dependencies = [
+ "serde_json",
+]
 
 [[package]]
 name = "label-anything-raster"

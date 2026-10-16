@@ -511,11 +511,44 @@ bug; the offending lower-key label is removed and the item reported as omitted.
 ### 10.4 Determinism
 
 * No iteration over hash containers in decisions; stable sorts with total comparators.
-* Float math only uses `+ − × ÷ sqrt` and the shared `det_math` functions
-  (`sin`, `cos` of degrees, `exp`, `log`, `log1p`), implemented identically.
-* Random numbers: PCG32 (XSH-RR, 64-bit state, multiplier 6364136223846793005, increment
-  1442695040888963407, seeded with `state = 0; step; state += seed; step`), floats as
-  `u32 / 2³²`, bounded integers as `floor(u32 · n / 2³²)`.
+* Float math only uses IEEE-754 `+ − × ÷ sqrt` (correctly rounded), exact operations
+  (comparisons, negation, `abs`, `%` = fmod, scaling by powers of two) and the shared
+  `det_math` functions. Platform math (`Math.sin`, `Math.round`, libm `exp`, `hypot`, …)
+  MUST NOT be used. `det_math` is implemented with the same operation sequence in every
+  implementation (Rust `la_expr::det_math`, TypeScript `detmath.ts`), so its results are
+  *identical*; `conformance/math/` checks them bit for bit:
+
+  | function | definition, special cases |
+  |---|---|
+  | `ln(x)` | natural logarithm; `ln(±0) = −∞`, `ln(x < 0) = NaN`, `ln(+∞) = +∞` |
+  | `ln_1p(x)` | `ln(1 + x)`; `ln_1p(−1) = −∞`, `ln_1p(x < −1) = NaN`, `ln_1p(±0) = ±0` |
+  | `exp(x)` | `eˣ`; overflow → `+∞`, underflow → `+0` (gradual underflow) |
+  | `pow(x, y)` | special cases of C99 Annex F (`pow(x, ±0) = 1`, `pow(1, y) = 1` even for NaN, `pow(−1, ±∞) = 1`, signed zeros and infinities, finite `x < 0` with non-integer `y` → NaN); integer `y` with `\|y\| ≤ 2³⁰` by repeated squaring, otherwise `exp(y · ln\|x\|)` (sign from the parity of `y`), both in double-double precision |
+  | `sin_cos_deg(d)` | `(sin d°, cos d°)`: `d % 360` exactly, reduced to `[−45°, 45°]` in degrees, then converted to radians with the double-double constant π/180; exact at multiples of 30° and 45° (`sin 45° = cos 45° = sqrt(0.5)`, `sin 30° = 0.5`, `cos 30° = sqrt(0.75)`); `cos` is never `−0`; `sin(±0) = ±0`, `sin(k·180°) = +0` for `k > 0` and `−0` for `k < 0`; non-finite `d` → NaN |
+  | `atan2_deg(y, x)` | angle of `(x, y)` in degrees in `[−180, 180]` with the special cases of C99 `atan2` (signed zeros, infinities); exact on the axes and for `\|x\| = \|y\|` (±45°, ±135°) |
+  | `cbrt(x)` | real cube root (odd function) |
+  | `floor`, `ceil`, `trunc` | exact (C semantics incl. signed zeros) |
+  | `round_half_away(x)` | nearest integer, halves away from zero (C `round`); **not** JS `Math.round` and not `floor(x + 0.5)` (wrong for 0.49999999999999994) |
+
+  NaN results are the canonical quiet NaN (a conformance check accepts any NaN). Not
+  normative but measured (`conformance/math/README.md`): the error is below 0.54 ulp for
+  every function (subnormal results: one more ulp), and `det_math` agrees with glibc and
+  V8 within 2 ulp.
+* Random numbers: PCG32 (PCG-XSH-RR 64/32), `step()`: `state = state ·
+  6364136223846793005 + 1442695040888963407 (mod 2⁶⁴)`:
+  * seeding with a 64-bit `seed`: `state = 0; step(); state += seed; step()`;
+  * `next_u32()`: `old = state; step(); x = u32(((old >> 18) ^ old) >> 27); rot = old >> 59;`
+    result `x` rotated right by `rot`;
+  * floats: `next_f64() = next_u32() / 2³²` in `[0, 1)`;
+  * bounded integers: `next_below(n) = (next_u32() · n) >> 32` for `n < 2³²`, exact in 64
+    bits (`= floor(u32 · n / 2³²)`); `next_below(0) = 0`; every call consumes one output;
+  * `shuffle(a)`: Fisher–Yates from the end — for `i = len−1` down to `1`, swap `a[i]`
+    and `a[next_below(i + 1)]`. A *PCG32 permutation* of `n` items (§9.1 `random` ties)
+    is `shuffle([0, 1, …, n−1])` on a fresh generator; its `k`-th element is the input
+    index of the item at position `k`.
+
+  TypeScript emulates the 64-bit state without `BigInt` (32-bit halves, 16-bit limbs for
+  the products). Vectors: `conformance/math/pcg32.json`.
 
 ---
 

@@ -1,6 +1,6 @@
 [package]
 name = "label-anything-expr"
-description = "Label Anything label placement: the safe priority expression language."
+description = "Label Anything label placement: the safe priority expression language and deterministic math (det_math, PCG32)."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -12,3 +12,7 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
+# `float_roundtrip`: correctly rounded JSON number parsing, as JSON.parse in TypeScript.
+# Without it serde_json misreads ~30 % of 17-digit exponent-notation doubles by 1 ulp,
+# which breaks Rust/TS bit parity of attrs values.
+serde_json = { workspace = true, features = ["float_roundtrip"] }
