@@ -10,9 +10,11 @@ machine speed and load.
 
 ## Decision
 * `time_budget_ms` is converted into a **deterministic iteration budget**:
-  `iterations = min(max_iterations, time_budget_ms × rate)` with `rate = 2000` moves/ms
-  (Rust) and `800` (TS). With the default budgets (100 ms Rust, 250 ms TS) both run the
-  same 200 000 moves. The annealing schedule is a function of the iteration index.
+  `iterations = min(max_iterations, time_budget_ms × rate, 400 × n_items)` with
+  `rate = 100` moves/ms (Rust) and `40` (TS). With the default budgets (100 ms Rust,
+  250 ms TS) both run the same 10 000 moves. The annealing schedule is a function of the
+  iteration index. (Profile note: a move costs ≈ 6 µs on the 200-label/10k-point case on
+  the CI container, so 100 moves/ms keeps the default solve inside its budget.)
 * A **wall-clock guard** at 3 × `time_budget_ms` stops search on pathologically slow
   machines; this sets `stats.time_guard_hit = true` (the only case where results may
   depend on timing). Greedy always completes.

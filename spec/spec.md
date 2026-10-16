@@ -499,7 +499,7 @@ priority objective (strict: placed key multiset, lexicographic; prefix: prefix l
 weighted: tier-wise weight sums) must not get worse; cost changes are accepted by the
 Metropolis rule `u < exp(−Δ/T)` with a geometric schedule from `T₀` (median |Δ| of 50
 probe moves) to `T₀/1000` over the iteration budget. The iteration budget is
-`min(max_iterations, time_budget_ms × rate)`, `rate` = 2000 (Rust) or 800 (TS).
+`min(max_iterations, time_budget_ms × rate, 400 × n_items)`, `rate` = 100 (Rust) or 40 (TS).
 
 ### 10.3 Uncross repair and verification
 

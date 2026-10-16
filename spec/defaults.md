@@ -128,9 +128,9 @@ are stale.
 ## Notes
 
 * **Time budget vs. determinism.** `solver.time_budget_ms` is converted into a fixed
-  iteration budget (`budget_ms × 2000` local-search moves in Rust, `budget_ms × 800` in
-  TypeScript, both capped by `solver.max_iterations`), so a solve is deterministic for a
-  given input and seed on every machine. A wall-clock guard at 3 × the budget stops the
+  iteration budget (`budget_ms × 100` local-search moves in Rust, `budget_ms × 40` in
+  TypeScript, both capped by `solver.max_iterations` and `400 × number of items`), so a
+  solve is deterministic for a given input and seed on every machine. A wall-clock guard at 3 × the budget stops the
   search on pathologically slow machines and sets `stats.time_guard_hit`. See ADR 0007.
 * **Hard vs. soft.** `"hard"` classes are filters: a candidate touching them is discarded.
   Numbers are soft weights per unit of covered fraction (covered px² / label px²).
