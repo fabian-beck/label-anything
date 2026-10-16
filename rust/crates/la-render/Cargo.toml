@@ -1,0 +1,16 @@
+[package]
+name = "label-anything-render"
+description = "Label Anything label placement: debug SVG overlay renderer (placed labels, leaders, candidates, cost heatmaps)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+la-core = { workspace = true }
+serde_json = { workspace = true }

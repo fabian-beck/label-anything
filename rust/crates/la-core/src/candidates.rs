@@ -322,8 +322,10 @@ fn sample_path(path: &[CVertex], k: usize, shape: &Shape, o: f64, hw: f64, hh: f
 
 /// Whether internal candidates apply to this item, and their rank.
 pub fn internal_rank(item: &Item, v: &Variant, models: Models, circle_ratio: f64) -> Option<f64> {
+    // prefer: ahead of every external position; allow: on par with the best one (the
+    // distance term then favours the label that sits on its mark)
     let prefer = Some(-1.0);
-    let allow = Some(8.0);
+    let allow = Some(0.0);
     match item.internal {
         InternalPolicy::Never => None,
         InternalPolicy::Prefer => prefer,

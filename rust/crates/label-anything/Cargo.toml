@@ -1,0 +1,23 @@
+[package]
+name = "label-anything"
+description = "Label Anything: a host-independent label placement engine (labels, icons, leaders; avoids SVG/raster backgrounds; priority-driven omission)."
+readme = "README.md"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[features]
+default = ["std-clock"]
+std-clock = []
+parallel = ["la-core/parallel"]
+
+[dependencies]
+la-core = { workspace = true }
+la-render = { workspace = true }
+serde_json = { workspace = true }
