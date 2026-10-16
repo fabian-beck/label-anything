@@ -309,25 +309,71 @@ const BOWS = [0, 0.3, -0.3];
 const SEED_IDS = new IdList();
 
 /**
+ * The seeds within reach of one item (`dd <= reach`), in seed-index query order, with
+ * their clearance, distance and score: what {@link freeSpaceSeeds} computes before its
+ * per-variant filter, kept for the item's next calls (one per variant and ladder step).
+ */
+class NearSeeds {
+  item = -1;
+  n = 0;
+  id = new Int32Array(64);
+  v = new Float64Array(64);
+  dd = new Float64Array(64);
+  score = new Float64Array(64);
+
+  fill(obs: Obstacles, item: Item): void {
+    const bb = item.shape.bbox();
+    const reach = item.len.maxDistance + maxf(bb.w(), bb.h()) * 0.5;
+    const c = item.shape.reference();
+    obs.seedIndex.query(Rect.fromCenter(c, reach, reach), SEED_IDS);
+    if (this.id.length < SEED_IDS.len) {
+      const cap = Math.max(SEED_IDS.len, 2 * this.id.length);
+      this.id = new Int32Array(cap);
+      this.v = new Float64Array(cap);
+      this.dd = new Float64Array(cap);
+      this.score = new Float64Array(cap);
+    }
+    let n = 0;
+    for (let q = 0; q < SEED_IDS.len; q++) {
+      const id = SEED_IDS.get(q);
+      const s = obs.seeds[id]!;
+      const v = s[1];
+      const dd = s[0].dist(c);
+      if (!(dd <= reach)) continue;
+      this.id[n] = id;
+      this.v[n] = v;
+      this.dd[n] = dd;
+      this.score[n] = v - 0.01 * dd;
+      n++;
+    }
+    this.n = n;
+    this.item = item.index;
+  }
+}
+
+/** The {@link NearSeeds} of each solve's obstacles (the last item asked for). */
+const NEAR_SEEDS = new WeakMap<Obstacles, NearSeeds>();
+
+/**
  * Up to 8 local maxima of the distance transform within `max_distance` of the item whose
  * clearance is at least `hh` (precomputed in `Obstacles.seeds`).
  */
 export function freeSpaceSeeds(obs: Obstacles, item: Item, hh: number): P[] {
-  const bb = item.shape.bbox();
-  const reach = item.len.maxDistance + maxf(bb.w(), bb.h()) * 0.5;
-  const c = item.shape.reference();
-  obs.seedIndex.query(Rect.fromCenter(c, reach, reach), SEED_IDS);
+  let near = NEAR_SEEDS.get(obs);
+  if (near === undefined) {
+    near = new NearSeeds();
+    NEAR_SEEDS.set(obs, near);
+  }
+  if (near.item !== item.index) near.fill(obs, item);
   // The 8 best by (score descending, row, col): a strict total order, so keeping the
   // best 8 by insertion gives exactly the first 8 of Rust's full sort.
   let n = 0;
-  for (let q = 0; q < SEED_IDS.len; q++) {
-    const id = SEED_IDS.get(q);
+  for (let q = 0; q < near.n; q++) {
+    // v >= hh && dd <= reach && dd > hh (the cached seeds are within reach)
+    if (!(near.v[q]! >= hh && near.dd[q]! > hh)) continue;
+    const id = near.id[q]!;
     const s = obs.seeds[id]!;
-    const p = s[0];
-    const v = s[1];
-    const dd = p.dist(c);
-    if (!(v >= hh && dd <= reach && dd > hh)) continue;
-    const score = v - 0.01 * dd;
+    const score = near.score[q]!;
     // position of the new seed among the kept ones
     let k = n;
     while (k > 0 && seedBefore(score, s[3], s[2], TOP_SCORE[k - 1]!, obs.seeds[TOP_ID[k - 1]!]!)) k--;
