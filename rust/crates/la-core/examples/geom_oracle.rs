@@ -237,7 +237,9 @@ impl Gen {
         } else {
             let a = self.range(-180.0, 180.0);
             let l = self.range(0.1, 3.0);
-            P::new(a.to_radians().cos() * l, a.to_radians().sin() * l)
+            // det_math, not the platform's libm: the inputs must be identical everywhere
+            let (sin, cos) = sin_cos_deg(a);
+            P::new(cos * l, sin * l)
         }
     }
 }
@@ -248,10 +250,11 @@ fn star(g: &mut Gen, c: P, n: usize, r0: f64, r1: f64, ccw: bool) -> Vec<P> {
     let snap = g.chance(0.3);
     let mut ring = Vec::with_capacity(n);
     for k in 0..n {
-        let a = (k as f64 + g.range(-0.2, 0.2)) / n as f64 * std::f64::consts::TAU;
+        let a = (k as f64 + g.range(-0.2, 0.2)) / n as f64 * 360.0;
         let a = if ccw { a } else { -a };
         let r = if k % 2 == 0 { r0 } else { r1 } * g.range(0.85, 1.15);
-        let mut p = P::new(c.x + a.cos() * r, c.y + a.sin() * r);
+        let (sin, cos) = sin_cos_deg(a);
+        let mut p = P::new(c.x + cos * r, c.y + sin * r);
         if snap {
             p = P::new((p.x * 2.0).round() / 2.0, (p.y * 2.0).round() / 2.0);
         }
@@ -319,8 +322,8 @@ fn random_rings(g: &mut Gen, c: P, size: f64) -> Vec<Vec<P>> {
             // pentagram (winding number 2 in the middle)
             let mut ring = Vec::new();
             for k in 0..5 {
-                let a = (k as f64 * 2.0 / 5.0) * std::f64::consts::TAU;
-                ring.push(P::new(c.x + a.cos() * size, c.y + a.sin() * size));
+                let (sin, cos) = sin_cos_deg(k as f64 * 144.0);
+                ring.push(P::new(c.x + cos * size, c.y + sin * size));
             }
             vec![ring]
         }

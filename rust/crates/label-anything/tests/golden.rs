@@ -85,13 +85,15 @@ fn debug_renderings_match_the_golden_images() {
             continue;
         }
         let differ = got
-            .data()
-            .chunks_exact(4)
-            .zip(want.data().chunks_exact(4))
+            .pixels()
+            .iter()
+            .zip(want.pixels())
             .filter(|(a, b)| {
-                a.iter()
-                    .zip(b.iter())
-                    .any(|(x, y)| x.abs_diff(*y) > CHANNEL_TOLERANCE)
+                let d = |x: u8, y: u8| x.abs_diff(y) > CHANNEL_TOLERANCE;
+                d(a.red(), b.red())
+                    || d(a.green(), b.green())
+                    || d(a.blue(), b.blue())
+                    || d(a.alpha(), b.alpha())
             })
             .count();
         let total = (got.width() * got.height()) as f64;
