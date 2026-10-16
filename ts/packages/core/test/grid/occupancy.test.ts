@@ -55,6 +55,17 @@ describe("occupancy", () => {
     }
   });
 
+  it("window_of_a_nan_coordinate", () => {
+    // a NaN bound converts to 0 (Rust `as i64`): first cell 0 + 1, end 0
+    const occ = new Occupancy(new Rect(0, 0, 100, 100)); // cell 2
+    const w = newWindow();
+    expect(occ.window(new Rect(NaN, 0, 30, 20), w)).toBe(true);
+    expect(Array.from(w)).toEqual([1, 15, 0, 10]);
+    expect(occ.window(new Rect(0, 0, NaN, 20), w)).toBe(false);
+    expect(occ.window(new Rect(0, NaN, 30, 20), w)).toBe(true);
+    expect(Array.from(w)).toEqual([0, 15, 1, 10]);
+  });
+
   it("frozen_answers_equal_the_bitset_answers", () => {
     const extent = new Rect(0, 0, 640, 480);
     const live = new Occupancy(extent);

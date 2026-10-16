@@ -44,14 +44,18 @@ export class Occupancy {
   private readonly cols: number;
   private readonly rows: number;
   private readonly count: Uint16Array;
-  /** `words` u32 per row; bit `c % 32` of word `c / 32` of row `r` = `count[r * cols + c] > 0`. */
-  private readonly bits: Uint32Array;
+  /**
+   * `words` 32-bit words per row; bit `c % 32` of word `c / 32` of row `r` =
+   * `count[r * cols + c] > 0` (an `Int32Array`, so that the JIT keeps the word arithmetic
+   * in 32-bit integers).
+   */
+  private readonly bits: Int32Array;
   private readonly words: number;
   /**
    * For grids that no longer change ({@link freeze}): summed-area table of the occupied
    * cells, `(cols + 1) × (rows + 1)`, so that a window query is O(1).
    */
-  private sat: Uint32Array | null = null;
+  private sat: Int32Array | null = null;
   /** Scratch window of {@link blocked}. */
   private readonly win = newWindow();
   /** Scratch box of {@link blocked} and {@link window}. */
@@ -71,7 +75,7 @@ export class Occupancy {
     this.cols = cols;
     this.rows = rows;
     this.count = new Uint16Array(cols * rows);
-    this.bits = new Uint32Array(words * rows);
+    this.bits = new Int32Array(words * rows);
     this.words = words;
   }
 
@@ -105,7 +109,8 @@ export class Occupancy {
   /** Builds the summed-area table of a grid that will not change any more (marking again drops it). */
   freeze(): void {
     const w = this.cols + 1;
-    const sat = new Uint32Array(w * (this.rows + 1));
+    // at most 4096 × 4096 cells: the sums fit in an Int32Array
+    const sat = new Int32Array(w * (this.rows + 1));
     for (let r = 0; r < this.rows; r++) {
       let run = 0;
       for (let c = 0; c < this.cols; c++) {
@@ -175,25 +180,23 @@ export class Occupancy {
    * inline, so that no coordinate is passed as a (boxed) argument.
    */
   windowBox(b: Float64Array, w: Window): boolean {
+    // The spans of `span`: first = floor(t0) + 1 (1 for a NaN, as `trunc` of 0 there),
+    // end = ceil(t1) (0 for a NaN), both on the clamped values, so exact.
     const inv = this.invCell;
     // columns: span(ox, cols, b[0], b[2])
     const tx0 = clampf((b[0]! + OCC_MARGIN - this.ox) * inv - 0.5, -4.5e15, 4.5e15);
     const tx1 = clampf((b[2]! - OCC_MARGIN - this.ox) * inv - 0.5, -4.5e15, 4.5e15);
-    const ix0 = tx0 === tx0 ? Math.trunc(tx0) : 0;
-    const fx = ix0 - (ix0 > tx0 ? 1 : 0) + 1;
+    const fx = tx0 === tx0 ? Math.floor(tx0) + 1 : 1;
     const c0 = fx > 0 ? fx : 0;
-    const ix1 = tx1 === tx1 ? Math.trunc(tx1) : 0;
-    const lx = ix1 + (ix1 < tx1 ? 1 : 0);
+    const lx = tx1 === tx1 ? Math.ceil(tx1) : 0;
     const c1 = lx < this.cols ? lx : this.cols;
     if (c1 <= c0) return false;
     // rows: span(oy, rows, b[1], b[3])
     const ty0 = clampf((b[1]! + OCC_MARGIN - this.oy) * inv - 0.5, -4.5e15, 4.5e15);
     const ty1 = clampf((b[3]! - OCC_MARGIN - this.oy) * inv - 0.5, -4.5e15, 4.5e15);
-    const iy0 = ty0 === ty0 ? Math.trunc(ty0) : 0;
-    const fy = iy0 - (iy0 > ty0 ? 1 : 0) + 1;
+    const fy = ty0 === ty0 ? Math.floor(ty0) + 1 : 1;
     const r0 = fy > 0 ? fy : 0;
-    const iy1 = ty1 === ty1 ? Math.trunc(ty1) : 0;
-    const ly = iy1 + (iy1 < ty1 ? 1 : 0);
+    const ly = ty1 === ty1 ? Math.ceil(ty1) : 0;
     const r1 = ly < this.rows ? ly : this.rows;
     if (r1 <= r0) return false;
     w[0] = c0;
@@ -224,11 +227,12 @@ export class Occupancy {
     const bits = this.bits;
     const w0 = c0 >>> 5;
     const w1 = (c1 - 1) >>> 5;
-    const first = (0xffffffff << (c0 & 31)) >>> 0;
-    const last = 0xffffffff >>> (31 - ((c1 - 1) & 31));
+    // bits c0 % 32 .. 31 of the first word and 0 .. (c1 - 1) % 32 of the last one
+    const first = -1 << (c0 & 31);
+    const last = (-1 >>> (31 - ((c1 - 1) & 31))) | 0;
     if (w0 === w1) {
       // the common case: the window lies in one word of every row
-      const m = (first & last) >>> 0;
+      const m = first & last;
       for (let k = r0 * stride + w0; k < r1 * stride; k += stride) if ((bits[k]! & m) !== 0) return true;
       return false;
     }
