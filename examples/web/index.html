@@ -1,0 +1,111 @@
+<!doctype html>
+<!--
+  Label Anything in the browser: label SVG circles with @label-anything/wasm.
+
+  From the repository (after `npm install` and `npm run build -w @label-anything/wasm` in ts/):
+    node ts/packages/wasm-adapter/browser/server.mjs 8080
+    open http://127.0.0.1:8080/examples/web/
+
+  In an application, install @label-anything/wasm and import it through a bundler, or keep
+  the import map below pointing at node_modules/@label-anything/wasm/dist/index.js.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Label Anything: WebAssembly example</title>
+<style>
+  body { font: 15px/1.45 system-ui, sans-serif; margin: 16px; color: #1f2328; background: #fff; }
+  h1 { font-size: 1.25rem; margin: 0 0 8px; }
+  p { margin: 8px 0; }
+  svg { display: block; width: 100%; max-width: 720px; height: auto; border: 1px solid #d0d7de; }
+  svg text { font: 12px sans-serif; fill: #1f2328; }
+  button { font: inherit; padding: 4px 12px; }
+  #stats { color: #59636e; }
+</style>
+<script type="importmap">
+  { "imports": { "@label-anything/wasm": "/node_modules/@label-anything/wasm/dist/index.js" } }
+</script>
+</head>
+<body>
+<h1>Labeling SVG circles with <code>@label-anything/wasm</code></h1>
+<p><button id="again" type="button">New points</button> <span id="stats">loading…</span></p>
+<svg id="chart" viewBox="0 0 720 440" role="img" aria-label="Scatterplot with labeled circles"></svg>
+<script type="module">
+  import { init, place } from "@label-anything/wasm";
+
+  const W = 720;
+  const H = 440;
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("chart");
+  const stats = document.getElementById("stats");
+  const NAMES = ["Ada", "Basil", "Cleo", "Dmitri", "Esther", "Farid", "Greta", "Hiro", "Ines", "Jonas",
+    "Kemal", "Lena", "Mateo", "Nadia", "Oskar", "Priya", "Quinn", "Rosa", "Soren", "Tomas"];
+
+  // Measure with the font the page renders, so labels fit exactly.
+  const ctx = document.createElement("canvas").getContext("2d");
+  function measure(text, font) {
+    ctx.font = `${font.italic ? "italic " : ""}${font.weight} ${font.size}px sans-serif`;
+    const m = ctx.measureText(text);
+    return { width: m.width, ascent: m.fontBoundingBoxAscent, descent: m.fontBoundingBoxDescent };
+  }
+
+  function el(name, attrs, parent) {
+    const e = document.createElementNS(NS, name);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+    parent.appendChild(e);
+    return e;
+  }
+
+  function circles(n) {
+    // two clusters plus a few outliers
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const cluster = i % 3 === 0 ? [500, 150] : [220, 280];
+      const spread = i % 10 === 9 ? 260 : 70;
+      out.push({
+        id: `c${i}`,
+        name: `${NAMES[i % NAMES.length]} ${Math.floor(i / NAMES.length) + 1}`,
+        x: Math.min(W - 10, Math.max(10, cluster[0] + (Math.random() - 0.5) * 2 * spread)),
+        y: Math.min(H - 10, Math.max(10, cluster[1] + (Math.random() - 0.5) * 1.4 * spread)),
+        r: 3 + Math.random() * 6,
+      });
+    }
+    return out;
+  }
+
+  function draw() {
+    const data = circles(70);
+    const problem = {
+      canvas: { width: W, height: H },
+      preset: "scatter",
+      items: data.map((c) => ({
+        id: c.id,
+        anchor: { type: "point", x: c.x, y: c.y, mark: { shape: "circle", r: c.r } },
+        label: { type: "text", text: c.name },
+      })),
+    };
+    const result = place(problem, { measure });
+
+    svg.replaceChildren();
+    for (const c of data) el("circle", { cx: c.x, cy: c.y, r: c.r, fill: "#4f7cc4", "fill-opacity": 0.55 }, svg);
+    for (const p of result.placements) {
+      if (!p.placed) continue;
+      if (p.leader) {
+        el("polyline", { points: p.leader.points.map((q) => q.join(",")).join(" "), fill: "none", stroke: "#8c959f" }, svg);
+      }
+      const t = p.text;
+      t.lines.forEach((line, i) => {
+        el("text", { x: p.box.x + t.x_offset, y: p.box.y + t.baseline_offsets[i] }, svg).textContent = line;
+      });
+    }
+    const s = result.stats;
+    stats.textContent = `${s.placed} of ${s.total} labels placed in ${s.runtime_ms.toFixed(1)} ms (${s.strategy_used})`;
+  }
+
+  await init(); // fetches label_anything_bg.wasm once
+  draw();
+  document.getElementById("again").addEventListener("click", draw);
+</script>
+</body>
+</html>
