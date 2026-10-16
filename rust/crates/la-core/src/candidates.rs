@@ -50,6 +50,17 @@ impl Side {
     }
 }
 
+/// Why a candidate is infeasible.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Block {
+    Edge,
+    Items,
+    Labels,
+    Leaders,
+    /// A static obstacle class (index into `Obstacles::classes`).
+    Class(u16),
+}
+
 /// A leader polyline from the item to the label's port.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Leader {
@@ -110,9 +121,8 @@ pub struct Cand {
     /// the extra cost then.
     pub relaxed: bool,
     pub relax_cost: f64,
-    /// Name of the first hard class that rejected the candidate.
-    pub blocked_by: Option<&'static str>,
-    pub blocked_class: Option<u16>,
+    /// The first hard constraint that rejected the candidate.
+    pub blocked: Option<Block>,
 }
 
 impl Cand {
@@ -130,8 +140,7 @@ impl Cand {
             feasible: true,
             relaxed: true,
             relax_cost: 0.0,
-            blocked_by: None,
-            blocked_class: None,
+            blocked: None,
         }
     }
     /// Bounding box of label and leaders.

@@ -2,7 +2,6 @@
 //! primitive indexes and the distance transform of the static hard classes.
 
 use crate::env::Env;
-use crate::geom::shape::Shape;
 use crate::geom::{dist_point_seg, dist_seg_rect, polygon, seg_overlaps_rect, Rect, EPS, P};
 use crate::grid::dt::distance_transform;
 use crate::grid::raster::MaskRaster;
@@ -95,6 +94,10 @@ pub struct Obstacles {
     pub prim_index: StaticIndex,
     /// Item marks.
     pub item_index: StaticIndex,
+    /// Coverage of all item marks, and of each item's own mark on an aligned local grid
+    /// (to exclude the own mark from `items` costs).
+    pub items_sat: Sat,
+    pub own: Vec<(GridSpec, Sat)>,
     /// Distance (px) from each cell center to the nearest static hard obstacle.
     pub dt: Vec<f64>,
     pub label_area: Option<Rect>,
@@ -205,6 +208,24 @@ pub fn prepare(model: &Model, env: &dyn Env, min_font: f64) -> Obstacles {
     let index_cell = (ext_area / n_items).sqrt().clamp(16.0, 128.0);
     let prim_index = StaticIndex::new(prims.iter().map(|(_, p)| p.bbox()).collect(), &model.extent, index_cell);
     let item_index = StaticIndex::new(model.items.iter().map(|it| it.shape.bbox()).collect(), &model.extent, index_cell);
+    // items coverage (global and per item)
+    let mut all_items = MaskRaster::new(grid);
+    let mut own = Vec::with_capacity(model.items.len());
+    for it in &model.items {
+        all_items.shape(&it.shape);
+        let (c0, c1, r0, r1) = grid.cell_range(&it.shape.bbox().inflate(cell));
+        let local = GridSpec {
+            ox: grid.ox + c0 as f64 * cell,
+            oy: grid.oy + r0 as f64 * cell,
+            cell,
+            cols: (c1 - c0).max(1),
+            rows: (r1 - r0).max(1),
+        };
+        let mut m = MaskRaster::new(local);
+        m.shape(&it.shape);
+        own.push((local, Sat::from_coverage(local.cols, local.rows, &m.into_coverage())));
+    }
+    let items_sat = Sat::from_coverage(grid.cols, grid.rows, &all_items.into_coverage());
     // distance transform of static hard obstacles (incl. items and outside the label area)
     let mut hard_mask = MaskRaster::new(grid);
     if dynamic.label_items.is_hard() {
@@ -239,6 +260,8 @@ pub fn prepare(model: &Model, env: &dyn Env, min_font: f64) -> Obstacles {
         prims,
         prim_index,
         item_index,
+        items_sat,
+        own,
         dt,
         label_area: model.label_area,
         leader_area: model.leader_area,
@@ -333,8 +356,32 @@ impl Prim {
 }
 
 impl Obstacles {
-    /// Shape of item `i` as an obstacle (for exact tests).
-    pub fn item_shape<'a>(&self, model: &'a Model, i: usize) -> &'a Shape {
-        &model.items[i].shape
+    /// Covered area (px²) of `r` by the marks of all items except `i`.
+    pub fn other_items_covered(&self, i: usize, r: &Rect) -> f64 {
+        let all = self.items_sat.covered_area(&self.grid, r);
+        if all <= 0.0 {
+            return 0.0;
+        }
+        let (g, s) = &self.own[i];
+        maxf(all - s.covered_area(g, r), 0.0)
+    }
+
+    /// Mean class coverage (0..1) sampled along segment `ab` every half cell, times length.
+    pub fn covered_len(&self, sat: &Sat, a: P, b: P) -> f64 {
+        let len = a.dist(b);
+        if len <= 0.0 || !sat.nonempty {
+            return 0.0;
+        }
+        let step = self.grid.cell * 0.5;
+        let n = ((len / step).ceil() as usize).max(1);
+        let mut acc = 0.0;
+        for k in 0..n {
+            let p = a.lerp(b, (k as f64 + 0.5) / n as f64);
+            let (u, v) = self.grid.to_cell(p);
+            if u >= 0.0 && v >= 0.0 && u < self.grid.cols as f64 && v < self.grid.rows as f64 {
+                acc += sat.cell(u as usize, v as usize) as f64 / 255.0;
+            }
+        }
+        acc * len / n as f64
     }
 }
