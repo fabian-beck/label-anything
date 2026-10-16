@@ -11,4 +11,14 @@ authors.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
+[features]
+default = ["decode"]
+# PNG, JPEG and WebP decoding through the `image` crate (pure Rust, minimal features).
+# Without it, `decode` returns a structured `unsupported` error; raw RGBA still works.
+decode = ["dep:image"]
+
 [dependencies]
+image = { workspace = true, optional = true, features = ["png", "jpeg", "webp"] }
+
+[dev-dependencies]
+serde_json = { workspace = true }
