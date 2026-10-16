@@ -20,12 +20,13 @@ const I64_LIMIT = 9223372036854775808;
  * magnitudes saturate at ±2^63 (as Rust's `as i64` does).
  */
 export function floorFast(x: number): number {
-  let t: number;
-  if (x !== x) t = 0;
-  else if (x >= I64_LIMIT) t = I64_LIMIT;
-  else if (x <= -I64_LIMIT) t = -I64_LIMIT;
-  else t = Math.trunc(x) + 0; // `+ 0` turns -0 into +0 (i64 has no negative zero)
-  return t > x ? t - 1 : t;
+  // Rust: t = x as i64 as f64; if t > x { t - 1 } else { t }. Below 2^63 in magnitude
+  // that is the floor with -0 turned into +0 (`+ 0`); beyond, `as i64` saturates (and
+  // -2^63 - 1 rounds back to -2^63); NaN casts to 0.
+  const f = Math.floor(x);
+  if (f > -I64_LIMIT && f < I64_LIMIT) return f + 0;
+  if (x !== x) return 0;
+  return x > 0 ? I64_LIMIT : -I64_LIMIT;
 }
 
 /** Rust's `ceil_fast`: `-floorFast(-x)`. */
