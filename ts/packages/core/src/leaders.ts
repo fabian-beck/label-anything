@@ -5,7 +5,7 @@
  * @module
  */
 
-import { Cand, Kind, Leader, SIDE_DISTANT, dirOf } from "./candidates.js";
+import { Cand, type KeepFn, Kind, Leader, SIDE_DISTANT, dirOf } from "./candidates.js";
 import { P, Rect } from "./geom/index.js";
 import type { Variant } from "./labels.js";
 import { cmpF64, maxf, minf, signEps } from "./math.js";
@@ -24,15 +24,28 @@ export function leaderStart(model: Model, item: Item, toward: P): P {
   return item.shape.boundaryPoint(d).add(d.mul(item.len.anchorGap));
 }
 
-/** Place a label of half size (hw, hh) so that its port side faces direction `d` at `t`. */
-function attachLabel(t: P, d: P, hw: number, hh: number, port: Port): [Rect, P] {
-  const sx = signEps(d.x, 1e-9);
-  const sy = signEps(d.y, 1e-9);
+/** Output of {@link attachCenter}: the label center `[x, y]`. */
+const AC = new Float64Array(2);
+
+/**
+ * Center of a label of half size (hw, hh) placed so that its port side faces direction
+ * `(dx, dy)` at `(tx, ty)` (Rust `attach_label`; the port is `t` itself), into {@link AC}.
+ */
+function attachCenter(tx: number, ty: number, dx: number, dy: number, hw: number, hh: number, port: Port): void {
+  const sx = signEps(dx, 1e-9);
+  const sy = signEps(dy, 1e-9);
   if (port === Port.SideCenter || port === Port.Baseline) {
-    if (Math.abs(d.x) >= Math.abs(d.y) * 0.999) return [Rect.fromCenter(new P(t.x + sx * hw, t.y), hw, hh), t];
-    return [Rect.fromCenter(new P(t.x, t.y + sy * hh), hw, hh), t];
+    if (Math.abs(dx) >= Math.abs(dy) * 0.999) {
+      AC[0] = tx + sx * hw;
+      AC[1] = ty;
+    } else {
+      AC[0] = tx;
+      AC[1] = ty + sy * hh;
+    }
+    return;
   }
-  return [Rect.fromCenter(new P(t.x + sx * hw, t.y + sy * hh), hw, hh), t];
+  AC[0] = tx + sx * hw;
+  AC[1] = ty + sy * hh;
 }
 
 /**
@@ -74,7 +87,7 @@ export function distant(
   vi: number,
   v: Variant,
   dirs: readonly [number, P][],
-  keep: (vi: number, r: Rect) => boolean,
+  keep: KeepFn,
   out: Cand[],
 ): void {
   const hw = v.w * 0.5;
@@ -122,20 +135,27 @@ export function distant(
     for (let k = 0; k < rings; k++) {
       const r = rings === 1 ? len.minDistance : len.minDistance + ((len.maxDistance - len.minDistance) * k) / (rings - 1);
       if (r <= 0) continue;
+      // t = start + d * r
+      const tx = start.x + d.x * r;
+      const ty = start.y + d.y * r;
       switch (style) {
         case LeaderStyle.Elbow: {
-          const e = start.add(d.mul(r));
           const run = 0.75 * em;
           const sx = d.x >= 0 ? 1 : -1;
-          const p = new P(e.x + sx * run, e.y);
-          const rect = Rect.fromCenter(new P(p.x + sx * hw, p.y), hw, hh);
-          if (keep(vi, rect)) push(rect, [start, e, p], k);
+          const px = tx + sx * run;
+          const cx = px + sx * hw;
+          if (keep(vi, cx - hw, ty - hh, cx + hw, ty + hh)) {
+            push(new Rect(cx - hw, ty - hh, cx + hw, ty + hh), [start, new P(tx, ty), new P(px, ty)], k);
+          }
           break;
         }
         case LeaderStyle.Orthogonal: {
-          const t = start.add(d.mul(r));
-          const [rect, portPt] = attachLabel(t, d, hw, hh, Port.SideCenter);
-          if (!keep(vi, rect)) continue;
+          attachCenter(tx, ty, d.x, d.y, hw, hh, Port.SideCenter);
+          const cx = AC[0]!;
+          const cy = AC[1]!;
+          if (!keep(vi, cx - hw, cy - hh, cx + hw, cy + hh)) continue;
+          const rect = new Rect(cx - hw, cy - hh, cx + hw, cy + hh);
+          const portPt = new P(tx, ty);
           if (Math.abs(d.x) < 1e-9 || Math.abs(d.y) < 1e-9) push(rect, [start, portPt], k);
           else {
             // po: vertical then horizontal into the side-center port
@@ -145,9 +165,11 @@ export function distant(
           break;
         }
         case LeaderStyle.Curved: {
-          const t = start.add(d.mul(r));
-          const [rect] = attachLabel(t, d, hw, hh, port);
-          if (!keep(vi, rect)) continue;
+          attachCenter(tx, ty, d.x, d.y, hw, hh, port);
+          const cx = AC[0]!;
+          const cy = AC[1]!;
+          if (!keep(vi, cx - hw, cy - hh, cx + hw, cy + hh)) continue;
+          const rect = new Rect(cx - hw, cy - hh, cx + hw, cy + hh);
           const p0 = rect.closestPoint(start);
           const s0 = leaderStart(model, item, p0);
           const portPt = rect.closestPoint(s0);
@@ -168,10 +190,12 @@ export function distant(
           break;
         }
         default: {
-          const t = start.add(d.mul(r));
-          const [rect, pp] = attachLabel(t, d, hw, hh, port);
-          let portPt = pp;
-          if (!keep(vi, rect)) continue;
+          attachCenter(tx, ty, d.x, d.y, hw, hh, port);
+          const cx = AC[0]!;
+          const cy = AC[1]!;
+          if (!keep(vi, cx - hw, cy - hh, cx + hw, cy + hh)) continue;
+          const rect = new Rect(cx - hw, cy - hh, cx + hw, cy + hh);
+          let portPt = new P(tx, ty);
           let s0 = start;
           if (style === LeaderStyle.Straight && port === Port.Nearest) {
             portPt = rect.closestPoint(start);
@@ -186,8 +210,8 @@ export function distant(
   // free-space seeds: local maxima of the distance transform near the item
   if (model.placement.freeSpaceSeeds && obs.dt.length > 0) {
     for (const seed of freeSpaceSeeds(obs, item, hh)) {
+      if (!keep(vi, seed.x - hw, seed.y - hh, seed.x + hw, seed.y + hh)) continue;
       const rect = Rect.fromCenter(seed, hw, hh);
-      if (!keep(vi, rect)) continue;
       const start0 = leaderStart(model, item, seed);
       const portPt = rect.closestPoint(start0);
       const start = leaderStart(model, item, portPt);
@@ -214,14 +238,45 @@ export function freeSpaceSeeds(obs: Obstacles, item: Item, hh: number): P[] {
   const reach = item.len.maxDistance + maxf(bb.w(), bb.h()) * 0.5;
   const c = item.shape.reference();
   obs.seedIndex.query(Rect.fromCenter(c, reach, reach), SEED_IDS);
-  const seeds: [number, number, number, P][] = [];
+  // The 8 best by (score descending, row, col): a strict total order, so keeping the
+  // best 8 by insertion gives exactly the first 8 of Rust's full sort.
+  let n = 0;
   for (let q = 0; q < SEED_IDS.len; q++) {
-    const [p, v, col, row] = obs.seeds[SEED_IDS.get(q)]!;
+    const id = SEED_IDS.get(q);
+    const s = obs.seeds[id]!;
+    const p = s[0];
+    const v = s[1];
     const dd = p.dist(c);
-    if (v >= hh && dd <= reach && dd > hh) seeds.push([v - 0.01 * dd, col, row, p]);
+    if (!(v >= hh && dd <= reach && dd > hh)) continue;
+    const score = v - 0.01 * dd;
+    // position of the new seed among the kept ones
+    let k = n;
+    while (k > 0 && seedBefore(score, s[3], s[2], TOP_SCORE[k - 1]!, obs.seeds[TOP_ID[k - 1]!]!)) k--;
+    if (k >= 8) continue;
+    const last = n < 8 ? n : 7;
+    for (let j = last; j > k; j--) {
+      TOP_SCORE[j] = TOP_SCORE[j - 1]!;
+      TOP_ID[j] = TOP_ID[j - 1]!;
+    }
+    TOP_SCORE[k] = score;
+    TOP_ID[k] = id;
+    if (n < 8) n++;
   }
-  seeds.sort((a, b) => cmpF64(b[0], a[0]) || a[2] - b[2] || a[1] - b[1]);
-  return seeds.slice(0, 8).map((s) => s[3]);
+  const out: P[] = [];
+  for (let k = 0; k < n; k++) out.push(obs.seeds[TOP_ID[k]!]![0]);
+  return out;
+}
+
+const TOP_SCORE = new Float64Array(8);
+const TOP_ID = new Int32Array(8);
+
+/** Seed `(score, row, col)` sorts before the kept seed `(s, other)` (Rust's comparator). */
+function seedBefore(score: number, row: number, col: number, s: number, other: readonly [P, number, number, number]): boolean {
+  // Rust: cmp_f64(b.0, a.0) — higher scores first
+  const c = cmpF64(s, score);
+  if (c !== 0) return c < 0;
+  if (row !== other[3]) return row < other[3];
+  return col < other[2];
 }
 
 /** Control point of a quadratic leader bowed by `bow × length` to the left of `a → b`. */

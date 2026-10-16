@@ -9,6 +9,7 @@ import { boundaryCandidates } from "../boundary.js";
 import {
   Cand,
   Kind,
+  type KeepFn,
   adjacent,
   internal,
   internalRank,
@@ -151,11 +152,11 @@ export class Solve {
     const win = this.window;
     let dropped = 0;
     // `keep` serves non-internal candidates only (internal labels sit on their mark)
-    const keep = (vi: number, r: Rect): boolean => {
+    const keep: KeepFn = (vi, x0, y0, x1, y1) => {
       if (!(quick || itemOcc !== null) || !isRectShape(variants[vi]!.shape)) return true;
-      const w = occ.window(r, win);
+      const w = occ.windowXY(x0, y0, x1, y1, win);
       if (itemOcc !== null) {
-        const hit = shared ? w && itemOcc.blockedIn(win) : itemOcc.blocked(r);
+        const hit = shared ? w && itemOcc.blockedIn(win) : itemOcc.blockedXY(x0, y0, x1, y1);
         if (hit) {
           dropped += 1;
           return false;
@@ -163,29 +164,24 @@ export class Solve {
       }
       return !(quick && state.nPlaced > 0 && w && occ.blockedIn(win));
     };
+    // Rust creates the adjacent and slider candidates and then drops those `keep` rejects;
+    // `adjacent` applies the same test to the same boxes in the same order before creating
+    // them (internal candidates are exempt either way).
+    const adjKeep = quick || itemOcc !== null ? keep : null;
     const fresh: Cand[] = [];
     const sliderPerGap = model.placement.sliderPerGap;
     const circleRatio = model.placement.internalCircleRatio;
     for (const vi of vis) {
       const v = variants[vi]!;
-      const start = fresh.length;
       if (item.area !== null) {
         // area anchors: internal candidates first; external ones around the dot
         const rank = internalRank(item, v, models, circleRatio);
         if (rank !== null) internal(item, vi, v, rank, fresh);
-        adjacent(item, vi, v, sliderPerGap, models, fresh);
+        adjacent(item, vi, v, sliderPerGap, models, fresh, adjKeep);
       } else {
-        adjacent(item, vi, v, sliderPerGap, models, fresh);
+        adjacent(item, vi, v, sliderPerGap, models, fresh, adjKeep);
         const rank = internalRank(item, v, models, circleRatio);
         if (rank !== null) internal(item, vi, v, rank, fresh);
-      }
-      if (quick || itemOcc !== null) {
-        let w = start;
-        for (let r = start; r < fresh.length; r++) {
-          const c = fresh[r]!;
-          if (c.kind === Kind.Internal || keep(vi, c.rect)) fresh[w++] = c;
-        }
-        fresh.length = w;
       }
       if (Models.has(models, Models.DISTANT)) distant(model, obs, item, vi, v, this.distantDirs, keep, fresh);
     }

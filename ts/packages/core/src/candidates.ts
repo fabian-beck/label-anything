@@ -6,11 +6,11 @@
  * @module
  */
 
-import { P, Rect, bboxOf, distPointSeg } from "./geom/index.js";
+import { P, Rect, bboxOf, distPointSegXY } from "./geom/index.js";
 import { polylabel } from "./geom/polygon.js";
-import { Shape, shapesOverlap, signDir } from "./geom/shape.js";
+import { Shape, shapesOverlap } from "./geom/shape.js";
 import type { Variant } from "./labels.js";
-import { cmpF64, maxf, minf, sinCosDeg } from "./math.js";
+import { cmpF64, len2d, maxf, minf, signEps, sinCosDeg } from "./math.js";
 import {
   InternalPolicy,
   type Item,
@@ -158,10 +158,17 @@ export class Cand {
     public rect: Rect,
   ) {}
 
+  /** Cache of {@link bbox} (computed on first use, once the leaders are complete). */
+  private bb: Rect | null = null;
+
   /** Bounding box of label and leaders. */
   bbox(): Rect {
-    let r = this.rect;
-    for (const l of this.leaders) r = r.union(l.bbox());
+    let r = this.bb;
+    if (r === null) {
+      r = this.rect;
+      for (const l of this.leaders) r = r.union(l.bbox());
+      this.bb = r;
+    }
     return r;
   }
 
@@ -232,11 +239,42 @@ export function dirOf(angleDeg: number): P {
   return new P(c, -s);
 }
 
+/** Output of {@link touchCenterXY}: `[x, y]`. */
+const TC = new Float64Array(2);
+
+/**
+ * {@link touchCenter} for the direction `(dx, dy)`, into {@link TC}: the operations of
+ * `supportInflated` and `signDir`, without allocating for circles (the common mark).
+ */
+function touchCenterXY(shape: Shape, o: number, dx: number, dy: number, hw: number, hh: number): void {
+  const l = len2d(dx, dy);
+  const nx = l > 0 ? dx / l : 0;
+  const ny = l > 0 ? dy / l : 0;
+  let px: number;
+  let py: number;
+  if (shape.kind === "circle") {
+    px = shape.c.x + nx * shape.r;
+    py = shape.c.y + ny * shape.r;
+  } else {
+    const p = shape.support(new P(dx, dy));
+    px = p.x;
+    py = p.y;
+  }
+  TC[0] = px + nx * o + signEps(dx, 1e-12) * hw;
+  TC[1] = py + ny * o + signEps(dy, 1e-12) * hh;
+}
+
 /** Label center touching `S ⊕ o` in direction `d` (spec §6.1). */
 export function touchCenter(shape: Shape, o: number, d: P, hw: number, hh: number): P {
-  const s = shape.supportInflated(d, o);
-  const [sx, sy] = signDir(d);
-  return new P(s.x + sx * hw, s.y + sy * hh);
+  touchCenterXY(shape, o, d.x, d.y, hw, hh);
+  return new P(TC[0]!, TC[1]!);
+}
+
+/** Whether {@link pushIn} can move a label (concave polygons only). */
+function needsPushIn(shape: Shape): boolean {
+  if (shape.kind !== "polygon") return false;
+  const p = shape.poly;
+  return !(p.rings.length === 1 && p.rings[0]!.length === p.hull.length);
 }
 
 /**
@@ -306,40 +344,79 @@ export function warm(model: Model, item: Item, vi: number, v: Variant, rect: Rec
   return c;
 }
 
-/** Adjacent and slider candidates of one variant. */
-export function adjacent(item: Item, vi: number, v: Variant, sliderPerGap: number, models: Models, out: Cand[]): void {
+/**
+ * Decides whether a label box `[x0, x1] × [y0, y1]` of variant `vi` is created (the
+ * candidate filter of `Solve.generateMode`; see there).
+ */
+export type KeepFn = (vi: number, x0: number, y0: number, x1: number, y1: number) => boolean;
+
+/**
+ * Adjacent and slider candidates of one variant. With `keep`, boxes it rejects are not
+ * created (Rust filters the created candidates right afterwards, calling `keep` on the
+ * same boxes in the same order).
+ */
+export function adjacent(
+  item: Item,
+  vi: number,
+  v: Variant,
+  sliderPerGap: number,
+  models: Models,
+  out: Cand[],
+  keep: KeepFn | null = null,
+): void {
   const hw = v.w * 0.5;
   const hh = v.h * 0.5;
   const o = item.len.offset;
   const shape = item.shape;
+  const push = needsPushIn(shape);
   const positions = item.positions;
-  const rankOf = (p: Pos): number | null => {
-    const r = positions.indexOf(p);
-    return r < 0 ? null : r;
-  };
   const it = item.index;
   if (Models.has(models, Models.ADJACENT)) {
-    positions.forEach((p, r) => {
+    for (let r = 0; r < positions.length; r++) {
+      const p = positions[r]!;
       const d = POS_DIRS[posAngularIndex(p)]!;
-      const c = pushIn(shape, o, touchCenter(shape, o, d, hw, hh), hw, hh);
-      out.push(new Cand(it, vi, v.level, Kind.Adjacent, p, r, Rect.fromCenter(c, hw, hh)));
-    });
+      touchCenterXY(shape, o, d.x, d.y, hw, hh);
+      let cx = TC[0]!;
+      let cy = TC[1]!;
+      if (push) {
+        const c = pushIn(shape, o, new P(cx, cy), hw, hh);
+        cx = c.x;
+        cy = c.y;
+      }
+      const x0 = cx - hw;
+      const y0 = cy - hh;
+      const x1 = cx + hw;
+      const y1 = cy + hh;
+      if (keep !== null && !keep(vi, x0, y0, x1, y1)) continue;
+      out.push(new Cand(it, vi, v.level, Kind.Adjacent, p, r, new Rect(x0, y0, x1, y1)));
+    }
   }
   if (!Models.has(models, Models.SLIDER) || sliderPerGap === 0) return;
   for (let k = 0; k < 8; k++) {
     const a = posFromAngularIndex(k);
     const b = posFromAngularIndex(k + 1);
-    const ra = rankOf(a);
-    const rb = rankOf(b);
-    if (ra === null || rb === null) continue;
-    const path = cspacePath(shape, o, hw, hh, k);
-    const samples = samplePath(path, sliderPerGap, shape, o, hw, hh);
-    for (let j = 0; j < samples.length; j++) {
+    const ra = positions.indexOf(a);
+    const rb = positions.indexOf(b);
+    if (ra < 0 || rb < 0) continue;
+    const n = cspacePathInto(shape, o, hw, hh, k);
+    const m = samplePathInto(n, sliderPerGap, shape, o, hw, hh);
+    for (let j = 0; j < m; j++) {
       const t = (j + 1) / (sliderPerGap + 1);
       const rank = ra + (rb - ra) * t + 0.25;
       const side = t < 0.5 ? a : b;
-      const c = pushIn(shape, o, samples[j]!, hw, hh);
-      out.push(new Cand(it, vi, v.level, Kind.Slider, side, rank, Rect.fromCenter(c, hw, hh)));
+      let cx = SP_X[j]!;
+      let cy = SP_Y[j]!;
+      if (push) {
+        const c = pushIn(shape, o, new P(cx, cy), hw, hh);
+        cx = c.x;
+        cy = c.y;
+      }
+      const x0 = cx - hw;
+      const y0 = cy - hh;
+      const x1 = cx + hw;
+      const y1 = cy + hh;
+      if (keep !== null && !keep(vi, x0, y0, x1, y1)) continue;
+      out.push(new Cand(it, vi, v.level, Kind.Slider, side, rank, new Rect(x0, y0, x1, y1)));
     }
   }
 }
@@ -356,10 +433,6 @@ export interface CVertex {
 
 const SAMPLE_STEP_DEG = 9.0;
 const EPS_DEG = 1e-4;
-
-function cAt(shape: Shape, o: number, hw: number, hh: number, phi: number): P {
-  return touchCenter(shape, o, dirOf(phi), hw, hh);
-}
 
 function isAxis(phi: number): boolean {
   const r = remEuclid(phi, 90);
@@ -406,47 +479,113 @@ function gapTable(k: number): GapTable {
   return GAP_TABLES[k]!;
 }
 
+/** The C-space path of {@link cspacePathInto}: positions, angles, straight flags, table indices. */
+const CS_X = new Float64Array(16);
+const CS_Y = new Float64Array(16);
+const CS_PHI = new Float64Array(16);
+const CS_STRAIGHT = new Uint8Array(16);
+const CS_IDX = new Int32Array(16);
+const CS_CUM = new Float64Array(16);
+/** The samples of {@link samplePathInto}. */
+let SP_X = new Float64Array(64);
+let SP_Y = new Float64Array(64);
+
+/**
+ * Boundary of `(S ⊕ o) ⊕ (−B)` over gap `k` (between two fixed positions), into the
+ * `CS_*` arrays; returns the number of vertices.
+ */
+function cspacePathInto(shape: Shape, o: number, hw: number, hh: number, k: number): number {
+  const t = gapTable(k);
+  let n = 0;
+  for (let j = 0; j < t.phis.length; j++) {
+    const d = t.dirs[j]!;
+    touchCenterXY(shape, o, d.x, d.y, hw, hh);
+    const px = TC[0]!;
+    const py = TC[1]!;
+    // verts.last().p.dist(p) < 1e-12
+    if (n > 0 && len2d(CS_X[n - 1]! - px, CS_Y[n - 1]! - py) < 1e-12) continue;
+    CS_X[n] = px;
+    CS_Y[n] = py;
+    CS_PHI[n] = t.phis[j]!;
+    CS_STRAIGHT[n] = 1;
+    CS_IDX[n] = j;
+    n++;
+  }
+  for (let i = 0; i + 1 < n; i++) {
+    let dx: number;
+    let dy: number;
+    if (CS_IDX[i + 1] === CS_IDX[i]! + 1) {
+      const m = t.mids[CS_IDX[i]!]!;
+      dx = m.x;
+      dy = m.y;
+    } else {
+      const m = dirOf((CS_PHI[i]! + CS_PHI[i + 1]!) * 0.5);
+      dx = m.x;
+      dy = m.y;
+    }
+    touchCenterXY(shape, o, dx, dy, hw, hh);
+    CS_STRAIGHT[i] = distPointSegXY(TC[0]!, TC[1]!, CS_X[i]!, CS_Y[i]!, CS_X[i + 1]!, CS_Y[i + 1]!) <= 1e-9 ? 1 : 0;
+  }
+  return n;
+}
+
+/**
+ * `k` samples at equal arc length of the path of {@link cspacePathInto} (`n` vertices),
+ * excluding the endpoints, into `SP_X`/`SP_Y`; returns their number.
+ */
+function samplePathInto(n: number, k: number, shape: Shape, o: number, hw: number, hh: number): number {
+  if (n < 2) return 0;
+  CS_CUM[0] = 0;
+  for (let i = 1; i < n; i++) CS_CUM[i] = CS_CUM[i - 1]! + len2d(CS_X[i - 1]! - CS_X[i]!, CS_Y[i - 1]! - CS_Y[i]!);
+  const total = CS_CUM[n - 1]!;
+  if (total <= 1e-9) return 0;
+  if (SP_X.length < k) {
+    SP_X = new Float64Array(k);
+    SP_Y = new Float64Array(k);
+  }
+  const sx = SP_X;
+  const sy = SP_Y;
+  let seg = 0;
+  for (let j = 1; j <= k; j++) {
+    const target = (total * j) / (k + 1);
+    while (seg + 1 < n - 1 && CS_CUM[seg + 1]! < target) seg += 1;
+    const len = CS_CUM[seg + 1]! - CS_CUM[seg]!;
+    const t = len > 0 ? (target - CS_CUM[seg]!) / len : 0;
+    if (CS_STRAIGHT[seg]) {
+      // a.p.lerp(b.p, t)
+      sx[j - 1] = CS_X[seg]! + (CS_X[seg + 1]! - CS_X[seg]!) * t;
+      sy[j - 1] = CS_Y[seg]! + (CS_Y[seg + 1]! - CS_Y[seg]!) * t;
+    } else {
+      // c_at(shape, o, hw, hh, phi)
+      const d = dirOf(CS_PHI[seg]! + (CS_PHI[seg + 1]! - CS_PHI[seg]!) * t);
+      touchCenterXY(shape, o, d.x, d.y, hw, hh);
+      sx[j - 1] = TC[0]!;
+      sy[j - 1] = TC[1]!;
+    }
+  }
+  return k;
+}
+
 /** Boundary of `(S ⊕ o) ⊕ (−B)` over gap `k` (between two fixed positions). */
 export function cspacePath(shape: Shape, o: number, hw: number, hh: number, k: number): CVertex[] {
-  const t = gapTable(k);
-  const verts: CVertex[] = [];
-  // table index of every kept vertex
-  const idx: number[] = [];
-  for (let j = 0; j < t.phis.length; j++) {
-    const p = touchCenter(shape, o, t.dirs[j]!, hw, hh);
-    if (verts.length > 0 && verts[verts.length - 1]!.p.dist(p) < 1e-12) continue;
-    verts.push({ p, phi: t.phis[j]!, straightNext: true });
-    idx.push(j);
-  }
-  for (let i = 0; i + 1 < verts.length; i++) {
-    const a = verts[i]!;
-    const b = verts[i + 1]!;
-    const d = idx[i + 1] === idx[i]! + 1 ? t.mids[idx[i]!]! : dirOf((a.phi + b.phi) * 0.5);
-    const mid = touchCenter(shape, o, d, hw, hh);
-    a.straightNext = distPointSeg(mid, a.p, b.p) <= 1e-9;
-  }
-  return verts;
+  const n = cspacePathInto(shape, o, hw, hh, k);
+  const out: CVertex[] = [];
+  for (let i = 0; i < n; i++) out.push({ p: new P(CS_X[i]!, CS_Y[i]!), phi: CS_PHI[i]!, straightNext: CS_STRAIGHT[i] === 1 });
+  return out;
 }
 
 /** `k` samples at equal arc length, excluding the endpoints. */
 export function samplePath(path: readonly CVertex[], k: number, shape: Shape, o: number, hw: number, hh: number): P[] {
-  if (path.length < 2) return [];
-  const cum = new Float64Array(path.length);
-  for (let i = 1; i < path.length; i++) cum[i] = cum[i - 1]! + path[i - 1]!.p.dist(path[i]!.p);
-  const total = cum[path.length - 1]!;
-  if (total <= 1e-9) return [];
-  const out: P[] = [];
-  let seg = 0;
-  for (let j = 1; j <= k; j++) {
-    const target = (total * j) / (k + 1);
-    while (seg + 1 < path.length - 1 && cum[seg + 1]! < target) seg += 1;
-    const a = path[seg]!;
-    const b = path[seg + 1]!;
-    const len = cum[seg + 1]! - cum[seg]!;
-    const t = len > 0 ? (target - cum[seg]!) / len : 0;
-    if (a.straightNext) out.push(a.p.lerp(b.p, t));
-    else out.push(cAt(shape, o, hw, hh, a.phi + (b.phi - a.phi) * t));
+  const n = path.length;
+  for (let i = 0; i < n; i++) {
+    CS_X[i] = path[i]!.p.x;
+    CS_Y[i] = path[i]!.p.y;
+    CS_PHI[i] = path[i]!.phi;
+    CS_STRAIGHT[i] = path[i]!.straightNext ? 1 : 0;
   }
+  const m = samplePathInto(n, k, shape, o, hw, hh);
+  const out: P[] = [];
+  for (let j = 0; j < m; j++) out.push(new P(SP_X[j]!, SP_Y[j]!));
   return out;
 }
 

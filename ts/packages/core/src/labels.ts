@@ -9,6 +9,7 @@
  */
 
 import {
+  type Font,
   FontBook,
   balancedWrap,
   extraWrapVariants,
@@ -110,6 +111,9 @@ function asciiEqIgnoreCase(a: string, b: string): boolean {
 
 /** Text measurement with the host callback first, then the font book. */
 export class Measurer {
+  /** The resolved font of each `FontSel` (fonts are resolved after `userFonts`). */
+  private readonly resolved = new Map<FontSel, Font>();
+
   constructor(
     readonly fonts: FontBook,
     readonly env: Env,
@@ -117,26 +121,34 @@ export class Measurer {
     readonly shaping: string,
   ) {}
 
+  private fontOf(font: FontSel): Font {
+    let f = this.resolved.get(font);
+    if (f === undefined) {
+      f = this.fonts.font(this.fonts.resolve(font.family, font.weight, font.italic));
+      this.resolved.set(font, f);
+    }
+    return f;
+  }
+
   width(font: FontSel, scale: number, text: string): number {
-    const spec = font.spec(scale);
+    const size = font.size * scale;
     if (this.env.measure) {
-      const m = this.env.measure(text, spec);
+      const m = this.env.measure(text, font.spec(scale));
       if (m !== null && m !== undefined) return m.width;
     }
-    const f = this.fonts.font(this.fonts.resolve(font.family, font.weight, font.italic));
-    return f.width(text, spec.size);
+    return this.fontOf(font).width(text, size);
   }
 
   /** `[ascent, descent]` in px, both positive. */
   vmetrics(font: FontSel, scale: number): [number, number] {
-    const spec = font.spec(scale);
+    const size = font.size * scale;
     if (this.env.measure) {
-      const m = this.env.measure("", spec);
+      const m = this.env.measure("", font.spec(scale));
       if (m !== null && m !== undefined) return [m.ascent, m.descent];
     }
-    const f = this.fonts.font(this.fonts.resolve(font.family, font.weight, font.italic));
+    const f = this.fontOf(font);
     const upm = f.unitsPerEm;
-    return [(f.ascender * spec.size) / upm, (-f.descender * spec.size) / upm];
+    return [(f.ascender * size) / upm, (-f.descender * size) / upm];
   }
 }
 
@@ -577,8 +589,16 @@ export function ladderVariants(
   }
 }
 
+const TRIMMED = new Map<number, string>();
+
+/** `format!("{:.4}")` without trailing zeros and point (memoized: few distinct scales). */
 function trimFloat(x: number): string {
-  return fmtFixed(x, 4).replace(/0+$/, "").replace(/\.$/, "");
+  let s = TRIMMED.get(x);
+  if (s === undefined) {
+    s = fmtFixed(x, 4).replace(/0+$/, "").replace(/\.$/, "");
+    if (TRIMMED.size < 4096) TRIMMED.set(x, s);
+  }
+  return s;
 }
 
 /** The same variant at another font scale. */

@@ -141,7 +141,12 @@ export class Occupancy {
 
   /** Whether any occupied cell center lies strictly inside `r`. */
   blocked(r: Rect): boolean {
-    return this.window(r, this.win) && this.blockedIn(this.win);
+    return this.windowXY(r.x0, r.y0, r.x1, r.y1, this.win) && this.blockedIn(this.win);
+  }
+
+  /** {@link blocked} of the rectangle `[x0, x1] × [y0, y1]`. */
+  blockedXY(x0: number, y0: number, x1: number, y1: number): boolean {
+    return this.windowXY(x0, y0, x1, y1, this.win) && this.blockedIn(this.win);
   }
 
   /**
@@ -149,11 +154,16 @@ export class Occupancy {
    * Grids with the same cells ({@link sameCells}) can share a window.
    */
   window(r: Rect, w: Window): boolean {
-    this.span(this.ox, this.cols, r.x0, r.x1);
+    return this.windowXY(r.x0, r.y0, r.x1, r.y1, w);
+  }
+
+  /** {@link window} of the rectangle `[x0, x1] × [y0, y1]`. */
+  windowXY(x0: number, y0: number, x1: number, y1: number, w: Window): boolean {
+    this.span(this.ox, this.cols, x0, x1);
     const c0 = SPAN[0]!;
     const c1 = SPAN[1]!;
     if (c0 >= c1) return false;
-    this.span(this.oy, this.rows, r.y0, r.y1);
+    this.span(this.oy, this.rows, y0, y1);
     const r0 = SPAN[0]!;
     const r1 = SPAN[1]!;
     if (r0 >= r1) return false;

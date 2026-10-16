@@ -9,7 +9,7 @@
  * @module
  */
 
-import { Cand, Kind, Leader, SIDE_BOUNDARY } from "./candidates.js";
+import { Cand, type KeepFn, Kind, Leader, SIDE_BOUNDARY } from "./candidates.js";
 import { P, Rect } from "./geom/index.js";
 import type { Variant } from "./labels.js";
 import { leaderStart } from "./leaders.js";
@@ -125,7 +125,7 @@ export function boundaryCandidates(
   item: Item,
   variants: readonly Variant[],
   vis: readonly number[],
-  keep: (vi: number, r: Rect) => boolean,
+  keep: KeepFn,
   out: Cand[],
 ): void {
   const area = obs.labelArea ?? model.canvas;
@@ -144,32 +144,48 @@ export function boundaryCandidates(
       // candidate rows: at the anchor height and a few offsets (for packing)
       for (let k = 0; k < OFFSETS.length; k++) {
         const off = OFFSETS[k]!;
-        let rect: Rect;
-        let port: P;
+        let rx0: number;
+        let ry0: number;
+        let rx1: number;
+        let ry1: number;
+        let px: number;
+        let py: number;
         if (vertical) {
           const y = clampf(item.anchor.y + off * v.h, area.y0 + hh, area.y1 - hh);
+          ry0 = y - hh;
+          ry1 = y + hh;
+          py = y;
           if (side === "left") {
             const x0 = area.x0 + margin;
-            rect = new Rect(x0, y - hh, x0 + v.w, y + hh);
-            port = new P(x0 + v.w, y);
+            rx0 = x0;
+            rx1 = x0 + v.w;
+            px = x0 + v.w;
           } else {
             const x1 = area.x1 - margin;
-            rect = new Rect(x1 - v.w, y - hh, x1, y + hh);
-            port = new P(x1 - v.w, y);
+            rx0 = x1 - v.w;
+            rx1 = x1;
+            px = x1 - v.w;
           }
         } else {
           const x = clampf(item.anchor.x + off * v.w, area.x0 + hw, area.x1 - hw);
+          rx0 = x - hw;
+          rx1 = x + hw;
+          px = x;
           if (side === "top") {
             const y0 = area.y0 + margin;
-            rect = new Rect(x - hw, y0, x + hw, y0 + v.h);
-            port = new P(x, y0 + v.h);
+            ry0 = y0;
+            ry1 = y0 + v.h;
+            py = y0 + v.h;
           } else {
             const y1 = area.y1 - margin;
-            rect = new Rect(x - hw, y1 - v.h, x + hw, y1);
-            port = new P(x, y1 - v.h);
+            ry0 = y1 - v.h;
+            ry1 = y1;
+            py = y1 - v.h;
           }
         }
-        if (!keep(vi, rect)) continue;
+        if (!keep(vi, rx0, ry0, rx1, ry1)) continue;
+        const rect = new Rect(rx0, ry0, rx1, ry1);
+        const port = new P(px, py);
         const start = leaderStart(model, item, port);
         const pts = boundaryPoints(style, vertical, start, port);
         const c = new Cand(it, vi, v.level, Kind.Boundary, SIDE_BOUNDARY, 9 + k * 0.25, rect);
