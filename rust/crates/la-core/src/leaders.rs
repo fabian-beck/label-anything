@@ -6,7 +6,7 @@ use crate::labels::Variant;
 use crate::math::{maxf, minf};
 use crate::model::opts::{Attach, LeaderStyle, Port};
 use crate::model::{Item, Model};
-use crate::obstacles::Obstacles;
+use crate::obstacles::FreeSpace;
 
 /// Leader start on the item for direction `d` (boundary + gap, center or tip).
 pub fn leader_start(model: &Model, item: &Item, toward: P) -> P {
@@ -85,7 +85,7 @@ fn directions(model: &Model) -> Vec<f64> {
 #[allow(clippy::too_many_arguments)]
 pub fn distant(
     model: &Model,
-    obs: &Obstacles,
+    seeds: &[NearSeed],
     item: &Item,
     vi: usize,
     v: &Variant,
@@ -227,8 +227,8 @@ pub fn distant(
         }
     }
     // free-space seeds: local maxima of the distance transform near the item
-    if model.placement.free_space_seeds && !obs.dt.is_empty() {
-        for seed in free_space_seeds(obs, item, hh) {
+    if model.placement.free_space_seeds {
+        for seed in free_space_seeds(seeds, hh) {
             let rect = Rect::from_center(seed, hw, hh);
             if !keep(vi, &rect) {
                 continue;
@@ -255,30 +255,65 @@ pub fn distant(
     }
 }
 
-/// Up to 8 local maxima of the distance transform within `max_distance` of the item
-/// whose clearance is at least `hh` (precomputed in `Obstacles::seeds`).
-pub fn free_space_seeds(obs: &Obstacles, item: &Item, hh: f64) -> Vec<P> {
+/// A local maximum of the distance transform near an item (see [`item_seeds`]).
+#[derive(Clone, Copy, Debug)]
+pub struct NearSeed {
+    /// Ranking key: clearance − 0.01 × distance (higher first).
+    key: f64,
+    col: usize,
+    row: usize,
+    p: P,
+    /// Clearance (px).
+    v: f64,
+    /// Distance from the item's reference point.
+    dd: f64,
+}
+
+/// The local maxima of the distance transform within reach of the item (`max_distance`
+/// plus half its mark), best first: the input of [`free_space_seeds`], the same for
+/// all variants of the item.
+pub fn item_seeds(fs: &FreeSpace, item: &Item) -> Vec<NearSeed> {
+    if fs.dt.is_empty() {
+        return Vec::new();
+    }
     let bb = item.shape.bbox();
     let reach = item.len.max_distance + bb.w().max(bb.h()) * 0.5;
     let c = item.shape.reference();
     let mut ids = Vec::new();
-    obs.seed_index
+    fs.seed_index
         .query(&Rect::from_center(c, reach, reach), &mut ids);
-    let mut seeds: Vec<(f64, usize, usize, P)> = Vec::new();
+    let mut seeds: Vec<NearSeed> = Vec::new();
     for id in ids {
-        let (p, v, col, row) = obs.seeds[id as usize];
+        let (p, v, col, row) = fs.seeds[id as usize];
         let dd = p.dist(c);
-        if v >= hh && dd <= reach && dd > hh {
-            seeds.push((v - 0.01 * dd, col, row, p));
+        if dd <= reach {
+            seeds.push(NearSeed {
+                key: v - 0.01 * dd,
+                col,
+                row,
+                p,
+                v,
+                dd,
+            });
         }
     }
     seeds.sort_by(|a, b| {
-        crate::math::cmp_f64(b.0, a.0)
-            .then(a.2.cmp(&b.2))
-            .then(a.1.cmp(&b.1))
+        crate::math::cmp_f64(b.key, a.key)
+            .then(a.row.cmp(&b.row))
+            .then(a.col.cmp(&b.col))
     });
-    seeds.truncate(8);
-    seeds.into_iter().map(|s| s.3).collect()
+    seeds
+}
+
+/// Up to 8 local maxima of the distance transform within `max_distance` of the item
+/// whose clearance is at least `hh` (and farther than `hh` from the item), best first;
+/// `seeds` are the item's seeds ([`item_seeds`]).
+pub fn free_space_seeds(seeds: &[NearSeed], hh: f64) -> impl Iterator<Item = P> + '_ {
+    seeds
+        .iter()
+        .filter(move |s| s.v >= hh && s.dd > hh)
+        .take(8)
+        .map(|s| s.p)
 }
 
 /// Control point of a quadratic leader bowed by `bow × length` to the left of `a → b`.

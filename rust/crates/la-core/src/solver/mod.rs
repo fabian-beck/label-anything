@@ -73,6 +73,8 @@ pub struct Solve<'a> {
     pub warm_cand: Vec<Option<u32>>,
     /// Directions of distant candidates (see `leaders::distant_dirs`).
     pub distant_dirs: Vec<(f64, crate::geom::P)>,
+    /// Free-space seeds near each item (`leaders::item_seeds`), once needed.
+    pub seeds: Vec<Option<Vec<crate::leaders::NearSeed>>>,
     pub iterations: u64,
     pub time_guard_hit: bool,
     /// The host cancelled the solve (sticky once seen; see [`Solve::poll_cancel`]).
@@ -117,6 +119,7 @@ impl<'a> Solve<'a> {
             warm_cand: vec![None; n],
             static_dropped: vec![0; n],
             distant_dirs: crate::leaders::distant_dirs(model),
+            seeds: vec![None; n],
             iterations: 0,
             time_guard_hit: false,
             cancelled: false,
@@ -170,6 +173,14 @@ impl<'a> Solve<'a> {
         // never be evict_lower targets or witnesses of a priority inversion (those only
         // involve strictly lower-priority labels). The occupancy grid rejects most of them
         // before their leaders are built; the exact test below decides the rest.
+        if models.has(Models::DISTANT)
+            && self.model.placement.free_space_seeds
+            && self.seeds[i].is_none()
+        {
+            let fs = self.obs.free_space(self.model);
+            self.seeds[i] = Some(crate::leaders::item_seeds(fs, item));
+        }
+        let seeds = self.seeds[i].as_deref().unwrap_or(&[]);
         let key_i = self.pri.prio[i].key;
         let filter = self.state.n_placed > 0;
         let quick = filter
@@ -254,7 +265,7 @@ impl<'a> Solve<'a> {
             if models.has(Models::DISTANT) {
                 crate::leaders::distant(
                     self.model,
-                    self.obs,
+                    seeds,
                     item,
                     vi,
                     v,

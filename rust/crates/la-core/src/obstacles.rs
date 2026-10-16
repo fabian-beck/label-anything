@@ -105,17 +105,30 @@ pub struct Obstacles {
     /// (to exclude the own mark from `items` costs).
     pub items_sat: Sat,
     pub own: Vec<(GridSpec, Sat)>,
-    /// Distance (px) from each cell center to the nearest static hard obstacle.
-    pub dt: Vec<f64>,
-    /// Local maxima of the distance transform: (cell center, clearance, col, row).
-    pub seeds: Vec<(P, f64, usize, usize)>,
-    pub seed_index: StaticIndex,
+    /// Free space, computed on first use (see [`Obstacles::free_space`]).
+    free: std::sync::OnceLock<FreeSpace>,
     pub label_area: Option<Rect>,
     pub leader_area: Option<Rect>,
     pub index_cell: f64,
 }
 
+/// The distance transform of the static hard obstacles and its local maxima, the
+/// free-space seeds of distant candidates.
+pub struct FreeSpace {
+    /// Distance (px) from each cell center to the nearest static hard obstacle.
+    pub dt: Vec<f64>,
+    /// Local maxima of the distance transform: (cell center, clearance, col, row).
+    pub seeds: Vec<(P, f64, usize, usize)>,
+    pub seed_index: StaticIndex,
+}
+
 impl Obstacles {
+    /// The free space of the obstacles prepared from `model`. Only free-space seeds of
+    /// distant candidates need it, so it is computed on first use.
+    pub fn free_space(&self, model: &Model) -> &FreeSpace {
+        self.free.get_or_init(|| free_space(model, self))
+    }
+
     /// Whether some relaxable class is hard (otherwise the `soft_overlap` ladder step
     /// cannot change anything: every relaxed-feasible candidate is feasible).
     pub fn any_relaxable_hard(&self) -> bool {
@@ -321,7 +334,28 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
     } else {
         None
     };
-    // distance transform of static hard obstacles (incl. items and outside the label area)
+    Obstacles {
+        grid,
+        classes,
+        dynamic,
+        prims,
+        prim_index,
+        item_index,
+        item_occ,
+        items_sat,
+        own,
+        free: std::sync::OnceLock::new(),
+        label_area: model.label_area,
+        leader_area: model.leader_area,
+        index_cell,
+    }
+}
+
+/// Distance transform of the static hard obstacles (incl. item marks when labels must
+/// avoid them, and the outside of the label area) and its local maxima.
+fn free_space(model: &Model, obs: &Obstacles) -> FreeSpace {
+    let (grid, classes, dynamic, index_cell) =
+        (obs.grid, &obs.classes, &obs.dynamic, obs.index_cell);
     let mut hard_mask = MaskRaster::new(grid);
     if dynamic.label_items.is_hard() {
         for it in &model.items {
@@ -359,22 +393,10 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         &model.extent,
         index_cell * 2.0,
     );
-    Obstacles {
-        grid,
-        classes,
-        dynamic,
-        prims,
-        prim_index,
-        item_index,
-        item_occ,
-        items_sat,
-        own,
+    FreeSpace {
         dt,
         seeds,
         seed_index,
-        label_area: model.label_area,
-        leader_area: model.leader_area,
-        index_cell,
     }
 }
 

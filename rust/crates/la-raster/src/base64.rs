@@ -53,12 +53,33 @@ fn b64_error(message: String) -> RasterError {
 /// ```
 pub fn decode_base64(input: &str) -> Result<Vec<u8>, RasterError> {
     let bytes = input.as_bytes();
-    let mut out = Vec::with_capacity(bytes.len() / 4 * 3 + 3);
+    // fast path: leading whole quanta of four alphabet characters (no whitespace or
+    // padding), three bytes at a time
+    let mut out = vec![0u8; bytes.len() / 4 * 3 + 3];
+    let mut o = 0;
+    let mut i = 0;
+    for q in bytes.chunks_exact(4) {
+        let (a, b, c, d) = (
+            TABLE[q[0] as usize],
+            TABLE[q[1] as usize],
+            TABLE[q[2] as usize],
+            TABLE[q[3] as usize],
+        );
+        if (a | b | c | d) >= 64 {
+            break;
+        }
+        let v = u32::from(a) << 18 | u32::from(b) << 12 | u32::from(c) << 6 | u32::from(d);
+        out[o..o + 3].copy_from_slice(&[(v >> 16) as u8, (v >> 8) as u8, v as u8]);
+        o += 3;
+        i += 4;
+    }
+    out.truncate(o);
+    // general path for the rest
     let mut acc: u32 = 0;
     let mut nbits: u32 = 0;
-    let mut chars: usize = 0;
+    let mut chars: usize = i;
     let mut pad: usize = 0;
-    for (pos, &c) in bytes.iter().enumerate() {
+    for (pos, &c) in bytes.iter().enumerate().skip(i) {
         let v = TABLE[c as usize];
         match v {
             SKIP => continue,
@@ -183,12 +204,29 @@ mod tests {
             decode_base64("-_-_").unwrap(),
             decode_base64("+/+/").unwrap()
         );
+        // the fast path (whole quanta) hands over to the general one mid-input
+        assert_eq!(decode_base64("TWFuTWFu").unwrap(), b"ManMan");
+        assert_eq!(decode_base64("TWFuTWE=").unwrap(), b"ManMa");
+        assert_eq!(decode_base64("TWFuTWE").unwrap(), b"ManMa");
+        assert_eq!(decode_base64("TWFuTQ").unwrap(), b"ManM");
+        assert_eq!(decode_base64("TWFu TW\nFu").unwrap(), b"ManMan");
+        assert_eq!(decode_base64("TWFuTWFu\n").unwrap(), b"ManMan");
     }
 
     #[test]
     fn rejects_malformed() {
         for bad in [
-            "T", "TQ=", "TQ===", "TQ==TQ==", "TWFu=", "TW*u", "TWFuT", "é",
+            "T",
+            "TQ=",
+            "TQ===",
+            "TQ==TQ==",
+            "TWFu=",
+            "TW*u",
+            "TWFuT",
+            "é",
+            "TWFuTWFuT",
+            "TWFuTW*u",
+            "TWFuTQ==TWFu",
         ] {
             let e = decode_base64(bad).unwrap_err();
             assert_eq!(e.kind, RasterErrorKind::InvalidBase64, "{bad}");
