@@ -75,6 +75,11 @@ export class Solve {
   warmCand: (number | null)[];
   /** Directions of distant candidates (see `distantDirs`). */
   distantDirs: [number, P][];
+  /**
+   * Statically feasible candidates of unplaced items that the placed-label filter had
+   * dropped (see {@link feasibleUnfiltered}); explanations only.
+   */
+  blockedFeasible: Cand[][];
   iterations = 0;
   timeGuardHit = false;
   /** The host cancelled the solve (sticky once seen; see {@link pollCancel}). */
@@ -112,6 +117,8 @@ export class Solve {
     this.warmCand = new Array<number | null>(n).fill(null);
     this.staticDropped = new Array<number>(n).fill(0);
     this.distantDirs = distantDirs(model);
+    this.blockedFeasible = [];
+    for (let i = 0; i < n; i++) this.blockedFeasible.push([]);
     this.evaluator = new Evaluator(model, obs, env);
   }
 
@@ -120,6 +127,63 @@ export class Solve {
     const g = this.model.groupOf[i];
     if (g !== undefined && g !== null && g !== i) return [];
     return this.generateMode(i, vis, models, level, false);
+  }
+
+  /**
+   * Up to `k` statically feasible candidates of item `i` (or, with the `soft_overlap`
+   * step, relaxed-feasible ones) among those that the placed-label filter of
+   * {@link generateMode} may have dropped, generated again without that filter, in
+   * generation order: the distant candidates and the models added by ladder steps of the
+   * item's level-0 variants, and every candidate of its ladder variants. For the
+   * explanation of an omitted item (spec §9.3) whose kept candidates all violate a static
+   * hard constraint: it was blocked by placed labels when one of these exists.
+   */
+  feasibleUnfiltered(i: number, k: number): Cand[] {
+    const model = this.model;
+    const obs = this.obs;
+    const item = model.items[i]!;
+    const models = this.models[i]!;
+    // level-0 variants: their adjacent, slider, internal and boundary candidates were
+    // generated before any label was placed (all kept); distant candidates on demand
+    const level0 = (models & ~item.models) | (models & Models.DISTANT);
+    const softOk = model.ladder.some((st) => st.kind === "soft_overlap");
+    const variants = this.variants[i]!;
+    const itemOcc = obs.itemOcc;
+    const box = KEEP_BOX;
+    // the item-mark test of generateMode, without the placed labels
+    const keep: KeepFn = (vi) =>
+      itemOcc === null || !isRectShape(variants[vi]!.shape) || !itemOcc.blockedBox(box);
+    const adjKeep = itemOcc !== null ? keep : null;
+    const sliderPerGap = model.placement.sliderPerGap;
+    const circleRatio = model.placement.internalCircleRatio;
+    const out: Cand[] = [];
+    for (let vi = 0; vi < variants.length; vi++) {
+      const v = variants[vi]!;
+      const m = v.level === 0 ? level0 : models;
+      if (m === 0) continue;
+      const fresh: Cand[] = [];
+      if (item.area !== null) {
+        const rank = internalRank(item, v, m, circleRatio);
+        if (rank !== null) internal(item, vi, v, rank, fresh);
+        adjacent(item, vi, v, sliderPerGap, m, fresh, adjKeep);
+      } else {
+        adjacent(item, vi, v, sliderPerGap, m, fresh, adjKeep);
+        const rank = internalRank(item, v, m, circleRatio);
+        if (rank !== null) internal(item, vi, v, rank, fresh);
+      }
+      if (Models.has(m, Models.DISTANT)) distant(model, obs, item, vi, v, this.distantDirs, keep, fresh);
+      if (Models.has(m, Models.BOUNDARY)) boundaryCandidates(model, obs, item, variants, [vi], keep, fresh);
+      for (const c of fresh) {
+        c.level = v.level;
+        c.lshape = labelShape(c.rect, v.shape);
+        this.evaluator.eval(c, v, null);
+        if (c.feasible || (softOk && c.relaxed)) {
+          out.push(c);
+          if (out.length === k) return out;
+        }
+      }
+    }
+    return out;
   }
 
   /** Statically evaluate candidate `cid` if it is not evaluated yet. */

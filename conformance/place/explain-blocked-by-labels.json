@@ -1,0 +1,14 @@
+{
+  "kind": "place",
+  "name": "an item whose statically feasible candidates placed labels block is omitted_by_priority",
+  "problem_file": "../problems/priority-prefix.json",
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "reasons": {
+      "t7": "omitted_by_priority"
+    }
+  }
+}

@@ -621,15 +621,28 @@ fn evict_lower(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<(u32, bool)> {
     Some((c, false))
 }
 
-/// Why item `i` could not be placed.
-pub fn explain(s: &Solve, i: usize) -> Reason {
+/// Statically feasible candidates an explanation looks at (the cheapest of the kept
+/// ones, or the first ones found by [`Solve::feasible_unfiltered`]).
+pub const EXPLAIN_CANDIDATES: usize = 5;
+
+/// Why item `i` could not be placed. Without a statically feasible candidate among its
+/// kept ones, the candidates that the placed labels blocked while they were generated
+/// decide (they were dropped then, spec §6.7): `omitted_by_priority` when one of them is
+/// statically feasible (kept in `s.blocked_feasible[i]` for `blocked_by`).
+pub fn explain(s: &mut Solve, i: usize) -> Reason {
     let any_static = s.by_item[i].iter().any(|&c| {
         let c = &s.cands[c as usize];
         c.feasible || c.relaxed && s.model.ladder.contains(&Step::SoftOverlap)
     });
     if any_static {
-        Reason::OmittedByPriority
-    } else {
-        Reason::NoFeasibleCandidate
+        return Reason::OmittedByPriority;
     }
+    let found = s.feasible_unfiltered(i, EXPLAIN_CANDIDATES);
+    let reason = if found.is_empty() {
+        Reason::NoFeasibleCandidate
+    } else {
+        Reason::OmittedByPriority
+    };
+    s.blocked_feasible[i] = found;
+    reason
 }

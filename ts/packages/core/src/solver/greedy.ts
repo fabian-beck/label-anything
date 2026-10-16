@@ -587,13 +587,27 @@ function evictLower(s: Solve, g: Greedy, i: number): [number, boolean] | null {
   return [c, false];
 }
 
-/** Why item `i` could not be placed. */
+/**
+ * Statically feasible candidates an explanation looks at (the cheapest of the kept ones,
+ * or the first ones found by `Solve.feasibleUnfiltered`).
+ */
+export const EXPLAIN_CANDIDATES = 5;
+
+/**
+ * Why item `i` could not be placed. Without a statically feasible candidate among its
+ * kept ones, the candidates that the placed labels blocked while they were generated
+ * decide (they were dropped then, spec §6.7): `omitted_by_priority` when one of them is
+ * statically feasible (kept in `s.blockedFeasible[i]` for `blocked_by`).
+ */
 export function explain(s: Solve, i: number): Reason {
   const soft = s.model.ladder.some((st) => stepEq(st, { kind: "soft_overlap" }));
   const anyStatic = s.byItem[i]!.some((c) => {
     const cd = s.cands[c]!;
     return cd.feasible || (cd.relaxed && soft);
   });
-  return anyStatic ? Reason.OmittedByPriority : Reason.NoFeasibleCandidate;
+  if (anyStatic) return Reason.OmittedByPriority;
+  const found = s.feasibleUnfiltered(i, EXPLAIN_CANDIDATES);
+  s.blockedFeasible[i] = found;
+  return found.length > 0 ? Reason.OmittedByPriority : Reason.NoFeasibleCandidate;
 }
 

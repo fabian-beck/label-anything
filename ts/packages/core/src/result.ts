@@ -26,6 +26,7 @@ import type { Shape } from "./geom/shape.js";
 import { type TextLayout, type Variant, partKindName } from "./labels.js";
 import { cmpF64, cmpStr } from "./math.js";
 import { leaderStyleName, stepName } from "./model/index.js";
+import { EXPLAIN_CANDIDATES } from "./solver/greedy.js";
 import { Reason, type Solve, reasonName } from "./solver/index.js";
 import type { Verification } from "./solver/verify.js";
 import { VERSION } from "./version.js";
@@ -259,8 +260,18 @@ export function build(s: Solve, ver: Verification, phases: readonly [string, num
       const fidx: number[] = [];
       for (let k = 0; k < feasId.length; k++) fidx.push(k);
       fidx.sort((a, b) => cmpF64(feasCost[a]!, feasCost[b]!) || feasId[a]! - feasId[b]!);
-      for (let t = 0; t < fidx.length && t < 5; t++) {
-        const c = s.cands[feasId[fidx[t]!]!]!;
+      const probes: Cand[] = [];
+      if (fidx.length === 0) {
+        // no kept feasible candidate: the feasible ones the placed labels had blocked while
+        // they were generated (ties in generation order)
+        const u = s.blockedFeasible[i]!;
+        const order = u.map((_, k) => k);
+        order.sort((a, b) => cmpF64(u[a]!.cost, u[b]!.cost) || a - b);
+        for (const k of order) probes.push(u[k]!);
+      } else {
+        for (let t = 0; t < fidx.length && t < EXPLAIN_CANDIDATES; t++) probes.push(s.cands[feasId[fidx[t]!]!]!);
+      }
+      for (const c of probes) {
         s.state.conflicts(c, s.cands, s.obs, i, buf);
         for (const j of buf) {
           const jc = s.cands[s.state.placed[j]!]!;

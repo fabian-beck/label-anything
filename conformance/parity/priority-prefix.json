@@ -357,11 +357,18 @@
       {
         "id": "t7",
         "placed": false,
-        "reason": "no_feasible_candidate",
+        "reason": "omitted_by_priority",
         "blocking": [
-          "items"
+          "items",
+          "labels",
+          "leaders"
         ],
-        "blocked_by": [],
+        "blocked_by": [
+          "t1",
+          "t2",
+          "t3",
+          "t4"
+        ],
         "priority": {
           "tier": 0,
           "score": 93.0,

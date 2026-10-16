@@ -75,6 +75,9 @@ pub struct Solve<'a> {
     pub distant_dirs: Vec<(f64, crate::geom::P)>,
     /// Free-space seeds near each item (`leaders::item_seeds`), once needed.
     pub seeds: Vec<Option<Vec<crate::leaders::NearSeed>>>,
+    /// Statically feasible candidates of unplaced items that the placed-label filter had
+    /// dropped (see [`Solve::feasible_unfiltered`]); explanations only.
+    pub blocked_feasible: Vec<Vec<Cand>>,
     pub iterations: u64,
     pub time_guard_hit: bool,
     /// The host cancelled the solve (sticky once seen; see [`Solve::poll_cancel`]).
@@ -120,6 +123,7 @@ impl<'a> Solve<'a> {
             static_dropped: vec![0; n],
             distant_dirs: crate::leaders::distant_dirs(model),
             seeds: vec![None; n],
+            blocked_feasible: vec![Vec::new(); n],
             iterations: 0,
             time_guard_hit: false,
             cancelled: false,
@@ -133,6 +137,60 @@ impl<'a> Solve<'a> {
             return vec![];
         }
         self.generate_mode(i, vis, models, level, false)
+    }
+
+    /// Up to `k` statically feasible candidates of item `i` (or, with the `soft_overlap`
+    /// step, relaxed-feasible ones) among those that the placed-label filter of
+    /// [`Solve::generate_mode`] may have dropped, generated again without that filter, in
+    /// generation order: the distant candidates and the models added by ladder steps of the
+    /// item's level-0 variants, and every candidate of its ladder variants. For the
+    /// explanation of an omitted item (spec §9.3) whose kept candidates all violate a
+    /// static hard constraint: it was blocked by placed labels when one of these exists.
+    pub fn feasible_unfiltered(&mut self, i: usize, k: usize) -> Vec<Cand> {
+        let item = &self.model.items[i];
+        let models = self.models[i];
+        if models.has(Models::DISTANT)
+            && self.model.placement.free_space_seeds
+            && self.seeds[i].is_none()
+        {
+            let fs = self.obs.free_space(self.model);
+            self.seeds[i] = Some(crate::leaders::item_seeds(fs, item));
+        }
+        // level-0 variants: their adjacent, slider, internal and boundary candidates were
+        // generated before any label was placed (all kept); distant candidates on demand
+        let level0 = Models((models.0 & !item.models.0) | (models.0 & Models::DISTANT));
+        let soft_ok = self.model.ladder.contains(&Step::SoftOverlap);
+        let mut ev = Evaluator::new(self.model, self.obs, self.env);
+        let mut out = Vec::new();
+        for vi in 0..self.variants[i].len() {
+            let v = &self.variants[i][vi];
+            let m = if v.level == 0 { level0 } else { models };
+            if m.0 == 0 {
+                continue;
+            }
+            let (fresh, _) = raw_candidates(
+                self.model,
+                self.obs,
+                item,
+                &self.variants[i],
+                &[vi],
+                m,
+                v.level,
+                self.seeds[i].as_deref().unwrap_or(&[]),
+                &self.distant_dirs,
+                None,
+            );
+            for mut c in fresh {
+                ev.eval(&mut c, v, None);
+                if c.feasible || (soft_ok && c.relaxed) {
+                    out.push(c);
+                    if out.len() == k {
+                        return out;
+                    }
+                }
+            }
+        }
+        out
     }
 
     /// Statically evaluate candidate `cid` if it is not evaluated yet.

@@ -782,7 +782,14 @@ higher or equal key, or cut by `prefix`/`max_labels`), `budget_exhausted` (not r
 before the time guard), `keep_with` (a member of its set failed), `grouped` (merged into a
 group label). `blocking` lists the hard classes that rejected candidates (most frequent
 first); `blocked_by` lists the placed items whose label or leader conflicts with the
-item's best feasible candidates. `stats.omission_order` lists omitted ids from the lowest
+item's best feasible candidates (the 5 cheapest statically feasible ones). Candidates
+dropped while they were generated because placed labels blocked them (§6.7) count: when
+no kept candidate of an omitted item is statically feasible, its dropped candidates are
+generated again without the placed labels — the distant candidates and the models added
+by ladder steps of its level-0 variants, then all candidates of its ladder variants, in
+generation order — and evaluated until 5 statically feasible ones are found; with one,
+the reason is `omitted_by_priority` and those candidates stand for the best feasible
+ones. `stats.omission_order` lists omitted ids from the lowest
 total-order position upward.
 
 ---

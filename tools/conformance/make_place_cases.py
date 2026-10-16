@@ -111,6 +111,14 @@ CASES["prefix-ladder"] = case(
     {"problem_file": "../problems/priority-prefix.json"},
     {"prefix": True, "placed_min": 5})
 
+# t7 sits inside the cluster: every position next to its mark covers another mark, and its
+# distant positions, statically fine, are taken by the labels and leaders placed before it
+# (they were dropped while generated, spec §6.7, and count for the explanation)
+CASES["explain-blocked-by-labels"] = case(
+    "an item whose statically feasible candidates placed labels block is omitted_by_priority",
+    {"problem_file": "../problems/priority-prefix.json"},
+    {"reasons": {"t7": "omitted_by_priority"}})
+
 CASES["max-labels"] = case(
     "a label budget keeps the highest priorities",
     {"canvas": {"width": 600, "height": 200}, "priority": {"budget": {"max_labels": 2}},

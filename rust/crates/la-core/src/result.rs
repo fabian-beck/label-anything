@@ -282,8 +282,19 @@ pub fn build(
                     *counts.entry("items".into()).or_insert(0) += s.static_dropped[i] as usize;
                 }
                 feas.sort_by(|a, b| crate::math::cmp_f64(a.0, b.0).then(a.1.cmp(&b.1)));
-                for &(_, cid) in feas.iter().take(5) {
-                    let c = s.cands[cid as usize].clone();
+                let probes: Vec<Cand> = if feas.is_empty() {
+                    // no kept feasible candidate: the feasible ones the placed labels had
+                    // blocked while they were generated (stable: ties in generation order)
+                    let mut u = s.blocked_feasible[i].clone();
+                    u.sort_by(|a, b| crate::math::cmp_f64(a.cost, b.cost));
+                    u
+                } else {
+                    feas.iter()
+                        .take(crate::solver::greedy::EXPLAIN_CANDIDATES)
+                        .map(|&(_, cid)| s.cands[cid as usize].clone())
+                        .collect()
+                };
+                for c in probes {
                     s.state.conflicts(&c, &s.cands, s.obs, i, &mut buf);
                     for &j in &buf {
                         let jc = &s.cands[s.state.placed[j as usize].unwrap() as usize];
