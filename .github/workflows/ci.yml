@@ -134,7 +134,7 @@ jobs:
       - name: Tutorial programs of the docs (JavaScript; browser snippets under jsdom; TypeScript CLI)
         run: |
           python3 examples/tutorials/run.py js
-          python3 examples/tutorials/run.py cli --only ts-cli --cli rust/target/release/label-anything --ts-cli node_modules/.bin/label-anything-ts
+          python3 examples/tutorials/run.py cli --only ts-cli --cli rust/target/release/label-anything --ts-cli ts/packages/cli/dist/main.js
       - name: Browser smoke test (Chromium)
         run: |
           npx playwright install --with-deps chromium

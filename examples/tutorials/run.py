@@ -1,7 +1,7 @@
 """Run the tutorial programs (the code shown in docs/) and check their results.
 
     python3 examples/tutorials/run.py data                        # data files are current
-    python3 examples/tutorials/run.py cli --cli rust/target/release/label-anything [--ts-cli node_modules/.bin/label-anything-ts]
+    python3 examples/tutorials/run.py cli --cli rust/target/release/label-anything [--ts-cli ts/packages/cli/dist/main.js]
     python3 examples/tutorials/run.py python                      # label_anything installed
     python3 examples/tutorials/run.py c go --lib rust/target/release
     python3 examples/tutorials/run.py java --jar bindings/java/target/label-anything-0.1.0.jar
@@ -15,6 +15,9 @@ validates and solves every problem in ``examples/tutorials/problems/`` and check
 tutorial says about it. Options: ``--only NAME...`` runs the programs whose name contains
 one of the words, ``-v`` prints their whole output.
 
+``--ts-cli`` is the TypeScript CLI's entry script (or its ``node_modules/.bin`` link); it
+runs as ``label-anything-ts`` with ``--node``.
+
 ``js`` runs the Node programs in ``js/`` with the built workspace packages
 (``@label-anything/core``, ``@label-anything/wasm``, ``@label-anything/extras``);
 ``js/browser-checks.mjs`` runs the browser snippets of ``js/browser/`` under jsdom.
@@ -25,6 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -39,6 +43,7 @@ PROBLEMS = HERE / "problems"
 
 failures: list[str] = []
 only: list[str] = []
+tmpdirs: list[Path] = []      # removed at the end unless something failed
 verbose = False
 
 
@@ -58,6 +63,7 @@ def fail(name: str, msg: str) -> None:
 def workdir() -> Path:
     """A fresh copy of data/ (returned; programs run there) next to a copy of problems/."""
     d = Path(tempfile.mkdtemp(prefix="la-tutorial-"))
+    tmpdirs.append(d)
     shutil.copytree(DATA, d / "data")
     shutil.copytree(PROBLEMS, d / "problems")
     return d / "data"
@@ -213,12 +219,26 @@ def lang_data(args: argparse.Namespace) -> None:
     run("data", [sys.executable, str(DATA / "make_data.py"), "--check"], HERE)
 
 
+def ts_cli_dir(entry: str, node: str) -> str:
+    """A directory with a ``label-anything-ts`` command running ``entry`` with Node.
+
+    Not npm's bin link: ``npm ci`` skips linking a bin whose file is not built yet.
+    """
+    d = Path(tempfile.mkdtemp(prefix="la-ts-cli-"))
+    tmpdirs.append(d)
+    exe = d / "label-anything-ts"
+    node_exe = shutil.which(node) or node
+    exe.write_text(f'#!/bin/sh\nexec {shlex.quote(node_exe)} {shlex.quote(str(Path(entry).resolve()))} "$@"\n')
+    exe.chmod(0o755)
+    return str(d)
+
+
 def lang_cli(args: argparse.Namespace) -> None:
     if not args.cli:
         fail("cli", "--cli PATH is required")
         return
     cli = str(Path(args.cli).resolve())
-    dirs = [str(Path(cli).parent)] + ([str(Path(args.ts_cli).absolute().parent)] if args.ts_cli else [])
+    dirs = [str(Path(cli).parent)] + ([ts_cli_dir(args.ts_cli, args.node)] if args.ts_cli else [])
     path_env = {"PATH": os.pathsep.join([*dirs, os.environ.get("PATH", "")])}
     for script in sorted((HERE / "cli").glob("*.sh")):
         if script.name.startswith("ts-") and not args.ts_cli:
@@ -309,7 +329,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("langs", nargs="+", choices=[*LANGS, "all"])
     ap.add_argument("--cli", help="the label-anything executable")
-    ap.add_argument("--ts-cli", help="the label-anything-ts executable (runs cli/ts-*.sh)")
+    ap.add_argument("--ts-cli", help="the TypeScript CLI's entry script, ts/packages/cli/dist/main.js (runs cli/ts-*.sh)")
     ap.add_argument("--lib", help="directory with liblabelanything (C, Go)")
     ap.add_argument("--jar", help="label-anything-<version>.jar (Java)")
     ap.add_argument("--python", default=sys.executable, help="Python with label_anything installed")
@@ -330,7 +350,10 @@ def main() -> int:
         log(f"\n{len(failures)} failure(s):")
         for f in failures:
             log(f"  {f.splitlines()[0]}")
+        log(f"(working directories kept: {tempfile.gettempdir()}/la-tutorial-*)")
         return 1
+    for d in tmpdirs:
+        shutil.rmtree(d, ignore_errors=True)
     log("\nall tutorial programs passed")
     return 0
 
