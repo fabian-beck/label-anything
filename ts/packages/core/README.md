@@ -87,13 +87,14 @@ several option changes (`test/parity-options.test.ts`).
 
 `node ts/packages/core/bench/place-bench.mjs` times `place` on the brief's performance
 problems (fixed PCG32 seeds; `--write <dir>` writes them as JSON for the Rust CLI).
-Minimum of 15 runs on Node 22, on a shared 4-core machine that was busy with other work
-(load average 6–8), next to the Rust CLI on the same problems:
+Times of `place` on Node 22 (40 runs after warm-up) and the Rust CLI's `runtime_ms` on
+the same problems, on a shared 4-core machine that was busy with other work (load
+average about 6):
 
-| problem | target | TypeScript (wall) | TypeScript (main-thread CPU) | Rust CLI (wall) |
-|---|---|---|---|---|
-| 200 labels + 10k points, 800×600 | ≤ 60 ms | 32–52 ms | 28–33 ms | ≈ 25 ms |
-| 2,000 labels + 100k points, 1920×1080, greedy | ≤ 600 ms | 760–795 ms | 575–595 ms | 390–470 ms |
+| problem | target | TypeScript, min / median | Rust CLI, min |
+|---|---|---|---|
+| 200 labels + 10k points, 800×600 | ≤ 60 ms | 32 / 41 ms | 21 ms |
+| 2,000 labels + 100k points, 1920×1080, greedy | ≤ 600 ms | 642 / 831 ms | 385 ms |
 
 About a fifth of the TypeScript time is garbage collection: a 2,000-label solve allocates
 about 260 MB, mostly candidates with their boxes and leaders. `docs/dev/porting.md`
