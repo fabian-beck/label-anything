@@ -215,6 +215,119 @@ per-pixel value in [0,1], which is area-averaged into the grid:
 * `saliency`: Sobel gradient magnitude of the luma plus local contrast (|luma − 5×5 box
   mean|), each divided by its maximum over the image, averaged.
 
+The rest of this section makes these rules exact. Decoding of PNG and raw RGBA, every
+mode, the area averaging and the quantization are *identical* in all implementations
+(reference: the `label-anything-raster` crate; tests: `conformance/raster`). Arithmetic
+is IEEE-754 binary64 with `+ − × ÷ sqrt` only, evaluated in the order written
+(left to right), plus exact integer arithmetic.
+
+**Sources.** `source` is a `data:` URL (prefix and `;base64` marker case-insensitive,
+media type not interpreted, payload base64 or percent-encoded) or bare base64; file
+paths are resolved by the host. `rgba.data` is base64 of exactly `width·height·4` bytes.
+Base64 accepts the standard and the URL-safe alphabet, ignores ASCII whitespace, and
+allows padding only when it completes the last quantum (only whitespace may follow
+it); a final quantum of one character is an error. Formats are recognized by
+signature.
+
+**PNG decoding** (the reference decodes with the Rust `image`/`png` crates; the
+TypeScript decoder reproduces them): colour types 0/2/3/4/6, bit depths 1–16, Adam7.
+Grey below 8 bit is scaled by `255 / (2^bits − 1)`, 16-bit samples become
+`(v + 128) div 257`; palette indices beyond PLTE are opaque black; a palette `tRNS`
+longer than the palette is ignored; a grey/RGB `tRNS` colour (compared on the low byte
+of each sample below 16 bit) gets alpha 0. Gamma, colour profiles and APNG frames are
+ignored (the default image is used). IHDR must come first; a PLTE length outside 3–768
+or not a multiple of 3, duplicate IHDR/PLTE, unknown critical chunks before the image
+data, IEND before IDAT and a CRC mismatch in a critical chunk are errors; ancillary
+chunks with a bad CRC or content are ignored (the first valid `tRNS` before IDAT
+counts). Only the first IDAT sequence is read; it must be followed by a complete chunk
+header (length and type). The zlib header is checked, Adler-32 is not, and compressed
+data beyond the image is ignored. Images whose expanded samples (`w·h·` bytes per pixel
+after the expansion above) exceed 512 MiB are rejected before the image data is read.
+JPEG and WebP are decoded where a decoder is available (Rust: `image`; TypeScript:
+`createImageBitmap`); their pixels may differ between decoders.
+
+Errors are structured, never crashes: `invalid_base64`, `invalid_data_url`,
+`unsupported_format` (unknown signature), `corrupt_image`, `invalid_dimensions`,
+`limit_exceeded`, `unsupported` (no decoder in this build/environment).
+
+**Placement.** Raster pixel `(px, py)` covers the canvas square
+`[ox + px/s, ox + (px+1)/s) × [oy + py/s, oy + (py+1)/s)` (`s` = `scale`,
+`(ox, oy)` = `offset`); grid cell `(gx, gy)` covers
+`[x0 + gx·c, x0 + (gx+1)·c) × [y0 + gy·c, y0 + (gy+1)·c)`.
+
+**Compositing.** A pixel `(r, g, b, a)` is composited over a backdrop colour per
+channel as `c' = (c·a + bg·(255 − a) + 127) div 255`, i.e.
+`floor((c·a + bg·(255 − a)) / 255 + ½)` (no exact halves exist). The backdrop is the
+background colour for `ink` and `classmap` and white for `cost` and `saliency`.
+
+**Background colour** (`ink.background: "auto"`). Histogram of the border pixels (first
+and last row and column, each pixel once) with alpha ≥ 128, keyed by the 5-bit
+quantization `(r>>3, g>>3, b>>3)`; the most frequent key wins, ties go to the smallest
+`(r5 << 10) | (g5 << 5) | b5`; the result is `(q << 3) | (q >> 2)` per channel. White if
+no border pixel qualifies.
+
+**OKLab** of an 8-bit colour. `r, g, b` are looked up in a 256-entry table holding the
+sRGB EOTF of `i / 255` (`i/255/12.92` for `i ≤ 10`, else `((i/255 + 0.055)/1.055)^2.4`)
+rounded once to binary64 (generated with exact arithmetic by
+`tools/raster/gen_srgb_lut.py`). Then, with Björn Ottosson's matrices,
+
+```
+l = 0.4122214708·r + 0.5363325363·g + 0.0514459929·b
+m = 0.2119034982·r + 0.6806995451·g + 0.1073969566·b
+s = 0.0883024619·r + 0.2817188376·g + 0.6299787005·b
+l' = cbrt(l), m' = cbrt(m), s' = cbrt(s)
+L = 0.2104542553·l' + 0.7936177850·m' − 0.0040720468·s'
+a = 1.9779984951·l' − 2.4285922050·m' + 0.4505937099·s'
+b = 0.0259040371·l' + 0.7827717662·m' − 0.8086757660·s'
+```
+
+`cbrt` is deterministic: `±0`, `±∞` and NaN are returned unchanged and `cbrt(−x) =
+−cbrt(x)`; for `x > 0` take the unique `k` with `m = x·8^k ∈ [1/8, 1)` (exact), start
+from `y = ((0.5921815819·m − 1.385919418)·m + 1.458110692)·m + 0.3408421562`, apply three
+Newton steps `y = y − ((y·y)·y − m) / ((3·y)·y)` and return `y·2^(−k)` (exact; within
+1 ulp). The OKLab distance is `sqrt((ΔL·ΔL + Δa·Δa) + Δb·Δb)`.
+
+**Pixel values.**
+
+* `ink`: `v = 1` iff `distance(oklab(c'), oklab(bg)) > ink.threshold`, `c'` the pixel
+  composited over the background colour `bg`.
+* `alpha`: `v = 1` iff `a / 255 > alpha.threshold`.
+* `cost`: with `n = 2126·R + 7152·G + 722·B` of the pixel composited over white (an
+  integer; the Rec. 709 luma is `n / 2 550 000`), `v = (2 550 000 − n) / 2 550 000`, or
+  `n / 2 550 000` with `cost.invert` (one division).
+* `classmap`: the palette is the `classmap` object in document order (key order is
+  significant). A pixel composited over the background colour (`ink.background`) is
+  skipped if its distance to the background is ≤ `ink.threshold`. Otherwise it goes to
+  the entry with the smallest distance among those within `classmap_tolerance`
+  (`≤`; ties → first listed); an `"ignore"` entry drops it; without a match it goes to
+  `ink` if `unmatched` is `"ink"`. The chosen class gets `v = 1`. One coverage grid is
+  produced per class with non-zero coverage, in palette order of first occurrence,
+  followed by `ink` for unmatched pixels if `ink` is not a palette class.
+* `saliency`, on the integers `n` of `cost`: Sobel `gx`, `gy` with replicate-clamped
+  neighbours (exact), `G = sqrt(gx·gx + gy·gy)`; the 5×5 window clipped to the image has
+  `k` pixels with sum `S`, `C = |k·n − S| / k`; `v = (G / max G + C / max C) / 2` with the
+  maxima over the whole image (a term is 0 when its maximum is 0). This is the
+  normalized Sobel magnitude and `|luma − box mean|` (the luma scale cancels).
+
+**Area averaging and quantization.** Per axis, a pixel interval `[p0, p1)` and a cell
+interval `[g0, g1)` (computed as in *Placement*) have the weight
+`w = (min(p1, g1) − max(p0, g0)) / c`, used iff the overlap is > 0. Then
+
+```
+h[py][gx]   = Σ over px ascending of  v(px, py) · wx(px, gx)
+cov[gy][gx] = Σ over py ascending of  wy(py, gy) · h[py][gx]
+```
+
+each sum starting at +0 and adding term by term (zero terms may be skipped; they never
+change a sum). The coverage byte is `q = min(255, floor(cov·255 + ½))`, and 1 if `q = 0`
+but `cov > 0` (§4.1). Cells partially outside the raster simply receive less.
+
+**Dilation** (`ink` only): a 3×3 maximum filter applied `ink.dilate` times to the
+quantized grid, cells outside the grid ignored.
+
+Inconsistent geometry (scale or cell not finite and > 0, non-finite offsets) yields
+zero coverage.
+
 ### 4.7 Distance transform
 
 The exact Euclidean distance transform (Felzenszwalb–Huttenlocher) of the union of all

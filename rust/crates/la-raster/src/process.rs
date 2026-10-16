@@ -130,8 +130,9 @@ impl Setup {
         Resampler::new(&self.cols, &self.rows, self.gcols, self.grows, k)
     }
 
-    /// Runs `per_pixel(resampler, px, pixel)` for every pixel that touches the grid, row by
-    /// row, and returns the `k` quantized grids.
+    /// Runs `per_pixel(resampler, px, py, pixel)` for the pixels of every raster row that
+    /// touches the grid (columns `cols.lo..cols.hi`, ascending), and returns the `k`
+    /// quantized grids.
     fn run(
         &self,
         img: &Rgba,
