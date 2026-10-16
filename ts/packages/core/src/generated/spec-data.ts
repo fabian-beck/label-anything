@@ -394,7 +394,7 @@ export const PRESETS: Readonly<Record<string, PresetData>> = {
     ]
   },
   "scatter": {
-    "description": "Scatterplots: unlabeled points are cheap to cover, lines cost more, text is hard; distant labels with straight leaders.",
+    "description": "Scatterplots: unlabeled points are cheap to cover, lines cost more, text is hard; distant labels with straight leaders; no boundary step in the ladder (margin labels would need leaders across the plot).",
     "options": {
       "placement": {
         "models": [
@@ -419,7 +419,16 @@ export const PRESETS: Readonly<Record<string, PresetData>> = {
       },
       "leaders": {
         "style": "straight"
-      }
+      },
+      "degrade": [
+        "alternatives",
+        "wrap",
+        "distant",
+        "evict_lower",
+        "shrink:0.85",
+        "soft_overlap",
+        "omit"
+      ]
     },
     "svg_classes": [
       {
