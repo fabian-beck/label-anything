@@ -11,4 +11,15 @@ authors.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
+[features]
+default = ["bundled-font", "shaping"]
+bundled-font = []
+shaping = ["dep:rustybuzz"]
+woff2 = ["dep:wuff"]
+
 [dependencies]
+rustybuzz = { workspace = true, optional = true }
+wuff = { version = "0.2.9", optional = true, default-features = false, features = ["brotli"] }
+
+[dev-dependencies]
+serde_json = { workspace = true, features = ["float_roundtrip"] }

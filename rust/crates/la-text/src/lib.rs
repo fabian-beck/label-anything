@@ -1,197 +1,80 @@
-//! TEMPORARY placeholder for the API developed on the text branch (replaced on merge).
-//! Widths are approximated as 0.55 em per code point; wrapping is greedy.
+//! Text measurement, line breaking, wrapping and truncation for the Label Anything label
+//! placement engine (spec §5.2–5.3 in `spec/spec.md`). Pure Rust, no I/O, builds for
+//! `wasm32-unknown-unknown`. The TypeScript package `@label-anything/text` implements the
+//! same algorithms with bit-identical results.
+//!
+//! # Measuring
+//!
+//! * [`Font::from_bytes`] parses a TrueType/OpenType font once; [`Font::width`] measures
+//!   with **simple shaping**: `cmap` → `hmtx` advances + GPOS pair kerning (`kern`
+//!   feature) or a legacy `kern` table, summed in font units and scaled once, so widths are
+//!   identical in every implementation. [`Font::width_shaped`] uses full shaping
+//!   (rustybuzz, feature `shaping`) and [`Font::measure`] picks one per [`Shaping`] mode;
+//!   [`needs_complex_shaping`] tells which texts need full shaping.
+//! * [`FontBook`] resolves `(family, weight, italic)` requests to fonts;
+//!   `FontBook::with_bundled` contains the bundled Noto Sans subset.
+//!
+//! ```
+//! # #[cfg(feature = "bundled-font")] {
+//! use label_anything_text::FontBook;
+//!
+//! let book = FontBook::with_bundled();
+//! let font = book.font(book.resolve("default", 400, false));
+//! assert_eq!(font.advance_units("AV"), 1199); // advances of A and V, plus their kerning
+//! assert_eq!(font.width("AV", 12.0), 1199.0 * 12.0 / 1000.0);
+//! # }
+//! ```
+//!
+//! # Wrapping
+//!
+//! The wrapping functions work on code points and take a `measure` closure, so they work
+//! with any font, size or host-provided measurement:
+//!
+//! * [`break_opportunities`] — where a line may end;
+//! * [`greedy_wrap`], [`balanced_wrap`] — line breaking;
+//! * [`truncate_end`], [`truncate_middle`] — shortening with `…`;
+//! * [`wrap_variants`], [`extra_wrap_variants`] — the layout variants of a label
+//!   ([`TextVariant`]) for given [`WrapOptions`].
+//!
+//! ```
+//! use label_anything_text::{greedy_wrap, wrap_variants, WrapOptions};
+//!
+//! let measure = |s: &str| 6.0 * s.chars().count() as f64; // or |s| font.width(s, 12.0)
+//! assert_eq!(greedy_wrap("org.example.Foo", 72.0, &measure), ["org.example.", "Foo"]);
+//! assert_eq!(greedy_wrap("The quick brown fox", 100.0, &measure), ["The quick brown", "fox"]);
+//!
+//! let opts = WrapOptions { max_width: Some(100.0), max_lines: 2, ..WrapOptions::default() };
+//! let variants = wrap_variants("The quick brown fox", &opts, &measure);
+//! assert_eq!(variants[0].lines, ["The quick", "brown fox"]); // balanced
+//! assert_eq!(variants[0].widths, [54.0, 54.0]);
+//! ```
+//!
+//! # Features
+//!
+//! * `bundled-font` (default): embeds the metrics-only Noto Sans Regular and Bold
+//!   (SIL OFL 1.1, see `assets/OFL.txt`) for `FontBook::with_bundled`.
+//! * `shaping` (default): full shaping with rustybuzz for [`Font::width_shaped`].
+//! * `woff2`: WOFF2 input for [`Font::from_bytes`] (pure-Rust decoder `wuff`).
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
 
-#[derive(Debug, Clone)]
-pub enum TextError {
-    Invalid(String),
-    Unsupported(String),
-}
+mod book;
+mod breaks;
+mod cmap;
+mod error;
+mod font;
+mod kern;
+mod reader;
+mod unicode;
+mod unicode_data;
+mod wrap;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct FontId(pub usize);
-
-pub struct Font {
-    upm: u16,
-}
-impl Font {
-    pub fn from_bytes(_data: Vec<u8>) -> Result<Font, TextError> {
-        Ok(Font { upm: 1000 })
-    }
-    pub fn units_per_em(&self) -> u16 {
-        self.upm
-    }
-    pub fn ascender(&self) -> i16 {
-        1069
-    }
-    pub fn descender(&self) -> i16 {
-        -293
-    }
-    pub fn line_gap(&self) -> i16 {
-        0
-    }
-    pub fn advance_units(&self, text: &str) -> i64 {
-        text.chars().count() as i64 * 550
-    }
-    pub fn width(&self, text: &str, size: f64) -> f64 {
-        self.advance_units(text) as f64 * size / self.upm as f64
-    }
-    pub fn width_shaped(&self, text: &str, size: f64) -> f64 {
-        self.width(text, size)
-    }
-}
-
-pub struct FontBook {
-    fonts: Vec<(String, u16, bool, Font)>,
-}
-impl FontBook {
-    pub fn with_bundled() -> FontBook {
-        FontBook {
-            fonts: vec![
-                ("default".into(), 400, false, Font { upm: 1000 }),
-                ("default".into(), 700, false, Font { upm: 1000 }),
-            ],
-        }
-    }
-    pub fn empty() -> FontBook {
-        FontBook { fonts: vec![] }
-    }
-    pub fn register(
-        &mut self,
-        family: &str,
-        weight: u16,
-        italic: bool,
-        data: Vec<u8>,
-    ) -> Result<FontId, TextError> {
-        self.fonts
-            .push((family.to_string(), weight, italic, Font::from_bytes(data)?));
-        Ok(FontId(self.fonts.len() - 1))
-    }
-    pub fn resolve(&self, _family: &str, weight: u16, _italic: bool) -> FontId {
-        FontId(if weight >= 600 && self.fonts.len() > 1 {
-            1
-        } else {
-            0
-        })
-    }
-    pub fn font(&self, id: FontId) -> &Font {
-        &self.fonts[id.0].3
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Shaping {
-    Simple,
-    Full,
-    Auto,
-}
-pub fn needs_complex_shaping(_text: &str) -> bool {
-    false
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Truncate {
-    None,
-    End,
-    Middle,
-}
-pub struct WrapOptions {
-    pub max_width: Option<f64>,
-    pub max_lines: usize,
-    pub balance: bool,
-    pub truncate: Truncate,
-}
-#[derive(Clone, Debug, PartialEq)]
-pub struct TextVariant {
-    pub lines: Vec<String>,
-    pub widths: Vec<f64>,
-    pub truncated: bool,
-}
-
-pub fn break_opportunities(text: &str) -> Vec<usize> {
-    text.chars()
-        .enumerate()
-        .filter(|(_, c)| *c == ' ')
-        .map(|(i, _)| i)
-        .collect()
-}
-pub fn greedy_wrap(text: &str, max_width: f64, measure: &dyn Fn(&str) -> f64) -> Vec<String> {
-    let mut lines = Vec::new();
-    let mut cur = String::new();
-    for w in text.split(' ') {
-        let cand = if cur.is_empty() {
-            w.to_string()
-        } else {
-            format!("{cur} {w}")
-        };
-        if !cur.is_empty() && measure(&cand) > max_width {
-            lines.push(std::mem::take(&mut cur));
-            cur = w.to_string();
-        } else {
-            cur = cand;
-        }
-    }
-    lines.push(cur);
-    lines
-}
-pub fn balanced_wrap(
-    text: &str,
-    n_lines: usize,
-    max_width: Option<f64>,
-    measure: &dyn Fn(&str) -> f64,
-) -> Vec<String> {
-    let total = measure(text);
-    let w = max_width.unwrap_or(total / n_lines as f64 + 1.0);
-    greedy_wrap(text, w, measure)
-}
-pub fn truncate_end(text: &str, max_width: f64, measure: &dyn Fn(&str) -> f64) -> String {
-    let cs: Vec<char> = text.chars().collect();
-    for n in (0..=cs.len()).rev() {
-        let s: String = cs[..n].iter().collect::<String>() + "…";
-        if measure(&s) <= max_width {
-            return s;
-        }
-    }
-    "…".into()
-}
-pub fn truncate_middle(
-    text: &str,
-    max_width: f64,
-    _max_lines: usize,
-    measure: &dyn Fn(&str) -> f64,
-) -> Vec<String> {
-    vec![truncate_end(text, max_width, measure)]
-}
-pub fn wrap_variants(
-    text: &str,
-    opts: &WrapOptions,
-    measure: &dyn Fn(&str) -> f64,
-) -> Vec<TextVariant> {
-    let lines = match opts.max_width {
-        Some(m) => greedy_wrap(text, m, measure),
-        None => vec![text.to_string()],
-    };
-    let widths = lines.iter().map(|l| measure(l)).collect();
-    vec![TextVariant {
-        lines,
-        widths,
-        truncated: false,
-    }]
-}
-pub fn extra_wrap_variants(
-    text: &str,
-    max_lines: usize,
-    measure: &dyn Fn(&str) -> f64,
-) -> Vec<TextVariant> {
-    (2..=max_lines)
-        .map(|n| {
-            let lines = balanced_wrap(text, n, None, measure);
-            let widths = lines.iter().map(|l| measure(l)).collect();
-            TextVariant {
-                lines,
-                widths,
-                truncated: false,
-            }
-        })
-        .filter(|v| v.lines.len() > 1)
-        .collect()
-}
+pub use book::{FontBook, FontId};
+pub use breaks::break_opportunities;
+pub use error::TextError;
+pub use font::{Font, Shaping};
+pub use unicode::needs_complex_shaping;
+pub use wrap::{
+    balanced_wrap, extra_wrap_variants, greedy_wrap, truncate_end, truncate_middle, wrap_variants,
+    TextVariant, Truncate, WrapOptions,
+};

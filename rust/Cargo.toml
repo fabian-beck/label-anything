@@ -16,7 +16,6 @@ categories = ["visualization", "graphics", "algorithms"]
 [workspace.dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-ttf-parser = { version = "0.25", default-features = false, features = ["std", "opentype-layout", "glyph-names"] }
 rustybuzz = "0.20"
 usvg = { version = "0.48", default-features = false }
 resvg = { version = "0.48", default-features = false }

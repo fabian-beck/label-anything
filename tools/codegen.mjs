@@ -10,6 +10,7 @@
 //          ts/packages/core/src/generated/spec-data.ts
 //          ts/packages/core/src/generated/problem.ts, result.ts   (types from the schemas)
 //          ts/packages/text/src/generated/fonts.ts                 (base64 metrics fonts)
+//          rust/crates/la-text/assets/                             (copies of the metrics fonts + OFL.txt)
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -167,12 +168,34 @@ function emit(rel, content) {
   return true;
 }
 
+// Published crates cannot include files outside their directory, so la-text embeds copies
+// of the metrics fonts (and their license) from rust/crates/la-text/assets/.
+function copyRustFonts() {
+  let changed = false;
+  for (const file of ["NotoSans-Regular.metrics.ttf", "NotoSans-Bold.metrics.ttf", "OFL.txt"]) {
+    const rel = `rust/crates/la-text/assets/${file}`;
+    const source = readFileSync(join(root, "fonts", file));
+    const target = join(root, rel);
+    if (existsSync(target) && readFileSync(target).equals(source)) continue;
+    changed = true;
+    if (check) {
+      console.error(`stale: ${rel}`);
+      continue;
+    }
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, source);
+    console.log(`wrote ${rel}`);
+  }
+  return changed;
+}
+
 const defaults = parseDefaultsTable(readFileSync(join(root, "spec/defaults.md"), "utf8"));
 const presets = readPresets();
 let stale = false;
 stale = emit("rust/crates/la-core/src/generated/spec_data.rs", rustSpecData(defaults, presets)) || stale;
 stale = emit("ts/packages/core/src/generated/spec-data.ts", tsSpecData(defaults, presets)) || stale;
 stale = emit("ts/packages/text/src/generated/fonts.ts", tsFonts()) || stale;
+stale = copyRustFonts() || stale;
 const types = await tsTypes();
 stale = emit("ts/packages/core/src/generated/problem.ts", types.problem) || stale;
 stale = emit("ts/packages/core/src/generated/result.ts", types.result) || stale;

@@ -240,52 +240,129 @@ reported baselines.
 
 ### 5.2 Text measurement
 
-Fonts: the bundled Noto Sans subset (Regular 400, Bold 700) or fonts supplied in
-`font.file` / registered through the API, keyed by family and weight (nearest weight).
+Fonts: the bundled Noto Sans subset (Regular 400, Bold 700, families `default` and
+`Noto Sans`) or fonts supplied in `font.file` / registered through the API: TrueType,
+OpenType (CFF) or the first font of a collection; WOFF2 only in Rust with the `woff2`
+feature. A request `(family, weight, style)` resolves to the family compared ASCII
+case-insensitively, else `default`, else the first registered family; within it to the
+requested style if it has one (else the other); then to the nearest weight (smallest
+|Δ|, ties → the lighter weight, identical entries → the latest registered). Fonts without
+`head`, `hhea`, `maxp`, `hmtx` or a usable `cmap`, or with `unitsPerEm` outside 16–16384,
+are rejected; a malformed `OS/2`, `GDEF`, `GPOS` or `kern` table is ignored.
 
 **Simple shaping** (identical in all implementations, ±0.01 px tested; in practice
-bit-identical): map code points through `cmap` (formats 4 and 12; unmapped → glyph 0),
-sum `hmtx` advances, add GPOS pair kerning: for every lookup index referenced by a `kern`
-feature of any script's default or language system (union, ascending), if the lookup is
-of type 2 (or type 9 extension to type 2), walk the glyph sequence pairwise (skipping
-mark glyphs per GDEF class 3 when the lookup flag has IgnoreMarks) and apply the first
-matching subtable (PairPos format 1 or 2); add `XAdvance` of the first value record (and
-of the second, which also advances past the pair when ValueFormat2 ≠ 0). Without GPOS a
-legacy `kern` format-0 table is used. Width = `(Σ advances + Σ adjustments) · size / unitsPerEm`
-computed in that order (integers first, one multiplication and one division).
+bit-identical):
 
-**Full shaping** (Rust: rustybuzz) is used when `text.shaping = "full"`, or `"auto"` and
-the text contains code points from scripts that need it (Arabic, Hebrew, Indic, Thai, …).
+1. *cmap*: one subtable is used, the first with the best (platform, encoding) of (3,10),
+   (0,4), (3,1), (0,3) whose format is 4 or 12. Its segments (groups) are stably sorted by
+   start code and the first one containing a code point maps it. Unmapped code points and
+   glyph ids ≥ `numGlyphs` give glyph 0. There is no Unicode normalization and no special
+   treatment of default-ignorable code points: they are measured with the glyph the
+   `cmap` gives them.
+2. *Advances*: the `hmtx` advance of every glyph (glyphs after `numberOfHMetrics` repeat
+   the last one).
+3. *GPOS kerning*: the kern lookups are the union of the lookup indices of every `kern`
+   feature referenced by any script's default or language system (its feature indices
+   and its required feature), in ascending order; only PairPos subtables take part (lookup
+   type 2, or subtables of a type 9 lookup whose extension type is 2). Each lookup walks the
+   whole glyph sequence: position `i` is skipped if its glyph is a mark (GDEF glyph class
+   3) and the lookup flag has IgnoreMarks (other flags are ignored); `j` is the next
+   position, skipping marks under IgnoreMarks. The first subtable that matches
+   `(g[i], g[j])` — format 1: the pair is listed; format 2: `g[i]` is covered and both
+   classes are below their counts, so class 0 matches too — adds the `XAdvance` of both of
+   its value records, and the walk continues at `j + 1` if its ValueFormat2 ≠ 0, else at
+   `j`; without a match it continues at `i + 1`. Device tables are ignored. Coverage and
+   ClassDef ranges are stably sorted by start (the first containing a glyph wins);
+   duplicate glyphs and pairs keep their first record.
+4. *Legacy kerning*: if no language system references a GPOS `kern` feature, a `kern` table
+   (Microsoft version 0 or Apple version 1.0) is one IgnoreMarks lookup whose pairs never
+   skip their second glyph and whose values are summed over its format 0 subtables that
+   are horizontal, not cross-stream and not minimum values (Apple: not vertical, not
+   cross-stream, no variation).
+5. *Width* = `(Σ advances + Σ adjustments) · size / unitsPerEm`, computed in that order
+   (integers first, one multiplication and one division).
+
+**Full shaping** (Rust: rustybuzz with its default features, so `kern` is on) is used when
+`text.shaping = "full"`, or `"auto"` and the text contains a code point of U+0590–08FF
+(Hebrew, Arabic, Syriac, Thaana, NKo, …, Arabic Extended-A), U+0900–0DFF (Devanagari …
+Malayalam, Sinhala), U+0E00–109F (Thai, Lao, Tibetan, Myanmar), U+1100–11FF (Hangul
+Jamo), U+1780–18AF (Khmer, Mongolian) or the extension blocks U+1CD0–1CFF, U+A8E0–A8FF,
+U+A960–A97F, U+A9E0–A9FF, U+AA60–AA7F, U+D7B0–D7FF, U+10EC0–10EFF, U+11660–1167F,
+U+11B00–11B5F. TypeScript has no full shaping and measures such texts with simple
+shaping unless the host supplies `width`/`height`.
 
 **Vertical metrics:** ascent = `hhea.ascender`, descent = `−hhea.descender` (or the
-OS/2 typo metrics when USE_TYPO_METRICS is set), scaled by `size/unitsPerEm`. A text
-block of `n` lines has height `ascent + descent + (n−1)·line_height·size`; the baseline of
-line `i` is at `padding + ascent + i·line_height·size` from the box top.
+OS/2 typo metrics when USE_TYPO_METRICS, `fsSelection` bit 7, is set), scaled by
+`size/unitsPerEm`. A text block of `n` lines has height
+`ascent + descent + (n−1)·line_height·size`; the baseline of line `i` is at
+`padding + ascent + i·line_height·size` from the box top.
 
 ### 5.3 Line breaking, wrapping, truncation
 
-Break opportunities (after position `k` = between char `k` and `k+1`):
-after a space (the space is dropped at the end of a line and leading spaces of a line
-are trimmed), after `/`, `.`, `_`, `-`, `,`, `;`, `:` (but `::` only after the second
-colon), between a lowercase letter and an uppercase letter (camelCase), between a letter
-and a digit run start, and between two CJK ideographs. Within a token wider than the
-available width, any character boundary is allowed (emergency break).
+Positions are **code point** indices `0 … n−1` of the text; `width(s)` is the measured
+width of a string (§5.2, or a host measurement). *White space* is the Unicode `White_Space`
+property; *combining marks* have General_Category Mn, Mc or Me (Unicode 15.1, one table
+shared by all implementations, generated by `tools/text/gen_unicode_tables.py`).
 
-`greedy(width W)`: fill lines left to right, breaking at the last opportunity that
-keeps the line ≤ W.
+**Break opportunities.** A line may end after position `k` (`0 ≤ k < n−1`), between
+`a = text[k]` and `b = text[k+1]`, iff `b` is not a combining mark and one of:
 
-`balanced(n)`: the smallest W (searched over the sorted set of distinct candidate line
-widths) such that `greedy(W)` produces ≤ n lines; ties → fewer lines.
+| rule | condition |
+|---|---|
+| space | `a` is white space other than the no-break spaces U+00A0, U+2007, U+202F |
+| punctuation | `a` is one of `/ \ . _ - , ; : \|`, except between two colons (`::` breaks only after the second) and except `.` or `,` with an ASCII digit on both sides (`3.14`, `1,000`) |
+| camelCase | `a` is Lowercase and `b` is Uppercase (Unicode properties) |
+| acronym | `a` and `b` are Uppercase and `text[k+2]` is Lowercase (`XMLHttp` → `XML`·`Http`) |
+| CJK | `a` and `b` are both in U+2E80–9FFF, U+AC00–D7AF, U+F900–FAFF, U+FF00–FFEF or U+20000–2FFFF |
 
-Variants of a text label (with wrap settings `max_width = M`, `max_lines = L`):
-`L_min` = lines of `greedy(M)` (1 if no `M`). Normal variants: `balanced(n)` for
-`n = L_min … min(L_min + 2, L)` (deduplicated; `wrap.balance: false` uses
-`greedy(M)` only). If `L_min > L`, the text is truncated per `truncate`:
-`end` keeps the first L lines of `greedy(M)` and shortens the last with `…`;
-`middle` removes the fewest code points from the middle of the text (replaced by `…`)
-such that `greedy(M)` fits in L lines; `none` lets lines exceed `M`.
+There are no mandatory breaks (line feeds are ordinary white space).
+
+**Lines.** The line `[s..e]` is the text from `s` to `e` without trailing white space. The
+first line starts at the first position that is not white space; after a line ending at
+`e` the next one starts after `e`, skipping white space. A blank text is one empty line.
+The searches below assume that extending a line never makes it narrower: they scan in
+ascending order and stop at the first candidate that does not fit, which for such widths
+is the same as taking the largest candidate that fits.
+
+`greedy(W)`: the line starting at `s` is the rest of the text if `width([s..n−1]) ≤ W`;
+otherwise it ends at the last break `k ≥ s` with `width([s..k]) ≤ W` (scanning up to the
+first break that does not fit). If even the first break after `s` does not fit, the line
+ends inside the segment `[s..t]` (`t` = the first break `≥ s`, or `n−1`; *emergency
+break*): at the last fitting `e ∈ [s, t)` that is not followed by a combining mark
+(scanning up to the first that does not fit), else at the first such `e`, else at `t`.
+
+`balanced(N, M)` (`M` optional): the candidate widths are `width([s..k])` for every line
+start `s` (the first one and the one after each break) and every `k ≥ s` among the
+breaks and `n−1`; with `M`, `k` runs in ascending order and stops at the first width
+`> M`, and `M` is a candidate itself. Sorted ascending without duplicates, the smallest
+candidate `c` such that `greedy(c)` has at most `N` lines is found by binary search
+(`lo = 0`, `hi = last`; `mid = ⌊(lo + hi)/2⌋`; `hi = mid` if `greedy(c[mid])` has at most
+`N` lines, else `lo = mid + 1`). The result is `greedy(c[lo])`, or `greedy(M)` if that still
+has more than `N` lines.
+
+`truncate_end(text, W)`: the text itself if it fits; else `p + "…"` for the longest prefix
+`p` of `m` code points (`m = 1, 2, …` in ascending order, skipping `m` where `text[m]` is a
+combining mark, trailing white space removed) such that `p + "…"` fits; `"…"` if none does.
+
+`truncate_middle(text, W, L)`: the text is trimmed (`n` code points). If `greedy(W)` has at
+most `L` lines, that is the result. Otherwise a binary search (`lo = 1`, `hi = n`, as
+above) finds the smallest `r` such that `greedy(W)` of `left + "…" + right` has at most `L`
+lines, where `left` is the first `⌈(n−r)/2⌉` code points, shortened while the code point
+after it is a combining mark, and `right` the last `⌊(n−r)/2⌋`, shortened while it starts
+with a combining mark, both without the white space next to `…`; the result is that
+`greedy(W)`.
+
+**Variants** of a text label with wrap settings (`max_width = M`, `max_lines = L`):
+`L_min` = lines of `greedy(M)` (without `M`: 1, the single line). If `L_min ≤ L`, the
+variants are `balanced(n, M)` for `n = L_min … min(L_min + 2, L)` without duplicates
+(`wrap.balance: false`: only `greedy(M)`). If `L_min > L`, the text is truncated per
+`truncate`: `end` keeps the first `L − 1` lines of `greedy(M)` and adds
+`truncate_end(rest, M)` for the text from the start of line `L` on; `middle` uses
+`truncate_middle(text, M, L)`; `none` keeps `greedy(M)` unchanged (more than `L` lines,
+not counted as truncated). A variant reports its lines and `width(line)` of every line.
 Without wrap settings the normal variant is the single line; the `wrap` ladder step adds
-`balanced(2)` and `balanced(3)` (up to `degrade_options.wrap_max_lines`).
+`balanced(n)` (no `M`) for `n = 2 … degrade_options.wrap_max_lines`, without duplicates and
+without single-line results.
 
 ### 5.4 Label variants
 
