@@ -187,7 +187,9 @@ export function run(s: Solve): void {
         s.reasons[i] = Reason.OmittedByPriority;
         continue;
       }
-      if (!processUnit(s, g, i, false)) cut = true;
+      // level 0 and then the ladder (spec §10.1), in total order; the first item that
+      // fails every step cuts the prefix
+      if (!processUnit(s, g, i, true)) cut = true;
     }
     return;
   }

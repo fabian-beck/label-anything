@@ -104,6 +104,13 @@ CASES["prefix-mode"] = case(
     {"problem_file": "../problems/priority-prefix.json"},
     {"prefix": True})
 
+# a dense cluster: from the third item on, every position next to the mark is taken by a
+# label or covers another mark, so the prefix grows only through the ladder (leaders)
+CASES["prefix-ladder"] = case(
+    "prefix omission runs the degradation ladder before it cuts the order",
+    {"problem_file": "../problems/priority-prefix.json"},
+    {"prefix": True, "placed_min": 5})
+
 CASES["max-labels"] = case(
     "a label budget keeps the highest priorities",
     {"canvas": {"width": 600, "height": 200}, "priority": {"budget": {"max_labels": 2}},

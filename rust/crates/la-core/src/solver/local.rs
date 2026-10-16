@@ -13,6 +13,9 @@ use la_expr::det_math::{exp, Pcg32};
 /// 40 with its 2.5× larger default budget, so both run the same number of moves.
 pub const MOVES_PER_MS: f64 = 100.0;
 
+/// Candidates an insertion tries (the cheapest usable ones, from a random offset).
+const INSERT_TRIES: usize = 12;
+
 pub struct LocalStats {
     pub iterations: u64,
     pub accepted: u64,
@@ -41,6 +44,20 @@ fn usable(s: &mut Solve, c: u32, soft_ok: bool) -> bool {
     s.ensure_eval(c);
     let cand = &s.cands[c as usize];
     cand.feasible || (soft_ok && cand.relaxed)
+}
+
+/// The number of candidates [`try_insert`] tries for item `u` (it draws its random offset
+/// below this number).
+fn insert_tries(s: &mut Solve, u: usize, soft_ok: bool) -> u32 {
+    let mut k = 0;
+    for j in 0..s.by_item[u].len() {
+        if k == INSERT_TRIES {
+            break;
+        }
+        let c = s.by_item[u][j];
+        k += usable(s, c, soft_ok) as usize;
+    }
+    k as u32
 }
 
 fn is_free(s: &mut Solve, i: usize, c: u32) -> bool {
@@ -111,6 +128,12 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
     let mut best = cur;
     let mut snapshot: Vec<Option<u32>> = s.state.placed.clone();
     let mut snap_reasons = s.reasons.clone();
+    // Every state change is an accepted move, so `st.accepted` versions the state. An
+    // insertion that failed on this version fails again (an attempt rolls back whatever it
+    // tried, and below the label cap the order of its tries does not matter): a retry only
+    // draws the random offset it would draw (prefix mode retries the first omitted item at
+    // every insertion move).
+    let mut failed_at: Vec<Option<u64>> = vec![None; n];
     for it in 0..iterations {
         if it % 256 == 0 {
             if s.env.now_ms() > deadline_ms && deadline_ms > 0.0 {
@@ -165,6 +188,13 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
                     continue;
                 }
             }
+            if failed_at[u] == Some(st.accepted) {
+                let tries = insert_tries(s, u, soft_ok);
+                if tries > 0 {
+                    rng.next_below(tries);
+                }
+                continue;
+            }
             if try_insert(s, u, soft_ok, &sets, &mut rng, &mut scratch) {
                 st.inserted += 1;
                 st.accepted += 1;
@@ -173,6 +203,8 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
                 best = cur;
                 snapshot.clone_from(&s.state.placed);
                 snap_reasons.clone_from(&s.reasons);
+            } else if !cap_full(s) {
+                failed_at[u] = Some(st.accepted);
             }
             continue;
         }
@@ -340,7 +372,7 @@ fn try_insert(
         ));
     }
     scored.sort_by(|a, b| crate::math::cmp_f64(a.0, b.0).then(a.1.cmp(&b.1)));
-    let tries = scored.len().min(12);
+    let tries = scored.len().min(INSERT_TRIES);
     let offset = if tries > 0 {
         rng.next_below(tries as u32) as usize
     } else {

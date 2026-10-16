@@ -47,6 +47,20 @@ function usable(s: Solve, c: number, softOk: boolean): boolean {
   return cand.feasible || (softOk && cand.relaxed);
 }
 
+/** Candidates an insertion tries (the cheapest usable ones, from a random offset). */
+const INSERT_TRIES = 12;
+
+/**
+ * The number of candidates {@link tryInsert} tries for item `u` (it draws its random
+ * offset below this number).
+ */
+function insertTries(s: Solve, u: number, softOk: boolean): number {
+  const list = s.byItem[u]!;
+  let k = 0;
+  for (let j = 0; j < list.length && k < INSERT_TRIES; j++) if (usable(s, list[j]!, softOk)) k += 1;
+  return k;
+}
+
 function isFree(s: Solve, i: number, c: number): boolean {
   return s.state.isFree(s.cands[c]!, s.cands, s.obs, i);
 }
@@ -102,6 +116,12 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
   let best = cur;
   let snapshot = s.state.placed.slice();
   let snapReasons = s.reasons.slice();
+  // Every state change is an accepted move, so `st.accepted` versions the state. An
+  // insertion that failed on this version fails again (an attempt rolls back whatever it
+  // tried, and below the label cap the order of its tries does not matter): a retry only
+  // draws the random offset it would draw (prefix mode retries the first omitted item at
+  // every insertion move).
+  const failedAt = new Array<number>(n).fill(-1);
   for (let it = 0; it < iterations; it++) {
     if (it % 256 === 0) {
       if (envNow(s.env) > deadlineMs && deadlineMs > 0) {
@@ -137,6 +157,11 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
       if (sets[u] || ru === Reason.KeepWith || ru === Reason.Grouped || ru === Reason.BudgetExhausted) continue;
       const m = s.model.maxLabels;
       if (m !== null && s.state.nPlaced >= m && mode !== Omission.Strict) continue;
+      if (failedAt[u] === st.accepted) {
+        const tries = insertTries(s, u, softOk);
+        if (tries > 0) rng.nextBelow(tries);
+        continue;
+      }
       if (tryInsert(s, u, softOk, sets, rng, scratch)) {
         st.inserted += 1;
         st.accepted += 1;
@@ -145,7 +170,7 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
         best = cur;
         snapshot = s.state.placed.slice();
         snapReasons = s.reasons.slice();
-      }
+      } else if (!capFull(s)) failedAt[u] = st.accepted;
       continue;
     }
     // relocate or swap
@@ -285,7 +310,7 @@ function tryInsert(s: Solve, u: number, softOk: boolean, sets: readonly boolean[
   const idx: number[] = [];
   for (let k = 0; k < scoredId.length; k++) idx.push(k);
   idx.sort((a, b) => cmpF64(scoredCost[a]!, scoredCost[b]!) || scoredId[a]! - scoredId[b]!);
-  const tries = idx.length < 12 ? idx.length : 12;
+  const tries = idx.length < INSERT_TRIES ? idx.length : INSERT_TRIES;
   const offset = tries > 0 ? rng.nextBelow(tries) : 0;
   const keyU = s.pri.prio[u]!.key;
   const mode = s.model.omission;

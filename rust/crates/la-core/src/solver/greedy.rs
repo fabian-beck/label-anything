@@ -112,7 +112,9 @@ pub fn run(s: &mut Solve) {
                 s.reasons[i] = Some(Reason::OmittedByPriority);
                 continue;
             }
-            if !process_unit(s, &mut g, i, false) {
+            // level 0 and then the ladder (spec §10.1), in total order; the first item
+            // that fails every step cuts the prefix
+            if !process_unit(s, &mut g, i, true) {
                 cut = true;
             }
         }
