@@ -6,8 +6,13 @@ use label_anything_expr::{parse, term_number, truthy, Context, Value};
 use serde_json::Value as Json;
 use std::path::{Path, PathBuf};
 
+/// `LA_EXPR_CONFORMANCE_DIR` runs another directory of expr cases (e.g. a large
+/// generated suite from `examples/gen_expr_random.rs`).
 fn dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../conformance/expr")
+    match std::env::var_os("LA_EXPR_CONFORMANCE_DIR") {
+        Some(d) => PathBuf::from(d),
+        None => Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../conformance/expr"),
+    }
 }
 
 /// Exact equality: like `values_equal`, but numbers must have identical bits.

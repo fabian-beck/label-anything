@@ -1,0 +1,2811 @@
+{
+  "cases": [
+    {
+      "expr": "([abs(max(0, attrs.obj.k, 'B')), [endsWith(attrs.list, attrs.emoji), !attrs['s p']]]) in [(('a') <= (([[1], [2, 3]]).upper())) != ('-0'), (attrs.f) + (((attrs.neg) in [attrs.n, [0]]) == (-('-0')))]",
+      "value": false
+    },
+    {
+      "expr": "attrs.s",
+      "value": "core"
+    },
+    {
+      "expr": "(log1p(((3) > (attrs.obj)) not in [min(attrs.u, 3)])) in [(attrs.z) || ([(true) && (1e308), -(attrs.list)]), ([coalesce('-0', 'a'), (attrs.obj.k) in [attrs.z, '']])[((attrs.f) not in [''])[(id).ceil()]]]",
+      "value": true
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "attrsattrs0.5n\"y*0.5",
+      "offset": 0
+    },
+    {
+      "expr": "max((contains(max(priority, attrs.tiny, '-0'), attrs.obj.k)) not in [min(attrs.z, min([], ''))], (tier)[(startsWith(attrs, tier)) < (log('é'))], ([('org.example.Foo')[attrs.big], (attrs.z) + (priority)]) not in [min(text.upper(), -('\\uFFFF'))])",
+      "value": null
+    },
+    {
+      "expr": "-([upper((attrs.neg) in [attrs.list, 1]), ((attrs.obj) - (attrs.list[1])) / (log(priority))])",
+      "value": null
+    },
+    {
+      "expr": "((attrs.list[2][0]) in [!startsWith(null, 'a'), contains([attrs.z, '1e999'], max(attrs.s, attrs.nested[1], false))]) not in [[(attrs.list.len()) && (max(attrs.n, 3, [1, 'a', null])), (max(attrs.nested[1], attrs.big, attrs.e)) in [(attrs.emoji).upper(), max(false, 'org.example.Foo', attrs.obj)]]]",
+      "value": true
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "true1e=foo\\u00e9nullabsattrs😀[",
+      "offset": 0
+    },
+    {
+      "expr": "((((attrs) in [[[1], [2, 3]], id])[max('1e999', id, attrs.missing)]) in [([1, 'a', null]) not in [('  12.5 ').len()], (true) % ((attrs.missing)[attrs.list[1]])]).floor()",
+      "value": null
+    },
+    {
+      "expr": "(min((max(attrs.neg, attrs.list.len(), ''))['a'], ((5e-324) not in [[[1], [2, 3]]]).sqrt())) in [(attrs.list).log1p(), -(attrs)]",
+      "value": true
+    },
+    {
+      "expr": "(contains(upper(log1p(text.upper())), max(-([0]), index, (tier) && (text)))).sqrt()",
+      "value": null
+    },
+    {
+      "expr": "true",
+      "value": true
+    },
+    {
+      "expr": "floor((len(max('  12.5 ', priority)))[[[1, 'a', null], text]])",
+      "value": null
+    },
+    {
+      "expr": "max(coalesce(coalesce(attrs.nz, attrs), max(-(''), (attrs) in [attrs.nested, x], 'é')), false, ([])[-(1)])",
+      "value": null
+    },
+    {
+      "expr": "'1e999'",
+      "value": "1e999"
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "1&&[==<0.5",
+      "offset": 4
+    },
+    {
+      "expr": "(contains([!5e-324, sqrt(y)], ([[[1], [2, 3]], '-0']) && (-(attrs.s)))) <= (-((floor(attrs.obj.k)) && ((attrs.nz) + (attrs.z))))",
+      "value": false
+    },
+    {
+      "expr": "startsWith((((attrs.s) not in [[0]]) in [startsWith(attrs.nested, attrs.list[2][0]), (attrs['s p']).floor()]) > (((attrs.list[1])[attrs.nz]) not in [('\\uFFFF').lower()]), 'B')",
+      "value": null
+    },
+    {
+      "expr": "attrs.e",
+      "value": ""
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "'x'min*======n(0.5)",
+      "offset": 3
+    },
+    {
+      "expr": "(max(-(!attrs.nested[1]), !index, max((attrs.missing) * ('😀'), (0.1) == ('B'), (index)[y]))) - (attrs['s p'])",
+      "value": null
+    },
+    {
+      "expr": "(((min(attrs.emoji, text)) / (attrs.tiny)) % (([attrs.list[1], false]) in [(attrs) <= (1), ![[1], [2, 3]]])).len()",
+      "value": null
+    },
+    {
+      "expr": "(abs(round(('é') in ['a', attrs.t]))).floor()",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "](+0.5notcoalesce&&\\u00e9(n",
+      "offset": 0
+    },
+    {
+      "expr": "('-0').len()",
+      "value": 2.0
+    },
+    {
+      "expr": "max((attrs.s) in [-(contains([1, 'a', null], 1e308)), ([0]) in [[0.1, attrs.nested], !text]], (((attrs.big).upper())[(5e-324) < (attrs.nested[1])]) && ('\\uFFFF'), ((-(1e308)) in [attrs.obj.k, (priority).round()]) in [!('B') % (attrs.nested), (attrs.nested) in [lower(attrs.big), [0]]])",
+      "value": null
+    },
+    {
+      "expr": "[max(contains(number(attrs.list[2][0]), ['a', 'B']), '\\uFFFF', ((index) > (true)) in [attrs.t, ([])[1]]), 2.5]",
+      "value": [
+        null,
+        2.5
+      ]
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "min,1eattrstruenotabs ",
+      "offset": 0
+    },
+    {
+      "expr": "[[1], [2, 3]]",
+      "value": [
+        [
+          1.0
+        ],
+        [
+          2.0,
+          3.0
+        ]
+      ]
+    },
+    {
+      "expr": "attrs.obj.k",
+      "value": "v"
+    },
+    {
+      "expr": "y",
+      "value": -3.0
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "attrsé",
+      "offset": 5
+    },
+    {
+      "expr": "('é')[(((index).ceil()) not in [(1e308).sqrt()]) >= (false)]",
+      "value": null
+    },
+    {
+      "expr": "[!attrs.obj, (((priority).upper()) not in [(null)['é']]) in [!endsWith(false, attrs.n), ((0)[x]) + (('é') > ('\\uFFFF'))]]",
+      "value": [
+        false,
+        false
+      ]
+    },
+    {
+      "expr": "max((attrs.nz) >= (!''), [((attrs.list.len()) not in [2.5]) in [(0) in [1, tier], ('-0')[2.5]], 0.1], !(coalesce('\\uFFFF', ''))[!'1e999'])",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "attrs=1en!n.,true",
+      "offset": 5
+    },
+    {
+      "expr": "-(-(-(min(-0, attrs.s))))",
+      "value": null
+    },
+    {
+      "expr": "((max(attrs.list.len(), ('  12.5 ')[[0]], min('', [1, 'a', null]))) not in [[('') not in [attrs.missing], (null) in ['é', attrs.list[2][0]]]]) in [-(false), (!([1, 'a', null]).round()) not in [priority]]",
+      "value": true
+    },
+    {
+      "expr": "((((attrs.neg) not in [attrs.e]) not in [index]) - (min(-(text.upper()), (attrs.tiny).log1p()))) in [(max((id) / (attrs.list[1]), startsWith(attrs.s, 2.5)))[-([attrs.z, text])], ((3) < ('😀')) in [(!1e308) not in [(attrs.e) in [attrs.emoji, attrs.f]], ((attrs.obj).abs()) not in [endsWith('é', attrs.e)]]]",
+      "value": true
+    },
+    {
+      "error": "expr_syntax",
+      "expr": ")[==n-1e",
+      "offset": 0
+    },
+    {
+      "expr": "attrs.list[2][0]",
+      "value": 3.0
+    },
+    {
+      "expr": "((max(('😀') <= (2.5), [], max('1e999', -0, attrs.obj.k))) in ['é', (log('\\uFFFF')) in [max('', attrs.s, [0]), tier]]) in ['😀', [1, 'a', null]]",
+      "value": false
+    },
+    {
+      "expr": "(min(!(attrs.emoji) < (attrs.z), (('é').sqrt()) + ([attrs.neg, [1, 'a', null]]))) - ((max(('-0')[attrs], (attrs.list)[attrs.e], attrs.list[1])) == (([null, '']) * (attrs.list[1])))",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "==foon0.5attrsfoo+",
+      "offset": 0
+    },
+    {
+      "expr": "(ceil(startsWith((null).number(), (attrs.n) not in [true]))) not in [-(((attrs.u)[0]).sqrt())]",
+      "value": false
+    },
+    {
+      "expr": "((abs(attrs.tiny)) || (['-0', ['org.example.Foo', 0]]))[-((!attrs.f) != (![[1], [2, 3]]))]",
+      "value": null
+    },
+    {
+      "expr": "max('é', log((max(0, 2.5, attrs.z)) not in [max(0.1, attrs.nz, [1, 'a', null])]), false)",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "@",
+      "offset": 0
+    },
+    {
+      "expr": "''",
+      "value": ""
+    },
+    {
+      "expr": "text",
+      "value": "Hello"
+    },
+    {
+      "expr": "-(-((-0) in [attrs.emoji, (attrs.obj) - (x)]))",
+      "value": null
+    },
+    {
+      "expr": "true",
+      "value": true
+    },
+    {
+      "expr": "((max([1, 'a', null], (attrs.list.len()) || (attrs.obj), attrs.n)) + (attrs.neg)).sqrt()",
+      "value": null
+    },
+    {
+      "expr": "([(attrs.big) - (('-0') / ('\\uFFFF')), attrs.neg]).upper()",
+      "value": null
+    },
+    {
+      "expr": "(max(((attrs.list) && (text)) in [coalesce(0.1, 1e308), ('-0')[null]], ((attrs) in [attrs.nested[1], '😀']).upper(), (!priority) <= (('org.example.Foo').lower()))) >= (!!(attrs.nested) % (text))",
+      "value": false
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "slennull",
+      "offset": 0
+    },
+    {
+      "expr": "!number(endsWith((x) != ([0]), number(attrs.list[2][0])))",
+      "value": true
+    },
+    {
+      "expr": "(sqrt(((attrs.s) == (1)) >= (attrs.n))) - ([0])",
+      "value": null
+    },
+    {
+      "expr": "'a'",
+      "value": "a"
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "min-&&attrs😀0.5\"ymin",
+      "offset": 0
+    },
+    {
+      "expr": "(max(([2.5, attrs['s p']]) > (attrs.f), (!'é').ceil(), ((null) == ([0])) == ((attrs.nz) in [attrs.big, 1e308])))[((!attrs.nz) || ((index) in [attrs.obj.k, attrs.big])).floor()]",
+      "value": null
+    },
+    {
+      "expr": "[((-0)[[attrs.list.len(), [1, 'a', null]]]) == (''), coalesce(((0.1) in [attrs.e, attrs.z])[sqrt('é')], ('') not in [['B', attrs.neg]])]",
+      "value": [
+        false,
+        true
+      ]
+    },
+    {
+      "expr": "-([(!attrs.obj.k) <= (max(attrs.list, text.upper())), !![0]])",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "true=attrsn&&-foo*-",
+      "offset": 4
+    },
+    {
+      "expr": "((max([1e308, true], attrs.neg, max([], attrs.u, attrs.e)))[(!'😀')[abs('é')]]) not in [(('org.example.Foo')[(index).log()]) not in [-((attrs.u) in ['-0', attrs.z])]]",
+      "value": true
+    },
+    {
+      "expr": "attrs.list",
+      "value": [
+        10.0,
+        "two",
+        [
+          3.0,
+          4.0
+        ],
+        null
+      ]
+    },
+    {
+      "expr": "(attrs.t) > ((attrs.z).number())",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "++[1-+é",
+      "offset": 0
+    },
+    {
+      "expr": "(((('-0') not in [attrs]) not in [(attrs.list[1])[true]]) * (attrs.n)) in [[((attrs.list.len()) not in [attrs.n])[([0]) in [priority, attrs.z]], -((id).round())], -(((attrs.z) in [0.1, attrs.nz]) < ('😀'))]",
+      "value": true
+    },
+    {
+      "expr": "max((max((attrs.big) not in [text], (x) not in [x])).log(), !(('😀').upper()) not in [ceil('a')], '1e999')",
+      "value": null
+    },
+    {
+      "expr": "[max([(y)[attrs.neg], ('B') not in [attrs.f]], max(contains(attrs.n, false), -(-0)), abs(([0]) * (attrs.nested))), ((-(-0)) not in [!attrs.nested]) not in [((-0) + (1e308)) / (![[1], [2, 3]])]]",
+      "value": [
+        null,
+        true
+      ]
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "coalesce<n1e.",
+      "offset": 0
+    },
+    {
+      "expr": "round((floor(log1p(attrs.tiny)))[((2.5) not in [attrs.neg]).ceil()])",
+      "value": null
+    },
+    {
+      "expr": "attrs.z",
+      "value": 0.0
+    },
+    {
+      "expr": "attrs.list[1]",
+      "value": "two"
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "==1eé||1eéfoo.",
+      "offset": 0
+    },
+    {
+      "expr": "-('  12.5 ')",
+      "value": null
+    },
+    {
+      "expr": "(((min(3, null)) / (attrs.tiny)) in [attrs['s p'], attrs.list]) in [coalesce(((text) < ('\\uFFFF')) in [(index).round(), [[1, 'a', null], attrs]], (max([1, 'a', null], 1)) not in [-(attrs.nz)]), (([false, attrs.missing]) in [-([]), len(attrs)]) in [(endsWith(attrs.big, attrs.list.len())) not in [startsWith('', id)], ceil(('1e999') not in [5e-324])]]",
+      "value": true
+    },
+    {
+      "expr": "attrs.list",
+      "value": [
+        10.0,
+        "two",
+        [
+          3.0,
+          4.0
+        ],
+        null
+      ]
+    },
+    {
+      "error": "expr_syntax",
+      "expr": ".",
+      "offset": 0
+    },
+    {
+      "expr": "-((((3) in [2.5, [1, 'a', null]])[max(attrs.big, attrs.missing, false)]) in [!contains('1e999', attrs.tiny), 'é'])",
+      "value": null
+    },
+    {
+      "expr": "(5e-324) in [(attrs.missing) in [2.5, (text.upper()) in [(text.upper()) <= (''), [1, 'a', null]]], max(((attrs.emoji)['é']).sqrt(), (('é') not in ['😀']) % (('  12.5 ')[1]), attrs.list[2][0])]",
+      "value": false
+    },
+    {
+      "expr": "([(log1p(attrs.neg)) in [(attrs.obj) != (attrs.list[2][0]), (3) in ['a', x]], (-(5e-324))[([1, 'a', null]).log()]]).lower()",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "*min||-",
+      "offset": 0
+    },
+    {
+      "expr": "log1p((((attrs.obj.k).number()) not in [0.1]).ceil())",
+      "value": null
+    },
+    {
+      "expr": "[!len(max(attrs.big, 0, 5e-324)), attrs.tiny]",
+      "value": [
+        true,
+        5e-324
+      ]
+    },
+    {
+      "expr": "(attrs.n).floor()",
+      "value": 41.0
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "foo=.'x'",
+      "offset": 0
+    },
+    {
+      "expr": "('\\uFFFF') not in ['B']",
+      "value": true
+    },
+    {
+      "expr": "-(ceil(((5e-324) in [attrs.nz, attrs.list[2][0]]) not in [attrs.e]))",
+      "value": null
+    },
+    {
+      "expr": "text.upper()",
+      "value": "HELLO"
+    },
+    {
+      "error": "expr_syntax",
+      "expr": ")min0.5",
+      "offset": 0
+    },
+    {
+      "expr": "('  12.5 ') == (((('  12.5 ')['1e999']) != (max(null, 0.1, tier))) >= ((-(0.1)).number()))",
+      "value": false
+    },
+    {
+      "expr": "(((-(2.5)) == ((text.upper()) in [attrs.missing, 5e-324])) not in ['B']) < ((attrs.nested[1]).lower())",
+      "value": false
+    },
+    {
+      "expr": "attrs.list.len()",
+      "value": 4.0
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "&&",
+      "offset": 0
+    },
+    {
+      "expr": "!((max('\\uFFFF', -0, attrs.list)) not in [(2.5).upper()]) || ((max(attrs.obj, false, attrs.nested[1])) in [(attrs.tiny) * (attrs.u), (1e308).round()])",
+      "value": true
+    },
+    {
+      "expr": "[(y)[contains(max(attrs.u, attrs.obj), (attrs.n) || ('org.example.Foo'))], ('é') not in ['  12.5 ']]",
+      "value": [
+        null,
+        true
+      ]
+    },
+    {
+      "expr": "!((attrs.list.len())[([[1], [2, 3]])[false]]) != (attrs.s)",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "1e-abs",
+      "offset": 1
+    },
+    {
+      "expr": "ceil((-(index)).ceil())",
+      "value": -7.0
+    },
+    {
+      "expr": "!(((id) not in [-0]) not in [(true).number()]) + (-(round(1)))",
+      "value": true
+    },
+    {
+      "expr": "-(attrs.z)",
+      "value": -0.0
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "n==é*",
+      "offset": 0
+    },
+    {
+      "expr": "coalesce((('-0').len()) not in [floor(!attrs.neg)], !([0]).sqrt())",
+      "value": true
+    },
+    {
+      "expr": "-(2.5)",
+      "value": -2.5
+    },
+    {
+      "expr": "(((('é') / ('')) in [-(attrs.list[1]), attrs.n]).log1p()) in [((max('é', attrs.neg))[sqrt(attrs.n)]).upper(), (y) in [-((index).round()), (upper(attrs.nested)) >= ((0) <= (attrs.list.len()))]]",
+      "value": true
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "in1e",
+      "offset": 0
+    },
+    {
+      "expr": "(((attrs.z) >= ((attrs.nz) not in [attrs.list[1]])) in [((attrs.u) == (attrs.list[2][0]))[('').lower()], attrs.nested[1]]) in [(min(x, (attrs) == (attrs.nz))).floor(), sqrt(min((attrs.neg) < (5e-324), (y).round()))]",
+      "value": false
+    },
+    {
+      "expr": "(!max(('😀') || (1), !attrs.nested[1], !attrs.list[1])) in [!(attrs.u) || ('\\uFFFF'), [(('😀') <= (attrs.emoji)) in [attrs.u, id], !(3) not in [attrs.neg]]]",
+      "value": true
+    },
+    {
+      "expr": "attrs.list[1]",
+      "value": "two"
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "1en😀",
+      "offset": 1
+    },
+    {
+      "expr": "(attrs.f) in [!round((attrs.list[2][0]) in [attrs.z, -0]), !((attrs.nested[1])['a']).log1p()]",
+      "value": false
+    },
+    {
+      "expr": "attrs.n",
+      "value": 41.0
+    },
+    {
+      "expr": "-(([[0], (5e-324).len()]) in [(max(attrs.t, attrs, attrs.nz)) in [(y)['org.example.Foo'], 'é'], ((-0).log()) in [upper(1e308), (1).round()]])",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "0.5\"y",
+      "offset": 3
+    },
+    {
+      "expr": "-('\\uFFFF')",
+      "value": null
+    },
+    {
+      "expr": "(attrs.list[2][0]) != (log(max([1, 5e-324], -('  12.5 '), (attrs.emoji) in [attrs.missing, attrs.emoji])))",
+      "value": true
+    },
+    {
+      "expr": "(max((('1e999') in ['a', 'é']) && ((attrs.u) / (attrs.emoji)), 'B', -([1, 'a', null])))[[([true, 0.1]) <= (attrs.list[2][0]), (('a') in ['é', attrs]).round()]]",
+      "value": null
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "0.5&&abs",
+      "offset": 5
+    },
+    {
+      "expr": "((max(-(attrs.tiny), -(attrs.s), !null)).log()).round()",
+      "value": null
+    },
+    {
+      "expr": "(max([attrs.z, (attrs['s p'])[id]], (contains([[1], [2, 3]], attrs.list))[attrs.u], [])) not in [!true]",
+      "value": true
+    },
+    {
+      "expr": "text.upper()",
+      "value": "HELLO"
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "lenminss1e=",
+      "offset": 0
+    },
+    {
+      "expr": "[attrs.nested, (attrs.t) == (round(!0.1))]",
+      "value": [
+        {
+          "1": "one",
+          "x": [
+            1.0,
+            2.0
+          ]
+        },
+        false
+      ]
+    },
+    {
+      "expr": "(-0).number()",
+      "value": -0.0
+    },
+    {
+      "expr": "(2.5) != (-((max(true, text, attrs['s p'])) || ([attrs.obj.k, []])))",
+      "value": true
+    },
+    {
+      "error": "expr_syntax",
+      "expr": ")",
+      "offset": 0
+    },
+    {
+      "expr": "('😀').lower()",
+      "value": "😀"
+    },
+    {
+      "expr": "(((!priority)[(5e-324) in [attrs.e, 1e308]]) not in [len(max(attrs.n, '\\uFFFF', attrs.obj))]) && (attrs.s)",
+      "value": false
+    },
+    {
+      "expr": "!'é'",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "<)||==notattrs-foo",
+      "offset": 0
+    },
+    {
+      "expr": "(endsWith(attrs.list, (![1, 'a', null]) in [contains(3, text.upper()), [attrs.neg, attrs.nz]])) * (!max(startsWith(x, attrs.missing), -(false), (true) / ('é')))",
+      "value": null
+    },
+    {
+      "expr": "sqrt(attrs.big)",
+      "value": 1e+150
+    },
+    {
+      "expr": "upper(attrs.u)",
+      "value": "STRAßE"
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "not-",
+      "offset": 0
+    },
+    {
+      "expr": "coalesce([(!attrs)[(null).floor()], -(floor('  12.5 '))], (([attrs.n, id]).floor()) in [priority, text.upper()])",
+      "value": [
+        null,
+        null
+      ]
+    },
+    {
+      "expr": "'B'",
+      "value": "B"
+    },
+    {
+      "expr": "attrs.z",
+      "value": 0.0
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "+\\u00e91ein'x'é1coalesce<",
+      "offset": 0
+    },
+    {
+      "expr": "max(([false, (null) in [attrs.t, attrs.t]]) in [(id) || (!'org.example.Foo'), -([attrs.nz, attrs.neg])], -(((attrs.f) == ([])) not in [-(attrs['s p'])]))",
+      "value": null
+    },
+    {
+      "expr": "attrs['s p']",
+      "value": "space"
+    },
+    {
+      "expr": "''",
+      "value": ""
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "😀min",
+      "offset": 0
+    },
+    {
+      "expr": "[max(max(log('\\uFFFF'), (attrs.list[2][0]) not in [attrs]), ((attrs.s) in [attrs.emoji, attrs.u])[attrs.f], -(('-0')[priority])), (attrs.list) == (startsWith(('-0') % (text.upper()), (true) != (1e308)))]",
+      "value": [
+        null,
+        false
+      ]
+    },
+    {
+      "expr": "-((([attrs.emoji, [1, 'a', null]]) not in [max(attrs.nz, x, tier)]) - (([attrs.list[1], 5e-324]) not in [startsWith(attrs.e, null)]))",
+      "value": null
+    },
+    {
+      "expr": "max([(('-0') not in [attrs.nested[1]])[(1e308) >= (attrs.nested[1])], ((attrs.e) > (attrs.big)) not in [log1p('org.example.Foo')]], contains(-(max(attrs.nested[1], -0, attrs.list)), max(-(attrs.list.len()), 0.1)), (attrs.f) in [(!2.5) >= ((attrs.emoji) in ['a', 2.5]), upper((1).sqrt())])",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "1e\"y",
+      "offset": 1
+    },
+    {
+      "expr": "(1e308) % ((attrs.nz) in [-((attrs.nz) in [attrs.emoji, attrs.obj.k]), contains([attrs.nested[1], 1e308], [[1], [2, 3]])])",
+      "value": null
+    },
+    {
+      "expr": "(!max(sqrt(attrs.big), [index, attrs.obj.k], (index) < (true))) + ((((null).abs()) < (([[1], [2, 3]]) not in ['1e999'])) in [((attrs) not in [5e-324]) not in [(attrs.obj.k) >= (attrs.nz)], y])",
+      "value": null
+    },
+    {
+      "expr": "(ceil(coalesce(attrs.missing, (false) in [attrs.nested[1], attrs.tiny]))) not in [(((attrs.nested[1]) <= ([])) in [(attrs.list[1])[attrs.nested[1]], (attrs.neg) >= (attrs.nz)]) - ((5e-324) / (len(attrs.obj)))]",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "'x'1e=coalesce",
+      "offset": 3
+    },
+    {
+      "expr": "len(0.1)",
+      "value": null
+    },
+    {
+      "expr": "-(([0.1, max(-0, attrs, attrs.list.len())]) not in [(endsWith(attrs.nz, [1, 'a', null])) + (!attrs.obj)])",
+      "value": null
+    },
+    {
+      "expr": "(3).abs()",
+      "value": 3.0
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "coalescenottrue\"y.&&min&&foo",
+      "offset": 0
+    },
+    {
+      "expr": "sqrt(coalesce((-(false)) not in [([0]) not in [attrs.obj]], (('1e999') % (-0)) - (max(attrs.list.len(), attrs.u, attrs.nested))))",
+      "value": null
+    },
+    {
+      "expr": "(((-('é')) > (-(2.5))) not in [max((2.5) != (text), min(id, attrs.list.len()), ([0]) not in [null])]).ceil()",
+      "value": null
+    },
+    {
+      "expr": "len(((min('-0', 0.1))[!attrs.nested])[(-(attrs.nz)) > ('-0')])",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "&&](+&&0.5attrs<)",
+      "offset": 0
+    },
+    {
+      "expr": "-(attrs.tiny)",
+      "value": -5e-324
+    },
+    {
+      "expr": "-((!(attrs.tiny)[attrs.s]) in [[('org.example.Foo') in [attrs.emoji, 0.1], ('😀') not in [id]], 'é'])",
+      "value": null
+    },
+    {
+      "expr": "ceil((number('B')).lower())",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": ".='x'1s*len) ",
+      "offset": 0
+    },
+    {
+      "expr": "log(((max(attrs.obj, [[1], [2, 3]], attrs.t)) not in [('😀') not in [0.1]])[null])",
+      "value": null
+    },
+    {
+      "expr": "-(max([attrs.list, attrs.tiny], (([[1], [2, 3]])['\\uFFFF']) in [-(attrs.missing), 'é'], (-(attrs.emoji)).abs()))",
+      "value": null
+    },
+    {
+      "expr": "[((number(attrs.nested)).floor()) / ((max(attrs.u, attrs, attrs.obj)).lower()), max(max(-(attrs.obj), -('\\uFFFF'), (attrs.u) not in [0.1]), !(attrs.big) == (attrs.s), abs((attrs.big)[attrs.f]))]",
+      "value": [
+        null,
+        null
+      ]
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "0.5miné",
+      "offset": 3
+    },
+    {
+      "expr": "(attrs.u)[max(ceil((attrs.f) not in [attrs.big]), ((3).sqrt()) not in [-([])], attrs.list[1])]",
+      "value": null
+    },
+    {
+      "expr": "[attrs.obj, (('a') - ('org.example.Foo')) && ((('😀') not in [attrs.big]) <= (contains(attrs.u, index)))]",
+      "value": [
+        {
+          "k": "v",
+          "w": 0.0
+        },
+        false
+      ]
+    },
+    {
+      "expr": "number((abs(tier))[(attrs.nz) % (max(text.upper(), text.upper(), tier))])",
+      "value": null
+    },
+    {
+      "expr": "0.5",
+      "value": 0.5
+    },
+    {
+      "expr": "![0]",
+      "value": false
+    },
+    {
+      "expr": "((attrs.obj) + ([0])) < (contains(attrs.list, (!1) not in [!-0]))",
+      "value": false
+    },
+    {
+      "expr": "attrs.list[1]",
+      "value": "two"
+    },
+    {
+      "error": "expr_syntax",
+      "expr": ".",
+      "offset": 0
+    },
+    {
+      "expr": "('\\uFFFF') in [max(max(([[1], [2, 3]]) == ('-0'), 'org.example.Foo'), 0.1, (sqrt([[1], [2, 3]])) not in [(attrs.obj)[attrs]]), true]",
+      "value": false
+    },
+    {
+      "expr": "attrs.e",
+      "value": ""
+    },
+    {
+      "expr": "0.1",
+      "value": 0.1
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "😀abscoalesce😀coalesce'x'",
+      "offset": 0
+    },
+    {
+      "expr": "x",
+      "value": 10.5
+    },
+    {
+      "expr": "(-((number(attrs.e)) not in [!attrs.missing])) * (min(((priority).log1p()) + ((attrs.t)[y]), [([0]) >= (tier), (attrs.list.len()) % (null)]))",
+      "value": null
+    },
+    {
+      "expr": "('') in [(endsWith(([[1], [2, 3]]).log(), (x) != (index)))[((attrs['s p']).log()) in [!'-0', (3) not in [attrs.obj.k]]], '']",
+      "value": true
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "@",
+      "offset": 0
+    },
+    {
+      "expr": "max((max(![], -(attrs.list[1]), (tier) in [attrs.s, y])).round(), !((attrs.u).len()) in [-(attrs.e), lower(text)])",
+      "value": null
+    },
+    {
+      "expr": "max(min((attrs.big)[y], attrs.obj), (max((0.1).len(), [attrs.neg, attrs.f], x)) not in [attrs.nested], [-(!attrs.list), (['  12.5 ', attrs.list[1]]) not in ['']])",
+      "value": null
+    },
+    {
+      "expr": "(-(-(([0])['\\uFFFF']))).sqrt()",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "==",
+      "offset": 0
+    },
+    {
+      "expr": "'  12.5 '",
+      "value": "  12.5 "
+    },
+    {
+      "expr": "5e-324",
+      "value": 5e-324
+    },
+    {
+      "expr": "(-((!priority) / (log(5e-324)))) in [![(id) >= (attrs.big), len(attrs.emoji)], max(((1).ceil()) || (([])[index]), (min(attrs.nested[1], attrs.nz)) not in [coalesce(attrs.f, [0])])]",
+      "value": true
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "]é",
+      "offset": 0
+    },
+    {
+      "expr": "((-((attrs.list) * ('')))[[-(null), [-0, x]]]) <= (!(endsWith(attrs.u, attrs.big)) && (max(priority, 1e308, '1e999')))",
+      "value": false
+    },
+    {
+      "expr": "([1, 'a', null]) != (1)",
+      "value": true
+    },
+    {
+      "expr": "attrs.nested[1]",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "@min",
+      "offset": 0
+    },
+    {
+      "expr": "(max(-(!'\\uFFFF'), ((attrs.list) < (attrs.u))[max(attrs.n, attrs.e, attrs.list)], 'B'))['1e999']",
+      "value": null
+    },
+    {
+      "expr": "max([((2.5) % (3)) in [(index) not in ['a'], 'B'], ((attrs.neg) in ['  12.5 ', '\\uFFFF']) > ((priority)[attrs])], attrs.nested[1], (attrs.list.len()) == (((1e308).log()) not in [('  12.5 ') && (attrs.obj.k)]))",
+      "value": null
+    },
+    {
+      "expr": "(null) && ((((attrs.e) in ['a', id]) && ((2.5) != (attrs.emoji))) > (!['1e999', 1]))",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "not<0.5min",
+      "offset": 0
+    },
+    {
+      "expr": "((attrs.missing) not in [['-0', ('') in [attrs.t, 'é']]]) not in [((-('org.example.Foo')) || ((attrs.neg)[attrs.list[2][0]])).upper()]",
+      "value": true
+    },
+    {
+      "expr": "!((!attrs.obj) not in [('a').log()]) + ([max(attrs.obj.k, priority, attrs), ['-0', null]])",
+      "value": true
+    },
+    {
+      "expr": "(log1p((-('B')) % ([]))) in [max(attrs.nested[1], -(('B')['-0']), ((0.1) < (index)) not in [(true) / ('\\uFFFF')]), -(((attrs.obj.k)[[1, 'a', null]]) not in [attrs.e])]",
+      "value": true
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "[.+abs",
+      "offset": 1
+    },
+    {
+      "expr": "!!(max(attrs, attrs.list, attrs.tiny)) not in [attrs.list.len()]",
+      "value": true
+    },
+    {
+      "expr": "coalesce([1, 'a', null], ((coalesce(0.1, '1e999')) not in [attrs.emoji]) in [priority, ((attrs.n) in [attrs.nested, true]) in [(attrs.list[1])[null], coalesce(y, [0])]])",
+      "value": [
+        1.0,
+        "a",
+        null
+      ]
+    },
+    {
+      "expr": "(!-(([1, 'a', null]) + (attrs.list[1]))) + (attrs.e)",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "&&]",
+      "offset": 0
+    },
+    {
+      "expr": "!(contains((text) >= (attrs.list[1]), number(tier)))[[(attrs.tiny) in ['1e999', 2.5], (priority).log()]]",
+      "value": true
+    },
+    {
+      "expr": "attrs.list[2][0]",
+      "value": 3.0
+    },
+    {
+      "expr": "(!(max(3, attrs.e, attrs.neg)).log1p()) + ((max(-(index), lower(attrs.u), (attrs.list[2][0]).lower())).log1p())",
+      "value": null
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "absmin<",
+      "offset": 0
+    },
+    {
+      "expr": "((max([0, 0.1], -(attrs.nz), (attrs.big) in [attrs['s p'], '  12.5 '])) <= (max(!attrs.list.len(), ('1e999') != (attrs.list.len()), (0).upper()))) < (-(((attrs.list[2][0]) in [attrs.obj, attrs.t]) && ((0.1) in [5e-324, tier])))",
+      "value": false
+    },
+    {
+      "expr": "!max(x, attrs.missing, 3)",
+      "value": true
+    },
+    {
+      "expr": "[0]",
+      "value": [
+        0.0
+      ]
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "\"y]||attrs&&s!n0.5,",
+      "offset": 0
+    },
+    {
+      "expr": "sqrt((([0])[('-0') not in [-0]]) not in [((attrs.nested[1])[x]).len()])",
+      "value": null
+    },
+    {
+      "expr": "len((((y)[[]]).log1p()) not in ['-0'])",
+      "value": null
+    },
+    {
+      "expr": "number([0])",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "+(coalesce'x'n",
+      "offset": 0
+    },
+    {
+      "expr": "number(sqrt((max(attrs.obj, attrs.u))[attrs.missing]))",
+      "value": null
+    },
+    {
+      "expr": "floor(abs((!-0) + (log1p(attrs.t))))",
+      "value": null
+    },
+    {
+      "expr": "'B'",
+      "value": "B"
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "len).||!||éabs1e",
+      "offset": 0
+    },
+    {
+      "expr": "((([[0], attrs.u])[![1, 'a', null]]) in [attrs.t, min(abs('\\uFFFF'), attrs.tiny)]) in [((len(attrs.e)) < (attrs['s p'])) in [(contains([1, 'a', null], 1)) in [(attrs.nested[1]).round(), (0.1) >= (attrs.emoji)], attrs.u], attrs.s]",
+      "value": true
+    },
+    {
+      "expr": "(max((floor(true)) || (!attrs.big), id, ('😀') not in [(text.upper()) not in [5e-324]])).sqrt()",
+      "value": null
+    },
+    {
+      "expr": "[-(1e308), (!([0]) not in [null]) == ([false, (attrs.neg) not in [attrs.e]])]",
+      "value": [
+        -1e+308,
+        false
+      ]
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "'x'[😀s1",
+      "offset": 4
+    },
+    {
+      "expr": "(((coalesce(attrs.u, attrs.nested[1]))[(tier) in [attrs.list[2][0], priority]])[(-('\\uFFFF'))[[attrs.s, '\\uFFFF']]])[(((attrs) in [text.upper(), '']) not in [attrs['s p']])[max((attrs.s).sqrt(), (2.5) + (attrs.list.len()), max(id, 'é'))]]",
+      "value": null
+    },
+    {
+      "expr": "[-(((attrs.missing) > ('1e999')) not in [('a') not in [attrs.f]]), 'org.example.Foo']",
+      "value": [
+        null,
+        "org.example.Foo"
+      ]
+    },
+    {
+      "expr": "attrs.list.len()",
+      "value": 4.0
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "abs",
+      "offset": 0
+    },
+    {
+      "expr": "(1e308).sqrt()",
+      "value": 1e+154
+    },
+    {
+      "expr": "(attrs.tiny) in [index, (lower(('B')[attrs['s p']])) < (max(floor(text), !attrs.missing, lower(attrs.z)))]",
+      "value": false
+    },
+    {
+      "expr": "3",
+      "value": 3.0
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "&&s\"y<not)s,1e😀",
+      "offset": 0
+    },
+    {
+      "expr": "((((priority) in ['-0', 'é']) == (-(attrs.e)))['  12.5 '])[-0]",
+      "value": null
+    },
+    {
+      "expr": "max((((attrs.nested[1]) not in ['é']) in [priority, (text).floor()]).number(), 3)",
+      "value": 3.0
+    },
+    {
+      "expr": "(-((max(tier, 'é', 'é')).ceil())) not in [attrs.s]",
+      "value": true
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "absfoo\\u00e9+",
+      "offset": 0
+    },
+    {
+      "expr": "(!ceil(contains(text, 2.5))) in [(((attrs.z) >= ('-0')) not in [max(attrs.nested[1], attrs.list, attrs.list[1])]) > (coalesce('org.example.Foo', '')), (true)[null]]",
+      "value": false
+    },
+    {
+      "expr": "(-(!(0.1) / (attrs.obj))).upper()",
+      "value": null
+    },
+    {
+      "expr": "[max(attrs['s p'], (contains(attrs['s p'], attrs.emoji)) && (('a') in [attrs['s p'], 0.1])), attrs.obj]",
+      "value": [
+        null,
+        {
+          "k": "v",
+          "w": 0.0
+        }
+      ]
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "[abs",
+      "offset": 1
+    },
+    {
+      "expr": "([((0.1) in [attrs.list[1], attrs.n])[max(2.5, y, false)], ((attrs.s).len()).abs()]) == ([(([[1], [2, 3]]) not in [attrs.obj]) != ([x, 2.5]), len(([[1], [2, 3]]) not in [attrs.list])])",
+      "value": false
+    },
+    {
+      "expr": "![1, 'a', null]",
+      "value": false
+    },
+    {
+      "expr": "(startsWith((abs(attrs)).abs(), ((attrs.list.len()) in [[], text.upper()]).sqrt()))[((contains(tier, null)) not in [([[1], [2, 3]]) <= (attrs.list.len())]) && (abs(startsWith(attrs['s p'], attrs.tiny)))]",
+      "value": null
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "len@||abs*",
+      "offset": 0
+    },
+    {
+      "expr": "'a'",
+      "value": "a"
+    },
+    {
+      "expr": "(!(-(false)) / ('é')) not in [((attrs.list[2][0]) > (min(attrs.nested[1], attrs.list))) in [-(tier), max(attrs.n, attrs['s p'], (3) >= (attrs.z))]]",
+      "value": true
+    },
+    {
+      "expr": "max(x, ([index, tier]) not in [round((1e308) not in [attrs])], (attrs.big) < (((attrs.neg) not in [0.1]).ceil()))",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "😀foo.==foonull1e😀",
+      "offset": 0
+    },
+    {
+      "expr": "((x).log1p()) not in [max(attrs.n, (('  12.5 ').log1p()) in [[[1], [2, 3]], (attrs.f).round()])]",
+      "value": true
+    },
+    {
+      "expr": "y",
+      "value": -3.0
+    },
+    {
+      "expr": "(!tier) > (max(([]) in [(attrs.obj.k) && (attrs.list.len()), (attrs.s) >= (1e308)], max(1e308, -(id), [attrs.u, [[1], [2, 3]]]), text))",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "😀\\u00e91e!.",
+      "offset": 0
+    },
+    {
+      "expr": "('a') * (attrs.list.len())",
+      "value": null
+    },
+    {
+      "expr": "(((attrs.big).number()) in [(attrs.nz) in [(attrs.obj.k) not in [attrs.z], coalesce(1, attrs.nested)], -(-(attrs.nested[1]))]) in [!max(attrs.list.len(), -(attrs.big), [1e308, 'é']), !((id) < (attrs.missing)) in [('a') not in [index], (attrs.nested[1])[2.5]]]",
+      "value": false
+    },
+    {
+      "expr": "round(startsWith(([priority, false])[(attrs.s) not in [1]], len(2.5)))",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": ")(nullnullnull@'x'n",
+      "offset": 0
+    },
+    {
+      "expr": "attrs.list[1]",
+      "value": "two"
+    },
+    {
+      "expr": "((!(true)[attrs.obj])[((attrs.nz) in [attrs.n, attrs['s p']]).round()]).upper()",
+      "value": null
+    },
+    {
+      "expr": "!(-0).ceil()",
+      "value": true
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "true1e1",
+      "offset": 0
+    },
+    {
+      "expr": "1",
+      "value": 1.0
+    },
+    {
+      "expr": "(abs(contains('-0', attrs.list.len()))) != ([0])",
+      "value": true
+    },
+    {
+      "expr": "text",
+      "value": "Hello"
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "len]||@coalesce",
+      "offset": 0
+    },
+    {
+      "expr": "((('😀') < ((attrs.f).ceil())).lower()) <= (contains((text)[max([[1], [2, 3]], 1e308, attrs.t)], coalesce(-('B'), 3)))",
+      "value": false
+    },
+    {
+      "expr": "id",
+      "value": "item-7"
+    },
+    {
+      "expr": "attrs.f",
+      "value": 2.5
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "nattrs,\"y1*not",
+      "offset": 0
+    },
+    {
+      "expr": "2.5",
+      "value": 2.5
+    },
+    {
+      "expr": "log((((attrs.obj.k) - (attrs.n)) not in [tier])[attrs.tiny])",
+      "value": null
+    },
+    {
+      "expr": "[attrs['s p'], (min(attrs.s, !text.upper()))[!'é']]",
+      "value": [
+        "space",
+        null
+      ]
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "null&&",
+      "offset": 6
+    },
+    {
+      "expr": "((!contains(attrs.obj.k, tier)) != ((-(1e308)).lower())).sqrt()",
+      "value": null
+    },
+    {
+      "expr": "(((('-0') - (attrs.f)) == (!'\\uFFFF')) in [1, attrs]).upper()",
+      "value": null
+    },
+    {
+      "expr": "-([(('B').lower()) < ([[], attrs.list[1]]), attrs])",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "==null",
+      "offset": 0
+    },
+    {
+      "expr": "endsWith(max((round(1))[3], [(attrs.u)[3], (attrs.n).log1p()], !-(x)), max(log(attrs.z), (('-0') && (attrs.t)) >= ((attrs) not in [id]), attrs.t))",
+      "value": null
+    },
+    {
+      "expr": "attrs.list[1]",
+      "value": "two"
+    },
+    {
+      "expr": "((index) >= (attrs.big)) >= ((max(-(attrs.t), max(priority, y))) == (sqrt(attrs.list.len())))",
+      "value": false
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "nullin)0.5attrs\"ytrue@]",
+      "offset": 0
+    },
+    {
+      "expr": "((((attrs['s p']) not in [3]).abs()) in [!attrs.list.len(), attrs.obj.k]) in [(-(max(5e-324, 5e-324, 'é'))) || (((x) && (text.upper())) in [(id) in [attrs.nested, text], abs(attrs.t)]), -(((attrs.f) - (tier)) in [(tier)[attrs.e], ceil(1)])]",
+      "value": true
+    },
+    {
+      "expr": "log1p([attrs.list[1], attrs.emoji])",
+      "value": null
+    },
+    {
+      "expr": "(!(max(priority, '1e999', attrs.missing)).len()) != (attrs.obj)",
+      "value": true
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "fooé\"y",
+      "offset": 0
+    },
+    {
+      "expr": "[x, -(((null) in [0, priority])[5e-324])]",
+      "value": [
+        10.5,
+        null
+      ]
+    },
+    {
+      "expr": "attrs.nz",
+      "value": -0.0
+    },
+    {
+      "expr": "((1e308).number()) not in [attrs.z]",
+      "value": true
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "abs==@)",
+      "offset": 0
+    },
+    {
+      "expr": "((((attrs.f) && (attrs.s)) not in [([]).lower()]) > (log((x) * (null))))[(-(sqrt(''))) < ((-(attrs.emoji)) == ((false) && (2.5)))]",
+      "value": null
+    },
+    {
+      "expr": "(-(-(-(attrs.list.len())))) <= ((number((attrs.t) in [attrs.nested, '1e999'])) not in [((attrs.list.len())[attrs.n]).sqrt()])",
+      "value": false
+    },
+    {
+      "expr": "attrs.big",
+      "value": 1e+300
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "coalesce@)\\u00e9null==not.'x'attrs",
+      "offset": 0
+    },
+    {
+      "expr": "(priority) not in [[[], abs((attrs.f) in [attrs.missing, index])]]",
+      "value": true
+    },
+    {
+      "expr": "min(attrs, '\\uFFFF')",
+      "value": null
+    },
+    {
+      "expr": "max((max((attrs.f).len(), ('').round(), [1e308, text])) / ((max('a', attrs.neg, -0)) in [![], max(attrs['s p'], attrs.f, attrs.n)]), attrs.list.len(), !max(('\\uFFFF').number(), -(2.5), endsWith(attrs['s p'], attrs.e)))",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "*len**1e!-foo'x'",
+      "offset": 0
+    },
+    {
+      "expr": "max((!-(attrs.list[2][0])) + ((attrs.list.len()) < (min(false, attrs.nz))), (!(0.1)[attrs.list.len()]) not in [!lower(text.upper())], -(max(sqrt(priority), (attrs.obj.k) in [attrs.neg, attrs], !x)))",
+      "value": null
+    },
+    {
+      "expr": "[!((attrs.missing) not in [true]) in [coalesce('a', attrs.n), min('', attrs.u)], ([max(y, 'a', [0]), ('B')['😀']])[startsWith(max(priority, attrs.emoji, index), coalesce(attrs.obj.k, attrs.list[2][0]))]]",
+      "value": [
+        true,
+        null
+      ]
+    },
+    {
+      "expr": "[(attrs.nested[1])[((attrs.big) > (3)) in [max(attrs.nested[1], priority, attrs.obj), -('a')]], -([(attrs.missing) > (attrs.list), ('  12.5 ') not in ['😀']])]",
+      "value": [
+        null,
+        null
+      ]
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "len",
+      "offset": 0
+    },
+    {
+      "expr": "max(-(max((text.upper()) <= (0), attrs.big)), [log(attrs.emoji), -(([[1], [2, 3]]) in [y, attrs.list[1]])], coalesce(-(max(attrs.list[1], priority, '1e999')), attrs.list[1]))",
+      "value": null
+    },
+    {
+      "expr": "![!sqrt([1, 'a', null]), (!y) < (endsWith(y, 'B'))]",
+      "value": false
+    },
+    {
+      "expr": "'a'",
+      "value": "a"
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "😀)attrs!'x'coalesceattrs1e",
+      "offset": 0
+    },
+    {
+      "expr": "-0",
+      "value": -0.0
+    },
+    {
+      "expr": "((!attrs.s) not in [endsWith(-(0), text)]) in [contains('é', ((text)[1]).ceil()), ((['😀', tier]) % ((null) not in [text.upper()])).number()]",
+      "value": false
+    },
+    {
+      "expr": "''",
+      "value": ""
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "(.,null. null@'x'\"y",
+      "offset": 1
+    },
+    {
+      "expr": "((round((index) <= ('B'))) in [(max(attrs.n, text.upper(), 1)) in [-('😀'), (attrs.neg)[attrs.list[1]]], (-([0])) < ((attrs.e) >= (attrs.obj.k))]) > ([log(max('', false, '')), attrs.nested[1]])",
+      "value": false
+    },
+    {
+      "expr": "[(-(coalesce(x, [0]))) in [(attrs.big) < (-('é')), ((attrs.n) in [y, '\\uFFFF']) <= ([id, 1])], (x) - (((5e-324) not in [priority]) - (('  12.5 ') in [attrs.u, attrs.n]))]",
+      "value": [
+        false,
+        null
+      ]
+    },
+    {
+      "expr": "startsWith(([([[1], [2, 3]]) != (attrs), !'1e999'])[-(('1e999')[text.upper()])], max(('org.example.Foo') * (max(attrs['s p'], priority, false)), (max(attrs.n, attrs.u, [0])).lower(), [priority, (3) in [y, 1]]))",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "!.*",
+      "offset": 1
+    },
+    {
+      "expr": "[sqrt(''), max(text, (upper(attrs.nz))[0.1], attrs['s p'])]",
+      "value": [
+        null,
+        null
+      ]
+    },
+    {
+      "expr": "(max(((attrs.nested) not in [2.5])[('a') in [0, attrs.z]], ((null) not in ['  12.5 ']) * ((attrs['s p']) * (priority)), attrs.neg)) && (abs(null))",
+      "value": false
+    },
+    {
+      "expr": "round(lower([min(attrs.nz, '😀'), coalesce(-0, attrs.obj)]))",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "<null-coalesce,abs*!'x'&&",
+      "offset": 0
+    },
+    {
+      "expr": "coalesce(!(attrs.obj) > (-(-0)), !coalesce((attrs.list[2][0]).sqrt(), -(true)))",
+      "value": true
+    },
+    {
+      "expr": "(([min([0], attrs.z), -(-0)]) < (max('B', max(tier, '😀', false), (attrs.list) in ['B', attrs.big]))) not in [!endsWith((attrs.nested)[attrs.list], ([]) - (0))]",
+      "value": true
+    },
+    {
+      "expr": "max(((attrs.list[1]) not in [(attrs.list[1])[attrs.list.len()]]) && (attrs.nz), ((attrs.missing) % ((index)[attrs.e]))[(max(1e308, null)) <= (-(0.1))], attrs.nested)",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "||+😀0.5min@ ||=len",
+      "offset": 0
+    },
+    {
+      "expr": "-0",
+      "value": -0.0
+    },
+    {
+      "expr": "'  12.5 '",
+      "value": "  12.5 "
+    },
+    {
+      "expr": "((ceil(attrs.n))[(('org.example.Foo').abs()) in [('1e999') - (text), contains(id, 1e308)]]).floor()",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "étrue*==(.- ",
+      "offset": 0
+    },
+    {
+      "expr": "attrs.f",
+      "value": 2.5
+    },
+    {
+      "expr": "ceil(!3)",
+      "value": null
+    },
+    {
+      "expr": "attrs.z",
+      "value": 0.0
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "len+abs -]\\u00e9abs+",
+      "offset": 0
+    },
+    {
+      "expr": "((attrs.list.len()).floor())[attrs.list]",
+      "value": null
+    },
+    {
+      "expr": "(attrs.missing)[(sqrt(max(attrs.nested[1], 0.1, attrs.u))) - (((attrs.nz)[attrs.u]) >= ((false) not in [2.5]))]",
+      "value": null
+    },
+    {
+      "expr": "!(null) == (-((x).round()))",
+      "value": true
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "(foo&&<nulltrue",
+      "offset": 1
+    },
+    {
+      "expr": "index",
+      "value": 7.0
+    },
+    {
+      "expr": "((attrs.list[1]) in [min((attrs.list[1]) not in [attrs.big], max(attrs.list[1], attrs.emoji, null)), ('B') in [([0]) || (tier), (-0) + (tier)]]) > (-(!('org.example.Foo') in [attrs.n, id]))",
+      "value": false
+    },
+    {
+      "expr": "endsWith(('org.example.Foo') not in [(text.upper()) < ((false) != ('é'))], ([['é', attrs.s], (attrs.missing).ceil()]) - (((y).log()) in ['😀', (attrs.missing) == (attrs.emoji)]))",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "-==,abs",
+      "offset": 1
+    },
+    {
+      "expr": "number((text) in [[(attrs.nested[1]) not in [''], (x)[attrs.t]], (2.5)[!'é']])",
+      "value": 0.0
+    },
+    {
+      "expr": "(((attrs.nested[1]).floor()).log()) in [text, ((max(1e308, tier, attrs.u)) in [('') not in [5e-324], ([0]) in [id, attrs.t]]) == (id)]",
+      "value": false
+    },
+    {
+      "expr": "([attrs.e, ((attrs.nz)[tier]) / (max(attrs.nested[1], attrs.nested, attrs.u))]) not in [coalesce([('  12.5 ').lower(), -([1, 'a', null])], ((attrs.list) not in [y]).log())]",
+      "value": true
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "\\u00e9||=+😀-,attrsattrsfoo",
+      "offset": 0
+    },
+    {
+      "expr": "'😀'",
+      "value": "😀"
+    },
+    {
+      "expr": "ceil([!'-0', index])",
+      "value": null
+    },
+    {
+      "expr": "(((-('org.example.Foo')) not in [(-0) + (attrs.obj)]).sqrt()) not in [(attrs.big)[(([1, 'a', null]) - (attrs)) * ([attrs.obj.k, 'org.example.Foo'])]]",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "+not=",
+      "offset": 0
+    },
+    {
+      "expr": "max((attrs.nested) not in [attrs.list[1]], [log(coalesce(2.5, index)), [attrs.nested, text.upper()]], -(-((attrs.z)[attrs.emoji])))",
+      "value": null
+    },
+    {
+      "expr": "[lower(attrs.e), max(endsWith((attrs.missing) != (attrs.missing), ('  12.5 ') in [attrs.obj.k, attrs]), 5e-324, y)]",
+      "value": [
+        "",
+        null
+      ]
+    },
+    {
+      "expr": "-((max(max(5e-324, 1), (true) + ('  12.5 '), (3) * (tier))).len())",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "'x']attrsmin\"y||&&'x'coalesces",
+      "offset": 3
+    },
+    {
+      "expr": "(((floor(true))[!'😀']) <= (false))[(ceil((1) not in [attrs['s p']]))[max(false, !id, floor(attrs.nz))]]",
+      "value": null
+    },
+    {
+      "expr": "((-(!attrs)) in [!!index, !(null)[attrs.list[1]]]) in [(max(tier, ('B') not in [attrs.list[1]], ('1e999').round())) not in [number('\\uFFFF')], [([attrs.list[1], []]).number(), ('-0') > ((attrs.list.len())['\\uFFFF'])]]",
+      "value": true
+    },
+    {
+      "expr": "max(!((5e-324)[attrs.obj]).number(), (!!attrs['s p'])[([null, attrs.s])[attrs.nz]], max([[attrs.tiny, 1], (attrs.n) not in [index]], attrs.list[1]))",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "\\u00e9len+in'x'in1e",
+      "offset": 0
+    },
+    {
+      "expr": "(-(endsWith(attrs.neg, (1e308)[[1, 'a', null]])))[((contains(attrs.nested, x)).number())[!(tier) in [attrs.big, attrs.obj]]]",
+      "value": null
+    },
+    {
+      "expr": "[1, 'a', null]",
+      "value": [
+        1.0,
+        "a",
+        null
+      ]
+    },
+    {
+      "expr": "([attrs.e, (attrs.nested[1])[([]).number()]]) + (attrs.e)",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "*",
+      "offset": 0
+    },
+    {
+      "expr": "(attrs.z)[([1, 'a', null]) - ((-(attrs.f)) not in [tier])]",
+      "value": null
+    },
+    {
+      "expr": "(attrs.nested[1]) >= ((endsWith((attrs.nz).log1p(), ([1, 'a', null]) + (attrs))) in [min(y, (attrs.f)['B']), log1p(max(attrs.list.len(), attrs.list[1]))])",
+      "value": false
+    },
+    {
+      "expr": "(startsWith((log(attrs))[(attrs) > (attrs.list[2][0])], len(max(attrs.obj, attrs.n, null))))[attrs.neg]",
+      "value": null
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "coalesce0.50.5]&&é",
+      "offset": 0
+    },
+    {
+      "expr": "sqrt(((!attrs.list[1]) || ((attrs.list[2][0]) > (0))).abs())",
+      "value": null
+    },
+    {
+      "expr": "((floor((attrs.f)[true])) >= (max([attrs.neg, y], (attrs['s p'])[null], max(true, '  12.5 ', text.upper())))) < (max((!attrs.list[1])[y], !-(attrs.neg), (([0]) * (attrs.list.len()))[(attrs.s)[attrs.list.len()]]))",
+      "value": false
+    },
+    {
+      "expr": "1",
+      "value": 1.0
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "coalesceminabs @@true]<null",
+      "offset": 0
+    },
+    {
+      "expr": "!sqrt(-(number(attrs.n)))",
+      "value": true
+    },
+    {
+      "expr": "[attrs.s, !(5e-324)[-(attrs.nested)]]",
+      "value": [
+        "core",
+        true
+      ]
+    },
+    {
+      "expr": "[[1], [2, 3]]",
+      "value": [
+        [
+          1.0
+        ],
+        [
+          2.0,
+          3.0
+        ]
+      ]
+    },
+    {
+      "error": "expr_syntax",
+      "expr": ")+",
+      "offset": 0
+    },
+    {
+      "expr": "-(!max((x) >= (1), endsWith(0.1, y), (attrs.emoji) in [attrs.nested[1], attrs.nz]))",
+      "value": null
+    },
+    {
+      "expr": "len(lower(y))",
+      "value": null
+    },
+    {
+      "expr": "[[((attrs.u) < (attrs.neg)) in [attrs['s p'], max(attrs.list.len(), text.upper(), attrs.list[1])], upper(5e-324)], (contains('org.example.Foo', !3)) != (-(log1p(attrs.list.len())))]",
+      "value": [
+        [
+          false,
+          null
+        ],
+        true
+      ]
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "+(0.5",
+      "offset": 0
+    },
+    {
+      "expr": "-0",
+      "value": -0.0
+    },
+    {
+      "expr": "-([max(attrs.nested, text, (attrs.s).log()), contains('\\uFFFF', max(attrs, text, [[1], [2, 3]]))])",
+      "value": null
+    },
+    {
+      "expr": "min(((1e308) <= (min(attrs, 3)))['org.example.Foo'], '  12.5 ')",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": ")",
+      "offset": 0
+    },
+    {
+      "expr": "(1e308) != (attrs.e)",
+      "value": true
+    },
+    {
+      "expr": "-(!attrs.list[1])",
+      "value": null
+    },
+    {
+      "expr": "(attrs.n) > ((priority)[!(2.5) not in [attrs]])",
+      "value": false
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "coalesce||attrs0.5+'x'",
+      "offset": 0
+    },
+    {
+      "expr": "-(!((id).number()) not in [[attrs.t, attrs.emoji]])",
+      "value": null
+    },
+    {
+      "expr": "max(1, (max(max(5e-324, attrs.big, attrs.f), -(text), [[1], [2, 3]])) * (max((attrs.nz)[y], max(attrs.neg, 0), (attrs.tiny)[attrs.f])), !(attrs.e) in [-(3), ('') in [y, attrs.nz]])",
+      "value": null
+    },
+    {
+      "expr": "[1, 'a', null]",
+      "value": [
+        1.0,
+        "a",
+        null
+      ]
+    },
+    {
+      "error": "expr_syntax",
+      "expr": ",,coalesce]coalesce1e1foo",
+      "offset": 0
+    },
+    {
+      "expr": "-(-0)",
+      "value": 0.0
+    },
+    {
+      "expr": "attrs.obj.k",
+      "value": "v"
+    },
+    {
+      "expr": "-((((attrs.tiny).log1p()) != (lower(attrs.neg))) + ((-(attrs.nz))[(1e308) || (id)]))",
+      "value": null
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "min,é",
+      "offset": 0
+    },
+    {
+      "expr": "(((-(2.5)) not in [attrs.list.len()]).len())[attrs]",
+      "value": null
+    },
+    {
+      "expr": "ceil(((!'-0').lower()) != (([1, 'a', null]) + ((attrs.list) + (text.upper()))))",
+      "value": null
+    },
+    {
+      "expr": "((-((id) not in [attrs.list])) != (((text.upper()) not in [text]) in [!attrs.s, attrs.s]))[max([([])[attrs.u], !attrs.neg], max(max(1, attrs.t), (x) not in [[1, 'a', null]], [0.1, 3]), !(attrs.z)['\\uFFFF'])]",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "é==)",
+      "offset": 0
+    },
+    {
+      "expr": "([[1], [2, 3]])[(((attrs.neg) not in [null]) == (([0]).round())) / ((contains(attrs.list[1], attrs.list[1])) not in [-([])])]",
+      "value": null
+    },
+    {
+      "expr": "text.upper()",
+      "value": "HELLO"
+    },
+    {
+      "expr": "(min((-(attrs.list.len())) && (('') % (0.1)), ((0.1) != ('  12.5 ')) == ((attrs.f) - ('😀')))).upper()",
+      "value": null
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "nottrue",
+      "offset": 0
+    },
+    {
+      "expr": "max(((max(1e308, null, attrs.nested[1])) == (!attrs.u)).log(), !'😀')",
+      "value": null
+    },
+    {
+      "expr": "attrs['s p']",
+      "value": "space"
+    },
+    {
+      "expr": "(max(!(attrs.f) not in [0.1], [('a').round(), (attrs.e) in [text.upper(), 5e-324]], ([]).abs())) not in [(((true) || (-0)) in [-(attrs.tiny), startsWith('B', '  12.5 ')]) / ((max(attrs.big, 'é')).log())]",
+      "value": false
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "abstrue",
+      "offset": 0
+    },
+    {
+      "expr": "(max(([1e308, text.upper()]) not in [('-0') not in [attrs.obj]], -([true, attrs.missing]), ((attrs.nested) not in [[0]]) < ((attrs.e) / (text.upper())))) not in [((([[1], [2, 3]]) && (attrs['s p'])) in [('  12.5 ') * (index), upper(attrs.list.len())])[-((attrs.list[2][0]) < (attrs.t))]]",
+      "value": false
+    },
+    {
+      "expr": "(((!attrs.e).lower()) in [[1, 'a', null], tier]) > ((((3)[text]) || (-(text.upper()))) || ((('a')[y]) < (max(attrs.nz, attrs.nested))))",
+      "value": false
+    },
+    {
+      "expr": "![attrs.n, (!index)[attrs.s]]",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "!true.*)(é\"yattrs\\u00e9",
+      "offset": 6
+    },
+    {
+      "expr": "!false",
+      "value": true
+    },
+    {
+      "expr": "['B', (text.upper()) not in [((2.5) / (priority)).len()]]",
+      "value": [
+        "B",
+        true
+      ]
+    },
+    {
+      "expr": "-([id, [('\\uFFFF') not in [attrs.z], 'a']])",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "\\u00e9foo\"y==(",
+      "offset": 0
+    },
+    {
+      "expr": "max(('B')[[-([0]), 'é']], attrs.n, -(((attrs.tiny) / (index)) in [-(attrs.list), (-0) / (5e-324)]))",
+      "value": null
+    },
+    {
+      "expr": "(((attrs.nested) >= ((attrs.missing) in [1e308, attrs.n])) != (!([0]) == (attrs.nz))).lower()",
+      "value": null
+    },
+    {
+      "expr": "[(-(![])) in [text, ((tier)[0.1]) in [number(attrs.e), attrs.nested[1]]], (['org.example.Foo', (attrs.neg).round()]) * ([[1], [2, 3]])]",
+      "value": [
+        false,
+        null
+      ]
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "not(n",
+      "offset": 0
+    },
+    {
+      "expr": "[1, ![!'-0', x]]",
+      "value": [
+        1.0,
+        false
+      ]
+    },
+    {
+      "expr": "attrs.list[1]",
+      "value": "two"
+    },
+    {
+      "expr": "!(1e308)[-((attrs.big) in [true, attrs.nz])]",
+      "value": true
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "1e😀n",
+      "offset": 1
+    },
+    {
+      "expr": "!([(attrs.u) && ([]), ('\\uFFFF').abs()]) in [number(('org.example.Foo') in [attrs.nested, text.upper()]), ((attrs.n).floor()) * (attrs.big)]",
+      "value": true
+    },
+    {
+      "expr": "null",
+      "value": null
+    },
+    {
+      "expr": "endsWith(!-(sqrt(attrs.tiny)), (lower((attrs.nested[1]) - (attrs.tiny)))[((attrs.big) not in [priority])[(text.upper()) not in [attrs.nested]]])",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": " ||\\u00e9||s)@'x'",
+      "offset": 1
+    },
+    {
+      "expr": "([1, 'a', null]).len()",
+      "value": 3.0
+    },
+    {
+      "expr": "'-0'",
+      "value": "-0"
+    },
+    {
+      "expr": "max((((priority)[attrs.missing])[attrs.list])[max(('  12.5 ')[attrs.obj.k], !attrs.big, (1)[x])], -([(attrs.nested) <= (attrs.z), -(true)]), [[], coalesce('  12.5 ', [null, 1])])",
+      "value": null
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "sinn",
+      "offset": 0
+    },
+    {
+      "expr": "((!-(priority)) || (log1p(attrs.list[2][0]))) <= ((round(false))[[('a').round(), [attrs.list[1], attrs.big]]])",
+      "value": false
+    },
+    {
+      "expr": "max([(max('B', 1, attrs.list)) - (!text), ((tier) not in ['\\uFFFF']).floor()], [-(('é') in [y, tier]), ((attrs.t) in [tier, attrs.emoji]) in [(attrs.emoji) % ('  12.5 '), !attrs.nested]], (([attrs.neg, 'é']) < ([attrs.z, attrs.obj])) == (((attrs.nz) > ('org.example.Foo'))[(attrs.list.len()).round()]))",
+      "value": null
+    },
+    {
+      "expr": "(lower(([tier, attrs.e]) + ((attrs.nested).lower())))[round([(attrs.z) / ([[1], [2, 3]]), (attrs.list[1]).upper()])]",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "),in<😀@attrs\"y",
+      "offset": 0
+    },
+    {
+      "expr": "attrs.obj",
+      "value": {
+        "k": "v",
+        "w": 0.0
+      }
+    },
+    {
+      "expr": "attrs.nested",
+      "value": {
+        "1": "one",
+        "x": [
+          1.0,
+          2.0
+        ]
+      }
+    },
+    {
+      "expr": "null",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": ")min==😀 ",
+      "offset": 0
+    },
+    {
+      "expr": "(ceil(((attrs.emoji).floor()) <= (-(attrs.tiny)))) not in [(3).upper()]",
+      "value": false
+    },
+    {
+      "expr": "max([[1], [2, 3]], startsWith((([0]) < (1)) >= ([attrs.list[2][0], attrs.z]), (contains(id, 'B')) + ((attrs.obj.k).number())), [!-0, (('😀') not in [[0]]) > ((attrs.tiny)[attrs.list[1]])])",
+      "value": null
+    },
+    {
+      "expr": "[priority, (startsWith([text.upper(), id], round('1e999')))[(round(false)) == (('é') + (attrs.missing))]]",
+      "value": [
+        2.5,
+        null
+      ]
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "[",
+      "offset": 1
+    },
+    {
+      "expr": "((!0.1) in [-(lower([])), max(contains(attrs['s p'], 1e308), attrs.nested[1], (attrs.nested[1]) not in [3])]) * (([('-0')[y], (attrs.nested[1]) in [attrs.neg, 2.5]])[((null) not in ['\\uFFFF']).floor()])",
+      "value": null
+    },
+    {
+      "expr": "-(-(((attrs.big) - (0)) in [([0]) < (attrs.missing), [attrs.list[2][0], '\\uFFFF']]))",
+      "value": null
+    },
+    {
+      "expr": "coalesce([attrs.t, index], ![0, !'org.example.Foo'])",
+      "value": [
+        true,
+        7.0
+      ]
+    },
+    {
+      "expr": "1",
+      "value": 1.0
+    },
+    {
+      "expr": "-(max(((y) / ('org.example.Foo')) not in [(attrs.f) / (true)], (log(attrs.list[2][0])) not in [('  12.5 ') not in [attrs.emoji]], ((attrs.e) in [attrs.neg, 'é']) || (priority)))",
+      "value": null
+    },
+    {
+      "expr": "0.1",
+      "value": 0.1
+    },
+    {
+      "expr": "max((sqrt((1)[''])) not in [[(2.5) >= (attrs.n), attrs['s p']]], contains(max([[], false], ('é') * ('é'), round(2.5)), [0]), text)",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "||.len+😀&&é1null",
+      "offset": 0
+    },
+    {
+      "expr": "text.upper()",
+      "value": "HELLO"
+    },
+    {
+      "expr": "[((attrs.e)[attrs.list])[(max(x, attrs.n, '😀')) not in [-(tier)]], !'  12.5 ']",
+      "value": [
+        null,
+        false
+      ]
+    },
+    {
+      "expr": "((((priority) / (id)) / (abs(1)))[len(-(attrs.emoji))]) not in [(((attrs['s p']).round()) >= (attrs.missing)) in [(([0])[index]) == ((attrs.obj) not in [attrs.nested[1]]), '\\uFFFF']]",
+      "value": true
+    },
+    {
+      "error": "expr_syntax",
+      "expr": ",!*[)'x'(!'x'é",
+      "offset": 0
+    },
+    {
+      "expr": "(max(max(([[1], [2, 3]]) in ['org.example.Foo', '-0'], (priority) > (attrs.obj.k), coalesce(attrs.obj.k, [0])), !!attrs.nested[1], (('😀') not in [attrs.missing]) && (tier))) != ((!('B') not in [priority]) in [max(attrs.nested, (attrs.big) in [attrs.emoji, attrs.obj.k], [1, 'a', null]), -(log([0]))])",
+      "value": true
+    },
+    {
+      "expr": "index",
+      "value": 7.0
+    },
+    {
+      "expr": "(lower((max(attrs.tiny, tier, attrs.u)) not in [text])) in [[((attrs.nz) > (attrs.list)) - (max(1, [], attrs.nested[1])), (contains(attrs.z, attrs.t)) not in [attrs.neg]], ('-0') in [3, !([]) >= (priority)]]",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "'x'=-not",
+      "offset": 3
+    },
+    {
+      "expr": "attrs.e",
+      "value": ""
+    },
+    {
+      "expr": "max(upper(min(([0]) == (attrs.list[2][0]), '1e999')), !min(text.upper(), sqrt(attrs.big)), (((2.5)[attrs.nested]) > ([false, attrs.s])) not in [[1, 'a', null]])",
+      "value": null
+    },
+    {
+      "expr": "log1p(-(abs(-(attrs.list))))",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "*len[1eminin😀é&&é",
+      "offset": 0
+    },
+    {
+      "expr": "(x) in [-((0.1) < ((text.upper()) + (attrs.f))), (('\\uFFFF').sqrt()) >= (max(!attrs.list[2][0], attrs.nested, len([[1], [2, 3]])))]",
+      "value": false
+    },
+    {
+      "expr": "(max(-(3), 0.1, (startsWith(attrs.nested, tier)) not in [2.5])) not in [(floor(max('-0', y, attrs.u)))[[attrs, (attrs.e).floor()]]]",
+      "value": false
+    },
+    {
+      "expr": "[(max(('\\uFFFF') in [y, attrs.list.len()], ('-0') not in [id], (x) in ['org.example.Foo', attrs.list[1]])) not in [[[attrs.obj, attrs.obj], max([0], '', 3)]], ([!'  12.5 ', ('  12.5 ') in [[], 3]]) <= ((!attrs.list[1]) in [('org.example.Foo') in ['a', 2.5], (y)[attrs.nested]])]",
+      "value": [
+        true,
+        false
+      ]
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "+foo.abstruefoo",
+      "offset": 0
+    },
+    {
+      "expr": "round(3)",
+      "value": 3.0
+    },
+    {
+      "expr": "'-0'",
+      "value": "-0"
+    },
+    {
+      "expr": "(-((('é') not in [attrs.e]) && (text.upper()))) - ([((attrs.nz) in [attrs, 1e308]) < ((0)['1e999']), (!'-0') < ((attrs.list.len()) || (text))])",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "[,..<=!absn😀",
+      "offset": 1
+    },
+    {
+      "expr": "max(max(min(lower(attrs.n), (x) <= (attrs.big)), '-0'), [-(attrs.list[1]), text], attrs.nz)",
+      "value": null
+    },
+    {
+      "expr": "!!((null) not in [attrs.obj]) && ([attrs.emoji, attrs.list])",
+      "value": true
+    },
+    {
+      "expr": "!((('1e999') in [text, [1, 'a', null]]) not in [(attrs.n) not in [attrs.u]]) > ((['', [[1], [2, 3]]]) + (floor(attrs.u)))",
+      "value": true
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "1e!",
+      "offset": 1
+    },
+    {
+      "expr": "((max((1e308) not in [attrs.obj.k], max([[1], [2, 3]], attrs.nested[1], null)))[(!attrs.s).log1p()]) || (max(max([-0, attrs.u], (attrs.big)[attrs.list[2][0]]), ((-0) in [1e308, attrs.neg]) || (lower('a')), 3))",
+      "value": false
+    },
+    {
+      "expr": "(((number(priority)) / ((attrs.big) not in [attrs.list[1]])) in [endsWith(attrs.s, (attrs.s) > ('  12.5 ')), number(attrs.nz)]) not in [priority]",
+      "value": true
+    },
+    {
+      "expr": "'é'",
+      "value": "é"
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "1len-foo.1e||foo'x'\\u00e9",
+      "offset": 1
+    },
+    {
+      "expr": "[(max('-0', [5e-324, attrs.t], (text).sqrt())).lower(), -((abs(x)) <= (log(attrs.z)))]",
+      "value": [
+        null,
+        null
+      ]
+    },
+    {
+      "expr": "(((([[1], [2, 3]]) != (attrs.nz)).abs()) in [ceil((attrs.obj).abs()), x]).upper()",
+      "value": null
+    },
+    {
+      "expr": "'é'",
+      "value": "é"
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "+.truenull",
+      "offset": 0
+    },
+    {
+      "expr": "(true) not in [attrs.nz]",
+      "value": true
+    },
+    {
+      "expr": "abs(min(((attrs.e) == (false)) in [('\\uFFFF') not in [attrs.neg], ''], ([attrs.obj.k, false])[0.1]))",
+      "value": null
+    },
+    {
+      "expr": "(3)[log(-(coalesce(attrs.s, 0.1)))]",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "true+",
+      "offset": 5
+    },
+    {
+      "expr": "(((coalesce('é', attrs.list.len())) in [-(attrs.s), [1, 'a', null]]) / (([tier, 'org.example.Foo']) == (attrs.list[1]))) in [attrs.obj.k, -(-(true))]",
+      "value": true
+    },
+    {
+      "expr": "((attrs.s) >= (-((attrs.u) <= (attrs.neg)))) in [(!(attrs.nested[1]) in [y, [1, 'a', null]]) in [[priority, ceil('  12.5 ')], max(('1e999') * ([1, 'a', null]), attrs.obj)], attrs.e]",
+      "value": true
+    },
+    {
+      "expr": "min(!0, (((attrs.n)[attrs.z]) not in [!null]) in [!(0.1).upper(), (('é') in [id, null]).number()])",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": ".[@=&&1e)||||é",
+      "offset": 0
+    },
+    {
+      "expr": "(coalesce((endsWith(2.5, 'a'))[attrs.emoji], (endsWith('-0', '😀')).number())) * (!-0)",
+      "value": null
+    },
+    {
+      "expr": "number(5e-324)",
+      "value": 5e-324
+    },
+    {
+      "expr": "max(sqrt(max([[[1], [2, 3]], '  12.5 '], ('1e999') in [attrs.list, attrs.nz], ('org.example.Foo') not in ['  12.5 '])), ((max(attrs.list[1], attrs.nz, attrs.list.len())) != ((0.1) in ['\\uFFFF', attrs['s p']])) not in [-((attrs.z) && (text))], (attrs.obj) / (((2.5) && ('1e999')) in [(-0) not in [tier], attrs.obj.k]))",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "+ 0.5[",
+      "offset": 0
+    },
+    {
+      "expr": "!([]) in [(([1, 'a', null]).floor()) - ('1e999'), (-0).ceil()]",
+      "value": true
+    },
+    {
+      "expr": "(0.1)[[([[], attrs.missing]).upper(), text.upper()]]",
+      "value": null
+    },
+    {
+      "expr": "max((-(([0]) not in ['a'])) == (!0), ((!'') <= (endsWith(attrs.emoji, attrs.big)))[(['B', attrs.emoji]) > ([1e308, id])], attrs.n)",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "*len",
+      "offset": 0
+    },
+    {
+      "expr": "[[(upper(attrs.u)) >= ((x).floor()), ((true) in [x, attrs.nested]) >= ((attrs.list[1]) in ['1e999', id])], -(tier)]",
+      "value": [
+        [
+          false,
+          false
+        ],
+        1.0
+      ]
+    },
+    {
+      "expr": "(startsWith(x, max('  12.5 ', max('😀', text, index), -(0)))) not in [round((0.1).len())]",
+      "value": false
+    },
+    {
+      "expr": "startsWith((((attrs.list.len()) in [5e-324, true]) % (endsWith([0], 1))) not in [(-(null)) && (-(attrs.emoji))], !-([index, 'org.example.Foo']))",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": ".||coalescetrueén\\u00e9,s<",
+      "offset": 0
+    },
+    {
+      "expr": "number(max(contains(('org.example.Foo') - (priority), -(tier)), ([attrs.t, attrs.nested[1]]) / (false)))",
+      "value": null
+    },
+    {
+      "expr": "max((max(max(2.5, 'org.example.Foo', [1, 'a', null]), lower(1))) + (number(min('😀', 2.5))), max('\\uFFFF', (!attrs)[[attrs.nested, attrs.nested]]), (attrs.big) in [!('1e999').lower(), -(['a', attrs.nested])])",
+      "value": null
+    },
+    {
+      "expr": "x",
+      "value": 10.5
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "miné'x'===min@\\u00e9not ",
+      "offset": 0
+    },
+    {
+      "expr": "attrs.obj.k",
+      "value": "v"
+    },
+    {
+      "expr": "(number((upper('😀')) in [abs(attrs.z), upper('org.example.Foo')])) < (([('\\uFFFF').round(), attrs.list[1]]) not in [max(-(priority), coalesce('org.example.Foo', '1e999'), -(text.upper()))])",
+      "value": false
+    },
+    {
+      "expr": "((!max(text, attrs.list[2][0], '')) + (-((x)[tier])))[-(((attrs.missing) != (attrs.s)) && (('org.example.Foo') in [attrs['s p'], [1, 'a', null]]))]",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "😀true1len,attrs||0.5",
+      "offset": 0
+    },
+    {
+      "expr": "(y)[(((attrs.list[2][0]) not in [attrs.t]) != ((attrs.missing) / (attrs.obj))) not in [priority]]",
+      "value": null
+    },
+    {
+      "expr": "(max((lower(attrs.f))['org.example.Foo'], 1, ('a') not in [max('  12.5 ', attrs.list[1], '\\uFFFF')])).upper()",
+      "value": null
+    },
+    {
+      "expr": "-(-(((0) / ('\\uFFFF')) == (('-0') not in [[]])))",
+      "value": null
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "coalesce=,<trues0.5",
+      "offset": 0
+    },
+    {
+      "expr": "[((-(priority)) <= (-(attrs.t)))[contains((attrs.big) / (attrs['s p']), attrs.obj.k)], ((-(priority)).upper()) || (x)]",
+      "value": [
+        null,
+        true
+      ]
+    },
+    {
+      "expr": "((-(contains(attrs.neg, attrs.tiny))) < (((attrs.nested) not in [attrs.obj.k]).round())).len()",
+      "value": null
+    },
+    {
+      "expr": "(((('B') in [index, y]) - (attrs.z)).log()) in [[ceil(([])['é']), 'B'], !index]",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "@",
+      "offset": 0
+    },
+    {
+      "expr": "[(attrs.neg)[((attrs.t).lower()) && (attrs.emoji)], (0.1)[(!3)[(attrs.list[1]).round()]]]",
+      "value": [
+        null,
+        null
+      ]
+    },
+    {
+      "expr": "([y, (-(id)).log1p()]) not in [coalesce((floor(tier)) in [(null) >= ('😀'), [attrs.z, text.upper()]], 'org.example.Foo')]",
+      "value": true
+    },
+    {
+      "expr": "max(((attrs.t) not in [[0.1, id]]) >= (startsWith([null, attrs.n], ([1, 'a', null]) in [0, attrs.obj.k])), ([[1], [2, 3]]) % ('\\uFFFF'), ([!'a', 5e-324]) not in [sqrt(attrs.t)])",
+      "value": null
+    },
+    {
+      "expr": "attrs",
+      "value": {
+        "big": 1e+300,
+        "e": "",
+        "emoji": "a😀￿",
+        "f": 2.5,
+        "list": [
+          10.0,
+          "two",
+          [
+            3.0,
+            4.0
+          ],
+          null
+        ],
+        "n": 41.0,
+        "neg": -7.0,
+        "nested": {
+          "1": "one",
+          "x": [
+            1.0,
+            2.0
+          ]
+        },
+        "nz": -0.0,
+        "obj": {
+          "k": "v",
+          "w": 0.0
+        },
+        "s": "core",
+        "s p": "space",
+        "t": true,
+        "tiny": 5e-324,
+        "u": "Straße",
+        "z": 0.0
+      }
+    },
+    {
+      "expr": "(max(text.upper(), -((attrs.missing) > (id)), (max(attrs.list[2][0], priority, attrs.list.len())) <= ((attrs.f) in [[0], 2.5]))) not in [(attrs.obj.k).log()]",
+      "value": false
+    },
+    {
+      "expr": "((round([id, attrs])).ceil()) not in [floor((max(null, attrs.neg, 'é')) || (contains('org.example.Foo', '😀')))]",
+      "value": false
+    },
+    {
+      "expr": "![[max('B', 1e308, y), !attrs.e], (null) not in [contains(attrs.nested, [0])]]",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "éfoo]mincoalesce)true",
+      "offset": 0
+    },
+    {
+      "expr": "(-((('  12.5 ') not in [attrs['s p']]) not in [([]).upper()])) <= (![1, 'a', null])",
+      "value": false
+    },
+    {
+      "expr": "!([]) in [(attrs['s p']) - ([attrs.f, attrs.obj.k]), min(attrs.list, ('a') + (false))]",
+      "value": true
+    },
+    {
+      "expr": "(-(attrs.nz)) < ((((attrs.obj.k) in ['\\uFFFF', attrs.emoji]) in [[attrs.nz, attrs.tiny], -([])]) in [lower(2.5), -((attrs.missing).len())])",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "&&coalesce][\\u00e9true",
+      "offset": 0
+    },
+    {
+      "expr": "(('  12.5 ')[(!id) != (abs([0]))]) == (((-(attrs.s))[attrs.list]).abs())",
+      "value": true
+    },
+    {
+      "expr": "((!(index) not in ['']) && ((-(text)) % ((attrs.t)['  12.5 ']))) not in [len(endsWith(max('-0', '\\uFFFF', x), ('org.example.Foo') / (text.upper())))]",
+      "value": true
+    },
+    {
+      "expr": "x",
+      "value": 10.5
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "abs!(",
+      "offset": 0
+    },
+    {
+      "expr": "([0]).sqrt()",
+      "value": null
+    },
+    {
+      "expr": "[(([false, attrs.big]).number()) <= (!(5e-324).upper()), (!(priority) || (attrs.list[1]))[startsWith([attrs['s p'], attrs.emoji], ('  12.5 ')[2.5])]]",
+      "value": [
+        false,
+        null
+      ]
+    },
+    {
+      "expr": "((((text.upper()) in [[0], 0]) && (attrs.f)).sqrt()) != (attrs.tiny)",
+      "value": true
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "é, ,foo@",
+      "offset": 0
+    },
+    {
+      "expr": "floor(!!round(attrs.list[1]))",
+      "value": null
+    },
+    {
+      "expr": "floor([round(max(attrs.s, 5e-324, attrs.neg)), (attrs.n)[(1) in [index, true]]])",
+      "value": null
+    },
+    {
+      "expr": "3",
+      "value": 3.0
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "notnull",
+      "offset": 0
+    },
+    {
+      "expr": "(-(priority)) > ((index)[-(max(attrs.obj, 'é', '  12.5 '))])",
+      "value": false
+    },
+    {
+      "expr": "min(max(startsWith((null) > (3), ceil(index)), [(attrs.u)[attrs.missing], max(1e308, attrs.missing)], ('B')[(attrs.list.len()) || (false)]), max((max(1e308, '-0')).upper(), 3, -((attrs.z)[text])))",
+      "value": null
+    },
+    {
+      "expr": "((-(max([0], index, text.upper())))[max((priority) not in [priority], ('  12.5 ').round(), attrs.nested[1])]) > (false)",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": ",",
+      "offset": 0
+    },
+    {
+      "expr": "!-((attrs.obj.k) - (!attrs.s))",
+      "value": true
+    },
+    {
+      "expr": "id",
+      "value": "item-7"
+    },
+    {
+      "expr": "attrs.emoji",
+      "value": "a😀￿"
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "true]1",
+      "offset": 4
+    },
+    {
+      "expr": "[]",
+      "value": []
+    },
+    {
+      "expr": "((contains((attrs.obj)['😀'], (attrs.n) not in [2.5])) not in [coalesce(attrs.f, -(attrs.obj))]) in [len(('').sqrt()), !(!attrs.big).number()]",
+      "value": true
+    },
+    {
+      "expr": "((max(-('1e999'), attrs.nested)) == ('org.example.Foo'))[(true) in [(('1e999')[1e308]) in [lower(true), [x, [[1], [2, 3]]]], text]]",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "&&",
+      "offset": 0
+    },
+    {
+      "expr": "[]",
+      "value": []
+    },
+    {
+      "expr": "attrs.z",
+      "value": 0.0
+    },
+    {
+      "expr": "min((upper(3)) * (!(1)[attrs.tiny]), [['  12.5 ', (attrs.z) not in [false]], max(max(attrs, '😀', 'org.example.Foo'), !true, (5e-324) <= (attrs.e))])",
+      "value": null
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "!nmin=(&&'x'",
+      "offset": 1
+    },
+    {
+      "expr": "((((attrs.neg)[attrs.nz])[-0]) in [[0], startsWith(log1p(true), !text.upper())]) in [(sqrt(startsWith(attrs['s p'], attrs.tiny))).ceil(), ([[y, index], (priority) != ('-0')]).lower()]",
+      "value": false
+    },
+    {
+      "expr": "!attrs.list",
+      "value": false
+    },
+    {
+      "expr": "((max(['  12.5 ', 1], log(attrs.z), ('')[attrs.z])) <= (((true) not in ['é']) not in [-(attrs.tiny)])) in [(lower((attrs.nested) in ['org.example.Foo', null])) in [(endsWith(attrs.nested[1], '')).lower(), (max([], attrs.f, attrs.e)) >= (max(attrs.list, attrs.list[1], '  12.5 '))], contains((!'a') != ([]), [1, 'a', null])]",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "-",
+      "offset": 1
+    },
+    {
+      "expr": "id",
+      "value": "item-7"
+    },
+    {
+      "expr": "max((-(([1, 'a', null])['\\uFFFF']))[('  12.5 ').log1p()], [floor(5e-324), coalesce(max(-0, attrs.s, 'a'), (2.5) <= (5e-324))], '\\uFFFF')",
+      "value": null
+    },
+    {
+      "expr": "!((max(0.1, 1, attrs.list[2][0])) not in [attrs.nz])[!-(attrs.u)]",
+      "value": true
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "+[éé!lennull&&(min",
+      "offset": 0
+    },
+    {
+      "expr": "(('org.example.Foo') not in [attrs.nz]) + ((attrs['s p']).abs())",
+      "value": null
+    },
+    {
+      "expr": "number(abs(max(log1p(attrs['s p']), attrs.missing, '  12.5 ')))",
+      "value": null
+    },
+    {
+      "expr": "coalesce(([attrs.list[2][0], coalesce(attrs['s p'], true)]) < (startsWith((attrs.list[2][0]) == (attrs.obj.k), ![1, 'a', null])), ([max('', attrs.list[2][0], [[1], [2, 3]]), (attrs.list[2][0]).len()])[(len(x))[[1e308, '😀']]])",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "'x'1efooattrsmin10.51<*",
+      "offset": 3
+    },
+    {
+      "expr": "(([(attrs) not in [attrs.list[1]], (3) not in [attrs.e]]) >= (((text.upper()).abs()) || (max(attrs.nested, -0, -0))))[((attrs.list[2][0]) >= (-(y))) != (max((3) in [y, attrs.list], (text).upper(), max(text, attrs.obj, '')))]",
+      "value": null
+    },
+    {
+      "expr": "attrs.f",
+      "value": 2.5
+    },
+    {
+      "expr": "((-((attrs.nested)[attrs.big])) in [max((y).round(), '  12.5 ', (x) in [text, attrs.u]), abs(attrs.missing)]).lower()",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "true,- *nullattrs",
+      "offset": 4
+    },
+    {
+      "expr": "(max((([0]) != (text)).number(), 'é', attrs.big)) >= (-((x) not in [number('-0')]))",
+      "value": false
+    },
+    {
+      "expr": "!(attrs.e)[(('-0') in [[1, 'a', null], tier]).sqrt()]",
+      "value": true
+    },
+    {
+      "expr": "max(1, ((([1, 'a', null]) >= (attrs.missing))[round(0)]) >= (attrs.n), ((coalesce([1, 'a', null], attrs.n)).round()) in [max(log1p(false), ('org.example.Foo').log1p(), -(true)), 0])",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "<\\u00e9<fooncoalesce- not",
+      "offset": 0
+    },
+    {
+      "expr": "(attrs.f)[max(attrs.big, endsWith((true) || (null), attrs.emoji))]",
+      "value": null
+    },
+    {
+      "expr": "true",
+      "value": true
+    },
+    {
+      "expr": "attrs['s p']",
+      "value": "space"
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "[!!+'x'",
+      "offset": 3
+    },
+    {
+      "expr": "(!5e-324)[[((attrs.n) not in ['B']) && (id), floor(null)]]",
+      "value": null
+    },
+    {
+      "expr": "max([], ([max(attrs.t, 0.1), max(attrs.list[2][0], attrs.list, attrs.z)]) in [contains(attrs.nested[1], (2.5) + ([0])), ((attrs.list) || (attrs.t)) > ((attrs.z)[true])])",
+      "value": null
+    },
+    {
+      "expr": "max(attrs.nested, attrs.list.len(), max((!0.1) in [attrs.n, -(attrs.n)], '-0', -((null) in [attrs.z, 5e-324])))",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "not,<",
+      "offset": 0
+    },
+    {
+      "expr": "tier",
+      "value": -1.0
+    },
+    {
+      "expr": "0",
+      "value": 0.0
+    },
+    {
+      "expr": "!(-((attrs.s) >= (x))) in [max(attrs.list[2][0], endsWith(index, text.upper()), !attrs.tiny), max(contains('😀', attrs.u), attrs.list[2][0], false)]",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "==scoalesce",
+      "offset": 0
+    },
+    {
+      "expr": "1e308",
+      "value": 1e+308
+    },
+    {
+      "expr": "[(endsWith(tier, len(attrs)))[(len(attrs.big)).lower()], (-(-([[1], [2, 3]]))).lower()]",
+      "value": [
+        null,
+        null
+      ]
+    },
+    {
+      "expr": "number((max((attrs.obj) || (attrs.emoji), ('')[5e-324], max(1, null, 1))).sqrt())",
+      "value": null
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "*true!in",
+      "offset": 0
+    },
+    {
+      "expr": "((min(-0, 5e-324)) || ((min('  12.5 ', '')).log1p())) == (attrs.obj.k)",
+      "value": false
+    },
+    {
+      "expr": "-((sqrt(3)) >= (endsWith(-0, false)))",
+      "value": null
+    },
+    {
+      "expr": "(number((-([[1], [2, 3]])).ceil())) < (min((contains(0, attrs)) not in [['é', attrs.n]], log1p([-0, x])))",
+      "value": false
+    },
+    {
+      "error": "expr_syntax",
+      "expr": "\"y",
+      "offset": 0
+    },
+    {
+      "expr": "text",
+      "value": "Hello"
+    },
+    {
+      "expr": "attrs.list[2][0]",
+      "value": 3.0
+    },
+    {
+      "expr": "(((attrs.list).number()) || ([(null)['a'], (text.upper()).sqrt()]))[(((false) == (priority)) % ((attrs.tiny) in [2.5, attrs.nz])) != ((!0) not in [('') not in ['B']])]",
+      "value": null
+    },
+    {
+      "error": "expr_unknown_identifier",
+      "expr": "true+s&&inmin]==",
+      "offset": 5
+    }
+  ],
+  "context": {
+    "attrs": {
+      "big": 1e+300,
+      "e": "",
+      "emoji": "a😀￿",
+      "f": 2.5,
+      "list": [
+        10,
+        "two",
+        [
+          3,
+          4
+        ],
+        null
+      ],
+      "n": 41,
+      "neg": -7,
+      "nested": {
+        "1": "one",
+        "x": [
+          1,
+          2
+        ]
+      },
+      "nz": -0.0,
+      "obj": {
+        "k": "v",
+        "w": 0
+      },
+      "s": "core",
+      "s p": "space",
+      "t": true,
+      "tiny": 5e-324,
+      "u": "Straße",
+      "z": 0
+    },
+    "id": "item-7",
+    "index": 7,
+    "priority": 2.5,
+    "text": "Hello",
+    "tier": -1,
+    "x": 10.5,
+    "y": -3
+  },
+  "description": "Random expressions (grammar-based and token soups) with the results of the Rust implementation: a parity net between implementations. Generated by rust/crates/la-expr/examples/gen_expr_random.rs.",
+  "kind": "expr",
+  "name": "random"
+}
