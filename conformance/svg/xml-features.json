@@ -1,0 +1,50 @@
+{
+  "kind": "svg",
+  "name": "XML features",
+  "description": "BOM, XML declaration, comments and processing instructions, a DOCTYPE with internal entities (Illustrator style, also in xmlns), numeric character references, CDATA, prefixed SVG elements, attribute whitespace normalization.",
+  "svg": "﻿<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- generator -->\n<?xml-stylesheet href=\"x.css\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\" [\n  <!ENTITY ns_svg \"http://www.w3.org/2000/svg\">\n  <!ENTITY w \"40\">\n  <!ELEMENT svg ANY>\n]>\n<svg xmlns=\"&ns_svg;\" xmlns:s=\"&ns_svg;\" width=\"200\" height=\"100\">\n  <rect id=\"a\" x=\"10\" y=\"10\" width=\"&w;\" height=\"&#x31;0\"/>\n  <s:rect id=\"b\" x=\"60\" y=\"10\" width=\"10\" height=\"10\"/>\n  <path id=\"c\" d=\"M 100 10&#10;h 10&#9;v 10\r\n h -10 z\"/>\n  <text id=\"t\" x=\"10\" y=\"80\" font-size=\"10\"><![CDATA[a<b]]>&amp;&#99;</text>\n</svg>\n",
+  "expect": {
+    "classes": {
+      "ink": {
+        "count": 4,
+        "polygons": 3,
+        "rects": 1,
+        "fill_area": 600
+      }
+    },
+    "geometry": [
+      {
+        "id": "a",
+        "fill_area": 400,
+        "bbox": [
+          10,
+          10,
+          40,
+          10
+        ]
+      },
+      {
+        "id": "b",
+        "fill_area": 100
+      },
+      {
+        "id": "c",
+        "fill_area": 100
+      },
+      {
+        "id": "t",
+        "bbox": [
+          10,
+          72,
+          27.5,
+          10
+        ]
+      }
+    ],
+    "elements": {
+      "b": {
+        "tag": "rect"
+      }
+    }
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "kind": "svg",
+  "name": "what is drawn",
+  "description": "display:none (also on ancestors), visibility:hidden with a visible child, zero opacity, transparent/zero-alpha fills, non-rendered containers (defs, clipPath, mask, marker, pattern, uninstantiated symbol), switch (first child without requiredExtensions, foreignObject skipped), <a>, unknown and foreign elements. Element bboxes ignore visibility and opacity.",
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:x=\"urn:example\" width=\"300\" height=\"100\">",
+    "  <rect id=\"nd\" display=\"none\" width=\"10\" height=\"10\"/>",
+    "  <g style=\"display:none\"><rect id=\"nd2\" width=\"10\" height=\"10\"/></g>",
+    "  <g visibility=\"hidden\"><rect id=\"vh\" width=\"10\" height=\"10\"/><rect id=\"vv\" visibility=\"visible\" x=\"20\" width=\"10\" height=\"10\"/></g>",
+    "  <g opacity=\"0\"><rect id=\"op\" x=\"40\" width=\"10\" height=\"10\"/></g>",
+    "  <g opacity=\"0.5\"><rect id=\"half\" x=\"60\" width=\"10\" height=\"10\" opacity=\"0.5\"/></g>",
+    "  <rect id=\"fo0\" x=\"80\" width=\"10\" height=\"10\" fill-opacity=\"0\"/>",
+    "  <rect id=\"tr\" x=\"100\" width=\"10\" height=\"10\" fill=\"transparent\"/>",
+    "  <rect id=\"rgba\" x=\"120\" width=\"10\" height=\"10\" fill=\"rgba(10, 20, 30, 0)\"/>",
+    "  <rect id=\"hex4\" x=\"140\" width=\"10\" height=\"10\" fill=\"#0000\"/>",
+    "  <rect id=\"hsl\" x=\"160\" width=\"10\" height=\"10\" fill=\"hsl(120 50% 50% / 0%)\"/>",
+    "  <rect id=\"url\" x=\"180\" width=\"10\" height=\"10\" fill=\"url(#grad)\"/>",
+    "  <rect id=\"url2\" x=\"200\" width=\"10\" height=\"10\" fill=\"url(#missing) none\"/>",
+    "  <rect id=\"url3\" x=\"220\" width=\"10\" height=\"10\" fill=\"url(#missing) red\"/>",
+    "  <defs><rect id=\"d\" width=\"10\" height=\"10\"/><linearGradient id=\"grad\"><stop offset=\"0\"/></linearGradient></defs>",
+    "  <clipPath id=\"cp\"><rect id=\"cpr\" width=\"10\" height=\"10\"/></clipPath>",
+    "  <mask id=\"mk\"><rect width=\"10\" height=\"10\"/></mask>",
+    "  <marker id=\"mr\"><rect width=\"10\" height=\"10\"/></marker>",
+    "  <pattern id=\"pt\"><rect width=\"10\" height=\"10\"/></pattern>",
+    "  <symbol id=\"sy\"><rect width=\"10\" height=\"10\"/></symbol>",
+    "  <switch><foreignObject width=\"50\" height=\"50\"><p xmlns=\"http://www.w3.org/1999/xhtml\">html</p></foreignObject><rect id=\"sw0\" requiredExtensions=\"http://example.org/ext\" x=\"240\" width=\"10\" height=\"10\"/><rect id=\"sw1\" x=\"240\" y=\"20\" width=\"10\" height=\"10\"/><rect id=\"sw2\" x=\"240\" y=\"40\" width=\"10\" height=\"10\"/></switch>",
+    "  <a href=\"https://example.org\"><rect id=\"link\" x=\"260\" width=\"10\" height=\"10\"/></a>",
+    "  <foo><rect id=\"unknown\" x=\"280\" width=\"10\" height=\"10\"/></foo>",
+    "  <x:g><rect id=\"foreign\" x=\"280\" y=\"20\" width=\"10\" height=\"10\"/></x:g>",
+    "  <rect id=\"vis2\" x=\"0\" y=\"50\" width=\"10\" height=\"10\" style=\"visibility: collapse\"/>",
+    "</svg>"
+  ],
+  "expect": {
+    "classes": {
+      "ink": {
+        "count": 6,
+        "polygons": 6,
+        "fill_area": 600
+      }
+    },
+    "elements": {
+      "nd": {
+        "drawn": false,
+        "bbox": null
+      },
+      "nd2": {
+        "drawn": false,
+        "bbox": null
+      },
+      "vh": {
+        "drawn": false,
+        "bbox": [
+          0,
+          0,
+          10,
+          10
+        ]
+      },
+      "vv": {
+        "drawn": true
+      },
+      "op": {
+        "drawn": false,
+        "bbox": [
+          40,
+          0,
+          10,
+          10
+        ]
+      },
+      "half": {
+        "drawn": true
+      },
+      "fo0": {
+        "drawn": true,
+        "filled": false
+      },
+      "tr": {
+        "filled": false
+      },
+      "rgba": {
+        "filled": false
+      },
+      "hex4": {
+        "filled": false
+      },
+      "hsl": {
+        "filled": false
+      },
+      "url": {
+        "filled": true
+      },
+      "url2": {
+        "filled": false
+      },
+      "url3": {
+        "filled": true
+      },
+      "d": {
+        "drawn": false,
+        "bbox": null
+      },
+      "cpr": {
+        "drawn": false,
+        "bbox": null
+      },
+      "sw0": {
+        "drawn": false
+      },
+      "sw1": {
+        "drawn": true
+      },
+      "sw2": {
+        "drawn": false
+      },
+      "link": {
+        "drawn": true
+      },
+      "unknown": {
+        "drawn": false
+      },
+      "foreign": {
+        "drawn": false
+      },
+      "vis2": {
+        "drawn": false
+      }
+    },
+    "geometry": [
+      {
+        "id": "vv",
+        "count": 1
+      },
+      {
+        "id": "half",
+        "count": 1
+      },
+      {
+        "id": "url",
+        "count": 1
+      },
+      {
+        "id": "url3",
+        "count": 1
+      },
+      {
+        "id": "sw1",
+        "count": 1
+      },
+      {
+        "id": "link",
+        "count": 1
+      }
+    ]
+  }
+}

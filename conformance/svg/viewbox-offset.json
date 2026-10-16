@@ -1,0 +1,24 @@
+{
+  "kind": "svg",
+  "name": "viewBox with offset",
+  "description": "viewBox -50 -50 100 100: user (-50,-50) maps to the viewport origin.",
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\" viewBox=\"-50 -50 100 100\">",
+    "  <rect id=\"box\" x=\"-50\" y=\"-50\" width=\"50\" height=\"100\"/>",
+    "</svg>"
+  ],
+  "expect": {
+    "geometry": [
+      {
+        "id": "box",
+        "fill_area": 5000,
+        "bbox": [
+          0,
+          0,
+          50,
+          100
+        ]
+      }
+    ]
+  }
+}

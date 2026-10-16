@@ -1,0 +1,9 @@
+{
+  "kind": "svg",
+  "name": "empty input",
+  "description": "Must fail with a structured 'parse' error.",
+  "svg": "",
+  "expect": {
+    "error": "parse"
+  }
+}

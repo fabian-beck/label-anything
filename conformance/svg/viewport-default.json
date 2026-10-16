@@ -1,0 +1,13 @@
+{
+  "kind": "svg",
+  "name": "no size at all",
+  "description": "Neither width/height nor viewBox: 300 x 150.",
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" >",
+    "</svg>"
+  ],
+  "expect": {
+    "width": 300,
+    "height": 150
+  }
+}

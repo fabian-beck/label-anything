@@ -1,0 +1,9 @@
+{
+  "kind": "svg",
+  "name": "two root elements",
+  "description": "Must fail with a structured 'parse' error.",
+  "svg": "<svg/><svg/>",
+  "expect": {
+    "error": "parse"
+  }
+}

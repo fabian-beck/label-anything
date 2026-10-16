@@ -1,0 +1,13 @@
+{
+  "kind": "svg",
+  "name": "width/height in inches",
+  "description": "3in x 2in = 288 x 192 px.",
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"3in\" height=\"2in\">",
+    "</svg>"
+  ],
+  "expect": {
+    "width": 288,
+    "height": 192
+  }
+}

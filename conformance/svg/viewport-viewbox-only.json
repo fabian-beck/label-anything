@@ -1,0 +1,13 @@
+{
+  "kind": "svg",
+  "name": "viewBox only",
+  "description": "No width/height: the viewBox size.",
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 640 480\">",
+    "</svg>"
+  ],
+  "expect": {
+    "width": 640,
+    "height": 480
+  }
+}

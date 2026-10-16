@@ -1,0 +1,9 @@
+{
+  "kind": "svg",
+  "name": "control character",
+  "description": "Must fail with a structured 'parse' error.",
+  "svg": "<svg>\u0001</svg>",
+  "expect": {
+    "error": "parse"
+  }
+}

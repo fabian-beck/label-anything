@@ -1,0 +1,9 @@
+{
+  "kind": "svg",
+  "name": "duplicated attribute",
+  "description": "Must fail with a structured 'parse' error.",
+  "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" width=\"20\"/>",
+  "expect": {
+    "error": "parse"
+  }
+}
