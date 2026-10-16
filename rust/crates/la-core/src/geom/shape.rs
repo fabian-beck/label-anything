@@ -417,6 +417,35 @@ impl Shape {
     }
 }
 
+/// Interiors of two shapes overlap (touching is allowed).
+pub fn shapes_overlap(a: &Shape, b: &Shape) -> bool {
+    if !a.bbox().overlaps(&b.bbox()) {
+        return false;
+    }
+    match (a, b) {
+        (Shape::Circle { c, r }, other) | (other, Shape::Circle { c, r }) => other.signed_distance(*c) < r - EPS,
+        _ => {
+            let ra = a.outline_rings();
+            let rb = b.outline_rings();
+            for x in &ra {
+                for y in &rb {
+                    let (n, m) = (x.len(), y.len());
+                    for i in 0..n {
+                        for j in 0..m {
+                            if super::seg_cross_proper(x[i], x[(i + 1) % n], y[j], y[(j + 1) % m]) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            // no crossing edges: one may contain the other
+            let inside = |s: &Shape, rings: &[Vec<P>]| rings.iter().flatten().any(|p| s.signed_distance(*p) < -EPS);
+            inside(a, &rb) || inside(b, &ra) || (a.signed_distance(b.reference()) < -EPS && b.contains(b.reference()))
+        }
+    }
+}
+
 /// Minimum signed distance from the points of segment `ab` to a convex shape.
 fn min_dist_on_segment(s: &Shape, a: P, b: P) -> f64 {
     let (mut lo, mut hi) = (0.0f64, 1.0f64);
@@ -703,6 +732,22 @@ mod tests {
         let r = Rect::new(t.x - 30.0, t.y, t.x, t.y + 10.0);
         assert!(!rr.overlaps_rect(&r));
         assert!(rr.overlaps_rect(&r.translate(P::new(0.3, -0.3))));
+    }
+
+    #[test]
+    fn shape_shape_overlap() {
+        let a = Shape::circle(P::new(0.0, 0.0), 5.0);
+        let b = Shape::circle(P::new(10.0, 0.0), 5.0);
+        assert!(!shapes_overlap(&a, &b));
+        let c = Shape::circle(P::new(9.0, 0.0), 5.0);
+        assert!(shapes_overlap(&a, &c));
+        let r = Shape::rect(P::new(0.0, 12.0), 20.0, 4.0, 0.0, 0.0);
+        assert!(!shapes_overlap(&a, &r));
+        let big = Shape::rect(P::new(0.0, 0.0), 100.0, 100.0, 5.0, 0.0);
+        let small = Shape::rect(P::new(1.0, 1.0), 2.0, 2.0, 0.0, 30.0);
+        assert!(shapes_overlap(&big, &small));
+        let tri = Shape::polygon(vec![vec![P::new(20.0, 20.0), P::new(30.0, 20.0), P::new(25.0, 28.0)]], false, P::new(25.0, 22.0));
+        assert!(!shapes_overlap(&small, &tri));
     }
 
     #[test]

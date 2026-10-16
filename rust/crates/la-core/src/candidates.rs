@@ -128,6 +128,47 @@ pub struct Cand {
     pub evaluated: bool,
     /// Boundary side (0 left, 1 right, 2 top, 3 bottom) of boundary candidates.
     pub bside: u8,
+    /// Exact label shape for non-rectangular labels (icons with circle, rounded or
+    /// polygon shapes); `None` = the box itself.
+    pub lshape: Option<Box<Shape>>,
+}
+
+/// The exact shape of a label box with the given label shape (`None` for rectangles).
+pub fn label_shape(rect: &Rect, shape: &crate::model::LabelShape) -> Option<Box<Shape>> {
+    use crate::model::LabelShape;
+    match shape {
+        LabelShape::Rect => None,
+        LabelShape::Rounded(r) if *r <= 0.0 => None,
+        LabelShape::Rounded(r) => Some(Box::new(Shape::rect(rect.center(), rect.w(), rect.h(), *r, 0.0))),
+        LabelShape::Circle => Some(Box::new(Shape::circle(rect.center(), rect.w().min(rect.h()) * 0.5))),
+        LabelShape::Polygon(pts) if pts.len() >= 3 => {
+            let o = P::new(rect.x0, rect.y0);
+            Some(Box::new(Shape::polygon(vec![pts.iter().map(|q| *q + o).collect()], false, rect.center())))
+        }
+        _ => None,
+    }
+}
+
+impl Cand {
+    /// Interiors of the two labels overlap (exact for non-rectangular labels).
+    pub fn label_overlaps(&self, other: &Cand) -> bool {
+        if !self.rect.overlaps(&other.rect) {
+            return false;
+        }
+        match (&self.lshape, &other.lshape) {
+            (None, None) => true,
+            (Some(a), None) => a.overlaps_rect(&other.rect),
+            (None, Some(b)) => b.overlaps_rect(&self.rect),
+            (Some(a), Some(b)) => crate::geom::shape::shapes_overlap(a, b),
+        }
+    }
+    /// The label's interior overlaps shape `s`.
+    pub fn label_overlaps_shape(&self, s: &Shape) -> bool {
+        match &self.lshape {
+            None => s.overlaps_rect(&self.rect),
+            Some(l) => crate::geom::shape::shapes_overlap(l, s),
+        }
+    }
 }
 
 impl Cand {
@@ -148,6 +189,7 @@ impl Cand {
             blocked: None,
             evaluated: false,
             bside: 255,
+            lshape: None,
         }
     }
     /// Bounding box of label and leaders.

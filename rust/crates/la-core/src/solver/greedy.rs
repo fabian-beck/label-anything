@@ -10,7 +10,7 @@ use std::collections::BinaryHeap;
 
 /// Exact hard conflict between two candidates of different items.
 pub fn pair_conflict(a: &Cand, b: &Cand, dy: &Dynamic) -> bool {
-    if dy.label_labels.is_hard() && a.rect.overlaps(&b.rect) {
+    if dy.label_labels.is_hard() && a.label_overlaps(b) {
         return true;
     }
     if dy.leader_labels.is_hard() {

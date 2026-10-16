@@ -60,6 +60,8 @@ pub struct FontSel {
     pub italic: bool,
     pub size: f64,
     pub line_height: f64,
+    /// Font file (data URL or path) to register for this family/weight/style.
+    pub file: Option<String>,
 }
 
 impl FontSel {
@@ -322,6 +324,11 @@ fn font_over(base: &FontSel, v: Option<&Value>) -> FontSel {
         if let Some(s) = o.get("line_height").and_then(|x| x.as_f64()) {
             f.line_height = s;
         }
+        match o.get("file") {
+            Some(Value::String(s)) => f.file = Some(s.clone()),
+            Some(Value::Null) => f.file = None,
+            _ => {}
+        }
     }
     f
 }
@@ -455,6 +462,7 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         italic: o.string("defaults.font.style") == "italic",
         size: o.f64("defaults.font.size"),
         line_height: o.f64("defaults.font.line_height"),
+        file: o.get("defaults.font.file").as_str().map(str::to_string),
     };
     let default_em = default_font.size;
 

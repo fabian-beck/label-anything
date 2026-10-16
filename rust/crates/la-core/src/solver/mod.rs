@@ -142,6 +142,7 @@ impl<'a> Solve<'a> {
         }
         for c in &mut fresh {
             c.level = level;
+            c.lshape = candidates::label_shape(&c.rect, &self.variants[i][c.variant as usize].shape);
         }
         if lazy {
             let mut ids = Vec::with_capacity(fresh.len());

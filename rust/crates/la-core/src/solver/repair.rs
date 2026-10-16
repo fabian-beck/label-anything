@@ -200,6 +200,7 @@ pub fn boundary_pass(s: &mut Solve) {
             let v = &s.variants[i][vi];
             let mut c = slot_candidate(s.model, &area, &s.model.items[i], vi, v, side, positions[assign[k]], oc.rank);
             c.level = oc.level;
+            c.lshape = crate::candidates::label_shape(&c.rect, &v.shape);
             let mut ev = Evaluator::new(s.model, s.obs, s.env);
             ev.eval(&mut c, v, None);
             fresh.push((i, c));
@@ -312,6 +313,7 @@ fn moved_to(s: &Solve, i: usize, from: u32, center: crate::geom::P) -> Option<Ca
     let rect = crate::geom::Rect::from_center(center, v.w * 0.5, v.h * 0.5);
     let item = &s.model.items[i];
     let mut c = Cand::new(i as u32, f.variant, f.level, f.kind, f.side, f.rank, rect);
+    c.lshape = crate::candidates::label_shape(&rect, &v.shape);
     let start = crate::leaders::leader_start(s.model, item, rect.center());
     let port = rect.closest_point(start);
     let start = crate::leaders::leader_start(s.model, item, port);

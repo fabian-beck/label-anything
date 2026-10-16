@@ -78,7 +78,11 @@ pub fn place_validated(problem: &Value, env: &dyn Env, warnings: Vec<Issue>) -> 
     let report = validate::Report { valid: true, errors: vec![], warnings };
     let mut m = model::build(problem, env).map_err(|e| PlaceError { errors: vec![Issue::new(e.pointer, &e.code, e.message)] })?;
     m.warnings.extend(report.warnings);
-    let fonts = labels::bundled_fonts();
+    let owned_fonts = labels::user_fonts(&mut m, env).map_err(|(p, msg)| PlaceError { errors: vec![Issue::new(p, "invalid_value", msg)] })?;
+    let fonts: &la_text::FontBook = match &owned_fonts {
+        Some(b) => b,
+        None => labels::bundled_fonts(),
+    };
     let measurer = labels::Measurer { fonts, env, shaping: &m.shaping };
     let variants: Vec<Vec<labels::Variant>> = m.items.iter().map(|it| labels::base_variants(&measurer, it)).collect();
     let mut min_font = f64::INFINITY;

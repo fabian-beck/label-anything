@@ -92,7 +92,7 @@ impl State {
             }
             let Some(pid) = self.placed[j as usize] else { continue };
             let p = &cands[pid as usize];
-            if dy.label_labels.is_hard() && c.rect.overlaps(&p.rect) {
+            if dy.label_labels.is_hard() && c.label_overlaps(p) {
                 out.push(j);
                 continue;
             }
@@ -138,7 +138,7 @@ impl State {
             }
             let Some(pid) = self.placed[ju] else { continue };
             let p = &cands[pid as usize];
-            if dy.label_labels.is_hard() && c.rect.overlaps(&p.rect) {
+            if dy.label_labels.is_hard() && c.label_overlaps(p) {
                 return Some(ju);
             }
             if dy.leader_labels.is_hard() && c.leaders.iter().any(|l| l.segments().any(|(a, b)| seg_overlaps_rect(a, b, &p.rect))) {

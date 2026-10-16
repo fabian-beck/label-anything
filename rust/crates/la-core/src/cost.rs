@@ -113,12 +113,12 @@ impl<'a> Evaluator<'a> {
                 }
                 match dy.own_mark {
                     OwnMark::Hard => {
-                        if sj.overlaps_rect(&r) {
+                        if c.label_overlaps_shape(sj) {
                             acc.violate(Block::Items, false, 0.0);
                         }
                     }
                     OwnMark::Partial(f) => {
-                        if sj.overlaps_rect(&r) {
+                        if c.label_overlaps_shape(sj) {
                             let (g, s) = &obs.own[i];
                             let frac = s.covered_area(g, &r) / maxf(sj.area(), 1e-9);
                             if frac > f {
@@ -130,7 +130,7 @@ impl<'a> Evaluator<'a> {
                 }
                 continue;
             }
-            if sj.overlaps_rect(&r) {
+            if c.label_overlaps_shape(sj) {
                 match dy.label_items {
                     AvoidW::Hard => acc.violate(Block::Items, false, 0.0),
                     _ => {}

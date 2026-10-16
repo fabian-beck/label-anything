@@ -13,6 +13,48 @@ pub fn bundled_fonts() -> &'static FontBook {
     B.get_or_init(FontBook::with_bundled)
 }
 
+/// Load the font files referenced by the items into a font book (bundled fonts first).
+/// Returns `None` when no item references a font file. Font families named `default` that
+/// carry a file are renamed so they never shadow the bundled font for other labels.
+pub fn user_fonts(model: &mut crate::model::Model, env: &dyn Env) -> Result<Option<FontBook>, (String, String)> {
+    use crate::model::{LabelSpec, PartSpec};
+    let mut book: Option<FontBook> = None;
+    let mut loaded: Vec<(String, String)> = Vec::new(); // (file, family)
+    for (i, item) in model.items.iter_mut().enumerate() {
+        let crate::model::Item { font, label, .. } = item;
+        let mut fonts: Vec<&mut FontSel> = vec![font];
+        match label {
+            LabelSpec::Text(t) => fonts.push(&mut t.font),
+            LabelSpec::Composite { parts, .. } => {
+                for p in parts.iter_mut() {
+                    if let PartSpec::Text(t) = p {
+                        fonts.push(&mut t.font);
+                    }
+                }
+            }
+            _ => {}
+        }
+        for f in fonts {
+            let Some(file) = f.file.clone() else { continue };
+            if let Some((_, fam)) = loaded.iter().find(|(fl, _)| *fl == file) {
+                f.family = fam.clone();
+                continue;
+            }
+            let bytes = if file.starts_with("data:") {
+                crate::model::data_url_bytes(&file).ok_or_else(|| (format!("/items/{i}/label/font/file"), "invalid data URL".to_string()))?
+            } else {
+                env.read_file(&file).map_err(|e| (format!("/items/{i}/label/font/file"), e))?
+            };
+            let family = if f.family.eq_ignore_ascii_case("default") { format!("user-font-{}", loaded.len()) } else { f.family.clone() };
+            let b = book.get_or_insert_with(FontBook::with_bundled);
+            b.register(&family, f.weight, f.italic, bytes).map_err(|e| (format!("/items/{i}/label/font/file"), format!("{e:?}")))?;
+            f.family = family.clone();
+            loaded.push((file, family));
+        }
+    }
+    Ok(book)
+}
+
 /// Text measurement with the host callback first, then the font book.
 pub struct Measurer<'a> {
     pub fonts: &'a FontBook,
