@@ -24,9 +24,11 @@ export { VERSION } from "./version.js";
 export { place, validate, renderDebugSvg, type BudgetProfile } from "./place.js";
 export { BasicEnv, BUILTIN_SVG, type Env, type Geom, type SvgBackend, type SvgDoc } from "./env.js";
 
-import type { LabelResult } from "./api.js";
+import type { LabelResult, ValidationReport } from "./api.js";
 import type { Env } from "./env.js";
-import { placeWith as placeWithImpl, type BudgetProfile } from "./place.js";
+import { PlaceError } from "./api.js";
+import { placeReported, placeWith as placeWithImpl, type BudgetProfile } from "./place.js";
+import { Issue } from "./validate.js";
 
 /**
  * Solve a problem (an object) with a custom environment. Throws `PlaceError` if the
@@ -35,4 +37,15 @@ import { placeWith as placeWithImpl, type BudgetProfile } from "./place.js";
  */
 export function placeWith(env: Env, problem: unknown, profile: BudgetProfile = "ts"): LabelResult {
   return placeWithImpl(problem, env, profile) as unknown as LabelResult;
+}
+
+/**
+ * Solve a problem whose validation report (from {@link validate}) is already known; its
+ * warnings are passed through to the result. Throws `PlaceError` if the report is not
+ * valid or the problem cannot be prepared.
+ */
+export function placeValidated(env: Env, problem: unknown, report: ValidationReport, profile: BudgetProfile = "ts"): LabelResult {
+  if (!report.valid) throw new PlaceError(report.errors);
+  const warnings = report.warnings.map((w) => new Issue(w.pointer ?? "", w.code, w.message));
+  return placeReported(problem, env, warnings, profile) as unknown as LabelResult;
 }

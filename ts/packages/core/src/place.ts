@@ -141,7 +141,15 @@ export function placeValidated(problem: unknown, env: Env, warnings: Issue[], pr
 export function placeWith(problem: unknown, env: Env, profile: BudgetProfile = "ts"): Record<string, unknown> {
   const report = validateProblem(problem);
   if (!report.valid) throw new PlaceError(report.errors);
-  const { result, debug, model } = placeValidated(problem, env, report.warnings, profile);
+  return placeReported(problem, env, report.warnings, profile);
+}
+
+/**
+ * Solve a problem whose validation report is already known (it must be valid; its
+ * warnings are passed through). Fills `debug_svg` when `output.debug_svg` is set.
+ */
+export function placeReported(problem: unknown, env: Env, warnings: Issue[], profile: BudgetProfile = "ts"): Record<string, unknown> {
+  const { result, debug, model } = placeValidated(problem, env, warnings, profile);
   if (debug !== null) result.debug_svg = debugSvg(model, result, debug);
   return result;
 }
