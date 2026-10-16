@@ -52,6 +52,12 @@ language). Text measurement comes from `@label-anything/text`, raster modes from
   yield the ids of `query` in the same order, and stops at the first conflict.
   `DynIndex` creates its buckets on first insert (a 4096 × 4096 grid of empty arrays
   costs seconds of garbage collection in JavaScript).
+* **Deferred occupancy marks.** Only candidate generation reads the placed-label
+  occupancy grid, so `State` logs placed and removed boxes and applies them when the grid
+  is read (a box placed and removed in between cancels out): local search, exact search
+  and repair do not mark it at all. The free-space seeds near an item are collected once
+  per item, not once per variant. Frozen occupancy grids scan their bitset for small
+  windows (cheaper than the summed-area table's cache misses in V8).
 * `Cand.bbox()` is cached; the measurer caches fonts; `FontBook.resolve` is memoized.
 
 ### Parity
