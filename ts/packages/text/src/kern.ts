@@ -14,10 +14,15 @@
 //   one IgnoreMarks lookup whose pairs never skip their second glyph, with pair values summed
 //   over its horizontal, non-cross-stream, non-minimum format 0 subtables;
 // * a malformed GDEF, GPOS or `kern` table is treated as absent.
+// `Kerning.ranges` prepares the adjustments of every range of one glyph sequence, so that
+// `ranges.adjustment(start, end)` equals `adjustment` of the glyphs `start..end` in constant
+// time (see `Track`).
 import { Malformed, type Reader } from "./reader.js";
 
 const KERN = 0x6b65726e; // "kern"
 const IGNORE_MARKS = 0x0008;
+/** `Track.runs` entry of a pair that does not skip its second glyph. */
+const NO_RUN = 0xffffffff;
 
 /** One subtable of a pair lookup, in matching form. */
 interface PairSubtable {
@@ -28,7 +33,7 @@ interface PairSubtable {
 }
 
 /** PairPos format 1 (and the legacy `kern` table): explicit glyph pairs. */
-class GlyphPairs implements PairSubtable {
+export class GlyphPairs implements PairSubtable {
   constructor(
     readonly skipSecond: boolean,
     /** Per pair set: [lo, hi) range in the record arrays, flattened. */
@@ -53,7 +58,7 @@ class GlyphPairs implements PairSubtable {
 }
 
 /** PairPos format 2: class pairs. */
-class ClassPairs implements PairSubtable {
+export class ClassPairs implements PairSubtable {
   constructor(
     readonly skipSecond: boolean,
     private readonly class2: Uint16Array,
@@ -72,7 +77,7 @@ class ClassPairs implements PairSubtable {
 /** A pair-positioning lookup with its subtables indexed by first glyph. */
 class PairLookup {
   constructor(
-    private readonly ignoreMarks: boolean,
+    readonly ignoreMarks: boolean,
     /** CSR index: the slots of glyph `g` are `offsets[g] ..< offsets[g + 1]`. */
     private readonly offsets: Uint32Array,
     private readonly slotSubtables: Uint16Array,
@@ -112,10 +117,40 @@ class PairLookup {
     }
     return total;
   }
+
+  /**
+   * The pairs of consecutive glyphs of `sequence[0..n)` (the glyphs this lookup's walk
+   * considers): the adjustment of pair `(t, t + 1)` at index `t` (0 without a match; the last
+   * entry is 0) and, if any pair skips its second glyph, which ones do (else `null`). `null` if
+   * no pair adjusts the advance.
+   */
+  pairs(sequence: Uint16Array, n: number): { deltas: Float64Array; skips: Uint8Array | null } | null {
+    const deltas = new Float64Array(n);
+    let skips: Uint8Array | null = null;
+    let adjusts = false;
+    for (let t = 0; t + 1 < n; t++) {
+      const first = sequence[t];
+      const hi = this.offsets[first + 1];
+      for (let s = this.offsets[first]; s < hi; s++) {
+        const subtable = this.subtables[this.slotSubtables[s]];
+        const delta = subtable.find(this.slotKeys[s], sequence[t + 1]);
+        if (delta === delta) {
+          deltas[t] = delta;
+          if (delta !== 0) adjusts = true;
+          if (subtable.skipSecond) {
+            if (skips === null) skips = new Uint8Array(n);
+            skips[t] = 1;
+          }
+          break;
+        }
+      }
+    }
+    return adjusts ? { deltas, skips } : null;
+  }
 }
 
 /** Collects subtables and their first-glyph slots, then builds the CSR index. */
-class LookupBuilder {
+export class LookupBuilder {
   /** [glyph, subtable, key] */
   private readonly slots: [number, number, number][] = [];
   private readonly subtables: PairSubtable[] = [];
@@ -463,7 +498,8 @@ function parseKernTable(kern: Reader, numGlyphs: number): PairLookup | null {
 
 /** Marks (GDEF glyph class 3) and the kern lookups of a font. */
 export class Kerning {
-  private constructor(
+  /** @internal Use {@link Kerning.parse}. */
+  constructor(
     private readonly marks: Uint8Array,
     private readonly lookups: readonly PairLookup[],
   ) {}
@@ -487,6 +523,132 @@ export class Kerning {
     let total = 0;
     for (const lookup of this.lookups) total += lookup.apply(glyphs, n, this.marks);
     return total;
+  }
+
+  /** Prepares the adjustments of every range of the first `n` glyphs, in time linear in `n`. */
+  ranges(glyphs: Uint16Array, n: number): KerningRanges {
+    let nonMarks = new Uint16Array(0);
+    let eligible = new Uint32Array(0);
+    let m = 0;
+    if (this.lookups.some((lookup) => lookup.ignoreMarks)) {
+      nonMarks = new Uint16Array(n);
+      eligible = new Uint32Array(n + 1);
+      for (let i = 0; i < n; i++) {
+        if (this.marks[glyphs[i]] !== 1) nonMarks[m++] = glyphs[i];
+        eligible[i + 1] = m;
+      }
+    }
+    // Lookups whose walks visit every position are summed per IgnoreMarks flag; a lookup with a
+    // pair that skips its second glyph gets a track of its own.
+    const sums: (Float64Array | null)[] = [null, null];
+    const tracks: Track[] = [];
+    for (const lookup of this.lookups) {
+      const pairs = lookup.ignoreMarks ? lookup.pairs(nonMarks, m) : lookup.pairs(glyphs, n);
+      if (pairs === null) continue;
+      if (pairs.skips === null) {
+        const k = lookup.ignoreMarks ? 1 : 0;
+        const sum = sums[k];
+        if (sum === null) sums[k] = pairs.deltas;
+        else for (let t = 0; t < sum.length; t++) sum[t] += pairs.deltas[t];
+      } else {
+        tracks.push(Track.skipping(lookup.ignoreMarks, pairs.deltas, pairs.skips));
+      }
+    }
+    for (const k of [0, 1]) {
+      const sum = sums[k];
+      if (sum !== null) tracks.push(Track.visitingAll(k === 1, sum));
+    }
+    return new KerningRanges(eligible, tracks);
+  }
+}
+
+/** The kerning adjustments of every range of one glyph sequence ({@link Kerning.ranges}). */
+export class KerningRanges {
+  constructor(
+    /**
+     * `eligible[i]`: the number of non-marks among the first `i` glyphs, i.e. the position of
+     * glyph `i` in the sequence an IgnoreMarks walk considers (empty if no lookup ignores marks).
+     */
+    private readonly eligible: Uint32Array,
+    private readonly tracks: readonly Track[],
+  ) {}
+
+  /** {@link Kerning.adjustment} of the glyphs `start..end` (`start <= end <= n`). */
+  adjustment(start: number, end: number): number {
+    let total = 0;
+    for (const track of this.tracks) {
+      total += track.ignoreMarks
+        ? track.adjustment(this.eligible[start], this.eligible[end])
+        : track.adjustment(start, end);
+    }
+    return total;
+  }
+}
+
+/**
+ * The walk of one lookup over a glyph sequence, or the summed walks of several lookups that
+ * visit every position, prepared for ranges.
+ *
+ * Positions are the glyphs the walk considers (the non-marks under IgnoreMarks, else all
+ * glyphs); pair `t` is `(t, t + 1)`. A walk adds the adjustment of the pair at each position it
+ * visits and moves on to the next position, or past it when the matching subtable skips its
+ * second glyph (ValueFormat2 ≠ 0). The walk over a range starts at its first position and adds
+ * the pairs that lie inside the range. Without skipping pairs it visits every position, so a
+ * range adds a contiguous run of pairs; with them, walks that start at different positions can
+ * visit different ones (`walk` below).
+ */
+class Track {
+  private constructor(
+    readonly ignoreMarks: boolean,
+    /**
+     * `walk[t]`: the sum of the adjustments a walk starting at position `t` adds up to the end
+     * of the sequence (`walk[len] = 0`), so the pairs it adds from `t` up to a position `u` it
+     * visits are `walk[t] − walk[u]`.
+     */
+    private readonly walk: Float64Array,
+    /**
+     * For a pair that skips its second glyph: the first pair of the run of consecutive such
+     * pairs that contains it; `NO_RUN` for the other pairs. Empty if no pair skips.
+     */
+    private readonly runs: Uint32Array,
+  ) {}
+
+  /** A walk that visits every position: suffix sums of the pair adjustments. */
+  static visitingAll(ignoreMarks: boolean, deltas: Float64Array): Track {
+    const walk = new Float64Array(deltas.length + 1);
+    for (let t = deltas.length - 1; t >= 0; t--) walk[t] = deltas[t] + walk[t + 1];
+    return new Track(ignoreMarks, walk, new Uint32Array(0));
+  }
+
+  /** A walk that moves past the second glyph of the pairs marked in `skips`. */
+  static skipping(ignoreMarks: boolean, deltas: Float64Array, skips: Uint8Array): Track {
+    const len = deltas.length;
+    // the last position has no pair, so a skip lands at most on `len`
+    const walk = new Float64Array(len + 1);
+    for (let t = len - 1; t >= 0; t--) walk[t] = deltas[t] + walk[skips[t] === 1 ? t + 2 : t + 1];
+    const runs = new Uint32Array(len).fill(NO_RUN);
+    for (let t = 0; t < len; t++) {
+      if (skips[t] === 1) runs[t] = t > 0 && skips[t - 1] === 1 ? runs[t - 1] : t;
+    }
+    return new Track(ignoreMarks, walk, runs);
+  }
+
+  /** The adjustments the walk over positions `first..end` adds. */
+  adjustment(first: number, end: number): number {
+    if (end < first + 2) return 0;
+    // The walk adds the pairs of the positions it visits before `end − 1` (the pair of `end − 1`
+    // crosses the end of the range). It reaches `end − 1`, unless it visits `last = end − 2` and
+    // that pair skips `end − 1`: then it reaches `end`. Within a run of skipping pairs a walk
+    // visits every other position, and a walk that starts before the run enters it at its first
+    // pair (only the pair before a position can skip it, and that one does not skip). So the walk
+    // visits `last` iff `last` has the parity of `max(first, run start)`.
+    const last = end - 2;
+    let stop = end - 1;
+    if (last < this.runs.length) {
+      const run = this.runs[last];
+      if (run !== NO_RUN && ((Math.max(first, run) ^ last) & 1) === 0) stop = end;
+    }
+    return this.walk[first] - this.walk[stop];
   }
 }
 
