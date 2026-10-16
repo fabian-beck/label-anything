@@ -112,7 +112,7 @@ background behind the text usually looks better).
 | `degraded` | placed labels per degradation kind (`wrapped`, `alternative`, `truncated`, `shrunk`, `soft_overlap`, `distant`, `boundary`) |
 | `flicker` | with `warm_start`: labels `moved`, `added`, `removed`, `mean_displacement` |
 | `grid` | the coverage grid: `cell` size, `cols`, `rows`, the obstacle `classes` that occur |
-| `implementation` | engine and version, e.g. `rust/0.1.0`, `ts/0.1.0` |
+| `implementation` | engine and version: `rust/0.1.0` (native), `wasm/0.1.0` (the Rust core as WebAssembly), `ts/0.1.0` |
 
 The result may also hold `warnings` (validation warnings such as `unknown_class`),
 `debug_svg` (with `output.debug_svg`) and `candidates` (with `output.candidates`).
