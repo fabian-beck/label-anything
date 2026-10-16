@@ -17,6 +17,7 @@ Every file is one JSON object with a `kind`:
 | `raster/` | `raster` | image decoding, background estimation, pixel modes, coverage grids (byte for byte); see `raster/README.md` |
 | `expr/` | `expr` | expression language results and errors |
 | `math/` | `math` | deterministic math (`det_math`) and PCG32, bit-exact vectors (see `math/README.md`) |
+| `geometry/` | `geometry` | geometry kernel, rasterizer, SATs, distance transform and spatial indexes of the core: inputs and Rust outputs, reproduced bit for bit (see `geometry/README.md`) |
 
 ## `validate` cases
 
