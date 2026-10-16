@@ -68,6 +68,14 @@ def test_implementation_names_and_metric_paths():
     assert metric_value(res, "phases_ms.verify") is None
 
 
+def test_perf_solvers_run_single_threaded(monkeypatch):
+    from bench.perf.runner import solver_env
+
+    monkeypatch.setenv("RAYON_NUM_THREADS", "8")
+    assert solver_env(1)["RAYON_NUM_THREADS"] == "1" and solver_env(3)["RAYON_NUM_THREADS"] == "3"
+    assert "RAYON_NUM_THREADS" not in solver_env(0)
+
+
 # ---------------------------------------------------------------------------
 # report analyses
 # ---------------------------------------------------------------------------

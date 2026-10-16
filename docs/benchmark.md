@@ -44,7 +44,7 @@ the Label Anything solvers (`rust`, `wasm`, `ts`):
    run: 200 labels + 10k points (800×600) ≤ 15 / 30 / 60 ms, 2,000 labels + 100k points
    (1920×1080, greedy) ≤ 120 / 250 / 600 ms, 2048² raster preparation ≤ 25 / 60 / 150 ms for
    Rust / WASM / TS, as the engine's own median timing (`stats.runtime_ms`,
-   `stats.phases_ms.prepare`) in steady state.
+   `stats.phases_ms.prepare`) in steady state, on one thread.
 
 A deliberate regression (a trade-off accepted for a better result elsewhere) needs an ADR in
 `docs/adr/` and an entry in `bench/gates-allow.json`:
@@ -58,24 +58,28 @@ Entries naming an ADR that does not exist are ignored and reported.
 
 ## Where the performance targets stand
 
-`python -m bench.perf --engine rust/target/release/label-anything --ts --wasm --runs 7` at
-commit 6f4ed69 (2026-10-16) on a 4-core cloud VM (Intel Xeon @ 2.1 GHz, Linux, Node 22),
+The targets of brief §5.8 hold for one thread, so `bench.perf` runs the native engine with
+`RAYON_NUM_THREADS=1` (`--threads`; the WebAssembly and TypeScript engines are single-threaded
+anyway). `python -m bench.perf --engine rust/target/release/label-anything --ts --wasm --runs 7`
+at commit 7de9678 (2026-10-16) on a 4-core cloud VM (Intel Xeon @ 2.1 GHz, Linux, Node 22),
 median engine time in ms (target in parentheses):
 
 | problem | Rust | WASM | TS |
 |---|---:|---:|---:|
-| 200 labels + 10k points | **14.1** (15) | **21.6** (30) | **46.8** (60) |
-| 2,000 labels + 100k points, greedy | 244 (120) | 323 (250) | 665 (600) |
-| 2048² raster preparation | **21.7** (25) | **39.4** (60) | **101.6** (150) |
+| 200 labels + 10k points | 16.4 (15) | **23.3** (30) | **44.0** (60) |
+| 2,000 labels + 100k points, greedy | 294.7 (120) | 328.2 (250) | 617.2 (600) |
+| 2048² raster preparation | 26.7 (25) | **38.3** (60) | **104.7** (150) |
 
-Six of the nine targets are met on this machine; the 2,000-label problem is not, in any
-implementation. About half of its time goes to the degradation ladder of the ≈ 1,400 labels
-that find no room at level 0 (most of them, ≈ 1,050, are omitted in the end): every ladder step
-generates and tests the candidates of new label variants against the placed labels, one item
-after the other. The Rust engine runs the order-independent phases on all cores (feature
-`parallel`: obstacle rasterization, level-0 candidates, the distance transform), which the
-WebAssembly and TypeScript engines cannot. Numbers from a faster machine are lower; compare
-numbers from the same machine only.
+Four of the nine targets are met on this machine. The brief sets them for a 2023 laptop, whose
+cores are faster than this VM's, but the gate checks them as measured, on whatever machine runs
+the benchmark. The 2,000-label problem misses in every implementation. Most of its time goes to
+the degradation ladder of the ≈ 1,400 labels that find no room at level 0 (≈ 1,025 of them are
+omitted in the end): their wrapped and shrunk variants get adjacent, slider and distant
+candidates, which are tested against the placed labels, one item after the other. With all
+cores (`--threads 0`) the native engine runs the order-independent phases in parallel (feature
+`parallel`: obstacle rasterization, level-0 candidates, the distance transform): 14.1, 244 and
+21.7 ms on this VM. Numbers from a faster machine are lower; compare numbers from the same
+machine only.
 
 ## Milestone acceptance
 

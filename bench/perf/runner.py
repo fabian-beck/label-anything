@@ -4,6 +4,11 @@ Each solver is an external command template with ``{problem}`` and ``{result}``
 placeholders (as in ``bench/run.py``); only solvers whose name identifies an
 implementation (``rust``, ``wasm``, ``ts``) are measured. Every problem is solved
 ``runs`` times; the value is the median of the engine-reported metric.
+
+The targets of brief §5.8 hold for a single thread: the native engine, which runs its
+data-parallel phases on all cores, gets ``RAYON_NUM_THREADS=1`` (``threads``; 0 leaves
+the thread count to the engine). The WebAssembly and TypeScript engines are
+single-threaded anyway.
 """
 from __future__ import annotations
 
@@ -43,19 +48,29 @@ def machine() -> dict:
     return {"platform": platform.platform(), "cpu": cpu, "cores": os.cpu_count(), "python": platform.python_version()}
 
 
-def solve_once(cmd: str, problem: Path, result: Path, timeout: float) -> dict:
+def solver_env(threads: int) -> dict[str, str]:
+    """The environment of a measured solver: ``RAYON_NUM_THREADS`` = ``threads`` (unset for 0)."""
+    env = dict(os.environ)
+    env.pop("RAYON_NUM_THREADS", None)
+    if threads > 0:
+        env["RAYON_NUM_THREADS"] = str(threads)
+    return env
+
+
+def solve_once(cmd: str, problem: Path, result: Path, timeout: float, env: dict[str, str] | None = None) -> dict:
     line = cmd.format(problem=shlex.quote(str(problem)), result=shlex.quote(str(result)))
-    r = subprocess.run(shlex.split(line), capture_output=True, text=True, timeout=timeout)
+    r = subprocess.run(shlex.split(line), capture_output=True, text=True, timeout=timeout, env=env)
     if r.returncode != 0:
         raise RuntimeError(f"exit {r.returncode}: {r.stderr.strip()[:400]}")
     return read_json(result)
 
 
 def run_perf(solvers: list[tuple[str, str]], runs: int = 7, problem_dir: str | Path = "bench/out/perf",
-             timeout: float = 600.0, log=print) -> dict:
+             timeout: float = 600.0, log=print, threads: int = 1) -> dict:
     """Measure every (name, command) solver that is a Label Anything implementation."""
     todo = [(n, c) for n, c in solvers if implementation(n) is not None]
-    report = {"runs": runs, "machine": machine(), "targets": TARGETS, "rows": []}
+    report = {"runs": runs, "threads": threads, "machine": machine(), "targets": TARGETS, "rows": []}
+    env = solver_env(threads)
     if not todo:
         return report
     paths = write_all(problem_dir)
@@ -68,7 +83,7 @@ def run_perf(solvers: list[tuple[str, str]], runs: int = 7, problem_dir: str | P
                 vals, totals = [], []
                 try:
                     for k in range(runs):
-                        res = solve_once(cmd, paths[pname], Path(d) / f"{name}-{pname}-{k}.json", timeout)
+                        res = solve_once(cmd, paths[pname], Path(d) / f"{name}-{pname}-{k}.json", timeout, env)
                         v = metric_value(res, spec["metric"])
                         if v is None:
                             raise RuntimeError(f"result has no stats.{spec['metric']}")

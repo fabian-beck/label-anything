@@ -37,6 +37,9 @@ def main(argv=None) -> int:
     ap.add_argument("--runs", type=int, default=7)
     ap.add_argument("--problems", default="bench/out/perf", help="where the generated problems are written")
     ap.add_argument("--timeout", type=float, default=600.0)
+    ap.add_argument("--threads", type=int, default=1,
+                    help="worker threads of the native engine (RAYON_NUM_THREADS; the targets are single-threaded; "
+                         "0 = all cores)")
     ap.add_argument("-o", "--out", help="write the measurements as JSON")
     a = ap.parse_args(argv)
     solvers = []
@@ -54,7 +57,7 @@ def main(argv=None) -> int:
         solvers.append(tuple(s.split("=", 1)))
     if not solvers:
         ap.error("give --engine or --solver")
-    rep = run_perf(solvers, a.runs, a.problems, a.timeout)
+    rep = run_perf(solvers, a.runs, a.problems, a.timeout, threads=a.threads)
     if a.out:
         write_json(a.out, rep, nd=4, indent=1)
     print(f"\n{'implementation':<16}{'problem':<14}{'metric':<20}{'median ms':>10}{'target ms':>11}  result")

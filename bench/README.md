@@ -295,7 +295,9 @@ Items are `{"id": "i<k>", "anchor": {"type": "point", "x", "y"}, "label": {"type
 so any implementation can regenerate byte-identical files; the raster is drawn without randomness
 (grid lines, stripes, discs, a gradient band) and passed as raw RGBA, so no image codec is timed.
 The measured value is the median over the runs of the engine's own timing (`stats.runtime_ms`,
-or `stats.phases_ms.prepare`), not the process wall time, which process start-up dominates.
+or `stats.phases_ms.prepare`), not the process wall time, which process start-up dominates. The
+targets hold for one thread: the native engine runs with `RAYON_NUM_THREADS=1` (`--threads N`,
+`bench/run.py --perf-threads N`; 0 = all cores).
 
 ```sh
 bench/.venv/bin/python -m bench.perf --engine rust/target/release/label-anything --runs 7

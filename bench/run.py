@@ -386,6 +386,9 @@ def main(argv=None) -> int:
     ap.add_argument("--timeout", type=float, default=600.0, help="seconds per external solver run")
     ap.add_argument("--perf", action="store_true", help="measure the performance targets (bench/perf)")
     ap.add_argument("--perf-runs", type=int, default=7, help="runs per performance problem")
+    ap.add_argument("--perf-threads", type=int, default=1,
+                    help="worker threads of the native engine for the performance targets (single-threaded "
+                         "targets; 0 = all cores)")
     ap.add_argument("--perf-problems", default=str(paths.OUT / "perf"), help="where the perf problems are written")
     ap.add_argument("--previous", help="results.json of the previous release (diff + regression gate)")
     ap.add_argument("--gate", action="store_true",
@@ -439,7 +442,7 @@ def main(argv=None) -> int:
 
         la = [(s.name, s.cmd) for s in solvers if s.is_la]
         report["perf"] = run_perf(la, a.perf_runs, a.perf_problems, a.timeout,
-                                  log=lambda m: print(m, flush=True))
+                                  log=lambda m: print(m, flush=True), threads=a.perf_threads)
     if previous is not None:
         report["diff"] = rep.compare(previous, report, a.threshold)
     report["parity"] = rep.parity(report)

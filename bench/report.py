@@ -428,11 +428,14 @@ def _perf_section(perf: dict | None) -> list[str]:
                  "wasm or ts are measured).</p>")
         return o
     m = perf.get("machine", {})
+    threads = perf.get("threads")
+    thr = ("one thread, as the targets of brief §5.8" if threads == 1 else
+           "all cores" if threads == 0 else f"{threads} threads" if threads else "the engine's default threads")
     o.append(f"<p class='note'>Median of {perf['runs']} runs of the engine's own timing "
              f"(<code>stats.runtime_ms</code>; raster target: <code>stats.phases_ms.prepare</code>), not process "
-             f"wall time. Machine: {esc(m.get('cpu', '?'))}, {esc(m.get('cores', '?'))} cores, "
-             f"{esc(m.get('platform', ''))}. Problems: <code>python -m bench.perf generate</code> "
-             "(deterministic).</p>")
+             f"wall time; the native engine on {thr}. Machine: {esc(m.get('cpu', '?'))}, "
+             f"{esc(m.get('cores', '?'))} cores, {esc(m.get('platform', ''))}. Problems: "
+             "<code>python -m bench.perf generate</code> (deterministic).</p>")
     o.append("<div class='scroll'><table><tr><th class='l'>problem</th><th class='l'>solver</th>"
              "<th class='l'>metric</th><th>median ms</th><th>target ms</th><th>ratio</th><th>runs (ms)</th>"
              "<th class='l'>result</th></tr>")
