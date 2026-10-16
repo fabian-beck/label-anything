@@ -61,16 +61,17 @@ Entries naming an ADR that does not exist are ignored and reported.
 The targets of brief §5.8 hold for one thread, so `bench.perf` runs the native engine with
 `RAYON_NUM_THREADS=1` (`--threads`; the WebAssembly and TypeScript engines are single-threaded
 anyway). `python -m bench.perf --engine rust/target/release/label-anything --ts --wasm --runs 7`
-at commit 7de9678 (2026-10-16) on a 4-core cloud VM (Intel Xeon @ 2.1 GHz, Linux, Node 22),
+at commit 89e2f1c (2026-10-16) on a 4-core cloud VM (Intel Xeon @ 2.1 GHz, Linux, Node 22),
 median engine time in ms (target in parentheses):
 
 | problem | Rust | WASM | TS |
 |---|---:|---:|---:|
-| 200 labels + 10k points | 16.4 (15) | **23.3** (30) | **44.0** (60) |
-| 2,000 labels + 100k points, greedy | 294.7 (120) | 328.2 (250) | 617.2 (600) |
-| 2048² raster preparation | 26.7 (25) | **38.3** (60) | **104.7** (150) |
+| 200 labels + 10k points | 16.4 (15) | **26.4** (30) | **47.3** (60) |
+| 2,000 labels + 100k points, greedy | 286.0 (120) | 317.7 (250) | 639.1 (600) |
+| 2048² raster preparation | **24.9** (25) | **38.5** (60) | **92.2** (150) |
 
-Four of the nine targets are met on this machine. The brief sets them for a 2023 laptop, whose
+Five of the nine targets are met on this machine (the native raster preparation only just;
+runs on this VM vary by about ±10 %). The brief sets them for a 2023 laptop, whose
 cores are faster than this VM's, but the gate checks them as measured, on whatever machine runs
 the benchmark. The 2,000-label problem misses in every implementation. Single-threaded, about
 40 % of its time goes to the degradation ladder of the ≈ 1,400 labels that find no room at
