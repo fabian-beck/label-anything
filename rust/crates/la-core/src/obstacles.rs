@@ -100,6 +100,9 @@ pub struct Obstacles {
     pub own: Vec<(GridSpec, Sat)>,
     /// Distance (px) from each cell center to the nearest static hard obstacle.
     pub dt: Vec<f64>,
+    /// Local maxima of the distance transform: (cell center, clearance, col, row).
+    pub seeds: Vec<(P, f64, usize, usize)>,
+    pub seed_index: StaticIndex,
     pub label_area: Option<Rect>,
     pub leader_area: Option<Rect>,
     pub index_cell: f64,
@@ -253,6 +256,8 @@ pub fn prepare(model: &Model, env: &dyn Env, min_font: f64) -> Obstacles {
             None => false,
         }
     });
+    let seeds = dt_maxima(&grid, &dt, model.default_em * 0.4);
+    let seed_index = StaticIndex::new(seeds.iter().map(|s| Rect::from_center(s.0, 0.0, 0.0)).collect(), &model.extent, index_cell * 2.0);
     Obstacles {
         grid,
         classes,
@@ -263,10 +268,47 @@ pub fn prepare(model: &Model, env: &dyn Env, min_font: f64) -> Obstacles {
         items_sat,
         own,
         dt,
+        seeds,
+        seed_index,
         label_area: model.label_area,
         leader_area: model.leader_area,
         index_cell,
     }
+}
+
+/// Local maxima of the distance transform with clearance ≥ `min_v` (plateaus keep their
+/// first cell in row-major order).
+fn dt_maxima(g: &GridSpec, dt: &[f64], min_v: f64) -> Vec<(P, f64, usize, usize)> {
+    let mut out = Vec::new();
+    for r in 0..g.rows {
+        for c in 0..g.cols {
+            let v = dt[r * g.cols + c];
+            if v < min_v || v >= 1e9 {
+                continue;
+            }
+            let mut is_max = true;
+            'n: for dr in -1i64..=1 {
+                for dc in -1i64..=1 {
+                    if dr == 0 && dc == 0 {
+                        continue;
+                    }
+                    let (rr, cc) = (r as i64 + dr, c as i64 + dc);
+                    if rr < 0 || cc < 0 || rr >= g.rows as i64 || cc >= g.cols as i64 {
+                        continue;
+                    }
+                    let w = dt[rr as usize * g.cols + cc as usize];
+                    if w > v || (w == v && (dr < 0 || (dr == 0 && dc < 0))) {
+                        is_max = false;
+                        break 'n;
+                    }
+                }
+            }
+            if is_max {
+                out.push((g.cell_center(c, r), v, c, r));
+            }
+        }
+    }
+    out
 }
 
 fn rasterize_prim(m: &mut MaskRaster, p: &Prim) {
@@ -366,13 +408,14 @@ impl Obstacles {
         maxf(all - s.covered_area(g, r), 0.0)
     }
 
-    /// Mean class coverage (0..1) sampled along segment `ab` every half cell, times length.
+    /// Mean class coverage (0..1) sampled along segment `ab` once per cell length, times
+    /// the length.
     pub fn covered_len(&self, sat: &Sat, a: P, b: P) -> f64 {
         let len = a.dist(b);
         if len <= 0.0 || !sat.nonempty {
             return 0.0;
         }
-        let step = self.grid.cell * 0.5;
+        let step = self.grid.cell;
         let n = ((len / step).ceil() as usize).max(1);
         let mut acc = 0.0;
         for k in 0..n {

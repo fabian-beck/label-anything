@@ -72,7 +72,7 @@ pub fn validate_str(text: &str) -> Report {
 pub fn validate(problem: &Value) -> Report {
     let interp = Interp { root: schema(), regexes: RefCell::new(BTreeMap::new()) };
     let mut errors = Vec::new();
-    interp.check(schema(), problem, "", false, &mut errors);
+    interp.check(schema(), problem, &Path::Root(""), false, false, &mut Sink::Collect(&mut errors));
     let mut warnings = Vec::new();
     semantic(problem, &mut errors, &mut warnings);
     errors.sort();
@@ -89,6 +89,40 @@ pub fn validate(problem: &Value) -> Report {
 struct Interp<'s> {
     root: &'s Value,
     regexes: RefCell<BTreeMap<String, regex_lite::Regex>>,
+}
+
+/// A lazily materialized JSON pointer (built only when an error is reported).
+#[derive(Clone, Copy)]
+enum Path<'p> {
+    Root(&'p str),
+    Key(&'p Path<'p>, &'p str),
+    Idx(&'p Path<'p>, usize),
+}
+
+impl Path<'_> {
+    fn render(&self) -> String {
+        let mut segs: Vec<String> = Vec::new();
+        let mut cur = self;
+        let root = loop {
+            match cur {
+                Path::Root(r) => break *r,
+                Path::Key(p, k) => {
+                    segs.push(ptr_token(k));
+                    cur = p;
+                }
+                Path::Idx(p, i) => {
+                    segs.push(i.to_string());
+                    cur = p;
+                }
+            }
+        };
+        let mut out = root.to_string();
+        for s in segs.iter().rev() {
+            out.push('/');
+            out.push_str(s);
+        }
+        out
+    }
 }
 
 fn type_name(v: &Value) -> &'static str {
@@ -130,11 +164,38 @@ fn short(v: &Value) -> String {
     }
 }
 
+/// Where errors go: collected with pointers, or just "did anything fail" (fail fast).
+enum Sink<'o> {
+    Collect(&'o mut Vec<Issue>),
+    Quick(bool),
+}
+
+impl Sink<'_> {
+    #[inline]
+    fn err(&mut self, ptr: &Path, code: &str, msg: impl FnOnce() -> String) {
+        match self {
+            Sink::Collect(v) => v.push(Issue::new(ptr.render(), code, msg())),
+            Sink::Quick(f) => *f = true,
+        }
+    }
+    #[inline]
+    fn push(&mut self, issue: Issue) {
+        match self {
+            Sink::Collect(v) => v.push(issue),
+            Sink::Quick(f) => *f = true,
+        }
+    }
+    #[inline]
+    fn failed(&self) -> bool {
+        matches!(self, Sink::Quick(true))
+    }
+}
+
 impl<'s> Interp<'s> {
     fn resolve(&self, r: &str) -> Option<&'s Value> {
         let mut cur = self.root;
         for tok in r.strip_prefix("#/")?.split('/') {
-            cur = cur.get(tok.replace("~1", "/").replace("~0", "~"))?;
+            cur = if tok.contains('~') { cur.get(tok.replace("~1", "/").replace("~0", "~"))? } else { cur.get(tok)? };
         }
         Some(cur)
     }
@@ -152,22 +213,44 @@ impl<'s> Interp<'s> {
         cache[pattern].is_match(s)
     }
 
-    /// Check `v` against schema `s`; returns the property names evaluated at this location.
-    fn check(&self, s: &'s Value, v: &Value, ptr: &str, unit: bool, out: &mut Vec<Issue>) -> BTreeSet<String> {
-        let mut evaluated = BTreeSet::new();
+    /// Fail-fast validity of `v` against `s` (no error objects).
+    fn valid(&self, s: &'s Value, v: &Value, unit: bool) -> bool {
+        let mut q = Sink::Quick(false);
+        self.check(s, v, &Path::Root(""), unit, false, &mut q);
+        !q.failed()
+    }
+
+    /// Property names evaluated by `s` at `v` (for `unevaluatedProperties`); `v` is valid.
+    fn evaluated_of<'v>(&self, s: &'s Value, v: &'v Value, unit: bool) -> Vec<&'v str> {
+        let mut sink_vec = Vec::new();
+        self.check(s, v, &Path::Root(""), unit, true, &mut Sink::Collect(&mut sink_vec))
+    }
+
+    /// Check `v` against schema `s`. When `collect` is set, returns the property names
+    /// evaluated at this location (for `unevaluatedProperties`). In `Quick` mode returns
+    /// as soon as anything fails.
+    fn check<'v>(&self, s: &'s Value, v: &'v Value, ptr: &Path, unit: bool, collect: bool, sink: &mut Sink) -> Vec<&'v str> {
+        let mut evaluated: Vec<&'v str> = Vec::new();
         let o = match s {
             Value::Bool(true) => return evaluated,
             Value::Bool(false) => {
-                out.push(Issue::new(ptr, "invalid_value", "value not allowed here"));
+                sink.err(ptr, "invalid_value", || "value not allowed here".into());
                 return evaluated;
             }
             Value::Object(o) => o,
             _ => return evaluated,
         };
+        let need = collect || o.contains_key("unevaluatedProperties");
         if let Some(Value::String(r)) = o.get("$ref") {
             if let Some(target) = self.resolve(r) {
                 let unit2 = unit || r == "#/$defs/length" || r == "#/$defs/nonNegLength";
-                evaluated.extend(self.check(target, v, ptr, unit2, out));
+                let ev = self.check(target, v, ptr, unit2, need, sink);
+                if sink.failed() {
+                    return evaluated;
+                }
+                if need {
+                    evaluated.extend(ev);
+                }
             }
         }
         if let Some(t) = o.get("type") {
@@ -177,98 +260,120 @@ impl<'s> Interp<'s> {
                 _ => true,
             };
             if !ok {
-                let want = match t {
-                    Value::String(t) => t.clone(),
-                    Value::Array(ts) => ts.iter().filter_map(|t| t.as_str()).collect::<Vec<_>>().join(" or "),
-                    _ => String::new(),
-                };
-                out.push(Issue::new(ptr, "type", format!("expected {want}, got {}", type_name(v))));
+                sink.err(ptr, "type", || {
+                    let want = match t {
+                        Value::String(t) => t.clone(),
+                        Value::Array(ts) => ts.iter().filter_map(|t| t.as_str()).collect::<Vec<_>>().join(" or "),
+                        _ => String::new(),
+                    };
+                    format!("expected {want}, got {}", type_name(v))
+                });
                 return evaluated;
             }
         }
         if let Some(c) = o.get("const") {
             if !json_eq(c, v) {
-                out.push(Issue::new(ptr, "const", format!("must be {}", short(c))));
+                sink.err(ptr, "const", || format!("must be {}", short(c)));
+                if sink.failed() {
+                    return evaluated;
+                }
             }
         }
         if let Some(Value::Array(e)) = o.get("enum") {
             if !e.iter().any(|x| json_eq(x, v)) {
-                let list: Vec<String> = e.iter().map(short).collect();
-                out.push(Issue::new(ptr, "enum", format!("must be one of {}", list.join(", "))));
+                sink.err(ptr, "enum", || {
+                    let list: Vec<String> = e.iter().map(short).collect();
+                    format!("must be one of {}", list.join(", "))
+                });
+                if sink.failed() {
+                    return evaluated;
+                }
             }
         }
         match v {
             Value::Number(n) => {
                 let x = n.as_f64().unwrap_or(0.0);
-                if let Some(m) = o.get("minimum").and_then(|m| m.as_f64()) {
-                    if x < m {
-                        out.push(Issue::new(ptr, "range", format!("must be >= {m}")));
-                    }
-                }
-                if let Some(m) = o.get("maximum").and_then(|m| m.as_f64()) {
-                    if x > m {
-                        out.push(Issue::new(ptr, "range", format!("must be <= {m}")));
-                    }
-                }
-                if let Some(m) = o.get("exclusiveMinimum").and_then(|m| m.as_f64()) {
-                    if x <= m {
-                        out.push(Issue::new(ptr, "range", format!("must be > {m}")));
-                    }
-                }
-                if let Some(m) = o.get("exclusiveMaximum").and_then(|m| m.as_f64()) {
-                    if x >= m {
-                        out.push(Issue::new(ptr, "range", format!("must be < {m}")));
+                for (kw, msg) in [("minimum", ">="), ("maximum", "<="), ("exclusiveMinimum", ">"), ("exclusiveMaximum", "<")] {
+                    if let Some(m) = o.get(kw).and_then(|m| m.as_f64()) {
+                        let bad = match kw {
+                            "minimum" => x < m,
+                            "maximum" => x > m,
+                            "exclusiveMinimum" => x <= m,
+                            _ => x >= m,
+                        };
+                        if bad {
+                            sink.err(ptr, "range", || format!("must be {msg} {m}"));
+                        }
                     }
                 }
             }
             Value::String(st) => {
                 if let Some(m) = o.get("minLength").and_then(|m| m.as_u64()) {
                     if (st.chars().count() as u64) < m {
-                        out.push(Issue::new(ptr, "length", format!("must have at least {m} characters")));
+                        sink.err(ptr, "length", || format!("must have at least {m} characters"));
                     }
                 }
                 if let Some(Value::String(p)) = o.get("pattern") {
                     if !self.regex_match(p, st) {
                         let code = if unit { "unit" } else { "pattern" };
-                        let msg = if unit {
-                            format!("invalid length {}: use a number (px) or <number>px|pt|em", short(v))
-                        } else {
-                            format!("{} does not match {p}", short(v))
-                        };
-                        out.push(Issue::new(ptr, code, msg));
+                        sink.err(ptr, code, || {
+                            if unit {
+                                format!("invalid length {}: use a number (px) or <number>px|pt|em", short(v))
+                            } else {
+                                format!("{} does not match {p}", short(v))
+                            }
+                        });
                     }
                 }
             }
             Value::Array(a) => {
                 if let Some(m) = o.get("minItems").and_then(|m| m.as_u64()) {
                     if (a.len() as u64) < m {
-                        out.push(Issue::new(ptr, "length", format!("must have at least {m} items")));
+                        sink.err(ptr, "length", || format!("must have at least {m} items"));
                     }
                 }
                 if let Some(m) = o.get("maxItems").and_then(|m| m.as_u64()) {
                     if (a.len() as u64) > m {
-                        out.push(Issue::new(ptr, "length", format!("must have at most {m} items")));
+                        sink.err(ptr, "length", || format!("must have at most {m} items"));
                     }
+                }
+                if sink.failed() {
+                    return evaluated;
                 }
                 let mut start = 0;
                 if let Some(Value::Array(pre)) = o.get("prefixItems") {
                     for (i, ps) in pre.iter().enumerate() {
                         if let Some(item) = a.get(i) {
-                            self.check(ps, item, &format!("{ptr}/{i}"), unit, out);
+                            self.check(ps, item, &Path::Idx(ptr, i), unit, false, sink);
+                            if sink.failed() {
+                                return evaluated;
+                            }
                         }
                     }
                     start = pre.len();
                 }
                 if let Some(is) = o.get("items") {
+                    // fast path for the common `[x, y]` point arrays
+                    let is_point = is.get("$ref").and_then(|r| r.as_str()) == Some("#/$defs/point");
                     for (i, item) in a.iter().enumerate().skip(start) {
-                        self.check(is, item, &format!("{ptr}/{i}"), unit, out);
+                        if is_point {
+                            if let Value::Array(xy) = item {
+                                if xy.len() == 2 && xy[0].is_number() && xy[1].is_number() {
+                                    continue;
+                                }
+                            }
+                        }
+                        self.check(is, item, &Path::Idx(ptr, i), unit, false, sink);
+                        if sink.failed() {
+                            return evaluated;
+                        }
                     }
                 }
                 if o.get("uniqueItems") == Some(&Value::Bool(true)) {
                     'outer: for i in 0..a.len() {
                         for j in 0..i {
                             if json_eq(&a[i], &a[j]) {
-                                out.push(Issue::new(format!("{ptr}/{i}"), "unique", "duplicate entry"));
+                                sink.err(&Path::Idx(ptr, i), "unique", || "duplicate entry".into());
                                 break 'outer;
                             }
                         }
@@ -279,16 +384,24 @@ impl<'s> Interp<'s> {
                 if let Some(Value::Array(req)) = o.get("required") {
                     for r in req.iter().filter_map(|r| r.as_str()) {
                         if !m.contains_key(r) {
-                            out.push(Issue::new(ptr_join(ptr, r), "required", format!("missing required property '{r}'")));
+                            sink.err(&Path::Key(ptr, r), "required", || format!("missing required property '{r}'"));
                         }
                     }
                 }
+                if sink.failed() {
+                    return evaluated;
+                }
                 let props = o.get("properties").and_then(|p| p.as_object());
                 if let Some(props) = props {
-                    for (k, ps) in props {
-                        if let Some(val) = m.get(k) {
-                            self.check(ps, val, &ptr_join(ptr, k), false, out);
-                            evaluated.insert(k.clone());
+                    for (k, val) in m {
+                        if let Some(ps) = props.get(k) {
+                            self.check(ps, val, &Path::Key(ptr, k), false, false, sink);
+                            if sink.failed() {
+                                return evaluated;
+                            }
+                            if need {
+                                evaluated.push(k.as_str());
+                            }
                         }
                     }
                 }
@@ -298,16 +411,24 @@ impl<'s> Interp<'s> {
                             continue;
                         }
                         if ap == &Value::Bool(false) {
-                            out.push(Issue::new(ptr_join(ptr, k), "unknown_property", format!("unknown property '{k}'")));
+                            sink.err(&Path::Key(ptr, k), "unknown_property", || format!("unknown property '{k}'"));
                         } else {
-                            self.check(ap, val, &ptr_join(ptr, k), false, out);
+                            self.check(ap, val, &Path::Key(ptr, k), false, false, sink);
                         }
-                        evaluated.insert(k.clone());
+                        if sink.failed() {
+                            return evaluated;
+                        }
+                        if need {
+                            evaluated.push(k.as_str());
+                        }
                     }
                 }
                 if let Some(pn) = o.get("propertyNames") {
                     for k in m.keys() {
-                        self.check(pn, &Value::String(k.clone()), &ptr_join(ptr, k), false, out);
+                        self.check(pn, &Value::String(k.clone()), &Path::Key(ptr, k), false, false, sink);
+                        if sink.failed() {
+                            return evaluated;
+                        }
                     }
                 }
                 if let Some(Value::Object(dr)) = o.get("dependentRequired") {
@@ -315,7 +436,7 @@ impl<'s> Interp<'s> {
                         if m.contains_key(k) {
                             for d in deps.as_array().into_iter().flatten().filter_map(|d| d.as_str()) {
                                 if !m.contains_key(d) {
-                                    out.push(Issue::new(ptr_join(ptr, d), "required", format!("'{d}' is required when '{k}' is given")));
+                                    sink.err(&Path::Key(ptr, d), "required", || format!("'{d}' is required when '{k}' is given"));
                                 }
                             }
                         }
@@ -324,89 +445,131 @@ impl<'s> Interp<'s> {
             }
             _ => {}
         }
+        if sink.failed() {
+            return evaluated;
+        }
         if let Some(Value::Array(all)) = o.get("allOf") {
             for sub in all {
-                evaluated.extend(self.check(sub, v, ptr, unit, out));
+                let ev = self.check(sub, v, ptr, unit, need, sink);
+                if sink.failed() {
+                    return evaluated;
+                }
+                if need {
+                    evaluated.extend(ev);
+                }
             }
         }
         if let Some(Value::Array(any)) = o.get("anyOf") {
-            let mut results = Vec::new();
-            let mut valid_any = false;
-            for sub in any {
-                let mut errs = Vec::new();
-                let ev = self.check(sub, v, ptr, unit, &mut errs);
-                if errs.is_empty() {
-                    valid_any = true;
-                    evaluated.extend(ev);
-                }
-                results.push(errs);
-            }
-            if !valid_any {
-                if required_only(any) {
-                    let first = any[0]["required"][0].as_str().unwrap_or("");
-                    let names = required_names(any);
-                    out.push(Issue::new(ptr_join(ptr, first), "required", format!("one of {names} is required")));
+            let valid: Vec<usize> = (0..any.len()).filter(|&k| self.valid(&any[k], v, unit)).collect();
+            if valid.is_empty() {
+                if let Sink::Collect(_) = sink {
+                    let p = ptr.render();
+                    if required_only(any) {
+                        let first = any[0]["required"][0].as_str().unwrap_or("");
+                        let names = required_names(any);
+                        sink.push(Issue::new(ptr_join(&p, first), "required", format!("one of {names} is required")));
+                    } else {
+                        let results = any.iter().map(|sub| self.errors_of(sub, v, ptr, unit)).collect();
+                        for e in best_alternative(results, &p) {
+                            sink.push(e);
+                        }
+                    }
                 } else {
-                    out.extend(best_alternative(results, ptr));
+                    sink.push(Issue::new(String::new(), "", String::new()));
+                    return evaluated;
+                }
+            } else if need {
+                for k in valid {
+                    evaluated.extend(self.evaluated_of(&any[k], v, unit));
                 }
             }
         }
         if let Some(Value::Array(one)) = o.get("oneOf") {
-            let mut results = Vec::new();
-            let mut valid = Vec::new();
-            for (i, sub) in one.iter().enumerate() {
-                let mut errs = Vec::new();
-                let ev = self.check(sub, v, ptr, unit, &mut errs);
-                if errs.is_empty() {
-                    valid.push((i, ev));
-                }
-                results.push(errs);
-            }
+            let valid: Vec<usize> = (0..one.len()).filter(|&k| self.valid(&one[k], v, unit)).collect();
             match valid.len() {
-                1 => evaluated.extend(valid.pop().map(|x| x.1).unwrap_or_default()),
+                1 => {
+                    if need {
+                        evaluated.extend(self.evaluated_of(&one[valid[0]], v, unit));
+                    }
+                }
                 0 => {
-                    if required_only(one) {
-                        out.push(Issue::new(ptr, "exclusive", format!("exactly one of {} is required", required_names(one))));
+                    if let Sink::Collect(_) = sink {
+                        let p = ptr.render();
+                        if required_only(one) {
+                            sink.push(Issue::new(p, "exclusive", format!("exactly one of {} is required", required_names(one))));
+                        } else {
+                            let results = one.iter().map(|sub| self.errors_of(sub, v, ptr, unit)).collect();
+                            for e in best_alternative(results, &p) {
+                                sink.push(e);
+                            }
+                        }
                     } else {
-                        out.extend(best_alternative(results, ptr));
+                        sink.push(Issue::new(String::new(), "", String::new()));
+                        return evaluated;
                     }
                 }
                 _ => {
-                    let msg = if required_only(one) {
-                        format!("only one of {} may be given", required_names(one))
-                    } else {
-                        "value matches more than one alternative".to_string()
-                    };
-                    out.push(Issue::new(ptr, "exclusive", msg));
+                    sink.err(ptr, "exclusive", || {
+                        if required_only(one) {
+                            format!("only one of {} may be given", required_names(one))
+                        } else {
+                            "value matches more than one alternative".to_string()
+                        }
+                    });
+                    if sink.failed() {
+                        return evaluated;
+                    }
                 }
             }
         }
         if let Some(cond) = o.get("if") {
-            let mut errs = Vec::new();
-            let ev = self.check(cond, v, ptr, unit, &mut errs);
-            if errs.is_empty() {
-                evaluated.extend(ev);
+            if self.valid(cond, v, unit) {
+                if need {
+                    evaluated.extend(self.evaluated_of(cond, v, unit));
+                }
                 if let Some(t) = o.get("then") {
-                    evaluated.extend(self.check(t, v, ptr, unit, out));
+                    let ev = self.check(t, v, ptr, unit, need, sink);
+                    if sink.failed() {
+                        return evaluated;
+                    }
+                    if need {
+                        evaluated.extend(ev);
+                    }
                 }
             } else if let Some(e) = o.get("else") {
-                evaluated.extend(self.check(e, v, ptr, unit, out));
+                let ev = self.check(e, v, ptr, unit, need, sink);
+                if sink.failed() {
+                    return evaluated;
+                }
+                if need {
+                    evaluated.extend(ev);
+                }
             }
         }
         if let (Some(up), Value::Object(m)) = (o.get("unevaluatedProperties"), v) {
             for (k, val) in m {
-                if evaluated.contains(k) {
+                if evaluated.contains(&k.as_str()) {
                     continue;
                 }
                 if up == &Value::Bool(false) {
-                    out.push(Issue::new(ptr_join(ptr, k), "unknown_property", format!("unknown property '{k}'")));
+                    sink.err(&Path::Key(ptr, k), "unknown_property", || format!("unknown property '{k}'"));
                 } else {
-                    self.check(up, val, &ptr_join(ptr, k), false, out);
+                    self.check(up, val, &Path::Key(ptr, k), false, false, sink);
                 }
-                evaluated.insert(k.clone());
+                if sink.failed() {
+                    return evaluated;
+                }
+                evaluated.push(k.as_str());
             }
         }
         evaluated
+    }
+
+    /// All errors of `v` against `s` (reporting path only).
+    fn errors_of(&self, s: &'s Value, v: &Value, ptr: &Path, unit: bool) -> Vec<Issue> {
+        let mut errs = Vec::new();
+        self.check(s, v, ptr, unit, false, &mut Sink::Collect(&mut errs));
+        errs
     }
 }
 

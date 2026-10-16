@@ -236,7 +236,7 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
                 print_report(&report);
                 return Ok(ExitCode::from(1));
             }
-            let mut result = label_anything::place_with(&p, &env).map_err(|e| e.to_string())?;
+            let mut result = label_anything::place_validated(&p, &env, report).map_err(|e| e.to_string())?;
             if let Some(path) = debug_svg {
                 if let Some(svg) = result.get("debug_svg").and_then(|s| s.as_str()) {
                     std::fs::write(&path, svg).map_err(|e| format!("{}: {e}", path.display()))?;

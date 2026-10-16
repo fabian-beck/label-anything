@@ -54,6 +54,8 @@ struct Greedy {
     sets: Vec<Option<usize>>,
     set_members: Vec<Vec<usize>>,
     cap_reached: bool,
+    /// Largest key level among placed labels (evict_lower needs a lower-key label).
+    max_key_placed: usize,
 }
 
 pub fn run(s: &mut Solve) {
@@ -69,6 +71,7 @@ pub fn run(s: &mut Solve) {
         sets: vec![None; n],
         set_members: Vec::new(),
         cap_reached: false,
+        max_key_placed: 0,
     };
     for k in 0..s.n_level0 {
         if g.alive[k] {
@@ -260,7 +263,13 @@ fn place_item(s: &mut Solve, g: &mut Greedy, i: usize, ladder: bool) -> bool {
         s.steps_tried[i].push(step.name());
         let choice = match step {
             Step::Omit => break,
-            Step::EvictLower => evict_lower(s, g, i),
+            Step::EvictLower => {
+                if g.max_key_placed > s.pri.prio[i].key {
+                    evict_lower(s, g, i)
+                } else {
+                    None
+                }
+            }
             Step::SoftOverlap => {
                 let ids: Vec<u32> = s.by_item[i].clone();
                 best_free(s, &ids, true)
@@ -286,6 +295,7 @@ fn place_item(s: &mut Solve, g: &mut Greedy, i: usize, ladder: bool) -> bool {
 
 fn commit(s: &mut Solve, g: &mut Greedy, i: usize, c: u32, relaxed: bool) {
     s.state.place(i, c, &s.cands, relaxed);
+    g.max_key_placed = g.max_key_placed.max(s.pri.prio[i].key);
     s.reasons[i] = None;
     // kill conflicting level-0 candidates of other undecided items
     let bb = s.cands[c as usize].bbox();
@@ -348,6 +358,21 @@ fn best_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<u32> {
         let d = s.state.dynamic_cost(cand, &s.cands, s.obs, buffer, clearance, lw, i);
         scored.push((cand.cost + d, c));
     }
+    // on-demand distant candidates: only when they could beat the best adjacent one
+    let best_adj = scored.iter().map(|x| x.0).fold(f64::INFINITY, f64::min);
+    if s.distant_pending[i] && best_adj > s.leader_cost_bound(i) {
+        s.ensure_distant(i);
+    }
+    let mut scratch = Vec::new();
+    let late: Vec<u32> = s.by_item[i].iter().copied().filter(|&c| (c as usize) >= s.n_level0 && s.cands[c as usize].level == 0 && s.cands[c as usize].feasible).collect();
+    for c in late {
+        let cand = s.cands[c as usize].clone();
+        if !s.state.is_free(&cand, &s.cands, s.obs, i, &mut scratch) {
+            continue;
+        }
+        let d = s.state.dynamic_cost(&cand, &s.cands, s.obs, buffer, clearance, lw, i);
+        scored.push((cand.cost + d, c));
+    }
     if scored.is_empty() {
         return None;
     }
@@ -405,10 +430,18 @@ fn lookahead(s: &Solve, g: &mut Greedy, i: usize, c: u32) -> f64 {
 }
 
 /// Cheapest feasible (or, with `relaxed`, relaxed-feasible) free candidate among `ids`.
+/// Lazily generated candidates are evaluated only when they are free.
 fn best_free(s: &mut Solve, ids: &[u32], relaxed: bool) -> Option<(u32, bool)> {
     let mut best: Option<(f64, u32)> = None;
     let mut scratch = Vec::new();
     for &c in ids {
+        if !s.cands[c as usize].evaluated {
+            let cand = s.cands[c as usize].clone();
+            if !s.state.is_free(&cand, &s.cands, s.obs, cand.item as usize, &mut scratch) {
+                continue;
+            }
+            s.ensure_eval(c);
+        }
         let cand = &s.cands[c as usize];
         let usable = if relaxed { !cand.feasible && cand.relaxed } else { cand.feasible };
         if !usable {
@@ -436,6 +469,7 @@ fn evict_lower(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<(u32, bool)> {
     let mut best: Option<((usize, f64, f64), u32, Vec<u32>)> = None;
     let mut confl = Vec::new();
     for c in ids {
+        s.ensure_eval(c);
         let cand = s.cands[c as usize].clone();
         if !cand.feasible {
             continue;

@@ -172,49 +172,24 @@ pub fn distant(model: &Model, obs: &Obstacles, item: &Item, vi: usize, v: &Varia
 }
 
 /// Up to 8 local maxima of the distance transform within `max_distance` of the item
-/// whose clearance is at least `hh`.
+/// whose clearance is at least `hh` (precomputed in `Obstacles::seeds`).
 pub fn free_space_seeds(obs: &Obstacles, item: &Item, hh: f64) -> Vec<P> {
-    let g = &obs.grid;
-    let reach = item.len.max_distance + item.shape.bbox().w().max(item.shape.bbox().h()) * 0.5;
+    let bb = item.shape.bbox();
+    let reach = item.len.max_distance + bb.w().max(bb.h()) * 0.5;
     let c = item.shape.reference();
-    let area = Rect::from_center(c, reach, reach);
-    let (c0, c1, r0, r1) = g.cell_range(&area);
-    let mut seeds: Vec<(f64, usize, usize)> = Vec::new();
-    for r in r0..r1 {
-        for col in c0..c1 {
-            let v = obs.dt[r * g.cols + col];
-            if v < hh || v >= 1e9 {
-                continue;
-            }
-            let mut is_max = true;
-            'n: for dr in -1i64..=1 {
-                for dc in -1i64..=1 {
-                    if dr == 0 && dc == 0 {
-                        continue;
-                    }
-                    let (rr, cc) = (r as i64 + dr, col as i64 + dc);
-                    if rr < 0 || cc < 0 || rr >= g.rows as i64 || cc >= g.cols as i64 {
-                        continue;
-                    }
-                    let w = obs.dt[rr as usize * g.cols + cc as usize];
-                    if w > v || (w == v && (dr < 0 || (dr == 0 && dc < 0))) {
-                        is_max = false;
-                        break 'n;
-                    }
-                }
-            }
-            if is_max {
-                let p = g.cell_center(col, r);
-                let dd = p.dist(c);
-                if dd <= reach && dd > hh {
-                    seeds.push((v - 0.01 * dd, col, r));
-                }
-            }
+    let mut ids = Vec::new();
+    obs.seed_index.query(&Rect::from_center(c, reach, reach), &mut ids);
+    let mut seeds: Vec<(f64, usize, usize, P)> = Vec::new();
+    for id in ids {
+        let (p, v, col, row) = obs.seeds[id as usize];
+        let dd = p.dist(c);
+        if v >= hh && dd <= reach && dd > hh {
+            seeds.push((v - 0.01 * dd, col, row, p));
         }
     }
     seeds.sort_by(|a, b| crate::math::cmp_f64(b.0, a.0).then(a.2.cmp(&b.2)).then(a.1.cmp(&b.1)));
     seeds.truncate(8);
-    seeds.into_iter().map(|(_, col, r)| g.cell_center(col, r)).collect()
+    seeds.into_iter().map(|s| s.3).collect()
 }
 
 /// Leader length helper for tests.

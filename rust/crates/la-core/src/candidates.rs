@@ -123,6 +123,9 @@ pub struct Cand {
     pub relax_cost: f64,
     /// The first hard constraint that rejected the candidate.
     pub blocked: Option<Block>,
+    /// Static cost and feasibility are computed (ladder candidates are evaluated lazily,
+    /// only once they are free of placed labels).
+    pub evaluated: bool,
 }
 
 impl Cand {
@@ -141,6 +144,7 @@ impl Cand {
             relaxed: true,
             relax_cost: 0.0,
             blocked: None,
+            evaluated: false,
         }
     }
     /// Bounding box of label and leaders.
@@ -241,7 +245,7 @@ struct CVertex {
     straight_next: bool,
 }
 
-const SAMPLE_STEP_DEG: f64 = 3.0;
+const SAMPLE_STEP_DEG: f64 = 9.0;
 const EPS_DEG: f64 = 1e-4;
 
 #[inline]

@@ -60,6 +60,8 @@ pub struct Solve<'a> {
     pub steps_tried: Vec<Vec<String>>,
     /// Highest ladder level generated per item.
     pub level_done: Vec<u8>,
+    /// Level-0 distant candidates not generated yet (they are created on demand).
+    pub distant_pending: Vec<bool>,
     pub iterations: u64,
     pub time_guard_hit: bool,
     pub start_ms: f64,
@@ -85,6 +87,7 @@ impl<'a> Solve<'a> {
             reasons: vec![None; n],
             steps_tried: vec![Vec::new(); n],
             level_done: vec![0; n],
+            distant_pending: vec![false; n],
             iterations: 0,
             time_guard_hit: false,
             start_ms,
@@ -93,6 +96,22 @@ impl<'a> Solve<'a> {
 
     /// Generate and evaluate candidates for `variants[vi_range]` of item `i` with `models`.
     pub fn generate(&mut self, i: usize, vis: &[usize], models: Models, level: u8) -> Vec<u32> {
+        self.generate_mode(i, vis, models, level, false)
+    }
+
+    /// Statically evaluate candidate `cid` if it is not evaluated yet.
+    pub fn ensure_eval(&mut self, cid: u32) {
+        if self.cands[cid as usize].evaluated {
+            return;
+        }
+        let mut c = std::mem::replace(&mut self.cands[cid as usize], Cand::new(0, 0, 0, Kind::Adjacent, candidates::Side::Internal, 0.0, crate::geom::Rect::EMPTY));
+        let v = &self.variants[c.item as usize][c.variant as usize];
+        Evaluator::new(self.model, self.obs, self.env).eval(&mut c, v, None);
+        self.cands[cid as usize] = c;
+    }
+
+    /// `lazy`: skip static evaluation and pruning (ladder candidates; see `ensure_eval`).
+    pub fn generate_mode(&mut self, i: usize, vis: &[usize], models: Models, level: u8, lazy: bool) -> Vec<u32> {
         let item = &self.model.items[i];
         let mut fresh: Vec<Cand> = Vec::new();
         for &vi in vis {
@@ -118,6 +137,15 @@ impl<'a> Solve<'a> {
         }
         for c in &mut fresh {
             c.level = level;
+        }
+        if lazy {
+            let mut ids = Vec::with_capacity(fresh.len());
+            for c in fresh {
+                ids.push(self.cands.len() as u32);
+                self.cands.push(c);
+            }
+            self.by_item[i].extend_from_slice(&ids);
+            return ids;
         }
         let mut ev = Evaluator::new(self.model, self.obs, self.env);
         for c in &mut fresh {
@@ -159,13 +187,15 @@ impl<'a> Solve<'a> {
         ids
     }
 
-    /// Level-0 candidates of all items, then the candidate index.
+    /// Level-0 candidates of all items, then the candidate index. Distant candidates are
+    /// generated on demand (see [`Solve::ensure_distant`]).
     pub fn generate_level0(&mut self) {
         let n = self.model.items.len();
         for i in 0..n {
             let vis: Vec<usize> = (0..self.variants[i].len()).collect();
             let m = self.models[i];
-            self.generate(i, &vis, m, 0);
+            self.distant_pending[i] = m.has(Models::DISTANT);
+            self.generate(i, &vis, Models(m.0 & !Models::DISTANT), 0);
         }
         // auto preset: enable distant labels when crowded
         if let Some((frac, crowded_models)) = self.model.auto_crowded {
@@ -180,14 +210,37 @@ impl<'a> Solve<'a> {
                     let add = Models(crowded_models.0 & !self.models[i].0);
                     if add.0 != 0 {
                         self.models[i] = Models(self.models[i].0 | add.0);
-                        let vis: Vec<usize> = (0..self.variants[i].len()).collect();
-                        self.generate(i, &vis, add, 0);
+                        if add.has(Models::DISTANT) {
+                            self.distant_pending[i] = true;
+                        }
+                        let rest = Models(add.0 & !Models::DISTANT);
+                        if rest.0 != 0 {
+                            let vis: Vec<usize> = (0..self.variants[i].len()).collect();
+                            self.generate(i, &vis, rest, 0);
+                        }
                     }
                 }
             }
         }
         self.n_level0 = self.cands.len();
         self.cand_ix = StaticIndex::new(self.cands.iter().map(|c| c.bbox()).collect(), &self.model.extent, self.obs.index_cell);
+    }
+
+    /// Generate the pending level-0 distant candidates of item `i` (once).
+    pub fn ensure_distant(&mut self, i: usize) -> Vec<u32> {
+        if !self.distant_pending[i] {
+            return vec![];
+        }
+        self.distant_pending[i] = false;
+        let vis: Vec<usize> = (0..self.variants[i].len()).filter(|&v| self.variants[i][v].level == 0).collect();
+        self.generate(i, &vis, Models(Models::DISTANT), 0)
+    }
+
+    /// Lower bound of the static cost of any leadered candidate of item `i`.
+    pub fn leader_cost_bound(&self, i: usize) -> f64 {
+        let w = &self.model.weights;
+        let it = &self.model.items[i];
+        w.leader + w.leader_length * it.len.leader_min / it.em() + w.position
     }
 
     /// Run ladder step `si` for item `i`: create its variants/candidates (once) and
@@ -213,15 +266,15 @@ impl<'a> Solve<'a> {
                 }
                 let vis: Vec<usize> = (start..self.variants[i].len()).collect();
                 let m = self.models[i];
-                self.generate(i, &vis, m, level)
+                self.generate_mode(i, &vis, m, level, true)
             }
             Step::Distant => {
                 if self.models[i].has(Models::DISTANT) {
-                    return vec![];
+                    return self.ensure_distant(i);
                 }
                 self.models[i] = self.models[i].with(Models::DISTANT);
                 let vis: Vec<usize> = (0..self.variants[i].len()).collect();
-                self.generate(i, &vis, Models(Models::DISTANT), level)
+                self.generate_mode(i, &vis, Models(Models::DISTANT), level, true)
             }
             Step::Boundary => {
                 if self.models[i].has(Models::BOUNDARY) {
@@ -229,7 +282,7 @@ impl<'a> Solve<'a> {
                 }
                 self.models[i] = self.models[i].with(Models::BOUNDARY);
                 let vis: Vec<usize> = (0..self.variants[i].len()).collect();
-                self.generate(i, &vis, Models(Models::BOUNDARY), level)
+                self.generate_mode(i, &vis, Models(Models::BOUNDARY), level, true)
             }
             _ => vec![],
         }

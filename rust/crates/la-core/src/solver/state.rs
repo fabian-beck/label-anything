@@ -119,17 +119,56 @@ impl State {
         out.dedup();
     }
 
-    /// Whether candidate `c` conflicts with nothing placed (except `skip`).
-    pub fn is_free(&mut self, c: &Cand, cands: &[Cand], obs: &Obstacles, skip: usize, scratch: &mut Vec<u32>) -> bool {
-        self.conflicts(c, cands, obs, skip, scratch);
-        scratch.is_empty()
+    /// Whether candidate `c` conflicts with nothing placed (except `skip`); stops at the
+    /// first conflict.
+    pub fn is_free(&mut self, c: &Cand, cands: &[Cand], obs: &Obstacles, skip: usize, _scratch: &mut Vec<u32>) -> bool {
+        self.first_conflict(c, cands, obs, skip, |_| true).is_none()
+    }
+
+    /// The first placed item (in index-query order) that conflicts with `c` and satisfies
+    /// `pred`.
+    pub fn first_conflict(&mut self, c: &Cand, cands: &[Cand], obs: &Obstacles, skip: usize, pred: impl Fn(usize) -> bool) -> Option<usize> {
+        let dy = &obs.dynamic;
+        let bb = c.bbox();
+        self.label_ix.query(&bb, &mut self.buf);
+        for &j in &self.buf {
+            let ju = j as usize;
+            if ju == skip || !pred(ju) {
+                continue;
+            }
+            let Some(pid) = self.placed[ju] else { continue };
+            let p = &cands[pid as usize];
+            if dy.label_labels.is_hard() && c.rect.overlaps(&p.rect) {
+                return Some(ju);
+            }
+            if dy.leader_labels.is_hard() && c.leaders.iter().any(|l| l.segments().any(|(a, b)| seg_overlaps_rect(a, b, &p.rect))) {
+                return Some(ju);
+            }
+        }
+        if self.segs.len() > self.free_segs.len() {
+            self.seg_ix.query(&bb.inflate(EPS * 2.0), &mut self.buf);
+            for &s in &self.buf {
+                let (j, a, b) = self.segs[s as usize];
+                let ju = j as usize;
+                if ju == skip || !pred(ju) {
+                    continue;
+                }
+                let hit_label = dy.leader_labels.is_hard() && seg_overlaps_rect(a, b, &c.rect);
+                let hit_cross = dy.leader_leaders.is_hard() && c.leaders.iter().any(|l| l.segments().any(|(p, q)| seg_intersects(a, b, p, q)));
+                if hit_label || hit_cross {
+                    return Some(ju);
+                }
+            }
+        }
+        None
     }
 
     /// Soft costs of `c` against placed labels and leaders.
     pub fn dynamic_cost(&mut self, c: &Cand, cands: &[Cand], obs: &Obstacles, buffer: f64, clearance: f64, leader_w: f64, skip: usize) -> f64 {
         let dy = &obs.dynamic;
         let need_labels = matches!(dy.label_labels, AvoidW::Soft(_)) || dy.buffer_labels > 0.0 || matches!(dy.leader_labels, AvoidW::Soft(_));
-        let need_leaders = dy.buffer_leaders > 0.0 || matches!(dy.leader_labels, AvoidW::Soft(_)) || !c.leaders.is_empty();
+        let has_segs = self.segs.len() > self.free_segs.len();
+        let need_leaders = has_segs && (dy.buffer_leaders > 0.0 || matches!(dy.leader_labels, AvoidW::Soft(_)) || !c.leaders.is_empty());
         if !need_labels && !need_leaders {
             return 0.0;
         }

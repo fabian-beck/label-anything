@@ -42,12 +42,13 @@ impl Buckets {
 }
 
 /// Static index over a fixed set of bounding boxes (compressed sparse rows).
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct StaticIndex {
     b: Buckets,
     offsets: Vec<u32>,
     ids: Vec<u32>,
     boxes: Vec<Rect>,
+    stamp: std::cell::RefCell<(Vec<u32>, u32)>,
 }
 
 impl StaticIndex {
@@ -83,7 +84,8 @@ impl StaticIndex {
                 }
             }
         }
-        StaticIndex { b, offsets: counts, ids, boxes }
+        let n = boxes.len();
+        StaticIndex { b, offsets: counts, ids, boxes, stamp: std::cell::RefCell::new((vec![0; n], 0)) }
     }
 
     pub fn len(&self) -> usize {
@@ -96,26 +98,43 @@ impl StaticIndex {
         &self.boxes[id as usize]
     }
 
-    /// Ids whose boxes touch `r` (closed), ascending, deduplicated.
+    /// Ids whose boxes touch `r` (closed), deduplicated, in bucket scan order
+    /// (row-major, first occurrence) — deterministic for a given index.
     pub fn query(&self, r: &Rect, out: &mut Vec<u32>) {
         out.clear();
         if self.boxes.is_empty() {
             return;
         }
         let (c0, c1, r0, r1) = self.b.range(r);
+        if c0 == c1 && r0 == r1 {
+            let k = r0 * self.b.cols + c0;
+            for &id in &self.ids[self.offsets[k] as usize..self.offsets[k + 1] as usize] {
+                if self.boxes[id as usize].touches(r) {
+                    out.push(id);
+                }
+            }
+            return;
+        }
+        let mut st = self.stamp.borrow_mut();
+        st.1 = st.1.wrapping_add(1);
+        if st.1 == 0 {
+            st.0.iter_mut().for_each(|x| *x = 0);
+            st.1 = 1;
+        }
+        let gen = st.1;
         for row in r0..=r1 {
             for col in c0..=c1 {
                 let k = row * self.b.cols + col;
                 for &id in &self.ids[self.offsets[k] as usize..self.offsets[k + 1] as usize] {
-                    if self.boxes[id as usize].touches(r) {
-                        out.push(id);
+                    let slot = &mut st.0[id as usize];
+                    if *slot != gen {
+                        *slot = gen;
+                        if self.boxes[id as usize].touches(r) {
+                            out.push(id);
+                        }
                     }
                 }
             }
-        }
-        if c0 != c1 || r0 != r1 {
-            out.sort_unstable();
-            out.dedup();
         }
     }
 }
@@ -126,12 +145,14 @@ pub struct DynIndex {
     b: Buckets,
     buckets: Vec<Vec<u32>>,
     boxes: Vec<Option<Rect>>,
+    stamp: Vec<u32>,
+    gen: u32,
 }
 
 impl DynIndex {
     pub fn new(extent: &Rect, cell: f64) -> DynIndex {
         let b = Buckets::new(extent, cell);
-        DynIndex { b, buckets: vec![Vec::new(); b.cols * b.rows], boxes: Vec::new() }
+        DynIndex { b, buckets: vec![Vec::new(); b.cols * b.rows], boxes: Vec::new(), stamp: Vec::new(), gen: 0 }
     }
 
     /// Insert with an explicit id (ids are small integers chosen by the caller).
@@ -169,13 +190,27 @@ impl DynIndex {
         self.boxes.get(id as usize).and_then(|b| b.as_ref())
     }
 
-    /// Ids whose boxes touch `r`, ascending, deduplicated.
-    pub fn query(&self, r: &Rect, out: &mut Vec<u32>) {
+    /// Ids whose boxes touch `r`, deduplicated, ascending (sorted so that results do not
+    /// depend on insertion/removal history).
+    pub fn query(&mut self, r: &Rect, out: &mut Vec<u32>) {
         out.clear();
         let (c0, c1, r0, r1) = self.b.range(r);
+        if self.stamp.len() < self.boxes.len() {
+            self.stamp.resize(self.boxes.len(), 0);
+        }
+        self.gen = self.gen.wrapping_add(1);
+        if self.gen == 0 {
+            self.stamp.iter_mut().for_each(|x| *x = 0);
+            self.gen = 1;
+        }
         for row in r0..=r1 {
             for col in c0..=c1 {
                 for &id in &self.buckets[row * self.b.cols + col] {
+                    let slot = &mut self.stamp[id as usize];
+                    if *slot == self.gen {
+                        continue;
+                    }
+                    *slot = self.gen;
                     if let Some(Some(b)) = self.boxes.get(id as usize) {
                         if b.touches(r) {
                             out.push(id);
@@ -184,8 +219,9 @@ impl DynIndex {
                 }
             }
         }
-        out.sort_unstable();
-        out.dedup();
+        if out.len() > 1 {
+            out.sort_unstable();
+        }
     }
 }
 
@@ -201,6 +237,7 @@ mod tests {
         ix.query(&Rect::xywh(8.0, 8.0, 1.0, 1.0), &mut out);
         assert_eq!(out, vec![0]);
         ix.query(&Rect::xywh(0.0, 0.0, 60.0, 60.0), &mut out);
+        out.sort_unstable();
         assert_eq!(out, vec![0, 1, 2]);
     }
 

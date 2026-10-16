@@ -65,11 +65,17 @@ pub fn place(problem: &Value, env: &dyn Env) -> Result<Value, PlaceError> {
 
 /// Solve a problem and, when `output.debug_svg` is set, return grid data for rendering.
 pub fn place_with_debug(problem: &Value, env: &dyn Env) -> Result<(Value, Option<DebugData>), PlaceError> {
-    let t0 = env.now_ms();
     let report = validate::validate(problem);
     if !report.valid {
         return Err(PlaceError { errors: report.errors });
     }
+    place_validated(problem, env, report.warnings)
+}
+
+/// Solve a problem that already passed `validate` (its warnings are passed through).
+pub fn place_validated(problem: &Value, env: &dyn Env, warnings: Vec<Issue>) -> Result<(Value, Option<DebugData>), PlaceError> {
+    let t0 = env.now_ms();
+    let report = validate::Report { valid: true, errors: vec![], warnings };
     let mut m = model::build(problem, env).map_err(|e| PlaceError { errors: vec![Issue::new(e.pointer, &e.code, e.message)] })?;
     m.warnings.extend(report.warnings);
     let fonts = labels::bundled_fonts();

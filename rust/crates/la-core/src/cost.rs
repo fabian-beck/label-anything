@@ -57,6 +57,15 @@ impl Acc<'_> {
     }
 }
 
+fn finish(c: &mut Cand, acc: Acc) {
+    c.evaluated = true;
+    c.cost = acc.cost;
+    c.feasible = acc.feasible;
+    c.relaxed = acc.relaxed;
+    c.relax_cost = acc.relax_cost;
+    c.blocked = acc.blocked;
+}
+
 impl<'a> Evaluator<'a> {
     pub fn new(model: &'a Model, obs: &'a Obstacles, env: &'a dyn Env) -> Evaluator<'a> {
         Evaluator { model, obs, env, buf: Vec::new(), buf2: Vec::new() }
@@ -86,10 +95,15 @@ impl<'a> Evaluator<'a> {
                 }
             }
         }
-        // 2. items (exact)
+        if !acc.relaxed {
+            return finish(c, acc);
+        }
+        // 2. items (exact); one query serves the buffer ring and the ambiguity term
         let ring = r.inflate(item.len.buffer);
+        let gap_guess = item.len.offset + 0.5 * em;
+        let reach = if item.len.buffer > gap_guess { item.len.buffer } else { gap_guess };
         self.buf.clear();
-        obs.item_index.query(&ring, &mut self.buf);
+        obs.item_index.query(&r.inflate(reach), &mut self.buf);
         for &j in &self.buf {
             let j = j as usize;
             let sj = &model.items[j].shape;
@@ -126,10 +140,14 @@ impl<'a> Evaluator<'a> {
         if let AvoidW::Soft(wt) = dy.label_items {
             acc.add("items", wt * obs.other_items_covered(i, &r) / area);
         }
-        if dy.buffer_items > 0.0 {
+        // the ring only sees other items when the item query found any besides the own
+        if dy.buffer_items > 0.0 && self.buf.iter().any(|&j| j as usize != i) {
             let ring_area = maxf(ring.area() - area, 1e-9);
             let cov = maxf(obs.other_items_covered(i, &ring) - obs.other_items_covered(i, &r), 0.0);
             acc.add("buffer:items", dy.buffer_items * cov / ring_area);
+        }
+        if !acc.relaxed {
+            return finish(c, acc);
         }
         // 3. static classes
         let mut hard_prims_checked = false;
@@ -156,18 +174,28 @@ impl<'a> Evaluator<'a> {
                         acc.violate(Block::Class(ci as u16), cl.relaxable, extra);
                     }
                 }
-                AvoidW::Soft(wt) => acc.add(&cl.name, wt * sat.covered_area(&obs.grid, &r) / area),
+                AvoidW::Soft(wt) => {
+                    if sat.any(&obs.grid, &r) {
+                        acc.add(&cl.name, wt * sat.covered_area(&obs.grid, &r) / area);
+                    }
+                }
                 AvoidW::Ignore => {}
             }
-            if cl.buffer > 0.0 {
+            if cl.buffer > 0.0 && sat.any(&obs.grid, &ring) {
                 let ring_area = maxf(ring.area() - area, 1e-9);
                 let cov = maxf(sat.covered_area(&obs.grid, &ring) - sat.covered_area(&obs.grid, &r), 0.0);
                 acc.add(&format!("buffer:{}", cl.name), cl.buffer * cov / ring_area);
             }
         }
+        if !acc.relaxed {
+            return finish(c, acc);
+        }
         // 4. leaders
         for l in &c.leaders {
             self.leader_terms(i, l, &r, &mut acc);
+        }
+        if !acc.relaxed {
+            return finish(c, acc);
         }
         // 5. position
         acc.add("position", w.position * c.rank / 8.0);
@@ -183,10 +211,12 @@ impl<'a> Evaluator<'a> {
             let d = minf(minf(r.x0 - la.x0, la.x1 - r.x1), minf(r.y0 - la.y0, la.y1 - r.y1));
             acc.add("edge", w.edge * maxf(0.0, 1.0 - maxf(d, 0.0) / em));
         }
-        // 9. ambiguity
+        // 9. ambiguity (the item query above covers the reach of adjacent labels)
         if w.ambiguity > 0.0 && c.kind != Kind::Internal {
             let amb = if let Some(l) = c.leaders.first() {
                 0.5 * self.ambiguity_point(i, l.port, em)
+            } else if gap <= gap_guess {
+                self.ambiguity_rect_cached(i, &r, gap, em)
             } else {
                 self.ambiguity_rect(i, &r, gap, em)
             };
@@ -203,11 +233,23 @@ impl<'a> Evaluator<'a> {
         if self.env.has_cost_callback() {
             acc.add("user", self.env.extra_cost(&item.id, &r, !c.leaders.is_empty()));
         }
-        c.cost = acc.cost;
-        c.feasible = acc.feasible;
-        c.relaxed = acc.relaxed;
-        c.relax_cost = acc.relax_cost;
-        c.blocked = acc.blocked;
+        finish(c, acc)
+    }
+
+    /// Ambiguity using the items already queried into `self.buf`.
+    fn ambiguity_rect_cached(&self, i: usize, r: &Rect, d_own: f64, em: f64) -> f64 {
+        let reach = d_own + 0.5 * em;
+        let mut d_other = f64::INFINITY;
+        for &j in &self.buf {
+            if j as usize != i {
+                d_other = minf(d_other, self.model.items[j as usize].shape.dist_rect(r));
+            }
+        }
+        if d_other < reach {
+            clampf((d_own - d_other) / em + 0.5, 0.0, 1.0)
+        } else {
+            0.0
+        }
     }
 
     fn ambiguity_rect(&mut self, i: usize, r: &Rect, d_own: f64, em: f64) -> f64 {

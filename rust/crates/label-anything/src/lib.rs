@@ -91,7 +91,16 @@ pub fn place(problem: &Value) -> Result<Value, PlaceError> {
 
 /// Solve with a custom environment. Fills `debug_svg` when `output.debug_svg` is set.
 pub fn place_with(problem: &Value, env: &dyn Env) -> Result<Value, PlaceError> {
-    let (mut result, debug) = la_core::place_with_debug(problem, env)?;
+    let report = validate(problem);
+    if !report.valid {
+        return Err(PlaceError { errors: report.errors });
+    }
+    place_validated(problem, env, report)
+}
+
+/// Solve a problem whose validation report is already known (must be valid).
+pub fn place_validated(problem: &Value, env: &dyn Env, report: Report) -> Result<Value, PlaceError> {
+    let (mut result, debug) = la_core::place_validated(problem, env, report.warnings)?;
     if let Some(d) = debug {
         let model = la_core::model::build(problem, env).ok();
         let svg = la_render::debug_svg(model.as_ref(), &result, Some(&d));

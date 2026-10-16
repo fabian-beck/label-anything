@@ -91,6 +91,7 @@ pub fn inversions(s: &mut Solve) -> usize {
         };
     }
     let soft_ok = s.model.ladder.contains(&Step::SoftOverlap);
+    let keys: Vec<usize> = s.pri.prio.iter().map(|p| p.key).collect();
     let mut count = 0;
     let mut buf = Vec::new();
     for h in 0..n {
@@ -105,6 +106,15 @@ pub fn inversions(s: &mut Solve) -> usize {
         let ids = s.by_item[h].clone();
         let mut inverted = false;
         for c in ids {
+            // cheap rejection first: a conflict with a higher- or equal-key label
+            let cand = s.cands[c as usize].clone();
+            if cand.evaluated && !(cand.feasible || (soft_ok && cand.relaxed)) {
+                continue;
+            }
+            if s.state.first_conflict(&cand, &s.cands, s.obs, h, |j| keys[j] <= key_h).is_some() {
+                continue;
+            }
+            s.ensure_eval(c);
             let cand = s.cands[c as usize].clone();
             if !(cand.feasible || (soft_ok && cand.relaxed)) {
                 continue;
