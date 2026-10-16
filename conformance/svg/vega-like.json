@@ -1,0 +1,114 @@
+{
+  "kind": "svg",
+  "name": "Vega-like chart",
+  "description": "Vega SVG renderer structure: background rect (:background → ignore), a stroked frame path with inherited fill none, axis ticks (<line>), axis labels (<text> with translate and text-anchor middle), symbol marks as <g class='mark-symbol role-mark'> paths made of two arcs (r^2 = 7.5), a degenerate path and a display:none path.",
+  "tolerance": 0.01,
+  "classes": [
+    {
+      "selector": ":background",
+      "class": "ignore"
+    },
+    {
+      "selector": ".mark-symbol path",
+      "class": "points"
+    },
+    {
+      "selector": ".role-axis-tick line",
+      "class": "axes"
+    },
+    {
+      "selector": ".role-axis-label text",
+      "class": "text"
+    },
+    {
+      "selector": "path.background",
+      "class": "frame"
+    },
+    {
+      "selector": "*",
+      "class": "ink"
+    }
+  ],
+  "svg": [
+    "<svg class=\"marks\" width=\"240\" height=\"140\" viewBox=\"0 0 240 140\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">",
+    "<rect width=\"240\" height=\"140\" fill=\"white\"></rect>",
+    "<g fill=\"none\" stroke-miterlimit=\"10\" transform=\"translate(30,10)\">",
+    "<g class=\"mark-group role-frame root\" role=\"graphics-object\" aria-roledescription=\"group mark container\">",
+    "<g transform=\"translate(0,0)\">",
+    "<path class=\"background\" aria-hidden=\"true\" d=\"M0.5,0.5h200v100h-200Z\" stroke=\"#ddd\"></path>",
+    "<g>",
+    "<g class=\"mark-group role-axis\" aria-hidden=\"true\" role=\"graphics-symbol\">",
+    "<g transform=\"translate(0.5,100.5)\">",
+    "<path class=\"background\" aria-hidden=\"true\" d=\"M0,0h0v0h0Z\" pointer-events=\"none\"></path>",
+    "<g><g class=\"mark-rule role-axis-tick\" pointer-events=\"none\">",
+    "<line transform=\"translate(0,0)\" x2=\"0\" y2=\"5\" stroke=\"#888\" stroke-width=\"1\" opacity=\"1\"></line>",
+    "<line transform=\"translate(100,0)\" x2=\"0\" y2=\"5\" stroke=\"#888\" stroke-width=\"1\" opacity=\"1\"></line>",
+    "</g>",
+    "<g class=\"mark-text role-axis-label\" pointer-events=\"none\">",
+    "<text text-anchor=\"middle\" transform=\"translate(0,15)\" font-family=\"sans-serif\" font-size=\"10px\" fill=\"#000\" opacity=\"1\">0</text>",
+    "<text text-anchor=\"middle\" transform=\"translate(100,15)\" font-family=\"sans-serif\" font-size=\"10px\" fill=\"#000\" opacity=\"1\">50</text>",
+    "</g></g>",
+    "</g>",
+    "</g>",
+    "<g class=\"mark-symbol role-mark marks\" role=\"graphics-object\" aria-roledescription=\"symbol mark container\">",
+    "<path transform=\"translate(20,30)\" d=\"M2.7386127875258306,0A2.7386127875258306,2.7386127875258306,0,1,1,-2.7386127875258306,0A2.7386127875258306,2.7386127875258306,0,1,1,2.7386127875258306,0\" fill=\"#4c78a8\" stroke-width=\"2\" opacity=\"0.7\"></path>",
+    "<path transform=\"translate(60,50)\" d=\"M2.7386127875258306,0A2.7386127875258306,2.7386127875258306,0,1,1,-2.7386127875258306,0A2.7386127875258306,2.7386127875258306,0,1,1,2.7386127875258306,0\" fill=\"#4c78a8\" stroke-width=\"2\" opacity=\"0.7\"></path>",
+    "<path transform=\"translate(100,20)\" d=\"M2.7386127875258306,0A2.7386127875258306,2.7386127875258306,0,1,1,-2.7386127875258306,0A2.7386127875258306,2.7386127875258306,0,1,1,2.7386127875258306,0\" fill=\"#4c78a8\" stroke-width=\"2\" opacity=\"0.7\"></path>",
+    "<path transform=\"translate(150,80)\" d=\"M2.7386127875258306,0A2.7386127875258306,2.7386127875258306,0,1,1,-2.7386127875258306,0A2.7386127875258306,2.7386127875258306,0,1,1,2.7386127875258306,0\" fill=\"#4c78a8\" stroke-width=\"2\" opacity=\"0.7\"></path>",
+    "</g>",
+    "</g>",
+    "<path class=\"foreground\" aria-hidden=\"true\" d=\"\" pointer-events=\"none\" display=\"none\"></path>",
+    "</g></g></g></svg>"
+  ],
+  "expect": {
+    "classes": {
+      "points": {
+        "count": 4,
+        "polygons": 4,
+        "fill_area": 94.24778,
+        "bbox": [
+          47.261387,
+          27.261387,
+          135.477226,
+          65.477226
+        ]
+      },
+      "axes": {
+        "count": 2,
+        "polylines": 2,
+        "stroke_length": 10,
+        "stroke_width": [
+          1,
+          1
+        ],
+        "bbox": [
+          30.5,
+          110.5,
+          100,
+          5
+        ]
+      },
+      "text": {
+        "count": 2,
+        "rects": 2,
+        "bbox": [
+          27.75,
+          117.5,
+          108.25,
+          10
+        ]
+      },
+      "frame": {
+        "count": 1,
+        "polylines": 1,
+        "stroke_length": 600,
+        "bbox": [
+          30.5,
+          10.5,
+          200,
+          100
+        ]
+      }
+    }
+  }
+}

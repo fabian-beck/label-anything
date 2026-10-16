@@ -1,0 +1,13 @@
+{
+  "kind": "svg",
+  "name": "width/height in em",
+  "description": "em = 16 px on the root: 10em x 5em = 160 x 80.",
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10em\" height=\"5em\">",
+    "</svg>"
+  ],
+  "expect": {
+    "width": 160,
+    "height": 80
+  }
+}

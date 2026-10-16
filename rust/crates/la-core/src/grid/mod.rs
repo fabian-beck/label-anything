@@ -80,7 +80,7 @@ fn clamp_floor(v: f64, n: usize) -> usize {
     } else if v >= n as f64 {
         n
     } else {
-        v.floor() as usize
+        v as usize // truncation == floor for v > 0
     }
 }
 
@@ -91,7 +91,7 @@ fn clamp_ceil(v: f64, n: usize) -> usize {
     } else if v >= n as f64 {
         n
     } else {
-        v.ceil() as usize
+        crate::math::ceil_fast(v) as usize
     }
 }
 
@@ -233,11 +233,11 @@ fn clamp01(v: f64, n: f64) -> f64 {
 #[inline]
 fn axis_parts(a: f64, b: f64, n: usize) -> [(usize, usize, f64); 3] {
     let none = (0usize, 0usize, 0.0f64);
-    let i0 = a.floor() as usize;
+    let i0 = a as usize; // a >= 0: truncation == floor
     if i0 >= n {
         return [none; 3];
     }
-    let bf = b.floor();
+    let bf = crate::math::floor_fast(b);
     let i1 = bf as usize; // cell containing b, or n when b == n
     if i1 == i0 {
         return [(i0, i0 + 1, b - a), none, none];
@@ -258,7 +258,7 @@ pub fn quantize(f: f64) -> u8 {
     if f <= 0.0 {
         return 0;
     }
-    let q = (f * 255.0 + 0.5).floor();
+    let q = crate::math::floor_fast(f * 255.0 + 0.5);
     if q < 1.0 {
         1
     } else if q > 255.0 {

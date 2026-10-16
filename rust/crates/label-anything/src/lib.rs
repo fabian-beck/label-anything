@@ -61,10 +61,10 @@ impl NativeEnv {
     }
 }
 
-/// The SVG backend compiled into this build (`None` until `label-anything-svg` is wired
-/// in). Bindings with their own [`Env`] (WASM, Python) delegate `Env::svg` to it.
+/// The SVG backend compiled into this build (`label-anything-svg`). Bindings with their
+/// own [`Env`] (WASM, Python) delegate `Env::svg` to it.
 pub fn svg_backend() -> Option<&'static dyn SvgBackend> {
-    None
+    Some(&la_core::env::BUILTIN_SVG)
 }
 
 impl Env for NativeEnv {

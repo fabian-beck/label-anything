@@ -1,0 +1,46 @@
+{
+  "kind": "svg",
+  "name": "preset auto rules",
+  "description": "spec/presets/auto.json svg_classes: full-canvas and 93 % x 90 % backgrounds are ignored; small rects/paths/uses and all circles are points; paths, lines, polylines and polygons are lines; text is text; everything else (large rects, images) is ink.",
+  "preset": "auto",
+  "tolerance": 0.1,
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"300\" height=\"200\">",
+    "  <defs><path id=\"m\" d=\"M -2 -2 h 4 v 4 h -4 z\"/></defs>",
+    "  <rect width=\"100%\" height=\"100%\" fill=\"white\"/>",
+    "  <rect x=\"10\" y=\"10\" width=\"280\" height=\"180\" fill=\"#eee\"/>",
+    "  <rect x=\"50\" y=\"50\" width=\"10\" height=\"10\"/>",
+    "  <rect x=\"100\" y=\"50\" width=\"20\" height=\"10\"/>",
+    "  <circle cx=\"200\" cy=\"100\" r=\"30\"/>",
+    "  <path d=\"M 10 150 L 290 150\" stroke=\"black\"/>",
+    "  <path d=\"M 10 160 h 5 v 5 h -5 z\"/>",
+    "  <use href=\"#m\" x=\"250\" y=\"40\"/>",
+    "  <polygon points=\"20,20 40,20 40,40\" fill=\"none\" stroke=\"black\"/>",
+    "  <text x=\"10\" y=\"190\" font-size=\"10\">label</text>",
+    "  <image x=\"200\" y=\"160\" width=\"40\" height=\"20\" href=\"x.png\"/>",
+    "</svg>"
+  ],
+  "expect": {
+    "classes": {
+      "points": {
+        "count": 4,
+        "polygons": 4,
+        "fill_area": 2968.433388
+      },
+      "lines": {
+        "count": 2,
+        "polylines": 2,
+        "stroke_length": 348.284271
+      },
+      "text": {
+        "count": 1,
+        "rects": 1
+      },
+      "ink": {
+        "count": 2,
+        "polygons": 2,
+        "fill_area": 1000
+      }
+    }
+  }
+}

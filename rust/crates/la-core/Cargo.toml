@@ -25,6 +25,7 @@ la-expr = { workspace = true }
 regex-lite = { workspace = true }
 la-text = { workspace = true }
 la-raster = { workspace = true, default-features = false }
+la-svg = { workspace = true }
 
 [dev-dependencies]
 # the sample problems include a PNG raster background

@@ -1,0 +1,41 @@
+{
+  "kind": "svg",
+  "name": "fill rules",
+  "description": "Nested squares 100x100 / 50x50: non-zero with equal orientation fills the hole (10000), even-odd or opposite orientation leaves it (7500). fill-rule is inherited and settable from CSS.",
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"500\" height=\"120\">",
+    "  <style>.eo { fill-rule: evenodd }</style>",
+    "  <path id=\"nz\" d=\"M 0 0 H 100 V 100 H 0 Z M 25 25 H 75 V 75 H 25 Z\"/>",
+    "  <path id=\"eo\" fill-rule=\"evenodd\" transform=\"translate(110 0)\" d=\"M 0 0 H 100 V 100 H 0 Z M 25 25 H 75 V 75 H 25 Z\"/>",
+    "  <path id=\"rev\" transform=\"translate(220 0)\" d=\"M 0 0 H 100 V 100 H 0 Z M 25 25 V 75 H 75 V 25 Z\"/>",
+    "  <g fill-rule=\"evenodd\"><path id=\"inh\" transform=\"translate(330 0)\" d=\"M 0 0 H 100 V 100 H 0 Z M 25 25 H 75 V 75 H 25 Z\"/></g>",
+    "  <path id=\"css\" class=\"eo\" fill-rule=\"nonzero\" transform=\"translate(440 0) scale(0.5)\" d=\"M 0 0 H 100 V 100 H 0 Z M 25 25 H 75 V 75 H 25 Z\"/>",
+    "</svg>"
+  ],
+  "expect": {
+    "geometry": [
+      {
+        "id": "nz",
+        "fill_area": 10000,
+        "polygons": 1,
+        "vertices": 8
+      },
+      {
+        "id": "eo",
+        "fill_area": 7500
+      },
+      {
+        "id": "rev",
+        "fill_area": 7500
+      },
+      {
+        "id": "inh",
+        "fill_area": 7500
+      },
+      {
+        "id": "css",
+        "fill_area": 1875.0
+      }
+    ]
+  }
+}

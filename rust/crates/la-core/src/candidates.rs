@@ -145,6 +145,17 @@ pub struct Cand {
     pub lshape: Option<Box<Shape>>,
 }
 
+/// Whether labels of this shape are their box ([`label_shape`] gives `None`).
+pub fn is_rect_shape(shape: &crate::model::LabelShape) -> bool {
+    use crate::model::LabelShape;
+    match shape {
+        LabelShape::Rect => true,
+        LabelShape::Rounded(r) => *r <= 0.0,
+        LabelShape::Circle => false,
+        LabelShape::Polygon(pts) => pts.len() < 3,
+    }
+}
+
 /// The exact shape of a label box with the given label shape (`None` for rectangles).
 pub fn label_shape(rect: &Rect, shape: &crate::model::LabelShape) -> Option<Box<Shape>> {
     use crate::model::LabelShape;
@@ -302,13 +313,8 @@ pub fn adjacent(
     let it = item.index as u32;
     if models.has(Models::ADJACENT) {
         for &(p, r) in &ranks {
-            let c = push_in(
-                shape,
-                o,
-                touch_center(shape, o, dir_of(p.angle()), hw, hh),
-                hw,
-                hh,
-            );
+            let d = pos_dirs()[p.angular_index()];
+            let c = push_in(shape, o, touch_center(shape, o, d, hw, hh), hw, hh);
             out.push(Cand::new(
                 it,
                 vi as u16,
@@ -329,9 +335,7 @@ pub fn adjacent(
         let (Some(ra), Some(rb)) = (rank_of(a), rank_of(b)) else {
             continue;
         };
-        let fa = a.angle();
-        let fb = if k == 7 { 360.0 } else { b.angle() };
-        let path = cspace_path(shape, o, hw, hh, fa, fb);
+        let path = cspace_path(shape, o, hw, hh, k);
         for (j, c) in sample_path(&path, slider_per_gap, shape, o, hw, hh)
             .into_iter()
             .enumerate()
@@ -375,24 +379,60 @@ fn is_axis(phi: f64) -> bool {
     r < 1e-9 || 90.0 - r < 1e-9
 }
 
-/// Boundary of `(S ⊕ o) ⊕ (−B)` between angles `fa` and `fb` (fa < fb, both fixed
-/// positions).
-fn cspace_path(shape: &Shape, o: f64, hw: f64, hh: f64, fa: f64, fb: f64) -> Vec<CVertex> {
-    let mut phis: Vec<f64> = vec![fa];
-    if is_axis(fa) {
-        phis.push(fa + EPS_DEG);
-    }
-    let n = ((fb - fa) / SAMPLE_STEP_DEG).ceil().max(1.0) as usize;
-    for k in 1..n {
-        phis.push(fa + (fb - fa) * k as f64 / n as f64);
-    }
-    if is_axis(fb) {
-        phis.push(fb - EPS_DEG);
-    }
-    phis.push(fb);
-    let mut verts: Vec<CVertex> = Vec::with_capacity(phis.len());
-    for &phi in &phis {
-        let p = c_at(shape, o, hw, hh, phi);
+/// Unit directions (`dir_of`) of the 8 fixed positions by angular index (computed once).
+fn pos_dirs() -> &'static [P; 8] {
+    static D: std::sync::OnceLock<[P; 8]> = std::sync::OnceLock::new();
+    D.get_or_init(|| std::array::from_fn(|k| dir_of(45.0 * k as f64)))
+}
+
+/// Vertex angles of the C-space path of gap `k` (between the fixed positions `k` and
+/// `k + 1` in angular order), with their directions and the directions of the angle
+/// midpoints between consecutive vertices. These depend only on `k`, so the
+/// trigonometry is done once per process.
+struct GapTable {
+    phis: Vec<f64>,
+    dirs: Vec<P>,
+    mids: Vec<P>,
+}
+
+fn gap_table(k: usize) -> &'static GapTable {
+    static T: std::sync::OnceLock<Vec<GapTable>> = std::sync::OnceLock::new();
+    &T.get_or_init(|| {
+        (0..8)
+            .map(|k| {
+                let fa = 45.0 * k as f64;
+                let fb = if k == 7 { 360.0 } else { 45.0 * (k + 1) as f64 };
+                let mut phis: Vec<f64> = vec![fa];
+                if is_axis(fa) {
+                    phis.push(fa + EPS_DEG);
+                }
+                let n = ((fb - fa) / SAMPLE_STEP_DEG).ceil().max(1.0) as usize;
+                for j in 1..n {
+                    phis.push(fa + (fb - fa) * j as f64 / n as f64);
+                }
+                if is_axis(fb) {
+                    phis.push(fb - EPS_DEG);
+                }
+                phis.push(fb);
+                let dirs = phis.iter().map(|&phi| dir_of(phi)).collect();
+                let mids = phis
+                    .windows(2)
+                    .map(|w| dir_of((w[0] + w[1]) * 0.5))
+                    .collect();
+                GapTable { phis, dirs, mids }
+            })
+            .collect()
+    })[k]
+}
+
+/// Boundary of `(S ⊕ o) ⊕ (−B)` over gap `k` (between two fixed positions).
+fn cspace_path(shape: &Shape, o: f64, hw: f64, hh: f64, k: usize) -> Vec<CVertex> {
+    let t = gap_table(k);
+    let mut verts: Vec<CVertex> = Vec::with_capacity(t.phis.len());
+    // table index of every kept vertex
+    let mut idx: Vec<usize> = Vec::with_capacity(t.phis.len());
+    for (j, &phi) in t.phis.iter().enumerate() {
+        let p = touch_center(shape, o, t.dirs[j], hw, hh);
         if let Some(last) = verts.last() {
             if last.p.dist(p) < 1e-12 {
                 continue;
@@ -403,10 +443,16 @@ fn cspace_path(shape: &Shape, o: f64, hw: f64, hh: f64, fa: f64, fb: f64) -> Vec
             phi,
             straight_next: true,
         });
+        idx.push(j);
     }
     for i in 0..verts.len().saturating_sub(1) {
         let (a, b) = (verts[i], verts[i + 1]);
-        let mid = c_at(shape, o, hw, hh, (a.phi + b.phi) * 0.5);
+        let d = if idx[i + 1] == idx[i] + 1 {
+            t.mids[idx[i]]
+        } else {
+            dir_of((a.phi + b.phi) * 0.5)
+        };
+        let mid = touch_center(shape, o, d, hw, hh);
         verts[i].straight_next = dist_point_seg(mid, a.p, b.p) <= 1e-9;
     }
     verts
@@ -599,8 +645,7 @@ mod tests {
             ),
         ] {
             for k in 0..8 {
-                let fa = 45.0 * k as f64;
-                let path = cspace_path(&shape, 2.0, 15.0, 6.0, fa, fa + 45.0);
+                let path = cspace_path(&shape, 2.0, 15.0, 6.0, k);
                 for c in sample_path(&path, 6, &shape, 2.0, 15.0, 6.0) {
                     let c = push_in(&shape, 2.0, c, 15.0, 6.0);
                     let r = Rect::from_center(c, 15.0, 6.0);

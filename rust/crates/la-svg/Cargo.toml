@@ -11,4 +11,20 @@ authors.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
+[features]
+default = []
+# Derive `serde::Serialize` for the public data types (JSON shape identical to the
+# objects returned by the TypeScript package `@label-anything/svg`).
+serde = ["dep:serde"]
+
 [dependencies]
+serde = { workspace = true, optional = true }
+
+[[example]]
+name = "dump"
+required-features = ["serde"]
+
+[dev-dependencies]
+serde_json = { workspace = true }
+# Oracle for differential tests of our own XML parser (see ADR 0013); not a runtime dependency.
+roxmltree = { workspace = true }

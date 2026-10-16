@@ -54,9 +54,14 @@ pub fn lookup<'a>(v: &'a Value, key: &str) -> Option<&'a Value> {
     Some(cur)
 }
 
+/// Top-level problem keys that hold data rather than options. They are never looked up
+/// through [`Opts`], so they are not copied into the merged options.
+pub const DATA_KEYS: [&str; 3] = ["items", "obstacles", "warm_start"];
+
 /// Effective options of one problem.
 pub struct Opts {
-    /// The problem with the preset's options merged underneath.
+    /// The problem's option sections (without [`DATA_KEYS`]) with the preset's options
+    /// merged underneath.
     pub merged: Value,
     pub preset_name: String,
     pub preset: Option<&'static Value>,
@@ -76,9 +81,18 @@ impl Opts {
                     .unwrap_or("auto")
             });
         let preset = preset(preset_name);
+        let options = match problem {
+            Value::Object(m) => Value::Object(
+                m.iter()
+                    .filter(|(k, _)| !DATA_KEYS.contains(&k.as_str()))
+                    .map(|(k, v)| (k.clone(), v.clone()))
+                    .collect(),
+            ),
+            other => other.clone(),
+        };
         let merged = match preset.and_then(|p| p.get("options")) {
-            Some(opts) => deep_merge(opts, problem),
-            None => problem.clone(),
+            Some(opts) => deep_merge(opts, &options),
+            None => options,
         };
         Opts {
             merged,

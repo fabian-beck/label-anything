@@ -1,0 +1,26 @@
+{
+  "kind": "svg",
+  "name": "width only with viewBox",
+  "description": "Only width given: height follows the viewBox aspect ratio (400 x 200).",
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"400\" viewBox=\"0 0 200 100\">",
+    "  <rect id=\"box\" width=\"200\" height=\"100\"/>",
+    "</svg>"
+  ],
+  "expect": {
+    "width": 400,
+    "height": 200,
+    "geometry": [
+      {
+        "id": "box",
+        "fill_area": 80000,
+        "bbox": [
+          0,
+          0,
+          400,
+          200
+        ]
+      }
+    ]
+  }
+}

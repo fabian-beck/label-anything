@@ -1,0 +1,13 @@
+{
+  "kind": "svg",
+  "name": "width/height in pt and mm",
+  "description": "460.8pt = 614.4 px, 50.8mm = 192 px.",
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"460.8pt\" height=\"50.8mm\">",
+    "</svg>"
+  ],
+  "expect": {
+    "width": 614.4,
+    "height": 192
+  }
+}

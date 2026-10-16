@@ -15,12 +15,15 @@ machine speed and load.
   250 ms TS) both run the same 10 000 moves. The annealing schedule is a function of the
   iteration index. (Profile note: a move costs ≈ 6 µs on the 200-label/10k-point case on
   the CI container, so 100 moves/ms keeps the default solve inside its budget.)
-* A **wall-clock guard** at 3 × `time_budget_ms` stops search on pathologically slow
-  machines; this sets `stats.time_guard_hit = true` (the only case where results may
-  depend on timing). Greedy always completes.
+* **Wall-clock guards** protect pathologically slow machines: local search stops at
+  3 × `time_budget_ms` after the start of the solve, and the greedy pass stops starting
+  new priority bands after 10 × `time_budget_ms` (the remaining items are reported as
+  `budget_exhausted`). Either sets `stats.time_guard_hit = true`; this is the only case
+  where results may depend on timing.
 * Arithmetic determinism across Rust and TS: only `+ − × ÷ sqrt` (IEEE correctly
   rounded) and shared `det_math` implementations of `sin/cos` (degrees), `exp`, `log`,
-  `log1p`; no `hypot`, no `Math.round` (use `floor(x + 0.5)`), sequential summation in
+  `log1p`; no `hypot`, no `Math.round` (use `round_half_away`; `floor(x + 0.5)` is wrong
+  for 0.49999999999999994), sequential summation in
   index order, stable sorts with total comparators, no decisions driven by hash-map
   iteration order.
 * RNG: PCG32 (XSH-RR) with the constants in spec §10.4; JS implements the 64-bit LCG

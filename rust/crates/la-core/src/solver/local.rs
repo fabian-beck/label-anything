@@ -44,9 +44,9 @@ fn usable(s: &mut Solve, c: u32, soft_ok: bool) -> bool {
 }
 
 fn is_free(s: &mut Solve, i: usize, c: u32) -> bool {
-    let cand = s.cands[c as usize].clone();
+    let cand = &s.cands[c as usize];
     let mut scratch = Vec::new();
-    s.state.is_free(&cand, &s.cands, s.obs, i, &mut scratch)
+    s.state.is_free(cand, &s.cands, s.obs, i, &mut scratch)
 }
 
 fn place(s: &mut Solve, i: usize, c: u32) {
@@ -185,8 +185,8 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
         }
         let old = item_cost(s, i, cur_c);
         s.state.unplace(i, &s.cands);
-        let cand = s.cands[k as usize].clone();
-        s.state.conflicts(&cand, &s.cands, s.obs, i, &mut scratch);
+        let cand = &s.cands[k as usize];
+        s.state.conflicts(cand, &s.cands, s.obs, i, &mut scratch);
         if scratch.is_empty() {
             let new = item_cost(s, i, k);
             let delta = new - old;
@@ -344,8 +344,8 @@ fn try_insert(
     let mode = s.model.omission;
     for t in 0..tries {
         let c = scored[(t + offset) % tries].1;
-        let cand = s.cands[c as usize].clone();
-        s.state.conflicts(&cand, &s.cands, s.obs, u, scratch);
+        let cand = &s.cands[c as usize];
+        s.state.conflicts(cand, &s.cands, s.obs, u, scratch);
         let blockers: Vec<usize> = scratch.iter().map(|&j| j as usize).collect();
         if blockers.is_empty() {
             let mut tx = Tx::default();
@@ -484,8 +484,8 @@ fn relocate_chain(
         if k == old || !usable(s, k, soft_ok) {
             continue;
         }
-        let cand = s.cands[k as usize].clone();
-        s.state.conflicts(&cand, &s.cands, s.obs, j, &mut scratch);
+        let cand = &s.cands[k as usize];
+        s.state.conflicts(cand, &s.cands, s.obs, j, &mut scratch);
         if scratch.len() != 1 {
             continue;
         }

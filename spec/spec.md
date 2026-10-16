@@ -178,22 +178,100 @@ in any source and not reserved) produce a validation **warning** `unknown_class`
 
 ### 4.5 SVG backgrounds
 
-The SVG viewport (`width`/`height`, else the `viewBox` size) is mapped onto the canvas
-(non-uniform scale if the sizes differ; normally they are equal). `viewBox` is honored
-with `preserveAspectRatio` (default `xMidYMid meet`). Elements are classified by the
-first matching rule of `classes` (else the preset's `svg_classes`, else
-`default_class`). Selector subset: type selectors, `*`, `.class`, `#id`, `[attr]`,
-`[attr=value]` (quotes optional), descendant combinator (space), comma lists, and the
-pseudo-classes `:small` (geometry bbox ≤ 16 px in both dimensions), `:background` (bbox
-≥ 90 % of the canvas in both dimensions), `:filled` and `:unfilled`. Fills (fill ≠ none,
-effective opacity > 0) become polygons, strokes become capsule polylines of the
-transformed stroke width, text elements become their bounding rectangles. Elements with
-`display:none`, `visibility:hidden`, zero opacity, inside `<defs>`, `<clipPath>`,
-`<mask>`, `<marker>`, `<pattern>` or `<symbol>` (unless instantiated by `<use>`) are not
-drawn. Curves are flattened with tolerance `tolerance` (0.25 px).
+Implemented identically by `label-anything-svg` and `@label-anything/svg` (ADR 0013) and
+tested by `conformance/svg/`. All output is in canvas pixels, y down.
+
+**Parsing.** XML 1.0 with namespaces and internal DTD entities; input that is not
+well-formed is an error (`parse`). The root must be `<svg>` (SVG namespace or none,
+else `invalid_value`); elements in other namespaces are never drawn. Limits (error
+`limit`): 1024 nesting levels, 10⁶ elements, 2·10⁶ rendered elements after `<use>`
+expansion, 8·10⁶ points; content more than 384 render levels deep (elements plus `<use>`
+levels) is skipped with a `limit` warning.
+
+**Viewport and canvas.** The root's `width`/`height` (unitless, px, pt, pc, in, cm, mm,
+em = 16 px, ex, rem, %) give the viewport W × H. Percentages and missing values refer to
+R = the `viewBox` size, else the canvas (if given), else 300 × 150; if exactly one of them
+is missing and a `viewBox` exists, it follows the `viewBox` aspect ratio. The `viewBox` is
+mapped into the viewport with `preserveAspectRatio` (all alignments, `meet`, `slice`,
+`none`; default `xMidYMid meet`; a `viewBox` with width or height ≤ 0 is ignored), then
+the viewport is scaled onto the canvas (non-uniform scale if the sizes differ; without a
+canvas, canvas = viewport). Nested `<svg>` (x, y, width/height default 100 %, `viewBox`,
+`transform`) and `<symbol>` instantiated by `<use>` (the `<use>`'s width/height override)
+establish viewports the same way. Percent lengths refer to the nearest `viewBox` (else
+viewport) size: x-like to the width, y-like to the height, others to √((w² + h²)/2).
+
+**Styles.** Properties: `fill`, `stroke`, `stroke-width`, `fill-opacity`,
+`stroke-opacity`, `opacity`, `fill-rule`, `display`, `visibility`, `font-size`,
+`font-family`, `font-weight`, `font` (CSS only), `text-anchor`, `dominant-baseline`,
+`vector-effect`. Priority (lowest first): presentation attributes, `<style>` rules
+(by specificity, then source order; rules whose selector is outside the subset below, or
+uses a pseudo-class, are dropped; @-rules are skipped), inline `style`, `!important`
+rules, inline `!important`. Invalid values are ignored; `inherit`, `initial`, `unset`
+work. All properties but `opacity`, `display` and `vector-effect` inherit; `opacity`
+multiplies down the tree. A paint is *none* for `none`, colours with alpha 0
+(`transparent`, `rgba(…, 0)`, `#rgba`, …) and `url(#id)` with a missing target and no
+fallback; existing paint servers and `currentColor` count as opaque. An element is
+**filled** if fill alpha × `fill-opacity` > 0 (images: always; `<line>`: never),
+**stroked** if stroke alpha × `stroke-opacity` > 0 and `stroke-width` > 0, and **drawn**
+if it is rendered (not `display:none`, not inside `<defs>`, `<clipPath>`, `<mask>`,
+`<marker>`, `<pattern>`, `<symbol>` or other non-rendering elements unless instantiated by
+`<use>`), its `visibility` is `visible` and the product of opacities is > 0.
+
+**Geometry.** Drawn shapes (`rect` with `rx`/`ry`, `circle`, `ellipse`, `line`,
+`polyline`, `polygon`, `path` with all commands, `image`) produce a polygon (one ring per
+subpath, with the fill rule) if filled (never for lines), and a capsule polyline per
+subpath if stroked, of width `stroke-width · √|det CTM|` (`vector-effect:
+non-scaling-stroke`: unscaled). `<image>` is its `x/y/width/height` rectangle (no
+intrinsic size). `<use>` (`href` or `xlink:href` to an element of the same document;
+missing, external and circular references are skipped with an `ignored` warning) renders
+its target with `transform · translate(x, y)`; styles inherit from the `<use>`.
+`<switch>` renders its first child without `requiredExtensions` whose `systemLanguage`
+(if any) includes English, skipping `<foreignObject>`; `<a>` acts like `<g>`. Not
+modelled: clipping, masks, filters, markers, dashes, transparency inside gradients or
+patterns, `<foreignObject>` content, external resources.
+
+**Flattening** (tolerance `tolerance`, default 0.25 px): quadratic and cubic Béziers are
+transformed to canvas px and split into n uniform parameter steps, n = ⌈√(k·M/tol)⌉,
+M = maxᵢ |Pᵢ − 2Pᵢ₊₁ + Pᵢ₊₂|, k = ¼ (quadratic) or ¾ (cubic). Elliptical arcs (SVG
+implementation notes F.6.5; radii that are too small are scaled up and the centre is the
+chord midpoint), circles, ellipses and rounded corners are sampled uniformly in their
+angle with n = max(⌈|Δθ| / (2·acos(1 − tol/r))⌉, ⌈|Δθ| / 90°⌉), r = the largest singular
+value of CTM · R(φ) · diag(rx, ry); n ≤ 4096. All vertices lie on the exact curve and
+the polyline is within `tol` of it.
+
+**Text boxes.** Whitespace in a `<text>` collapses to single spaces and is trimmed at
+both ends (`xml:space="preserve"`: tabs and newlines become spaces). `<tspan>`, `<a>` and
+`<textPath>` content is laid out in order; the first value of `x`, `y`, `dx`, `dy`
+(lengths, em, %) positions it, and an absolute `x` or `y` starts a new chunk. A run spans
+`measure(text, font_size, first font family, weight)` horizontally (default 0.55 em per
+code point) and 0.8 em above / 0.2 em below the baseline (`dominant-baseline` `middle`,
+`central`, `mathematical`: centred on y; `hanging`, `text-top`, `text-before-edge`: top at
+y; `ideographic`, `text-bottom`, `text-after-edge`: bottom at y). `text-anchor` shifts a
+chunk by 0, ½ or 1 times its advance. The box of each chunk (union of its visible,
+painted runs) is transformed by the CTM; its axis-aligned bounding box is the `Rect`
+primitive, attributed to the `<text>` element.
+
+**Boxes and attribution.** Every rendered element has a geometry bbox (without stroke
+width; ignoring visibility, paint and opacity, like `getBBox`): its own geometry or the
+union over its rendered descendants (for `<use>`: its instance). Geometry drawn through
+`<use>` is attributed to the **outermost** `<use>`: classification, `from_svg` lookups
+and selectors see that element, never the referenced ones.
+
+**Classification.** Primitives are classified by the first rule of `classes` (else the
+preset's `svg_classes`) whose selector matches the element they are attributed to, else
+by `default_class`; class `ignore` drops them. Selector subset (also for `from_svg`):
+type selectors (case-sensitive), `*`, `.class`, `#id`, `[attr]`, `[attr=value]` (value
+quoted or not, exact match), compound selectors (`circle.outlier[data-k=1]`), descendant
+(whitespace) and child (`>`) combinators, comma lists, CSS escapes, and the pseudo-classes
+`:small` (element bbox ≤ 16 px in both dimensions), `:background` (bbox ≥ 90 % of the
+canvas in both dimensions), `:filled` and `:unfilled`. Anything else (sibling
+combinators, other attribute operators or flags, other pseudo-classes and
+pseudo-elements) is a `pattern` error.
 
 `auto_mark_items: true`: items with `svg_id` take their mark geometry from that SVG
-element (as `from_svg`), and that element is removed from its class.
+element (as `from_svg`), and that element is removed from its class. A `from_svg` mark is
+the element's outline: per drawn shape its fill polygon, else its text boxes, else its
+stroke capsules.
 
 ### 4.6 Raster backgrounds
 
@@ -703,11 +781,44 @@ bug; the offending lower-key label is removed and the item reported as omitted.
 ### 10.4 Determinism
 
 * No iteration over hash containers in decisions; stable sorts with total comparators.
-* Float math only uses `+ − × ÷ sqrt` and the shared `det_math` functions
-  (`sin`, `cos` of degrees, `exp`, `log`, `log1p`), implemented identically.
-* Random numbers: PCG32 (XSH-RR, 64-bit state, multiplier 6364136223846793005, increment
-  1442695040888963407, seeded with `state = 0; step; state += seed; step`), floats as
-  `u32 / 2³²`, bounded integers as `floor(u32 · n / 2³²)`.
+* Float math only uses IEEE-754 `+ − × ÷ sqrt` (correctly rounded), exact operations
+  (comparisons, negation, `abs`, `%` = fmod, scaling by powers of two) and the shared
+  `det_math` functions. Platform math (`Math.sin`, `Math.round`, libm `exp`, `hypot`, …)
+  MUST NOT be used. `det_math` is implemented with the same operation sequence in every
+  implementation (Rust `la_expr::det_math`, TypeScript `detmath.ts`), so its results are
+  *identical*; `conformance/math/` checks them bit for bit:
+
+  | function | definition, special cases |
+  |---|---|
+  | `ln(x)` | natural logarithm; `ln(±0) = −∞`, `ln(x < 0) = NaN`, `ln(+∞) = +∞` |
+  | `ln_1p(x)` | `ln(1 + x)`; `ln_1p(−1) = −∞`, `ln_1p(x < −1) = NaN`, `ln_1p(±0) = ±0` |
+  | `exp(x)` | `eˣ`; overflow → `+∞`, underflow → `+0` (gradual underflow) |
+  | `pow(x, y)` | special cases of C99 Annex F (`pow(x, ±0) = 1`, `pow(1, y) = 1` even for NaN, `pow(−1, ±∞) = 1`, signed zeros and infinities, finite `x < 0` with non-integer `y` → NaN); integer `y` with `\|y\| ≤ 2³⁰` by repeated squaring, otherwise `exp(y · ln\|x\|)` (sign from the parity of `y`), both in double-double precision |
+  | `sin_cos_deg(d)` | `(sin d°, cos d°)`: `d % 360` exactly, reduced to `[−45°, 45°]` in degrees, then converted to radians with the double-double constant π/180; exact at multiples of 30° and 45° (`sin 45° = cos 45° = sqrt(0.5)`, `sin 30° = 0.5`, `cos 30° = sqrt(0.75)`); `cos` is never `−0`; `sin(±0) = ±0`, `sin(k·180°) = +0` for `k > 0` and `−0` for `k < 0`; non-finite `d` → NaN |
+  | `atan2_deg(y, x)` | angle of `(x, y)` in degrees in `[−180, 180]` with the special cases of C99 `atan2` (signed zeros, infinities); exact on the axes and for `\|x\| = \|y\|` (±45°, ±135°) |
+  | `cbrt(x)` | real cube root (odd function) |
+  | `floor`, `ceil`, `trunc` | exact (C semantics incl. signed zeros) |
+  | `round_half_away(x)` | nearest integer, halves away from zero (C `round`); **not** JS `Math.round` and not `floor(x + 0.5)` (wrong for 0.49999999999999994) |
+
+  NaN results are the canonical quiet NaN (a conformance check accepts any NaN). Not
+  normative but measured (`conformance/math/README.md`): the error is below 0.55 ulp for
+  every function (subnormal results: one more ulp), and `det_math` agrees with glibc and
+  V8 within 2 ulp.
+* Random numbers: PCG32 (PCG-XSH-RR 64/32), `step()`: `state = state ·
+  6364136223846793005 + 1442695040888963407 (mod 2⁶⁴)`:
+  * seeding with a 64-bit `seed`: `state = 0; step(); state += seed; step()`;
+  * `next_u32()`: `old = state; step(); x = u32(((old >> 18) ^ old) >> 27); rot = old >> 59;`
+    result `x` rotated right by `rot`;
+  * floats: `next_f64() = next_u32() / 2³²` in `[0, 1)`;
+  * bounded integers: `next_below(n) = (next_u32() · n) >> 32` for `n < 2³²`, exact in 64
+    bits (`= floor(u32 · n / 2³²)`); `next_below(0) = 0`; every call consumes one output;
+  * `shuffle(a)`: Fisher–Yates from the end — for `i = len−1` down to `1`, swap `a[i]`
+    and `a[next_below(i + 1)]`. A *PCG32 permutation* of `n` items (§9.1 `random` ties)
+    is `shuffle([0, 1, …, n−1])` on a fresh generator; its `k`-th element is the input
+    index of the item at position `k`.
+
+  TypeScript emulates the 64-bit state without `BigInt` (32-bit halves, 16-bit limbs for
+  the products). Vectors: `conformance/math/pcg32.json`.
 
 ---
 

@@ -1,0 +1,9 @@
+{
+  "kind": "svg",
+  "name": "recursive entities",
+  "description": "Must fail with a structured 'parse' error.",
+  "svg": "<!DOCTYPE svg [<!ENTITY a \"&b;\"><!ENTITY b \"&a;\">]><svg xmlns=\"http://www.w3.org/2000/svg\">&a;</svg>",
+  "expect": {
+    "error": "parse"
+  }
+}

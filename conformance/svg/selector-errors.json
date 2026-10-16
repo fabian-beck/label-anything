@@ -1,0 +1,134 @@
+{
+  "kind": "svg",
+  "name": "selector syntax errors",
+  "description": "Syntax errors are reported with code 'pattern' by classify and select; valid selectors with comma lists, child/descendant combinators, attribute selectors and * select primitives of the matching elements and their descendants, each once.",
+  "tolerance": 0.1,
+  "classes": [
+    {
+      "selector": "circle",
+      "class": "ok"
+    },
+    {
+      "selector": "circle[",
+      "class": "bad"
+    }
+  ],
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\">",
+    "  <g class=\"grp\"><circle cx=\"20\" cy=\"20\" r=\"5\"/><g><circle class=\"k\" cx=\"40\" cy=\"20\" r=\"5\"/></g></g>",
+    "  <rect id=\"r\" data-k=\"2\" x=\"60\" y=\"10\" width=\"10\" height=\"10\"/>",
+    "</svg>"
+  ],
+  "expect": {
+    "classify_error": "pattern",
+    "select": [
+      {
+        "selector": "circle[",
+        "error": "pattern"
+      },
+      {
+        "selector": "a >",
+        "error": "pattern"
+      },
+      {
+        "selector": ":hover",
+        "error": "pattern"
+      },
+      {
+        "selector": "a + b",
+        "error": "pattern"
+      },
+      {
+        "selector": "a ~ b",
+        "error": "pattern"
+      },
+      {
+        "selector": "[x~=y]",
+        "error": "pattern"
+      },
+      {
+        "selector": "[x=y i]",
+        "error": "pattern"
+      },
+      {
+        "selector": "",
+        "error": "pattern"
+      },
+      {
+        "selector": "  ",
+        "error": "pattern"
+      },
+      {
+        "selector": "#",
+        "error": "pattern"
+      },
+      {
+        "selector": ".",
+        "error": "pattern"
+      },
+      {
+        "selector": "::before",
+        "error": "pattern"
+      },
+      {
+        "selector": "circle:not(.k)",
+        "error": "pattern"
+      },
+      {
+        "selector": "a,",
+        "error": "pattern"
+      },
+      {
+        "selector": "[x='y]",
+        "error": "pattern"
+      },
+      {
+        "selector": "circle",
+        "count": 2
+      },
+      {
+        "selector": ".grp",
+        "count": 2
+      },
+      {
+        "selector": ".grp > circle",
+        "count": 1,
+        "bbox": [
+          15,
+          15,
+          10,
+          10
+        ]
+      },
+      {
+        "selector": ".grp circle",
+        "count": 2
+      },
+      {
+        "selector": "g, circle",
+        "count": 2
+      },
+      {
+        "selector": "[data-k='2']",
+        "count": 1,
+        "fill_area": 100
+      },
+      {
+        "selector": "rect[data-k=\"2\"]#r",
+        "count": 1
+      },
+      {
+        "selector": "*",
+        "count": 3
+      },
+      {
+        "selector": "svg",
+        "count": 3
+      },
+      {
+        "selector": "path",
+        "count": 0
+      }
+    ]
+  }
+}

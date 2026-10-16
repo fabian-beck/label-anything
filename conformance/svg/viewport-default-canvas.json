@@ -1,0 +1,31 @@
+{
+  "kind": "svg",
+  "name": "no size, canvas given",
+  "description": "Neither width/height nor viewBox but a canvas: the viewport is the canvas (no scaling).",
+  "canvas": {
+    "width": 800,
+    "height": 600
+  },
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" >",
+    "  <rect id=\"box\" x=\"10\" y=\"10\" width=\"20\" height=\"20\"/>",
+    "</svg>"
+  ],
+  "expect": {
+    "width": 800,
+    "height": 600,
+    "canvas_width": 800,
+    "canvas_height": 600,
+    "geometry": [
+      {
+        "id": "box",
+        "bbox": [
+          10,
+          10,
+          20,
+          20
+        ]
+      }
+    ]
+  }
+}

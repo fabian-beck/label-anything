@@ -11,6 +11,7 @@ pub mod verify;
 use crate::candidates::{self, Cand, Kind};
 use crate::cost::Evaluator;
 use crate::env::Env;
+use crate::geom::Rect;
 use crate::index::StaticIndex;
 use crate::labels::{self, Measurer, Variant};
 use crate::model::opts::{Models, Step};
@@ -65,6 +66,8 @@ pub struct Solve<'a> {
     pub level_done: Vec<u8>,
     /// Level-0 distant candidates not generated yet (they are created on demand).
     pub distant_pending: Vec<bool>,
+    /// Directions of distant candidates (see `leaders::distant_dirs`).
+    pub distant_dirs: Vec<(f64, crate::geom::P)>,
     pub iterations: u64,
     pub time_guard_hit: bool,
     pub start_ms: f64,
@@ -94,11 +97,17 @@ impl<'a> Solve<'a> {
             cand_ix: StaticIndex::new(vec![], &model.extent, obs.index_cell),
             n_level0: 0,
             models: model.items.iter().map(|it| it.models).collect(),
-            state: State::new(n, &model.extent, obs.index_cell),
+            state: State::new(
+                n,
+                &model.extent,
+                obs.index_cell,
+                pri.prio.iter().map(|p| p.key).collect(),
+            ),
             reasons: vec![None; n],
             steps_tried: vec![Vec::new(); n],
             level_done: vec![0; n],
             distant_pending: vec![false; n],
+            distant_dirs: crate::leaders::distant_dirs(model),
             iterations: 0,
             time_guard_hit: false,
             start_ms,
@@ -145,9 +154,26 @@ impl<'a> Solve<'a> {
         lazy: bool,
     ) -> Vec<u32> {
         let item = &self.model.items[i];
+        // While labels are placed (ladder steps, on-demand distant candidates), candidates
+        // blocked (hard) by a placed label or leader of higher or equal priority are
+        // dropped (spec §6.7): they cannot be used while that label stays, and they can
+        // never be evict_lower targets or witnesses of a priority inversion (those only
+        // involve strictly lower-priority labels). The occupancy grid rejects most of them
+        // before their leaders are built; the exact test below decides the rest.
+        let key_i = self.pri.prio[i].key;
+        let filter = self.state.n_placed > 0;
+        let quick = filter
+            && self.obs.dynamic.label_labels.is_hard()
+            && self.state.max_placed_key().is_some_and(|k| k <= key_i);
+        let state = &self.state;
+        let variants = &self.variants[i];
+        let keep = |vi: usize, r: &Rect| {
+            !(quick && candidates::is_rect_shape(&variants[vi].shape) && state.quick_blocked(r))
+        };
         let mut fresh: Vec<Cand> = Vec::new();
         for &vi in vis {
-            let v = &self.variants[i][vi];
+            let v = &variants[vi];
+            let start = fresh.len();
             if item.area.is_some() {
                 // area anchors: internal candidates first; external ones around the dot
                 if let Some(rank) = candidates::internal_rank(
@@ -184,24 +210,46 @@ impl<'a> Solve<'a> {
                     candidates::internal(item, vi, v, rank, &mut fresh);
                 }
             }
+            if quick {
+                let mut w = start;
+                for r in start..fresh.len() {
+                    if keep(vi, &fresh[r].rect) {
+                        fresh.swap(w, r);
+                        w += 1;
+                    }
+                }
+                fresh.truncate(w);
+            }
             if models.has(Models::DISTANT) {
-                crate::leaders::distant(self.model, self.obs, item, vi, v, &mut fresh);
+                crate::leaders::distant(
+                    self.model,
+                    self.obs,
+                    item,
+                    vi,
+                    v,
+                    &self.distant_dirs,
+                    &keep,
+                    &mut fresh,
+                );
             }
         }
         if models.has(Models::BOUNDARY) {
             crate::boundary::boundary_candidates(
-                self.model,
-                self.obs,
-                item,
-                &self.variants[i],
-                vis,
-                &mut fresh,
+                self.model, self.obs, item, variants, vis, &keep, &mut fresh,
             );
         }
         for c in &mut fresh {
             c.level = level;
-            c.lshape =
-                candidates::label_shape(&c.rect, &self.variants[i][c.variant as usize].shape);
+            c.lshape = candidates::label_shape(&c.rect, &variants[c.variant as usize].shape);
+        }
+        if filter {
+            let prio = &self.pri.prio;
+            let (state, cands, obs) = (&mut self.state, &self.cands, self.obs);
+            fresh.retain(|c| {
+                state
+                    .first_conflict(c, cands, obs, i, |j| prio[j].key <= key_i)
+                    .is_none()
+            });
         }
         if lazy {
             let mut ids = Vec::with_capacity(fresh.len());

@@ -374,10 +374,10 @@ fn font_over(base: &FontSel, v: Option<&Value>) -> FontSel {
     f
 }
 
-fn as_list(v: Option<&Value>) -> Vec<Value> {
+fn as_list(v: Option<&Value>) -> Vec<&Value> {
     match v {
-        Some(Value::Array(a)) => a.clone(),
-        Some(o @ Value::Object(_)) => vec![o.clone()],
+        Some(Value::Array(a)) => a.iter().collect(),
+        Some(o @ Value::Object(_)) => vec![o],
         _ => vec![],
     }
 }
@@ -517,10 +517,11 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
 
     // --- rasters (decoded first: they may define the canvas) ---
     let mut rasters = Vec::new();
+    let empty_src = Value::Object(Default::default());
     let mut raster_list = as_list(lookup(problem, "obstacles.raster"));
     let mut override_img = env.raster_override();
     if override_img.is_some() && raster_list.is_empty() {
-        raster_list.push(Value::Object(Default::default()));
+        raster_list.push(&empty_src);
     }
     for (i, src) in raster_list.iter().enumerate() {
         if let Some(img) = override_img.take() {
@@ -590,7 +591,7 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     }
 
     // --- SVG documents ---
-    let mut svgs: Vec<(Box<dyn SvgDoc>, Value, String)> = Vec::new();
+    let mut svgs: Vec<(Box<dyn SvgDoc>, &Value, String)> = Vec::new();
     let svg_list = as_list(lookup(problem, "obstacles.svg"));
     let svg_is_array = problem
         .pointer("/obstacles/svg")
@@ -628,8 +629,11 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         let tol = source_opt(src, "obstacles.svg", "tolerance")
             .as_f64()
             .unwrap_or(0.25);
-        let measure =
-            |t: &str, size: f64, _fam: &str, _w: u16| t.chars().count() as f64 * 0.55 * size;
+        // SVG text is measured with the bundled fonts (simple shaping)
+        let book = crate::labels::bundled_fonts();
+        let measure = |t: &str, size: f64, fam: &str, w: u16| {
+            book.font(book.resolve(fam, w, false)).width(t, size)
+        };
         let doc = backend
             .load(&markup, canvas.map(|c| (c.w(), c.h())), tol, &measure)
             .map_err(|m| err(format!("{ptr}/source"), "invalid_value", m))?;
@@ -637,7 +641,7 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
             let (w, h) = doc.size();
             canvas = Some(Rect::new(0.0, 0.0, w, h));
         }
-        svgs.push((doc, src.clone(), ptr));
+        svgs.push((doc, *src, ptr));
     }
 
     // --- coordinates ---
@@ -654,11 +658,11 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     }
 
     // --- items ---
-    let items_json = problem
+    let items_json: &[Value] = problem
         .get("items")
         .and_then(|v| v.as_array())
-        .cloned()
-        .unwrap_or_default();
+        .map(|v| v.as_slice())
+        .unwrap_or(&[]);
     let global_models = Models::from_names(&o.strings("placement.models"));
     let user_set_models = lookup(problem, "placement.models").is_some();
     let mut items = Vec::with_capacity(items_json.len());
@@ -1146,7 +1150,7 @@ pub fn mark_shape(
     m: &Value,
     at: P,
     to_px: &Affine,
-    svgs: &[(Box<dyn SvgDoc>, Value, String)],
+    svgs: &[(Box<dyn SvgDoc>, &Value, String)],
     warnings: &mut Vec<Issue>,
     ptr: &str,
 ) -> Result<(Shape, bool), BuildError> {
@@ -1263,7 +1267,7 @@ fn build_item(
     o: &Opts,
     default_font: &FontSel,
     to_px: &Affine,
-    svgs: &[(Box<dyn SvgDoc>, Value, String)],
+    svgs: &[(Box<dyn SvgDoc>, &Value, String)],
     auto_marks: bool,
     used_svg_ids: &mut Vec<String>,
     global_models: Models,

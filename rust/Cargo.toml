@@ -15,11 +15,10 @@ categories = ["visualization", "graphics", "algorithms"]
 
 [workspace.dependencies]
 serde = { version = "1.0", features = ["derive"] }
-# preserve_order: objects keep the key order of the JSON text, as in JavaScript
-serde_json = { version = "1.0", features = ["preserve_order"] }
+# preserve_order: objects keep the key order of the JSON text, as in JavaScript.
+# float_roundtrip: correctly rounded number parsing, as JSON.parse (Rust/TS parity).
+serde_json = { version = "1.0", features = ["preserve_order", "float_roundtrip"] }
 rustybuzz = "0.20"
-usvg = { version = "0.48", default-features = false }
-resvg = { version = "0.48", default-features = false }
 roxmltree = "0.21"
 image = { version = "0.25", default-features = false }
 rayon = "1.10"
