@@ -134,6 +134,12 @@ Cell size `c = solver.grid_cell`, or `auto` = `clamp(min_font_size / 4, 1, 4)` w
 canvas (or the unbounded working extent) with `cols = ceil(W / c)`, `rows = ceil(H / c)`
 cells, origin at the canvas origin (or the extent's top-left).
 
+The grid has at most 16 000 000 cells. When the `auto` cell size would exceed that (a
+canvas of more than about 16 000 × 16 000 px), `c` becomes `max(c, sqrt(W·H / 16·10⁶))`
+and is then multiplied by 1.25 until `cols · rows` fits. An explicit `solver.grid_cell`
+that exceeds the limit, and a working extent that is not finite, are errors
+(code `limit`).
+
 Every class that occurs and is not `ignore` for both labels and leaders gets one
 **coverage grid**: `u8` per cell, `0..255` = fraction of the cell covered (`255` = full).
 A cell touched by geometry never stores 0 (minimum 1), so "any coverage" is
@@ -423,8 +429,12 @@ free-space seeds for distant candidates and early rejection.
 * `text`: measured with the built-in shaper (§5.2) unless `width`/`height` are given.
 * `icon`, `box`: fixed `width × height`; `shape` (`rect`, `rounded:r`, `circle`,
   `polygon` with `polygon` points) is used for exact collision tests.
-* `composite`: parts laid out in a `row` (default) or `column` with `gap`, aligned
-  `center` (default) across the main axis.
+* `composite`: parts laid out in a `row` (default) or `column`, `gap` (default 0)
+  between consecutive parts, aligned `center` (default), `start` or `end` across the main
+  axis. Text parts are single lines measured with their font (inheriting the composite's
+  `font`), icon and box parts use their `width × height`; a part's own `padding` is
+  ignored, the composite's `padding` (default `defaults.padding`) surrounds the whole
+  row or column.
 
 The **label box** is the content box grown by `padding` on every side. It is the
 collision box and the reported `box`. Text is drawn at `x_offset = padding` and the
@@ -638,6 +648,20 @@ violating a static hard constraint are infeasible (kept only for explanations).
 Candidates with static cost > `prune_factor × best + 1` of the same item and level are
 dropped.
 
+Filtering while generating (ADR 0015), always exact:
+
+* When labels may overlap no item mark (`avoid.label.items` and the own-mark policy
+  hard), non-internal rectangular candidates whose box contains, with a 2·EPS margin,
+  the center of an occupancy cell lying inside an item mark are not created; they are
+  counted per item and reported as `items` among the blocking classes. The occupancy
+  grid covers the extent with square cells of `max(2, sqrt(area / 10⁶))` px.
+* Candidates generated while labels are placed (ladder steps, on-demand distant
+  candidates) are not kept when a placed label or leader of higher or equal priority
+  blocks them under a hard policy. With hard label–label overlaps and every placed
+  label of key ≤ the item's, rectangular candidates are first tested against the same
+  kind of occupancy grid of placed rectangular labels.
+* The warm-start box of an item is an extra level-0 candidate (ADR 0016).
+
 ---
 
 ## 7. Leaders
@@ -705,8 +729,22 @@ wins; the **total order** additionally sorts by `score` and then by the tie rule
 then index; `random`/`random(n)`: a PCG32 permutation with seed `n` or `solver.seed`).
 `rank` = position in the total order (0 = highest).
 
-* `tier`: `item.tier`, else the first matching `priority.tiers` rule, else 0.
+* `tier`: `item.tier`, else the first matching `priority.tiers` rule, else 0 (a higher
+  tier outranks a lower one).
 * `score`: `item.priority` if given, else Σ `weight · normalized(term)`, else 0.
+* Built-in terms (raw values; larger = more important before `weight`):
+
+  | term | raw value of item `i` |
+  |---|---|
+  | `input_order` | `n − i` (earlier items larger) |
+  | `label_size` | area of the item's first label variant in em² (use a negative weight to prefer short labels) |
+  | `mark_size` | area of the item's mark shape in px² |
+  | `centrality` | −distance from the anchor to `priority.focus` (default: the canvas center, else the extent center) |
+  | `degree` | numeric `attrs.degree` if present, else the number of `obstacles.vector` polyline endpoints within 0.5 px of the mark (incident edges) |
+  | `outlierness` | gap to the `k`-th nearest neighbour (default `k` = 5): `max(0, d − r_j − r_i)` over the other item marks and the discs of the `points` class, with `d` the center distance and `r` the circle radius or the area-equivalent radius `sqrt(area/π)`; with fewer than `k` neighbours the largest gap found (or the extent size) |
+  | `isolation` | the same gap with `k` = 1 |
+  | `crowding` | −`isolation` |
+
 * Terms: raw value → `transform` (`log1p`, `sqrt`, `neg`, `abs`) → normalization over all
   items: `rank` (average rank of equal values, scaled to [0,1]; 1 = largest),
   `minmax` ((v − min)/(max − min), 0 when max = min), `none`. Missing values → 0 after
@@ -777,6 +815,16 @@ After search: any two crossing leaders (only possible when `avoid.leader.leaders
 soft) are uncrossed by exchanging label positions when that shortens the total leader
 length; then all hard constraints are re-verified exactly. A violation found here is a
 bug; the offending lower-key label is removed and the item reported as omitted.
+
+### 10.3a Cancellation and progress
+
+Hosts may cancel a solve (a cancellation token, an `AbortSignal`). The solver polls the
+request at every priority band and every 64 items of the greedy pass, every 256
+local-search moves and every 4,096 exact-search nodes. Once cancelled it stops improving:
+the greedy pass places no further items (they are reported as `budget_exhausted`), the
+searches keep their best state, and repair and verification still run, so the result
+is valid; `stats.cancelled` is `true`. Progress is reported per greedy band and every
+256 local-search moves as `(phase, fraction)`.
 
 ### 10.4 Determinism
 

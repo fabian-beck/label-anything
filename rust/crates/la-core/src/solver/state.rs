@@ -2,116 +2,10 @@
 
 use crate::candidates::Cand;
 use crate::geom::{seg_intersects, seg_len_in_rect, seg_overlaps_rect, seg_seg_dist, Rect, EPS, P};
+use crate::grid::occupancy::Occupancy;
 use crate::index::DynIndex;
 use crate::math::{maxf, minf};
 use crate::obstacles::{AvoidW, Obstacles};
-
-/// Margin of the quick rejection test (2 × `EPS`, so that a hit implies an overlap in
-/// the sense of `Rect::overlaps`).
-const OCC_MARGIN: f64 = 2.0 * EPS;
-
-/// Fine grid counting, per cell, the placed rectangular labels whose interior contains
-/// the cell center. A candidate box that contains an occupied cell center (with margin)
-/// overlaps a placed label: a quick, exact rejection test (`State::quick_blocked`).
-struct Occupancy {
-    ox: f64,
-    oy: f64,
-    cell: f64,
-    cols: usize,
-    rows: usize,
-    count: Vec<u16>,
-}
-
-impl Occupancy {
-    fn new(extent: &Rect) -> Occupancy {
-        // about 1M cells at most, and never finer than 2 px
-        let area = maxf(extent.w() * extent.h(), 1.0);
-        let cell = maxf(2.0, (area / 1.0e6).sqrt());
-        let cols = ((extent.w() / cell).ceil() as usize).clamp(1, 4096);
-        let rows = ((extent.h() / cell).ceil() as usize).clamp(1, 4096);
-        Occupancy {
-            ox: extent.x0,
-            oy: extent.y0,
-            cell,
-            cols,
-            rows,
-            count: vec![0; cols * rows],
-        }
-    }
-
-    /// Columns (or rows) whose cell centers lie strictly inside `(a, b)` shrunk by the
-    /// margin, as a half-open index range.
-    fn span(o: f64, cell: f64, n: usize, a: f64, b: f64) -> (usize, usize) {
-        let lo = a + OCC_MARGIN;
-        let hi = b - OCC_MARGIN;
-        if hi <= lo || hi.is_nan() || lo.is_nan() {
-            return (0, 0);
-        }
-        let first = ((lo - o) / cell - 0.5).floor() + 1.0;
-        let last = ((hi - o) / cell - 0.5).ceil() - 1.0;
-        let first = first.max(0.0);
-        let last = last.min(n as f64 - 1.0);
-        if last < first {
-            return (0, 0);
-        }
-        let (mut f, mut l) = (first as usize, last as usize + 1);
-        // exact strictness at the ends despite rounding
-        while f < l && o + (f as f64 + 0.5) * cell <= lo {
-            f += 1;
-        }
-        while l > f && o + ((l - 1) as f64 + 0.5) * cell >= hi {
-            l -= 1;
-        }
-        (f, l)
-    }
-
-    fn mark(&mut self, r: &Rect, add: bool) {
-        let (c0, c1) = Self::span(self.ox, self.cell, self.cols, r.x0, r.x1);
-        let (r0, r1) = Self::span(self.oy, self.cell, self.rows, r.y0, r.y1);
-        for row in r0..r1 {
-            let base = row * self.cols;
-            for v in &mut self.count[base + c0..base + c1] {
-                *v = if add {
-                    v.saturating_add(1)
-                } else {
-                    v.saturating_sub(1)
-                };
-            }
-        }
-    }
-
-    /// Whether the cell center at `(x, y)`'s cell is occupied and strictly inside `r`.
-    #[inline]
-    fn hit(&self, r: &Rect, x: f64, y: f64) -> bool {
-        // truncation == floor inside the grid
-        let gx = (x - self.ox) / self.cell;
-        let gy = (y - self.oy) / self.cell;
-        if !(gx >= 0.0 && gy >= 0.0 && gx < self.cols as f64 && gy < self.rows as f64) {
-            return false;
-        }
-        let (gx, gy) = (gx as usize, gy as usize);
-        let qx = self.ox + (gx as f64 + 0.5) * self.cell;
-        let qy = self.oy + (gy as f64 + 0.5) * self.cell;
-        self.count[gy * self.cols + gx] > 0
-            && r.x0 + OCC_MARGIN < qx
-            && qx < r.x1 - OCC_MARGIN
-            && r.y0 + OCC_MARGIN < qy
-            && qy < r.y1 - OCC_MARGIN
-    }
-
-    /// Probes the center and four inner points of `r`.
-    fn blocked(&self, r: &Rect) -> bool {
-        let c = r.center();
-        if self.hit(r, c.x, c.y) {
-            return true;
-        }
-        let (dx, dy) = (r.w() * 0.3, r.h() * 0.3);
-        self.hit(r, c.x - dx, c.y - dy)
-            || self.hit(r, c.x + dx, c.y - dy)
-            || self.hit(r, c.x - dx, c.y + dy)
-            || self.hit(r, c.x + dx, c.y + dy)
-    }
-}
 
 /// The set of placed labels with spatial indexes.
 pub struct State {
@@ -166,6 +60,11 @@ impl State {
     /// rectangular label (`false` means "unknown", not "free").
     pub fn quick_blocked(&self, r: &Rect) -> bool {
         self.n_placed > 0 && self.occ.blocked(r)
+    }
+
+    /// The placed-label occupancy grid (its windows serve grids with the same cells).
+    pub fn occupancy(&self) -> &Occupancy {
+        &self.occ
     }
 
     pub fn place(&mut self, item: usize, cid: u32, cands: &[Cand], relaxed: bool) {

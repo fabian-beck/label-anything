@@ -1,0 +1,38 @@
+{
+  "kind": "validate",
+  "name": "expr-syntax",
+  "problem": {
+    "items": [],
+    "priority": {
+      "tiers": [
+        {
+          "where": "attrs.x +",
+          "tier": 1
+        },
+        {
+          "where": "",
+          "tier": 2
+        }
+      ]
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/priority/tiers/0/where",
+        "code": "expr_syntax"
+      },
+      {
+        "pointer": "/priority/tiers/1/where",
+        "code": "expr_syntax"
+      },
+      {
+        "pointer": "/priority/tiers/1/where",
+        "code": "length"
+      }
+    ],
+    "warnings": [],
+    "exact": true
+  }
+}

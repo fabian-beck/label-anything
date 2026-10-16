@@ -207,11 +207,22 @@ pub struct Item {
     pub svg_id: Option<String>,
     /// The original item JSON (for callbacks).
     pub raw: Value,
+    /// Pole of inaccessibility of a polygon mark (computed on first use).
+    pub pole: std::sync::OnceLock<P>,
 }
 
 impl Item {
     pub fn em(&self) -> f64 {
         self.font.size
+    }
+
+    /// The pole of inaccessibility of the mark (polygon marks; the reference point of
+    /// other shapes), computed once.
+    pub fn pole(&self) -> P {
+        *self.pole.get_or_init(|| match &self.shape {
+            Shape::Polygon(p) => crate::geom::polygon::polylabel(&p.rings, p.even_odd, 0.5).0,
+            s => s.reference(),
+        })
     }
 }
 
@@ -1565,5 +1576,6 @@ fn build_item(
         keep_with,
         svg_id,
         raw: it.clone(),
+        pole: std::sync::OnceLock::new(),
     })
 }

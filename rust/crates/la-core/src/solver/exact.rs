@@ -38,6 +38,7 @@ struct Search<'a> {
     weight: Vec<f64>,
     min_cost: Vec<f64>,
     cost: &'a dyn Fn(u32) -> f64,
+    cancel: &'a dyn Fn() -> bool,
     mode: Omission,
     chosen: Vec<Option<u32>>,
     best: Obj,
@@ -57,6 +58,10 @@ impl Search<'_> {
     fn dfs(&mut self, k: usize, prio: &mut Vec<f64>, cost: f64, prefix_alive: bool) {
         self.nodes += 1;
         if self.nodes > self.max_nodes {
+            return;
+        }
+        if self.nodes.is_multiple_of(4096) && (self.cancel)() {
+            self.max_nodes = self.nodes; // stop: keep the best solution found so far
             return;
         }
         if k == self.order.len() {
@@ -204,6 +209,8 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
     };
     let costs: Vec<f64> = s.cands.iter().map(|c| c.cost).collect();
     let cost_fn = |c: u32| costs[c as usize];
+    let env = s.env;
+    let cancel_fn = move || env.cancelled();
     let min_cost: Vec<f64> = cands
         .iter()
         .map(|v| v.first().map(|&c| costs[c as usize]).unwrap_or(0.0))
@@ -234,6 +241,7 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
         weight,
         min_cost,
         cost: &cost_fn,
+        cancel: &cancel_fn,
         mode: s.model.omission,
         chosen: vec![None; n],
         best: Obj {

@@ -112,9 +112,15 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
     let mut snapshot: Vec<Option<u32>> = s.state.placed.clone();
     let mut snap_reasons = s.reasons.clone();
     for it in 0..iterations {
-        if it % 256 == 0 && s.env.now_ms() > deadline_ms && deadline_ms > 0.0 {
-            s.time_guard_hit = true;
-            break;
+        if it % 256 == 0 {
+            if s.env.now_ms() > deadline_ms && deadline_ms > 0.0 {
+                s.time_guard_hit = true;
+                break;
+            }
+            if s.poll_cancel() {
+                break;
+            }
+            s.env.progress("local", it as f64 / iterations as f64);
         }
         st.iterations += 1;
         let temp = t0 * exp(ln_ratio * it as f64 / iterations as f64);

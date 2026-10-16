@@ -1,0 +1,56 @@
+[build-system]
+requires = ["maturin>=1.9.4,<2"]
+build-backend = "maturin"
+
+[project]
+name = "label-anything"
+description = "Label Anything: a host-independent label placement engine (labels, icons, leaders; avoids SVG/raster backgrounds; priority-driven omission)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [{ name = "Label Anything contributors" }]
+keywords = ["label-placement", "labeling", "visualization", "leader-lines", "cartography", "matplotlib", "plotly"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Typing :: Typed",
+]
+dynamic = ["version"]
+# NumPy is optional: raster backgrounds also accept bytes and PIL images
+dependencies = []
+
+[project.optional-dependencies]
+numpy = ["numpy>=1.21"]
+matplotlib = ["label-anything-extras>=0.1", "matplotlib>=3.5", "numpy>=1.21"]
+plotly = ["label-anything-extras>=0.1", "plotly>=5"]
+seaborn = ["label-anything-extras>=0.1", "seaborn>=0.12", "matplotlib>=3.5", "numpy>=1.21"]
+all = ["label-anything-extras>=0.1", "matplotlib>=3.5", "plotly>=5", "seaborn>=0.12", "numpy>=1.21"]
+test = ["pytest>=7", "numpy>=1.21", "pillow>=9"]
+
+[project.urls]
+Homepage = "https://github.com/fabian-beck/label-anything"
+Repository = "https://github.com/fabian-beck/label-anything"
+Documentation = "https://github.com/fabian-beck/label-anything/blob/main/docs/bindings/python.md"
+
+[tool.maturin]
+python-source = "python"
+module-name = "label_anything._native"
+bindings = "pyo3"
+strip = true
+# bytecode left by test runs against an editable install
+exclude = ["**/__pycache__/**", "**/*.pyc"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["label_anything_extras", "label_anything_extras.*", "numpy", "numpy.*", "PIL", "PIL.*"]
+ignore_missing_imports = true

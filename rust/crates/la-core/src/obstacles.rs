@@ -2,7 +2,7 @@
 //! primitive indexes and the distance transform of the static hard classes.
 
 use crate::geom::{dist_point_seg, dist_seg_rect, polygon, seg_overlaps_rect, Rect, EPS, P};
-use crate::grid::dt::distance_transform;
+use crate::grid::dt::{distance_transform, dt_maxima};
 use crate::grid::raster::MaskRaster;
 use crate::grid::{GridSpec, Sat};
 use crate::index::StaticIndex;
@@ -97,6 +97,10 @@ pub struct Obstacles {
     pub prim_index: StaticIndex,
     /// Item marks.
     pub item_index: StaticIndex,
+    /// Cells inside item marks, when labels may overlap no mark at all (`label_items`
+    /// and the own-mark policy hard): quick, exact rejection of non-internal label boxes
+    /// during candidate generation.
+    pub item_occ: Option<crate::grid::occupancy::Occupancy>,
     /// Coverage of all item marks, and of each item's own mark on an aligned local grid
     /// (to exclude the own mark from `items` costs).
     pub items_sat: Sat,
@@ -111,11 +115,45 @@ pub struct Obstacles {
     pub index_cell: f64,
 }
 
-/// Choose the grid cell size (spec §4.1).
+impl Obstacles {
+    /// Whether some relaxable class is hard (otherwise the `soft_overlap` ladder step
+    /// cannot change anything: every relaxed-feasible candidate is feasible).
+    pub fn any_relaxable_hard(&self) -> bool {
+        self.classes
+            .iter()
+            .any(|c| c.relaxable && (c.label.is_hard() || c.leader.is_hard()))
+    }
+}
+
+/// Most grid cells (spec §4.1): enough for any practical canvas, and SAT sums of `u8`
+/// coverage stay exact (below 2³² / 255 ≈ 16.8 M cells).
+pub const MAX_GRID_CELLS: f64 = 16_000_000.0;
+
+/// Number of cells of the grid covering the model extent with cell size `c`.
+pub fn grid_cells(model: &Model, c: f64) -> f64 {
+    maxf((model.extent.w() / c).ceil(), 1.0) * maxf((model.extent.h() / c).ceil(), 1.0)
+}
+
+/// Choose the grid cell size (spec §4.1): `solver.grid_cell`, else `clamp(min_font / 4,
+/// 1, 4)` grown (by factors of 1.25) until the grid has at most [`MAX_GRID_CELLS`] cells.
+/// The extent must be finite; an explicit cell size may exceed the cell limit (checked
+/// by the caller).
 pub fn grid_cell(model: &Model, min_font: f64) -> f64 {
     match model.grid_cell {
         Some(c) if c > 0.0 => c,
-        _ => (min_font / 4.0).clamp(1.0, 4.0),
+        _ => {
+            let mut c = (min_font / 4.0).clamp(1.0, 4.0);
+            if grid_cells(model, c) > MAX_GRID_CELLS {
+                c = maxf(
+                    c,
+                    (model.extent.w() * model.extent.h() / MAX_GRID_CELLS).sqrt(),
+                );
+                while grid_cells(model, c) > MAX_GRID_CELLS {
+                    c *= 1.25;
+                }
+            }
+            c
+        }
     }
 }
 
@@ -272,6 +310,17 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         ));
     }
     let items_sat = Sat::from_coverage(grid.cols, grid.rows, &all_items.into_coverage());
+    let item_occ = if dynamic.label_items.is_hard() && dynamic.own_mark == OwnMark::Hard {
+        let mut occ = crate::grid::occupancy::Occupancy::new(&model.extent);
+        for it in &model.items {
+            occ.mark_shape(&it.shape);
+        }
+        // static from here on: O(1) window queries
+        occ.freeze();
+        (!occ.is_empty()).then_some(occ)
+    } else {
+        None
+    };
     // distance transform of static hard obstacles (incl. items and outside the label area)
     let mut hard_mask = MaskRaster::new(grid);
     if dynamic.label_items.is_hard() {
@@ -317,6 +366,7 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         prims,
         prim_index,
         item_index,
+        item_occ,
         items_sat,
         own,
         dt,
@@ -326,41 +376,6 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         leader_area: model.leader_area,
         index_cell,
     }
-}
-
-/// Local maxima of the distance transform with clearance ≥ `min_v` (plateaus keep their
-/// first cell in row-major order).
-fn dt_maxima(g: &GridSpec, dt: &[f64], min_v: f64) -> Vec<(P, f64, usize, usize)> {
-    let mut out = Vec::new();
-    for r in 0..g.rows {
-        for c in 0..g.cols {
-            let v = dt[r * g.cols + c];
-            if v < min_v || v >= 1e9 {
-                continue;
-            }
-            let mut is_max = true;
-            'n: for dr in -1i64..=1 {
-                for dc in -1i64..=1 {
-                    if dr == 0 && dc == 0 {
-                        continue;
-                    }
-                    let (rr, cc) = (r as i64 + dr, c as i64 + dc);
-                    if rr < 0 || cc < 0 || rr >= g.rows as i64 || cc >= g.cols as i64 {
-                        continue;
-                    }
-                    let w = dt[rr as usize * g.cols + cc as usize];
-                    if w > v || (w == v && (dr < 0 || (dr == 0 && dc < 0))) {
-                        is_max = false;
-                        break 'n;
-                    }
-                }
-            }
-            if is_max {
-                out.push((g.cell_center(c, r), v, c, r));
-            }
-        }
-    }
-    out
 }
 
 fn rasterize_prim(m: &mut MaskRaster, p: &Prim) {

@@ -6,7 +6,7 @@
  * @minItems 4
  * @maxItems 4
  */
-export type Rect4 = [unknown, unknown, unknown, unknown];
+export type Rect4 = [number, number, number, number];
 /**
  * Affine map [a,b,c,d,e,f] from input units to canvas pixels: x' = a*x + c*y + e, y' = b*x + d*y + f (SVG matrix order). Applied to anchors, item polygons with absolute coordinates, area polygons and vector obstacles. Lengths (radii, widths, sizes) are never transformed.
  *
@@ -78,7 +78,7 @@ export type Ring = [Point, Point, Point, ...Point[]];
  * @minItems 2
  * @maxItems 2
  */
-export type Point = [unknown, unknown];
+export type Point = [number, number];
 export type Models = ("adjacent" | "slider" | "internal" | "distant" | "boundary")[];
 export type InternalPolicy = "auto" | "prefer" | "allow" | "never";
 export type PositionOrder = ("perceptual" | "cartographic") | [PositionName, ...PositionName[]];
@@ -187,7 +187,7 @@ export type Color = string;
  * @minItems 2
  * @maxItems 2
  */
-export type Point1 = [unknown, unknown];
+export type Point1 = [number, number];
 export type RasterSource1 = {
   [k: string]: unknown | undefined;
 };
@@ -456,7 +456,7 @@ export interface VectorLayer {
   /**
    * [x, y, r] triples.
    */
-  circles?: [unknown, unknown, unknown][];
+  circles?: [number, number, number][];
   polylines?: Polyline[];
   /**
    * Stroke width for polylines (px).

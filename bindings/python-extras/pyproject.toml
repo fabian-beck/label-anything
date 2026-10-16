@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "label-anything-extras"
+version = "0.1.0"
+description = "Plotting helpers for Label Anything (label placement): matplotlib, Plotly and seaborn."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [{ name = "Label Anything contributors" }]
+keywords = ["label-placement", "labeling", "matplotlib", "plotly", "seaborn", "annotations"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Matplotlib",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Typing :: Typed",
+]
+dependencies = ["label-anything>=0.1"]
+
+[project.optional-dependencies]
+matplotlib = ["matplotlib>=3.5", "numpy>=1.21"]
+plotly = ["plotly>=5"]
+seaborn = ["seaborn>=0.12", "matplotlib>=3.5", "numpy>=1.21"]
+all = ["matplotlib>=3.5", "numpy>=1.21", "plotly>=5", "seaborn>=0.12"]
+test = ["pytest>=7", "matplotlib>=3.5", "numpy>=1.21", "plotly>=5", "seaborn>=0.12"]
+
+[project.urls]
+Homepage = "https://github.com/fabian-beck/label-anything"
+Documentation = "https://github.com/fabian-beck/label-anything/blob/main/docs/bindings/python.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+label_anything_extras = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
+
+[[tool.mypy.overrides]]
+module = ["plotly", "plotly.*", "seaborn", "seaborn.*", "pandas", "pandas.*"]
+ignore_missing_imports = true

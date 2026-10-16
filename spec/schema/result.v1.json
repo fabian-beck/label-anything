@@ -181,6 +181,7 @@
         "seed": { "type": "integer", "minimum": 0 },
         "iterations": { "type": "integer", "minimum": 0 },
         "time_guard_hit": { "type": "boolean", "description": "The wall-clock guard stopped a phase early (result may then depend on machine speed)." },
+        "cancelled": { "type": "boolean", "description": "The host cancelled the solve (cancellation token / AbortSignal); the result is the best valid state found so far, and items not yet processed are reported as budget_exhausted." },
         "candidates": { "type": "integer", "minimum": 0 },
         "omission_order": { "type": "array", "items": { "type": "string" } },
         "priority_inversions": { "type": "integer", "minimum": 0 },

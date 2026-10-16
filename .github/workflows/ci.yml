@@ -1,0 +1,237 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 4 * * 1" # weekly: everything, plus coverage-guided fuzzing
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: Rust (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - name: Format
+        if: runner.os == 'Linux'
+        run: cargo fmt --all --check
+      - name: Clippy
+        if: runner.os == 'Linux'
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Test (workspace, release)
+        # the Python extension is built and tested by the python job (it needs an interpreter on Windows)
+        run: cargo test --workspace --release --exclude label-anything-py
+      - name: Conformance (place cases)
+        run: cargo test -p label-anything --release --test conformance
+      - name: Randomized guarantees (more cases)
+        if: runner.os == 'Linux'
+        run: cargo test -p label-anything-core --release --test random_problems
+        env:
+          LA_RANDOM_CASES: "1000"
+
+  wasm32:
+    name: Core for wasm32
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - run: cargo build --manifest-path rust/Cargo.toml -p label-anything-core --target wasm32-unknown-unknown --release
+      - run: cargo build --manifest-path rust/Cargo.toml -p label-anything-core --target wasm32-unknown-unknown --release --features decode
+
+  typescript:
+    name: TypeScript and JS helpers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type-check and build
+        run: npm run build
+      - name: Rust CLI (the real engine for the JS helpers' integration tests)
+        run: cargo build --release --manifest-path rust/Cargo.toml -p label-anything-cli
+      - name: Tests (incl. conformance, Rust parity fixtures and the JS helpers)
+        run: npx vitest run
+
+  generated:
+    name: Generated files are current
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r tools/text/requirements.txt
+      - name: Spec code generation
+        run: node tools/codegen.mjs --check
+      - name: Place conformance cases
+        run: python3 tools/conformance/make_place_cases.py --check
+      - name: Text conformance cases
+        run: python3 tools/text/gen_text_cases.py --check
+      - name: Schema cross-check (Python jsonschema)
+        run: |
+          pip install jsonschema
+          python3 conformance/check_schema.py
+
+  licenses:
+    name: Dependency licenses
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/check-licenses.mjs
+
+  python:
+    name: Python ${{ matrix.python }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.9", "3.13"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Build the wheel
+        run: |
+          pip install "maturin>=1.9.4,<2"
+          cd rust/crates/la-py && maturin build --release --out ../../target/wheels
+      - name: Install and test
+        run: |
+          pip install rust/target/wheels/label_anything-*.whl "./bindings/python-extras[all,test]" pytest numpy pillow
+          pytest -q rust/crates/la-py/tests bindings/python-extras/tests
+      - name: Brief example (§6.1), verbatim
+        run: python examples/brief/python_6_1.py --out "$RUNNER_TEMP"
+
+  examples:
+    name: C, Go and CLI examples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - run: cargo build --release --manifest-path rust/Cargo.toml -p label-anything-capi -p label-anything-cli
+      - name: C
+        run: |
+          cc examples/c/main.c -Irust/crates/la-capi/include -Lrust/target/release -llabelanything -o la-c
+          LD_LIBRARY_PATH=rust/target/release ./la-c
+      - name: Go
+        run: cd examples/go && LD_LIBRARY_PATH=../../rust/target/release go run .
+      - name: CLI (brief §6.5)
+        run: examples/brief/cli_6_5.sh rust/target/release/label-anything
+
+  bench:
+    name: Benchmark (${{ startsWith(github.ref, 'refs/tags/') && 'full' || 'quick' }})
+    if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Cache fetched data and built problems
+        uses: actions/cache@v4
+        with:
+          path: |
+            bench/data
+            bench/out
+          key: bench-${{ hashFiles('bench/common/sources.py', 'bench/scenarios/**/*.py', 'bench/common/*.py') }}
+      - run: cargo build --release --manifest-path rust/Cargo.toml -p label-anything-cli
+      - name: Fetch and build scenarios
+        run: |
+          python3 -m venv bench/.venv
+          bench/.venv/bin/pip install -r bench/requirements.txt
+          bench/.venv/bin/python -m bench.scenarios fetch
+          bench/.venv/bin/python -m bench.scenarios build
+      - name: Run
+        run: >
+          bench/.venv/bin/python bench/run.py
+          --suite ${{ startsWith(github.ref, 'refs/tags/') && 'full' || 'quick' }}
+          --runs ${{ startsWith(github.ref, 'refs/tags/') && '7' || '3' }}
+          --solver naive --solver greedy
+          --solver "rust=$PWD/rust/target/release/label-anything place {problem} -o {result}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bench-report
+          path: bench-report/
+
+  fuzz:
+    name: Fuzzing (cargo-fuzz)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo install cargo-fuzz --locked
+      - name: Fuzz each target for 4 minutes
+        run: |
+          rust/fuzz/seed.sh
+          cd rust/fuzz
+          for t in place_json svg_parse raster_decode; do
+            cargo +nightly fuzz run "$t" -- -max_total_time=240 -rss_limit_mb=4096 -timeout=20
+          done
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: fuzz-artifacts
+          path: rust/fuzz/artifacts/

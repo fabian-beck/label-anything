@@ -1,0 +1,12 @@
+{
+  "kind": "place",
+  "name": "200 labels over dense points (deterministic)",
+  "problem_file": "../problems/many-points.json",
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed_min": 190
+  }
+}
