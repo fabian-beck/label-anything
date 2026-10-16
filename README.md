@@ -46,6 +46,22 @@ const res = place({
 label-anything place problem.json -o result.json --debug-svg overlay.svg
 ```
 
+## Packages
+
+| Language | Package | What it is |
+|---|---|---|
+| Rust | `label-anything` (crate) | the engine; data-parallel phases on all cores |
+| CLI | `label-anything` (`rust/crates/la-cli`) | `place`, `validate`, `render`, `bench`, `serve` (HTTP) |
+| Python ≥ 3.9 | `label-anything` (PyPI; `rust/crates/la-py`) | the Rust engine; extras for matplotlib, Plotly, seaborn (`bindings/python-extras`) |
+| JavaScript / TypeScript | `@label-anything/core` | the engine in pure TypeScript, bit-identical to Rust |
+| JavaScript (WebAssembly) | `@label-anything/wasm` | the Rust engine compiled to WebAssembly, same API as `core` |
+| JavaScript helpers | `@label-anything/extras` | d3, Observable Plot, Vega, Leaflet, MapLibre, Cytoscape, sigma, Web Workers |
+| Java ≥ 17 | `io.github.fabian-beck:label-anything` | the Rust engine through FFM (JDK 22+) or JNI |
+| C, Go, … | `label_anything.h` (`rust/crates/la-capi`) | C ABI; `examples/c`, `examples/go` |
+
+The packages are not published to the registries yet; build them from this repository
+(see the getting-started pages).
+
 ## Documentation
 
 The documentation site is **<https://fabian-beck.github.io/label-anything/>** (built from
@@ -90,7 +106,8 @@ implementation-independent evaluator, and six baselines — naive, greedy, texta
 adjustText, vega-label and ggrepel — scored the same way.
 `label-anything bench --baselines --perf` writes `bench-report/index.html`: metric tables,
 renderings side by side, runtime-vs-size plots, Rust/TypeScript parity and the performance
-targets; `--gate` enforces the release gates (`docs/benchmark.md`, `bench/README.md`).
+targets; `--gate` enforces the release gates (`docs/benchmark.md`, `bench/README.md`, which
+also lists where the performance targets stand).
 
 ## Repository layout
 
@@ -100,7 +117,8 @@ conformance/   language-neutral test cases used by every implementation
 fonts/         bundled Noto Sans subset (SIL OFL 1.1)
 rust/          performance core: la-core, la-text, la-expr, la-svg, la-raster, la-render,
                la-cli, la-wasm, la-py, la-capi, and the label-anything facade crate
-ts/            pure TypeScript implementation (@label-anything/core, text, svg, raster)
+ts/            pure TypeScript implementation (@label-anything/core, text, svg, raster, the
+               label-anything-ts CLI) and the WebAssembly package (@label-anything/wasm)
 bindings/      Java (FFM/JNI), Python extras (matplotlib, Plotly), JS extras (d3, Vega, …)
 bench/         real-world benchmark: scenarios, evaluator, baselines, report, perf targets, gates
 docs/          documentation and architecture decision records (docs/adr)

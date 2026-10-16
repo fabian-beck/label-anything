@@ -9,11 +9,17 @@ what the gates check and how to read the report.
 
 ```sh
 cargo build --release --manifest-path rust/Cargo.toml -p label-anything-cli
+npm ci && npm run build && npm run build:wasm -w @label-anything/wasm
 bench/.venv/bin/python bench/run.py --suite full --runs 7 \
-    --engine rust/target/release/label-anything \
-    --solver 'ts=node ts/packages/cli/dist/main.js place {problem} -o {result}' \
+    --engine rust/target/release/label-anything --ts --wasm \
     --baselines --gate --previous path/to/previous-release/results.json
 ```
+
+`--ts` and `--wasm` run the TypeScript engine and the WebAssembly build through the TypeScript
+CLI (`label-anything-ts place [--engine wasm]`). All three implementations are timed in steady
+state: `--warmup 3` solves in the same process precede every timed solve, as in a host
+application that solves repeatedly (a fresh process also times font loading, first-touch memory
+and, for JavaScript, compiling the engine).
 
 or, equivalently for the Rust engine alone,
 `label-anything bench --suite full --baselines --gate --previous path/to/results.json`.
@@ -35,17 +41,38 @@ the Label Anything solvers (`rust`, `wasm`, `ts`):
    run: 200 labels + 10k points (800×600) ≤ 15 / 30 / 60 ms, 2,000 labels + 100k points
    (1920×1080, greedy) ≤ 120 / 250 / 600 ms, 2048² raster preparation ≤ 25 / 60 / 150 ms for
    Rust / WASM / TS, as the engine's own median timing (`stats.runtime_ms`,
-   `stats.phases_ms.prepare`).
+   `stats.phases_ms.prepare`) in steady state.
 
 A deliberate regression (a trade-off accepted for a better result elsewhere) needs an ADR in
 `docs/adr/` and an entry in `bench/gates-allow.json`:
 
 ```json
 {"allow": [{"metric": "placed_rate", "scenario": "05-airports", "config": "*", "solver": "rust",
-            "adr": "0018", "reason": "labels near the antimeridian now omitted instead of clipped"}]}
+            "adr": "00NN", "reason": "labels near the antimeridian now omitted instead of clipped"}]}
 ```
 
 Entries naming an ADR that does not exist are ignored and reported.
+
+## Where the performance targets stand
+
+`python -m bench.perf --engine rust/target/release/label-anything --ts --wasm --runs 7` at
+commit 6f4ed69 (2026-10-16) on a 4-core cloud VM (Intel Xeon @ 2.1 GHz, Linux, Node 22),
+median engine time in ms (target in parentheses):
+
+| problem | Rust | WASM | TS |
+|---|---:|---:|---:|
+| 200 labels + 10k points | **14.1** (15) | **21.6** (30) | **46.8** (60) |
+| 2,000 labels + 100k points, greedy | 244 (120) | 323 (250) | 665 (600) |
+| 2048² raster preparation | **21.7** (25) | **39.4** (60) | **101.6** (150) |
+
+Six of the nine targets are met on this machine; the 2,000-label problem is not, in any
+implementation. About half of its time goes to the degradation ladder of the ≈ 1,400 labels
+that find no room at level 0 (most of them, ≈ 1,050, are omitted in the end): every ladder step
+generates and tests the candidates of new label variants against the placed labels, one item
+after the other. The Rust engine runs the order-independent phases on all cores (feature
+`parallel`: obstacle rasterization, level-0 candidates, the distance transform), which the
+WebAssembly and TypeScript engines cannot. Numbers from a faster machine are lower; compare
+numbers from the same machine only.
 
 ## Reading the report
 
