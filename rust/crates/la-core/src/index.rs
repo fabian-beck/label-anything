@@ -1,7 +1,9 @@
 //! Uniform-grid spatial indexes: a static CSR index and a dynamic one (insert/remove).
 //!
-//! Queries return ids in ascending order without duplicates, so results never depend on
-//! bucket iteration order.
+//! Queries return ids without duplicates in bucket scan order (rows, then columns, then
+//! bucket order). That order is a deterministic function of the index's construction and
+//! of the sequence of inserts and removals, so it is reproducible across runs and across
+//! implementations that mirror these structures.
 
 use crate::geom::Rect;
 
@@ -215,8 +217,8 @@ impl DynIndex {
         self.boxes.get(id as usize).and_then(|b| b.as_ref())
     }
 
-    /// Ids whose boxes touch `r`, deduplicated, ascending (sorted so that results do not
-    /// depend on insertion/removal history).
+    /// Ids whose boxes touch `r`, deduplicated, in bucket scan order (deterministic for a
+    /// given history of inserts and removals; removal swaps the last bucket entry in).
     pub fn query(&mut self, r: &Rect, out: &mut Vec<u32>) {
         out.clear();
         let (c0, c1, r0, r1) = self.b.range(r);
@@ -243,9 +245,6 @@ impl DynIndex {
                     }
                 }
             }
-        }
-        if out.len() > 1 {
-            out.sort_unstable();
         }
     }
 }
@@ -277,6 +276,7 @@ mod tests {
         ix.insert(1, Rect::xywh(20.0, 20.0, 5.0, 5.0));
         let mut out = Vec::new();
         ix.query(&Rect::xywh(21.0, 21.0, 1.0, 1.0), &mut out);
+        out.sort_unstable();
         assert_eq!(out, vec![1, 3]);
         ix.remove(3);
         ix.query(&Rect::xywh(21.0, 21.0, 1.0, 1.0), &mut out);

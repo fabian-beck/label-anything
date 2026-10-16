@@ -204,8 +204,21 @@ impl<'a> Solve<'a> {
                 candidates::label_shape(&c.rect, &self.variants[i][c.variant as usize].shape);
         }
         if lazy {
+            // Ladder candidates blocked (hard) by a placed label or leader of higher or
+            // equal priority are not stored: they cannot be used while that label stays,
+            // and they can never be evict_lower targets or witnesses of a priority
+            // inversion (those only involve strictly lower-priority labels). Spec §6.7.
+            let key_i = self.pri.prio[i].key;
+            let prio = &self.pri.prio;
             let mut ids = Vec::with_capacity(fresh.len());
             for c in fresh {
+                if self
+                    .state
+                    .first_conflict(&c, &self.cands, self.obs, i, |j| prio[j].key <= key_i)
+                    .is_some()
+                {
+                    continue;
+                }
                 ids.push(self.cands.len() as u32);
                 self.cands.push(c);
             }

@@ -352,7 +352,7 @@ fn unplace_item(s: &mut Solve, g: &mut Greedy, i: usize) {
         if s.state.placed[j].is_some() {
             continue;
         }
-        let cand = s.cands[k].clone();
+        let cand = &s.cands[k];
         if s.state.is_free(&cand, &s.cands, s.obs, j, &mut scratch) {
             g.alive[k] = true;
             g.live[j] += 1;
@@ -394,7 +394,7 @@ fn best_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<u32> {
         })
         .collect();
     for c in late {
-        let cand = s.cands[c as usize].clone();
+        let cand = &s.cands[c as usize];
         if !s.state.is_free(&cand, &s.cands, s.obs, i, &mut scratch) {
             continue;
         }
@@ -465,17 +465,20 @@ fn best_free(s: &mut Solve, ids: &[u32], relaxed: bool) -> Option<(u32, bool)> {
     let mut best: Option<(f64, u32)> = None;
     let mut scratch = Vec::new();
     for &c in ids {
-        if !s.cands[c as usize].evaluated {
-            let cand = s.cands[c as usize].clone();
+        let cu = c as usize;
+        let i = s.cands[cu].item as usize;
+        // lazily generated candidates are evaluated once they are free
+        let fresh = !s.cands[cu].evaluated;
+        if fresh {
             if !s
                 .state
-                .is_free(&cand, &s.cands, s.obs, cand.item as usize, &mut scratch)
+                .is_free(&s.cands[cu], &s.cands, s.obs, i, &mut scratch)
             {
                 continue;
             }
             s.ensure_eval(c);
         }
-        let cand = &s.cands[c as usize];
+        let cand = &s.cands[cu];
         let usable = if relaxed {
             !cand.feasible && cand.relaxed
         } else {
@@ -484,14 +487,12 @@ fn best_free(s: &mut Solve, ids: &[u32], relaxed: bool) -> Option<(u32, bool)> {
         if !usable {
             continue;
         }
-        let i = cand.item as usize;
         let item = &s.model.items[i];
-        let cand = cand.clone();
-        if !s.state.is_free(&cand, &s.cands, s.obs, i, &mut scratch) {
+        if !fresh && !s.state.is_free(cand, &s.cands, s.obs, i, &mut scratch) {
             continue;
         }
         let d = s.state.dynamic_cost(
-            &cand,
+            cand,
             &s.cands,
             s.obs,
             item.len.buffer,
@@ -520,7 +521,7 @@ fn evict_lower(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<(u32, bool)> {
     let mut confl = Vec::new();
     for c in ids {
         s.ensure_eval(c);
-        let cand = s.cands[c as usize].clone();
+        let cand = &s.cands[c as usize];
         if !cand.feasible {
             continue;
         }

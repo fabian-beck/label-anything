@@ -274,7 +274,7 @@ pub fn boundary_pass(s: &mut Solve) {
             let id = s.cands.len() as u32;
             s.cands.push(c);
             s.by_item[i].push(id);
-            let cand = s.cands[id as usize].clone();
+            let cand = &s.cands[id as usize];
             let mut scratch = Vec::new();
             if !s.state.is_free(&cand, &s.cands, s.obs, i, &mut scratch) {
                 ok = false;
@@ -357,11 +357,11 @@ pub fn uncross(s: &mut Solve) {
                 s.cands.push(nj);
                 s.by_item[j].push(id_j);
                 let mut scratch = Vec::new();
-                let ci2 = s.cands[id_i as usize].clone();
+                let ci2 = &s.cands[id_i as usize];
                 let ok_i = s.state.is_free(&ci2, &s.cands, s.obs, i, &mut scratch);
                 if ok_i {
                     s.state.place(i, id_i, &s.cands, false);
-                    let cj2 = s.cands[id_j as usize].clone();
+                    let cj2 = &s.cands[id_j as usize];
                     if s.state.is_free(&cj2, &s.cands, s.obs, j, &mut scratch) {
                         s.state.place(j, id_j, &s.cands, false);
                         improved = true;

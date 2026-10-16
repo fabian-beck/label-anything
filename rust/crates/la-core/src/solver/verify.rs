@@ -38,7 +38,7 @@ pub fn verify(s: &mut Solve) -> Verification {
         let mut worst: Option<usize> = None;
         for i in 0..n {
             let Some(c) = s.state.placed[i] else { continue };
-            let cand = s.cands[c as usize].clone();
+            let cand = &s.cands[c as usize];
             s.state.conflicts(&cand, &s.cands, s.obs, i, &mut buf);
             for &j in &buf {
                 let j = j as usize;
@@ -132,7 +132,7 @@ pub fn inversions(s: &mut Solve) -> usize {
         let mut inverted = false;
         for c in ids {
             // cheap rejection first: a conflict with a higher- or equal-key label
-            let cand = s.cands[c as usize].clone();
+            let cand = &s.cands[c as usize];
             if cand.evaluated && !(cand.feasible || (soft_ok && cand.relaxed)) {
                 continue;
             }
@@ -143,7 +143,7 @@ pub fn inversions(s: &mut Solve) -> usize {
                 continue;
             }
             s.ensure_eval(c);
-            let cand = s.cands[c as usize].clone();
+            let cand = &s.cands[c as usize];
             if !(cand.feasible || (soft_ok && cand.relaxed)) {
                 continue;
             }
