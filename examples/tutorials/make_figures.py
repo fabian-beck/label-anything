@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -103,9 +104,23 @@ def composite(problem_path: Path, result: dict[str, Any], out: Path, ss: int = 2
     img.save(out, optimize=True)
 
 
+def python_figure(python: str, program: str, output: str, name: str, tmp: Path) -> None:
+    """Run a Python tutorial program in a copy of the data and keep the image it writes."""
+    work = tmp / name
+    shutil.copytree(HERE / "data", work / "data")
+    shutil.copytree(HERE / "problems", work / "problems")
+    subprocess.run([python, str(HERE / "python" / program)], cwd=work / "data", check=True, env={**os.environ, "MPLBACKEND": "Agg"})
+    shutil.copyfile(work / "data" / output, FIGURES / f"{name}.png")
+
+
+# (output name, Python program, the image it writes)
+PYTHON_FIGURES = [("matplotlib", "helpers_matplotlib.py", "matplotlib.png")]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--cli", required=True, help="the label-anything executable")
+    ap.add_argument("--python", help="a Python with label_anything[matplotlib] (figures of the Python helpers)")
     ap.add_argument("--only", nargs="*", help="figure names to (re)make")
     args = ap.parse_args()
     cli = str(Path(args.cli).resolve())
@@ -126,6 +141,11 @@ def main() -> int:
             problem = HERE / rel
             result = json.loads(solve(cli, problem, tmp).read_text(encoding="utf-8"))
             composite(problem, result, FIGURES / f"{name}.png")
+            print(f"docs/assets/figures/{name}.png")
+        for name, program, output in PYTHON_FIGURES if args.python else []:
+            if args.only and name not in args.only:
+                continue
+            python_figure(args.python, program, output, name, tmp)
             print(f"docs/assets/figures/{name}.png")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

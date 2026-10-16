@@ -37,6 +37,12 @@ DATA = HERE / "data"
 PROBLEMS = HERE / "problems"
 
 failures: list[str] = []
+only: list[str] = []
+verbose = False
+
+
+def selected(name: str) -> bool:
+    return not only or any(o in name for o in only)
 
 
 def log(msg: str) -> None:
@@ -57,6 +63,8 @@ def workdir() -> Path:
 
 
 def run(name: str, cmd: list[str], cwd: Path, env: dict[str, str] | None = None, timeout: float = 300) -> subprocess.CompletedProcess[str] | None:
+    if not selected(name):
+        return None
     log(f"--- {name}: {' '.join(cmd)}")
     try:
         p = subprocess.run(cmd, cwd=cwd, env={**os.environ, **(env or {})}, text=True, capture_output=True, timeout=timeout)
@@ -67,7 +75,7 @@ def run(name: str, cmd: list[str], cwd: Path, env: dict[str, str] | None = None,
         fail(name, f"exit code {p.returncode}\n{p.stdout[-3000:]}\n{p.stderr[-3000:]}")
         return None
     out = p.stdout.strip().splitlines()
-    for line in out[-3:]:
+    for line in (out if verbose else out[-3:]):
         log(f"    {line[:160]}")
     return p
 
@@ -311,7 +319,12 @@ def main() -> int:
     ap.add_argument("--java-opt", action="append", default=[], help="extra JVM option (repeatable)")
     ap.add_argument("--node", default="node")
     ap.add_argument("--js-engine", choices=["core", "cli"], default="core")
+    ap.add_argument("--only", nargs="*", default=[], help="run only programs whose name contains one of these")
+    ap.add_argument("-v", "--verbose", action="store_true", help="print the whole output of every program")
     args = ap.parse_args()
+    only.extend(args.only)
+    global verbose
+    verbose = args.verbose
     langs = list(LANGS) if "all" in args.langs else args.langs
     for lang in langs:
         log(f"=== {lang}")
