@@ -1,7 +1,7 @@
 """Run the tutorial programs (the code shown in docs/) and check their results.
 
     python3 examples/tutorials/run.py data                        # data files are current
-    python3 examples/tutorials/run.py cli --cli rust/target/release/label-anything
+    python3 examples/tutorials/run.py cli --cli rust/target/release/label-anything [--ts-cli node_modules/.bin/label-anything-ts]
     python3 examples/tutorials/run.py python                      # label_anything installed
     python3 examples/tutorials/run.py c go --lib rust/target/release
     python3 examples/tutorials/run.py java --jar bindings/java/target/label-anything-0.1.0.jar
@@ -218,8 +218,12 @@ def lang_cli(args: argparse.Namespace) -> None:
         fail("cli", "--cli PATH is required")
         return
     cli = str(Path(args.cli).resolve())
-    path_env = {"PATH": f"{Path(cli).parent}{os.pathsep}{os.environ.get('PATH', '')}"}
+    dirs = [str(Path(cli).parent)] + ([str(Path(args.ts_cli).absolute().parent)] if args.ts_cli else [])
+    path_env = {"PATH": os.pathsep.join([*dirs, os.environ.get("PATH", "")])}
     for script in sorted((HERE / "cli").glob("*.sh")):
+        if script.name.startswith("ts-") and not args.ts_cli:
+            log(f"--- cli/{script.name}: skipped (no --ts-cli)")
+            continue
         wd = workdir()
         if run(f"cli/{script.name}", ["bash", str(script)], wd, path_env) is None:
             continue
@@ -305,6 +309,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("langs", nargs="+", choices=[*LANGS, "all"])
     ap.add_argument("--cli", help="the label-anything executable")
+    ap.add_argument("--ts-cli", help="the label-anything-ts executable (runs cli/ts-*.sh)")
     ap.add_argument("--lib", help="directory with liblabelanything (C, Go)")
     ap.add_argument("--jar", help="label-anything-<version>.jar (Java)")
     ap.add_argument("--python", default=sys.executable, help="Python with label_anything installed")
