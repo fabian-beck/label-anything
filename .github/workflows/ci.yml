@@ -181,6 +181,39 @@ jobs:
       - name: CLI (brief §6.5)
         run: examples/brief/cli_6_5.sh rust/target/release/label-anything
 
+  java:
+    name: Java (FFM on JDK 25, JNI on JDK 17)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          # the last version is the default: it builds the multi-release JAR and runs the
+          # FFM tests; JDK 17 runs the JNI tests (base classes of the JAR)
+          java-version: |
+            17
+            25
+          cache: maven
+      - name: Native library (C ABI + JNI entry points) and the CLI (reference for the tests)
+        run: >
+          cargo build --release --manifest-path rust/Cargo.toml
+          -p label-anything-capi -p label-anything-cli --features label-anything-capi/jni
+      - name: Build and test (integration tests once with FFM, once with JNI)
+        run: mvn -B -ntp -f bindings/java/pom.xml verify -Dlabelanything.jni.jvm="$JAVA_HOME_17_X64/bin/java"
+      - name: Brief example (§6.3), verbatim (FFM)
+        run: examples/brief/java/run.sh bindings/java/target/label-anything-0.1.0.jar
+      - name: Brief example (§6.3), verbatim, on JDK 17 (JNI)
+        run: PATH="$JAVA_HOME_17_X64/bin:$PATH" examples/brief/java/run.sh bindings/java/target/label-anything-0.1.0.jar
+      - name: Java example
+        run: >
+          java --enable-native-access=ALL-UNNAMED -cp bindings/java/target/label-anything-0.1.0.jar
+          examples/java/Main.java "$RUNNER_TEMP/overlay.svg"
+
   bench:
     name: Benchmark (${{ startsWith(github.ref, 'refs/tags/') && 'full' || 'quick' }})
     if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/')
