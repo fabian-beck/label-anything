@@ -1,0 +1,15 @@
+{
+  "obstacles": {
+    "raster": { "source": "../data/overlay.png", "mode": "alpha", "class": "route", "alpha": { "threshold": 0.1 } }
+  },
+  "avoid": { "label": { "route": 5 } },
+  "items": [
+    { "id": "start", "anchor": { "type": "point", "x": 30, "y": 280 }, "label": { "type": "text", "text": "Start" } },
+    { "id": "ford", "anchor": { "type": "point", "x": 120, "y": 230 }, "label": { "type": "text", "text": "Ford" } },
+    { "id": "mill", "anchor": { "type": "point", "x": 190, "y": 250 }, "label": { "type": "text", "text": "Mill" } },
+    { "id": "pass", "anchor": { "type": "point", "x": 260, "y": 170 }, "label": { "type": "text", "text": "Pass" } },
+    { "id": "hut", "anchor": { "type": "point", "x": 330, "y": 150 }, "label": { "type": "text", "text": "Hut" } },
+    { "id": "ridge", "anchor": { "type": "point", "x": 400, "y": 80 }, "label": { "type": "text", "text": "Ridge" } },
+    { "id": "summit", "anchor": { "type": "point", "x": 455, "y": 60 }, "label": { "type": "text", "text": "Summit" } }
+  ]
+}

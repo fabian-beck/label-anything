@@ -145,11 +145,54 @@ def omitted_with(reason: str) -> Callable[[dict[str, Any]], str | None]:
     return check
 
 
-PROBLEM_CHECKS: dict[str, tuple[int, Callable[[dict[str, Any]], str | None] | None]] = {}
+def model_of(**wanted: str) -> Callable[[dict[str, Any]], str | None]:
+    """Items (by id) placed with the given model; ``"-"`` means omitted."""
+
+    def check(res: dict[str, Any]) -> str | None:
+        ps = placements(res)
+        bad = {i: ps[i].get("model") if ps[i]["placed"] else "-" for i, m in wanted.items() if (ps[i].get("model") if ps[i]["placed"] else "-") != m}
+        return f"models {bad}, expected {wanted}" if bad else None
+
+    return check
 
 
-def expect(name: str, placed_min: int, check: Callable[[dict[str, Any]], str | None] | None = None) -> None:
-    PROBLEM_CHECKS[name] = (placed_min, check)
+def priority_cities(res: dict[str, Any]) -> str | None:
+    problem = json.loads((PROBLEMS / "priority-cities.json").read_text())
+    attrs = {it["id"]: it["attrs"] for it in problem["items"]}
+    ps = placements(res)
+    msgs = []
+    capitals = [i for i, a in attrs.items() if a.get("capital")]
+    if not all(ps[c]["placed"] for c in capitals):
+        msgs.append(f"capitals {capitals} not all placed")
+    for region in {a["region"] for a in attrs.values()}:
+        n = sum(1 for i, a in attrs.items() if a["region"] == region and ps[i]["placed"])
+        if n < 2:
+            msgs.append(f"region {region}: {n} labels (coverage asks for 2)")
+    if res["stats"]["priority_inversions"] != 0:
+        msgs.append("priority inversions")
+    order = res["stats"]["omission_order"]
+    if sorted(order) != sorted(i for i, p in ps.items() if not p["placed"]):
+        msgs.append("omission_order does not list the omitted items")
+    return "; ".join(msgs) or None
+
+
+PROBLEM_CHECKS: dict[str, tuple[int, Callable[[dict[str, Any]], str | None] | None]] = {
+    "svg-classes.json": (18, None),
+    "raster-ink.json": (18, None),
+    "raster-alpha.json": (7, None),
+    "raster-cost.json": (18, None),
+    "raster-classmap.json": (10, None),
+    "raster-saliency.json": (5, None),
+    "leaders-straight.json": (10, leader_styles("straight")),
+    "leaders-angles.json": (10, leader_styles("angles")),
+    "leaders-orthogonal.json": (10, leader_styles("orthogonal")),
+    "leaders-elbow.json": (10, leader_styles("elbow")),
+    "leaders-curved.json": (10, leader_styles("curved")),
+    "leaders-boundary.json": (11, models("boundary")),
+    "priority-cities.json": (30, all_checks(omitted_with("omitted_by_priority"), priority_cities)),
+    "shapes.json": (10, model_of(big="internal", ellipse="internal", card="internal", region="internal", islet="adjacent", medium="adjacent")),
+    "graph.json": (14, model_of(core="internal", api="internal", db="internal", cache="internal", web="adjacent")),
+}
 
 
 # ---------------------------------------------------------------------------------------

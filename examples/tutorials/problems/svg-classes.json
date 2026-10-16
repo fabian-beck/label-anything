@@ -1,0 +1,44 @@
+{
+  "preset": "scatter",
+  "obstacles": {
+    "svg": {
+      "path": "../data/scatter.svg",
+      "classes": [
+        { "selector": "#background", "class": "ignore" },
+        { "selector": ".legend *", "class": "legend" },
+        { "selector": "text", "class": "text" },
+        { "selector": ".grid line", "class": "grid" },
+        { "selector": ".axis line", "class": "axes" },
+        { "selector": "circle.point", "class": "points" },
+        { "selector": "path.trend", "class": "lines" }
+      ],
+      "auto_mark_items": true
+    }
+  },
+  "avoid": {
+    "label": { "legend": "hard", "grid": "ignore", "points": 0.3, "lines": 1.5 },
+    "leader": { "legend": "hard", "grid": "ignore" }
+  },
+  "items": [
+    { "id": "o0", "svg_id": "o0", "anchor": { "type": "point", "x": 680.8, "y": 192.1 }, "label": { "type": "text", "text": "CouponView" } },
+    { "id": "o1", "svg_id": "o1", "anchor": { "type": "point", "x": 134.8, "y": 357.2 }, "label": { "type": "text", "text": "ThemeFactory" } },
+    { "id": "o2", "svg_id": "o2", "anchor": { "type": "point", "x": 103.6, "y": 277.6 }, "label": { "type": "text", "text": "NoteBuilder" } },
+    { "id": "o3", "svg_id": "o3", "anchor": { "type": "point", "x": 431.9, "y": 171.0 }, "label": { "type": "text", "text": "ImageClient" } },
+    { "id": "o4", "svg_id": "o4", "anchor": { "type": "point", "x": 102.4, "y": 412.2 }, "label": { "type": "text", "text": "LayoutBuilder" } },
+    { "id": "o5", "svg_id": "o5", "anchor": { "type": "point", "x": 113.4, "y": 414.2 }, "label": { "type": "text", "text": "EventClient" } },
+    { "id": "o6", "svg_id": "o6", "anchor": { "type": "point", "x": 157.7, "y": 340.8 }, "label": { "type": "text", "text": "CartHandler" } },
+    { "id": "o7", "svg_id": "o7", "anchor": { "type": "point", "x": 153.6, "y": 468.4 }, "label": { "type": "text", "text": "TicketClient" } },
+    { "id": "o8", "svg_id": "o8", "anchor": { "type": "point", "x": 215.8, "y": 291.0 }, "label": { "type": "text", "text": "BadgeStore" } },
+    { "id": "o9", "svg_id": "o9", "anchor": { "type": "point", "x": 649.8, "y": 254.9 }, "label": { "type": "text", "text": "UploadStore" } },
+    { "id": "o10", "svg_id": "o10", "anchor": { "type": "point", "x": 623.3, "y": 97.8 }, "label": { "type": "text", "text": "TokenBuilder" } },
+    { "id": "o11", "svg_id": "o11", "anchor": { "type": "point", "x": 723.1, "y": 113.9 }, "label": { "type": "text", "text": "QueueManager" } },
+    { "id": "o12", "svg_id": "o12", "anchor": { "type": "point", "x": 445.8, "y": 158.5 }, "label": { "type": "text", "text": "BadgeClient" } },
+    { "id": "o13", "svg_id": "o13", "anchor": { "type": "point", "x": 585.5, "y": 91.2 }, "label": { "type": "text", "text": "GridStore" } },
+    { "id": "o14", "svg_id": "o14", "anchor": { "type": "point", "x": 499.6, "y": 148.2 }, "label": { "type": "text", "text": "EventStore" } },
+    { "id": "o15", "svg_id": "o15", "anchor": { "type": "point", "x": 687.3, "y": 139.4 }, "label": { "type": "text", "text": "CartClient" } },
+    { "id": "o16", "svg_id": "o16", "anchor": { "type": "point", "x": 85.4, "y": 413.5 }, "label": { "type": "text", "text": "IndexView" } },
+    { "id": "o17", "svg_id": "o17", "anchor": { "type": "point", "x": 635.1, "y": 257.5 }, "label": { "type": "text", "text": "DraftHandler" } },
+    { "id": "o18", "svg_id": "o18", "anchor": { "type": "point", "x": 192.2, "y": 316.7 }, "label": { "type": "text", "text": "ThemeView" } },
+    { "id": "o19", "svg_id": "o19", "anchor": { "type": "point", "x": 110.9, "y": 462.2 }, "label": { "type": "text", "text": "InboxManager" } }
+  ]
+}

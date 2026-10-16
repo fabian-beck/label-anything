@@ -1,0 +1,14 @@
+{
+  "obstacles": {
+    "raster": { "source": "../data/photo.png", "mode": "saliency", "class": "detail" }
+  },
+  "avoid": { "label": { "detail": 3 }, "leader": { "detail": 0.5 } },
+  "placement": { "models": ["adjacent", "slider", "distant"] },
+  "items": [
+    { "id": "sun", "anchor": { "type": "point", "x": 380, "y": 70 }, "label": { "type": "text", "text": "Sun" } },
+    { "id": "tower", "anchor": { "type": "point", "x": 137, "y": 152 }, "label": { "type": "text", "text": "Tower" } },
+    { "id": "hotel", "anchor": { "type": "point", "x": 338, "y": 168 }, "label": { "type": "text", "text": "Hotel" } },
+    { "id": "studio", "anchor": { "type": "point", "x": 186, "y": 211 }, "label": { "type": "text", "text": "Studio" } },
+    { "id": "depot", "anchor": { "type": "point", "x": 455, "y": 158 }, "label": { "type": "text", "text": "Depot" } }
+  ]
+}
