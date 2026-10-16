@@ -1,0 +1,27 @@
+{
+  "obstacles": {
+    "raster": {
+      "source": "../data/map.png",
+      "mode": "classmap",
+      "classmap": { "#9cc3e6": "water", "#bfe0a8": "parks", "#8f8f8f": "roads" },
+      "classmap_tolerance": 0.08
+    }
+  },
+  "avoid": {
+    "label": { "water": "hard", "parks": 0.2, "roads": 1.0 },
+    "leader": { "water": 0.5, "roads": 0.2 }
+  },
+  "defaults": { "mark": { "shape": "circle", "r": 3 } },
+  "items": [
+    { "id": "harbour", "anchor": { "type": "point", "x": 300, "y": 140 }, "label": { "type": "text", "text": "Harbour" } },
+    { "id": "old-town", "anchor": { "type": "point", "x": 228, "y": 178 }, "label": { "type": "text", "text": "Old Town" } },
+    { "id": "mill", "anchor": { "type": "point", "x": 168, "y": 262 }, "label": { "type": "text", "text": "Mill" } },
+    { "id": "station", "anchor": { "type": "point", "x": 380, "y": 178 }, "label": { "type": "text", "text": "Station" } },
+    { "id": "museum", "anchor": { "type": "point", "x": 120, "y": 60 }, "label": { "type": "text", "text": "Museum" } },
+    { "id": "market", "anchor": { "type": "point", "x": 260, "y": 110 }, "label": { "type": "text", "text": "Market" } },
+    { "id": "bridge", "anchor": { "type": "point", "x": 222, "y": 214 }, "label": { "type": "text", "text": "Bridge" } },
+    { "id": "school", "anchor": { "type": "point", "x": 60, "y": 200 }, "label": { "type": "text", "text": "School" } },
+    { "id": "park-gate", "anchor": { "type": "point", "x": 300, "y": 232 }, "label": { "type": "text", "text": "Park Gate" } },
+    { "id": "library", "anchor": { "type": "point", "x": 420, "y": 260 }, "label": { "type": "text", "text": "Library" } }
+  ]
+}

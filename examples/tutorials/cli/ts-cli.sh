@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# The TypeScript CLI (docs/getting-started/cli.md): the same commands on the pure
+# TypeScript engine (Node). Run in a copy of examples/tutorials/data with
+# `label-anything-ts` on the PATH (npm install -g @label-anything/cli); in this repository,
+# after npm ci && npm run build:
+#   python3 examples/tutorials/run.py cli --only ts-cli --cli <label-anything> --ts-cli ts/packages/cli/dist/main.js
+set -euo pipefail
+
+# --8<-- [start:ts]
+label-anything-ts validate ../problems/shapes.json
+label-anything-ts place ../problems/shapes.json -o shapes.ts.json --debug-svg shapes.ts.svg
+label-anything-ts render ../problems/shapes.json shapes.ts.json -o shapes.ts.overlay.svg
+# --8<-- [end:ts]
+grep -q '"implementation":"ts/' shapes.ts.json
+test -s shapes.ts.svg && test -s shapes.ts.overlay.svg

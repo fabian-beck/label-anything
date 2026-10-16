@@ -1,0 +1,54 @@
+name: Pages
+
+# Builds the documentation site (mkdocs.yml, docs/) and deploys it to GitHub Pages:
+# for every release tag and on demand. On a tag, the site's links into the repository
+# point to that tag (docs/_hooks/la_docs.py), otherwise to main.
+#
+# One-time setup: repository Settings → Pages → Build and deployment → Source:
+# "GitHub Actions".
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build the site
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+      - run: pip install -r docs/requirements.txt
+      - uses: actions/configure-pages@v5
+      - run: mkdocs build --strict --site-dir site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -23,6 +23,9 @@ venv/
 /bench/data/
 /bench-report/
 /bench/out/
+# Documentation site (mkdocs build) and its virtual environment
+/site/
+/.venv-docs/
 # Misc
 .DS_Store
 *.swp

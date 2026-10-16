@@ -1,0 +1,140 @@
+# Documentation site of Label Anything (MkDocs + Material for MkDocs).
+#   pip install -r docs/requirements.txt && mkdocs serve      # http://127.0.0.1:8000
+#   mkdocs build --strict                                      # what CI runs
+# Code shown on the pages is included from examples/tutorials/ (pymdownx.snippets), so
+# the programs CI runs (examples/tutorials/run.py) are the ones you read.
+site_name: Label Anything
+site_description: >-
+  A host-independent label placement engine: labels, icons and leaders that avoid what must
+  not be covered, with priority-driven omission, for every language.
+site_url: https://fabian-beck.github.io/label-anything/
+repo_url: https://github.com/fabian-beck/label-anything
+repo_name: fabian-beck/label-anything
+edit_uri: edit/main/docs/
+copyright: Label Anything contributors · MIT License · bundled font Noto Sans (SIL OFL 1.1)
+
+docs_dir: docs
+strict: true
+exclude_docs: |
+  /requirements.txt
+  /_hooks/
+
+hooks:
+  - docs/_hooks/la_docs.py
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+theme:
+  name: material
+  language: en
+  font: false # system fonts: no requests to third-party font servers
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+    - toc.follow
+
+extra_css:
+  - assets/extra.css
+
+plugins:
+  - search
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - getting-started/index.md
+      - Python: getting-started/python.md
+      - JavaScript and TypeScript: getting-started/javascript.md
+      - Java: getting-started/java.md
+      - C and Go: getting-started/c-go.md
+      - CLI and HTTP server: getting-started/cli.md
+  - Tutorials:
+      - tutorials/index.md
+      - Label your outliers in 5 lines: tutorials/outliers.md
+      - Labels over an SVG background: tutorials/svg-background.md
+      - Raster backgrounds: tutorials/raster-backgrounds.md
+      - Leaders and leader styles: tutorials/leaders.md
+      - Priority and omission: tutorials/priority.md
+      - Shapes: tutorials/shapes.md
+      - Interactive maps and stability: tutorials/interactive-maps.md
+      - Node-link diagrams: tutorials/node-link.md
+  - Concepts:
+      - concepts/index.md
+      - The problem format: concepts/problem.md
+      - The result format: concepts/result.md
+      - Avoidance classes and policy: concepts/avoidance.md
+      - Candidates and the degradation ladder: concepts/candidates.md
+      - Presets and defaults: concepts/presets-defaults.md
+      - Time budget, determinism, cancellation: concepts/solver.md
+      - The debug overlay: concepts/debug-overlay.md
+      - Errors and validation: concepts/errors.md
+  - Reference:
+      - reference/index.md
+      - Specification: reference/spec.md
+      - Defaults: reference/defaults.md
+      - Presets: reference/presets.md
+      - Expression language: reference/expressions.md
+      - JSON Schemas: reference/schemas.md
+      - Python API: bindings/python.md
+      - Java API: bindings/java.md
+      - JavaScript API: reference/javascript-api.md
+      - WebAssembly package: bindings/wasm.md
+      - C API: reference/c-api.md
+  - Project:
+      - project/index.md
+      - Benchmark:
+          - project/benchmark.md
+          - Release procedure and gates: benchmark.md
+      - Architecture decisions:
+          - project/decisions.md
+      - Contributing: project/contributing.md
+      - Porting the core to TypeScript: dev/porting.md

@@ -46,6 +46,25 @@ const res = place({
 label-anything place problem.json -o result.json --debug-svg overlay.svg
 ```
 
+## Documentation
+
+The documentation site is **<https://fabian-beck.github.io/label-anything/>** (built from
+`docs/` with MkDocs; every code example on it is a program in `examples/tutorials/` that
+CI runs):
+
+* [Getting started](https://fabian-beck.github.io/label-anything/getting-started/) —
+  Python (incl. matplotlib, Plotly, seaborn), JavaScript/TypeScript and WebAssembly,
+  Java, C and Go, the CLI and the HTTP server;
+* [Tutorials](https://fabian-beck.github.io/label-anything/tutorials/) — outliers in five
+  lines, SVG and raster backgrounds, leaders, priority and omission, shapes, interactive
+  maps, node-link diagrams;
+* [Concepts](https://fabian-beck.github.io/label-anything/concepts/) — the problem and
+  result formats, avoidance, candidates and the degradation ladder, presets, the solver;
+* [Reference](https://fabian-beck.github.io/label-anything/reference/) — specification,
+  defaults, presets, expressions, JSON Schemas, the API of each language;
+* [Benchmark](https://fabian-beck.github.io/label-anything/project/benchmark/) and
+  [architecture decisions](https://fabian-beck.github.io/label-anything/project/decisions/).
+
 ## Defaults
 
 | Topic | Default |
