@@ -284,8 +284,12 @@ fn place_item(s: &mut Solve, g: &mut Greedy, i: usize, ladder: bool) -> bool {
                 }
             }
             Step::SoftOverlap => {
-                let ids: Vec<u32> = s.by_item[i].clone();
-                best_free(s, &ids, true)
+                if s.obs.any_relaxable_hard() {
+                    let ids: Vec<u32> = s.by_item[i].clone();
+                    best_free(s, &ids, true)
+                } else {
+                    None
+                }
             }
             _ => {
                 let ids = s.ladder_candidates(i, si);

@@ -423,8 +423,12 @@ free-space seeds for distant candidates and early rejection.
 * `text`: measured with the built-in shaper (§5.2) unless `width`/`height` are given.
 * `icon`, `box`: fixed `width × height`; `shape` (`rect`, `rounded:r`, `circle`,
   `polygon` with `polygon` points) is used for exact collision tests.
-* `composite`: parts laid out in a `row` (default) or `column` with `gap`, aligned
-  `center` (default) across the main axis.
+* `composite`: parts laid out in a `row` (default) or `column`, `gap` (default 0)
+  between consecutive parts, aligned `center` (default), `start` or `end` across the main
+  axis. Text parts are single lines measured with their font (inheriting the composite's
+  `font`), icon and box parts use their `width × height`; a part's own `padding` is
+  ignored, the composite's `padding` (default `defaults.padding`) surrounds the whole
+  row or column.
 
 The **label box** is the content box grown by `padding` on every side. It is the
 collision box and the reported `box`. Text is drawn at `x_offset = padding` and the
@@ -705,8 +709,22 @@ wins; the **total order** additionally sorts by `score` and then by the tie rule
 then index; `random`/`random(n)`: a PCG32 permutation with seed `n` or `solver.seed`).
 `rank` = position in the total order (0 = highest).
 
-* `tier`: `item.tier`, else the first matching `priority.tiers` rule, else 0.
+* `tier`: `item.tier`, else the first matching `priority.tiers` rule, else 0 (a higher
+  tier outranks a lower one).
 * `score`: `item.priority` if given, else Σ `weight · normalized(term)`, else 0.
+* Built-in terms (raw values; larger = more important before `weight`):
+
+  | term | raw value of item `i` |
+  |---|---|
+  | `input_order` | `n − i` (earlier items larger) |
+  | `label_size` | area of the item's first label variant in em² (use a negative weight to prefer short labels) |
+  | `mark_size` | area of the item's mark shape in px² |
+  | `centrality` | −distance from the anchor to `priority.focus` (default: the canvas center, else the extent center) |
+  | `degree` | numeric `attrs.degree` if present, else the number of `obstacles.vector` polyline endpoints within 0.5 px of the mark (incident edges) |
+  | `outlierness` | gap to the `k`-th nearest neighbour (default `k` = 5): `max(0, d − r_j − r_i)` over the other item marks and the discs of the `points` class, with `d` the center distance and `r` the circle radius or the area-equivalent radius `sqrt(area/π)`; with fewer than `k` neighbours the largest gap found (or the extent size) |
+  | `isolation` | the same gap with `k` = 1 |
+  | `crowding` | −`isolation` |
+
 * Terms: raw value → `transform` (`log1p`, `sqrt`, `neg`, `abs`) → normalization over all
   items: `rank` (average rank of equal values, scaled to [0,1]; 1 = largest),
   `minmax` ((v − min)/(max − min), 0 when max = min), `none`. Missing values → 0 after

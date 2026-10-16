@@ -1,0 +1,63 @@
+{
+  "kind": "place",
+  "name": "a required item outranks higher scores",
+  "problem": {
+    "canvas": {
+      "width": 200,
+      "height": 60
+    },
+    "placement": {
+      "models": [
+        "adjacent"
+      ],
+      "position_order": [
+        "right"
+      ]
+    },
+    "degrade": [
+      "omit"
+    ],
+    "items": [
+      {
+        "id": "big",
+        "anchor": {
+          "type": "point",
+          "x": 60,
+          "y": 30
+        },
+        "label": {
+          "type": "text",
+          "text": "Big"
+        },
+        "priority": 100.0
+      },
+      {
+        "id": "must",
+        "anchor": {
+          "type": "point",
+          "x": 60,
+          "y": 30
+        },
+        "label": {
+          "type": "text",
+          "text": "Must"
+        },
+        "priority": 0.0,
+        "required": true
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "placed_ids": [
+      "must"
+    ],
+    "unplaced_ids": [
+      "big"
+    ]
+  }
+}

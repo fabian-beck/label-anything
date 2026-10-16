@@ -3,7 +3,7 @@
 use crate::candidates::Cand;
 use crate::geom::{seg_intersects, seg_len_in_rect, seg_overlaps_rect, seg_seg_dist, Rect, EPS, P};
 use crate::index::DynIndex;
-use crate::math::{maxf, minf};
+use crate::math::{ceil_fast, floor_fast, maxf, minf};
 use crate::obstacles::{AvoidW, Obstacles};
 
 /// Margin of the quick rejection test (2 × `EPS`, so that a hit implies an overlap in
@@ -11,15 +11,20 @@ use crate::obstacles::{AvoidW, Obstacles};
 const OCC_MARGIN: f64 = 2.0 * EPS;
 
 /// Fine grid counting, per cell, the placed rectangular labels whose interior contains
-/// the cell center. A candidate box that contains an occupied cell center (with margin)
-/// overlaps a placed label: a quick, exact rejection test (`State::quick_blocked`).
+/// the cell center, mirrored in a per-row bitset of non-zero cells. A candidate box whose
+/// interior contains an occupied cell center (with margin) overlaps a placed label: an
+/// exact rejection test (`State::quick_blocked`) that misses only overlaps thinner than a
+/// cell.
 struct Occupancy {
     ox: f64,
     oy: f64,
-    cell: f64,
+    inv_cell: f64,
     cols: usize,
     rows: usize,
     count: Vec<u16>,
+    /// `words` u64 per row; bit `c` of row `r` = `count[r * cols + c] > 0`.
+    bits: Vec<u64>,
+    words: usize,
 }
 
 impl Occupancy {
@@ -29,87 +34,85 @@ impl Occupancy {
         let cell = maxf(2.0, (area / 1.0e6).sqrt());
         let cols = ((extent.w() / cell).ceil() as usize).clamp(1, 4096);
         let rows = ((extent.h() / cell).ceil() as usize).clamp(1, 4096);
+        let words = cols.div_ceil(64);
         Occupancy {
             ox: extent.x0,
             oy: extent.y0,
-            cell,
+            inv_cell: 1.0 / cell,
             cols,
             rows,
             count: vec![0; cols * rows],
+            bits: vec![0; words * rows],
+            words,
         }
     }
 
-    /// Columns (or rows) whose cell centers lie strictly inside `(a, b)` shrunk by the
-    /// margin, as a half-open index range.
-    fn span(o: f64, cell: f64, n: usize, a: f64, b: f64) -> (usize, usize) {
-        let lo = a + OCC_MARGIN;
-        let hi = b - OCC_MARGIN;
-        if hi <= lo || hi.is_nan() || lo.is_nan() {
+    /// Cells `k` (along one axis) whose centers `o + (k + 0.5)·cell` lie inside `(a, b)`
+    /// shrunk by the margin, as a half-open index range. Mark and query use the same
+    /// computation; its rounding error (~1e-13 px) is far below the margin, so a cell
+    /// center counted inside both a placed label and a candidate implies an overlap.
+    #[inline]
+    fn span(&self, o: f64, n: usize, a: f64, b: f64) -> (usize, usize) {
+        let t0 = (a + OCC_MARGIN - o) * self.inv_cell - 0.5;
+        let t1 = (b - OCC_MARGIN - o) * self.inv_cell - 0.5;
+        // t0 < k < t1
+        let f = maxf(floor_fast(t0) + 1.0, 0.0);
+        let l = minf(ceil_fast(t1), n as f64);
+        if l <= f || l.is_nan() || f.is_nan() {
             return (0, 0);
         }
-        let first = ((lo - o) / cell - 0.5).floor() + 1.0;
-        let last = ((hi - o) / cell - 0.5).ceil() - 1.0;
-        let first = first.max(0.0);
-        let last = last.min(n as f64 - 1.0);
-        if last < first {
-            return (0, 0);
-        }
-        let (mut f, mut l) = (first as usize, last as usize + 1);
-        // exact strictness at the ends despite rounding
-        while f < l && o + (f as f64 + 0.5) * cell <= lo {
-            f += 1;
-        }
-        while l > f && o + ((l - 1) as f64 + 0.5) * cell >= hi {
-            l -= 1;
-        }
-        (f, l)
+        (f as usize, l as usize)
     }
 
     fn mark(&mut self, r: &Rect, add: bool) {
-        let (c0, c1) = Self::span(self.ox, self.cell, self.cols, r.x0, r.x1);
-        let (r0, r1) = Self::span(self.oy, self.cell, self.rows, r.y0, r.y1);
+        let (c0, c1) = self.span(self.ox, self.cols, r.x0, r.x1);
+        let (r0, r1) = self.span(self.oy, self.rows, r.y0, r.y1);
         for row in r0..r1 {
             let base = row * self.cols;
-            for v in &mut self.count[base + c0..base + c1] {
+            let wbase = row * self.words;
+            for c in c0..c1 {
+                let v = &mut self.count[base + c];
                 *v = if add {
                     v.saturating_add(1)
                 } else {
                     v.saturating_sub(1)
                 };
+                let bit = 1u64 << (c % 64);
+                if *v > 0 {
+                    self.bits[wbase + c / 64] |= bit;
+                } else {
+                    self.bits[wbase + c / 64] &= !bit;
+                }
             }
         }
     }
 
-    /// Whether the cell center at `(x, y)`'s cell is occupied and strictly inside `r`.
-    #[inline]
-    fn hit(&self, r: &Rect, x: f64, y: f64) -> bool {
-        // truncation == floor inside the grid
-        let gx = (x - self.ox) / self.cell;
-        let gy = (y - self.oy) / self.cell;
-        if !(gx >= 0.0 && gy >= 0.0 && gx < self.cols as f64 && gy < self.rows as f64) {
+    /// Whether any occupied cell center lies strictly inside `r`.
+    fn blocked(&self, r: &Rect) -> bool {
+        let (c0, c1) = self.span(self.ox, self.cols, r.x0, r.x1);
+        if c0 >= c1 {
             return false;
         }
-        let (gx, gy) = (gx as usize, gy as usize);
-        let qx = self.ox + (gx as f64 + 0.5) * self.cell;
-        let qy = self.oy + (gy as f64 + 0.5) * self.cell;
-        self.count[gy * self.cols + gx] > 0
-            && r.x0 + OCC_MARGIN < qx
-            && qx < r.x1 - OCC_MARGIN
-            && r.y0 + OCC_MARGIN < qy
-            && qy < r.y1 - OCC_MARGIN
-    }
-
-    /// Probes the center and four inner points of `r`.
-    fn blocked(&self, r: &Rect) -> bool {
-        let c = r.center();
-        if self.hit(r, c.x, c.y) {
-            return true;
+        let (r0, r1) = self.span(self.oy, self.rows, r.y0, r.y1);
+        let (w0, w1) = (c0 / 64, (c1 - 1) / 64);
+        let first_mask = !0u64 << (c0 % 64);
+        let last_mask = !0u64 >> (63 - (c1 - 1) % 64);
+        for row in r0..r1 {
+            let words = &self.bits[row * self.words..(row + 1) * self.words];
+            if w0 == w1 {
+                if words[w0] & first_mask & last_mask != 0 {
+                    return true;
+                }
+                continue;
+            }
+            if words[w0] & first_mask != 0 || words[w1] & last_mask != 0 {
+                return true;
+            }
+            if words[w0 + 1..w1].iter().any(|&w| w != 0) {
+                return true;
+            }
         }
-        let (dx, dy) = (r.w() * 0.3, r.h() * 0.3);
-        self.hit(r, c.x - dx, c.y - dy)
-            || self.hit(r, c.x + dx, c.y - dy)
-            || self.hit(r, c.x - dx, c.y + dy)
-            || self.hit(r, c.x + dx, c.y + dy)
+        false
     }
 }
 
