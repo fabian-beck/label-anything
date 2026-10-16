@@ -178,17 +178,28 @@ impl<'a> Solve<'a> {
         let state = &self.state;
         let variants = &self.variants[i];
         let item_occ = self.obs.item_occ.as_ref();
+        let occ = state.occupancy();
+        // both grids cover the model extent with the same cells: one window serves both
+        let shared = item_occ.is_none_or(|o| o.same_cells(occ));
         let dropped = std::cell::Cell::new(0u32);
         // `keep` serves non-internal candidates only (internal labels sit on their mark)
         let keep = |vi: usize, r: &Rect| {
-            if !candidates::is_rect_shape(&variants[vi].shape) {
+            if !(quick || item_occ.is_some()) || !candidates::is_rect_shape(&variants[vi].shape) {
                 return true;
             }
-            if item_occ.is_some_and(|o| o.blocked(r)) {
-                dropped.set(dropped.get() + 1);
-                return false;
+            let w = occ.window(r);
+            if let Some(o) = item_occ {
+                let hit = if shared {
+                    w.is_some_and(|w| o.blocked_in(&w))
+                } else {
+                    o.blocked(r)
+                };
+                if hit {
+                    dropped.set(dropped.get() + 1);
+                    return false;
+                }
             }
-            !(quick && state.quick_blocked(r))
+            !(quick && state.n_placed > 0 && w.is_some_and(|w| occ.blocked_in(&w)))
         };
         let mut fresh: Vec<Cand> = Vec::new();
         for &vi in vis {

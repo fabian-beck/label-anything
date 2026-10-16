@@ -62,6 +62,11 @@ impl State {
         self.n_placed > 0 && self.occ.blocked(r)
     }
 
+    /// The placed-label occupancy grid (its windows serve grids with the same cells).
+    pub fn occupancy(&self) -> &Occupancy {
+        &self.occ
+    }
+
     pub fn place(&mut self, item: usize, cid: u32, cands: &[Cand], relaxed: bool) {
         debug_assert!(self.placed[item].is_none());
         let c = &cands[cid as usize];

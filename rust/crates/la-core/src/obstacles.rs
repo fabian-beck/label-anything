@@ -291,6 +291,8 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         for it in &model.items {
             occ.mark_shape(&it.shape);
         }
+        // static from here on: O(1) window queries
+        occ.freeze();
         (!occ.is_empty()).then_some(occ)
     } else {
         None
