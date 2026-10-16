@@ -1,0 +1,23 @@
+{
+  "kind": "validate",
+  "name": "expr-arity",
+  "problem": {
+    "items": [],
+    "priority": {
+      "coverage": {
+        "by": "min()"
+      }
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/priority/coverage/by",
+        "code": "expr_arity"
+      }
+    ],
+    "warnings": [],
+    "exact": true
+  }
+}

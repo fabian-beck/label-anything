@@ -1,0 +1,388 @@
+{
+  "about": "Reports of the Rust validator (rust/crates/la-core/src/validate.rs) for every sample problem (its JSON text, validate_str) and every inline problem of a validate case. The TypeScript validator must reproduce them exactly. Regenerate: node tools/validate/parity.mjs reports. Checked by cargo test -p label-anything-core --test validate_reports and ts/packages/core/test/conformance-validate.test.ts.",
+  "reports": {
+    "problems/area-anchor.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/bubbles.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/elbow-boundary.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/groups-keepwith.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/icons-composite.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/leaders-angles.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/long-names.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/many-points.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/minimal.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/outliers-hard.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/polygon-path-marks.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/presets-map.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/priority-attrs.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/priority-prefix.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/raster-ink.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/region.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/scatter-basic.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/shapes-nodes.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/svg-background.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/unbounded.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/units.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/warm-start.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/weighted-coverage.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "problems/y-up-transform.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "validate/bad-degrade-step.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/degrade/1",
+          "code": "pattern",
+          "message": "\"shrink:2\" does not match ^(alternatives|wrap|truncate|distant|boundary|evict_lower|soft_overlap|omit|shrink:(0(\\.[0-9]+)?|1(\\.0+)?|\\.[0-9]+))$"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/bad-enum.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/leaders/style",
+          "code": "enum",
+          "message": "must be one of \"straight\", \"angles\", \"orthogonal\", \"elbow\", \"curved\""
+        }
+      ],
+      "warnings": []
+    },
+    "validate/bad-unit.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/placement/offset",
+          "code": "unit",
+          "message": "invalid length \"3 px\": use a number (px) or <number>px|pt|em"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/canvas-range.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/canvas/width",
+          "code": "range",
+          "message": "must be > 0"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/duplicate-ids.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/items/1/id",
+          "code": "duplicate_id",
+          "message": "id 'a' is already used by item 0"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/duplicate-implicit-id.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/items/1",
+          "code": "duplicate_id",
+          "message": "id '1' is already used by item 0"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/expr-arity.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/priority/coverage/by",
+          "code": "expr_arity",
+          "message": "min() takes at least 1 argument, got 0 (at 0)"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/expr-syntax.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/priority/tiers/0/where",
+          "code": "expr_syntax",
+          "message": "expected an expression, found end of input (at 9)"
+        },
+        {
+          "pointer": "/priority/tiers/1/where",
+          "code": "expr_syntax",
+          "message": "expected an expression, found end of input (at 0)"
+        },
+        {
+          "pointer": "/priority/tiers/1/where",
+          "code": "length",
+          "message": "must have at least 1 characters"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/expr-unknown-identifier.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/priority/terms/0/expr",
+          "code": "expr_unknown_identifier",
+          "message": "unknown identifier 'nope' (at 0)"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/icon-missing-height.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/items/0/label/height",
+          "code": "required",
+          "message": "missing required property 'height'"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/keep-with-unknown.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/items/0/keep_with/0",
+          "code": "unknown_ref",
+          "message": "unknown item id 'zz'"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/line-anchor.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/items/0/anchor/type",
+          "code": "unsupported",
+          "message": "anchor type 'line' is reserved for v2"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/mark-extra-prop.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/items/0/anchor/mark/rx",
+          "code": "unknown_property",
+          "message": "unknown property 'rx'"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/missing-anchor-y.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/items/0/anchor/y",
+          "code": "required",
+          "message": "missing required property 'y'"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/negative-length.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/placement/offset",
+          "code": "range",
+          "message": "must be >= 0"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/raster-no-source.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/obstacles/raster",
+          "code": "exclusive",
+          "message": "exactly one of source | rgba is required"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/svg-source-and-path.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/obstacles/svg",
+          "code": "exclusive",
+          "message": "only one of source | path may be given"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/text-label-no-text.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/items/0/label/text",
+          "code": "required",
+          "message": "one of text | width+height is required"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/type-error.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/items/0/anchor/x",
+          "code": "type",
+          "message": "expected number, got string"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/unknown-class-warning.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": [
+        {
+          "pointer": "/avoid/label/outlierz",
+          "code": "unknown_class",
+          "message": "class 'outlierz' is not produced by any obstacle source"
+        }
+      ]
+    },
+    "validate/unknown-property.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/solverr",
+          "code": "unknown_property",
+          "message": "unknown property 'solverr'"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/version-const.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/version",
+          "code": "const",
+          "message": "must be \"1\""
+        }
+      ],
+      "warnings": []
+    },
+    "validate/y-up-no-canvas.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/canvas",
+          "code": "required",
+          "message": "y_axis 'up' needs a canvas (or a background) to flip y"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
