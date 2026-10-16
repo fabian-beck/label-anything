@@ -62,6 +62,17 @@ label-anything place problem.json -o result.json --debug-svg overlay.svg
 The complete table is `spec/defaults.md`; presets (`scatter`, `map`, `graph`,
 `illustration`, `auto`) are in `spec/presets/`.
 
+## Benchmark
+
+`bench/` is a real-world benchmark: twelve scenarios built from open data (scatterplots,
+volcano plots, embeddings, airports on a world map, city POIs on map tiles, node-link
+diagrams, illustrations, line charts, stress sizes, interactive zooming, priority), an
+implementation-independent evaluator, and six baselines — naive, greedy, textalloc,
+adjustText, vega-label and ggrepel — scored the same way.
+`label-anything bench --baselines --perf` writes `bench-report/index.html`: metric tables,
+renderings side by side, runtime-vs-size plots, Rust/TypeScript parity and the performance
+targets; `--gate` enforces the release gates (`docs/benchmark.md`, `bench/README.md`).
+
 ## Repository layout
 
 ```
@@ -72,7 +83,7 @@ rust/          performance core: la-core, la-text, la-expr, la-svg, la-raster, l
                la-cli, la-wasm, la-py, la-capi, and the label-anything facade crate
 ts/            pure TypeScript implementation (@label-anything/core, text, svg, raster)
 bindings/      Java (FFM/JNI), Python extras (matplotlib, Plotly), JS extras (d3, Vega, …)
-bench/         real-world benchmark: scenarios, fetch scripts, evaluator, baselines, report
+bench/         real-world benchmark: scenarios, evaluator, baselines, report, perf targets, gates
 docs/          documentation and architecture decision records (docs/adr)
 examples/      runnable examples per language and background type
 tools/         code generation and maintenance scripts
