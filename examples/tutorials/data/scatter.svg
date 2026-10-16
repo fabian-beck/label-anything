@@ -1,0 +1,365 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" font-family="sans-serif">
+  <rect id="background" width="800" height="600" fill="white"/>
+  <text class="title" x="70" y="26" font-size="16">Classes by size and coupling</text>
+  <g class="grid" stroke="#e6e9ed">
+    <line x1="70" y1="40" x2="70" y2="540"/>
+    <line x1="170" y1="40" x2="170" y2="540"/>
+    <line x1="270" y1="40" x2="270" y2="540"/>
+    <line x1="370" y1="40" x2="370" y2="540"/>
+    <line x1="470" y1="40" x2="470" y2="540"/>
+    <line x1="570" y1="40" x2="570" y2="540"/>
+    <line x1="670" y1="40" x2="670" y2="540"/>
+    <line x1="770" y1="40" x2="770" y2="540"/>
+    <line x1="70" y1="540" x2="770" y2="540"/>
+    <line x1="70" y1="440" x2="770" y2="440"/>
+    <line x1="70" y1="340" x2="770" y2="340"/>
+    <line x1="70" y1="240" x2="770" y2="240"/>
+    <line x1="70" y1="140" x2="770" y2="140"/>
+    <line x1="70" y1="40" x2="770" y2="40"/>
+  </g>
+  <g class="axis" stroke="#4a5560" stroke-width="1.5">
+    <line x1="70" y1="540" x2="770" y2="540"/>
+    <line x1="70" y1="40" x2="70" y2="540"/>
+    <line x1="70" y1="540" x2="70" y2="546"/>
+    <line x1="170" y1="540" x2="170" y2="546"/>
+    <line x1="270" y1="540" x2="270" y2="546"/>
+    <line x1="370" y1="540" x2="370" y2="546"/>
+    <line x1="470" y1="540" x2="470" y2="546"/>
+    <line x1="570" y1="540" x2="570" y2="546"/>
+    <line x1="670" y1="540" x2="670" y2="546"/>
+    <line x1="770" y1="540" x2="770" y2="546"/>
+    <line x1="64" y1="540" x2="70" y2="540"/>
+    <line x1="64" y1="440" x2="70" y2="440"/>
+    <line x1="64" y1="340" x2="70" y2="340"/>
+    <line x1="64" y1="240" x2="70" y2="240"/>
+    <line x1="64" y1="140" x2="70" y2="140"/>
+    <line x1="64" y1="40" x2="70" y2="40"/>
+  </g>
+  <g class="ticks" font-size="11" fill="#4a5560">
+    <text x="70" y="560" text-anchor="middle">0</text>
+    <text x="170" y="560" text-anchor="middle">100</text>
+    <text x="270" y="560" text-anchor="middle">200</text>
+    <text x="370" y="560" text-anchor="middle">300</text>
+    <text x="470" y="560" text-anchor="middle">400</text>
+    <text x="570" y="560" text-anchor="middle">500</text>
+    <text x="670" y="560" text-anchor="middle">600</text>
+    <text x="770" y="560" text-anchor="middle">700</text>
+    <text x="60" y="544" text-anchor="end">0</text>
+    <text x="60" y="444" text-anchor="end">10</text>
+    <text x="60" y="344" text-anchor="end">20</text>
+    <text x="60" y="244" text-anchor="end">30</text>
+    <text x="60" y="144" text-anchor="end">40</text>
+    <text x="60" y="44" text-anchor="end">50</text>
+  </g>
+  <text class="axis-title" x="420" y="592" font-size="12" text-anchor="middle">Lines of code</text>
+  <path class="trend" d="M80.0 452.6 L760.0 128.3" fill="none" stroke="#d1495b" stroke-width="2"/>
+  <g class="points" fill="#9aa5b1">
+    <circle class="point" cx="495.2" cy="217.4" r="3"/>
+    <circle class="point" cx="432.6" cy="301.0" r="3"/>
+    <circle class="point" cx="287.0" cy="388.8" r="3"/>
+    <circle class="point" cx="229.8" cy="403.4" r="3"/>
+    <circle class="point" cx="400.9" cy="360.9" r="3"/>
+    <circle class="point" cx="359.8" cy="333.9" r="3"/>
+    <circle class="point" cx="208.0" cy="365.2" r="3"/>
+    <circle class="point" cx="367.6" cy="344.2" r="3"/>
+    <circle class="point" cx="651.2" cy="193.5" r="3"/>
+    <circle class="point" cx="532.1" cy="237.1" r="3"/>
+    <circle class="point" cx="324.4" cy="286.3" r="3"/>
+    <circle class="point" cx="183.0" cy="378.6" r="3"/>
+    <circle class="point" cx="378.2" cy="315.2" r="3"/>
+    <circle class="point" cx="324.6" cy="299.4" r="3"/>
+    <circle class="point" cx="289.1" cy="380.8" r="3"/>
+    <circle class="point" cx="216.9" cy="390.4" r="3"/>
+    <circle class="point" cx="155.1" cy="411.1" r="3"/>
+    <circle class="point" cx="179.9" cy="354.2" r="3"/>
+    <circle class="point" cx="375.2" cy="313.0" r="3"/>
+    <circle class="point" cx="424.0" cy="277.9" r="3"/>
+    <circle class="point" cx="438.8" cy="295.5" r="3"/>
+    <circle class="point" cx="276.0" cy="349.2" r="3"/>
+    <circle class="point" cx="516.4" cy="287.0" r="3"/>
+    <circle class="point" cx="151.3" cy="398.3" r="3"/>
+    <circle class="point" cx="264.8" cy="381.2" r="3"/>
+    <circle class="point" cx="330.1" cy="255.9" r="3"/>
+    <circle class="point" cx="173.5" cy="395.4" r="3"/>
+    <circle class="point" cx="337.7" cy="238.3" r="3"/>
+    <circle class="point" cx="317.1" cy="391.2" r="3"/>
+    <circle class="point" cx="273.8" cy="367.9" r="3"/>
+    <circle class="point" cx="391.9" cy="250.7" r="3"/>
+    <circle class="point" cx="492.0" cy="330.6" r="3"/>
+    <circle class="point" cx="573.3" cy="265.3" r="3"/>
+    <circle class="point" cx="443.4" cy="289.8" r="3"/>
+    <circle class="point" cx="428.9" cy="340.4" r="3"/>
+    <circle class="point" cx="360.2" cy="316.8" r="3"/>
+    <circle class="point" cx="350.4" cy="323.5" r="3"/>
+    <circle class="point" cx="545.0" cy="230.7" r="3"/>
+    <circle class="point" cx="569.4" cy="178.2" r="3"/>
+    <circle class="point" cx="267.0" cy="416.7" r="3"/>
+    <circle class="point" cx="323.4" cy="393.8" r="3"/>
+    <circle class="point" cx="343.5" cy="270.6" r="3"/>
+    <circle class="point" cx="521.7" cy="258.5" r="3"/>
+    <circle class="point" cx="451.7" cy="250.7" r="3"/>
+    <circle class="point" cx="617.1" cy="220.9" r="3"/>
+    <circle class="point" cx="541.0" cy="198.0" r="3"/>
+    <circle class="point" cx="450.9" cy="376.0" r="3"/>
+    <circle class="point" cx="229.9" cy="337.1" r="3"/>
+    <circle class="point" cx="406.1" cy="289.7" r="3"/>
+    <circle class="point" cx="427.2" cy="296.7" r="3"/>
+    <circle class="point" cx="302.2" cy="349.4" r="3"/>
+    <circle class="point" cx="374.3" cy="291.4" r="3"/>
+    <circle class="point" cx="220.9" cy="421.8" r="3"/>
+    <circle class="point" cx="283.6" cy="361.6" r="3"/>
+    <circle class="point" cx="264.9" cy="404.8" r="3"/>
+    <circle class="point" cx="341.5" cy="309.9" r="3"/>
+    <circle class="point" cx="532.5" cy="220.5" r="3"/>
+    <circle class="point" cx="224.0" cy="360.9" r="3"/>
+    <circle class="point" cx="345.2" cy="418.0" r="3"/>
+    <circle class="point" cx="210.4" cy="405.6" r="3"/>
+    <circle class="point" cx="462.6" cy="277.5" r="3"/>
+    <circle class="point" cx="310.8" cy="311.6" r="3"/>
+    <circle class="point" cx="482.6" cy="241.9" r="3"/>
+    <circle class="point" cx="389.1" cy="251.2" r="3"/>
+    <circle class="point" cx="293.4" cy="324.7" r="3"/>
+    <circle class="point" cx="344.7" cy="323.8" r="3"/>
+    <circle class="point" cx="458.6" cy="353.4" r="3"/>
+    <circle class="point" cx="331.3" cy="370.3" r="3"/>
+    <circle class="point" cx="495.9" cy="310.0" r="3"/>
+    <circle class="point" cx="361.6" cy="296.7" r="3"/>
+    <circle class="point" cx="277.1" cy="383.9" r="3"/>
+    <circle class="point" cx="370.3" cy="371.7" r="3"/>
+    <circle class="point" cx="420.4" cy="252.6" r="3"/>
+    <circle class="point" cx="352.2" cy="330.1" r="3"/>
+    <circle class="point" cx="464.7" cy="277.0" r="3"/>
+    <circle class="point" cx="410.1" cy="369.0" r="3"/>
+    <circle class="point" cx="310.5" cy="382.7" r="3"/>
+    <circle class="point" cx="447.6" cy="310.0" r="3"/>
+    <circle class="point" cx="397.3" cy="284.7" r="3"/>
+    <circle class="point" cx="552.7" cy="274.9" r="3"/>
+    <circle class="point" cx="528.2" cy="233.6" r="3"/>
+    <circle class="point" cx="519.8" cy="193.7" r="3"/>
+    <circle class="point" cx="494.0" cy="271.9" r="3"/>
+    <circle class="point" cx="274.7" cy="401.9" r="3"/>
+    <circle class="point" cx="485.4" cy="277.6" r="3"/>
+    <circle class="point" cx="315.0" cy="425.2" r="3"/>
+    <circle class="point" cx="496.9" cy="274.9" r="3"/>
+    <circle class="point" cx="288.9" cy="293.9" r="3"/>
+    <circle class="point" cx="567.7" cy="209.4" r="3"/>
+    <circle class="point" cx="590.6" cy="230.5" r="3"/>
+    <circle class="point" cx="410.8" cy="335.1" r="3"/>
+    <circle class="point" cx="302.8" cy="357.5" r="3"/>
+    <circle class="point" cx="390.5" cy="326.8" r="3"/>
+    <circle class="point" cx="442.0" cy="263.8" r="3"/>
+    <circle class="point" cx="309.0" cy="363.9" r="3"/>
+    <circle class="point" cx="407.7" cy="248.1" r="3"/>
+    <circle class="point" cx="497.2" cy="212.7" r="3"/>
+    <circle class="point" cx="553.0" cy="254.9" r="3"/>
+    <circle class="point" cx="394.9" cy="234.5" r="3"/>
+    <circle class="point" cx="378.9" cy="258.1" r="3"/>
+    <circle class="point" cx="295.4" cy="248.0" r="3"/>
+    <circle class="point" cx="474.5" cy="314.0" r="3"/>
+    <circle class="point" cx="528.3" cy="252.1" r="3"/>
+    <circle class="point" cx="276.4" cy="416.5" r="3"/>
+    <circle class="point" cx="390.9" cy="310.2" r="3"/>
+    <circle class="point" cx="563.1" cy="302.8" r="3"/>
+    <circle class="point" cx="422.7" cy="202.9" r="3"/>
+    <circle class="point" cx="431.5" cy="243.5" r="3"/>
+    <circle class="point" cx="281.1" cy="372.5" r="3"/>
+    <circle class="point" cx="337.9" cy="344.1" r="3"/>
+    <circle class="point" cx="532.4" cy="156.3" r="3"/>
+    <circle class="point" cx="481.4" cy="341.9" r="3"/>
+    <circle class="point" cx="444.2" cy="342.2" r="3"/>
+    <circle class="point" cx="275.7" cy="305.7" r="3"/>
+    <circle class="point" cx="443.8" cy="191.2" r="3"/>
+    <circle class="point" cx="529.1" cy="251.2" r="3"/>
+    <circle class="point" cx="471.6" cy="219.7" r="3"/>
+    <circle class="point" cx="389.2" cy="346.5" r="3"/>
+    <circle class="point" cx="542.4" cy="216.0" r="3"/>
+    <circle class="point" cx="448.0" cy="244.3" r="3"/>
+    <circle class="point" cx="399.7" cy="306.5" r="3"/>
+    <circle class="point" cx="285.6" cy="348.5" r="3"/>
+    <circle class="point" cx="463.2" cy="220.9" r="3"/>
+    <circle class="point" cx="336.2" cy="337.2" r="3"/>
+    <circle class="point" cx="173.4" cy="417.1" r="3"/>
+    <circle class="point" cx="506.6" cy="248.6" r="3"/>
+    <circle class="point" cx="413.4" cy="267.5" r="3"/>
+    <circle class="point" cx="524.5" cy="293.5" r="3"/>
+    <circle class="point" cx="282.1" cy="401.0" r="3"/>
+    <circle class="point" cx="447.1" cy="290.2" r="3"/>
+    <circle class="point" cx="479.1" cy="323.9" r="3"/>
+    <circle class="point" cx="360.7" cy="328.5" r="3"/>
+    <circle class="point" cx="509.4" cy="219.4" r="3"/>
+    <circle class="point" cx="401.6" cy="332.3" r="3"/>
+    <circle class="point" cx="301.3" cy="348.7" r="3"/>
+    <circle class="point" cx="364.5" cy="406.9" r="3"/>
+    <circle class="point" cx="488.5" cy="182.7" r="3"/>
+    <circle class="point" cx="362.0" cy="357.8" r="3"/>
+    <circle class="point" cx="232.7" cy="335.1" r="3"/>
+    <circle class="point" cx="502.5" cy="188.3" r="3"/>
+    <circle class="point" cx="460.4" cy="245.0" r="3"/>
+    <circle class="point" cx="310.1" cy="262.7" r="3"/>
+    <circle class="point" cx="494.4" cy="203.6" r="3"/>
+    <circle class="point" cx="539.1" cy="243.9" r="3"/>
+    <circle class="point" cx="367.2" cy="266.4" r="3"/>
+    <circle class="point" cx="573.0" cy="207.4" r="3"/>
+    <circle class="point" cx="313.9" cy="281.5" r="3"/>
+    <circle class="point" cx="579.0" cy="263.2" r="3"/>
+    <circle class="point" cx="331.6" cy="383.1" r="3"/>
+    <circle class="point" cx="341.0" cy="295.0" r="3"/>
+    <circle class="point" cx="397.4" cy="307.9" r="3"/>
+    <circle class="point" cx="398.6" cy="259.0" r="3"/>
+    <circle class="point" cx="235.9" cy="337.3" r="3"/>
+    <circle class="point" cx="599.6" cy="274.8" r="3"/>
+    <circle class="point" cx="410.5" cy="272.0" r="3"/>
+    <circle class="point" cx="397.6" cy="292.5" r="3"/>
+    <circle class="point" cx="314.6" cy="330.9" r="3"/>
+    <circle class="point" cx="548.5" cy="195.3" r="3"/>
+    <circle class="point" cx="449.2" cy="275.0" r="3"/>
+    <circle class="point" cx="423.5" cy="238.2" r="3"/>
+    <circle class="point" cx="445.2" cy="243.5" r="3"/>
+    <circle class="point" cx="360.5" cy="386.7" r="3"/>
+    <circle class="point" cx="468.0" cy="244.5" r="3"/>
+    <circle class="point" cx="470.9" cy="197.1" r="3"/>
+    <circle class="point" cx="641.0" cy="192.4" r="3"/>
+    <circle class="point" cx="344.9" cy="290.5" r="3"/>
+    <circle class="point" cx="392.3" cy="208.0" r="3"/>
+    <circle class="point" cx="430.5" cy="318.4" r="3"/>
+    <circle class="point" cx="427.8" cy="251.7" r="3"/>
+    <circle class="point" cx="237.7" cy="327.9" r="3"/>
+    <circle class="point" cx="366.0" cy="307.3" r="3"/>
+    <circle class="point" cx="311.8" cy="401.4" r="3"/>
+    <circle class="point" cx="362.0" cy="267.5" r="3"/>
+    <circle class="point" cx="266.5" cy="367.1" r="3"/>
+    <circle class="point" cx="358.5" cy="281.5" r="3"/>
+    <circle class="point" cx="619.0" cy="201.9" r="3"/>
+    <circle class="point" cx="387.4" cy="194.0" r="3"/>
+    <circle class="point" cx="292.8" cy="357.0" r="3"/>
+    <circle class="point" cx="340.9" cy="348.6" r="3"/>
+    <circle class="point" cx="432.8" cy="231.1" r="3"/>
+    <circle class="point" cx="205.9" cy="399.7" r="3"/>
+    <circle class="point" cx="489.4" cy="295.4" r="3"/>
+    <circle class="point" cx="452.6" cy="309.4" r="3"/>
+    <circle class="point" cx="281.6" cy="316.4" r="3"/>
+    <circle class="point" cx="480.4" cy="213.9" r="3"/>
+    <circle class="point" cx="392.2" cy="328.0" r="3"/>
+    <circle class="point" cx="378.5" cy="324.0" r="3"/>
+    <circle class="point" cx="589.6" cy="191.9" r="3"/>
+    <circle class="point" cx="437.5" cy="249.2" r="3"/>
+    <circle class="point" cx="324.5" cy="296.0" r="3"/>
+    <circle class="point" cx="466.5" cy="258.5" r="3"/>
+    <circle class="point" cx="319.4" cy="380.0" r="3"/>
+    <circle class="point" cx="476.4" cy="257.6" r="3"/>
+    <circle class="point" cx="281.3" cy="370.4" r="3"/>
+    <circle class="point" cx="454.8" cy="240.0" r="3"/>
+    <circle class="point" cx="413.1" cy="292.3" r="3"/>
+    <circle class="point" cx="252.7" cy="407.4" r="3"/>
+    <circle class="point" cx="391.6" cy="226.4" r="3"/>
+    <circle class="point" cx="473.0" cy="185.8" r="3"/>
+    <circle class="point" cx="210.0" cy="355.0" r="3"/>
+    <circle class="point" cx="208.1" cy="349.3" r="3"/>
+    <circle class="point" cx="551.9" cy="240.3" r="3"/>
+    <circle class="point" cx="542.3" cy="252.4" r="3"/>
+    <circle class="point" cx="543.8" cy="277.1" r="3"/>
+    <circle class="point" cx="553.3" cy="192.1" r="3"/>
+    <circle class="point" cx="436.9" cy="258.6" r="3"/>
+    <circle class="point" cx="566.3" cy="262.7" r="3"/>
+    <circle class="point" cx="389.9" cy="300.0" r="3"/>
+    <circle class="point" cx="559.6" cy="281.6" r="3"/>
+    <circle class="point" cx="526.4" cy="177.1" r="3"/>
+    <circle class="point" cx="519.2" cy="252.8" r="3"/>
+    <circle class="point" cx="188.0" cy="460.1" r="3"/>
+    <circle class="point" cx="361.1" cy="287.1" r="3"/>
+    <circle class="point" cx="301.7" cy="336.6" r="3"/>
+    <circle class="point" cx="266.5" cy="372.7" r="3"/>
+    <circle class="point" cx="395.1" cy="289.8" r="3"/>
+    <circle class="point" cx="625.0" cy="148.0" r="3"/>
+    <circle class="point" cx="280.4" cy="313.5" r="3"/>
+    <circle class="point" cx="447.4" cy="292.2" r="3"/>
+    <circle class="point" cx="514.0" cy="214.4" r="3"/>
+    <circle class="point" cx="580.0" cy="227.6" r="3"/>
+    <circle class="point" cx="355.5" cy="335.2" r="3"/>
+    <circle class="point" cx="544.7" cy="272.2" r="3"/>
+    <circle class="point" cx="304.6" cy="338.1" r="3"/>
+    <circle class="point" cx="359.4" cy="362.9" r="3"/>
+    <circle class="point" cx="466.5" cy="307.5" r="3"/>
+    <circle class="point" cx="302.5" cy="374.6" r="3"/>
+    <circle class="point" cx="275.1" cy="392.2" r="3"/>
+    <circle class="point" cx="663.9" cy="162.6" r="3"/>
+    <circle class="point" cx="520.3" cy="231.6" r="3"/>
+    <circle class="point" cx="407.5" cy="240.4" r="3"/>
+    <circle class="point" cx="293.3" cy="384.5" r="3"/>
+    <circle class="point" cx="475.9" cy="233.0" r="3"/>
+    <circle class="point" cx="459.7" cy="258.6" r="3"/>
+    <circle class="point" cx="439.8" cy="267.0" r="3"/>
+    <circle class="point" cx="390.4" cy="301.7" r="3"/>
+    <circle class="point" cx="384.3" cy="224.8" r="3"/>
+    <circle class="point" cx="439.4" cy="291.4" r="3"/>
+    <circle class="point" cx="465.6" cy="285.8" r="3"/>
+    <circle class="point" cx="446.3" cy="334.0" r="3"/>
+    <circle class="point" cx="371.8" cy="317.3" r="3"/>
+    <circle class="point" cx="567.8" cy="229.4" r="3"/>
+    <circle class="point" cx="144.8" cy="432.3" r="3"/>
+    <circle class="point" cx="433.6" cy="286.6" r="3"/>
+    <circle class="point" cx="266.2" cy="443.1" r="3"/>
+    <circle class="point" cx="375.7" cy="320.9" r="3"/>
+    <circle class="point" cx="554.0" cy="195.4" r="3"/>
+    <circle class="point" cx="273.2" cy="376.9" r="3"/>
+    <circle class="point" cx="363.6" cy="316.9" r="3"/>
+    <circle class="point" cx="280.4" cy="368.9" r="3"/>
+    <circle class="point" cx="508.1" cy="244.1" r="3"/>
+    <circle class="point" cx="368.6" cy="340.8" r="3"/>
+    <circle class="point" cx="278.5" cy="377.9" r="3"/>
+    <circle class="point" cx="371.3" cy="248.2" r="3"/>
+    <circle class="point" cx="484.5" cy="236.4" r="3"/>
+    <circle class="point" cx="578.4" cy="134.8" r="3"/>
+    <circle class="point" cx="437.0" cy="366.9" r="3"/>
+    <circle class="point" cx="341.7" cy="393.8" r="3"/>
+    <circle class="point" cx="258.5" cy="365.7" r="3"/>
+    <circle class="point" cx="275.9" cy="330.0" r="3"/>
+    <circle class="point" cx="288.1" cy="293.6" r="3"/>
+    <circle class="point" cx="352.4" cy="350.3" r="3"/>
+    <circle class="point" cx="403.1" cy="259.2" r="3"/>
+    <circle class="point" cx="339.6" cy="382.9" r="3"/>
+    <circle class="point" cx="385.0" cy="380.0" r="3"/>
+    <circle class="point" cx="405.7" cy="245.1" r="3"/>
+    <circle class="point" cx="298.4" cy="382.6" r="3"/>
+    <circle class="point" cx="443.5" cy="263.5" r="3"/>
+    <circle class="point" cx="357.8" cy="276.3" r="3"/>
+    <circle class="point" cx="313.5" cy="328.0" r="3"/>
+    <circle class="point" cx="392.6" cy="307.0" r="3"/>
+    <circle class="point" cx="570.9" cy="168.8" r="3"/>
+    <circle class="point" cx="498.7" cy="234.0" r="3"/>
+    <circle class="point" cx="421.5" cy="363.7" r="3"/>
+    <circle class="point" cx="399.0" cy="224.7" r="3"/>
+    <circle class="point" cx="372.6" cy="274.7" r="3"/>
+    <circle class="point" cx="379.1" cy="317.4" r="3"/>
+    <circle class="point" cx="345.3" cy="395.3" r="3"/>
+    <circle class="point" cx="218.3" cy="333.7" r="3"/>
+    <circle class="point" cx="425.7" cy="269.3" r="3"/>
+  </g>
+  <g class="outliers" fill="#2f5d8a">
+    <circle class="point outlier" id="o0" cx="680.8" cy="192.1" r="3"><title>CouponView</title></circle>
+    <circle class="point outlier" id="o1" cx="134.8" cy="357.2" r="3"><title>ThemeFactory</title></circle>
+    <circle class="point outlier" id="o2" cx="103.6" cy="277.6" r="3"><title>NoteBuilder</title></circle>
+    <circle class="point outlier" id="o3" cx="431.9" cy="171.0" r="3"><title>ImageClient</title></circle>
+    <circle class="point outlier" id="o4" cx="102.4" cy="412.2" r="3"><title>LayoutBuilder</title></circle>
+    <circle class="point outlier" id="o5" cx="113.4" cy="414.2" r="3"><title>EventClient</title></circle>
+    <circle class="point outlier" id="o6" cx="157.7" cy="340.8" r="3"><title>CartHandler</title></circle>
+    <circle class="point outlier" id="o7" cx="153.6" cy="468.4" r="3"><title>TicketClient</title></circle>
+    <circle class="point outlier" id="o8" cx="215.8" cy="291.0" r="3"><title>BadgeStore</title></circle>
+    <circle class="point outlier" id="o9" cx="649.8" cy="254.9" r="3"><title>UploadStore</title></circle>
+    <circle class="point outlier" id="o10" cx="623.3" cy="97.8" r="3"><title>TokenBuilder</title></circle>
+    <circle class="point outlier" id="o11" cx="723.1" cy="113.9" r="3"><title>QueueManager</title></circle>
+    <circle class="point outlier" id="o12" cx="445.8" cy="158.5" r="3"><title>BadgeClient</title></circle>
+    <circle class="point outlier" id="o13" cx="585.5" cy="91.2" r="3"><title>GridStore</title></circle>
+    <circle class="point outlier" id="o14" cx="499.6" cy="148.2" r="3"><title>EventStore</title></circle>
+    <circle class="point outlier" id="o15" cx="687.3" cy="139.4" r="3"><title>CartClient</title></circle>
+    <circle class="point outlier" id="o16" cx="85.4" cy="413.5" r="3"><title>IndexView</title></circle>
+    <circle class="point outlier" id="o17" cx="635.1" cy="257.5" r="3"><title>DraftHandler</title></circle>
+    <circle class="point outlier" id="o18" cx="192.2" cy="316.7" r="3"><title>ThemeView</title></circle>
+    <circle class="point outlier" id="o19" cx="110.9" cy="462.2" r="3"><title>InboxManager</title></circle>
+  </g>
+  <g class="legend" transform="translate(600 52)">
+    <rect width="150" height="46" fill="white" stroke="#c9ced4"/>
+    <circle cx="14" cy="15" r="3" fill="#9aa5b1"/><text x="24" y="19" font-size="11">class</text>
+    <circle cx="14" cy="32" r="3" fill="#2f5d8a"/><text x="24" y="36" font-size="11">outlier</text>
+  </g>
+</svg>
