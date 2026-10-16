@@ -20,7 +20,8 @@ The brief prescribes the layout (`spec/`, `conformance/`, `rust/`, `ts/`, `bindi
   * npm: `@label-anything/core`, `/text`, `/svg`, `/raster`, `/wasm`, `/wasm-adapter`,
     `/extras` (js-extras).
   * PyPI: `label-anything` (import `label_anything`).
-  * Maven: `dev.labelanything:label-anything` (Java package `dev.labelanything`).
+  * Maven: `io.github.fabian-beck:label-anything` (Java package
+    `io.github.fabianbeck.labelanything`; `io.github.*` group ids need no domain).
   * C library: `liblabelanything` with header `label_anything.h`.
 * All package descriptions say "label placement" for discoverability.
 

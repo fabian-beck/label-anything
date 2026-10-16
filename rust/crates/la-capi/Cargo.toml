@@ -15,6 +15,12 @@ categories.workspace = true
 name = "labelanything"
 crate-type = ["cdylib", "staticlib", "rlib"]
 
+[features]
+default = []
+# JNI entry points for the Java binding (bindings/java), written against the raw JNIEnv
+# function table: the feature adds no dependencies.
+jni = []
+
 [dependencies]
 label-anything = { workspace = true }
 serde_json = { workspace = true }

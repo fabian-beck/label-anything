@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>io.github.fabian-beck</groupId>
+  <artifactId>label-anything</artifactId>
+  <version>0.1.0</version>
+  <packaging>jar</packaging>
+
+  <name>Label Anything</name>
+  <description>Label Anything for Java: a host-independent label placement engine (labels, icons,
+    leaders; avoids SVG/raster backgrounds; priority-driven omission). FFM (Java 22+) with a JNI
+    fallback (Java 17+) over the Rust core; no runtime dependencies.</description>
+  <url>https://github.com/fabian-beck/label-anything</url>
+
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/licenses/MIT</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Label Anything contributors</name>
+      <url>https://github.com/fabian-beck/label-anything</url>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:https://github.com/fabian-beck/label-anything.git</connection>
+    <developerConnection>scm:git:https://github.com/fabian-beck/label-anything.git</developerConnection>
+    <url>https://github.com/fabian-beck/label-anything</url>
+  </scm>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <!-- Base classes (JNI path) target Java 17; META-INF/versions/22 (FFM path) targets 22. -->
+    <maven.compiler.release>17</maven.compiler.release>
+
+    <!-- Where the native build lives (cargo build -release -p label-anything-capi -features jni). -->
+    <labelanything.rust.dir>${project.basedir}/../../rust</labelanything.rust.dir>
+    <labelanything.native.dir>${labelanything.rust.dir}/target/release</labelanything.native.dir>
+    <!-- Platform directory and file name of the bundled library (set per OS by the profiles). -->
+    <labelanything.platform>linux-x86_64</labelanything.platform>
+    <labelanything.libfile>liblabelanything.so</labelanything.libfile>
+    <!-- Integration tests: conformance problems and the CLI used as reference. -->
+    <labelanything.conformance.dir>${project.basedir}/../../conformance/problems</labelanything.conformance.dir>
+    <labelanything.cli>${labelanything.native.dir}/label-anything</labelanything.cli>
+    <!-- JVM running the JNI integration tests (e.g. a Java 17-21 java executable). -->
+    <labelanything.jni.jvm></labelanything.jni.jvm>
+
+    <junit.version>5.14.4</junit.version>
+    <surefire.version>3.5.4</surefire.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <!-- Bundle the native library as native/{os}-{arch}/{file}. -->
+      <resource>
+        <directory>${labelanything.native.dir}</directory>
+        <includes>
+          <include>${labelanything.libfile}</include>
+        </includes>
+        <targetPath>native/${labelanything.platform}</targetPath>
+      </resource>
+    </resources>
+
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>3.5.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.3.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-install-plugin</artifactId>
+          <version>3.1.4</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>3.1.4</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.6.1</version>
+        <executions>
+          <execution>
+            <id>require-jdk22</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>[22,)</version>
+                  <message>Building needs JDK 22+ (the FFM classes of META-INF/versions/22). The JAR runs on Java 17+.</message>
+                </requireJavaVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.14.1</version>
+        <configuration>
+          <compilerArgs>
+            <arg>-Xlint:all,-serial,-processing</arg>
+          </compilerArgs>
+        </configuration>
+        <executions>
+          <!-- src/main/java22 -> target/classes/META-INF/versions/22 -->
+          <execution>
+            <id>compile-java22</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <release>22</release>
+              <compileSourceRoots>
+                <compileSourceRoot>${project.basedir}/src/main/java22</compileSourceRoot>
+              </compileSourceRoots>
+              <multiReleaseOutput>true</multiReleaseOutput>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.2</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Multi-Release>true</Multi-Release>
+              <Automatic-Module-Name>io.github.fabianbeck.labelanything</Automatic-Module-Name>
+              <Enable-Native-Access>ALL-UNNAMED</Enable-Native-Access>
+              <Implementation-Title>${project.name}</Implementation-Title>
+              <Implementation-Version>${project.version}</Implementation-Version>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <!-- Unit tests (*Test): pure Java, no native library. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${surefire.version}</version>
+      </plugin>
+
+      <!-- Integration tests (*IT) against the packaged multi-release JAR, once per backend.
+           Both executions merge into the default summary file that the verify goal reads. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>${surefire.version}</version>
+        <configuration>
+          <classesDirectory>${project.build.directory}/${project.build.finalName}.jar</classesDirectory>
+          <argLine>--enable-native-access=ALL-UNNAMED</argLine>
+          <redirectTestOutputToFile>true</redirectTestOutputToFile>
+        </configuration>
+        <executions>
+          <execution>
+            <id>it-ffm</id>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+            <configuration>
+              <reportsDirectory>${project.build.directory}/failsafe-reports/ffm</reportsDirectory>
+              <systemPropertyVariables>
+                <labelanything.backend>ffm</labelanything.backend>
+                <labelanything.conformance.dir>${labelanything.conformance.dir}</labelanything.conformance.dir>
+                <labelanything.cli>${labelanything.cli}</labelanything.cli>
+              </systemPropertyVariables>
+            </configuration>
+          </execution>
+          <execution>
+            <id>it-jni</id>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+            <configuration>
+              <jvm>${labelanything.jni.jvm}</jvm>
+              <reportsDirectory>${project.build.directory}/failsafe-reports/jni</reportsDirectory>
+              <systemPropertyVariables>
+                <labelanything.backend>jni</labelanything.backend>
+                <labelanything.conformance.dir>${labelanything.conformance.dir}</labelanything.conformance.dir>
+                <labelanything.cli>${labelanything.cli}</labelanything.cli>
+              </systemPropertyVariables>
+            </configuration>
+          </execution>
+          <execution>
+            <id>verify</id>
+            <goals>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>linux-aarch64</id>
+      <activation>
+        <os><name>Linux</name><arch>aarch64</arch></os>
+      </activation>
+      <properties>
+        <labelanything.platform>linux-aarch64</labelanything.platform>
+      </properties>
+    </profile>
+    <profile>
+      <id>macos-x86_64</id>
+      <activation>
+        <os><family>mac</family><arch>x86_64</arch></os>
+      </activation>
+      <properties>
+        <labelanything.platform>macos-x86_64</labelanything.platform>
+        <labelanything.libfile>liblabelanything.dylib</labelanything.libfile>
+      </properties>
+    </profile>
+    <profile>
+      <id>macos-aarch64</id>
+      <activation>
+        <os><family>mac</family><arch>aarch64</arch></os>
+      </activation>
+      <properties>
+        <labelanything.platform>macos-aarch64</labelanything.platform>
+        <labelanything.libfile>liblabelanything.dylib</labelanything.libfile>
+      </properties>
+    </profile>
+    <profile>
+      <id>windows-x86_64</id>
+      <activation>
+        <os><family>windows</family><arch>amd64</arch></os>
+      </activation>
+      <properties>
+        <labelanything.platform>windows-x86_64</labelanything.platform>
+        <labelanything.libfile>labelanything.dll</labelanything.libfile>
+        <labelanything.cli>${labelanything.native.dir}/label-anything.exe</labelanything.cli>
+      </properties>
+    </profile>
+  </profiles>
+</project>

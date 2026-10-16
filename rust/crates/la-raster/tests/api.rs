@@ -477,9 +477,9 @@ mod codecs {
         let mut out = Cursor::new(Vec::new());
         gray.write_to(&mut out, image::ImageFormat::Png).unwrap();
         let decoded = decode(&out.into_inner()).unwrap();
-        for (v, px) in decoded.data.chunks_exact(4).enumerate() {
+        for (v, px) in decoded.data.as_chunks::<4>().0.iter().enumerate() {
             let want = ((v as u32 + 128) / 257) as u8;
-            assert_eq!(px, [want, want, want, 255], "v = {v}");
+            assert_eq!(*px, [want, want, want, 255], "v = {v}");
         }
     }
 }

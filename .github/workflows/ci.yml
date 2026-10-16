@@ -24,6 +24,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     defaults:
       run:
         working-directory: rust
@@ -43,18 +44,19 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Test (workspace, release)
         # the Python extension is built and tested by the python job (it needs an interpreter on Windows)
-        run: cargo test --workspace --release --exclude label-anything-py
+        run: cargo test --workspace --profile ci --exclude label-anything-py
       - name: Conformance (place cases)
-        run: cargo test -p label-anything --release --test conformance
+        run: cargo test -p label-anything --profile ci --test conformance
       - name: Randomized guarantees (more cases)
         if: runner.os == 'Linux'
-        run: cargo test -p label-anything-core --release --test random_problems
+        run: cargo test -p label-anything-core --profile ci --test random_problems
         env:
           LA_RANDOM_CASES: "1000"
 
   wasm32:
     name: Core for wasm32
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -69,6 +71,7 @@ jobs:
   typescript:
     name: TypeScript and JS helpers
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -90,6 +93,7 @@ jobs:
   wasm:
     name: WebAssembly package (@label-anything/wasm)
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     env:
       LA_WASM_REQUIRED: "1" # the WebAssembly tests fail instead of being skipped without a build
     steps:
@@ -131,6 +135,7 @@ jobs:
   generated:
     name: Generated files are current
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -156,6 +161,7 @@ jobs:
   licenses:
     name: Dependency licenses
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -171,6 +177,7 @@ jobs:
       matrix:
         python: ["3.9", "3.13"]
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -187,13 +194,16 @@ jobs:
       - name: Install and test
         run: |
           pip install rust/target/wheels/label_anything-*.whl "./bindings/python-extras[all,test]" pytest numpy pillow
-          pytest -q rust/crates/la-py/tests bindings/python-extras/tests
+          # separately: both directories have a conftest.py that tests import by name
+          pytest -q rust/crates/la-py/tests
+          pytest -q bindings/python-extras/tests
       - name: Brief example (§6.1), verbatim
         run: python examples/brief/python_6_1.py --out "$RUNNER_TEMP"
 
   examples:
     name: C, Go and CLI examples
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -213,10 +223,45 @@ jobs:
       - name: CLI (brief §6.5)
         run: examples/brief/cli_6_5.sh rust/target/release/label-anything
 
+  java:
+    name: Java (FFM on JDK 25, JNI on JDK 17)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          # the last version is the default: it builds the multi-release JAR and runs the
+          # FFM tests; JDK 17 runs the JNI tests (base classes of the JAR)
+          java-version: |
+            17
+            25
+          cache: maven
+      - name: Native library (C ABI + JNI entry points) and the CLI (reference for the tests)
+        run: >
+          cargo build --release --manifest-path rust/Cargo.toml
+          -p label-anything-capi -p label-anything-cli --features label-anything-capi/jni
+      - name: Build and test (integration tests once with FFM, once with JNI)
+        run: mvn -B -ntp -f bindings/java/pom.xml verify -Dlabelanything.jni.jvm="$JAVA_HOME_17_X64/bin/java"
+      - name: Brief example (§6.3), verbatim (FFM)
+        run: examples/brief/java/run.sh bindings/java/target/label-anything-0.1.0.jar
+      - name: Brief example (§6.3), verbatim, on JDK 17 (JNI)
+        run: PATH="$JAVA_HOME_17_X64/bin:$PATH" examples/brief/java/run.sh bindings/java/target/label-anything-0.1.0.jar
+      - name: Java example
+        run: >
+          java --enable-native-access=ALL-UNNAMED -cp bindings/java/target/label-anything-0.1.0.jar
+          examples/java/Main.java "$RUNNER_TEMP/overlay.svg"
+
   bench:
     name: Benchmark (${{ startsWith(github.ref, 'refs/tags/') && 'full' || 'quick' }})
     if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -260,6 +305,7 @@ jobs:
     name: Fuzzing (cargo-fuzz)
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
