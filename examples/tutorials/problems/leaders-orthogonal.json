@@ -2,7 +2,7 @@
   "canvas": { "width": 480, "height": 300 },
   "defaults": { "mark": { "shape": "circle", "r": 3 } },
   "placement": { "models": ["adjacent", "distant"], "max_distance": "9em" },
-  "leaders": {"style": "orthogonal"},
+  "leaders": { "style": "orthogonal" },
   "obstacles": { "vector": [ { "class": "points", "r": 2, "points": [
       [103.7, 82.9], [33.2, 140.6], [213.8, 239.0], [248.4, 186.5], [239.9, 192.2], [221.2, 92.3],
       [459.0, 278.9], [389.7, 204.0], [158.7, 79.7], [147.2, 38.3], [357.2, 124.1], [392.5, 120.5],

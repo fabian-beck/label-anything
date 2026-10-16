@@ -1,3 +1,1 @@
-# Specification
-
-TODO
+--8<-- "spec/spec.md"

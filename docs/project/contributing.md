@@ -1,3 +1,28 @@
-# Contributing
+--8<-- "CONTRIBUTING.md"
 
-TODO
+## Documentation
+
+This site is built with [MkDocs](https://www.mkdocs.org/) and
+[Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) from `docs/` and
+`mkdocs.yml`; code shown on its pages is included from `examples/tutorials/`, which CI
+runs.
+
+```sh
+python3 -m venv .venv-docs && .venv-docs/bin/pip install -r docs/requirements.txt
+.venv-docs/bin/mkdocs serve                  # http://127.0.0.1:8000, rebuilds on change
+.venv-docs/bin/mkdocs build --strict         # as in CI
+python3 examples/tutorials/run.py cli --cli rust/target/release/label-anything   # the tutorial programs
+python3 examples/tutorials/make_figures.py --cli rust/target/release/label-anything   # the figures
+```
+
+* Change a tutorial's code in `examples/tutorials/<language>/`; the page includes it by
+  section (`--8<-- [start:name]` … `[end:name]` comments in the file).
+* `examples/tutorials/data/make_data.py` writes the tutorial data; CI checks that the
+  committed files are current (`--check`).
+* The specification, defaults, presets, expression grammar and API definitions are
+  included from their source files: change them there.
+* New ADRs in `docs/adr/` appear in the navigation and the [index](decisions.md)
+  automatically.
+
+The site is deployed to GitHub Pages from release tags (`v*`) and on demand
+(`.github/workflows/pages.yml`).

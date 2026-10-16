@@ -5,6 +5,8 @@
 * ``docs/assets/gallery/*.png``: debug renderings (``label-anything render problem.json
   result.json -o x.png``): item shapes, vector and SVG obstacles in grey, label boxes,
   leaders, omitted items as red crosses.
+* ``docs/assets/figures/debug-overlay.svg``: a debug overlay written during the solve
+  (``place --debug-svg``), with the cost heatmap of every obstacle class.
 * ``docs/assets/figures/*.png``: what a host would draw over a raster background: the
   image, the marks, and the labels and leaders of the result (Pillow, bundled Noto Sans).
 
@@ -52,6 +54,8 @@ COMPOSITES = [
     ("raster-classmap", "problems/raster-classmap.json"),
     ("raster-saliency", "problems/raster-saliency.json"),
 ]
+# debug overlays rendered during the solve (place --debug-svg): with the cost heatmaps
+DEBUG_SVGS = [("debug-overlay", "problems/raster-classmap.json")]
 
 
 def solve(cli: str, problem: Path, tmp: Path) -> Path:
@@ -142,6 +146,12 @@ def main() -> int:
             result = json.loads(solve(cli, problem, tmp).read_text(encoding="utf-8"))
             composite(problem, result, FIGURES / f"{name}.png")
             print(f"docs/assets/figures/{name}.png")
+        for name, rel in DEBUG_SVGS:
+            if args.only and name not in args.only:
+                continue
+            out = FIGURES / f"{name}.svg"
+            subprocess.run([cli, "place", str(HERE / rel), "-o", str(tmp / "debug.json"), "--debug-svg", str(out)], check=True)
+            print(f"docs/assets/figures/{name}.svg")
         for name, program, output in PYTHON_FIGURES if args.python else []:
             if args.only and name not in args.only:
                 continue

@@ -1,3 +1,1 @@
-# Defaults
-
-TODO
+--8<-- "spec/defaults.md"
