@@ -371,6 +371,7 @@ td.good,span.good{color:var(--good);font-weight:600}td.good{background:var(--goo
 img{max-width:100%;border:1px solid var(--line);background:#fff}
 .imgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:10px}
 figure{margin:0}figcaption{font-size:12px;color:var(--ink2)}
+figure.na{border:1px dashed var(--line);padding:10px;align-self:start}
 .chart svg{max-width:100%;height:auto}details{margin:6px 0 14px}summary{cursor:pointer;color:var(--ink2)}
 nav ul{columns:2;padding-left:18px}@media (max-width:640px){nav ul{columns:1}}
 """
@@ -629,6 +630,9 @@ def _scenario_sections(report: dict) -> list[str]:
                     o.append(f"<figure><img loading='lazy' src='{esc(r['overlay'])}' alt='{esc(r['solver'])} debug "
                              f"overlay for {esc(cfg)}'><figcaption>{esc(r['solver'])} · engine debug overlay (cost "
                              f"grids, candidates) · <a href='{esc(r['overlay'])}'>open</a></figcaption></figure>")
+                elif "skipped" in r or "error" in r:
+                    what = f"n/a: {r['skipped']}" if "skipped" in r else f"failed: {r['error']}"
+                    o.append(f"<figure class='na'><figcaption>{esc(r['solver'])} · {esc(what)}</figcaption></figure>")
             o.append("</div>")
     return o
 
