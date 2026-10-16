@@ -107,7 +107,7 @@ export class Evaluator {
           if (c.labelOverlapsShape(sj)) acc.violate(BLOCK_ITEMS, false, 0);
         } else if (om.kind === "partial") {
           if (c.labelOverlapsShape(sj)) {
-            const own = obs.own[i]!;
+            const own = obs.own(i);
             const frac = own[1].coveredArea(own[0], r) / maxf(sj.area(), 1e-9);
             if (frac > om.f) acc.violate(BLOCK_ITEMS, false, 0);
           }
@@ -140,11 +140,12 @@ export class Evaluator {
         else if (cl.hasPrims) {
           const buf2 = this.buf2;
           if (!hardPrimsChecked) {
-            obs.primIndex.query(r, buf2);
+            obs.primIndex().query(r, buf2);
             hardPrimsChecked = true;
           }
+          const prims = obs.prims();
           for (let q = 0; q < buf2.len; q++) {
-            const pr = obs.prims[buf2.get(q)]!;
+            const pr = prims[buf2.get(q)]!;
             if (pr[0] === ci && primOverlapsRect(pr[1], r)) {
               hit = true;
               break;
@@ -306,11 +307,12 @@ export class Evaluator {
         } else if (cl.hasPrims) {
           const buf2 = this.buf2;
           if (!primIdsLoaded) {
-            obs.primIndex.query(l.bbox().inflate(hw + 1), buf2);
+            obs.primIndex().query(l.bbox().inflate(hw + 1), buf2);
             primIdsLoaded = true;
           }
+          const prims = obs.prims();
           for (let q = 0; q < buf2.len && !hit; q++) {
-            const pr = obs.prims[buf2.get(q)]!;
+            const pr = prims[buf2.get(q)]!;
             if (pr[0] !== ci) continue;
             for (let k = 0; k < nseg; k++) {
               const a = l.segA(k);

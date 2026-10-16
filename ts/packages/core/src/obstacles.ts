@@ -24,6 +24,7 @@ import { Occupancy } from "./grid/occupancy.js";
 import { MaskRaster } from "./grid/raster.js";
 import { asF64, get } from "./json.js";
 import { clampf, cmpStr, maxf, minf, toIndex } from "./math.js";
+import type { Shape } from "./geom/shape.js";
 import { type Model, type Prim, primBbox } from "./model/index.js";
 import { parseRustF64 } from "./json.js";
 import { StaticIndex } from "./spatial.js";
@@ -102,15 +103,33 @@ export interface Dynamic {
   ownMark: OwnMark;
 }
 
+/**
+ * The model's vector primitives that are kept as exact obstacles: their positions in
+ * `model.vector` and their class indices (see {@link Obstacles.prims}).
+ */
+export interface PrimSource {
+  vector: readonly (readonly [string, Prim])[];
+  at: Int32Array;
+  cls: Int32Array;
+  n: number;
+  extent: Rect;
+}
+
 /** Prepared static obstacles. */
 export class Obstacles {
+  /** {@link prims} and {@link primIndex} once built. */
+  private primList: [number, Prim][] | null = null;
+  private primIx: StaticIndex | null = null;
+  /** {@link itemsSat} and {@link own} once built. */
+  private itemsSatCache: Sat | null = null;
+  private ownCache: ([GridSpec, Sat] | null)[] | null = null;
+
   constructor(
     public grid: GridSpec,
     public classes: Class[],
     public dynamic: Dynamic,
-    /** Exact vector primitives (class index, primitive). */
-    public prims: [number, Prim][],
-    public primIndex: StaticIndex,
+    /** The exact vector primitives ({@link prims}), not yet materialized. */
+    private readonly primSource: PrimSource,
     /** Item marks. */
     public itemIndex: StaticIndex,
     /**
@@ -119,12 +138,8 @@ export class Obstacles {
      * candidate generation.
      */
     public itemOcc: Occupancy | null,
-    /**
-     * Coverage of all item marks, and of each item's own mark on an aligned local grid
-     * (to exclude the own mark from `items` costs).
-     */
-    public itemsSat: Sat,
-    public own: [GridSpec, Sat][],
+    /** The item shapes (for {@link itemsSat} and {@link own}). */
+    private readonly itemShapes: readonly Shape[],
     /** Distance (px) from each cell center to the nearest static hard obstacle. */
     public dt: Float64Array,
     /** Local maxima of the distance transform: (cell center, clearance, col, row). */
@@ -136,6 +151,36 @@ export class Obstacles {
   ) {}
 
   /**
+   * Exact vector primitives (class index, primitive), in model order. Only hard classes
+   * query them, so the list and its index ({@link primIndex}) are built on first use
+   * (the same list and index as when built up front).
+   */
+  prims(): [number, Prim][] {
+    let l = this.primList;
+    if (l === null) {
+      const src = this.primSource;
+      l = [];
+      for (let k = 0; k < src.n; k++) l.push([src.cls[k]!, src.vector[src.at[k]!]![1]]);
+      this.primList = l;
+    }
+    return l;
+  }
+
+  /** Index of the bounding boxes of {@link prims} (built on first use). */
+  primIndex(): StaticIndex {
+    let ix = this.primIx;
+    if (ix === null) {
+      ix = new StaticIndex(
+        this.prims().map((e) => primBbox(e[1])),
+        this.primSource.extent,
+        this.indexCell,
+      );
+      this.primIx = ix;
+    }
+    return ix;
+  }
+
+  /**
    * Whether some relaxable class is hard (otherwise the `soft_overlap` ladder step cannot
    * change anything: every relaxed-feasible candidate is feasible).
    */
@@ -143,11 +188,56 @@ export class Obstacles {
     return this.classes.some((c) => c.relaxable && (c.label.isHard() || c.leader.isHard()));
   }
 
+  /**
+   * Coverage of all item marks. Only soft `items` costs and buffers use it (and
+   * {@link own}), so it is built on first use.
+   */
+  itemsSat(): Sat {
+    let s = this.itemsSatCache;
+    if (s === null) {
+      const g = this.grid;
+      const allItems = new MaskRaster(g);
+      for (const sh of this.itemShapes) allItems.shape(sh);
+      s = Sat.fromCoverage(g.cols, g.rows, allItems.intoCoverage());
+      this.itemsSatCache = s;
+    }
+    return s;
+  }
+
+  /**
+   * Coverage of item `i`'s own mark on a local grid aligned with {@link grid} (to exclude
+   * the own mark from `items` costs); built on first use.
+   */
+  own(i: number): [GridSpec, Sat] {
+    let all = this.ownCache;
+    if (all === null) {
+      all = new Array<[GridSpec, Sat] | null>(this.itemShapes.length).fill(null);
+      this.ownCache = all;
+    }
+    let o = all[i]!;
+    if (o === null) {
+      const grid = this.grid;
+      const cell = grid.cell;
+      const sh = this.itemShapes[i]!;
+      const cr = grid.cellRange(sh.bbox().inflate(cell));
+      const c0 = cr[0];
+      const c1 = cr[1];
+      const r0 = cr[2];
+      const r1 = cr[3];
+      const local = new GridSpec(grid.ox + c0 * cell, grid.oy + r0 * cell, cell, c1 - c0 > 1 ? c1 - c0 : 1, r1 - r0 > 1 ? r1 - r0 : 1);
+      const m = new MaskRaster(local);
+      m.shape(sh);
+      o = [local, Sat.fromCoverage(local.cols, local.rows, m.intoCoverage())];
+      all[i] = o;
+    }
+    return o;
+  }
+
   /** Covered area (px²) of `r` by the marks of all items except `i`. */
   otherItemsCovered(i: number, r: Rect): number {
-    const all = this.itemsSat.coveredArea(this.grid, r);
+    const all = this.itemsSat().coveredArea(this.grid, r);
     if (all <= 0) return 0;
-    const own = this.own[i]!;
+    const own = this.own(i);
     return maxf(all - own[1].coveredArea(own[0], r), 0);
   }
 
@@ -219,7 +309,10 @@ export function prepare(model: Model, minFont: number): Obstacles {
   names.forEach((n, i) => classIndex.set(n, i));
   // rasterize vector primitives per class into masks, collect exact prims
   const masks: (MaskRaster | null)[] = classes.map(() => null);
-  const prims: [number, Prim][] = [];
+  // the exact primitives, as positions in `vector` (materialized on demand)
+  const primAt = new Int32Array(vector.length);
+  const primCls = new Int32Array(vector.length);
+  let nPrims = 0;
   for (let k = 0; k < vector.length; k++) {
     const e = vector[k]!;
     const prim = e[1];
@@ -233,7 +326,9 @@ export function prepare(model: Model, minFont: number): Obstacles {
       masks[ci] = m;
     }
     rasterizePrim(m, prim);
-    prims.push([ci, prim]);
+    primAt[nPrims] = k;
+    primCls[nPrims] = ci;
+    nPrims++;
   }
   masks.forEach((m, ci) => {
     if (m !== null) {
@@ -280,32 +375,12 @@ export function prepare(model: Model, minFont: number): Obstacles {
   const nItems = model.items.length > 1 ? model.items.length : 1;
   const extArea = maxf(model.extent.area(), 1);
   const indexCell = clampf(Math.sqrt(extArea / nItems), 16, 128);
-  const primIndex = new StaticIndex(
-    prims.map((e) => primBbox(e[1])),
-    model.extent,
-    indexCell,
-  );
   const itemIndex = new StaticIndex(
     model.items.map((it) => it.shape.bbox()),
     model.extent,
     indexCell,
   );
-  // items coverage (global and per item)
-  const allItems = new MaskRaster(grid);
-  const own: [GridSpec, Sat][] = [];
-  for (const it of model.items) {
-    allItems.shape(it.shape);
-    const cr = grid.cellRange(it.shape.bbox().inflate(cell));
-    const c0 = cr[0];
-    const c1 = cr[1];
-    const r0 = cr[2];
-    const r1 = cr[3];
-    const local = new GridSpec(grid.ox + c0 * cell, grid.oy + r0 * cell, cell, c1 - c0 > 1 ? c1 - c0 : 1, r1 - r0 > 1 ? r1 - r0 : 1);
-    const m = new MaskRaster(local);
-    m.shape(it.shape);
-    own.push([local, Sat.fromCoverage(local.cols, local.rows, m.intoCoverage())]);
-  }
-  const itemsSat = Sat.fromCoverage(grid.cols, grid.rows, allItems.intoCoverage());
+  // items coverage (global and per item): Obstacles.itemsSat and Obstacles.own, on demand
   let itemOcc: Occupancy | null = null;
   if (dynamic.labelItems.isHard() && dynamic.ownMark.kind === "hard") {
     const occ = new Occupancy(model.extent);
@@ -343,12 +418,10 @@ export function prepare(model: Model, minFont: number): Obstacles {
     grid,
     classes,
     dynamic,
-    prims,
-    primIndex,
+    { vector, at: primAt, cls: primCls, n: nPrims, extent: model.extent },
     itemIndex,
     itemOcc,
-    itemsSat,
-    own,
+    model.items.map((it) => it.shape),
     dt,
     seeds,
     seedIndex,
