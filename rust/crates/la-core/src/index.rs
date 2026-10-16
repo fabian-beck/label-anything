@@ -32,12 +32,13 @@ impl Buckets {
     }
     #[inline]
     fn range(&self, r: &Rect) -> (usize, usize, usize, usize) {
-        let c0 = ((r.x0 - self.ox) / self.cell).floor();
-        let c1 = ((r.x1 - self.ox) / self.cell).floor();
-        let r0 = ((r.y0 - self.oy) / self.cell).floor();
-        let r1 = ((r.y1 - self.oy) / self.cell).floor();
+        // cell of coordinate v = floor(v), clamped; truncation equals floor for v >= 0
+        let c0 = (r.x0 - self.ox) / self.cell;
+        let c1 = (r.x1 - self.ox) / self.cell;
+        let r0 = (r.y0 - self.oy) / self.cell;
+        let r1 = (r.y1 - self.oy) / self.cell;
         let cl = |v: f64, n: usize| -> usize {
-            if v < 0.0 {
+            if v.is_nan() || v < 0.0 {
                 0
             } else if v >= n as f64 {
                 n - 1

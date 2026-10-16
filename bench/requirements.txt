@@ -1,0 +1,13 @@
+# Benchmark tooling (not distributed with Label Anything). Python 3.13.
+# All licenses are permissive: BSD-3-Clause (numpy, scipy, scikit-learn, networkx,
+# threadpoolctl), MIT-CMU (Pillow), MIT (jsonschema, fonttools, pytest).
+#   python3 -m venv bench/.venv && bench/.venv/bin/pip install -r bench/requirements.txt
+numpy==2.5.4
+scipy==1.18.1
+pillow==12.3.0
+networkx==3.7
+scikit-learn==1.9.1
+threadpoolctl==3.7.0
+jsonschema==4.26.0
+fonttools==4.67.0
+pytest==9.1.1

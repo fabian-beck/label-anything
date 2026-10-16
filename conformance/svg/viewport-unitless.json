@@ -1,0 +1,13 @@
+{
+  "kind": "svg",
+  "name": "unitless and px",
+  "description": "Unitless = px.",
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"123.5\" height=\"45px\">",
+    "</svg>"
+  ],
+  "expect": {
+    "width": 123.5,
+    "height": 45
+  }
+}

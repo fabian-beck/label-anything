@@ -6,6 +6,24 @@
 
 pub use la_expr::det_math::{cbrt, exp, ln, ln_1p, round_half_away, sin_cos_deg};
 
+/// `x.floor()` without a libm call (`f64::floor` is a function call on baseline x86-64,
+/// which lacks SSE4.1). Exact for |x| < 2^63; NaN maps to 0.
+#[inline]
+pub fn floor_fast(x: f64) -> f64 {
+    let t = x as i64 as f64;
+    if t > x {
+        t - 1.0
+    } else {
+        t
+    }
+}
+
+/// `x.ceil()` without a libm call (see [`floor_fast`]).
+#[inline]
+pub fn ceil_fast(x: f64) -> f64 {
+    -floor_fast(-x)
+}
+
 /// Euclidean length without `hypot` (identical across implementations).
 #[inline]
 pub fn len2d(x: f64, y: f64) -> f64 {

@@ -1,0 +1,101 @@
+{
+  "kind": "place",
+  "name": "a label budget keeps the highest priorities",
+  "problem": {
+    "canvas": {
+      "width": 600,
+      "height": 200
+    },
+    "priority": {
+      "budget": {
+        "max_labels": 2
+      }
+    },
+    "items": [
+      {
+        "id": "i0",
+        "anchor": {
+          "type": "point",
+          "x": 60,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Item 0"
+        },
+        "priority": 0.0
+      },
+      {
+        "id": "i1",
+        "anchor": {
+          "type": "point",
+          "x": 170,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Item 1"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "i2",
+        "anchor": {
+          "type": "point",
+          "x": 280,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Item 2"
+        },
+        "priority": 2.0
+      },
+      {
+        "id": "i3",
+        "anchor": {
+          "type": "point",
+          "x": 390,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Item 3"
+        },
+        "priority": 3.0
+      },
+      {
+        "id": "i4",
+        "anchor": {
+          "type": "point",
+          "x": 500,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Item 4"
+        },
+        "priority": 4.0
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 2,
+    "placed_ids": [
+      "i4",
+      "i3"
+    ],
+    "unplaced_ids": [
+      "i0",
+      "i1",
+      "i2"
+    ],
+    "reasons": {
+      "i0": "omitted_by_priority"
+    }
+  }
+}

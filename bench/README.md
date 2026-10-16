@@ -1,0 +1,245 @@
+# Label Anything — real-world benchmark
+
+Twelve scenarios built from real, openly licensed data (one of them synthetic-from-real,
+one a synthetic camera path over real data), an implementation-independent evaluator, one
+renderer for every implementation, and a
+runner that produces `bench-report/`. Everything here depends only on the JSON formats
+(`spec/schema/problem.v1.json`, `spec/schema/result.v1.json`) and on `spec/` itself, never
+on an engine implementation.
+
+```
+bench/
+  common/          shared library: sources + fetch, spec options, text measurement, geometry,
+                   problem model, raster modes, scene/SVG builder, deterministic JSON
+  scenarios/NN-*/  fetch.py, build.py, README.md, LICENSE.md (+ data helpers, polygons.json)
+  eval/            evaluator package + CLI (python -m bench.eval) + tests/
+  solvers/         built-in baselines: naive, greedy
+  render.py        problem + result (+ background) -> SVG / PNG
+  run.py           runner -> bench-report/results.json + index.html
+  validate_problems.py
+  requirements.txt
+  data/            fetched third-party data (gitignored, never committed)
+  out/problems/    generated problems, truths, backgrounds (gitignored, reproducible)
+```
+
+## Quick start
+
+```sh
+python3 -m venv bench/.venv && bench/.venv/bin/pip install -r bench/requirements.txt
+bench/.venv/bin/python -m bench.scenarios fetch          # download + verify SHA-256 (≈ 85 MB)
+bench/.venv/bin/python -m bench.scenarios build          # write bench/out/problems/ (~12 min, see below)
+bench/.venv/bin/python bench/validate_problems.py       # JSON Schema 2020-12 + size budgets
+bench/.venv/bin/python bench/run.py --suite quick       # naive + greedy baselines -> bench-report/
+bench/.venv/bin/python -m pytest bench/eval/tests      # evaluator unit tests
+```
+
+Run from the repository root. Single scenarios: `python -m bench.scenarios build 05` (or
+`python bench/scenarios/05-airports/build.py`). Requirements: Python 3.13 and the pinned
+packages; scenario 01 also needs a JDK ≥ 11 (`java` on PATH) to run `CkLite.java`.
+Building takes ≈ 12 minutes the first time, ≈ 10 of them for the t-SNE of scenario 04,
+which is cached (later builds: ≈ 2 minutes, dominated by the Cora force layout).
+
+**Engine runs.** The engine CLI is not part of this branch yet; once it exists:
+
+```sh
+bench/.venv/bin/python bench/run.py --suite full \
+    --solver naive --solver greedy \
+    --solver 'rust=label-anything place {problem} -o {result}' \
+    --solver 'ts=node ts/packages/cli/dist/main.js place {problem} -o {result}'
+```
+
+**Evaluate one result.** `python -m bench.eval problem.json result.json [--truth t.json]
+[--summary] [-o metrics.json]` (the truth defaults to `<problem>.truth.json`).
+Sequences: `python -m bench.eval sequence <sequence.json> --results <dir-with-frame-results>`.
+
+**Render one result.** `python bench/render.py problem.json result.json -o out.svg --png out.png`
+(the PNG uses `<problem>.bg.png` as background when present; `--font-href` embeds an
+`@font-face` URL for Noto Sans in the SVG).
+
+## Output layout
+
+```
+bench/out/problems/<scenario>/<config>.json          problem (validates against problem.v1.json)
+bench/out/problems/<scenario>/<config>.truth.json    exact geometry of every obstacle class
+bench/out/problems/<scenario>/<config>.bg.svg|.png   background for rendering
+bench/out/problems/<scenario>/scenario.json          manifest: configs (quick flag, size, files), sources
+bench/out/problems/11-stability/<seq>/f000…f029.json + sequence.json
+bench-report/results.json, index.html, results/<solver>/…, metrics/<solver>/…, img/<solver>/…
+```
+
+**truth.json** (every config; `bench/common/truth.py`) — `{"version": 1, "canvas": [W, H],
+"classes": {<class>: {"circles": [[x, y, r]], "rects": [[x, y, w, h]],
+"polylines": [{"points": [[x, y], …], "width": w}], "polygons": [{"rings": [[[x, y], …], …],
+"fill_rule": "evenodd"}]}}, "rasters": [{"index", "mode", "class", "scale", "offset"}],
+"includes_problem_vectors": true}` in canvas px. Background geometry is emitted by the same
+drawing list that produced the SVG (`bench/common/scene.py`): fills → polygons/circles/rects,
+strokes → polylines with the stroke width, text → its bounding box measured with the bundled
+font. The problem's `obstacles.vector` layers are added mapped through `transform`/`y_axis`
+(positioned shapes as polygons). Raster classes cannot be listed as geometry: `rasters` says
+which raster source yields which class, and the evaluator derives the mask per pixel with
+the definitions of spec §4.6. Item marks are defined by the problem's anchors (spec §3.2).
+
+## Scenarios
+
+| # | scenario | configs (quick first) | data | synthetic? |
+|---|---|---|---|---|
+| 01 | software metrics outliers | `cbo-rfc-10-none`, `cbo-rfc-30-vector`, `cbo-rfc-100-svg`, `wmc-loc-30-raster` | React Native 0.63.5 Android Java sources (1,206 classes), CK-style metrics | no |
+| 02 | volcano plot | `top20-vector`, `top50-svg`, `top30-transform`, `nfcore-top20-vector` | Galaxy volcanoplot table (16,406 genes); nf-core DESeq2 results | no |
+| 03 | Gapminder bubbles | `y2005-vector`, `y2005-svg`, `y1955-all-vector` | vega-datasets gapminder.json | no |
+| 04 | embedding map | `k40-ink`, `k40-saliency`, `k120-areas` | 50,000 WordNet 3.0 noun glosses, t-SNE computed here | no (computed embedding) |
+| 05 | airports on an SVG world map | `world-iata-300-none`, `world-iata-1000-vector`, `world-iata-3000-svg`, `europe-names-400-svg` | OpenFlights airports/routes, Natural Earth countries | no |
+| 06 | city POIs on raster tiles | `monaco-ink`, `monaco-saliency`, `monaco-pins-ink` | OpenStreetMap extract of Monaco, map rendered here | no (rendered tiles) |
+| 07 | node-link | `lesmis-circles`, `lesmis-shapes`, `cora-circles` | Les Misérables (vega-datasets), Cora citation network | no |
+| 08 | technical / anatomical illustration | `astronaut-boundary`, `retina-boundary`, `rocket-distant` | scikit-image sample photos + hand-made CC0 polygons | no |
+| 09 | line chart end labels | `unemployment-14-vector`, `stocks-5-svg`, `life-62-boundary` | vega-datasets unemployment, stocks, gapminder | no |
+| 10 | stress / scale | `n00200` … `n20000` (7 sizes) | scenario 05 at 10× density (jittered copies) | **yes** |
+| 11 | interactive stability | sequences `zoom-pan-1000` (quick), `zoom-pan-3000` (30 frames each) | scenario 05 | camera path only |
+| 12 | priority showcase | `metrics-attr-strict` (quick) + 17 more `<dataset>-<type>-<mode>` (types attr, outlier, coverage; modes strict, prefix, weighted) | scenarios 01 and 05 | no |
+
+115 problems in the full suite (incl. 60 sequence frames), all valid against the schema,
+each ≤ 3.5 MB; the quick suite (11 configs + the 30-frame quick sequence) is ≈ 5.2 MB.
+Every scenario directory documents what and why, the configs and the rendering recipe
+(`README.md`) and the data licenses (`LICENSE.md`).
+
+### Substitutions, emulations and synthetic data
+
+* **01 — CK.** CK's jar-with-dependencies is not published on Maven Central and its
+  Eclipse-JDT dependency closure cannot be fetched reliably (Central is rate-limited from
+  the build environment). `CkLite.java` implements CK's definitions of CBO, RFC, WMC, LOC,
+  NOM and NOF on the JDK's own javac syntax tree (no type attribution; documented in the
+  file). Java sources come from the `react-native` npm tarball.
+* **02 — DE table.** Two MIT-licensed tables on raw GitHub (Galaxy tools-iuc test data;
+  nf-core test-datasets).
+* **04 — embedding.** No precomputed embedding of an open corpus was reachable; the
+  embedding is computed deterministically (TF-IDF → SVD → t-SNE, fixed seeds, one thread).
+* **06 — tiles.** Tile servers are blocked, so the raster map is rendered locally from an
+  OSM extract (planetiler's Monaco test resource) with our own PBF reader and style.
+* **07 — citation network.** Cora (LINQS selection, distributed in the MIT-licensed
+  `tkipf/pygcn` repository); paper titles are not part of that copy, so labels are the
+  paper ids (with the last four digits as an `alternatives` fallback).
+* **10, 11 — synthetic.** Scenario 10 jitters copies of real airports (σ = 0.6°, seed 10)
+  to reach 10× density and 20,000 anchors; scenario 11 is a synthetic camera path over
+  real data.
+* **Everywhere — SVG `ignore`.** Elements that must not interact with labels are mapped
+  to the class `background` with `avoid.label/leader.background = "ignore"` because the
+  literal class `"ignore"` does not validate in v1 (see *Spec findings*).
+
+## Data sources and licenses
+
+All downloads are pinned (commit-hash raw GitHub URLs, exact package versions) and
+verified by SHA-256 (`bench/common/sources.py`); nothing is committed. Status: all 13
+checksums verified on 2026-10-16 (the scikit-image sdist also matches PyPI's published
+digest).
+
+| source id | pinned location | SHA-256 | license | attribution |
+|---|---|---|---|---|
+| `react-native-0.63.5` | npm `react-native-0.63.5.tgz` | `4100debc…fd631eee` | MIT | React Native, © Facebook, Inc. and its affiliates |
+| `galaxy-volcano-input` | `galaxyproject/tools-iuc@3b052d86` `tools/volcanoplot/test-data/input.tab` | `d80359b0…a16156a7` | MIT | Galaxy IUC; "Getting Genetics Done" (S. Turner) |
+| `nfcore-srp254919-deseq2`, `-genemeta` | `nf-core/test-datasets@618f1541` `data/genomics/mus_musculus/rnaseq_expression/` | `4e62f213…76d8beae`, `adc433f0…b58a06b3` | MIT (SRA data unrestricted) | nf-core; SRA study SRP254919 |
+| `vega-datasets-3.2.1` | npm `vega-datasets-3.2.1.tgz` | `6f72fda4…881cc5a3` | BSD-3-Clause package; gapminder CC BY 4.0, BLS data public domain | vega-datasets; Gapminder Foundation; U.S. BLS; D. E. Knuth (SGB) |
+| `nltk-wordnet` | `nltk/nltk_data@550b6625` `packages/corpora/wordnet.zip` | `cbda5ea6…2646ab59` | WordNet 3.0 license | Princeton University, WordNet (2010) |
+| `openflights-airports`, `-routes` | `jpatokal/openflights@56a3cce4` `data/` | `9387cdb3…d9ff59f9`, `bd373706…735f2390` | ODbL 1.0 / DbCL 1.0 | "Contains information from OpenFlights.org (ODbL)" |
+| `ne-50m-countries` | `nvkelso/natural-earth-vector@ca96624a` `geojson/ne_50m_admin_0_countries.geojson` | `3e458fc0…a2b7fdeb` | public domain | "Made with Natural Earth" |
+| `osm-monaco` | `onthegomap/planetiler@7a5e0c59` `planetiler-core/src/test/resources/monaco-latest.osm.pbf` | `a3fa87c1…7e88c9be` | ODbL 1.0 | "© OpenStreetMap contributors" |
+| `cora-cites`, `cora-content` | `tkipf/pygcn@1600b5b7` `data/cora/` | `ec1a3723…42d5945e`, `b8ebed0f…46e9c8ee` | repository MIT; data: research use, no explicit license (not redistributed) | McCallum et al. 2000; Sen et al. 2008 |
+| `scikit-image-0.26.0-sdist` | PyPI `scikit_image-0.26.0.tar.gz` | `f5f970ab…e59199fa` | BSD-3-Clause; images: NASA/SpaceX public domain, retina CC0 | NASA; SpaceX; M. Häggström |
+
+Benchmark tooling dependencies (`requirements.txt`) are BSD-3-Clause, MIT or MIT-CMU.
+
+## Evaluator metrics
+
+`bench/eval/` (`evaluate(problem, result, truth)`, CLI `python -m bench.eval`). All
+geometry is canvas px; tolerance **t = 0.5 px**: a box violates something only if the box
+shrunk by t on every side still intersects it (label–label: overlap > t in both axes).
+Hard/soft/ignore come from the effective options (defaults.md ← preset ← problem).
+
+| group | metric | definition |
+|---|---|---|
+| placement | `placed_rate` | placed / items |
+| | `placed_weighted` | Σ_placed g(rank) / Σ_all g(rank), g(r) = 1/log2(r + 2); rank = the result's `priority.rank`, else the reference priority order (input order without priorities) |
+| | `required_placed` | every `required` item is placed |
+| hard | `hard.total` and breakdown | `label_label` (pairs), `label_item` (label vs another item's true mark, `items` hard), `own_mark` (external label vs own mark: `hard` = intersects, `partial:f` = covers > f + 0.01 of the mark), `internal_outside` (internal label not inside its shape), `class:<k>` (hard vector classes from the problem and truth.json; raster classes: integral of the §4.6 pixel mask over the shrunk box > 0), `canvas_edge` (outside the canvas/region minus padding, unless `allow_outside`), `leader_leader` (proper crossings, contacts within t of an endpoint ignored), `leader_label` (leader or underline through another label), `leader_own_label` (leader enters its own label; last segment exempt for `port: baseline`), `leader_item` / `leader_class:<k>` (when hard for leaders), `leader_canvas` |
+| soft coverage | `coverage.<class>.{mean,max,touching}` | covered px² / label px² per placed label (union area: exact clipping for one primitive, 1/8 px point sampling otherwise, ≤ 6 thin strokes: clipped length × width; raster classes: integral of the value map), averaged; also `items` (other marks) and `labels` (other labels); classes ignored for labels are skipped |
+| leaders | `crossings`, `label_intersections`, `length_mean_em`, `length_max_em`, `bends_mean`, `rate` | pairs of crossing leaders (always counted), leader–other-label pairs, polyline length / label font size, points − 2 |
+| ambiguity | `ambiguity.rate` | fraction of placed labels whose nearest item shape is not their own: signed distance from the label box (min over box points; ≤ 0 when overlapping); leadered labels: from the leader's first point |
+| shape fidelity | `adjacent_gap_mean`, `_abs_mean`, `_max_abs`, `adjacent_touch_rate` | gap = signed distance(box, own shape) − `placement.offset` for adjacent/slider labels without leader (target 0; touch = \|gap\| ≤ t) |
+| | `own_mark_violations`, `internal_outside` | as above |
+| | `internal_eligible`, `internal_rate` | placed items whose shape can contain the placed box grown by `placement.inner_padding` (circles exactly, rects/ellipses at the center, polygons at the pole of inaccessibility); rate = fraction of them placed internally |
+| position | `position.rank_mean`, `hist` | PerceptPPO rank (top 0, right 1, bottom 2, left 3, top-right 4, bottom-right 5, top-left 6, bottom-left 7) of adjacent labels by `anchor_side` |
+| priority | `inversions` | **removal test**: an omitted h counts if any of its fixed adjacent positions (support-function placement around the true shape ⊕ offset, spec §6.1: the 8 positions, or only those of an explicit `position_order` list, when the `adjacent` model is enabled; area anchors also their pole unless `internal: never`) is free given only the placed labels/leaders of key ≥ key(h), the marks of all other items and the hard classes; conservative: the candidate box is *grown* by t; key = (required, tier, reserved, band(score)); items without such candidates (e.g. `models: ["distant"]`) are counted in `removal_untestable` |
+| | `prefix_length`, `prefix_rate` | items at the start of the priority order that are all placed |
+| | `ndcg_at_k` | k = placed; DCG = Σ_j g(rank of the j-th placed in rank order)/log2(j + 2), normalized by the ideal (the top-k); 1 iff the placed set is a prefix |
+| | `coverage.satisfaction` | groups of `priority.coverage.by` (canonical JSON of the value) with ≥ min(min_per_group, group size) placed labels / groups |
+| | `rank_source`, `reported_inversions` | where ranks came from; the result's own stat for comparison |
+| text | `wrapped`, `alternative`, `truncated`, `shrunk` | fractions of placed text labels (incl. composite text parts): > 1 line without wrap settings, `used` = `alternative:i`, `used` = `truncated`, `scale` < 1 or smaller font |
+| runtime | `runtime_ms`, `wall_ms` (runner: median, p95, runs), `iterations`, `time_guard_hit` | from `stats` and the runner |
+| checks | `result_check` | result schema errors, unknown/missing/duplicate ids, placed without box |
+| stability | `displacement_mean_px`/`_median_px`/`_mean_em`, `flip_rate`, `added_total`, `removed_total`, `nesting_rate`, `nesting_fraction_mean` | consecutive frames: change of (box center − anchor) for labels placed in both; side flips; labels appearing/disappearing among items visible in both; zoom-in steps with P_t ∩ V_{t+1} ⊆ P_{t+1} |
+
+The **reference priority** (used when a result does not report `priority` for every
+placement) implements `item.priority/tier/required`, `priority.terms` (`attr`, `expr` via
+a Python implementation of `spec/expr.peg`, transforms, `rank`/`minmax`/`none`
+normalization), `priority.tiers`, `priority.coverage` reservations and the tie rules. The
+built-in terms are approximated (their exact definitions live in the engine):
+outlierness = mean distance to the k nearest anchors, isolation = nearest-anchor distance,
+crowding = −anchors within 4 em, label_size, mark_size, centrality = −distance to
+`priority.focus`, degree = `attrs.degree`, input_order = −index.
+
+Text measurement for omitted items (removal test) re-implements spec §5.2 simple shaping
+(cmap, hmtx, GPOS kern pair adjustment with IgnoreMarks, typo metrics) and §5.3 line
+breaking with fontTools on the bundled Noto Sans; the label box is the first normal
+variant (`balanced(L_min)` under wrap settings).
+
+## Renderer
+
+`bench/render.py` draws, identically for every solver: background (embedded raster, SVG
+embedded as image in SVG output, `<config>.bg.png` for PNG output), vector obstacles
+(only without a background image), item marks with their true shapes (area anchors
+dashed), label boxes, text at the reported `baseline_offsets` and `x_offset` with Noto Sans
+from `fonts/` (PNG: glyphs positioned with the same GPOS kerning as the measurement),
+composite icon parts, leaders and underlines, and unplaced items as red ×. PNG output uses
+Pillow (2× supersampling); no LGPL rasterizer is involved.
+
+## Runner
+
+`bench/run.py` discovers problems from the scenario manifests, runs every solver
+`--runs` times (default 7; runtime median and p95 by nearest rank, wall time and
+`stats.runtime_ms`), checks determinism (identical placements across runs), evaluates the
+last result (with the truth), renders PNGs (`--svg`: also SVGs; `--no-render`: none) and
+writes `bench-report/results.json` and a static `bench-report/index.html` (per-scenario
+tables and images side by side, each image linked to its metrics JSON; sequence table).
+Solvers: built-in `naive` and `greedy`, or `NAME=COMMAND` with `{problem}` and `{result}`
+placeholders (`--timeout` seconds per run, default 600). Sequences are solved frame by
+frame; frame t+1 gets `warm_start.placements` = frame t's placements with each box shifted
+by its anchor's movement. `--suite quick` = configs marked `quick` (one small config per
+scenario) + the quick sequence; `--suite full` = everything; `--scenario` restricts to
+scenario ids.
+
+Baselines (they exist so the pipeline is testable without the engine and as reference
+rows): `naive` puts every label top-right of its true shape (area anchors: internal at the
+pole) without collision handling; `greedy` processes items in the reference priority order
+and takes the first position of the item's position order (area anchors: their pole
+first) that stays in the label area and is free of placed labels, other marks and hard
+vector/raster classes. It always uses the adjacent model (no leaders, no degradation, it
+ignores `models`) and does not parse SVG backgrounds.
+
+## Determinism and reproducibility
+
+Fixed seeds everywhere (jitter, permutations, layouts, k-means, SVD, t-SNE); JSON is
+written with sorted keys and floats rounded to 3 decimals; PNGs are encoded without
+metadata. Rebuilding every scenario with the same inputs gives byte-identical problem,
+truth and background files (checked for all scenarios). The t-SNE of scenario 04 runs with
+single-threaded BLAS/OpenMP so its float reductions do not depend on the thread count;
+results can still differ across numpy/scikit-learn versions or CPU architectures, which
+is why the embedding is cached and the versions are pinned.
+
+## Spec findings (reported, not changed here)
+
+* `svgClassRule.class`, `svgSource.default_class` and `rasterSource.classmap` values are
+  `oneOf [className, const "ignore"]`, but `"ignore"` also matches the `className`
+  pattern, so the documented value `"ignore"` never validates (oneOf requires exactly one
+  match). Fix: `anyOf`, or exclude `ignore` from `className`.
+* Composite labels: the defaults of `gap` and of the parts' `padding` are not specified
+  (the benchmark always sets both explicitly; the evaluator assumes 0 when absent).
+* The built-in priority terms (`outlierness`, `isolation`, `crowding`, …) have no normative
+  definition in spec.md; the evaluator's fallbacks are listed above.

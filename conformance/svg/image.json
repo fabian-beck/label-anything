@@ -1,0 +1,56 @@
+{
+  "kind": "svg",
+  "name": "images",
+  "description": "<image> is ink: its (transformed) rectangle as a filled polygon; it counts as filled; missing width/height means no geometry (intrinsic sizes are unknown).",
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"300\" height=\"200\">",
+    "  <image id=\"i1\" x=\"10\" y=\"10\" width=\"50\" height=\"30\" href=\"data:image/png;base64,AAAA\"/>",
+    "  <image id=\"i2\" x=\"100\" y=\"100\" width=\"50\" height=\"30\" xlink:href=\"x.png\" transform=\"rotate(30 100 100)\"/>",
+    "  <image id=\"i3\" x=\"10\" y=\"100\" width=\"50\" href=\"x.png\"/>",
+    "</svg>"
+  ],
+  "expect": {
+    "classes": {
+      "ink": {
+        "count": 2,
+        "polygons": 2,
+        "fill_area": 3000
+      }
+    },
+    "geometry": [
+      {
+        "id": "i1",
+        "fill_area": 1500,
+        "bbox": [
+          10,
+          10,
+          50,
+          30
+        ],
+        "vertices": 4
+      },
+      {
+        "id": "i2",
+        "fill_area": 1500,
+        "bbox": [
+          85.0,
+          100,
+          58.30127,
+          50.980762
+        ]
+      },
+      {
+        "id": "i3",
+        "count": 0
+      }
+    ],
+    "elements": {
+      "i1": {
+        "filled": true
+      },
+      "i3": {
+        "bbox": null
+      }
+    }
+  }
+}

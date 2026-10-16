@@ -122,13 +122,15 @@ pub fn slot_candidate(
     c
 }
 
-/// Boundary candidates for the given variants.
+/// Boundary candidates for the given variants. Label boxes for which `keep(vi, box)` is
+/// false are skipped before their leaders are built.
 pub fn boundary_candidates(
     model: &Model,
     obs: &Obstacles,
     item: &Item,
     variants: &[Variant],
     vis: &[usize],
+    keep: &dyn Fn(usize, &Rect) -> bool,
     out: &mut Vec<Cand>,
 ) {
     let Some(area) = obs.label_area.or(model.canvas) else {
@@ -141,12 +143,21 @@ pub fn boundary_candidates(
         let v = &variants[vi];
         let (hw, hh) = (v.w * 0.5, v.h * 0.5);
         for side in &model.placement.boundary.sides {
+            // a label longer than the side cannot be stacked along it
+            let vertical = side == "left" || side == "right";
+            if (vertical && v.h > area.h()) || (!vertical && v.w > area.w()) {
+                continue;
+            }
             // candidate rows: at the anchor height and a few offsets (for packing)
             let offsets = [0.0, -1.0, 1.0, -2.0, 2.0, -3.0, 3.0];
             for (k, &off) in offsets.iter().enumerate() {
                 let (rect, port) = match side.as_str() {
                     "left" | "right" => {
-                        let y = (item.anchor.y + off * v.h).clamp(area.y0 + hh, area.y1 - hh);
+                        let y = crate::math::clampf(
+                            item.anchor.y + off * v.h,
+                            area.y0 + hh,
+                            area.y1 - hh,
+                        );
                         if side == "left" {
                             let x0 = area.x0 + margin;
                             (Rect::new(x0, y - hh, x0 + v.w, y + hh), P::new(x0 + v.w, y))
@@ -156,7 +167,11 @@ pub fn boundary_candidates(
                         }
                     }
                     _ => {
-                        let x = (item.anchor.x + off * v.w).clamp(area.x0 + hw, area.x1 - hw);
+                        let x = crate::math::clampf(
+                            item.anchor.x + off * v.w,
+                            area.x0 + hw,
+                            area.x1 - hw,
+                        );
                         if side == "top" {
                             let y0 = area.y0 + margin;
                             (Rect::new(x - hw, y0, x + hw, y0 + v.h), P::new(x, y0 + v.h))
@@ -166,6 +181,9 @@ pub fn boundary_candidates(
                         }
                     }
                 };
+                if !keep(vi, &rect) {
+                    continue;
+                }
                 let start = crate::leaders::leader_start(model, item, port);
                 let pts = match style {
                     LeaderStyle::Orthogonal | LeaderStyle::Elbow => {

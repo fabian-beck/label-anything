@@ -1,0 +1,9 @@
+{
+  "kind": "svg",
+  "name": "not XML",
+  "description": "Must fail with a structured 'parse' error.",
+  "svg": "hello world",
+  "expect": {
+    "error": "parse"
+  }
+}

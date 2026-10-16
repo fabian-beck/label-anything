@@ -111,6 +111,16 @@ pub struct Obstacles {
     pub index_cell: f64,
 }
 
+impl Obstacles {
+    /// Whether some relaxable class is hard (otherwise the `soft_overlap` ladder step
+    /// cannot change anything: every relaxed-feasible candidate is feasible).
+    pub fn any_relaxable_hard(&self) -> bool {
+        self.classes
+            .iter()
+            .any(|c| c.relaxable && (c.label.is_hard() || c.leader.is_hard()))
+    }
+}
+
 /// Choose the grid cell size (spec §4.1).
 pub fn grid_cell(model: &Model, min_font: f64) -> f64 {
     match model.grid_cell {

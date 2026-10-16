@@ -1,0 +1,9 @@
+{
+  "kind": "svg",
+  "name": "unbound prefix",
+  "description": "Must fail with a structured 'parse' error.",
+  "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\"><x:rect/></svg>",
+  "expect": {
+    "error": "parse"
+  }
+}

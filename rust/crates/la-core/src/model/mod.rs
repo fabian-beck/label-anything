@@ -629,8 +629,11 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         let tol = source_opt(src, "obstacles.svg", "tolerance")
             .as_f64()
             .unwrap_or(0.25);
-        let measure =
-            |t: &str, size: f64, _fam: &str, _w: u16| t.chars().count() as f64 * 0.55 * size;
+        // SVG text is measured with the bundled fonts (simple shaping)
+        let book = crate::labels::bundled_fonts();
+        let measure = |t: &str, size: f64, fam: &str, w: u16| {
+            book.font(book.resolve(fam, w, false)).width(t, size)
+        };
         let doc = backend
             .load(&markup, canvas.map(|c| (c.w(), c.h())), tol, &measure)
             .map_err(|m| err(format!("{ptr}/source"), "invalid_value", m))?;
@@ -655,11 +658,11 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     }
 
     // --- items ---
-    let items_json = problem
+    let items_json: &[Value] = problem
         .get("items")
         .and_then(|v| v.as_array())
-        .cloned()
-        .unwrap_or_default();
+        .map(|v| v.as_slice())
+        .unwrap_or(&[]);
     let global_models = Models::from_names(&o.strings("placement.models"));
     let user_set_models = lookup(problem, "placement.models").is_some();
     let mut items = Vec::with_capacity(items_json.len());

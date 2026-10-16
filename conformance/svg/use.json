@@ -1,0 +1,147 @@
+{
+  "kind": "svg",
+  "name": "use and symbol",
+  "description": "<use> with href and xlink:href, x/y after transform, symbols with viewBox scaled into width/height, use of groups and of other uses; instance geometry is attributed to the outermost <use> (rules on the referenced elements do not apply); styles inherit from the <use>; missing and circular references are ignored with warnings.",
+  "tolerance": 0.1,
+  "classes": [
+    {
+      "selector": ".tpl",
+      "class": "template"
+    },
+    {
+      "selector": "#u1, #u2",
+      "class": "tile"
+    },
+    {
+      "selector": "#u3",
+      "class": "symbol"
+    },
+    {
+      "selector": "#u4",
+      "class": "pair"
+    },
+    {
+      "selector": "use",
+      "class": "line"
+    }
+  ],
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"300\" height=\"200\">",
+    "  <defs>",
+    "    <rect id=\"sq\" class=\"tpl\" width=\"10\" height=\"10\"/>",
+    "    <path id=\"plain\" d=\"M 0 0 H 20\"/>",
+    "    <symbol id=\"sym\" viewBox=\"0 0 10 10\"><circle cx=\"5\" cy=\"5\" r=\"5\"/></symbol>",
+    "    <g id=\"pair\" class=\"tpl\"><use href=\"#sq\"/><use href=\"#sq\" x=\"20\"/></g>",
+    "    <g id=\"loop\"><use href=\"#loop\"/></g>",
+    "  </defs>",
+    "  <use id=\"u1\" href=\"#sq\" x=\"10\" y=\"10\"/>",
+    "  <use id=\"u2\" xlink:href=\"#sq\" x=\"30\" y=\"10\" transform=\"scale(2)\"/>",
+    "  <use id=\"u3\" href=\"#sym\" x=\"100\" y=\"0\" width=\"40\" height=\"40\"/>",
+    "  <use id=\"u4\" href=\"#pair\" x=\"150\" y=\"100\"/>",
+    "  <use id=\"u5\" href=\"#plain\" x=\"10\" y=\"150\" style=\"fill: none; stroke: black; stroke-width: 2\"/>",
+    "  <use id=\"u6\" href=\"#sq\" style=\"display: none\"/>",
+    "  <use id=\"u7\" href=\"#nothing\"/>",
+    "  <use id=\"u8\" href=\"#loop\"/>",
+    "  <use id=\"u9\" href=\"other.svg#sq\"/>",
+    "</svg>"
+  ],
+  "expect": {
+    "warnings": [
+      "ignored",
+      "ignored",
+      "ignored"
+    ],
+    "classes": {
+      "tile": {
+        "count": 2,
+        "polygons": 2,
+        "fill_area": 500,
+        "bbox": [
+          10,
+          10,
+          70,
+          30
+        ]
+      },
+      "symbol": {
+        "count": 1,
+        "fill_area": 1256.637061,
+        "bbox": [
+          100,
+          0,
+          40,
+          40
+        ]
+      },
+      "pair": {
+        "count": 2,
+        "fill_area": 200,
+        "bbox": [
+          150,
+          100,
+          30,
+          10
+        ]
+      },
+      "line": {
+        "count": 1,
+        "polylines": 1,
+        "stroke_length": 20,
+        "stroke_width": [
+          2,
+          2
+        ]
+      }
+    },
+    "elements": {
+      "sq": {
+        "drawn": false,
+        "bbox": null,
+        "filled": true
+      },
+      "u2": {
+        "drawn": true,
+        "bbox": [
+          60,
+          20,
+          20,
+          20
+        ]
+      },
+      "u4": {
+        "bbox": [
+          150,
+          100,
+          30,
+          10
+        ]
+      },
+      "u5": {
+        "filled": false,
+        "stroked": true
+      },
+      "u6": {
+        "drawn": false,
+        "bbox": null
+      },
+      "u7": {
+        "bbox": null
+      }
+    },
+    "geometry": [
+      {
+        "id": "u3",
+        "count": 1,
+        "fill_area": 1256.637061
+      },
+      {
+        "id": "pair",
+        "count": 0
+      },
+      {
+        "id": "sq",
+        "count": 0
+      }
+    ]
+  }
+}
