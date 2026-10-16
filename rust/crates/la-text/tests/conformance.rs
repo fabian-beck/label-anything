@@ -1,13 +1,15 @@
 //! Runs the `text` conformance cases in `conformance/text/*.json` (see
 //! `tools/text/gen_text_cases.py` for the keys). Widths must match within the case's
-//! tolerance and, stricter, be bit-identical to the reference values.
+//! tolerance and, stricter, be bit-identical to the reference values. The wrapping cases
+//! run twice: with the closure `|s| font.width(s, size)` and with `Measure::Font` (lines
+//! measured with `MeasuredText`), whose variants must be bit-identical to the closure's.
 #![cfg(feature = "bundled-font")]
 
 use std::path::{Path, PathBuf};
 
 use label_anything_text::{
     balanced_wrap, break_opportunities, extra_wrap_variants, greedy_wrap, truncate_end,
-    truncate_middle, wrap_variants, Font, FontBook, TextVariant, Truncate, WrapOptions,
+    truncate_middle, wrap_variants, Font, FontBook, Measure, TextVariant, Truncate, WrapOptions,
 };
 use serde_json::Value;
 
@@ -88,12 +90,43 @@ fn check_variants(errors: &mut Vec<String>, context: &str, got: &[TextVariant], 
     }
 }
 
-fn run_case(name: &str, case: &Value, errors: &mut Vec<String>) -> usize {
+/// Variants of the prepared path that are not bit-identical to the closure's.
+fn check_same_bits(
+    errors: &mut Vec<String>,
+    context: &str,
+    got: &[TextVariant],
+    closure: &[TextVariant],
+) {
+    let bits = |v: &[TextVariant]| -> Vec<(Vec<String>, Vec<u64>, bool)> {
+        v.iter()
+            .map(|v| {
+                (
+                    v.lines.clone(),
+                    v.widths.iter().map(|w| w.to_bits()).collect(),
+                    v.truncated,
+                )
+            })
+            .collect()
+    };
+    if bits(got) != bits(closure) {
+        errors.push(format!(
+            "{context}: {got:?} differs from the closure's {closure:?}"
+        ));
+    }
+}
+
+/// `prepared`: measure with `Measure::Font` instead of the closure.
+fn run_case(name: &str, case: &Value, errors: &mut Vec<String>, prepared: bool) -> usize {
     assert_eq!(case["kind"], "text", "{name}");
     let mut book = FontBook::with_bundled();
     let font = load_font(&mut book, &case["font"]);
     let size = case["size"].as_f64().expect("size");
-    let measure = |s: &str| font.width(s, size);
+    let closure = |s: &str| font.width(s, size);
+    let measure = if prepared {
+        Measure::Font { font, size }
+    } else {
+        Measure::Callback(&closure)
+    };
     let mut checked = 0;
     let mut fail = |message: String| errors.push(format!("{name}: {message}"));
 
@@ -154,7 +187,7 @@ fn run_case(name: &str, case: &Value, errors: &mut Vec<String>) -> usize {
     }
     for entry in case["wrap"].as_array().into_iter().flatten() {
         let (text, w) = (str_of(&entry["text"]), entry["max_width"].as_f64().unwrap());
-        let got = greedy_wrap(text, w, &measure);
+        let got = greedy_wrap(text, w, measure);
         if got != strings(&entry["lines"]) {
             fail(format!(
                 "greedy({text:?}, {w}) = {got:?}, expected {:?}",
@@ -167,7 +200,7 @@ fn run_case(name: &str, case: &Value, errors: &mut Vec<String>) -> usize {
         let text = str_of(&entry["text"]);
         let n = entry["lines_target"].as_u64().unwrap() as usize;
         let m = opt_width(&entry["max_width"]);
-        let got = balanced_wrap(text, n, m, &measure);
+        let got = balanced_wrap(text, n, m, measure);
         if got != strings(&entry["lines"]) {
             fail(format!(
                 "balanced({text:?}, {n}, {m:?}) = {got:?}, expected {:?}",
@@ -179,12 +212,12 @@ fn run_case(name: &str, case: &Value, errors: &mut Vec<String>) -> usize {
     for entry in case["truncate"].as_array().into_iter().flatten() {
         let (text, w) = (str_of(&entry["text"]), entry["max_width"].as_f64().unwrap());
         let got = match str_of(&entry["mode"]) {
-            "end" => vec![truncate_end(text, w, &measure)],
+            "end" => vec![truncate_end(text, w, measure)],
             _ => truncate_middle(
                 text,
                 w,
                 entry["max_lines"].as_u64().unwrap_or(1) as usize,
-                &measure,
+                measure,
             ),
         };
         let expected = match entry.get("result") {
@@ -212,32 +245,39 @@ fn run_case(name: &str, case: &Value, errors: &mut Vec<String>) -> usize {
                 _ => Truncate::None,
             },
         };
-        let got = wrap_variants(text, &opts, &measure);
-        check_variants(
-            errors,
-            &format!("{name}: variants({text:?}, {o})"),
-            &got,
-            &entry["variants"],
-        );
+        let got = wrap_variants(text, &opts, measure);
+        let context = format!("{name}: variants({text:?}, {o})");
+        check_variants(errors, &context, &got, &entry["variants"]);
+        if prepared {
+            check_same_bits(
+                errors,
+                &context,
+                &got,
+                &wrap_variants(text, &opts, &closure),
+            );
+        }
         checked += 1;
     }
     for entry in case["extra_variants"].as_array().into_iter().flatten() {
         let text = str_of(&entry["text"]);
         let n = entry["max_lines"].as_u64().unwrap() as usize;
-        let got = extra_wrap_variants(text, n, &measure);
-        check_variants(
-            errors,
-            &format!("{name}: extra_variants({text:?}, {n})"),
-            &got,
-            &entry["variants"],
-        );
+        let got = extra_wrap_variants(text, n, measure);
+        let context = format!("{name}: extra_variants({text:?}, {n})");
+        check_variants(errors, &context, &got, &entry["variants"]);
+        if prepared {
+            check_same_bits(
+                errors,
+                &context,
+                &got,
+                &extra_wrap_variants(text, n, &closure),
+            );
+        }
         checked += 1;
     }
     checked
 }
 
-#[test]
-fn text_conformance() {
+fn run_cases(prepared: bool) {
     let mut files: Vec<PathBuf> = std::fs::read_dir(case_dir())
         .expect("conformance/text exists")
         .map(|entry| entry.expect("readable").path())
@@ -253,6 +293,7 @@ fn text_conformance() {
             &path.file_name().unwrap().to_string_lossy(),
             &case,
             &mut errors,
+            prepared,
         );
     }
     assert!(
@@ -262,4 +303,14 @@ fn text_conformance() {
         errors.join("\n")
     );
     assert!(checked > 500, "only {checked} checks");
+}
+
+#[test]
+fn text_conformance() {
+    run_cases(false);
+}
+
+#[test]
+fn text_conformance_measured_text() {
+    run_cases(true);
 }

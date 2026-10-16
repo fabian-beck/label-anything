@@ -1,6 +1,6 @@
 import { CharMap } from "./cmap.js";
 import { TextError } from "./errors.js";
-import { Kerning } from "./kern.js";
+import { Kerning, type KerningRanges } from "./kern.js";
 import { Malformed, Reader } from "./reader.js";
 
 const tag = (name: string): number =>
@@ -179,6 +179,37 @@ export class Font {
       total += this.advances[glyph];
     }
     return this.kerning.isEmpty ? total : total + this.kerning.adjustment(glyphs, n);
+  }
+
+  /**
+   * @internal The glyphs of the code points of `text` (the first `n` entries of `glyphs`) and
+   * the sums of the advances of the first `i` of them (`advances[i]`, `i <= n`), for
+   * {@link MeasuredText}.
+   */
+  glyphRun(text: string): { glyphs: Uint16Array; n: number; advances: Float64Array } {
+    const glyphs = new Uint16Array(text.length);
+    const advances = new Float64Array(text.length + 1);
+    let n = 0;
+    for (let i = 0; i < text.length; i++) {
+      let cp = text.charCodeAt(i);
+      if (cp >= 0xd800 && cp <= 0xdbff && i + 1 < text.length) {
+        const low = text.charCodeAt(i + 1);
+        if (low >= 0xdc00 && low <= 0xdfff) {
+          cp = 0x10000 + ((cp - 0xd800) << 10) + (low - 0xdc00);
+          i++;
+        }
+      }
+      const glyph = this.cmap.glyph(cp);
+      glyphs[n] = glyph;
+      advances[n + 1] = advances[n] + this.advances[glyph];
+      n++;
+    }
+    return { glyphs, n, advances: advances.subarray(0, n + 1) };
+  }
+
+  /** @internal The kerning of the ranges of `glyphs[0..n)`, for {@link MeasuredText}. */
+  kerningRanges(glyphs: Uint16Array, n: number): KerningRanges {
+    return this.kerning.ranges(glyphs, n);
   }
 
   /**

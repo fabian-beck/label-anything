@@ -211,6 +211,13 @@ pub trait Env {
     fn measure(&self, _text: &str, _font: &FontSpec) -> Option<TextMetrics> {
         None
     }
+    /// Whether [`Env::measure`] may return `Some`. Return `false` when it never does: text
+    /// is then measured with the fonts alone, so wrapping can measure the candidate lines of
+    /// simple-shaped text in constant time (`la_text::Measure::Font`, ADR 0018). The
+    /// default, `true`, is correct for every environment.
+    fn has_measure_callback(&self) -> bool {
+        true
+    }
     /// Host priority callback: `(tier, score)` per item, evaluated once per item.
     fn priority(&self, _item: &serde_json::Value, _index: usize) -> Option<(Option<i64>, f64)> {
         None
@@ -238,4 +245,8 @@ pub trait Env {
 #[derive(Default)]
 pub struct BasicEnv;
 
-impl Env for BasicEnv {}
+impl Env for BasicEnv {
+    fn has_measure_callback(&self) -> bool {
+        false
+    }
+}

@@ -70,6 +70,13 @@ timing fields and the implementation name); `test/random-problems.test.ts` compa
 random problems (`LA_RANDOM_PARITY`) with the Rust CLI (`label-anything place -
 --no-clock`) when `rust/target/release/label-anything` exists.
 
+Wrapping and truncation take a `la_text::Measure`: `Measure::Font { font, size }` is a
+`FontMeasure` (`{ font, size }`) in TypeScript, `Measure::Callback(&f)` a plain function.
+`Measurer::wrap_measure` picks the font measure when there is no host measurement
+(`Env::has_measure_callback()` is `false`; in TypeScript: no `PlaceOptions.measure`) and
+shaping is `simple`, or `auto` for a text without complex scripts (ADR 0018). Both measures
+give identical results, so where TypeScript lacks full shaping either choice is correct.
+
 ## Names
 
 * Functions, methods, fields and locals: `snake_case` → `camelCase`

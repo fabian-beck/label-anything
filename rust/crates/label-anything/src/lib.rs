@@ -92,6 +92,9 @@ impl Env for NativeEnv {
             0.0
         }
     }
+    fn has_measure_callback(&self) -> bool {
+        false
+    }
 }
 
 /// Validate a problem.

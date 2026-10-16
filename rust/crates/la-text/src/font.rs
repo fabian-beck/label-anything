@@ -231,8 +231,18 @@ impl Font {
     }
 
     #[inline]
-    fn glyph(&self, c: char) -> u16 {
+    pub(crate) fn glyph(&self, c: char) -> u16 {
         self.cmap.glyph(u32::from(c))
+    }
+
+    /// The `hmtx` advance of a glyph, in font units.
+    #[inline]
+    pub(crate) fn glyph_advance(&self, glyph: u16) -> i64 {
+        i64::from(self.advances[usize::from(glyph)])
+    }
+
+    pub(crate) fn kerning(&self) -> &Kerning {
+        &self.kerning
     }
 
     /// Simple shaping (spec §5.2): the sum of the `hmtx` advances of the glyphs the code

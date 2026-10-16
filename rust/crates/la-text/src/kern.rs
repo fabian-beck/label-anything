@@ -19,11 +19,17 @@
 //!   summed over its format 0 subtables that are horizontal, not cross-stream and not
 //!   minimum values (Apple: not vertical, not cross-stream, no variation).
 //! * A malformed GDEF, GPOS or `kern` table is treated as absent.
+//!
+//! [`Kerning::ranges`] prepares the adjustments of every range of one glyph sequence, so
+//! that `ranges.adjustment(start, end)` equals `adjustment(&glyphs[start..end])` in
+//! constant time (see [`Track`]).
 
 use crate::reader::{Malformed, Parsed, Reader};
 
 const KERN: u32 = u32::from_be_bytes(*b"kern");
 const IGNORE_MARKS: u16 = 0x0008;
+/// [`Track::runs`] entry of a pair that does not skip its second glyph.
+const NO_RUN: u32 = u32::MAX;
 
 /// Marks (GDEF glyph class 3) and the kern lookups of a font.
 pub(crate) struct Kerning {
@@ -61,6 +67,164 @@ impl Kerning {
             .iter()
             .map(|lookup| lookup.apply(glyphs, &self.marks))
             .sum()
+    }
+
+    /// Prepares the adjustments of every range of `glyphs`, in time linear in its length.
+    pub(crate) fn ranges(&self, glyphs: &[u16]) -> KerningRanges {
+        let mut non_marks = Vec::new();
+        let mut eligible = Vec::new();
+        if self.lookups.iter().any(|lookup| lookup.ignore_marks) {
+            eligible.reserve(glyphs.len() + 1);
+            eligible.push(0);
+            for &glyph in glyphs {
+                if !self.marks[usize::from(glyph)] {
+                    non_marks.push(glyph);
+                }
+                eligible.push(non_marks.len() as u32);
+            }
+        }
+        // Lookups whose walks visit every position are summed per IgnoreMarks flag; a lookup
+        // with a pair that skips its second glyph gets a track of its own.
+        let mut sums: [Vec<i64>; 2] = [Vec::new(), Vec::new()];
+        let mut tracks = Vec::new();
+        for lookup in &self.lookups {
+            let sequence = if lookup.ignore_marks {
+                &non_marks
+            } else {
+                glyphs
+            };
+            let Some((deltas, skips)) = lookup.pairs(sequence) else {
+                continue;
+            };
+            if skips.is_empty() {
+                let sum = &mut sums[usize::from(lookup.ignore_marks)];
+                if sum.is_empty() {
+                    *sum = deltas;
+                } else {
+                    sum.iter_mut().zip(deltas).for_each(|(s, d)| *s += d);
+                }
+            } else {
+                tracks.push(Track::skipping(lookup.ignore_marks, &deltas, &skips));
+            }
+        }
+        for (ignore_marks, deltas) in [false, true].into_iter().zip(sums) {
+            if !deltas.is_empty() {
+                tracks.push(Track::visiting_all(ignore_marks, deltas));
+            }
+        }
+        KerningRanges { eligible, tracks }
+    }
+}
+
+/// The kerning adjustments of every range of one glyph sequence ([`Kerning::ranges`]).
+#[derive(Clone, Debug)]
+pub(crate) struct KerningRanges {
+    /// `eligible[i]`: the number of non-marks among the first `i` glyphs, i.e. the position
+    /// of glyph `i` in the sequence an IgnoreMarks walk considers (empty if no lookup
+    /// ignores marks).
+    eligible: Vec<u32>,
+    tracks: Vec<Track>,
+}
+
+impl KerningRanges {
+    /// [`Kerning::adjustment`] of the glyphs `start..end` (`start <= end <= len`).
+    #[inline]
+    pub(crate) fn adjustment(&self, start: usize, end: usize) -> i64 {
+        self.tracks
+            .iter()
+            .map(|track| {
+                if track.ignore_marks {
+                    let first = self.eligible[start] as usize;
+                    track.adjustment(first, self.eligible[end] as usize)
+                } else {
+                    track.adjustment(start, end)
+                }
+            })
+            .sum()
+    }
+}
+
+/// The walk of one lookup over a glyph sequence, or the summed walks of several lookups
+/// that visit every position, prepared for ranges.
+///
+/// Positions are the glyphs the walk considers (the non-marks under IgnoreMarks, else all
+/// glyphs); pair `t` is `(t, t + 1)`. A walk adds the adjustment of the pair at each
+/// position it visits and moves on to the next position, or past it when the matching
+/// subtable skips its second glyph (ValueFormat2 ≠ 0). The walk over a range starts at its
+/// first position and adds the pairs that lie inside the range. Without skipping pairs it
+/// visits every position, so a range adds a contiguous run of pairs; with them, walks that
+/// start at different positions can visit different ones (`walk` below).
+#[derive(Clone, Debug)]
+struct Track {
+    ignore_marks: bool,
+    /// `walk[t]`: the sum of the adjustments a walk starting at position `t` adds up to the
+    /// end of the sequence (`walk[len] = 0`), so the pairs it adds from `t` up to a position
+    /// `u` it visits are `walk[t] − walk[u]`.
+    walk: Vec<i64>,
+    /// For a pair that skips its second glyph: the first pair of the run of consecutive such
+    /// pairs that contains it; [`NO_RUN`] for the other pairs. Empty if no pair skips.
+    runs: Vec<u32>,
+}
+
+impl Track {
+    /// A walk that visits every position: suffix sums of the pair adjustments.
+    fn visiting_all(ignore_marks: bool, deltas: Vec<i64>) -> Track {
+        let mut walk = deltas;
+        walk.push(0);
+        for t in (0..walk.len() - 1).rev() {
+            walk[t] += walk[t + 1];
+        }
+        Track {
+            ignore_marks,
+            walk,
+            runs: Vec::new(),
+        }
+    }
+
+    /// A walk that moves past the second glyph of the pairs marked in `skips`.
+    fn skipping(ignore_marks: bool, deltas: &[i64], skips: &[bool]) -> Track {
+        let len = deltas.len();
+        // the last position has no pair, so a skip lands at most on `len`
+        let mut walk = vec![0; len + 1];
+        for t in (0..len).rev() {
+            walk[t] = deltas[t] + walk[if skips[t] { t + 2 } else { t + 1 }];
+        }
+        let mut runs = vec![NO_RUN; len];
+        for t in 0..len {
+            if skips[t] {
+                runs[t] = if t > 0 && skips[t - 1] {
+                    runs[t - 1]
+                } else {
+                    t as u32
+                };
+            }
+        }
+        Track {
+            ignore_marks,
+            walk,
+            runs,
+        }
+    }
+
+    /// The adjustments the walk over positions `first..end` adds.
+    #[inline]
+    fn adjustment(&self, first: usize, end: usize) -> i64 {
+        if end < first + 2 {
+            return 0;
+        }
+        // The walk adds the pairs of the positions it visits before `end − 1` (the pair of
+        // `end − 1` crosses the end of the range). It reaches `end − 1`, unless it visits
+        // `last = end − 2` and that pair skips `end − 1`: then it reaches `end`. Within a run
+        // of skipping pairs a walk visits every other position, and a walk that starts before
+        // the run enters it at its first pair (only the pair before a position can skip it,
+        // and that one does not skip). So the walk visits `last` iff `last` has the parity of
+        // `max(first, run start)`.
+        let last = end - 2;
+        let stop = match self.runs.get(last) {
+            Some(&run) if run != NO_RUN && (first.max(run as usize) ^ last) & 1 == 0 => end,
+            _ => end - 1,
+        };
+        self.walk[first] - self.walk[stop]
     }
 }
 
@@ -164,6 +328,45 @@ impl PairLookup {
             i = next;
         }
         total
+    }
+
+    /// The pair `(first, second)` as [`PairLookup::apply`] matches it: `(adjustment, skip
+    /// second glyph)` of the first subtable that matches.
+    fn find(&self, first: u16, second: u16) -> Option<(i32, bool)> {
+        let first = usize::from(first);
+        for &(subtable, key) in
+            &self.slots[self.offsets[first] as usize..self.offsets[first + 1] as usize]
+        {
+            let subtable = &self.subtables[usize::from(subtable)];
+            if let Some(found) = subtable.find(key, second, &self.class_tables) {
+                return Some(found);
+            }
+        }
+        None
+    }
+
+    /// The pairs of consecutive glyphs of `sequence` (the glyphs this lookup's walk
+    /// considers): the adjustment of pair `(t, t + 1)` at index `t` (0 without a match; the
+    /// last entry is 0) and, if any pair skips its second glyph, which ones do. `None` if
+    /// no pair adjusts the advance.
+    fn pairs(&self, sequence: &[u16]) -> Option<(Vec<i64>, Vec<bool>)> {
+        let mut deltas = vec![0; sequence.len()];
+        let mut skips = Vec::new();
+        let mut adjusts = false;
+        for (t, pair) in sequence.windows(2).enumerate() {
+            let Some((delta, skip)) = self.find(pair[0], pair[1]) else {
+                continue;
+            };
+            deltas[t] = i64::from(delta);
+            adjusts |= delta != 0;
+            if skip {
+                if skips.is_empty() {
+                    skips = vec![false; sequence.len()];
+                }
+                skips[t] = true;
+            }
+        }
+        adjusts.then_some((deltas, skips))
     }
 }
 
@@ -614,4 +817,130 @@ fn parse_kern_table(kern: Reader, num_glyphs: u16) -> Parsed<Option<PairLookup>>
         slots.into_iter(),
     );
     Ok(builder.finish(true))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// xorshift64*: deterministic pseudo-random numbers for the property tests.
+    struct Rng(u64);
+
+    impl Rng {
+        fn below(&mut self, n: u64) -> u64 {
+            self.0 ^= self.0 >> 12;
+            self.0 ^= self.0 << 25;
+            self.0 ^= self.0 >> 27;
+            self.0.wrapping_mul(0x2545_F491_4F6C_DD1D) % n
+        }
+
+        fn delta(&mut self) -> i32 {
+            self.below(201) as i32 - 100
+        }
+    }
+
+    /// Random marks and 1–4 lookups (IgnoreMarks or not) of 1–3 subtables each: explicit
+    /// pairs or class pairs (including classes beyond the class count), skipping their
+    /// second glyph or not. Few glyphs and dense tables give long runs of skipping pairs.
+    fn random_kerning(rng: &mut Rng, num_glyphs: u16) -> Kerning {
+        let marks = (0..num_glyphs).map(|_| rng.below(4) == 0).collect();
+        let mut lookups = Vec::new();
+        for _ in 0..1 + rng.below(4) {
+            let mut builder = LookupBuilder::new(num_glyphs);
+            for _ in 0..1 + rng.below(3) {
+                let skip_second = rng.below(2) == 0;
+                let mut slots = Vec::new();
+                let subtable = if rng.below(2) == 0 {
+                    let (mut sets, mut records) = (Vec::new(), Vec::new());
+                    for first in 0..num_glyphs {
+                        if rng.below(3) == 0 {
+                            continue;
+                        }
+                        let start = records.len() as u32;
+                        for second in 0..num_glyphs {
+                            if rng.below(2) == 0 {
+                                records.push((second, rng.delta()));
+                            }
+                        }
+                        slots.push((first, sets.len() as u16));
+                        sets.push((start, records.len() as u32));
+                    }
+                    PairSubtable::Glyphs {
+                        skip_second,
+                        sets,
+                        records,
+                    }
+                } else {
+                    let (class1_count, class2_count) = (1 + rng.below(3), 1 + rng.below(3));
+                    let classes = (0..num_glyphs)
+                        .map(|_| rng.below(class2_count + 1) as u16)
+                        .collect();
+                    builder.class_tables.push(classes);
+                    builder.class_table_addresses.push(usize::MAX);
+                    for first in 0..num_glyphs {
+                        if rng.below(3) != 0 {
+                            slots.push((first, rng.below(class1_count) as u16));
+                        }
+                    }
+                    PairSubtable::Classes {
+                        skip_second,
+                        class2: builder.class_tables.len() - 1,
+                        class2_count: class2_count as u16,
+                        deltas: (0..class1_count * class2_count)
+                            .map(|_| rng.delta())
+                            .collect(),
+                    }
+                };
+                builder.push_subtable(subtable, slots.into_iter());
+            }
+            lookups.extend(builder.finish(rng.below(2) == 0));
+        }
+        Kerning { marks, lookups }
+    }
+
+    #[test]
+    fn ranges_equal_the_walk_over_every_range() {
+        let mut rng = Rng(0x9E37_79B9_7F4A_7C15);
+        let (mut skipping, mut long_runs) = (0, 0);
+        for _ in 0..400 {
+            let num_glyphs = 2 + rng.below(6) as u16;
+            let kerning = random_kerning(&mut rng, num_glyphs);
+            for _ in 0..8 {
+                let len = rng.below(25) as usize;
+                let glyphs: Vec<u16> = (0..len)
+                    .map(|_| rng.below(u64::from(num_glyphs)) as u16)
+                    .collect();
+                let ranges = kerning.ranges(&glyphs);
+                for track in ranges.tracks.iter().filter(|t| !t.runs.is_empty()) {
+                    skipping += 1;
+                    let runs = &track.runs;
+                    long_runs += (1..runs.len())
+                        .filter(|&t| runs[t] != NO_RUN && runs[t] as usize + 1 < t)
+                        .count();
+                }
+                for start in 0..=len {
+                    for end in start..=len {
+                        assert_eq!(
+                            ranges.adjustment(start, end),
+                            kerning.adjustment(&glyphs[start..end]),
+                            "glyphs {glyphs:?}, range {start}..{end}"
+                        );
+                    }
+                }
+            }
+        }
+        // the cases exercise walks with skipped glyphs, including runs of 3+ skipping pairs
+        assert!(skipping > 500 && long_runs > 500, "{skipping} {long_runs}");
+    }
+
+    #[test]
+    fn ranges_without_kerning() {
+        let kerning = Kerning {
+            marks: vec![false; 4],
+            lookups: Vec::new(),
+        };
+        let ranges = kerning.ranges(&[1, 2, 3]);
+        assert!(ranges.tracks.is_empty() && ranges.eligible.is_empty());
+        assert_eq!(ranges.adjustment(0, 3), 0);
+    }
 }

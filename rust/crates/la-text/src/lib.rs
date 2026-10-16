@@ -25,10 +25,15 @@
 //! # }
 //! ```
 //!
+//! [`MeasuredText`] prepares a text once and then measures any of its substrings in
+//! constant time, bit-identical to [`Font::width`].
+//!
 //! # Wrapping
 //!
-//! The wrapping functions work on code points and take a `measure` closure, so they work
-//! with any font, size or host-provided measurement:
+//! The wrapping functions work on code points and take a [`Measure`]: a font at a size
+//! ([`Measure::Font`], simple shaping; candidate lines are measured in constant time with
+//! [`MeasuredText`]) or a closure, so they work with any font, size or host-provided
+//! measurement:
 //!
 //! * [`break_opportunities`] — where a line may end;
 //! * [`greedy_wrap`], [`balanced_wrap`] — line breaking;
@@ -39,7 +44,7 @@
 //! ```
 //! use label_anything_text::{greedy_wrap, wrap_variants, WrapOptions};
 //!
-//! let measure = |s: &str| 6.0 * s.chars().count() as f64; // or |s| font.width(s, 12.0)
+//! let measure = |s: &str| 6.0 * s.chars().count() as f64; // or Measure::Font { font, size }
 //! assert_eq!(greedy_wrap("org.example.Foo", 72.0, &measure), ["org.example.", "Foo"]);
 //! assert_eq!(greedy_wrap("The quick brown fox", 100.0, &measure), ["The quick brown", "fox"]);
 //!
@@ -47,6 +52,19 @@
 //! let variants = wrap_variants("The quick brown fox", &opts, &measure);
 //! assert_eq!(variants[0].lines, ["The quick", "brown fox"]); // balanced
 //! assert_eq!(variants[0].widths, [54.0, 54.0]);
+//! ```
+//!
+//! ```
+//! # #[cfg(feature = "bundled-font")] {
+//! use label_anything_text::{extra_wrap_variants, FontBook, Measure};
+//!
+//! let book = FontBook::with_bundled();
+//! let font = book.font(book.resolve("default", 400, false));
+//! let text = "com.facebook.react.uimanager.ViewGroupManager";
+//! let fast = extra_wrap_variants(text, 3, Measure::Font { font, size: 10.0 });
+//! assert_eq!(fast, extra_wrap_variants(text, 3, &|s: &str| font.width(s, 10.0)));
+//! assert_eq!(fast[0].lines, ["com.facebook.react.", "uimanager.ViewGroupManager"]);
+//! # }
 //! ```
 //!
 //! # Features
@@ -64,6 +82,7 @@ mod cmap;
 mod error;
 mod font;
 mod kern;
+mod measured;
 mod reader;
 mod unicode;
 mod unicode_data;
@@ -73,8 +92,9 @@ pub use book::{FontBook, FontId};
 pub use breaks::break_opportunities;
 pub use error::TextError;
 pub use font::{Font, Shaping};
+pub use measured::MeasuredText;
 pub use unicode::needs_complex_shaping;
 pub use wrap::{
     balanced_wrap, extra_wrap_variants, greedy_wrap, truncate_end, truncate_middle, wrap_variants,
-    TextVariant, Truncate, WrapOptions,
+    Measure, TextVariant, Truncate, WrapOptions,
 };
