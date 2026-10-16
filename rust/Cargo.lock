@@ -535,7 +535,6 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "label-anything",
- "label-anything-core",
  "serde_json",
  "wasm-bindgen",
 ]

@@ -117,16 +117,16 @@ compiled.
 | `priority(item, index)` | Evaluated in JavaScript before the solve, once per item. The values are written into a copy of the problem: `item.priority = score` (unless the item has a `priority`) and, for `[tier, score]`, `item.tier = tier` (unless the item has a `tier`); `priority.terms` is dropped because the callback replaces it. Tiers rules, `required` and ties still apply. This is what the Rust core does with a native priority callback, so results agree. Must return a finite number or `[integer, finite number]` (else `TypeError`). |
 | `cost(candidate)` | Called for every candidate with `{itemId, box: {x, y, w, h}, leader}`; the value is added to its static cost. One call costs one JS↔WASM crossing (the argument object is built on the JavaScript side). Must return a finite number (else `TypeError`). |
 | `measure(text, font)` | Replaces the built-in text measurement (`font = {family, weight, italic, size}`); return `{width, ascent, descent}` in px or `null` for the built-in measurement of this text. It is also called with `""` for the vertical metrics of a font. Typical use: `CanvasRenderingContext2D.measureText` with the page's font. |
-| `progress(phase, fraction)` | Called when a phase starts (`"greedy"`, `"local"`, `"exact"`). |
-| `signal` | An `AbortSignal` (any object with `aborted`). `place` is synchronous and blocks the JavaScript thread, so the flag can only change between solves or inside one of the callbacks. If it is already aborted when `place` is called, the solve stops after the greedy phase (`stats.strategy_used == "greedy"`). The core reads it through `Env::cancelled` while solving, but does not poll it yet, so aborting from inside a callback has no effect so far. |
+| `progress(phase, fraction)` | Called when a phase starts (`"greedy"`, `"local"`, `"exact"`), per greedy priority band and every 256 local-search moves (spec §10.3a). |
+| `signal` | An `AbortSignal` (any object with `aborted`), the core's cancellation request (spec §10.3a): it is polled at every priority band and every 64 items of the greedy pass, every 256 local-search moves and every 4,096 exact-search nodes; once aborted the solver stops improving and returns a valid result with `stats.cancelled == true` (items not reached are `budget_exhausted`). `place` is synchronous and blocks the JavaScript thread, so the flag can only be set before the call (then nothing is placed) or from one of the callbacks, e.g. `progress`. |
 | `raster` | RGBA8 pixels `{width, height, data}` with `data` a `Uint8Array` or `Uint8ClampedArray` (an `ImageData` qualifies; any `ArrayBuffer` view of `width·height·4` bytes works). They are copied once into WebAssembly memory and replace the image of the first `obstacles.raster` source, whose options (mode, scale, class, …) still apply, or add a raster source with default options. Keep an `obstacles.raster` entry with any `source` (e.g. `"host"`) to set those options. Wrong sizes throw `RangeError`. |
 | `readFile(path)` | The only file access: called for `obstacles.svg.path`, raster `source` paths and font `file`s. Return the bytes as a `Uint8Array` (a string is taken as UTF-8 text). Without it, a file reference fails with a `PlaceError` (`invalid_value`, pointing at the field). In Node: `readFile: (p) => fs.readFileSync(p)`. |
 
 **Exceptions.** The first exception thrown by any callback stops all further callbacks
-(they are not called again), asks the solver to stop and is rethrown unchanged — the same
-object — from `place`. WebAssembly cannot unwind Rust frames, so "stop" means the core
-finishes the current solve without calling back into JavaScript and its result is
-discarded; no memory is leaked.
+(they are not called again), cancels the solve (the core stops at its next poll) and is
+rethrown unchanged — the same object — from `place`. WebAssembly cannot unwind Rust
+frames, so the core returns normally first and its result is discarded; no memory is
+leaked.
 
 ## Errors inside the module
 
@@ -217,18 +217,24 @@ checks it):
 ```sh
 rustup target add wasm32-unknown-unknown
 cargo install wasm-bindgen-cli --version 0.2.129
-cd ts && npm install
+npm install                                  # at the repository root (npm workspace)
 npm run build:wasm -w @label-anything/wasm   # cargo build + wasm-bindgen into wasm/
 npm run build                                # TypeScript (all packages)
-npm test                                     # vitest, all packages
+npx vitest run                               # all packages
 npm run test:browser -w @label-anything/wasm # Playwright + Chromium smoke test
+node examples/brief/js_6_2.mjs               # the brief's §6.2 example, verbatim
 ```
+
+The CI job `wasm` (`.github/workflows/ci.yml`) does exactly this on ubuntu-latest with
+Rust 1.97.0 and wasm-bindgen-cli 0.2.129, builds the native CLI for the equality tests,
+checks the size budget (gzip < 1 MB) and runs the smoke test in Chromium.
 
 The WebAssembly build uses its own Cargo profile (`wasm-release`, passed with `--config`:
 fat LTO, one codegen unit), so it does not invalidate native release builds. Options of
 `scripts/build-wasm.mjs`: `--no-default-features`, `--features …`, `--opt-level` (default
 `s`), `--core-opt-level` (default `3`), `--keep-names` (keep the name section for
-profiling). Without `wasm/`, the WebAssembly tests are skipped with a warning.
+profiling). Without `wasm/`, the WebAssembly tests are skipped with a warning (they fail
+instead when `LA_WASM_REQUIRED` is set, as in CI).
 
 Tests (`ts/packages/wasm-adapter/test`):
 
@@ -253,7 +259,8 @@ Tests (`ts/packages/wasm-adapter/test`):
 
 * `place` is synchronous: it blocks the thread it runs on. For large problems in a page,
   run it in a worker (`initSync` with a `WebAssembly.Module` sent from the main thread).
-* Cancellation: see `signal` above (only an already aborted signal has an effect today).
+* Cancellation from outside the call (a timer, a UI event) needs the solve to run in a
+  worker; on the calling thread only the callbacks can abort it.
 * The first `place` call after instantiation is slower than later ones because V8
   compiles the module lazily and optimizes hot functions while they run; see Performance.
 * WebAssembly memory grows to the peak need of the largest solve and is not returned to

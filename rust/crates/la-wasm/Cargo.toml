@@ -28,8 +28,6 @@ decode = ["label-anything/decode"]
 # not `workspace = true`: the facade's default features include `std-clock`
 # (`std::time::Instant` panics on wasm32-unknown-unknown) and `decode`
 label-anything = { path = "../label-anything", version = "0.1.0", default-features = false }
-# `la_core::geom::Rect` appears in the `Env` trait but is not re-exported by the facade
-la-core = { workspace = true }
 serde_json = { workspace = true }
 wasm-bindgen = { workspace = true }
 js-sys = { workspace = true }

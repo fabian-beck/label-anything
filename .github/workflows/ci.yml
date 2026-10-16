@@ -87,6 +87,47 @@ jobs:
       - name: Tests (incl. conformance, Rust parity fixtures and the JS helpers)
         run: npx vitest run
 
+  wasm:
+    name: WebAssembly package (@label-anything/wasm)
+    runs-on: ubuntu-latest
+    env:
+      LA_WASM_REQUIRED: "1" # the WebAssembly tests fail instead of being skipped without a build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.97.0" # pinned: the size budget and the measured sizes depend on it
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - name: wasm-bindgen CLI (exactly the wasm-bindgen crate version of rust/Cargo.lock)
+        run: cargo install wasm-bindgen-cli --version 0.2.129 --locked
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build the module and its glue (cargo + wasm-bindgen)
+        run: npm run build:wasm -w @label-anything/wasm
+      - name: Size budget (gzip < 1 MB)
+        run: |
+          size=$(gzip -9 -c ts/packages/wasm-adapter/wasm/label_anything_bg.wasm | wc -c)
+          echo "label_anything_bg.wasm: $size bytes gzip"
+          test "$size" -lt 1000000
+      - name: Type-check and build
+        run: npm run build
+      - name: Rust CLI (the native results the WebAssembly results must equal)
+        run: cargo build --release --manifest-path rust/Cargo.toml -p label-anything-cli
+      - name: Tests in Node
+        run: npx vitest run ts/packages/wasm-adapter
+      - name: Brief example (§6.2), verbatim
+        run: node examples/brief/js_6_2.mjs
+      - name: Browser smoke test (Chromium)
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:browser -w @label-anything/wasm
+
   generated:
     name: Generated files are current
     runs-on: ubuntu-latest

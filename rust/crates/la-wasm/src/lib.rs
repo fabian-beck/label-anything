@@ -9,9 +9,9 @@
 //!   `errors` of a `PlaceError`). `options` is a `PlaceOptions` object: the callbacks
 //!   `measure`, `cost`, `progress`, `readFile`, the `signal` and the `raster` pixels;
 //!   `priority` is evaluated by the wrapper before the call. The first exception thrown
-//!   by a callback stops all further callbacks and is rethrown unchanged; wrong option
-//!   types throw a `TypeError` (a wrong pixel count a `RangeError`). If the signal is
-//!   already aborted, the solve stops after the greedy phase (`solver.strategy` greedy).
+//!   by a callback stops all further callbacks, cancels the solve and is rethrown
+//!   unchanged; wrong option types throw a `TypeError` (a wrong pixel count a
+//!   `RangeError`). `signal.aborted` is the core's cancellation request (spec §10.3a).
 //! * `validate(problemJson)` returns the report JSON `{valid, errors, warnings}`.
 //! * `renderSvg(problemJson, resultJson)` returns the debug SVG, or an error list (a JSON
 //!   array) when a JSON text is invalid.
@@ -28,7 +28,7 @@ mod env;
 mod js;
 
 use env::JsEnv;
-use label_anything::{Env, Issue};
+use label_anything::Issue;
 use serde_json::Value;
 use std::sync::atomic::{AtomicU32, Ordering};
 use wasm_bindgen::prelude::*;
@@ -66,34 +66,15 @@ fn parse_error(what: &str, e: serde_json::Error) -> String {
     issues_json(&[Issue::new("", "parse", format!("invalid {what}JSON: {e}"))])
 }
 
-/// Stop after the greedy phase (an already aborted signal).
-fn force_greedy(problem: &mut Value) {
-    if let Some(obj) = problem.as_object_mut() {
-        let solver = obj
-            .entry("solver")
-            .or_insert_with(|| Value::Object(Default::default()));
-        if let Some(s) = solver.as_object_mut() {
-            s.insert("strategy".into(), Value::from("greedy"));
-        }
-    }
-}
-
 fn place_impl(problem_json: &str, options: &JsValue) -> Result<String, JsValue> {
     let env = JsEnv::from_options(options)?;
-    let mut problem: Value = match serde_json::from_str(problem_json) {
+    let problem: Value = match serde_json::from_str(problem_json) {
         Ok(v) => v,
         Err(e) => return Ok(parse_error("", e)),
     };
     let report = label_anything::validate(&problem);
     if !report.valid {
         return Ok(issues_json(&report.errors));
-    }
-    let aborted = env.cancelled();
-    if let Some(e) = env.take_error() {
-        return Err(e);
-    }
-    if aborted {
-        force_greedy(&mut problem);
     }
     let out = label_anything::place_validated(&problem, &env, report);
     if let Some(e) = env.take_error() {
@@ -115,7 +96,14 @@ pub fn place(problem_json: &str, options: &JsValue) -> Result<String, JsValue> {
 #[wasm_bindgen]
 pub fn validate(problem_json: &str) -> String {
     counted(|| {
-        let report = la_core::validate::validate_str(problem_json);
+        let report = match serde_json::from_str::<Value>(problem_json) {
+            Ok(v) => label_anything::validate(&v),
+            Err(e) => label_anything::Report {
+                valid: false,
+                errors: vec![Issue::new("", "parse", format!("invalid JSON: {e}"))],
+                warnings: vec![],
+            },
+        };
         serde_json::to_string(&report).unwrap_or_else(|_| {
             r#"{"valid":false,"errors":[{"pointer":"","code":"internal","message":"cannot serialize the report"}],"warnings":[]}"#.into()
         })

@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { LabelResult } from "@label-anything/core";
-import { built, PROBLEMS, problemFiles, rasterOptions, REPO, untimed, type AnyProblem } from "./helpers.js";
+import { built, PROBLEMS, problemFiles, rasterOptions, REPO, required, untimed, type AnyProblem } from "./helpers.js";
 
 type Wasm = typeof import("../src/node.js");
 let la: Wasm;
@@ -19,7 +19,9 @@ const cli = [
   `${REPO}rust/target/debug/label-anything`,
 ].find((p): p is string => typeof p === "string" && p !== "" && existsSync(p));
 if (built && !cli) {
-  console.warn("@label-anything/wasm: native CLI not found (cargo build -p label-anything-cli), skipping the comparison");
+  const msg = "@label-anything/wasm: native CLI not found (cargo build -p label-anything-cli)";
+  if (required) throw new Error(`${msg}; LA_WASM_REQUIRED is set`);
+  console.warn(`${msg}, skipping the comparison`);
 }
 
 const files = [

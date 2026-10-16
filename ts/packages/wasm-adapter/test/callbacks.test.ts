@@ -188,19 +188,35 @@ describe.skipIf(!built)("callbacks", () => {
   });
 
   describe("signal", () => {
-    it("an aborted signal stops after the greedy phase", () => {
-      const problem = scatter(12);
-      const normal = la.place(problem);
-      expect(normal.stats.strategy_used).toBe("local");
-      const controller = new AbortController();
-      controller.abort();
-      const r = la.place(problem, { signal: controller.signal });
-      expect(r.stats.strategy_used).toBe("greedy");
-      expect(r.stats.iterations).toBe(0);
-      expect(r.stats.hard_violations).toBe(0);
-      const greedy = la.place({ ...problem, solver: { strategy: "greedy" } });
-      expect(untimed(r)).toEqual(untimed(greedy));
-      expect(la.place(problem, { signal: new AbortController().signal }).stats.strategy_used).toBe("local");
+    it("is the core's cancellation request (spec §10.3a)", () => {
+      const problem = scatter(40);
+      const normal = la.place(problem, { signal: new AbortController().signal });
+      expect(normal.stats.cancelled).toBe(false);
+      expect(normal.stats.iterations).toBeGreaterThan(1000);
+
+      // aborted before the call: the greedy pass places nothing, the result is valid
+      const before = new AbortController();
+      before.abort();
+      const r = la.place(problem, { signal: before.signal });
+      expect(r.stats.cancelled).toBe(true);
+      expect(r.stats.placed).toBe(0);
+      expect(new Set(r.placements.map((p) => p.reason))).toEqual(new Set(["budget_exhausted"]));
+
+      // aborted from a callback during the local search: stops at the next poll
+      const during = new AbortController();
+      const m = la.place(problem, {
+        signal: during.signal,
+        progress: (phase, fraction) => {
+          if (phase === "local" && fraction > 0) during.abort();
+        },
+      });
+      expect(m.stats.cancelled).toBe(true);
+      expect(m.stats.placed).toBe(normal.stats.placed);
+      expect(m.stats.hard_violations).toBe(0);
+      expect(m.stats.iterations).toBeLessThan(normal.stats.iterations);
+
+      // any object with `aborted` works
+      expect(la.place(problem, { signal: { aborted: true } as AbortSignal }).stats.cancelled).toBe(true);
     });
   });
 

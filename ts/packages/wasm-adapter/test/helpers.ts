@@ -8,11 +8,12 @@ import { decodeSource } from "../../raster/src/index.js";
 export const WASM_FILE = fileURLToPath(new URL("../wasm/label_anything_bg.wasm", import.meta.url));
 export const built =
   existsSync(WASM_FILE) && existsSync(fileURLToPath(new URL("../wasm/label_anything.js", import.meta.url)));
+/** Set in CI (the wasm job) so that a missing build fails instead of skipping the tests. */
+export const required = Boolean(process.env.LA_WASM_REQUIRED);
 if (!built) {
-  console.warn(
-    "@label-anything/wasm: wasm/ is not built, skipping the WebAssembly tests " +
-      "(run `npm run build:wasm -w @label-anything/wasm`)",
-  );
+  const msg = "@label-anything/wasm: wasm/ is not built (run `npm run build:wasm -w @label-anything/wasm`)";
+  if (required) throw new Error(`${msg}; LA_WASM_REQUIRED is set`);
+  console.warn(`${msg}, skipping the WebAssembly tests`);
 }
 
 export const REPO = fileURLToPath(new URL("../../../../", import.meta.url));

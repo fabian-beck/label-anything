@@ -7,7 +7,7 @@ run verbatim in CI"):
 |---|---|---|
 | §6.1 Python one-call API | `python_6_1.py` (a prelude creates the inputs it assumes) | `python` |
 | §6.5 CLI (place, CSV mode, render to SVG/PNG, validate, stdin/stdout, serve) | `cli_6_5.sh` (+ `make_inputs.py`) | `examples` |
-| §6.2 JavaScript/TypeScript | follows with `@label-anything/core` (`place`) and `@label-anything/wasm` | — |
+| §6.2 JavaScript/TypeScript | `js_6_2.mjs` against `@label-anything/wasm` (a prelude creates `points` and `svgEl`; checks also run the commented `priority` callback variant). Build the package first: `npm run build:wasm -w @label-anything/wasm && npm run build` | `wasm` |
 | §6.3 Java builder | follows with the Java binding (`bindings/java`) | — |
 
 The C and Go programs of §6.3 are `examples/c` and `examples/go`.

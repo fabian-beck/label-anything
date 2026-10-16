@@ -6,17 +6,16 @@
 //! * Raster: `options.raster` pixels, copied once into WASM memory per model build.
 //! * `measure`, `cost`, `progress`: JavaScript functions. The first exception thrown by
 //!   any callback is kept; from then on no callback is called again (they return neutral
-//!   values), [`Env::cancelled`] is true, and the binding rethrows the exception instead
-//!   of returning the result. The core has no way to unwind, so "stop" means the solve
-//!   finishes without calling back into JavaScript.
-//! * `signal`: [`Env::cancelled`] reads `signal.aborted`. A synchronous `place` call
-//!   blocks the JavaScript thread, so the flag can only change between solves or inside
-//!   one of the callbacks.
+//!   values), [`Env::cancelled`] is true so the core stops at its next poll, and the
+//!   binding rethrows the exception instead of returning the result. WebAssembly cannot
+//!   unwind the Rust frames, so the solve returns normally (no leaks) before the rethrow.
+//! * `signal`: [`Env::cancelled`] reads `signal.aborted` (polled by the core, spec
+//!   §10.3a). A synchronous `place` call blocks the JavaScript thread, so the flag can only
+//!   be set before the call or inside one of the callbacks.
 
 use crate::js;
 use js_sys::{ArrayBuffer, Function, Reflect, Uint8Array};
-use la_core::geom::Rect;
-use label_anything::{Env, FontSpec, RgbaImage, SvgBackend, TextMetrics};
+use label_anything::{Env, FontSpec, Rect, RgbaImage, SvgBackend, TextMetrics};
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use wasm_bindgen::{JsCast, JsValue};
