@@ -57,6 +57,10 @@ enum Cmd {
         /// greedy | local | exact | auto (solver.strategy; greedy skips the local search).
         #[arg(long)]
         strategy: Option<String>,
+        /// Degradation ladder, comma-separated steps (degrade), e.g. `wrap,distant,omit`;
+        /// `omit` alone turns the ladder off.
+        #[arg(long, value_delimiter = ',')]
+        degrade: Option<Vec<String>>,
         /// Pretty-print the result.
         #[arg(long)]
         pretty: bool,
@@ -240,6 +244,7 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
             time,
             seed,
             strategy,
+            degrade,
             pretty,
             anchors,
             x_col,
@@ -290,6 +295,9 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
             }
             if let Some(s) = strategy {
                 obj.entry("solver").or_insert(json!({}))["strategy"] = json!(s);
+            }
+            if let Some(d) = degrade {
+                obj.insert("degrade".into(), json!(d));
             }
             if let Some(o) = omission {
                 obj.entry("priority").or_insert(json!({}))["omission"] = json!(o);

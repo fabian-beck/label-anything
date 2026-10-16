@@ -98,6 +98,20 @@ describe("label-anything-ts", () => {
     expect(bad.err).toContain("/solver/strategy");
   });
 
+  it("--degrade sets the degradation ladder", () => {
+    const out = join(tmp, "degrade.json");
+    const prefix = join(PROBLEMS, "priority-prefix.json");
+    expect(run(["place", prefix, "-o", out, "--degrade", "omit"], io())).toBe(0);
+    const plain = JSON.parse(readFileSync(out, "utf8")) as Result;
+    expect(run(["place", prefix, "-o", out, "--degrade", "wrap,distant,shrink:0.85,omit"], io())).toBe(0);
+    const ladder = JSON.parse(readFileSync(out, "utf8")) as Result;
+    expect(plain.stats.degraded).toEqual({});
+    expect(Number(ladder.stats.placed)).toBeGreaterThan(Number(plain.stats.placed));
+    const bad = io();
+    expect(run(["place", prefix, "--degrade", "wrap,nope"], bad)).toBe(1);
+    expect(bad.err).toContain("/degrade/1");
+  });
+
   it("validates", () => {
     const ok = io();
     expect(run(["validate", join(PROBLEMS, "minimal.json")], ok)).toBe(0);
