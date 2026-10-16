@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: indexed image without PLTE",
+  "image": {
+    "file": "images/corrupt-no-plte.png"
+  },
+  "decode": {
+    "error": "corrupt_image"
+  }
+}

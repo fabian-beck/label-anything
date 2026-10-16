@@ -1,0 +1,52 @@
+{
+  "kind": "raster",
+  "name": "data: URL (base64)",
+  "image": {
+    "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAIAAAFlEcHbAAAAHklEQVR42mNgYNBg9OLSYFJl1WDmdtfQ1lS01dYAABZMAnxt8QyPAAAAAElFTkSuQmCC"
+  },
+  "decode": {
+    "width": 3,
+    "height": 2,
+    "rgba_fnv1a32": "efb771d0"
+  },
+  "background": [
+    0,
+    0,
+    41
+  ],
+  "runs": [
+    {
+      "name": "cost",
+      "mode": {
+        "kind": "cost",
+        "invert": false
+      },
+      "class": "cost",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 3,
+        "rows": 2
+      },
+      "expect": [
+        {
+          "class": "cost",
+          "fnv1a32": "0f861a5f",
+          "sum": 1282,
+          "nonzero": 6,
+          "coverage": "/PHlx7uu"
+        }
+      ]
+    }
+  ]
+}

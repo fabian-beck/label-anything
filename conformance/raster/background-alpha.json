@@ -1,0 +1,54 @@
+{
+  "kind": "raster",
+  "name": "background estimation skips border pixels with alpha < 128",
+  "image": {
+    "file": "images/bg-alpha-border.png"
+  },
+  "decode": {
+    "width": 8,
+    "height": 6,
+    "rgba_fnv1a32": "e4d90c5d"
+  },
+  "background": [
+    90,
+    123,
+    148
+  ],
+  "runs": [
+    {
+      "name": "ink with the estimated background",
+      "mode": {
+        "kind": "ink",
+        "background": null,
+        "threshold": 0.12,
+        "dilate": 0
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 8,
+        "rows": 6
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "c8ccbc3d",
+          "sum": 8670,
+          "nonzero": 34,
+          "coverage": "AAAA//////8A//////////////////8AAP///////wAA//////////8AAAAAAAD/"
+        }
+      ]
+    }
+  ]
+}

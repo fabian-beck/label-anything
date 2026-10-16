@@ -1,0 +1,54 @@
+{
+  "kind": "raster",
+  "name": "decode: deflate-dynamic (identical pixels in every variant)",
+  "image": {
+    "file": "images/deflate-dynamic.png"
+  },
+  "decode": {
+    "width": 30,
+    "height": 20,
+    "rgba_fnv1a32": "b2ca2f41"
+  },
+  "background": [
+    0,
+    0,
+    41
+  ],
+  "runs": [
+    {
+      "name": "ink",
+      "mode": {
+        "kind": "ink",
+        "background": null,
+        "threshold": 0.12,
+        "dilate": 0
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 15,
+        "rows": 10
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "0c90f72c",
+          "sum": 37995,
+          "nonzero": 150,
+          "coverage": "gP//////////////////////////v/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+/////////////////////////////////////////////////////"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: zero width",
+  "image": {
+    "file": "images/corrupt-zero-width.png"
+  },
+  "decode": {
+    "error": "corrupt_image"
+  }
+}

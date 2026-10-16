@@ -276,11 +276,8 @@ pub fn process(
             let invert = *invert;
             let grids = setup.run(img, 1, |res, px, _, p| {
                 let n = luma_numerator(p);
-                let v = if invert {
-                    f64::from(n)
-                } else {
-                    f64::from(LUMA_DENOM - n)
-                } / f64::from(LUMA_DENOM);
+                let numerator = if invert { n } else { LUMA_DENOM - n };
+                let v = f64::from(numerator) / f64::from(LUMA_DENOM);
                 if v != 0.0 {
                     res.add(0, px, v);
                 }

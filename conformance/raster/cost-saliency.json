@@ -1,0 +1,247 @@
+{
+  "kind": "raster",
+  "name": "cost and saliency: strokes and a photo-like image",
+  "image": {
+    "file": "images/photo-rgb8.png"
+  },
+  "decode": {
+    "width": 64,
+    "height": 48,
+    "rgba_fnv1a32": "55f8ddd2"
+  },
+  "background": [
+    74,
+    49,
+    181
+  ],
+  "runs": [
+    {
+      "name": "cost, cell 2",
+      "mode": {
+        "kind": "cost",
+        "invert": false
+      },
+      "class": "cost",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 32,
+        "rows": 24
+      },
+      "expect": [
+        {
+          "class": "cost",
+          "fnv1a32": "a0812596",
+          "sum": 87067,
+          "nonzero": 768,
+          "coverage": "uLOzq7KwqqeorqWqq6ypo6eqpaSjoKChnZqgoJiVl5yzsqupp7Cjq6WtpKepnZ+jp6apnpyZmZmem5GfmpaUm6WjpaeorKWmo6efn5ubkqShoZ2emJWTmKKbmpWSkpiTo56qm56lnp+lpqCWnZqTl5acm5SWl5KWk5OWlY2TiJCnnZugmZ6ZmpydnJublJGflZSPlJaRkZGWk42QjYyOg5yioJmYmaCXlpyQlZSTiY6PinRQUm2PhpWJhX6Kh4KGl5uYk5WRlJKbkI+SiYqGj38xEBAQEDB+iYSJf4SGhImZlo+Lj5WWjI+Qh4qIipGJMRAQEBAQEDGCgIWEfYN1fouQjoeHjIWJhoqJiIqGhmsQEBAQEBAQEGZ+eXd7eYN3jIKGhYyMiIGIhYSDgoF8TBAQEBAQEBAQSXl7eX55eXSMf4h+gIOBh4F+fYN2fH5IEBAQEBAQEBBJbXx0cXB3cX+FgoWCeoB+d311fXZ6e2cQEBAQEBAQEFtpcG1qc3JvgH13e3yAfIB5dYF4eXVwdSoQEBAQEBArcWdwaWNrYWSCdnR1dHt4fnpxcXJscG9scCkQEBAQJ2hobF5naGZja3B4e3hzb3FuampuaWprc2ZkZ1k6PlZlXF5pX1hmXmBgenJn5OTk5OTk5ORxYGpmZWZoZWpgZFpiZ2JcXWNfXFxqa2vk5OTk5OTk5GVhaF9kZmBbY2RiWmFhXlhTPCYTCWJnYuTk5OTk5OTkYFplY11WWVBYYF1YRzAcBwgXLUFOY2Vd5OTk5OTk5ORZWFdYW2BUSzQpEAMSJzZFUFRKT05YXGHk5OTk5OTk5E9UUUYrGggIGCo6TVFQUFBIS0pHTFZUXOTk5OTk5MeVJRADECI0SFFHS05STE5NREZJR0JEV1xX5N2ufUcVFUctOVFRUU1FR1JCTk8/RUs8QElINkhKOSMRAg8gM0RLT01MRklAS0pIRD8/QkVKQ0M9PDtDOwcaKzxISk9HRUVNSj5FRUlJPkE/Q0I+PzpAODs+PjQx"
+        }
+      ]
+    },
+    {
+      "name": "cost inverted, scale 1.5, cell 2.5, offset (1, 2)",
+      "mode": {
+        "kind": "cost",
+        "invert": true
+      },
+      "class": "cost",
+      "placement": {
+        "scale": 1.5,
+        "offset": [
+          1,
+          2
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2.5,
+        "cols": 28,
+        "rows": 22
+      },
+      "expect": [
+        {
+          "class": "cost",
+          "fnv1a32": "7c684df1",
+          "sum": 30942,
+          "nonzero": 252,
+          "coverage": "CA8QDxEQEhESEREREhQRFBUIAAAAAAAAAAAAAC9QVFZZV1laXVpdY2RiaGVpMAAAAAAAAAAAAAA3W15bXVljZ2ZjZWhsZWhvbjQAAAAAAAAAAAAAOGFkY2ZmZ2ttb4eJc211dXc6AAAAAAAAAAAAAD5pbmxscHJ2dcTv79B/en5+OQAAAAAAAAAAAABEdHh1eHd4epXv7+/vqIaEg0AAAAAAAAAAAAAASX19fH2BgYSh7+/v77eKjYtDAAAAAAAAAAAAAEyDhYSBiIeKkt3v7+WdlZeXRgAAAAAAAAAAAABSinR1eHqNlpKcvsGmm5+dn0kAAAAAAAAAAAAAV5UbGxsbd5qdnZ6doZ+vvM1iAAAAAAAAAAAAAF6dGxsbG4Gko6q7x9bX0sO4UgAAAAAAAAAAAABlpBsbGyyo1drXzr+yr7W2uVYAAAAAAAAAAAAAaLiCosfLvba0trW8ubi+vMBYAAAAAAAAAAAAAFeFdm5ubm5xbnBzcXN1dXR3OgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        }
+      ]
+    },
+    {
+      "name": "saliency, cell 2",
+      "mode": {
+        "kind": "saliency"
+      },
+      "class": "salient",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 32,
+        "rows": 24
+      },
+      "expect": [
+        {
+          "class": "salient",
+          "fnv1a32": "0d05f2b6",
+          "sum": 19585,
+          "nonzero": 722,
+          "coverage": "FQ0KCw8QDAoRDwcNDA0NDQ8QDQsMDwcJCQ8XDg0LCxIKEREOCw0NCw0NEA8NDhANDAkPDQsNBgoMDA4RCgsNCRMRCgUODg4JCQoRDQoOERIGCAwMCQ4HBw0LEgwNCQ4LDwwVDw4MCg4JCQoPDxEKEA4QCgoPDQ0ODA0NCRIJDxMODQwNDgkICw0LDwsICgkUCg0QFRYNCw0IEhIMCwcODAwKDRMKEAsRBg4QEA4KDQ4UKlNvd001Dw8MCxIQDxILDwwNCxANEAsPCREKEQ4OEjhZNxcWNVk3FBIODhAKDw0PCA0ODQ0OCQ0NCg4LDxEvVxcCAAACF1spDQoNCQcUDAoJCwkNDBELCQwFDg0PEkw1AgAAAAACMkYMCw4MDQ4SDBEMCw4PCxIODAkJExAVahQAAAAAAAAUZBkMEBUMCwkQDgoNCgwLDA0KCg4RChRkEwAAAAAAABNfDQ4MFBEIBwsLEAsODxMODgkLCQkLFk0vAgAAAAACKjoJCwsQDg4SEA0QEQYIDA0KCxIMEA4LKUUUAQAAARJJKQsOCBINERAPDxIIDQoKDAwQDw4LExAKOEImEBAnQTELDg8OCAkPDhIPEDJGTktOUU45GQkLDwoLITtMUTwiDhMRCQ8KEQ4MFAtFcERGR0dKSXUzEgoPDA0HCBERDwoKCgsMChEeJC8NC0dNAAAAAAAATEwOCwsRCw4UDwcKDgwTIy44TlJGWQsNUk8AAAAAAABNUwsOCwsTDwwLGSg4PFVBUVM+UDEvERBVUQAAAAAAAFJXCgwOESguM0FVRFc/UkQwLSQMCw0LCkxSAAAAAAIHY1EmLz1OQlJMPU4sMSMRDA0KDgoNDQkRUlQEDBxEdIK1Yz1aP0g4Ly0VEgsLEA0QCg4HCwwODg85q4yM0qKahoFYLTUnGRMNDhEPEQ4VDhARDQsOEw42SU2BpHBRRTAbHQ8MDwoVDhEMEREPCwcOCgoNDQ4PEi47Ujs0Jh4XBw8HDRUVDg8JEg4MDAgLDQ0MDwsODQ0L"
+        }
+      ]
+    },
+    {
+      "name": "saliency, scale 0.5, cell 3, origin (2, 2)",
+      "mode": {
+        "kind": "saliency"
+      },
+      "class": "salient",
+      "placement": {
+        "scale": 0.5,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          2,
+          2
+        ],
+        "cell": 3,
+        "cols": 44,
+        "rows": 33
+      },
+      "expect": [
+        {
+          "class": "salient",
+          "fnv1a32": "b9ec1685",
+          "sum": 34008,
+          "nonzero": 1275,
+          "coverage": "EgkODA8MCAoMCgwOCgcPDA0RDAsLCwoJDQkJEAkFCgQNDBEPCwoOCQ0QAAAPEhEMEAkMFAoMCg4REg8ODQ4ODREMCAsSDQwLDAYKDA0ODQ8RCgoKDwcAABMRCwQIDgwQDQsIDAwQDAsODhESDQUGDQwLCw4KBgYMDA0TDw8LBxAJDQAAEAsRDhENCgwMCgkKDQsQDQsRCxMPCAwNCw4ODgwLCg4KDAsKCBEKEQ0PAAAJDBINDhENCgwQCwsICw0MDg4MEQ4PDg0KCgsNCQoNDAcQDw0OEQgOCxIAABAOCgsRDAgHCQsOCg0ODAoICAcSEAkOCxEZGhUNCxALChQSEgsKBwoQDAAACwkMERMJEA0MEQYKDxERDwsKDA0SEhw8XW96XjgoDQ8NDAoRExERFBEMAAAICg0ODhAQDxEKDQoODggQEg8NDxElUWhLQkJJYlYjFxQNDQ8PDQgOCQcAAA8KDA4IDQoOCw0PDQwQDg0LDBEOLFdLHwgDAwgeS1cnDhEMDBAOCA4VEAAADgkODg0ODRELBwsMDQkPCwwQERVUUxYEAQAAAQQWVFMODQsPCQkIEQ8MAAAHBwkLCA8MFgsLCAoLBQ4KEgwRK1kuAwEAAAAAAQMrVCcMDA4PCgwODxEAABIPEQgKCggPCxIKDA0HBwwQERRPUxcBAAAAAAAAARZORg8KCxMUDgwMDAAADA0IChIREhEHDhAMCgsPFBQKE0dTDAAAAAAAAAAADFBJFQ4IFRUMCwsHAAARDwsKDAkMDwYODwgMCQwRDgsRRlEPAAAAAAAAAAAPS0EMDQsPFBEMBgkAAAwLDg8LEA8REw0NDggLCgoJDBQ5UCICAQAAAAABAh9AJAkNCQ4PDwwNEAAADQsRDwwICQ0ODwsLDBAMCQ8LDR1WOAgBAAAAAAEIN1EaCQ4HChMNEBoOAAAODw4ODgkKCwoJCw0OFAwPDxENEiBOMA8DAQEDDi1MJw8MDg8JDg4LEA4AABEQEwoLDQkKCQ8MEQsPDgsQEg8MEjlDOSETEiE7QjIRDA4QDg0ICA0RDgAADhANGDU5PzpDQURDNyobCggNEA4LCx82Qk9UQz4gDxEREgkMDwwQDw0MAAAQCytocG91c3Zze3t4gS0SEAcMDwgNCRAgKCgiFQ0LDw4MDQwKCRAQEQ8AAAwNPH4gERERERISEhplUxQMCQ0SCAwKDQoODgkLCwkICw8ODyAoNTRPUAAAEAo1fhMAAAAAAAAACVxbEQ0KCRARDA8QEhAGDAoMDgwfJzQ+PlFXRFJUAAAMD0OBFAAAAAAAAAAJXV8WCw0MDA4TEAwNCxQYKzQ3TE49T1xFQlc9NTIAAAgOO4MUAAAAAAAAAApgYBUOEA4KDBUVEygrQj5QVENNXkM+Uzo0KBsVFAAADw9GhhQAAAAAAAAACmZsFA4MHCQtQEpIPEtbQUJNPTM7Lx0TFREJCQYKAAAJCjmHFAAAAAAAAgYYe2AiMjk7SVNATlk9PUs4LCkdFAoLEAYODAsPCw8AAAsSP4YVAwcNHzdYcIfFYztJWkJATTYzPCYbFwkODBAQCxEMDQ4GDAsODgAACws2kTM0XIGgjL3QjY97RD5UPSwkHRQTCw4QEgYPExEKDw8KDAgLDg0OAAAfKC2g29KWn7WFW10/bTMqFxYTFBMTDg8REw8PEQsQEg8QDg4NDhEQFBEAADtNUl+GkWhEVTspIBQXDQ8KEQsREA0QDgsREg8OCgYMCwkHDw0NDA4SEgAALz5QPjw3Mx4gFwYMCwcMERUUDhEIChENDgkNCAsKCg0PDA4KDhAOEAoMAAAKFR0ZFAkHBwcGAwUGAwUHCAcFBwMDCAUIBQUDBAQFBQMDBgQEAwQFAwMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ]
+    },
+    {
+      "name": "saliency, cell 0.5 (checksum + samples)",
+      "mode": {
+        "kind": "saliency"
+      },
+      "class": "salient",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 0.5,
+        "cols": 128,
+        "rows": 96
+      },
+      "expect": [
+        {
+          "class": "salient",
+          "fnv1a32": "db453acd",
+          "sum": 313312,
+          "nonzero": 11488,
+          "samples": [
+            [
+              0,
+              0,
+              19
+            ],
+            [
+              127,
+              0,
+              23
+            ],
+            [
+              0,
+              95,
+              31
+            ],
+            [
+              127,
+              95,
+              9
+            ],
+            [
+              64,
+              48,
+              79
+            ],
+            [
+              42,
+              80,
+              233
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ink, threshold 0.05",
+      "mode": {
+        "kind": "ink",
+        "background": null,
+        "threshold": 0.05,
+        "dilate": 1
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 32,
+        "rows": 24
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "2b6b567a",
+          "sum": 195521,
+          "nonzero": 768,
+          "coverage": "gL////////////////////////////////////////+/v///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////"
+        }
+      ]
+    }
+  ]
+}

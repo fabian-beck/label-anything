@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: file truncated inside IDAT",
+  "image": {
+    "file": "images/corrupt-truncated.png"
+  },
+  "decode": {
+    "error": "corrupt_image"
+  }
+}

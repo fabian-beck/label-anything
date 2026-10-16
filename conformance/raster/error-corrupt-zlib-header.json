@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: bad zlib header",
+  "image": {
+    "file": "images/corrupt-zlib-header.png"
+  },
+  "decode": {
+    "error": "corrupt_image"
+  }
+}

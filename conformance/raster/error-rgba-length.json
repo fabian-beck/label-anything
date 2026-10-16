@@ -1,0 +1,14 @@
+{
+  "kind": "raster",
+  "name": "raw RGBA with the wrong length",
+  "image": {
+    "rgba": {
+      "width": 2,
+      "height": 2,
+      "data": "AAAAAAAA"
+    }
+  },
+  "decode": {
+    "error": "invalid_dimensions"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "kind": "raster",
+  "name": "background estimation: equal border counts -> smallest quantized colour",
+  "image": {
+    "file": "images/bg-tie.png"
+  },
+  "decode": {
+    "width": 6,
+    "height": 4,
+    "rgba_fnv1a32": "530be305"
+  },
+  "background": [
+    41,
+    41,
+    206
+  ],
+  "runs": [
+    {
+      "name": "ink with the estimated background",
+      "mode": {
+        "kind": "ink",
+        "background": null,
+        "threshold": 0.12,
+        "dilate": 0
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 6,
+        "rows": 4
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "7d6ae731",
+          "sum": 4080,
+          "nonzero": 16,
+          "coverage": "AP8A/wD///////8AAP///////wD/AP8A"
+        }
+      ]
+    }
+  ]
+}

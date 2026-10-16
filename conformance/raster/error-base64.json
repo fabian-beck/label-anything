@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "invalid base64",
+  "image": {
+    "base64": "iVBORw0KGgo$"
+  },
+  "decode": {
+    "error": "invalid_base64"
+  }
+}
