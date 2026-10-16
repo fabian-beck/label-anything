@@ -73,27 +73,29 @@ class Priority:
         transform: Optional[str] = None,
         normalize: Optional[str] = None,
     ) -> Priority:
-        """Mean distance to the ``k`` nearest neighbours (default ``k`` = 5)."""
+        """Gap to the ``k``-th nearest neighbour (default ``k`` = 5): distance between
+        mark outlines over the other items and the ``points`` class (spec §9.1)."""
         return cls.builtin("outlierness", k=k, transform=transform, normalize=normalize)
 
     @classmethod
     def isolation(cls, *, transform: Optional[str] = None, normalize: Optional[str] = None) -> Priority:
-        """Distance to the nearest other item."""
+        """Gap to the nearest neighbour (``outlierness`` with ``k`` = 1)."""
         return cls.builtin("isolation", transform=transform, normalize=normalize)
 
     @classmethod
     def crowding(cls, *, transform: Optional[str] = None, normalize: Optional[str] = None) -> Priority:
-        """Number of items nearby."""
+        """Negative ``isolation``: larger when the nearest neighbour is close."""
         return cls.builtin("crowding", transform=transform, normalize=normalize)
 
     @classmethod
     def label_size(cls, *, transform: Optional[str] = None, normalize: Optional[str] = None) -> Priority:
-        """Label area (use a negative weight to favour short labels)."""
+        """Area of the first label variant in em² (use a negative weight to favour short
+        labels)."""
         return cls.builtin("label_size", transform=transform, normalize=normalize)
 
     @classmethod
     def mark_size(cls, *, transform: Optional[str] = None, normalize: Optional[str] = None) -> Priority:
-        """Area of the item's mark."""
+        """Area of the item's mark shape in px²."""
         return cls.builtin("mark_size", transform=transform, normalize=normalize)
 
     @classmethod
@@ -103,12 +105,13 @@ class Priority:
 
     @classmethod
     def degree(cls, *, transform: Optional[str] = None, normalize: Optional[str] = None) -> Priority:
-        """Node degree (``attrs.degree``) for graphs."""
+        """``attrs.degree`` if numeric, else the number of ``obstacles.vector`` polyline
+        endpoints at the mark (incident edges of a node)."""
         return cls.builtin("degree", transform=transform, normalize=normalize)
 
     @classmethod
     def input_order(cls, *, transform: Optional[str] = None, normalize: Optional[str] = None) -> Priority:
-        """Earlier items first."""
+        """Earlier items are more important (raw value ``n - index``)."""
         return cls.builtin("input_order", transform=transform, normalize=normalize)
 
     @classmethod
