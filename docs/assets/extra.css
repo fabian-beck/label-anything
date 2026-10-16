@@ -1,0 +1,31 @@
+/* Label Anything docs: small additions to Material for MkDocs. */
+
+/* gallery cards: images fill the card */
+.la-gallery img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.2rem;
+}
+
+/* figures inside text keep their aspect and never overflow */
+.md-typeset img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* side-by-side figures */
+.la-figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.8rem;
+}
+
+.la-figures figure {
+  margin: 0;
+}
+
+/* debug renderings have a white background: keep it in dark mode */
+[data-md-color-scheme="slate"] .md-typeset img {
+  background: #ffffff;
+}
