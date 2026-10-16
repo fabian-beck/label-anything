@@ -642,6 +642,20 @@ violating a static hard constraint are infeasible (kept only for explanations).
 Candidates with static cost > `prune_factor × best + 1` of the same item and level are
 dropped.
 
+Filtering while generating (ADR 0015), always exact:
+
+* When labels may overlap no item mark (`avoid.label.items` and the own-mark policy
+  hard), non-internal rectangular candidates whose box contains, with a 2·EPS margin,
+  the center of an occupancy cell lying inside an item mark are not created; they are
+  counted per item and reported as `items` among the blocking classes. The occupancy
+  grid covers the extent with square cells of `max(2, sqrt(area / 10⁶))` px.
+* Candidates generated while labels are placed (ladder steps, on-demand distant
+  candidates) are not kept when a placed label or leader of higher or equal priority
+  blocks them under a hard policy. With hard label–label overlaps and every placed
+  label of key ≤ the item's, rectangular candidates are first tested against the same
+  kind of occupancy grid of placed rectangular labels.
+* The warm-start box of an item is an extra level-0 candidate (ADR 0016).
+
 ---
 
 ## 7. Leaders
