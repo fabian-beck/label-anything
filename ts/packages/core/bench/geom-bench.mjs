@@ -9,7 +9,7 @@
 // * 1M shape-vs-rectangle overlap tests per shape kind (rectangles near the shapes).
 //
 // Run (from ts/, after `npx tsc -b packages/core`):
-//   node --expose-gc packages/core/bench/geom-bench.mjs [runs]
+//   node packages/core/bench/geom-bench.mjs [runs]
 import { sinCosDeg } from "../dist/detmath.js";
 import { P, Rect } from "../dist/geom/index.js";
 import { Shape } from "../dist/geom/shape.js";
@@ -22,13 +22,14 @@ const runs = Number(process.argv[2] ?? 5);
 
 /**
  * Best wall time in ms of `runs` runs of `f` (which returns a checksum), after a warm-up
- * run. On a busy machine the minimum is the most stable statistic.
+ * run. On a busy machine the minimum is the most stable statistic. (No forced GC between
+ * runs: after a forced full GC, allocating the large typed arrays of the rasterizer made
+ * the next run much slower than in normal operation.)
  */
 function best(f) {
   let t = Infinity;
   let sum = f();
   for (let i = 0; i < runs; i++) {
-    globalThis.gc?.();
     const t0 = performance.now();
     sum = f();
     t = Math.min(t, performance.now() - t0);
