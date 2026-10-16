@@ -1,0 +1,189 @@
+{
+  "canvas": {
+    "width": 400,
+    "height": 300
+  },
+  "transform": [
+    40,
+    0,
+    0,
+    30,
+    0,
+    0
+  ],
+  "y_axis": "up",
+  "items": [
+    {
+      "id": "v0",
+      "anchor": {
+        "type": "point",
+        "x": 0,
+        "y": 0.5
+      },
+      "label": {
+        "type": "text",
+        "text": "(0)"
+      }
+    },
+    {
+      "id": "v1",
+      "anchor": {
+        "type": "point",
+        "x": 1,
+        "y": 1.5
+      },
+      "label": {
+        "type": "text",
+        "text": "(1)"
+      }
+    },
+    {
+      "id": "v2",
+      "anchor": {
+        "type": "point",
+        "x": 2,
+        "y": 4.5
+      },
+      "label": {
+        "type": "text",
+        "text": "(2)"
+      }
+    },
+    {
+      "id": "v3",
+      "anchor": {
+        "type": "point",
+        "x": 3,
+        "y": 0.5
+      },
+      "label": {
+        "type": "text",
+        "text": "(3)"
+      }
+    },
+    {
+      "id": "v4",
+      "anchor": {
+        "type": "point",
+        "x": 4,
+        "y": 7.5
+      },
+      "label": {
+        "type": "text",
+        "text": "(4)"
+      }
+    },
+    {
+      "id": "v5",
+      "anchor": {
+        "type": "point",
+        "x": 5,
+        "y": 7.5
+      },
+      "label": {
+        "type": "text",
+        "text": "(5)"
+      }
+    },
+    {
+      "id": "v6",
+      "anchor": {
+        "type": "point",
+        "x": 6,
+        "y": 0.5
+      },
+      "label": {
+        "type": "text",
+        "text": "(6)"
+      }
+    },
+    {
+      "id": "v7",
+      "anchor": {
+        "type": "point",
+        "x": 7,
+        "y": 4.5
+      },
+      "label": {
+        "type": "text",
+        "text": "(7)"
+      }
+    },
+    {
+      "id": "v8",
+      "anchor": {
+        "type": "point",
+        "x": 8,
+        "y": 1.5
+      },
+      "label": {
+        "type": "text",
+        "text": "(8)"
+      }
+    },
+    {
+      "id": "v9",
+      "anchor": {
+        "type": "point",
+        "x": 9,
+        "y": 0.5
+      },
+      "label": {
+        "type": "text",
+        "text": "(9)"
+      }
+    }
+  ],
+  "obstacles": {
+    "vector": [
+      {
+        "class": "lines",
+        "polylines": [
+          [
+            [
+              0,
+              0.5
+            ],
+            [
+              1,
+              1.5
+            ],
+            [
+              2,
+              4.5
+            ],
+            [
+              3,
+              0.5
+            ],
+            [
+              4,
+              7.5
+            ],
+            [
+              5,
+              7.5
+            ],
+            [
+              6,
+              0.5
+            ],
+            [
+              7,
+              4.5
+            ],
+            [
+              8,
+              1.5
+            ],
+            [
+              9,
+              0.5
+            ]
+          ]
+        ],
+        "width": 1
+      }
+    ]
+  }
+}

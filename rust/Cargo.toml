@@ -25,6 +25,7 @@ image = { version = "0.25", default-features = false }
 rayon = "1.10"
 base64 = "0.22"
 proptest = "1.5"
+regex-lite = "0.1"
 la-core = { package = "label-anything-core", path = "crates/la-core", version = "0.1.0" }
 la-text = { package = "label-anything-text", path = "crates/la-text", version = "0.1.0" }
 la-expr = { package = "label-anything-expr", path = "crates/la-expr", version = "0.1.0" }

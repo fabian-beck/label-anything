@@ -1,0 +1,29 @@
+{
+  "kind": "validate",
+  "name": "icon-missing-height",
+  "problem": {
+    "items": [
+      {
+        "anchor": {
+          "type": "point",
+          "x": 1,
+          "y": 1
+        },
+        "label": {
+          "type": "icon",
+          "width": 3
+        }
+      }
+    ]
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/items/0/label/height",
+        "code": "required"
+      }
+    ],
+    "warnings": []
+  }
+}

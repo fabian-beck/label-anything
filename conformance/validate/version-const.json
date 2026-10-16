@@ -1,0 +1,18 @@
+{
+  "kind": "validate",
+  "name": "version-const",
+  "problem": {
+    "version": "2",
+    "items": []
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/version",
+        "code": "const"
+      }
+    ],
+    "warnings": []
+  }
+}

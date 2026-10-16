@@ -1,0 +1,40 @@
+{
+  "items": [
+    {
+      "id": "a",
+      "anchor": {
+        "type": "point",
+        "x": 100,
+        "y": 100
+      },
+      "label": {
+        "type": "text",
+        "text": "Alpha"
+      }
+    },
+    {
+      "id": "b",
+      "anchor": {
+        "type": "point",
+        "x": 108,
+        "y": 104
+      },
+      "label": {
+        "type": "text",
+        "text": "Beta"
+      }
+    },
+    {
+      "id": "c",
+      "anchor": {
+        "type": "point",
+        "x": 300,
+        "y": 220
+      },
+      "label": {
+        "type": "text",
+        "text": "Gamma"
+      }
+    }
+  ]
+}

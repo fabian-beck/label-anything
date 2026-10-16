@@ -55,6 +55,10 @@ function readPresets() {
 // Canonical JSON: keys in insertion order as authored (stable), no whitespace.
 const json = (v) => JSON.stringify(v);
 
+function readSchema(file) {
+  return JSON.parse(readFileSync(join(root, "spec/schema", file), "utf8"));
+}
+
 function rustSpecData(defaults, presets) {
   const presetNames = Object.keys(presets);
   const lines = [];
@@ -72,6 +76,9 @@ function rustSpecData(defaults, presets) {
   for (const n of presetNames) lines.push(`    ("${n}", r##"${json(presets[n])}"##),`);
   lines.push("];");
   lines.push("");
+  lines.push("/// spec/schema/problem.v1.json (minified), interpreted by the validator.");
+  lines.push(`pub const PROBLEM_SCHEMA_JSON: &str = r##"${json(readSchema("problem.v1.json"))}"##;`);
+  lines.push("");
   return lines.join("\n");
 }
 
@@ -86,6 +93,9 @@ function tsSpecData(defaults, presets) {
   lines.push("");
   lines.push("/** Presets (spec/presets/*.json). */");
   lines.push(`export const PRESETS: Readonly<Record<string, PresetData>> = ${JSON.stringify(presets, null, 2)};`);
+  lines.push("");
+  lines.push("/** spec/schema/problem.v1.json, interpreted by the validator. */");
+  lines.push(`export const PROBLEM_SCHEMA: Readonly<Record<string, unknown>> = ${JSON.stringify(readSchema("problem.v1.json"))};`);
   lines.push("");
   lines.push("export interface PresetData {");
   lines.push("  description: string;");

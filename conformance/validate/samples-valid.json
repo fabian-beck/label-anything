@@ -1,0 +1,34 @@
+{
+  "kind": "validate",
+  "name": "all sample problems are valid",
+  "problem_files": [
+    "../problems/area-anchor.json",
+    "../problems/bubbles.json",
+    "../problems/elbow-boundary.json",
+    "../problems/groups-keepwith.json",
+    "../problems/icons-composite.json",
+    "../problems/leaders-angles.json",
+    "../problems/long-names.json",
+    "../problems/many-points.json",
+    "../problems/minimal.json",
+    "../problems/outliers-hard.json",
+    "../problems/polygon-path-marks.json",
+    "../problems/presets-map.json",
+    "../problems/priority-attrs.json",
+    "../problems/priority-prefix.json",
+    "../problems/raster-ink.json",
+    "../problems/region.json",
+    "../problems/scatter-basic.json",
+    "../problems/shapes-nodes.json",
+    "../problems/svg-background.json",
+    "../problems/unbounded.json",
+    "../problems/units.json",
+    "../problems/warm-start.json",
+    "../problems/weighted-coverage.json",
+    "../problems/y-up-transform.json"
+  ],
+  "expect": {
+    "valid": true,
+    "errors": []
+  }
+}

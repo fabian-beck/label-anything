@@ -1,0 +1,171 @@
+{
+  "canvas": {
+    "width": 700,
+    "height": 500
+  },
+  "items": [
+    {
+      "id": "c0",
+      "anchor": {
+        "type": "point",
+        "x": 200,
+        "y": 250,
+        "mark": {
+          "shape": "circle",
+          "r": 80
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "China"
+      },
+      "attrs": {
+        "pop": 1400
+      }
+    },
+    {
+      "id": "c1",
+      "anchor": {
+        "type": "point",
+        "x": 420,
+        "y": 220,
+        "mark": {
+          "shape": "circle",
+          "r": 75
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "India"
+      },
+      "attrs": {
+        "pop": 1380
+      }
+    },
+    {
+      "id": "c2",
+      "anchor": {
+        "type": "point",
+        "x": 560,
+        "y": 380,
+        "mark": {
+          "shape": "circle",
+          "r": 28
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "USA"
+      },
+      "attrs": {
+        "pop": 330
+      }
+    },
+    {
+      "id": "c3",
+      "anchor": {
+        "type": "point",
+        "x": 600,
+        "y": 120,
+        "mark": {
+          "shape": "circle",
+          "r": 20
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "Indonesia"
+      },
+      "attrs": {
+        "pop": 270
+      }
+    },
+    {
+      "id": "c4",
+      "anchor": {
+        "type": "point",
+        "x": 120,
+        "y": 420,
+        "mark": {
+          "shape": "circle",
+          "r": 12
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "Brazil"
+      },
+      "attrs": {
+        "pop": 210
+      }
+    },
+    {
+      "id": "c5",
+      "anchor": {
+        "type": "point",
+        "x": 330,
+        "y": 430,
+        "mark": {
+          "shape": "circle",
+          "r": 6
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "Iceland"
+      },
+      "attrs": {
+        "pop": 0.37
+      }
+    },
+    {
+      "id": "c6",
+      "anchor": {
+        "type": "point",
+        "x": 650,
+        "y": 450,
+        "mark": {
+          "shape": "circle",
+          "r": 4
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "Malta"
+      },
+      "attrs": {
+        "pop": 0.5
+      }
+    },
+    {
+      "id": "c7",
+      "anchor": {
+        "type": "point",
+        "x": 90,
+        "y": 90,
+        "mark": {
+          "shape": "circle",
+          "r": 9
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "Chile"
+      },
+      "attrs": {
+        "pop": 19
+      }
+    }
+  ],
+  "placement": {
+    "internal": "auto"
+  },
+  "priority": {
+    "terms": [
+      {
+        "attr": "pop",
+        "transform": "log1p"
+      }
+    ]
+  }
+}

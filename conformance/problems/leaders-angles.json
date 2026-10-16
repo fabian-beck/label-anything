@@ -1,0 +1,151 @@
+{
+  "canvas": {
+    "width": 500,
+    "height": 400
+  },
+  "items": [
+    {
+      "id": "d0",
+      "anchor": {
+        "type": "point",
+        "x": 256.0,
+        "y": 200.0
+      },
+      "label": {
+        "type": "text",
+        "text": "Dense label 0"
+      }
+    },
+    {
+      "id": "d1",
+      "anchor": {
+        "type": "point",
+        "x": 253.24181383520883,
+        "y": 205.0488259088474
+      },
+      "label": {
+        "type": "text",
+        "text": "Dense label 1"
+      }
+    },
+    {
+      "id": "d2",
+      "anchor": {
+        "type": "point",
+        "x": 247.50311898071715,
+        "y": 205.4557845609541
+      },
+      "label": {
+        "type": "text",
+        "text": "Dense label 2"
+      }
+    },
+    {
+      "id": "d3",
+      "anchor": {
+        "type": "point",
+        "x": 244.06004502039733,
+        "y": 200.8467200483592
+      },
+      "label": {
+        "type": "text",
+        "text": "Dense label 3"
+      }
+    },
+    {
+      "id": "d4",
+      "anchor": {
+        "type": "point",
+        "x": 246.07813827481831,
+        "y": 195.45918502815243
+      },
+      "label": {
+        "type": "text",
+        "text": "Dense label 4"
+      }
+    },
+    {
+      "id": "d5",
+      "anchor": {
+        "type": "point",
+        "x": 251.70197311277937,
+        "y": 194.24645435202117
+      },
+      "label": {
+        "type": "text",
+        "text": "Dense label 5"
+      }
+    },
+    {
+      "id": "d6",
+      "anchor": {
+        "type": "point",
+        "x": 255.7610217199022,
+        "y": 198.32350701080645
+      },
+      "label": {
+        "type": "text",
+        "text": "Dense label 6"
+      }
+    },
+    {
+      "id": "d7",
+      "anchor": {
+        "type": "point",
+        "x": 254.52341352605984,
+        "y": 203.94191959231273
+      },
+      "label": {
+        "type": "text",
+        "text": "Dense label 7"
+      }
+    },
+    {
+      "id": "d8",
+      "anchor": {
+        "type": "point",
+        "x": 249.12699979714833,
+        "y": 205.9361494797403
+      },
+      "label": {
+        "type": "text",
+        "text": "Dense label 8"
+      }
+    },
+    {
+      "id": "d9",
+      "anchor": {
+        "type": "point",
+        "x": 244.53321842869195,
+        "y": 202.47271091145055
+      },
+      "label": {
+        "type": "text",
+        "text": "Dense label 9"
+      }
+    }
+  ],
+  "placement": {
+    "models": [
+      "adjacent",
+      "slider",
+      "distant"
+    ],
+    "max_distance": "10em"
+  },
+  "leaders": {
+    "style": "angles",
+    "angles": [
+      0,
+      45,
+      90,
+      135,
+      180,
+      225,
+      270,
+      315
+    ],
+    "port": "side-center",
+    "clearance": 3
+  }
+}

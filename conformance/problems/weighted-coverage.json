@@ -1,0 +1,662 @@
+{
+  "canvas": {
+    "width": 600,
+    "height": 400
+  },
+  "items": [
+    {
+      "id": "w0",
+      "anchor": {
+        "type": "point",
+        "x": 523.5,
+        "y": 293.9
+      },
+      "label": {
+        "type": "text",
+        "text": "City 0"
+      },
+      "attrs": {
+        "traffic": 0,
+        "region": "north"
+      }
+    },
+    {
+      "id": "w1",
+      "anchor": {
+        "type": "point",
+        "x": 260.4,
+        "y": 143.0
+      },
+      "label": {
+        "type": "text",
+        "text": "City 1"
+      },
+      "attrs": {
+        "traffic": 37,
+        "region": "south"
+      }
+    },
+    {
+      "id": "w2",
+      "anchor": {
+        "type": "point",
+        "x": 130.2,
+        "y": 304.5
+      },
+      "label": {
+        "type": "text",
+        "text": "City 2"
+      },
+      "attrs": {
+        "traffic": 74,
+        "region": "east"
+      }
+    },
+    {
+      "id": "w3",
+      "anchor": {
+        "type": "point",
+        "x": 81.2,
+        "y": 342.5
+      },
+      "label": {
+        "type": "text",
+        "text": "City 3"
+      },
+      "attrs": {
+        "traffic": 11,
+        "region": "north"
+      }
+    },
+    {
+      "id": "w4",
+      "anchor": {
+        "type": "point",
+        "x": 164.5,
+        "y": 93.2
+      },
+      "label": {
+        "type": "text",
+        "text": "City 4"
+      },
+      "attrs": {
+        "traffic": 48,
+        "region": "south"
+      }
+    },
+    {
+      "id": "w5",
+      "anchor": {
+        "type": "point",
+        "x": 235.2,
+        "y": 139.7
+      },
+      "label": {
+        "type": "text",
+        "text": "City 5"
+      },
+      "attrs": {
+        "traffic": 85,
+        "region": "east"
+      }
+    },
+    {
+      "id": "w6",
+      "anchor": {
+        "type": "point",
+        "x": 254.4,
+        "y": 192.3
+      },
+      "label": {
+        "type": "text",
+        "text": "City 6"
+      },
+      "attrs": {
+        "traffic": 22,
+        "region": "north"
+      }
+    },
+    {
+      "id": "w7",
+      "anchor": {
+        "type": "point",
+        "x": 133.9,
+        "y": 330.5
+      },
+      "label": {
+        "type": "text",
+        "text": "City 7"
+      },
+      "attrs": {
+        "traffic": 59,
+        "region": "south"
+      }
+    },
+    {
+      "id": "w8",
+      "anchor": {
+        "type": "point",
+        "x": 92.9,
+        "y": 47.5
+      },
+      "label": {
+        "type": "text",
+        "text": "City 8"
+      },
+      "attrs": {
+        "traffic": 96,
+        "region": "east"
+      }
+    },
+    {
+      "id": "w9",
+      "anchor": {
+        "type": "point",
+        "x": 483.9,
+        "y": 45.6
+      },
+      "label": {
+        "type": "text",
+        "text": "City 9"
+      },
+      "attrs": {
+        "traffic": 33,
+        "region": "north"
+      }
+    },
+    {
+      "id": "w10",
+      "anchor": {
+        "type": "point",
+        "x": 428.3,
+        "y": 107.2
+      },
+      "label": {
+        "type": "text",
+        "text": "City 10"
+      },
+      "attrs": {
+        "traffic": 70,
+        "region": "south"
+      }
+    },
+    {
+      "id": "w11",
+      "anchor": {
+        "type": "point",
+        "x": 182.0,
+        "y": 125.4
+      },
+      "label": {
+        "type": "text",
+        "text": "City 11"
+      },
+      "attrs": {
+        "traffic": 7,
+        "region": "east"
+      }
+    },
+    {
+      "id": "w12",
+      "anchor": {
+        "type": "point",
+        "x": 231.6,
+        "y": 220.1
+      },
+      "label": {
+        "type": "text",
+        "text": "City 12"
+      },
+      "attrs": {
+        "traffic": 44,
+        "region": "north"
+      }
+    },
+    {
+      "id": "w13",
+      "anchor": {
+        "type": "point",
+        "x": 429.4,
+        "y": 98.8
+      },
+      "label": {
+        "type": "text",
+        "text": "City 13"
+      },
+      "attrs": {
+        "traffic": 81,
+        "region": "south"
+      }
+    },
+    {
+      "id": "w14",
+      "anchor": {
+        "type": "point",
+        "x": 358.6,
+        "y": 92.5
+      },
+      "label": {
+        "type": "text",
+        "text": "City 14"
+      },
+      "attrs": {
+        "traffic": 18,
+        "region": "east"
+      }
+    },
+    {
+      "id": "w15",
+      "anchor": {
+        "type": "point",
+        "x": 251.1,
+        "y": 196.9
+      },
+      "label": {
+        "type": "text",
+        "text": "City 15"
+      },
+      "attrs": {
+        "traffic": 55,
+        "region": "north"
+      }
+    },
+    {
+      "id": "w16",
+      "anchor": {
+        "type": "point",
+        "x": 365.6,
+        "y": 355.9
+      },
+      "label": {
+        "type": "text",
+        "text": "City 16"
+      },
+      "attrs": {
+        "traffic": 92,
+        "region": "south"
+      }
+    },
+    {
+      "id": "w17",
+      "anchor": {
+        "type": "point",
+        "x": 112.5,
+        "y": 150.4
+      },
+      "label": {
+        "type": "text",
+        "text": "City 17"
+      },
+      "attrs": {
+        "traffic": 29,
+        "region": "east"
+      }
+    },
+    {
+      "id": "w18",
+      "anchor": {
+        "type": "point",
+        "x": 357.3,
+        "y": 72.4
+      },
+      "label": {
+        "type": "text",
+        "text": "City 18"
+      },
+      "attrs": {
+        "traffic": 66,
+        "region": "north"
+      }
+    },
+    {
+      "id": "w19",
+      "anchor": {
+        "type": "point",
+        "x": 418.9,
+        "y": 121.9
+      },
+      "label": {
+        "type": "text",
+        "text": "City 19"
+      },
+      "attrs": {
+        "traffic": 3,
+        "region": "south"
+      }
+    },
+    {
+      "id": "w20",
+      "anchor": {
+        "type": "point",
+        "x": 246.3,
+        "y": 110.7
+      },
+      "label": {
+        "type": "text",
+        "text": "City 20"
+      },
+      "attrs": {
+        "traffic": 40,
+        "region": "east"
+      }
+    },
+    {
+      "id": "w21",
+      "anchor": {
+        "type": "point",
+        "x": 149.0,
+        "y": 322.7
+      },
+      "label": {
+        "type": "text",
+        "text": "City 21"
+      },
+      "attrs": {
+        "traffic": 77,
+        "region": "north"
+      }
+    },
+    {
+      "id": "w22",
+      "anchor": {
+        "type": "point",
+        "x": 502.3,
+        "y": 221.1
+      },
+      "label": {
+        "type": "text",
+        "text": "City 22"
+      },
+      "attrs": {
+        "traffic": 14,
+        "region": "south"
+      }
+    },
+    {
+      "id": "w23",
+      "anchor": {
+        "type": "point",
+        "x": 89.8,
+        "y": 183.3
+      },
+      "label": {
+        "type": "text",
+        "text": "City 23"
+      },
+      "attrs": {
+        "traffic": 51,
+        "region": "east"
+      }
+    },
+    {
+      "id": "w24",
+      "anchor": {
+        "type": "point",
+        "x": 409.8,
+        "y": 199.5
+      },
+      "label": {
+        "type": "text",
+        "text": "City 24"
+      },
+      "attrs": {
+        "traffic": 88,
+        "region": "north"
+      }
+    },
+    {
+      "id": "w25",
+      "anchor": {
+        "type": "point",
+        "x": 322.1,
+        "y": 348.7
+      },
+      "label": {
+        "type": "text",
+        "text": "City 25"
+      },
+      "attrs": {
+        "traffic": 25,
+        "region": "south"
+      }
+    },
+    {
+      "id": "w26",
+      "anchor": {
+        "type": "point",
+        "x": 513.8,
+        "y": 331.5
+      },
+      "label": {
+        "type": "text",
+        "text": "City 26"
+      },
+      "attrs": {
+        "traffic": 62,
+        "region": "east"
+      }
+    },
+    {
+      "id": "w27",
+      "anchor": {
+        "type": "point",
+        "x": 65.1,
+        "y": 48.4
+      },
+      "label": {
+        "type": "text",
+        "text": "City 27"
+      },
+      "attrs": {
+        "traffic": 99,
+        "region": "north"
+      }
+    },
+    {
+      "id": "w28",
+      "anchor": {
+        "type": "point",
+        "x": 70.7,
+        "y": 305.3
+      },
+      "label": {
+        "type": "text",
+        "text": "City 28"
+      },
+      "attrs": {
+        "traffic": 36,
+        "region": "south"
+      }
+    },
+    {
+      "id": "w29",
+      "anchor": {
+        "type": "point",
+        "x": 449.6,
+        "y": 150.1
+      },
+      "label": {
+        "type": "text",
+        "text": "City 29"
+      },
+      "attrs": {
+        "traffic": 73,
+        "region": "east"
+      }
+    },
+    {
+      "id": "w30",
+      "anchor": {
+        "type": "point",
+        "x": 345.3,
+        "y": 104.2
+      },
+      "label": {
+        "type": "text",
+        "text": "City 30"
+      },
+      "attrs": {
+        "traffic": 10,
+        "region": "north"
+      }
+    },
+    {
+      "id": "w31",
+      "anchor": {
+        "type": "point",
+        "x": 127.3,
+        "y": 288.1
+      },
+      "label": {
+        "type": "text",
+        "text": "City 31"
+      },
+      "attrs": {
+        "traffic": 47,
+        "region": "south"
+      }
+    },
+    {
+      "id": "w32",
+      "anchor": {
+        "type": "point",
+        "x": 410.4,
+        "y": 148.2
+      },
+      "label": {
+        "type": "text",
+        "text": "City 32"
+      },
+      "attrs": {
+        "traffic": 84,
+        "region": "east"
+      }
+    },
+    {
+      "id": "w33",
+      "anchor": {
+        "type": "point",
+        "x": 406.4,
+        "y": 56.4
+      },
+      "label": {
+        "type": "text",
+        "text": "City 33"
+      },
+      "attrs": {
+        "traffic": 21,
+        "region": "north"
+      }
+    },
+    {
+      "id": "w34",
+      "anchor": {
+        "type": "point",
+        "x": 449.6,
+        "y": 355.7
+      },
+      "label": {
+        "type": "text",
+        "text": "City 34"
+      },
+      "attrs": {
+        "traffic": 58,
+        "region": "south"
+      }
+    },
+    {
+      "id": "w35",
+      "anchor": {
+        "type": "point",
+        "x": 460.6,
+        "y": 335.5
+      },
+      "label": {
+        "type": "text",
+        "text": "City 35"
+      },
+      "attrs": {
+        "traffic": 95,
+        "region": "east"
+      }
+    },
+    {
+      "id": "w36",
+      "anchor": {
+        "type": "point",
+        "x": 260.8,
+        "y": 193.6
+      },
+      "label": {
+        "type": "text",
+        "text": "City 36"
+      },
+      "attrs": {
+        "traffic": 32,
+        "region": "north"
+      }
+    },
+    {
+      "id": "w37",
+      "anchor": {
+        "type": "point",
+        "x": 341.9,
+        "y": 343.8
+      },
+      "label": {
+        "type": "text",
+        "text": "City 37"
+      },
+      "attrs": {
+        "traffic": 69,
+        "region": "south"
+      }
+    },
+    {
+      "id": "w38",
+      "anchor": {
+        "type": "point",
+        "x": 159.9,
+        "y": 347.6
+      },
+      "label": {
+        "type": "text",
+        "text": "City 38"
+      },
+      "attrs": {
+        "traffic": 6,
+        "region": "east"
+      }
+    },
+    {
+      "id": "w39",
+      "anchor": {
+        "type": "point",
+        "x": 145.1,
+        "y": 244.2
+      },
+      "label": {
+        "type": "text",
+        "text": "City 39"
+      },
+      "attrs": {
+        "traffic": 43,
+        "region": "north"
+      }
+    }
+  ],
+  "priority": {
+    "terms": [
+      {
+        "attr": "traffic",
+        "normalize": "minmax"
+      }
+    ],
+    "omission": "weighted",
+    "coverage": {
+      "by": "attrs.region",
+      "min_per_group": 2
+    },
+    "ties": "anchor_x"
+  }
+}

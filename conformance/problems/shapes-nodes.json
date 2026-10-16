@@ -1,0 +1,118 @@
+{
+  "canvas": {
+    "width": 600,
+    "height": 400
+  },
+  "preset": "graph",
+  "items": [
+    {
+      "id": "server-a",
+      "anchor": {
+        "type": "point",
+        "x": 120,
+        "y": 100,
+        "mark": {
+          "shape": "rect",
+          "w": 80,
+          "h": 30,
+          "corner_radius": 6
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "Server A"
+      }
+    },
+    {
+      "id": "db",
+      "anchor": {
+        "type": "point",
+        "x": 320,
+        "y": 110,
+        "mark": {
+          "shape": "ellipse",
+          "rx": 50,
+          "ry": 22
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "Database"
+      }
+    },
+    {
+      "id": "rot",
+      "anchor": {
+        "type": "point",
+        "x": 470,
+        "y": 260,
+        "mark": {
+          "shape": "rect",
+          "w": 40,
+          "h": 20,
+          "rotation": 30
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "Rotated node"
+      }
+    },
+    {
+      "id": "tiny",
+      "anchor": {
+        "type": "point",
+        "x": 200,
+        "y": 300,
+        "mark": {
+          "shape": "circle",
+          "r": 4
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "Tiny node with a long name"
+      }
+    }
+  ],
+  "obstacles": {
+    "vector": [
+      {
+        "class": "lines",
+        "polylines": [
+          [
+            [
+              120,
+              100
+            ],
+            [
+              320,
+              110
+            ]
+          ],
+          [
+            [
+              320,
+              110
+            ],
+            [
+              470,
+              260
+            ]
+          ],
+          [
+            [
+              200,
+              300
+            ],
+            [
+              120,
+              100
+            ]
+          ]
+        ],
+        "width": 1.5
+      }
+    ]
+  }
+}

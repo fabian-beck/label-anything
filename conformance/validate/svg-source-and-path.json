@@ -1,0 +1,23 @@
+{
+  "kind": "validate",
+  "name": "svg-source-and-path",
+  "problem": {
+    "items": [],
+    "obstacles": {
+      "svg": {
+        "source": "<svg/>",
+        "path": "a.svg"
+      }
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/obstacles/svg",
+        "code": "exclusive"
+      }
+    ],
+    "warnings": []
+  }
+}

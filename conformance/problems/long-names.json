@@ -1,0 +1,79 @@
+{
+  "canvas": {
+    "width": 640,
+    "height": 480
+  },
+  "defaults": {
+    "font": {
+      "size": 11
+    }
+  },
+  "items": [
+    {
+      "id": "Foo.java",
+      "anchor": {
+        "type": "point",
+        "x": 320,
+        "y": 200
+      },
+      "label": {
+        "type": "text",
+        "text": "org.example.very.long.ClassName",
+        "alternatives": [
+          "ClassName",
+          "CN"
+        ],
+        "wrap": {
+          "max_width": "12em",
+          "max_lines": 2
+        },
+        "truncate": "middle"
+      }
+    },
+    {
+      "id": "Bar.java",
+      "anchor": {
+        "type": "point",
+        "x": 330,
+        "y": 210
+      },
+      "label": {
+        "type": "text",
+        "text": "org.apache.commons.lang3.builder.ReflectionToStringBuilder",
+        "wrap": {
+          "max_width": "10em",
+          "max_lines": 3
+        },
+        "truncate": "end"
+      }
+    },
+    {
+      "id": "gene",
+      "anchor": {
+        "type": "point",
+        "x": 100,
+        "y": 100
+      },
+      "label": {
+        "type": "text",
+        "text": "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION",
+        "wrap": {
+          "max_width": 90,
+          "max_lines": 3
+        }
+      }
+    },
+    {
+      "id": "paper",
+      "anchor": {
+        "type": "point",
+        "x": 500,
+        "y": 400
+      },
+      "label": {
+        "type": "text",
+        "text": "A Very Long Paper Title That Goes On and On: The Sequel"
+      }
+    }
+  ]
+}

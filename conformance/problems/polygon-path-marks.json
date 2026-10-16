@@ -1,0 +1,92 @@
+{
+  "canvas": {
+    "width": 500,
+    "height": 400
+  },
+  "items": [
+    {
+      "id": "poly",
+      "anchor": {
+        "type": "point",
+        "x": 150,
+        "y": 150,
+        "mark": {
+          "shape": "polygon",
+          "relative": true,
+          "points": [
+            [
+              -40,
+              -30
+            ],
+            [
+              40,
+              -30
+            ],
+            [
+              40,
+              30
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              -40,
+              30
+            ]
+          ]
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "Concave"
+      }
+    },
+    {
+      "id": "path",
+      "anchor": {
+        "type": "point",
+        "x": 350,
+        "y": 150,
+        "mark": {
+          "shape": "path",
+          "relative": true,
+          "d": "M -30 0 A 30 20 0 1 1 30 0 L 0 40 Z"
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "Path mark"
+      }
+    },
+    {
+      "id": "svgnode",
+      "svg_id": "node7",
+      "anchor": {
+        "type": "point",
+        "x": 250,
+        "y": 300,
+        "mark": {
+          "shape": "from_svg",
+          "svg_id": "node7"
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "From SVG"
+      }
+    }
+  ],
+  "obstacles": {
+    "svg": {
+      "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"500\" height=\"400\"><rect id=\"node7\" x=\"220\" y=\"285\" width=\"60\" height=\"30\" rx=\"5\"/></svg>",
+      "auto_mark_items": true,
+      "classes": [
+        {
+          "selector": "*",
+          "class": "ink"
+        }
+      ]
+    }
+  }
+}

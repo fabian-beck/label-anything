@@ -1,0 +1,20 @@
+{
+  "kind": "validate",
+  "name": "negative-length",
+  "problem": {
+    "items": [],
+    "placement": {
+      "offset": -2
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/placement/offset",
+        "code": "range"
+      }
+    ],
+    "warnings": []
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "kind": "validate",
+  "name": "bad-enum",
+  "problem": {
+    "items": [],
+    "leaders": {
+      "style": "zigzag"
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/leaders/style",
+        "code": "enum"
+      }
+    ],
+    "warnings": []
+  }
+}

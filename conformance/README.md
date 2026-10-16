@@ -22,7 +22,8 @@ Every file is one JSON object with a `kind`:
 {
   "kind": "validate",
   "name": "duplicate ids",
-  "problem": { ... } | "problem_file": "../problems/scatter-basic.json",
+  "problem": { ... } | "problem_file": "../problems/scatter-basic.json"
+             | "problem_files": ["../problems/a.json", "..."],   // each must satisfy expect
   "expect": {
     "valid": false,
     "errors": [ { "pointer": "/items/1/id", "code": "duplicate_id" } ],   // must all be reported
@@ -58,7 +59,11 @@ Warning codes: `unknown_class` (an `avoid` key that no source produces and that 
 reserved), `ignored` (an option that has no effect in this context).
 
 Pointers are RFC 6901 JSON Pointers into the problem. For `unknown_property` the pointer
-points at the offending property; for `required` at the object missing it.
+points at the offending property; for `required` at the missing property (e.g.
+`/items/0/anchor/y`); for `exclusive` at the object whose alternatives conflict.
+
+`check_schema.py` validates every problem with the JSON Schema itself (Python
+`jsonschema`, Draft 2020-12) and checks that the expected `valid` flags agree with it.
 
 ## `place` cases
 

@@ -1,0 +1,87 @@
+{
+  "canvas": {
+    "width": 500,
+    "height": 300
+  },
+  "items": [
+    {
+      "id": "SEA",
+      "anchor": {
+        "type": "point",
+        "x": 120,
+        "y": 40
+      },
+      "label": {
+        "type": "icon",
+        "width": 16,
+        "height": 16,
+        "shape": "rect"
+      }
+    },
+    {
+      "id": "n17",
+      "anchor": {
+        "type": "point",
+        "x": 300,
+        "y": 150,
+        "mark": {
+          "shape": "rect",
+          "w": 30,
+          "h": 18,
+          "corner_radius": 4
+        }
+      },
+      "label": {
+        "type": "composite",
+        "direction": "row",
+        "gap": 3,
+        "parts": [
+          {
+            "type": "icon",
+            "width": 12,
+            "height": 12
+          },
+          {
+            "type": "text",
+            "text": "Server A"
+          }
+        ]
+      }
+    },
+    {
+      "id": "spark",
+      "anchor": {
+        "type": "point",
+        "x": 200,
+        "y": 220
+      },
+      "label": {
+        "type": "box",
+        "width": 60,
+        "height": 14,
+        "shape": "rounded:3"
+      }
+    },
+    {
+      "id": "pin",
+      "anchor": {
+        "type": "point",
+        "x": 420,
+        "y": 120,
+        "mark": {
+          "shape": "icon",
+          "w": 14,
+          "h": 20,
+          "tip": [
+            7,
+            20
+          ]
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "Café Central"
+      }
+    }
+  ]
+}

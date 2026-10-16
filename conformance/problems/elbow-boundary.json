@@ -1,0 +1,123 @@
+{
+  "canvas": {
+    "width": 700,
+    "height": 400
+  },
+  "preset": "illustration",
+  "items": [
+    {
+      "id": "part0",
+      "anchor": {
+        "type": "point",
+        "x": 250,
+        "y": 100
+      },
+      "label": {
+        "type": "text",
+        "text": "Part 0: component"
+      }
+    },
+    {
+      "id": "part1",
+      "anchor": {
+        "type": "point",
+        "x": 290,
+        "y": 100
+      },
+      "label": {
+        "type": "text",
+        "text": "Part 1: component"
+      }
+    },
+    {
+      "id": "part2",
+      "anchor": {
+        "type": "point",
+        "x": 330,
+        "y": 100
+      },
+      "label": {
+        "type": "text",
+        "text": "Part 2: component"
+      }
+    },
+    {
+      "id": "part3",
+      "anchor": {
+        "type": "point",
+        "x": 370,
+        "y": 100
+      },
+      "label": {
+        "type": "text",
+        "text": "Part 3: component"
+      }
+    },
+    {
+      "id": "part4",
+      "anchor": {
+        "type": "point",
+        "x": 250,
+        "y": 150
+      },
+      "label": {
+        "type": "text",
+        "text": "Part 4: component"
+      }
+    },
+    {
+      "id": "part5",
+      "anchor": {
+        "type": "point",
+        "x": 290,
+        "y": 150
+      },
+      "label": {
+        "type": "text",
+        "text": "Part 5: component"
+      }
+    },
+    {
+      "id": "part6",
+      "anchor": {
+        "type": "point",
+        "x": 330,
+        "y": 150
+      },
+      "label": {
+        "type": "text",
+        "text": "Part 6: component"
+      }
+    },
+    {
+      "id": "part7",
+      "anchor": {
+        "type": "point",
+        "x": 370,
+        "y": 150
+      },
+      "label": {
+        "type": "text",
+        "text": "Part 7: component"
+      }
+    }
+  ],
+  "leaders": {
+    "style": "elbow",
+    "port": "side-center"
+  },
+  "placement": {
+    "models": [
+      "boundary"
+    ],
+    "boundary": {
+      "sides": [
+        "left",
+        "right"
+      ],
+      "align": "stack",
+      "gap": 4,
+      "margin": 8
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "canvas": {
+    "width": 800,
+    "height": 600,
+    "padding": "0.5em"
+  },
+  "defaults": {
+    "font": {
+      "family": "default",
+      "size": 14,
+      "weight": "bold",
+      "line_height": 1.3
+    },
+    "padding": "2pt",
+    "buffer": "0.25em"
+  },
+  "items": [
+    {
+      "id": "u1",
+      "anchor": {
+        "type": "point",
+        "x": 400,
+        "y": 300
+      },
+      "label": {
+        "type": "text",
+        "text": "Units everywhere",
+        "font": {
+          "size": 10,
+          "weight": 400
+        },
+        "padding": "1px"
+      }
+    },
+    {
+      "id": "u2",
+      "anchor": {
+        "type": "point",
+        "x": 420,
+        "y": 310
+      },
+      "label": {
+        "type": "text",
+        "text": "Bold label"
+      }
+    }
+  ],
+  "placement": {
+    "offset": "3px",
+    "max_distance": "6em"
+  },
+  "leaders": {
+    "min_length": "4pt",
+    "max_length": "12em",
+    "anchor_gap": "0.1em",
+    "clearance": "2px"
+  }
+}

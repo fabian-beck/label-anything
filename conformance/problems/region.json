@@ -1,0 +1,164 @@
+{
+  "canvas": {
+    "width": 600,
+    "height": 400,
+    "padding": 2,
+    "region": [
+      50,
+      20,
+      520,
+      340
+    ]
+  },
+  "items": [
+    {
+      "id": "e0",
+      "anchor": {
+        "type": "point",
+        "x": 55,
+        "y": 25
+      },
+      "label": {
+        "type": "text",
+        "text": "Edge 0"
+      }
+    },
+    {
+      "id": "e1",
+      "anchor": {
+        "type": "point",
+        "x": 105,
+        "y": 355
+      },
+      "label": {
+        "type": "text",
+        "text": "Edge 1"
+      }
+    },
+    {
+      "id": "e2",
+      "anchor": {
+        "type": "point",
+        "x": 155,
+        "y": 25
+      },
+      "label": {
+        "type": "text",
+        "text": "Edge 2"
+      }
+    },
+    {
+      "id": "e3",
+      "anchor": {
+        "type": "point",
+        "x": 205,
+        "y": 355
+      },
+      "label": {
+        "type": "text",
+        "text": "Edge 3"
+      }
+    },
+    {
+      "id": "e4",
+      "anchor": {
+        "type": "point",
+        "x": 255,
+        "y": 25
+      },
+      "label": {
+        "type": "text",
+        "text": "Edge 4"
+      }
+    },
+    {
+      "id": "e5",
+      "anchor": {
+        "type": "point",
+        "x": 305,
+        "y": 355
+      },
+      "label": {
+        "type": "text",
+        "text": "Edge 5"
+      }
+    },
+    {
+      "id": "e6",
+      "anchor": {
+        "type": "point",
+        "x": 355,
+        "y": 25
+      },
+      "label": {
+        "type": "text",
+        "text": "Edge 6"
+      }
+    },
+    {
+      "id": "e7",
+      "anchor": {
+        "type": "point",
+        "x": 405,
+        "y": 355
+      },
+      "label": {
+        "type": "text",
+        "text": "Edge 7"
+      }
+    },
+    {
+      "id": "e8",
+      "anchor": {
+        "type": "point",
+        "x": 455,
+        "y": 25
+      },
+      "label": {
+        "type": "text",
+        "text": "Edge 8"
+      }
+    },
+    {
+      "id": "e9",
+      "anchor": {
+        "type": "point",
+        "x": 505,
+        "y": 355
+      },
+      "label": {
+        "type": "text",
+        "text": "Edge 9"
+      }
+    }
+  ],
+  "obstacles": {
+    "vector": [
+      {
+        "class": "axes",
+        "rects": [
+          [
+            50,
+            360,
+            520,
+            1
+          ],
+          [
+            50,
+            20,
+            1,
+            340
+          ]
+        ]
+      }
+    ]
+  },
+  "avoid": {
+    "label": {
+      "axes": "hard"
+    },
+    "leader": {
+      "axes": "ignore"
+    }
+  }
+}

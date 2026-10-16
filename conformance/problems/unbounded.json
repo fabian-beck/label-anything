@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "id": "n1",
+      "anchor": {
+        "type": "point",
+        "x": -50,
+        "y": -20
+      },
+      "label": {
+        "type": "text",
+        "text": "Negative coords"
+      }
+    },
+    {
+      "id": "n2",
+      "anchor": {
+        "type": "point",
+        "x": 5000,
+        "y": 3000
+      },
+      "label": {
+        "type": "text",
+        "text": "Far away"
+      }
+    }
+  ],
+  "output": {
+    "debug_svg": true,
+    "cost_breakdown": true
+  }
+}

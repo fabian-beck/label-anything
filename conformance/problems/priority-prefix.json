@@ -1,0 +1,274 @@
+{
+  "canvas": {
+    "width": 400,
+    "height": 300
+  },
+  "items": [
+    {
+      "id": "t0",
+      "anchor": {
+        "type": "point",
+        "x": 200,
+        "y": 150
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 0"
+      },
+      "priority": 100
+    },
+    {
+      "id": "t1",
+      "anchor": {
+        "type": "point",
+        "x": 204,
+        "y": 150
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 1"
+      },
+      "priority": 99
+    },
+    {
+      "id": "t2",
+      "anchor": {
+        "type": "point",
+        "x": 208,
+        "y": 150
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 2"
+      },
+      "priority": 98
+    },
+    {
+      "id": "t3",
+      "anchor": {
+        "type": "point",
+        "x": 212,
+        "y": 150
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 3"
+      },
+      "priority": 97
+    },
+    {
+      "id": "t4",
+      "anchor": {
+        "type": "point",
+        "x": 216,
+        "y": 150
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 4"
+      },
+      "priority": 96
+    },
+    {
+      "id": "t5",
+      "anchor": {
+        "type": "point",
+        "x": 200,
+        "y": 154
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 5"
+      },
+      "priority": 95
+    },
+    {
+      "id": "t6",
+      "anchor": {
+        "type": "point",
+        "x": 204,
+        "y": 154
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 6"
+      },
+      "priority": 94
+    },
+    {
+      "id": "t7",
+      "anchor": {
+        "type": "point",
+        "x": 208,
+        "y": 154
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 7"
+      },
+      "priority": 93
+    },
+    {
+      "id": "t8",
+      "anchor": {
+        "type": "point",
+        "x": 212,
+        "y": 154
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 8"
+      },
+      "priority": 92
+    },
+    {
+      "id": "t9",
+      "anchor": {
+        "type": "point",
+        "x": 216,
+        "y": 154
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 9"
+      },
+      "priority": 91
+    },
+    {
+      "id": "t10",
+      "anchor": {
+        "type": "point",
+        "x": 200,
+        "y": 158
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 10"
+      },
+      "priority": 90
+    },
+    {
+      "id": "t11",
+      "anchor": {
+        "type": "point",
+        "x": 204,
+        "y": 158
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 11"
+      },
+      "priority": 89
+    },
+    {
+      "id": "t12",
+      "anchor": {
+        "type": "point",
+        "x": 208,
+        "y": 158
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 12"
+      },
+      "priority": 88
+    },
+    {
+      "id": "t13",
+      "anchor": {
+        "type": "point",
+        "x": 212,
+        "y": 158
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 13"
+      },
+      "priority": 87
+    },
+    {
+      "id": "t14",
+      "anchor": {
+        "type": "point",
+        "x": 216,
+        "y": 158
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 14"
+      },
+      "priority": 86
+    },
+    {
+      "id": "t15",
+      "anchor": {
+        "type": "point",
+        "x": 200,
+        "y": 162
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 15"
+      },
+      "priority": 85
+    },
+    {
+      "id": "t16",
+      "anchor": {
+        "type": "point",
+        "x": 204,
+        "y": 162
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 16"
+      },
+      "priority": 84
+    },
+    {
+      "id": "t17",
+      "anchor": {
+        "type": "point",
+        "x": 208,
+        "y": 162
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 17"
+      },
+      "priority": 83
+    },
+    {
+      "id": "t18",
+      "anchor": {
+        "type": "point",
+        "x": 212,
+        "y": 162
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 18"
+      },
+      "priority": 82
+    },
+    {
+      "id": "t19",
+      "anchor": {
+        "type": "point",
+        "x": 216,
+        "y": 162
+      },
+      "label": {
+        "type": "text",
+        "text": "Top item 19"
+      },
+      "priority": 81
+    }
+  ],
+  "priority": {
+    "omission": "prefix",
+    "budget": {
+      "max_labels": 10
+    }
+  }
+}

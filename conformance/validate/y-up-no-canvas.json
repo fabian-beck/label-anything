@@ -1,0 +1,18 @@
+{
+  "kind": "validate",
+  "name": "y-up-no-canvas",
+  "problem": {
+    "items": [],
+    "y_axis": "up"
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/canvas",
+        "code": "required"
+      }
+    ],
+    "warnings": []
+  }
+}

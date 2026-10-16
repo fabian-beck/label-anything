@@ -1,0 +1,33 @@
+{
+  "kind": "validate",
+  "name": "keep-with-unknown",
+  "problem": {
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 1,
+          "y": 1
+        },
+        "label": {
+          "type": "text",
+          "text": "A"
+        },
+        "keep_with": [
+          "zz"
+        ]
+      }
+    ]
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/items/0/keep_with/0",
+        "code": "unknown_ref"
+      }
+    ],
+    "warnings": []
+  }
+}

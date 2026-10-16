@@ -1,0 +1,20 @@
+{
+  "kind": "validate",
+  "name": "bad-unit",
+  "problem": {
+    "items": [],
+    "placement": {
+      "offset": "3 px"
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/placement/offset",
+        "code": "unit"
+      }
+    ],
+    "warnings": []
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "kind": "validate",
+  "name": "mark-extra-prop",
+  "problem": {
+    "items": [
+      {
+        "anchor": {
+          "type": "point",
+          "x": 1,
+          "y": 1,
+          "mark": {
+            "shape": "circle",
+            "r": 2,
+            "rx": 3
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "A"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/items/0/anchor/mark/rx",
+        "code": "unknown_property"
+      }
+    ],
+    "warnings": []
+  }
+}

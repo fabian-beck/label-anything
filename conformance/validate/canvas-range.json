@@ -1,0 +1,21 @@
+{
+  "kind": "validate",
+  "name": "canvas-range",
+  "problem": {
+    "canvas": {
+      "width": 0,
+      "height": 10
+    },
+    "items": []
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/canvas/width",
+        "code": "range"
+      }
+    ],
+    "warnings": []
+  }
+}

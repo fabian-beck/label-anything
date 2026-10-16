@@ -1,0 +1,18 @@
+{
+  "kind": "validate",
+  "name": "unknown-property",
+  "problem": {
+    "items": [],
+    "solverr": {}
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/solverr",
+        "code": "unknown_property"
+      }
+    ],
+    "warnings": []
+  }
+}

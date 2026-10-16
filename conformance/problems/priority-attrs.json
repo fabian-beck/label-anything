@@ -1,0 +1,512 @@
+{
+  "canvas": {
+    "width": 800,
+    "height": 600
+  },
+  "items": [
+    {
+      "id": "c0",
+      "anchor": {
+        "type": "point",
+        "x": 609.6,
+        "y": 345.5
+      },
+      "label": {
+        "type": "text",
+        "text": "Class0"
+      },
+      "attrs": {
+        "cbo": 0,
+        "category": "core"
+      }
+    },
+    {
+      "id": "c1",
+      "anchor": {
+        "type": "point",
+        "x": 317.5,
+        "y": 417.5
+      },
+      "label": {
+        "type": "text",
+        "text": "Class1"
+      },
+      "attrs": {
+        "cbo": 7,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c2",
+      "anchor": {
+        "type": "point",
+        "x": 590.7,
+        "y": 183.0
+      },
+      "label": {
+        "type": "text",
+        "text": "Class2"
+      },
+      "attrs": {
+        "cbo": 14,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c3",
+      "anchor": {
+        "type": "point",
+        "x": 726.5,
+        "y": 406.9
+      },
+      "label": {
+        "type": "text",
+        "text": "Class3"
+      },
+      "attrs": {
+        "cbo": 21,
+        "category": "core"
+      }
+    },
+    {
+      "id": "c4",
+      "anchor": {
+        "type": "point",
+        "x": 753.6,
+        "y": 292.6
+      },
+      "label": {
+        "type": "text",
+        "text": "Class4"
+      },
+      "attrs": {
+        "cbo": 28,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c5",
+      "anchor": {
+        "type": "point",
+        "x": 240.3,
+        "y": 388.9
+      },
+      "label": {
+        "type": "text",
+        "text": "Class5"
+      },
+      "attrs": {
+        "cbo": 35,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c6",
+      "anchor": {
+        "type": "point",
+        "x": 304.5,
+        "y": 442.1
+      },
+      "label": {
+        "type": "text",
+        "text": "Class6"
+      },
+      "attrs": {
+        "cbo": 42,
+        "category": "core"
+      }
+    },
+    {
+      "id": "c7",
+      "anchor": {
+        "type": "point",
+        "x": 602.7,
+        "y": 274.1
+      },
+      "label": {
+        "type": "text",
+        "text": "Class7"
+      },
+      "attrs": {
+        "cbo": 49,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c8",
+      "anchor": {
+        "type": "point",
+        "x": 272.6,
+        "y": 333.5
+      },
+      "label": {
+        "type": "text",
+        "text": "Class8"
+      },
+      "attrs": {
+        "cbo": 6,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c9",
+      "anchor": {
+        "type": "point",
+        "x": 633.8,
+        "y": 354.6
+      },
+      "label": {
+        "type": "text",
+        "text": "Class9"
+      },
+      "attrs": {
+        "cbo": 13,
+        "category": "core"
+      }
+    },
+    {
+      "id": "c10",
+      "anchor": {
+        "type": "point",
+        "x": 595.9,
+        "y": 139.2
+      },
+      "label": {
+        "type": "text",
+        "text": "Class10"
+      },
+      "attrs": {
+        "cbo": 20,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c11",
+      "anchor": {
+        "type": "point",
+        "x": 81.2,
+        "y": 187.0
+      },
+      "label": {
+        "type": "text",
+        "text": "Class11"
+      },
+      "attrs": {
+        "cbo": 27,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c12",
+      "anchor": {
+        "type": "point",
+        "x": 540.1,
+        "y": 394.0
+      },
+      "label": {
+        "type": "text",
+        "text": "Class12"
+      },
+      "attrs": {
+        "cbo": 34,
+        "category": "core"
+      }
+    },
+    {
+      "id": "c13",
+      "anchor": {
+        "type": "point",
+        "x": 44.2,
+        "y": 173.2
+      },
+      "label": {
+        "type": "text",
+        "text": "Class13"
+      },
+      "attrs": {
+        "cbo": 41,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c14",
+      "anchor": {
+        "type": "point",
+        "x": 719.7,
+        "y": 59.7
+      },
+      "label": {
+        "type": "text",
+        "text": "Class14"
+      },
+      "attrs": {
+        "cbo": 48,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c15",
+      "anchor": {
+        "type": "point",
+        "x": 218.5,
+        "y": 360.7
+      },
+      "label": {
+        "type": "text",
+        "text": "Class15"
+      },
+      "attrs": {
+        "cbo": 5,
+        "category": "core"
+      }
+    },
+    {
+      "id": "c16",
+      "anchor": {
+        "type": "point",
+        "x": 308.5,
+        "y": 152.5
+      },
+      "label": {
+        "type": "text",
+        "text": "Class16"
+      },
+      "attrs": {
+        "cbo": 12,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c17",
+      "anchor": {
+        "type": "point",
+        "x": 49.0,
+        "y": 87.1
+      },
+      "label": {
+        "type": "text",
+        "text": "Class17"
+      },
+      "attrs": {
+        "cbo": 19,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c18",
+      "anchor": {
+        "type": "point",
+        "x": 666.3,
+        "y": 310.0
+      },
+      "label": {
+        "type": "text",
+        "text": "Class18"
+      },
+      "attrs": {
+        "cbo": 26,
+        "category": "core"
+      }
+    },
+    {
+      "id": "c19",
+      "anchor": {
+        "type": "point",
+        "x": 437.8,
+        "y": 272.1
+      },
+      "label": {
+        "type": "text",
+        "text": "Class19"
+      },
+      "attrs": {
+        "cbo": 33,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c20",
+      "anchor": {
+        "type": "point",
+        "x": 330.2,
+        "y": 370.3
+      },
+      "label": {
+        "type": "text",
+        "text": "Class20"
+      },
+      "attrs": {
+        "cbo": 40,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c21",
+      "anchor": {
+        "type": "point",
+        "x": 135.7,
+        "y": 541.5
+      },
+      "label": {
+        "type": "text",
+        "text": "Class21"
+      },
+      "attrs": {
+        "cbo": 47,
+        "category": "core"
+      }
+    },
+    {
+      "id": "c22",
+      "anchor": {
+        "type": "point",
+        "x": 517.7,
+        "y": 55.6
+      },
+      "label": {
+        "type": "text",
+        "text": "Class22"
+      },
+      "attrs": {
+        "cbo": 4,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c23",
+      "anchor": {
+        "type": "point",
+        "x": 743.0,
+        "y": 266.1
+      },
+      "label": {
+        "type": "text",
+        "text": "Class23"
+      },
+      "attrs": {
+        "cbo": 11,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c24",
+      "anchor": {
+        "type": "point",
+        "x": 328.6,
+        "y": 517.5
+      },
+      "label": {
+        "type": "text",
+        "text": "Class24"
+      },
+      "attrs": {
+        "cbo": 18,
+        "category": "core"
+      }
+    },
+    {
+      "id": "c25",
+      "anchor": {
+        "type": "point",
+        "x": 50.0,
+        "y": 379.3
+      },
+      "label": {
+        "type": "text",
+        "text": "Class25"
+      },
+      "attrs": {
+        "cbo": 25,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c26",
+      "anchor": {
+        "type": "point",
+        "x": 73.9,
+        "y": 313.7
+      },
+      "label": {
+        "type": "text",
+        "text": "Class26"
+      },
+      "attrs": {
+        "cbo": 32,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c27",
+      "anchor": {
+        "type": "point",
+        "x": 601.5,
+        "y": 498.0
+      },
+      "label": {
+        "type": "text",
+        "text": "Class27"
+      },
+      "attrs": {
+        "cbo": 39,
+        "category": "core"
+      }
+    },
+    {
+      "id": "c28",
+      "anchor": {
+        "type": "point",
+        "x": 558.8,
+        "y": 493.2
+      },
+      "label": {
+        "type": "text",
+        "text": "Class28"
+      },
+      "attrs": {
+        "cbo": 46,
+        "category": "util"
+      }
+    },
+    {
+      "id": "c29",
+      "anchor": {
+        "type": "point",
+        "x": 254.6,
+        "y": 169.6
+      },
+      "label": {
+        "type": "text",
+        "text": "Class29"
+      },
+      "attrs": {
+        "cbo": 3,
+        "category": "util"
+      }
+    }
+  ],
+  "priority": {
+    "terms": [
+      {
+        "attr": "cbo",
+        "transform": "log1p",
+        "weight": 0.5
+      },
+      {
+        "builtin": "label_size",
+        "weight": -0.2
+      },
+      {
+        "builtin": "outlierness",
+        "k": 5
+      }
+    ],
+    "tiers": [
+      {
+        "where": "attrs.category == 'core'",
+        "tier": 1
+      }
+    ],
+    "omission": "strict"
+  }
+}

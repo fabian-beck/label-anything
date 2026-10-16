@@ -1,0 +1,22 @@
+{
+  "kind": "validate",
+  "name": "unknown-class-warning",
+  "problem": {
+    "items": [],
+    "avoid": {
+      "label": {
+        "outlierz": "hard"
+      }
+    }
+  },
+  "expect": {
+    "valid": true,
+    "errors": [],
+    "warnings": [
+      {
+        "pointer": "/avoid/label/outlierz",
+        "code": "unknown_class"
+      }
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "kind": "validate",
+  "name": "text-label-no-text",
+  "problem": {
+    "items": [
+      {
+        "anchor": {
+          "type": "point",
+          "x": 1,
+          "y": 1
+        },
+        "label": {
+          "type": "text"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/items/0/label/text",
+        "code": "required"
+      }
+    ],
+    "warnings": []
+  }
+}

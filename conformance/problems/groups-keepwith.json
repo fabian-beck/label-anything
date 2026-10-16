@@ -1,0 +1,75 @@
+{
+  "canvas": {
+    "width": 400,
+    "height": 300
+  },
+  "items": [
+    {
+      "id": "g1",
+      "anchor": {
+        "type": "point",
+        "x": 200,
+        "y": 150
+      },
+      "label": {
+        "type": "text",
+        "text": "Coincident A"
+      },
+      "group": "dup"
+    },
+    {
+      "id": "g2",
+      "anchor": {
+        "type": "point",
+        "x": 200.2,
+        "y": 150.1
+      },
+      "label": {
+        "type": "text",
+        "text": "Coincident B"
+      },
+      "group": "dup"
+    },
+    {
+      "id": "k1",
+      "anchor": {
+        "type": "point",
+        "x": 100,
+        "y": 80
+      },
+      "label": {
+        "type": "text",
+        "text": "Pair left"
+      },
+      "keep_with": "pair"
+    },
+    {
+      "id": "k2",
+      "anchor": {
+        "type": "point",
+        "x": 130,
+        "y": 80
+      },
+      "label": {
+        "type": "text",
+        "text": "Pair right"
+      },
+      "keep_with": "pair"
+    },
+    {
+      "id": "x",
+      "anchor": {
+        "type": "point",
+        "x": 300,
+        "y": 220
+      },
+      "label": {
+        "type": "text",
+        "text": "Solo"
+      },
+      "keep_with": [
+        "k1"
+      ]
+    }
+  ]
+}

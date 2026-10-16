@@ -1,0 +1,22 @@
+{
+  "kind": "validate",
+  "name": "raster-no-source",
+  "problem": {
+    "items": [],
+    "obstacles": {
+      "raster": {
+        "mode": "ink"
+      }
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/obstacles/raster",
+        "code": "exclusive"
+      }
+    ],
+    "warnings": []
+  }
+}

@@ -867,7 +867,7 @@
           "description": "CSS subset: type, .class, #id, [attr], [attr=value], descendant combinator, *, comma lists."
         },
         "class": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/$defs/className"
             },
@@ -898,7 +898,7 @@
           "description": "First matching rule wins. Unmatched drawn elements use default_class."
         },
         "default_class": {
-          "oneOf": [
+          "anyOf": [
             {
               "$ref": "#/$defs/className"
             },
@@ -1025,7 +1025,7 @@
             "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
           },
           "additionalProperties": {
-            "oneOf": [
+            "anyOf": [
               {
                 "$ref": "#/$defs/className"
               },

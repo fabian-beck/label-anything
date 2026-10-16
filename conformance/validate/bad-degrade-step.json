@@ -1,0 +1,21 @@
+{
+  "kind": "validate",
+  "name": "bad-degrade-step",
+  "problem": {
+    "items": [],
+    "degrade": [
+      "wrap",
+      "shrink:2"
+    ]
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/degrade/1",
+        "code": "pattern"
+      }
+    ],
+    "warnings": []
+  }
+}

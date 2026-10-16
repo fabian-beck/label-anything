@@ -1,0 +1,69 @@
+{
+  "canvas": {
+    "width": 500,
+    "height": 400
+  },
+  "preset": "map",
+  "items": [
+    {
+      "id": "lake",
+      "anchor": {
+        "type": "area",
+        "polygon": [
+          [
+            100,
+            100
+          ],
+          [
+            300,
+            80
+          ],
+          [
+            380,
+            200
+          ],
+          [
+            260,
+            300
+          ],
+          [
+            120,
+            260
+          ]
+        ]
+      },
+      "label": {
+        "type": "text",
+        "text": "Lake Constance"
+      }
+    },
+    {
+      "id": "pond",
+      "anchor": {
+        "type": "area",
+        "polygon": [
+          [
+            420,
+            330
+          ],
+          [
+            440,
+            325
+          ],
+          [
+            445,
+            345
+          ],
+          [
+            425,
+            350
+          ]
+        ]
+      },
+      "label": {
+        "type": "text",
+        "text": "Small pond"
+      }
+    }
+  ]
+}
