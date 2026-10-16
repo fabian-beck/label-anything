@@ -2,7 +2,7 @@
 
 | Data | Source (pinned) | License | Attribution |
 |---|---|---|---|
-| WordNet 3.0 (`wordnet/data.noun`, glosses and lemma names) | `nltk/nltk_data@550b6625…` `packages/corpora/wordnet.zip`, SHA-256 `cbda5ea6…6ab59` | WordNet 3.0 license (permissive, BSD-like) | Princeton University "About WordNet." WordNet. Princeton University. 2010. |
+| WordNet 3.0 (`wordnet/data.noun`, glosses and lemma names) | `nltk/nltk_data@550b6625…` `packages/corpora/wordnet.zip`, SHA-256 `cbda5ea6…2646ab59` | WordNet 3.0 license (permissive, BSD-like) | Princeton University "About WordNet." WordNet. Princeton University. 2010. |
 
 WordNet 3.0 license (required notice): *"WordNet 3.0 Copyright 2006 by Princeton
 University. All rights reserved. THIS SOFTWARE AND DATABASE IS PROVIDED "AS IS" AND

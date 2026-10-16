@@ -11,7 +11,7 @@ Configs:
 * ``lesmis-shapes``           same layout, UML/ER-like nodes: rounded rects (corner radius 4) sized to
                               hold the name for degree ≥ 8, ellipses for the others,
 * ``cora-circles``            Cora citation network, largest connected component (2,485 papers,
-                              5,069 links), 150 most cited papers labeled, other papers are hard
+                              5,069 links), 150 most cited papers labeled with their paper ids (alternative: last 4 digits), other papers are hard
                               ``nodes`` obstacles.
 """
 from __future__ import annotations
@@ -140,7 +140,7 @@ def main() -> None:
         if n in labeled:
             t = TOPICS.get(topic.get(n, ""), "Unknown")
             items.append({"id": n, "anchor": {"type": "point", "x": x, "y": y, "mark": {"shape": "circle", "r": r}},
-                          "label": {"type": "text", "text": f"{n} ({t})"},
+                          "label": {"type": "text", "text": n, "alternatives": [n[-4:]]},
                           "attrs": {"citations": citations.get(n, 0), "degree": deg, "topic": t}})
         else:
             others.append([x, y, r])

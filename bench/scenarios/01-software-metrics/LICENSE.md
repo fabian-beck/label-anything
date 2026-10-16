@@ -2,7 +2,7 @@
 
 | Data | Source (pinned) | License | Attribution |
 |---|---|---|---|
-| Java sources of `ReactAndroid/src/main/java` | npm `react-native@0.63.5` tarball, SHA-256 `4100debc…31eee` | MIT | React Native, Copyright (c) Facebook, Inc. and its affiliates. |
+| Java sources of `ReactAndroid/src/main/java` | npm `react-native@0.63.5` tarball, SHA-256 `4100debc…fd631eee` | MIT | React Native, Copyright (c) Facebook, Inc. and its affiliates. |
 
 The sources are downloaded by `fetch.py` and never committed. `build.py` only derives
 class names and metric values (CBO, RFC, WMC, LOC, …) from them; the generated problems
