@@ -71,7 +71,8 @@ impl CancelToken {
     }
 
     fn __repr__(&self) -> String {
-        format!("CancelToken(cancelled={})", self.cancelled())
+        let flag = if self.cancelled() { "True" } else { "False" };
+        format!("CancelToken(cancelled={flag})")
     }
 }
 

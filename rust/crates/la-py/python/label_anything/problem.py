@@ -330,8 +330,9 @@ def make_item(
         a["mark"] = mark_dict(mark)
     item["anchor"] = a
     item["label"] = label_dict(label)
-    if attrs:
-        item["attrs"] = clean_attrs(attrs)
+    cleaned = clean_attrs(attrs) if attrs else None
+    if cleaned:
+        item["attrs"] = cleaned
     if priority is not None:
         item["priority"] = _finite_number(priority, f"{pointer}/priority")
     if tier is not None:
