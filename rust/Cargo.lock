@@ -175,6 +175,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "label-anything-capi"
+version = "0.1.0"
+dependencies = [
+ "label-anything",
+ "serde_json",
+]
+
+[[package]]
 name = "label-anything-cli"
 version = "0.1.0"
 dependencies = [

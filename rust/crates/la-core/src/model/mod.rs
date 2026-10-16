@@ -29,7 +29,9 @@ impl LabelShape {
         match s {
             Some("circle") => LabelShape::Circle,
             Some("polygon") => LabelShape::Polygon(points_of(polygon.unwrap_or(&Value::Null))),
-            Some(x) if x.starts_with("rounded:") => LabelShape::Rounded(x[8..].parse().unwrap_or(0.0)),
+            Some(x) if x.starts_with("rounded:") => {
+                LabelShape::Rounded(x[8..].parse().unwrap_or(0.0))
+            }
             _ => LabelShape::Rect,
         }
     }
@@ -66,7 +68,12 @@ pub struct FontSel {
 
 impl FontSel {
     pub fn spec(&self, scale: f64) -> FontSpec {
-        FontSpec { family: self.family.clone(), weight: self.weight, italic: self.italic, size: self.size * scale }
+        FontSpec {
+            family: self.family.clone(),
+            weight: self.weight,
+            italic: self.italic,
+            size: self.size * scale,
+        }
     }
 }
 
@@ -98,14 +105,29 @@ pub enum FixedKind {
 #[derive(Clone, Debug, PartialEq)]
 pub enum PartSpec {
     Text(TextSpec),
-    Fixed { kind: FixedKind, w: f64, h: f64, shape: LabelShape },
+    Fixed {
+        kind: FixedKind,
+        w: f64,
+        h: f64,
+        shape: LabelShape,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum LabelSpec {
     Text(TextSpec),
-    Fixed { kind: FixedKind, w: f64, h: f64, shape: LabelShape },
-    Composite { row: bool, gap: f64, align: String, parts: Vec<PartSpec> },
+    Fixed {
+        kind: FixedKind,
+        w: f64,
+        h: f64,
+        shape: LabelShape,
+    },
+    Composite {
+        row: bool,
+        gap: f64,
+        align: String,
+        parts: Vec<PartSpec>,
+    },
 }
 
 impl LabelSpec {
@@ -196,10 +218,21 @@ impl Item {
 /// A vector obstacle primitive in canvas px.
 #[derive(Clone, Debug)]
 pub enum Prim {
-    Disc { c: P, r: f64 },
+    Disc {
+        c: P,
+        r: f64,
+    },
     Rect(Rect),
-    Polygon { rings: Vec<Vec<P>>, even_odd: bool, bbox: Rect },
-    Polyline { points: Vec<P>, hw: f64, closed: bool },
+    Polygon {
+        rings: Vec<Vec<P>>,
+        even_odd: bool,
+        bbox: Rect,
+    },
+    Polyline {
+        points: Vec<P>,
+        hw: f64,
+        closed: bool,
+    },
     Shape(Shape),
 }
 
@@ -270,7 +303,11 @@ pub struct Model {
 impl Model {
     /// Members of the group represented by `rep` (empty if `rep` is not a representative).
     pub fn group_members(&self, rep: usize) -> &[usize] {
-        self.groups.iter().find(|g| g.0 == rep).map(|g| g.1.as_slice()).unwrap_or(&[])
+        self.groups
+            .iter()
+            .find(|g| g.0 == rep)
+            .map(|g| g.1.as_slice())
+            .unwrap_or(&[])
     }
 }
 
@@ -283,7 +320,11 @@ pub struct BuildError {
 }
 
 fn err(pointer: impl Into<String>, code: &str, message: impl Into<String>) -> BuildError {
-    BuildError { pointer: pointer.into(), code: code.to_string(), message: message.into() }
+    BuildError {
+        pointer: pointer.into(),
+        code: code.to_string(),
+        message: message.into(),
+    }
 }
 
 pub fn points_of(v: &Value) -> Vec<P> {
@@ -416,7 +457,11 @@ fn resolve_groups(m: &mut Model) {
             by_name.entry(g.clone()).or_default().push(it.index);
         }
     }
-    let mut groups: Vec<(usize, Vec<usize>)> = by_name.into_values().filter(|v| v.len() >= 2).map(|v| (v[0], v)).collect();
+    let mut groups: Vec<(usize, Vec<usize>)> = by_name
+        .into_values()
+        .filter(|v| v.len() >= 2)
+        .map(|v| (v[0], v))
+        .collect();
     groups.sort_by_key(|g| g.0);
     for (rep, members) in &groups {
         let mut pts: Vec<P> = Vec::new();
@@ -428,7 +473,11 @@ fn resolve_groups(m: &mut Model) {
         }
         centroid = centroid * (1.0 / members.len() as f64);
         let hull = polygon::convex_hull(&pts);
-        let shape = if hull.len() >= 3 { Shape::polygon(vec![hull], false, centroid) } else { Shape::circle(centroid, 2.0) };
+        let shape = if hull.len() >= 3 {
+            Shape::polygon(vec![hull], false, centroid)
+        } else {
+            Shape::circle(centroid, 2.0)
+        };
         let texts: Vec<String> = {
             let mut t: Vec<String> = Vec::new();
             for &k in members {
@@ -468,19 +517,56 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
 
     // --- rasters (decoded first: they may define the canvas) ---
     let mut rasters = Vec::new();
-    for (i, src) in as_list(lookup(problem, "obstacles.raster")).iter().enumerate() {
-        let ptr = format!("/obstacles/raster{}", if problem.pointer("/obstacles/raster").map(|v| v.is_array()).unwrap_or(false) { format!("/{i}") } else { String::new() });
+    let mut raster_list = as_list(lookup(problem, "obstacles.raster"));
+    let mut override_img = env.raster_override();
+    if override_img.is_some() && raster_list.is_empty() {
+        raster_list.push(Value::Object(Default::default()));
+    }
+    for (i, src) in raster_list.iter().enumerate() {
+        if let Some(img) = override_img.take() {
+            let opts = raster_opts(src, "/obstacles/raster")?;
+            rasters.push(RasterSrc { img, opts });
+            continue;
+        }
+        let ptr = format!(
+            "/obstacles/raster{}",
+            if problem
+                .pointer("/obstacles/raster")
+                .map(|v| v.is_array())
+                .unwrap_or(false)
+            {
+                format!("/{i}")
+            } else {
+                String::new()
+            }
+        );
         let Some(backend) = env.raster() else {
-            return Err(err(ptr, "unsupported", "raster backgrounds need a raster backend (not available in this build)"));
+            return Err(err(
+                ptr,
+                "unsupported",
+                "raster backgrounds need a raster backend (not available in this build)",
+            ));
         };
         let img = if let Some(rgba) = src.get("rgba") {
             let w = rgba["width"].as_u64().unwrap_or(0) as u32;
             let h = rgba["height"].as_u64().unwrap_or(0) as u32;
             let data = base64_decode(rgba["data"].as_str().unwrap_or("")).unwrap_or_default();
             if data.len() != (w as usize) * (h as usize) * 4 {
-                return Err(err(format!("{ptr}/rgba/data"), "invalid_value", format!("expected {} bytes of RGBA data, got {}", w as usize * h as usize * 4, data.len())));
+                return Err(err(
+                    format!("{ptr}/rgba/data"),
+                    "invalid_value",
+                    format!(
+                        "expected {} bytes of RGBA data, got {}",
+                        w as usize * h as usize * 4,
+                        data.len()
+                    ),
+                ));
             }
-            RgbaImage { width: w, height: h, data }
+            RgbaImage {
+                width: w,
+                height: h,
+                data,
+            }
         } else {
             let s = src["source"].as_str().unwrap_or("");
             let r = if s.starts_with("data:") || looks_base64(s) {
@@ -496,33 +582,65 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
 
     // --- canvas ---
     let mut canvas: Option<Rect> = problem.get("canvas").map(|c| {
-        Rect::new(0.0, 0.0, c["width"].as_f64().unwrap_or(0.0), c["height"].as_f64().unwrap_or(0.0))
+        Rect::new(
+            0.0,
+            0.0,
+            c["width"].as_f64().unwrap_or(0.0),
+            c["height"].as_f64().unwrap_or(0.0),
+        )
     });
     if canvas.is_none() {
         if let Some(r) = rasters.first() {
-            canvas = Some(Rect::new(0.0, 0.0, r.img.width as f64 / r.opts.scale, r.img.height as f64 / r.opts.scale));
+            canvas = Some(Rect::new(
+                0.0,
+                0.0,
+                r.img.width as f64 / r.opts.scale,
+                r.img.height as f64 / r.opts.scale,
+            ));
         }
     }
 
     // --- SVG documents ---
     let mut svgs: Vec<(Box<dyn SvgDoc>, Value, String)> = Vec::new();
     let svg_list = as_list(lookup(problem, "obstacles.svg"));
-    let svg_is_array = problem.pointer("/obstacles/svg").map(|v| v.is_array()).unwrap_or(false);
+    let svg_is_array = problem
+        .pointer("/obstacles/svg")
+        .map(|v| v.is_array())
+        .unwrap_or(false);
     for (i, src) in svg_list.iter().enumerate() {
-        let ptr = format!("/obstacles/svg{}", if svg_is_array { format!("/{i}") } else { String::new() });
+        let ptr = format!(
+            "/obstacles/svg{}",
+            if svg_is_array {
+                format!("/{i}")
+            } else {
+                String::new()
+            }
+        );
         let Some(backend) = env.svg() else {
-            return Err(err(ptr, "unsupported", "SVG backgrounds need an SVG backend (not available in this build)"));
+            return Err(err(
+                ptr,
+                "unsupported",
+                "SVG backgrounds need an SVG backend (not available in this build)",
+            ));
         };
-        let markup = match (src.get("source").and_then(|s| s.as_str()), src.get("path").and_then(|s| s.as_str())) {
+        let markup = match (
+            src.get("source").and_then(|s| s.as_str()),
+            src.get("path").and_then(|s| s.as_str()),
+        ) {
             (Some(s), _) => s.to_string(),
             (None, Some(p)) => {
-                let b = env.read_file(p).map_err(|m| err(format!("{ptr}/path"), "invalid_value", m))?;
+                let b = env
+                    .read_file(p)
+                    .map_err(|m| err(format!("{ptr}/path"), "invalid_value", m))?;
                 String::from_utf8_lossy(&b).into_owned()
             }
             _ => String::new(),
         };
-        let tol = source_opt(src, "obstacles.svg", "tolerance").as_f64().unwrap_or(0.25);
-        let measure = |t: &str, size: f64, _fam: &str, _w: u16| t.chars().count() as f64 * 0.55 * size;
+        let tol = source_opt(src, "obstacles.svg", "tolerance")
+            .as_f64()
+            .unwrap_or(0.25);
+        let measure =
+            |t: &str, size: f64, _fam: &str, _w: u16| t.chars().count() as f64 * 0.55 * size;
         let doc = backend
             .load(&markup, canvas.map(|c| (c.w(), c.h())), tol, &measure)
             .map_err(|m| err(format!("{ptr}/source"), "invalid_value", m))?;
@@ -547,60 +665,172 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     }
 
     // --- items ---
-    let items_json = problem.get("items").and_then(|v| v.as_array()).cloned().unwrap_or_default();
+    let items_json = problem
+        .get("items")
+        .and_then(|v| v.as_array())
+        .cloned()
+        .unwrap_or_default();
     let global_models = Models::from_names(&o.strings("placement.models"));
     let user_set_models = lookup(problem, "placement.models").is_some();
     let mut items = Vec::with_capacity(items_json.len());
     let mut used_svg_ids: Vec<String> = Vec::new();
-    let auto_marks = svg_list.iter().any(|s| source_opt(s, "obstacles.svg", "auto_mark_items").as_bool().unwrap_or(false));
+    let auto_marks = svg_list.iter().any(|s| {
+        source_opt(s, "obstacles.svg", "auto_mark_items")
+            .as_bool()
+            .unwrap_or(false)
+    });
     for (i, it) in items_json.iter().enumerate() {
         let ptr = format!("/items/{i}");
-        let item = build_item(i, it, &ptr, &o, &default_font, &to_px, &svgs, auto_marks, &mut used_svg_ids, global_models, &mut warnings)?;
+        let item = build_item(
+            i,
+            it,
+            &ptr,
+            &o,
+            &default_font,
+            &to_px,
+            &svgs,
+            auto_marks,
+            &mut used_svg_ids,
+            global_models,
+            &mut warnings,
+        )?;
         items.push(item);
     }
 
     // --- vector obstacles ---
     let mut vector: Vec<(String, Prim)> = Vec::new();
-    for layer in lookup(problem, "obstacles.vector").and_then(|v| v.as_array()).into_iter().flatten() {
+    for layer in lookup(problem, "obstacles.vector")
+        .and_then(|v| v.as_array())
+        .into_iter()
+        .flatten()
+    {
         let class = layer["class"].as_str().unwrap_or("ink").to_string();
-        let r = source_opt(layer, "obstacles.vector", "r").as_f64().unwrap_or(2.0);
-        let width = source_opt(layer, "obstacles.vector", "width").as_f64().unwrap_or(1.0);
-        let even_odd = source_opt(layer, "obstacles.vector", "fill_rule").as_str() == Some("evenodd");
+        let r = source_opt(layer, "obstacles.vector", "r")
+            .as_f64()
+            .unwrap_or(2.0);
+        let width = source_opt(layer, "obstacles.vector", "width")
+            .as_f64()
+            .unwrap_or(1.0);
+        let even_odd =
+            source_opt(layer, "obstacles.vector", "fill_rule").as_str() == Some("evenodd");
         for p in points_of(layer.get("points").unwrap_or(&Value::Null)) {
-            vector.push((class.clone(), Prim::Disc { c: to_px.apply(p), r }));
+            vector.push((
+                class.clone(),
+                Prim::Disc {
+                    c: to_px.apply(p),
+                    r,
+                },
+            ));
         }
-        for c in layer.get("circles").and_then(|v| v.as_array()).into_iter().flatten() {
-            let (x, y, cr) = (c[0].as_f64().unwrap_or(0.0), c[1].as_f64().unwrap_or(0.0), c[2].as_f64().unwrap_or(0.0));
-            vector.push((class.clone(), Prim::Disc { c: to_px.apply(P::new(x, y)), r: cr }));
+        for c in layer
+            .get("circles")
+            .and_then(|v| v.as_array())
+            .into_iter()
+            .flatten()
+        {
+            let (x, y, cr) = (
+                c[0].as_f64().unwrap_or(0.0),
+                c[1].as_f64().unwrap_or(0.0),
+                c[2].as_f64().unwrap_or(0.0),
+            );
+            vector.push((
+                class.clone(),
+                Prim::Disc {
+                    c: to_px.apply(P::new(x, y)),
+                    r: cr,
+                },
+            ));
         }
-        for pl in layer.get("polylines").and_then(|v| v.as_array()).into_iter().flatten() {
+        for pl in layer
+            .get("polylines")
+            .and_then(|v| v.as_array())
+            .into_iter()
+            .flatten()
+        {
             let pts: Vec<P> = points_of(pl).into_iter().map(|p| to_px.apply(p)).collect();
-            vector.push((class.clone(), Prim::Polyline { points: pts, hw: width * 0.5, closed: false }));
+            vector.push((
+                class.clone(),
+                Prim::Polyline {
+                    points: pts,
+                    hw: width * 0.5,
+                    closed: false,
+                },
+            ));
         }
-        for pg in layer.get("polygons").and_then(|v| v.as_array()).into_iter().flatten() {
+        for pg in layer
+            .get("polygons")
+            .and_then(|v| v.as_array())
+            .into_iter()
+            .flatten()
+        {
             let ring: Vec<P> = points_of(pg).into_iter().map(|p| to_px.apply(p)).collect();
             let bbox = crate::geom::bbox_of(&ring);
-            vector.push((class.clone(), Prim::Polygon { rings: vec![ring], even_odd, bbox }));
+            vector.push((
+                class.clone(),
+                Prim::Polygon {
+                    rings: vec![ring],
+                    even_odd,
+                    bbox,
+                },
+            ));
         }
-        for rc in layer.get("rects").and_then(|v| v.as_array()).into_iter().flatten() {
-            let v: Vec<f64> = rc.as_array().into_iter().flatten().map(|x| x.as_f64().unwrap_or(0.0)).collect();
+        for rc in layer
+            .get("rects")
+            .and_then(|v| v.as_array())
+            .into_iter()
+            .flatten()
+        {
+            let v: Vec<f64> = rc
+                .as_array()
+                .into_iter()
+                .flatten()
+                .map(|x| x.as_f64().unwrap_or(0.0))
+                .collect();
             if v.len() == 4 {
                 let a = to_px.apply(P::new(v[0], v[1]));
                 let b = to_px.apply(P::new(v[0] + v[2], v[1] + v[3]));
                 if to_px.0[1] == 0.0 && to_px.0[2] == 0.0 {
-                    vector.push((class.clone(), Prim::Rect(Rect::new(a.x.min(b.x), a.y.min(b.y), a.x.max(b.x), a.y.max(b.y)))));
+                    vector.push((
+                        class.clone(),
+                        Prim::Rect(Rect::new(
+                            a.x.min(b.x),
+                            a.y.min(b.y),
+                            a.x.max(b.x),
+                            a.y.max(b.y),
+                        )),
+                    ));
                 } else {
-                    let ring: Vec<P> = [P::new(v[0], v[1]), P::new(v[0] + v[2], v[1]), P::new(v[0] + v[2], v[1] + v[3]), P::new(v[0], v[1] + v[3])]
-                        .iter()
-                        .map(|p| to_px.apply(*p))
-                        .collect();
+                    let ring: Vec<P> = [
+                        P::new(v[0], v[1]),
+                        P::new(v[0] + v[2], v[1]),
+                        P::new(v[0] + v[2], v[1] + v[3]),
+                        P::new(v[0], v[1] + v[3]),
+                    ]
+                    .iter()
+                    .map(|p| to_px.apply(*p))
+                    .collect();
                     let bbox = crate::geom::bbox_of(&ring);
-                    vector.push((class.clone(), Prim::Polygon { rings: vec![ring], even_odd: false, bbox }));
+                    vector.push((
+                        class.clone(),
+                        Prim::Polygon {
+                            rings: vec![ring],
+                            even_odd: false,
+                            bbox,
+                        },
+                    ));
                 }
             }
         }
-        for sh in layer.get("shapes").and_then(|v| v.as_array()).into_iter().flatten() {
-            let at = to_px.apply(P::new(sh["x"].as_f64().unwrap_or(0.0), sh["y"].as_f64().unwrap_or(0.0)));
+        for sh in layer
+            .get("shapes")
+            .and_then(|v| v.as_array())
+            .into_iter()
+            .flatten()
+        {
+            let at = to_px.apply(P::new(
+                sh["x"].as_f64().unwrap_or(0.0),
+                sh["y"].as_f64().unwrap_or(0.0),
+            ));
             let (shape, _) = mark_shape(sh, at, &to_px, &[], &mut warnings, "/obstacles/vector")?;
             vector.push((class.clone(), Prim::Shape(shape)));
         }
@@ -612,7 +842,12 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         .and_then(|v| v.as_array())
         .map(|a| {
             a.iter()
-                .filter_map(|r| Some((r.get("selector")?.as_str()?.to_string(), r.get("class")?.as_str()?.to_string())))
+                .filter_map(|r| {
+                    Some((
+                        r.get("selector")?.as_str()?.to_string(),
+                        r.get("class")?.as_str()?.to_string(),
+                    ))
+                })
                 .collect()
         })
         .unwrap_or_default();
@@ -620,11 +855,19 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         let rules: Vec<(String, String)> = match src.get("classes").and_then(|v| v.as_array()) {
             Some(a) => a
                 .iter()
-                .filter_map(|r| Some((r.get("selector")?.as_str()?.to_string(), r.get("class")?.as_str()?.to_string())))
+                .filter_map(|r| {
+                    Some((
+                        r.get("selector")?.as_str()?.to_string(),
+                        r.get("class")?.as_str()?.to_string(),
+                    ))
+                })
                 .collect(),
             None => preset_rules.clone(),
         };
-        let default_class = source_opt(src, "obstacles.svg", "default_class").as_str().unwrap_or("ink").to_string();
+        let default_class = source_opt(src, "obstacles.svg", "default_class")
+            .as_str()
+            .unwrap_or("ink")
+            .to_string();
         let geoms = doc
             .classify(&rules, &default_class, &used_svg_ids)
             .map_err(|(ri, m)| err(format!("{ptr}/classes/{ri}/selector"), "pattern", m))?;
@@ -659,10 +902,13 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     // --- label area ---
     let allow_outside = o.bool("canvas.allow_outside");
     let pad = o.length("canvas.padding").px(default_em);
-    let region = problem.pointer("/canvas/region").and_then(|r| r.as_array()).and_then(|r| {
-        let v: Vec<f64> = r.iter().filter_map(|x| x.as_f64()).collect();
-        (v.len() == 4).then(|| Rect::xywh(v[0], v[1], v[2], v[3]))
-    });
+    let region = problem
+        .pointer("/canvas/region")
+        .and_then(|r| r.as_array())
+        .and_then(|r| {
+            let v: Vec<f64> = r.iter().filter_map(|x| x.as_f64()).collect();
+            (v.len() == 4).then(|| Rect::xywh(v[0], v[1], v[2], v[3]))
+        });
     let label_area = match (canvas, allow_outside) {
         (Some(c), false) => {
             let base = region.unwrap_or(c);
@@ -687,19 +933,32 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         s if s.starts_with("random(") => Ties::Random(s[7..s.len() - 1].parse().unwrap_or(0)),
         _ => Ties::InputOrder,
     };
-    let focus = lookup(problem, "priority.focus").and_then(points_of_single).map(|p| to_px.apply(p));
+    let focus = lookup(problem, "priority.focus")
+        .and_then(points_of_single)
+        .map(|p| to_px.apply(p));
 
     // --- ladder ---
-    let ladder: Vec<Step> = o.strings("degrade").iter().filter_map(|s| Step::parse(s)).collect();
+    let ladder: Vec<Step> = o
+        .strings("degrade")
+        .iter()
+        .filter_map(|s| Step::parse(s))
+        .collect();
 
     // --- auto preset ---
     let auto_crowded = if o.preset_name == "auto" && !user_set_models {
         o.preset.and_then(|p| p.get("auto")).map(|a| {
-            let f = a.get("crowded_fraction").and_then(|v| v.as_f64()).unwrap_or(0.3);
+            let f = a
+                .get("crowded_fraction")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.3);
             let names: Vec<String> = a
                 .get("crowded_models")
                 .and_then(|v| v.as_array())
-                .map(|x| x.iter().filter_map(|s| s.as_str().map(str::to_string)).collect())
+                .map(|x| {
+                    x.iter()
+                        .filter_map(|s| s.as_str().map(str::to_string))
+                        .collect()
+                })
                 .unwrap_or_default();
             (f, Models::from_names(&names))
         })
@@ -709,11 +968,20 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
 
     // --- warm start ---
     let mut warm = BTreeMap::new();
-    for p in lookup(problem, "warm_start.placements").and_then(|v| v.as_array()).into_iter().flatten() {
+    for p in lookup(problem, "warm_start.placements")
+        .and_then(|v| v.as_array())
+        .into_iter()
+        .flatten()
+    {
         if let Some(id) = p.get("id").and_then(|v| v.as_str()) {
             let placed = p.get("placed").and_then(|v| v.as_bool()).unwrap_or(true);
             let b = p.get("box").and_then(|b| {
-                Some(Rect::xywh(b.get("x")?.as_f64()?, b.get("y")?.as_f64()?, b.get("w")?.as_f64()?, b.get("h")?.as_f64()?))
+                Some(Rect::xywh(
+                    b.get("x")?.as_f64()?,
+                    b.get("y")?.as_f64()?,
+                    b.get("w")?.as_f64()?,
+                    b.get("h")?.as_f64()?,
+                ))
             });
             warm.insert(id.to_string(), if placed { b } else { None });
         }
@@ -744,7 +1012,10 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         omission,
         ties,
         band: o.f64("priority.band"),
-        max_labels: o.get("priority.budget.max_labels").as_u64().map(|v| v as usize),
+        max_labels: o
+            .get("priority.budget.max_labels")
+            .as_u64()
+            .map(|v| v as usize),
         max_ink_fraction: o.get("priority.budget.max_ink_fraction").as_f64(),
         focus,
         priority_value: o.get("priority"),
@@ -766,7 +1037,11 @@ fn points_of_single(v: &Value) -> Option<P> {
 
 /// Bare base64 (no `.`; file paths must carry an extension).
 fn looks_base64(s: &str) -> bool {
-    s.len() >= 16 && s.bytes().all(|c| c.is_ascii_alphanumeric() || matches!(c, b'+' | b'/' | b'=' | b'-' | b'_' | b'\n' | b'\r' | b' '))
+    s.len() >= 16
+        && s.bytes().all(|c| {
+            c.is_ascii_alphanumeric()
+                || matches!(c, b'+' | b'/' | b'=' | b'-' | b'_' | b'\n' | b'\r' | b' ')
+        })
 }
 
 fn parse_color(s: &str) -> Option<[u8; 3]> {
@@ -790,14 +1065,24 @@ fn raster_opts(src: &Value, ptr: &str) -> Result<RasterOpts, BuildError> {
     let background = get("ink.background").as_str().and_then(parse_color);
     let ink_threshold = get("ink.threshold").as_f64().unwrap_or(0.12);
     let mode = match mode.as_str() {
-        "alpha" => RasterMode::Alpha { threshold: get("alpha.threshold").as_f64().unwrap_or(0.1) },
-        "cost" => RasterMode::Cost { invert: get("cost.invert").as_bool().unwrap_or(false) },
+        "alpha" => RasterMode::Alpha {
+            threshold: get("alpha.threshold").as_f64().unwrap_or(0.1),
+        },
+        "cost" => RasterMode::Cost {
+            invert: get("cost.invert").as_bool().unwrap_or(false),
+        },
         "saliency" => RasterMode::Saliency,
         "classmap" => {
             let mut palette = Vec::new();
             if let Some(Value::Object(m)) = src.get("classmap") {
                 for (k, v) in m {
-                    let c = parse_color(k).ok_or_else(|| err(format!("{ptr}/classmap"), "pattern", format!("invalid colour {k}")))?;
+                    let c = parse_color(k).ok_or_else(|| {
+                        err(
+                            format!("{ptr}/classmap"),
+                            "pattern",
+                            format!("invalid colour {k}"),
+                        )
+                    })?;
                     palette.push((c, v.as_str().unwrap_or("ink").to_string()));
                 }
             }
@@ -809,14 +1094,21 @@ fn raster_opts(src: &Value, ptr: &str) -> Result<RasterOpts, BuildError> {
                 ink_threshold,
             }
         }
-        _ => RasterMode::Ink { background, threshold: ink_threshold, dilate: get("ink.dilate").as_u64().unwrap_or(1) as u32 },
+        _ => RasterMode::Ink {
+            background,
+            threshold: ink_threshold,
+            dilate: get("ink.dilate").as_u64().unwrap_or(1) as u32,
+        },
     };
     let off = get("offset");
     Ok(RasterOpts {
         mode,
         class: get("class").as_str().unwrap_or("ink").to_string(),
         scale: get("scale").as_f64().unwrap_or(1.0),
-        offset: P::new(off.get(0).and_then(|v| v.as_f64()).unwrap_or(0.0), off.get(1).and_then(|v| v.as_f64()).unwrap_or(0.0)),
+        offset: P::new(
+            off.get(0).and_then(|v| v.as_f64()).unwrap_or(0.0),
+            off.get(1).and_then(|v| v.as_f64()).unwrap_or(0.0),
+        ),
     })
 }
 
@@ -824,9 +1116,21 @@ fn geom_to_prim(g: Geom) -> Prim {
     match g {
         Geom::Polygon { rings, even_odd } => {
             let bbox = crate::geom::bbox_of(&rings.iter().flatten().copied().collect::<Vec<_>>());
-            Prim::Polygon { rings, even_odd, bbox }
+            Prim::Polygon {
+                rings,
+                even_odd,
+                bbox,
+            }
         }
-        Geom::Polyline { points, width, closed } => Prim::Polyline { points, hw: width * 0.5, closed },
+        Geom::Polyline {
+            points,
+            width,
+            closed,
+        } => Prim::Polyline {
+            points,
+            hw: width * 0.5,
+            closed,
+        },
         Geom::Rect(r) => Prim::Rect(r),
     }
 }
@@ -861,12 +1165,23 @@ pub fn mark_shape(
     let shape = m.get("shape").and_then(|s| s.as_str()).unwrap_or("circle");
     Ok(match shape {
         "ellipse" => (Shape::ellipse(at, f("rx"), f("ry"), f("rotation")), false),
-        "rect" => (Shape::rect(at, f("w"), f("h"), f("corner_radius"), f("rotation")), false),
+        "rect" => (
+            Shape::rect(at, f("w"), f("h"), f("corner_radius"), f("rotation")),
+            false,
+        ),
         "polygon" => {
             let rel = m.get("relative").and_then(|v| v.as_bool()).unwrap_or(false);
             let map = |p: P| if rel { at + p } else { to_px.apply(p) };
-            let mut rings = vec![points_of(&m["points"]).into_iter().map(map).collect::<Vec<_>>()];
-            for h in m.get("holes").and_then(|v| v.as_array()).into_iter().flatten() {
+            let mut rings = vec![points_of(&m["points"])
+                .into_iter()
+                .map(map)
+                .collect::<Vec<_>>()];
+            for h in m
+                .get("holes")
+                .and_then(|v| v.as_array())
+                .into_iter()
+                .flatten()
+            {
                 rings.push(points_of(h).into_iter().map(map).collect());
             }
             (Shape::polygon(rings, false, at), false)
@@ -874,14 +1189,29 @@ pub fn mark_shape(
         "path" => {
             let rel = m.get("relative").and_then(|v| v.as_bool()).unwrap_or(false);
             let d = m.get("d").and_then(|v| v.as_str()).unwrap_or("");
-            let subs = path::flatten(d, 0.25).map_err(|e| err(format!("{ptr}/d"), "pattern", format!("invalid path data at {}: {}", e.offset, e.message)))?;
+            let subs = path::flatten(d, 0.25).map_err(|e| {
+                err(
+                    format!("{ptr}/d"),
+                    "pattern",
+                    format!("invalid path data at {}: {}", e.offset, e.message),
+                )
+            })?;
             let rings: Vec<Vec<P>> = subs
                 .into_iter()
                 .filter(|s| s.points.len() >= 3)
-                .map(|s| s.points.into_iter().map(|p| if rel { at + p } else { to_px.apply(p) }).collect())
+                .map(|s| {
+                    s.points
+                        .into_iter()
+                        .map(|p| if rel { at + p } else { to_px.apply(p) })
+                        .collect()
+                })
                 .collect();
             if rings.is_empty() {
-                warnings.push(Issue::new(ptr, "ignored", "path mark has no area; using a point"));
+                warnings.push(Issue::new(
+                    ptr,
+                    "ignored",
+                    "path mark has no area; using a point",
+                ));
                 (Shape::circle(at, 0.0), false)
             } else {
                 (Shape::polygon(rings, false, at), false)
@@ -890,11 +1220,19 @@ pub fn mark_shape(
         "icon" => {
             let w = f("w");
             let h = f("h");
-            let tip = m.get("tip").and_then(points_of_single).unwrap_or(P::new(w * 0.5, h));
+            let tip = m
+                .get("tip")
+                .and_then(points_of_single)
+                .unwrap_or(P::new(w * 0.5, h));
             let tl = at - tip;
             let ring = match m.get("silhouette") {
                 Some(s) => points_of(s).into_iter().map(|p| tl + p).collect(),
-                None => vec![tl, tl + P::new(w, 0.0), tl + P::new(w, h), tl + P::new(0.0, h)],
+                None => vec![
+                    tl,
+                    tl + P::new(w, 0.0),
+                    tl + P::new(w, h),
+                    tl + P::new(0.0, h),
+                ],
             };
             (Shape::polygon(vec![ring], false, at), true)
         }
@@ -906,12 +1244,19 @@ pub fn mark_shape(
                         geoms.extend(g);
                     }
                 } else if let Some(sel) = m.get("selector").and_then(|v| v.as_str()) {
-                    geoms.extend(doc.geometry_by_selector(sel).map_err(|e| err(format!("{ptr}/selector"), "pattern", e))?);
+                    geoms.extend(
+                        doc.geometry_by_selector(sel)
+                            .map_err(|e| err(format!("{ptr}/selector"), "pattern", e))?,
+                    );
                 }
             }
             let rings = geoms_to_rings(&geoms);
             if rings.is_empty() {
-                warnings.push(Issue::new(ptr, "ignored", "from_svg mark not found in the SVG background; using a point"));
+                warnings.push(Issue::new(
+                    ptr,
+                    "ignored",
+                    "from_svg mark not found in the SVG background; using a point",
+                ));
                 (Shape::circle(at, 2.0), false)
             } else {
                 (Shape::polygon(rings, false, at), false)
@@ -935,14 +1280,21 @@ fn build_item(
     global_models: Models,
     warnings: &mut Vec<Issue>,
 ) -> Result<Item, BuildError> {
-    let id = it.get("id").and_then(|v| v.as_str()).map(str::to_string).unwrap_or_else(|| i.to_string());
+    let id = it
+        .get("id")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .unwrap_or_else(|| i.to_string());
     let anchor_v = &it["anchor"];
     let label_v = &it["label"];
     // font: defaults ← label.font
     let font = font_over(default_font, label_v.get("font"));
     let em = font.size;
     let len_of = |key: &str, item_key: Option<&Value>| -> f64 {
-        item_key.and_then(Length::from_value).unwrap_or_else(|| o.length(key)).px(em)
+        item_key
+            .and_then(Length::from_value)
+            .unwrap_or_else(|| o.length(key))
+            .px(em)
     };
     let ip = it.get("placement");
     let padding = len_of("defaults.padding", label_v.get("padding"));
@@ -961,24 +1313,52 @@ fn build_item(
         boundary_margin: len_of("placement.boundary.margin", None),
     };
     // anchor + mark
-    let svg_id = it.get("svg_id").and_then(|v| v.as_str()).map(str::to_string);
+    let svg_id = it
+        .get("svg_id")
+        .and_then(|v| v.as_str())
+        .map(str::to_string);
     let (anchor, shape, area, tip) = match anchor_v["type"].as_str() {
         Some("area") => {
-            let mut rings = vec![points_of(&anchor_v["polygon"]).into_iter().map(|p| to_px.apply(p)).collect::<Vec<_>>()];
-            for h in anchor_v.get("holes").and_then(|v| v.as_array()).into_iter().flatten() {
+            let mut rings = vec![points_of(&anchor_v["polygon"])
+                .into_iter()
+                .map(|p| to_px.apply(p))
+                .collect::<Vec<_>>()];
+            for h in anchor_v
+                .get("holes")
+                .and_then(|v| v.as_array())
+                .into_iter()
+                .flatten()
+            {
                 rings.push(points_of(h).into_iter().map(|p| to_px.apply(p)).collect());
             }
             let (pole, pole_dist) = polygon::polylabel(&rings, false, 0.5);
             let area_shape = Shape::polygon(rings, false, pole);
             let dot = match anchor_v.get("dot") {
-                Some(m) => mark_shape(m, pole, to_px, svgs, warnings, &format!("{ptr}/anchor/dot"))?.0,
+                Some(m) => {
+                    mark_shape(m, pole, to_px, svgs, warnings, &format!("{ptr}/anchor/dot"))?.0
+                }
                 None => Shape::circle(pole, 2.0),
             };
-            (pole, dot, Some(Area { shape: area_shape, pole, pole_dist }), false)
+            (
+                pole,
+                dot,
+                Some(Area {
+                    shape: area_shape,
+                    pole,
+                    pole_dist,
+                }),
+                false,
+            )
         }
         _ => {
-            let at = to_px.apply(P::new(anchor_v["x"].as_f64().unwrap_or(0.0), anchor_v["y"].as_f64().unwrap_or(0.0)));
-            let mark = anchor_v.get("mark").cloned().unwrap_or_else(|| o.get("defaults.mark"));
+            let at = to_px.apply(P::new(
+                anchor_v["x"].as_f64().unwrap_or(0.0),
+                anchor_v["y"].as_f64().unwrap_or(0.0),
+            ));
+            let mark = anchor_v
+                .get("mark")
+                .cloned()
+                .unwrap_or_else(|| o.get("defaults.mark"));
             let mark = if auto_marks && svg_id.is_some() && anchor_v.get("mark").is_none() {
                 serde_json::json!({"shape": "from_svg", "svg_id": svg_id.clone().unwrap()})
             } else {
@@ -989,7 +1369,14 @@ fn build_item(
                     used_svg_ids.push(sid.to_string());
                 }
             }
-            let (s, tip) = mark_shape(&mark, at, to_px, svgs, warnings, &format!("{ptr}/anchor/mark"))?;
+            let (s, tip) = mark_shape(
+                &mark,
+                at,
+                to_px,
+                svgs,
+                warnings,
+                &format!("{ptr}/anchor/mark"),
+            )?;
             (at, s, None, tip)
         }
     };
@@ -997,47 +1384,94 @@ fn build_item(
     let text_spec = |v: &Value, f: &FontSel| -> TextSpec {
         let wrap = match v.get("wrap") {
             Some(Value::Object(w)) => Some(WrapSpec {
-                max_width: w.get("max_width").and_then(Length::from_value).map(|l| l.px(f.size)),
-                max_lines: w.get("max_lines").and_then(|x| x.as_u64()).unwrap_or(1).max(1) as usize,
+                max_width: w
+                    .get("max_width")
+                    .and_then(Length::from_value)
+                    .map(|l| l.px(f.size)),
+                max_lines: w
+                    .get("max_lines")
+                    .and_then(|x| x.as_u64())
+                    .unwrap_or(1)
+                    .max(1) as usize,
                 balance: w.get("balance").and_then(|x| x.as_bool()).unwrap_or(true),
             }),
             Some(Value::Null) => None,
             _ => match o.get("defaults.wrap") {
                 Value::Object(w) => Some(WrapSpec {
-                    max_width: w.get("max_width").and_then(Length::from_value).map(|l| l.px(f.size)),
-                    max_lines: w.get("max_lines").and_then(|x| x.as_u64()).unwrap_or(1).max(1) as usize,
+                    max_width: w
+                        .get("max_width")
+                        .and_then(Length::from_value)
+                        .map(|l| l.px(f.size)),
+                    max_lines: w
+                        .get("max_lines")
+                        .and_then(|x| x.as_u64())
+                        .unwrap_or(1)
+                        .max(1) as usize,
                     balance: w.get("balance").and_then(|x| x.as_bool()).unwrap_or(true),
                 }),
                 _ => None,
             },
         };
-        let explicit = match (v.get("width").and_then(|x| x.as_f64()), v.get("height").and_then(|x| x.as_f64())) {
+        let explicit = match (
+            v.get("width").and_then(|x| x.as_f64()),
+            v.get("height").and_then(|x| x.as_f64()),
+        ) {
             (Some(w), Some(h)) => {
                 let lines = v
                     .get("lines")
                     .and_then(|l| l.as_array())
-                    .map(|a| a.iter().filter_map(|s| s.as_str().map(str::to_string)).collect())
-                    .unwrap_or_else(|| vec![v.get("text").and_then(|t| t.as_str()).unwrap_or("").to_string()]);
+                    .map(|a| {
+                        a.iter()
+                            .filter_map(|s| s.as_str().map(str::to_string))
+                            .collect()
+                    })
+                    .unwrap_or_else(|| {
+                        vec![v
+                            .get("text")
+                            .and_then(|t| t.as_str())
+                            .unwrap_or("")
+                            .to_string()]
+                    });
                 Some((w, h, lines))
             }
             _ => None,
         };
         TextSpec {
-            text: v.get("text").and_then(|t| t.as_str()).unwrap_or("").to_string(),
+            text: v
+                .get("text")
+                .and_then(|t| t.as_str())
+                .unwrap_or("")
+                .to_string(),
             alternatives: v
                 .get("alternatives")
                 .and_then(|a| a.as_array())
-                .map(|a| a.iter().filter_map(|s| s.as_str().map(str::to_string)).collect())
+                .map(|a| {
+                    a.iter()
+                        .filter_map(|s| s.as_str().map(str::to_string))
+                        .collect()
+                })
                 .unwrap_or_default(),
             wrap,
-            truncate: Truncate::parse(v.get("truncate").and_then(|t| t.as_str()).unwrap_or(&o.string("defaults.truncate"))),
+            truncate: Truncate::parse(
+                v.get("truncate")
+                    .and_then(|t| t.as_str())
+                    .unwrap_or(&o.string("defaults.truncate")),
+            ),
             explicit,
-            align: v.get("align").and_then(|a| a.as_str()).unwrap_or("start").to_string(),
+            align: v
+                .get("align")
+                .and_then(|a| a.as_str())
+                .unwrap_or("start")
+                .to_string(),
             font: f.clone(),
         }
     };
     let fixed = |v: &Value| -> (FixedKind, f64, f64, LabelShape) {
-        let kind = if v["type"].as_str() == Some("box") { FixedKind::Box } else { FixedKind::Icon };
+        let kind = if v["type"].as_str() == Some("box") {
+            FixedKind::Box
+        } else {
+            FixedKind::Icon
+        };
         (
             kind,
             v["width"].as_f64().unwrap_or(0.0),
@@ -1066,8 +1500,16 @@ fn build_item(
                 .collect();
             LabelSpec::Composite {
                 row: label_v.get("direction").and_then(|d| d.as_str()) != Some("column"),
-                gap: label_v.get("gap").and_then(Length::from_value).map(|l| l.px(em)).unwrap_or(0.0),
-                align: label_v.get("align").and_then(|a| a.as_str()).unwrap_or("center").to_string(),
+                gap: label_v
+                    .get("gap")
+                    .and_then(Length::from_value)
+                    .map(|l| l.px(em))
+                    .unwrap_or(0.0),
+                align: label_v
+                    .get("align")
+                    .and_then(|a| a.as_str())
+                    .unwrap_or("center")
+                    .to_string(),
                 parts,
             }
         }
@@ -1077,15 +1519,30 @@ fn build_item(
     let models = ip
         .and_then(|p| p.get("models"))
         .and_then(|m| m.as_array())
-        .map(|a| Models::from_names(&a.iter().filter_map(|s| s.as_str().map(str::to_string)).collect::<Vec<_>>()))
+        .map(|a| {
+            Models::from_names(
+                &a.iter()
+                    .filter_map(|s| s.as_str().map(str::to_string))
+                    .collect::<Vec<_>>(),
+            )
+        })
         .unwrap_or(global_models);
     let internal = InternalPolicy::parse(
-        ip.and_then(|p| p.get("internal")).and_then(|v| v.as_str()).unwrap_or(&o.string("placement.internal")),
+        ip.and_then(|p| p.get("internal"))
+            .and_then(|v| v.as_str())
+            .unwrap_or(&o.string("placement.internal")),
     );
-    let positions = position_order(ip.and_then(|p| p.get("position_order")).unwrap_or(&o.get("placement.position_order")));
+    let positions = position_order(
+        ip.and_then(|p| p.get("position_order"))
+            .unwrap_or(&o.get("placement.position_order")),
+    );
     let keep_with = match it.get("keep_with") {
         Some(Value::String(s)) => Some(KeepWith::Set(s.clone())),
-        Some(Value::Array(a)) => Some(KeepWith::Ids(a.iter().filter_map(|s| s.as_str().map(str::to_string)).collect())),
+        Some(Value::Array(a)) => Some(KeepWith::Ids(
+            a.iter()
+                .filter_map(|s| s.as_str().map(str::to_string))
+                .collect(),
+        )),
         _ => None,
     };
     Ok(Item {
@@ -1101,10 +1558,16 @@ fn build_item(
         models,
         internal,
         positions,
-        attrs: it.get("attrs").cloned().unwrap_or(Value::Object(Default::default())),
+        attrs: it
+            .get("attrs")
+            .cloned()
+            .unwrap_or(Value::Object(Default::default())),
         explicit_priority: it.get("priority").and_then(|v| v.as_f64()),
         explicit_tier: it.get("tier").and_then(|v| v.as_i64()),
-        required: it.get("required").and_then(|v| v.as_bool()).unwrap_or(false),
+        required: it
+            .get("required")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false),
         group: it.get("group").and_then(|v| v.as_str()).map(str::to_string),
         keep_with,
         svg_id,

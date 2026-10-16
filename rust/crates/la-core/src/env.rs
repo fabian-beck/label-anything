@@ -27,8 +27,15 @@ pub struct TextMetrics {
 /// Geometry produced by an SVG backend, in canvas pixels.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Geom {
-    Polygon { rings: Vec<Vec<P>>, even_odd: bool },
-    Polyline { points: Vec<P>, width: f64, closed: bool },
+    Polygon {
+        rings: Vec<Vec<P>>,
+        even_odd: bool,
+    },
+    Polyline {
+        points: Vec<P>,
+        width: f64,
+        closed: bool,
+    },
     Rect(Rect),
 }
 
@@ -39,7 +46,12 @@ pub trait SvgDoc {
     /// Classify drawn geometry by the first matching `(selector, class)` rule; class
     /// `"ignore"` drops geometry. Elements whose id is in `exclude_ids` are skipped.
     /// Selector errors return `(rule index, message)`.
-    fn classify(&self, rules: &[(String, String)], default_class: &str, exclude_ids: &[String]) -> Result<Vec<(String, Geom)>, (usize, String)>;
+    fn classify(
+        &self,
+        rules: &[(String, String)],
+        default_class: &str,
+        exclude_ids: &[String],
+    ) -> Result<Vec<(String, Geom)>, (usize, String)>;
     /// Geometry of the element with this id (and its descendants).
     fn geometry_by_id(&self, id: &str) -> Option<Vec<Geom>>;
     /// Geometry of all elements matching `selector`.
@@ -70,10 +82,24 @@ pub struct RgbaImage {
 /// Raster processing mode with its parameters (spec §4.6).
 #[derive(Clone, Debug, PartialEq)]
 pub enum RasterMode {
-    Ink { background: Option<[u8; 3]>, threshold: f64, dilate: u32 },
-    Alpha { threshold: f64 },
-    Cost { invert: bool },
-    ClassMap { palette: Vec<([u8; 3], String)>, tolerance: f64, unmatched_ink: bool, background: Option<[u8; 3]>, ink_threshold: f64 },
+    Ink {
+        background: Option<[u8; 3]>,
+        threshold: f64,
+        dilate: u32,
+    },
+    Alpha {
+        threshold: f64,
+    },
+    Cost {
+        invert: bool,
+    },
+    ClassMap {
+        palette: Vec<([u8; 3], String)>,
+        tolerance: f64,
+        unmatched_ink: bool,
+        background: Option<[u8; 3]>,
+        ink_threshold: f64,
+    },
     Saliency,
 }
 
@@ -93,7 +119,12 @@ pub trait RasterBackend {
     /// Decode encoded image bytes (PNG, JPEG, WebP).
     fn decode_bytes(&self, bytes: &[u8]) -> Result<RgbaImage, String>;
     /// Coverage (0..255 per cell) of each produced class on `grid`.
-    fn coverage(&self, img: &RgbaImage, opts: &RasterOpts, grid: &GridSpec) -> Vec<(String, Vec<u8>)>;
+    fn coverage(
+        &self,
+        img: &RgbaImage,
+        opts: &RasterOpts,
+        grid: &GridSpec,
+    ) -> Vec<(String, Vec<u8>)>;
 }
 
 /// Everything the core needs from its host.
@@ -104,9 +135,16 @@ pub trait Env {
     fn raster(&self) -> Option<&dyn RasterBackend> {
         None
     }
+    /// A raster background supplied directly by the host (C ABI / bindings): replaces the
+    /// image of the first `obstacles.raster` source (or adds one with default options).
+    fn raster_override(&self) -> Option<RgbaImage> {
+        None
+    }
     /// Read a file (CLI, Python, Java, Node). Unavailable by default.
     fn read_file(&self, path: &str) -> Result<Vec<u8>, String> {
-        Err(format!("file access is not available in this environment ({path})"))
+        Err(format!(
+            "file access is not available in this environment ({path})"
+        ))
     }
     /// Monotonic time in milliseconds (only used for the wall-clock guard and stats).
     fn now_ms(&self) -> f64 {

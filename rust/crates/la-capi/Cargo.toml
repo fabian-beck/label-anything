@@ -1,0 +1,20 @@
+[package]
+name = "label-anything-capi"
+description = "C ABI of Label Anything (label placement): JSON in, JSON out, plus a zero-copy raster entry point."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lib]
+name = "labelanything"
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+label-anything = { workspace = true }
+serde_json = { workspace = true }
