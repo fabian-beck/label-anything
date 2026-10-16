@@ -87,6 +87,17 @@ describe("label-anything-ts", () => {
     expect(readFileSync(svg, "utf8")).toMatch(/^<svg /);
   });
 
+  it("--strategy sets solver.strategy", () => {
+    const out = join(tmp, "greedy.json");
+    expect(run(["place", join(PROBLEMS, "scatter-basic.json"), "-o", out, "--strategy", "greedy"], io())).toBe(0);
+    expect((JSON.parse(readFileSync(out, "utf8")) as Result).stats.strategy_used).toBe("greedy");
+    expect(run(["place", join(PROBLEMS, "scatter-basic.json"), "-o", out], io())).toBe(0);
+    expect((JSON.parse(readFileSync(out, "utf8")) as Result).stats.strategy_used).toBe("local");
+    const bad = io();
+    expect(run(["place", join(PROBLEMS, "scatter-basic.json"), "--strategy", "nope"], bad)).toBe(1);
+    expect(bad.err).toContain("/solver/strategy");
+  });
+
   it("validates", () => {
     const ok = io();
     expect(run(["validate", join(PROBLEMS, "minimal.json")], ok)).toBe(0);

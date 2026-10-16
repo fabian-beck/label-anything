@@ -18,8 +18,9 @@ npm install -g @label-anything/cli           # label-anything-ts
 
 * `place problem.json -o result.json`: solve. `--debug-svg out.svg` also writes the
   [debug overlay](../concepts/debug-overlay.md) with the cost heatmaps; `--time` sets
-  `solver.time_budget_ms`, `--seed` `solver.seed`, `--pretty` indents the JSON. Relative
-  file paths in the problem resolve against the problem file's directory.
+  `solver.time_budget_ms`, `--seed` `solver.seed`, `--strategy` `solver.strategy`
+  (`greedy` skips the local search), `--pretty` indents the JSON. Relative file paths in
+  the problem resolve against the problem file's directory.
 * `render problem.json result.json -o overlay.svg` draws the overlay of an existing
   result; `-o overlay.png` rasterizes it (with the bundled Noto Sans).
 * `validate problem.json` prints errors and warnings and exits with 1 when the problem is

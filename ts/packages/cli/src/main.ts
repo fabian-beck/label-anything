@@ -33,9 +33,9 @@ const USAGE = `label-anything-ts ${VERSION} — label placement (TypeScript engi
 
 Usage:
   label-anything-ts place <problem.json|-> [-o <result.json|->] [--debug-svg <file>]
-        [--time <ms>] [--seed <n>] [--pretty] [--preset <name>] [--omission <mode>]
-        [--max-labels <n>] [--font-size <px>] [--canvas <WxH>] [--background <file>]
-        [--engine core|wasm] [--warmup <n>]
+        [--time <ms>] [--seed <n>] [--strategy <name>] [--pretty] [--preset <name>]
+        [--omission <mode>] [--max-labels <n>] [--font-size <px>] [--canvas <WxH>]
+        [--background <file>] [--engine core|wasm] [--warmup <n>]
   label-anything-ts validate <problem.json|-> [--json]
   label-anything-ts render <problem.json> <result.json> [-o <out.svg|->]
   label-anything-ts --help | --version
@@ -72,6 +72,7 @@ const VALUED = new Set([
   "--debug-svg",
   "--time",
   "--seed",
+  "--strategy",
   "--preset",
   "--omission",
   "--max-labels",
@@ -214,6 +215,8 @@ function cmdPlace(p: Parsed, io: Io): number {
   if (time !== undefined) section(obj, "solver").time_budget_ms = time;
   const seed = numberFlag(flags, "--seed");
   if (seed !== undefined) section(obj, "solver").seed = seed;
+  const strategy = flags.get("--strategy");
+  if (typeof strategy === "string") section(obj, "solver").strategy = strategy;
   const omission = flags.get("--omission");
   if (typeof omission === "string") section(obj, "priority").omission = omission;
   const maxLabels = numberFlag(flags, "--max-labels");

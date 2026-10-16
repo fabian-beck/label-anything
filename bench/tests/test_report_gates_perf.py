@@ -214,3 +214,33 @@ def test_runner_end_to_end(tmp_path, monkeypatch):
     assert report.main([str(out / "results.json"), "--previous", str(keep)]) == 0
     assert (out / "index.html").exists() and read_json(out / "results.json")["diff"]["rows"] == []
     assert report.main([str(out / "results.json"), "--gate"]) == 1
+
+
+# ---------------------------------------------------------------------------
+# milestone acceptance (M3, M4)
+# ---------------------------------------------------------------------------
+def _row(solver, config, **summary):
+    return {"solver": solver, "scenario": "02-volcano", "config": config, "summary": summary}
+
+
+def test_milestones_m3_and_m4():
+    from bench import milestones
+
+    dense = dict(placed_rate=0.6, placed=60, placed_weighted=0.70, priority_inversions=0, leader_crossings=0)
+    full = dict(dense, placed=66, placed_weighted=0.77)
+    easy = dict(placed_rate=1.0, placed=10, placed_weighted=1.0, priority_inversions=0, leader_crossings=0)
+    rep = {"results": [_row("rust-greedy", "a", **dense), _row("rust", "a", **full),
+                       _row("rust-greedy", "b", **easy), _row("rust", "b", **easy),
+                       _row("greedy", "a", **dict(dense, leader_crossings=3))]}
+    assert milestones.m3(rep)[0]  # baselines do not count
+    ok, lines = milestones.m4(rep)
+    assert ok and "+10.0%" in lines[0] and "1 dense problems" in lines[0]
+    # less than 5 % on average, or a new priority inversion, fails M4
+    assert not milestones.m4(rep, min_gain=0.2)[0]
+    rep["results"][1]["summary"] = dict(full, priority_inversions=1)
+    assert not milestones.m4(rep)[0]
+    rep["results"][1]["summary"] = dict(full, leader_crossings=2)
+    ok, lines = milestones.m3(rep)
+    assert not ok and "2 crossings" in lines[1]
+    # M4 needs a -greedy twin
+    assert not milestones.m4({"results": [_row("rust", "a", **full)]})[0]
