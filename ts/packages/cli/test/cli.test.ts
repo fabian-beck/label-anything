@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
-import { type Io, run } from "../src/main.js";
+import { type Io, loadWasmEngine, run, wantsWasm } from "../src/main.js";
 
 const ROOT = fileURLToPath(new URL("../../../../", import.meta.url));
 const PROBLEMS = join(ROOT, "conformance/problems");
@@ -32,6 +32,39 @@ function io(stdin = ""): Io & { out: string; err: string } {
 }
 
 type Result = { placements: { placed: boolean }[]; stats: Record<string, unknown>; debug_svg: unknown };
+
+const WASM_BUILT = existsSync(join(ROOT, "ts/packages/wasm-adapter/wasm/label_anything_bg.wasm"));
+
+describe("engines and warm-up", () => {
+  const placements = (f: string) =>
+    (JSON.parse(readFileSync(f, "utf8")) as { placements: unknown[] }).placements;
+  it("--warmup solves several times and reports the last (identical) solve", () => {
+    const a = join(tmp, "w0.json");
+    const b = join(tmp, "w2.json");
+    expect(run(["place", join(PROBLEMS, "scatter-basic.json"), "-o", a, "--no-clock"], io())).toBe(0);
+    expect(run(["place", join(PROBLEMS, "scatter-basic.json"), "-o", b, "--no-clock", "--warmup", "2"], io())).toBe(0);
+    expect(placements(b)).toEqual(placements(a));
+    const t = io();
+    expect(run(["place", join(PROBLEMS, "scatter-basic.json"), "--warmup", "-1"], t)).toBe(2);
+    expect(t.err).toContain("--warmup");
+  });
+  it("--engine wasm needs the WebAssembly engine loaded", () => {
+    expect(wantsWasm(["place", "p.json", "--engine", "wasm"])).toBe(true);
+    expect(wantsWasm(["place", "p.json", "--engine=wasm"])).toBe(true);
+    expect(wantsWasm(["place", "p.json", "--engine", "core"])).toBe(false);
+    const t = io();
+    expect(run(["place", join(PROBLEMS, "scatter-basic.json"), "--engine", "nope"], t)).toBe(2);
+    expect(t.err).toContain("--engine");
+  });
+  it.skipIf(!WASM_BUILT)("--engine wasm solves with @label-anything/wasm", async () => {
+    await loadWasmEngine();
+    const out = join(tmp, "wasm.json");
+    expect(run(["place", join(PROBLEMS, "scatter-basic.json"), "-o", out, "--engine", "wasm"], io())).toBe(0);
+    const r = JSON.parse(readFileSync(out, "utf8")) as Result;
+    expect(String(r.stats.implementation)).toMatch(/^wasm\//);
+    expect(r.placements.some((p) => p.placed)).toBe(true);
+  });
+});
 
 describe("label-anything-ts", () => {
   it("places a problem file and writes the result", () => {

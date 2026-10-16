@@ -1,7 +1,11 @@
 """Performance targets (brief §5.8): generate the problems and measure implementations.
 
-    python -m bench.perf --engine rust/target/release/label-anything [--runs 7] [-o perf.json]
-    python -m bench.perf --solver 'ts=node ts/packages/cli/dist/main.js place {problem} -o {result}'
+    python -m bench.perf --engine rust/target/release/label-anything [--ts] [--wasm] [--runs 7] [-o perf.json]
+    python -m bench.perf --solver 'ts=node ts/packages/cli/dist/main.js place {problem} -o {result} --warmup 3'
+
+``--ts`` and ``--wasm`` time the TypeScript engine and the WebAssembly build through the
+TypeScript CLI. Every implementation is timed in steady state: ``--warmup`` solves (default
+3) in the same process precede each timed solve.
     python -m bench.perf generate [DIR]
 
 Exit code 0 when every measured implementation meets its targets, 1 otherwise.
@@ -9,7 +13,9 @@ Exit code 0 when every measured implementation meets its targets, 1 otherwise.
 from __future__ import annotations
 
 import argparse
+import shlex
 import sys
+from pathlib import Path
 
 from ..common.jsonio import write_json
 from . import TARGETS
@@ -25,6 +31,9 @@ def main(argv=None) -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--engine", help="Rust CLI binary (adds the solver rust=ENGINE place {problem} -o {result})")
     ap.add_argument("--solver", action="append", default=[], help="NAME=COMMAND (NAME rust|wasm|ts[-suffix])")
+    ap.add_argument("--ts", action="store_true", help="add ts= the TypeScript engine (ts/packages/cli)")
+    ap.add_argument("--wasm", action="store_true", help="add wasm= the WebAssembly build through the TypeScript CLI")
+    ap.add_argument("--warmup", type=int, default=3, help="warm-up solves before each timed solve (rust, ts, wasm)")
     ap.add_argument("--runs", type=int, default=7)
     ap.add_argument("--problems", default="bench/out/perf", help="where the generated problems are written")
     ap.add_argument("--timeout", type=float, default=600.0)
@@ -32,7 +41,13 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     solvers = []
     if a.engine:
-        solvers.append(("rust", f"{a.engine} place {{problem}} -o {{result}}"))
+        solvers.append(("rust", f"{a.engine} place {{problem}} -o {{result}} --warmup {a.warmup}"))
+    ts_main = Path(__file__).resolve().parents[2] / "ts/packages/cli/dist/main.js"
+    js = f"node {shlex.quote(str(ts_main))} place {{problem}} -o {{result}} --warmup {a.warmup}"
+    if a.ts:
+        solvers.append(("ts", js))
+    if a.wasm:
+        solvers.append(("wasm", f"{js} --engine wasm"))
     for s in a.solver:
         if "=" not in s:
             ap.error(f"--solver expects NAME=COMMAND, got {s!r}")

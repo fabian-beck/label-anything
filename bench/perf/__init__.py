@@ -5,7 +5,10 @@ every Label Anything implementation that took part in a run (solver names
 ``rust``, ``wasm``, ``ts``, optionally with a suffix such as ``rust-local``); the
 measured value is the median over ``--perf-runs`` runs of the engine's own
 timing (``stats.runtime_ms``, or ``stats.phases_ms.prepare`` for the raster
-target), not the process wall time, which process start-up dominates.
+target), not the process wall time, which process start-up dominates. The
+engines are timed in steady state: ``--warmup`` solves of the same problem in the
+same process precede each timed solve (``bench/run.py`` and ``python -m bench.perf``
+pass ``--warmup 3`` to the Rust and TypeScript CLIs).
 
 =================  ====================================================  ======  =====  =====
 problem            what                                                  Rust    WASM   TS

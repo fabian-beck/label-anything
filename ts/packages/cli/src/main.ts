@@ -6,6 +6,7 @@
  *
  * ```text
  * label-anything-ts place problem.json -o result.json [--debug-svg out.svg] [--time 200] [--seed 1]
+ *                   [--engine core|wasm] [--warmup 3]
  * label-anything-ts render problem.json result.json -o overlay.svg
  * label-anything-ts validate problem.json [--json]
  * ```
@@ -34,11 +35,14 @@ Usage:
   label-anything-ts place <problem.json|-> [-o <result.json|->] [--debug-svg <file>]
         [--time <ms>] [--seed <n>] [--pretty] [--preset <name>] [--omission <mode>]
         [--max-labels <n>] [--font-size <px>] [--canvas <WxH>] [--background <file>]
+        [--engine core|wasm] [--warmup <n>]
   label-anything-ts validate <problem.json|-> [--json]
   label-anything-ts render <problem.json> <result.json> [-o <out.svg|->]
   label-anything-ts --help | --version
 
-'-' reads stdin / writes stdout.`;
+'-' reads stdin / writes stdout. --engine wasm solves with @label-anything/wasm (the
+Rust core compiled to WebAssembly) instead of the TypeScript core; --warmup <n> solves
+n times before the reported solve (steady-state timing of a JIT-compiled engine).`;
 
 /** A usage or I/O error (exit code 2). */
 class CliError extends Error {}
@@ -74,6 +78,8 @@ const VALUED = new Set([
   "--font-size",
   "--canvas",
   "--background",
+  "--engine",
+  "--warmup",
 ]);
 const SWITCHES = new Set(["--pretty", "--json", "--no-clock", "--help", "-h", "--version", "-V"]);
 
@@ -176,6 +182,27 @@ function numberFlag(flags: Map<string, string | true>, name: string): number | u
   return x;
 }
 
+/** The `place` function of @label-anything/wasm (loaded by {@link loadWasmEngine}). */
+type WasmPlace = (problem: unknown) => unknown;
+let wasmPlace: WasmPlace | null = null;
+
+/** Loads @label-anything/wasm for `--engine wasm` (before {@link run}). */
+export async function loadWasmEngine(): Promise<void> {
+  // a variable specifier: the CLI builds and runs without the optional package
+  const spec = "@label-anything/wasm";
+  try {
+    const m = (await import(spec)) as { place: WasmPlace };
+    wasmPlace = m.place;
+  } catch (e) {
+    throw new CliError(`--engine wasm needs ${spec} (built): ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
+
+/** Whether the arguments ask for the WebAssembly engine. */
+export function wantsWasm(args: readonly string[]): boolean {
+  return args.some((a, i) => a === "--engine=wasm" || (a === "--engine" && args[i + 1] === "wasm"));
+}
+
 function cmdPlace(p: Parsed, io: Io): number {
   const path = p.positional[0];
   if (path === undefined) throw new CliError("missing problem file");
@@ -216,8 +243,22 @@ function cmdPlace(p: Parsed, io: Io): number {
     printReport(report, io);
     return 1;
   }
-  const env = envFor(path, flags.get("--no-clock") !== true);
-  const result = placeValidated(env, problem, report) as unknown as Obj;
+  const engine = flags.get("--engine") ?? "core";
+  if (engine !== "core" && engine !== "wasm") throw new CliError(`--engine: core or wasm, not ${String(engine)}`);
+  const warmup = numberFlag(flags, "--warmup") ?? 0;
+  if (!Number.isInteger(warmup) || warmup < 0) throw new CliError("--warmup must be a non-negative integer");
+  let solve: () => Obj;
+  if (engine === "wasm") {
+    if (wasmPlace === null) throw new CliError("--engine wasm: the WebAssembly engine is not loaded");
+    if (flags.get("--no-clock") === true) throw new CliError("--no-clock is not available with --engine wasm");
+    const place = wasmPlace;
+    solve = () => place(problem) as Obj;
+  } else {
+    const env = envFor(path, flags.get("--no-clock") !== true);
+    solve = () => placeValidated(env, problem, report) as unknown as Obj;
+  }
+  for (let k = 0; k < warmup; k++) solve();
+  const result = solve();
   if (typeof debugSvg === "string") {
     const svg = result.debug_svg;
     if (typeof svg === "string") {
@@ -312,4 +353,15 @@ function isMain(): boolean {
   }
 }
 
-if (isMain()) process.exitCode = run(process.argv.slice(2));
+if (isMain()) {
+  const args = process.argv.slice(2);
+  if (wantsWasm(args)) {
+    try {
+      await loadWasmEngine();
+    } catch (e) {
+      process.stderr.write(`label-anything-ts: ${e instanceof Error ? e.message : String(e)}\n`);
+      process.exit(2);
+    }
+  }
+  process.exitCode = run(args);
+}

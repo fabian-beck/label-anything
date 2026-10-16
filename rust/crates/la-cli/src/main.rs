@@ -84,6 +84,10 @@ enum Cmd {
         /// Solve without a clock (no wall-clock guards; deterministic, for parity tests).
         #[arg(long, hide = true)]
         no_clock: bool,
+        /// Solve this many times before the reported solve (steady-state timing, as in a
+        /// host application that solves repeatedly).
+        #[arg(long, default_value_t = 0)]
+        warmup: u32,
     },
     /// Render the debug overlay of a problem and a result.
     Render {
@@ -242,6 +246,7 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
             font_size,
             max_labels,
             no_clock,
+            warmup,
         } => {
             let (mut p, env) = match (&problem, &anchors) {
                 (Some(path), None) => {
@@ -324,6 +329,10 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
             }
             let clockless = Clockless(&env);
             let env: &dyn Env = if no_clock { &clockless } else { &env };
+            for _ in 0..warmup {
+                label_anything::place_validated(&p, env, label_anything::validate(&p))
+                    .map_err(|e| e.to_string())?;
+            }
             let mut result =
                 label_anything::place_validated(&p, env, report).map_err(|e| e.to_string())?;
             if let Some(path) = debug_svg {

@@ -15,7 +15,7 @@ Solvers (``--solver``, repeatable; default: the built-in baselines ``naive`` and
 
 Solvers named ``rust``, ``wasm`` or ``ts`` (optionally ``-suffix``) are Label Anything
 implementations: they get the performance targets, the parity table and the release
-gates. ``--engine PATH`` adds ``rust=PATH place {problem} -o {result}`` and its debug
+gates. ``--engine PATH`` adds ``rust=PATH place {problem} -o {result} --warmup N`` and its debug
 overlay; ``--baselines`` adds all six baselines (what ``label-anything bench --baselines``
 passes). ``--overlay NAME=COMMAND`` (placeholders ``{problem}``, ``{result}``, ``{svg}``)
 renders an engine debug overlay next to the benchmark rendering, from one extra untimed run.
@@ -326,8 +326,17 @@ def build_solvers(a, log=print) -> tuple[list[Solver], dict[str, str]]:
     if a.engine:
         eng = shlex.quote(str(Path(a.engine).resolve()))
         if not any(s.split("=", 1)[0] == "rust" for s in specs):
-            specs.insert(0, f"rust={eng} place {{problem}} -o {{result}}")
+            specs.insert(0, f"rust={eng} place {{problem}} -o {{result}} --warmup {a.warmup}")
         overlays.setdefault("rust", f"{eng} place {{problem}} -o {{result}} --debug-svg {{svg}}")
+    # the TypeScript CLI runs both JavaScript engines; every implementation reports a
+    # steady-state solve after --warmup solves in the same process (a fresh process would
+    # time loading fonts, first-touch memory and, for JavaScript, compiling the engine)
+    ts_main = shlex.quote(str(Path(__file__).resolve().parent.parent / "ts/packages/cli/dist/main.js"))
+    js = f"place {{problem}} -o {{result}} --warmup {a.warmup}"
+    if a.ts and not any(s.split("=", 1)[0] == "ts" for s in specs):
+        specs.append(f"ts=node {ts_main} {js}")
+    if a.wasm and not any(s.split("=", 1)[0] == "wasm" for s in specs):
+        specs.append(f"wasm=node {ts_main} {js} --engine wasm")
     if a.baselines:
         specs += [b for b in ALL_BASELINES if b not in specs]
     if not specs:
@@ -356,6 +365,12 @@ def main(argv=None) -> int:
     ap.add_argument("--solver", action="append",
                     help="naive | greedy | textalloc | adjusttext | vega-label | ggrepel | NAME=COMMAND (repeatable)")
     ap.add_argument("--engine", help="Rust CLI binary: adds rust=ENGINE place {problem} -o {result} and its overlay")
+    ap.add_argument("--ts", action="store_true",
+                    help="add ts= the TypeScript engine (ts/packages/cli, built with npm run build)")
+    ap.add_argument("--wasm", action="store_true",
+                    help="add wasm= the WebAssembly engine through the TypeScript CLI (npm run build:wasm)")
+    ap.add_argument("--warmup", type=int, default=3,
+                    help="warm-up solves before each timed rust/ts/wasm solve (steady state; default 3)")
     ap.add_argument("--baselines", action="store_true", help="add all baselines (naive, greedy and the four tools)")
     ap.add_argument("--require-baselines", action="store_true",
                     help="fail instead of skipping a requested baseline whose toolchain is missing")

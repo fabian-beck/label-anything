@@ -53,12 +53,18 @@ which is cached (later builds: ≈ 2 minutes, dominated by the Cora force layout
 **Engine runs.** Build the Rust CLI (`cargo build --release --manifest-path
 rust/Cargo.toml -p label-anything-cli`) and the TypeScript packages (`npm run build`,
 which includes the `label-anything-ts` CLI) and pass them as solvers; `--engine` adds the
-Rust CLI as `rust` together with its debug overlay, `--baselines` adds every baseline (see
-*Baselines*):
+Rust CLI as `rust` together with its debug overlay, `--ts` and `--wasm` add the TypeScript
+engine and the WebAssembly build (`npm run build:wasm -w @label-anything/wasm`) through the
+TypeScript CLI. All three are timed in steady state, as a host application that solves
+repeatedly sees them: `--warmup` solves (default 3) in the same process precede every timed
+solve (a fresh process would also time loading fonts, first-touch memory and, for
+JavaScript, compiling the engine); `--baselines` adds every baseline (see *Baselines*):
 
 ```sh
 bench/.venv/bin/python bench/run.py --suite quick --engine rust/target/release/label-anything \
     --baselines --perf                                  # Rust + all baselines + performance targets
+bench/.venv/bin/python bench/run.py --suite quick --engine rust/target/release/label-anything \
+    --ts --wasm --perf                                  # all three implementations
 bench/.venv/bin/python bench/run.py --suite full \
     --solver naive --solver greedy \
     --solver 'rust=rust/target/release/label-anything place {problem} -o {result}' \
