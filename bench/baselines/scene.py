@@ -264,11 +264,11 @@ def build_scene(problem: dict, problem_path: str | Path | None = None, truth: di
                                     for it in prob.items):
         notes.append(Note("unsupported", "internal", "internal labels are not supported"))
     lopts = opts.get("leaders", {}) or {}
-    if lopts.get("style", "straight") != "straight" or lopts.get("angles"):
+    style = lopts.get("style", "straight")
+    if style != "straight" and ({"distant", "boundary"} & models):
+        angles = f" with angles {lopts.get('angles')}" if style in ("angles", "elbow") and lopts.get("angles") else ""
         notes.append(Note("unsupported", "leader-style",
-                          f"leader style {lopts.get('style', 'straight')!r}"
-                          + (f" with angles {lopts.get('angles')}" if lopts.get("angles") else "")
-                          + " is not supported (straight connectors at most)"))
+                          f"leader style {style!r}{angles} is not supported (straight connectors at most)"))
     if any(lab.item.label.has_wrap or (lab.item.label.raw or {}).get("alternatives") for lab in labels):
         notes.append(Note("unsupported", "text-variants", "wrapping alternatives / shorter alternatives are "
                                                           "not used; the normal variant is placed"))

@@ -38,7 +38,7 @@ import numpy as np
 from ..common.geom import Box
 from ..common.jsonio import read_json, write_json
 from . import Unsupported
-from .mpl import Canvas, fix_extent, px_to_pt
+from .mpl import Canvas, ensure_matplotlib, fix_extent, px_to_pt
 from .results import build_result
 from .scene import Note, build_scene, ray_exit, sample_polyline
 
@@ -89,6 +89,13 @@ def pair_cost(labels, static: list[Box]) -> float:
         ye = len(overlap_intervals(T[:, 2], T[:, 3], S[:, 2], S[:, 3]))
         cost = max(cost, float(xe) * float(ye))
     return 2.0 * cost
+
+
+def warmup() -> None:
+    """Import the tool and register the fonts once, outside the timed runs."""
+    import adjustText  # noqa: F401
+
+    ensure_matplotlib()
 
 
 def solve(problem: dict, problem_path=None) -> dict:

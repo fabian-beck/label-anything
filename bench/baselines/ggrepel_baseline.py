@@ -8,10 +8,11 @@ positions back (method: bench/baselines/ggrepel.R). Translation:
   matching the mark radius), then the obstacle points with empty labels — every
   item's mark that is not labeled, obstacle circles (their radius), rects, polygon
   outlines and interiors, polylines (sampled points; emulation), raster cells
-  (cell centres; emulation). Samples are spaced by half the smallest label
-  height (a label crossing a line overlaps about two samples, which matters for
-  ``max.overlaps``), coarser (doubling) when more than ``POINT_BUDGET`` points
-  would result; obstacle circles are never thinned,
+  (cell centres; emulation). Samples are one smallest label height apart (a
+  label lying across a line overlaps about one sample per label height of its
+  width; this matters for ``max.overlaps``, which counts data points), coarser
+  (doubling) when more than ``POINT_BUDGET`` points would result; obstacle
+  circles are never thinned,
 * composite labels: the text part prefixed with spaces as wide as the icon part
   (emulation), so the text extent covers the whole label box,
 * font: the bundled Noto Sans, registered for the R process through a private
@@ -140,7 +141,7 @@ def scene_json(scene: Scene) -> tuple[dict, list[Note]]:
             fixed.append((b.cx, b.cy, 0.5 * max(b.w, b.h)))
     obs = scene.obstacles
     fixed += [(x, y, r) for x, y, r, _c in obs.circles]
-    base = max(2.0, 0.5 * min((lab.h for lab in scene.labels), default=4.0))
+    base = max(2.0, min((lab.h for lab in scene.labels), default=4.0))
     step = base
     pts: list[tuple[float, float, float]] = []
     for step in (base, 2 * base, 4 * base, 8 * base):

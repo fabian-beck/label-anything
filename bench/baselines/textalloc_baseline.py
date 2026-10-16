@@ -27,7 +27,7 @@ import time
 from collections import defaultdict, deque
 
 from ..common.jsonio import read_json, write_json
-from .mpl import Canvas, fix_extent, px_to_pt
+from .mpl import Canvas, ensure_matplotlib, fix_extent, px_to_pt
 from .results import build_result
 from .scene import Note, build_scene, choose_cell
 
@@ -54,13 +54,23 @@ def available() -> str | None:
     return None
 
 
+def warmup() -> None:
+    """Import the tool and register the fonts once, outside the timed runs."""
+    import textalloc  # noqa: F401
+
+    ensure_matplotlib()
+
+
 def solve(problem: dict, problem_path=None) -> dict:
     import textalloc
 
     scene = build_scene(problem, problem_path)
     cv = Canvas(scene.width, scene.height, scene.area)
-    tool_notes = [Note("emulation", "textalloc-lines", "polylines have no width for textalloc (a 0.5 px margin "
-                                                       "applies to points, lines and labels)")]
+    tool_notes: list[Note] = []
+    if scene.obstacles.polylines or scene.obstacles.rects or scene.obstacles.polygons:
+        tool_notes.append(Note("emulation", "textalloc-lines", "polylines have no width and rects / polygons are "
+                                                               "their outlines (+ rect centres) for textalloc; a "
+                                                               "0.5 px margin applies to points, lines and labels"))
     try:
         labels = scene.labels
         xs, ys, texts, sizes_pt, weights, tss = [], [], [], [], [], []
