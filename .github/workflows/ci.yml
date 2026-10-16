@@ -65,22 +65,24 @@ jobs:
       - run: cargo build --manifest-path rust/Cargo.toml -p label-anything-core --target wasm32-unknown-unknown --release --features decode
 
   typescript:
-    name: TypeScript
+    name: TypeScript and JS helpers
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ts
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: ts/package-lock.json
       - run: npm ci
-      - name: Type-check
-        run: npx tsc -b packages/text packages/svg packages/raster packages/core
-      - name: Tests (incl. conformance and Rust parity fixtures)
+      - name: Type-check and build
+        run: npm run build
+      - name: Rust CLI (the real engine for the JS helpers' integration tests)
+        run: cargo build --release --manifest-path rust/Cargo.toml -p label-anything-cli
+      - name: Tests (incl. conformance, Rust parity fixtures and the JS helpers)
         run: npx vitest run
 
   generated:
@@ -91,6 +93,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+      - run: npm ci
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"

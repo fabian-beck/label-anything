@@ -1,0 +1,45 @@
+{
+  "name": "@label-anything/extras",
+  "version": "0.1.0",
+  "description": "Label Anything helpers for d3, Vega, Observable Plot, Leaflet, MapLibre, Cytoscape.js and sigma.js, plus a Web Worker engine.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./d3": { "types": "./dist/d3.d.ts", "import": "./dist/d3.js" },
+    "./vega": { "types": "./dist/vega.d.ts", "import": "./dist/vega.js" },
+    "./plot": { "types": "./dist/plot.d.ts", "import": "./dist/plot.js" },
+    "./leaflet": { "types": "./dist/leaflet.d.ts", "import": "./dist/leaflet.js" },
+    "./maplibre": { "types": "./dist/maplibre.d.ts", "import": "./dist/maplibre.js" },
+    "./cytoscape": { "types": "./dist/cytoscape.d.ts", "import": "./dist/cytoscape.js" },
+    "./sigma": { "types": "./dist/sigma.d.ts", "import": "./dist/sigma.js" },
+    "./worker": { "types": "./dist/worker.d.ts", "import": "./dist/worker.js" }
+  },
+  "files": ["dist", "src", "README.md"],
+  "sideEffects": false,
+  "repository": { "type": "git", "url": "https://github.com/fabian-beck/label-anything", "directory": "bindings/js-extras" },
+  "keywords": ["label placement", "labeling", "d3", "vega", "observable plot", "leaflet", "maplibre", "cytoscape", "sigma"],
+  "scripts": { "build": "tsc -b", "test": "vitest run" },
+  "dependencies": {
+    "@label-anything/core": "0.1.0",
+    "@label-anything/svg": "0.1.0"
+  },
+  "peerDependencies": {
+    "@observablehq/plot": "^0.6.10"
+  },
+  "peerDependenciesMeta": {
+    "@observablehq/plot": { "optional": true }
+  },
+  "devDependencies": {
+    "@observablehq/plot": "^0.6.17",
+    "@types/d3-selection": "^3.0.11",
+    "@types/leaflet": "^1.9.20",
+    "cytoscape": "^3.33.0",
+    "d3-selection": "^3.0.0",
+    "jsdom": "^26.1.0",
+    "leaflet": "^1.9.4",
+    "vega": "^6.3.0"
+  }
+}

@@ -147,7 +147,7 @@ function draft07Tuples(node) {
 }
 
 async function tsTypes() {
-  const require = createRequire(join(root, "ts/package.json"));
+  const require = createRequire(join(root, "package.json"));
   const { compile } = require("json-schema-to-typescript");
   const out = {};
   for (const [name, file] of [["problem", "problem.v1.json"], ["result", "result.v1.json"]]) {

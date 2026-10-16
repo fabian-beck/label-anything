@@ -1,0 +1,6 @@
+{
+  "extends": "../../ts/tsconfig.base.json",
+  "compilerOptions": { "rootDir": "src", "outDir": "dist" },
+  "include": ["src"],
+  "references": [{ "path": "../../ts/packages/core" }, { "path": "../../ts/packages/svg" }]
+}

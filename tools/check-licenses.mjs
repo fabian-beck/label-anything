@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Check that every third-party dependency is permissively licensed (brief §2.9).
 //
-//   node tools/check-licenses.mjs            # Rust (cargo metadata) + npm (ts/package-lock.json)
+//   node tools/check-licenses.mjs            # Rust (cargo metadata) + npm (package-lock.json)
 //
 // Rust crates and npm runtime dependencies must be MIT/Apache-2.0/BSD/ISC/Zlib-like.
 // npm development dependencies (never shipped) may also use a few other permissive
@@ -72,7 +72,7 @@ for (const p of meta.packages) {
 }
 
 // --- npm ---
-const lock = JSON.parse(readFileSync(join(ROOT, "ts/package-lock.json"), "utf8"));
+const lock = JSON.parse(readFileSync(join(ROOT, "package-lock.json"), "utf8"));
 let nNpm = 0;
 for (const [path, p] of Object.entries(lock.packages ?? {})) {
   if (!path.includes("node_modules/") || p.link) continue; // the workspace itself
