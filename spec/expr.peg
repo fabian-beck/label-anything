@@ -3,8 +3,10 @@
 # Used by priority.tiers[].where, priority.terms[].expr and priority.coverage.by.
 # Small, safe and side-effect free. Every implementation parses this grammar with a
 # hand-written recursive-descent parser and is tested against conformance/expr/*.json.
+# Implementations: rust/crates/la-expr (Rust), ts/packages/core/src/expr (TypeScript).
 #
-# Whitespace (space, tab, CR, LF) may appear between any two tokens.
+# Whitespace (space, tab, CR, LF; nothing else) may appear before, between and after
+# tokens.
 #
 #   Expr      <- Or EOF
 #   Or        <- And ( '||' And )*
@@ -15,7 +17,7 @@
 #   Add       <- Mul ( ( '+' / '-' ) Mul )*
 #   Mul       <- Unary ( ( '*' / '/' / '%' ) Unary )*
 #   Unary     <- '-' Unary / Postfix
-#   Postfix   <- Primary ( '.' Ident '(' Args? ')' / '.' Ident / '[' Expr ']' )*
+#   Postfix   <- Primary ( '.' Ident '(' Args? ')' / '.' Ident / '[' Or ']' )*
 #   Primary   <- Number / String / 'true' / 'false' / 'null' / Call / Ident / '(' Or ')' / List
 #   Call      <- Ident '(' Args? ')'
 #   Args      <- Or ( ',' Or )*
@@ -24,16 +26,46 @@
 #   String    <- '"' ( '\\' . / [^"\\] )* '"'  /  "'" ( '\\' . / [^'\\] )* "'"
 #   Ident     <- [A-Za-z_] [A-Za-z0-9_]*
 #
-# Keywords: true false null in not. They are not identifiers.
-# String escapes: \\ \" \' \n \t \uXXXX (BMP code point). Any other escaped char is itself.
+# Tokens are matched longest first ('==' before '=', '<=' before '<', '!=' before '!');
+# a lone '=', '&' or '|' and any character outside the grammar is an error.
+# Keywords: true false null in not. They are not identifiers, also not after '.'
+# (write attrs["in"]); 'not' only occurs in 'not in'. Comparisons do not chain
+# (1 < 2 < 3 is an error); '!' binds looser than comparison (!a == b is !(a == b));
+# the right side of 'in' / 'not in' must be a list literal.
+# A Number denotes the nearest double (ties to even); a literal that overflows to
+# infinity is an error, underflow to 0 is not. "1." is the number 1 followed by '.'.
+# String escapes: \\ \" \' \n \t \uXXXX (exactly 4 hex digits: a BMP code point; an
+# escaped high surrogate must be followed by an escaped low surrogate, the pair denotes one
+# supplementary code point; any other surrogate is an error). Any other escaped character
+# is itself (\r is "r", \/ is "/"). Raw newlines may appear inside strings.
+#
+# Nesting: each '(' group, list literal, '[' index, call argument list and each prefix
+# '!' or '-' opens a level. Opening level 257 is an error (at the token that opens it).
+# Operator chains (a + b + …), postfix chains (a[0][1]…) and method chains (a.f().g()…)
+# are not nesting and have no limit.
+#
+# Errors are parse-time only, with a code and the offset in Unicode code points:
+#   expr_syntax              no match of the grammar; invalid character, string or escape;
+#                            number literal out of range; nesting too deep
+#   expr_unknown_identifier  a name that is not a variable (or, when called, not a function)
+#   expr_arity               a function called with the wrong number of arguments
+# The first error in reading order is reported: a name is resolved when it is read (before
+# the arguments of a call), the arity is checked after the closing ')'. The offset is the
+# start of the offending token or character; for an unterminated string the opening quote;
+# for an invalid escape its backslash; for unknown names and arity errors the name (for
+# method calls the name after '.'); for an unexpected end of input the length of the
+# source. Messages are informative only.
 #
 # ---------------------------------------------------------------------------------------
 # Semantics
 # ---------------------------------------------------------------------------------------
-# Values: number (IEEE 754 double), string, boolean, null, list.
+# Values: null, boolean, number (finite IEEE 754 double), string (sequence of Unicode code
+# points), list, object (objects only come from attrs: JSON objects inside attrs).
+# Numbers are never NaN or infinite: such results become null. Evaluation is total: it
+# never fails or throws, only parsing can fail.
 #
 # Variables (bare identifiers):
-#   attrs   the item's attrs object; attrs.x, attrs["x y"] read members (missing -> null)
+#   attrs   the item's attrs object ({} if the item has none)
 #   id      the item id (string)
 #   index   input index (number, 0-based)
 #   text    the label text ("" for non-text labels)
@@ -41,39 +73,65 @@
 #   tier    the explicit item.tier or null
 #   x, y    anchor reference point in canvas px
 # Unknown identifiers are a parse-time error (code "expr_unknown_identifier").
-# Member access on a non-object yields null. JSON arrays in attrs are lists; [i] indexes
-# them (non-integer or out-of-range index -> null).
+# Member access o.name / o["name"] reads an own key of a JSON object (missing -> null);
+# l[i] reads element i of a list for an integer 0 <= i < length (-0 counts as 0). Every
+# other access is null: members of non-objects (strings and lists have no members),
+# string indices on lists, number indices on objects, non-integer or out-of-range indices,
+# indexing strings.
 #
-# Truthiness: false, null, 0, NaN, "" and [] are falsy; everything else is truthy.
+# Truthiness: false, null, 0, -0, "" and [] are falsy; everything else is truthy (every
+# object, also {}, and every non-empty list, also [0]).
 # '!' returns a boolean. '&&' and '||' return booleans (not the operand values) and
 # short-circuit.
 #
 # Arithmetic (+ - * / % and unary -) is defined on numbers only; booleans are NOT
 # coerced. Any other operand type yields null. '+' on two strings concatenates.
-# Division by zero yields null. '%' is the truncated remainder (sign of the dividend),
-# like C fmod. Results that are not finite (NaN, ±Infinity) become null.
+# Division by zero (x / 0, x % 0, also by -0) yields null. '%' is the truncated remainder
+# (sign of the dividend), like C fmod. Results that are not finite become null. IEEE
+# signed zeros are kept (-0, 0 * -1 and -4 % 2 are -0).
 #
 # Comparison:
-#   == / !=  structural equality; numbers compare numerically, strings by code points,
-#            booleans and null by identity, lists elementwise. Different types are unequal.
-#   < <= > >=  numbers numerically, strings by code point sequence; any other pair of
-#            operands yields false.
+#   == / !=  structural equality ("values_equal"): numbers numerically (-0 == 0), strings
+#            by code points, booleans and null by identity, lists elementwise, objects by
+#            equal key sets with equal values (key order is irrelevant). Different types
+#            are unequal.
+#   < <= > >=  numbers numerically, strings lexicographically by code point (not by UTF-16
+#            code unit: "￿" < "😀"); any other pair of operands yields false.
 #   a in [l1, l2, ...]   a == li for some i. 'not in' negates.
 #
 # Functions (wrong arity is a parse-time error "expr_arity"; wrong argument types return null):
-#   abs(n) min(a, b, ...) max(a, b, ...) log(n) (natural; n <= 0 -> null) sqrt(n) (n < 0 -> null)
-#   floor(n) ceil(n) round(n) (half away from zero) log1p(n) (n <= -1 -> null)
-#   len(s | list) lower(s) upper(s) number(v) (string -> number via the Number rule, bool -> 0/1, else null)
-#   startsWith(s, prefix) endsWith(s, suffix) contains(s, needle)
-#   coalesce(a, b, ...) (first non-null argument)
-# Method syntax is sugar for the call with the receiver as first argument:
+#   abs(n)                 |n|; abs(-0) = 0
+#   min(a, ...) max(a, ...)  one or more numbers (any other argument -> null); a tie keeps
+#                          the earlier argument (min(-0, 0) = -0, min(0, -0) = 0)
+#   log(n)                 natural logarithm for n > 0 (else null)
+#   log1p(n)               ln(1 + n) for n > -1 (else null)
+#   sqrt(n)                for n >= 0 (else null); sqrt(-0) = -0
+#   floor(n) ceil(n)       as IEEE (floor(-0.5) = -1, ceil(-0.5) = -0)
+#   round(n)               nearest integer, halves away from zero (round(2.5) = 3,
+#                          round(-2.5) = -3, round(0.49999999999999994) = 0, round(-0.4) = -0)
+#   len(s | list)          number of code points of a string (len("😀") = 1) or of list elements
+#   lower(s) upper(s)      ASCII case mapping only (A-Z <-> a-z; "É", "ß", "ı" unchanged):
+#                          full Unicode case mappings differ between platform versions
+#   number(v)              number -> itself; boolean -> 1/0; string -> its value if it is the
+#                          Number rule with an optional leading '-', surrounded by optional
+#                          whitespace (space, tab, CR, LF); everything else, and a string
+#                          whose value is not finite ("1e999"), -> null
+#   startsWith(s, prefix) endsWith(s, suffix)   strings only
+#   contains(s, needle)    substring test for two strings; contains(list, v): some element == v
+#   coalesce(a, ...)       the first argument that is not null (null if there is none)
+# Method syntax is sugar for the call with the receiver as first argument (the receiver
+# counts for the arity):
 #   attrs.name.startsWith("org.")  ==  startsWith(attrs.name, "org.")
+# A member name followed by '(' is always a call (attrs.foo() is an unknown function).
 #
 # Results:
 #   where-clauses match iff the value is truthy.
 #   expr terms use the value if it is a number, 1/0 for booleans, and treat anything
 #   else as missing (missing values get normalized value 0).
-#   coverage.by groups items by the canonical JSON text of the value; null is its own group.
+#   coverage.by groups items whose values are equal under values_equal (the equality of
+#   '=='; null is its own group, -0 and 0 are the same group); groups are ordered by the
+#   first occurrence of their value in input order.
 #
-# Determinism: log, log1p and sqrt use the shared deterministic implementations of the
-# engine (det_math), so all implementations agree bit for bit.
+# Determinism: log, log1p and round use the shared deterministic implementations of the
+# engine (det_math, spec §10.4) and sqrt is IEEE sqrt, so all implementations agree bit
+# for bit; string functions work on code points, so they agree for every string.

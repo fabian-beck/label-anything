@@ -1,135 +1,80 @@
-//! TEMPORARY placeholder used while the real crate is developed on another branch.
-//! Provides the `det_math` API surface with std implementations.
-pub mod det_math {
-    pub fn ln(x: f64) -> f64 {
-        x.ln()
+//! Label Anything expression language (`spec/expr.peg`) and deterministic math.
+//!
+//! Expressions are used by `priority.tiers[].where`, `priority.terms[].expr` and
+//! `priority.coverage.by`. They are small, safe and side-effect free: parsing is the only
+//! step that can fail ([`ExprError`]); evaluation is total and never panics.
+//!
+//! ```
+//! use label_anything_expr::{parse, Context, Value};
+//!
+//! let attrs = Value::from(&serde_json::json!({ "category": "core", "cbo": 41 }));
+//! let expr = parse("attrs.category == 'core' && attrs.cbo > 10").unwrap();
+//! assert_eq!(expr.eval(&Context::new(&attrs)), Value::Bool(true));
+//! ```
+//!
+//! [`det_math`] holds the deterministic math functions and the PCG32 generator shared bit
+//! for bit with the TypeScript implementation (`ts/packages/core/src/detmath.ts`,
+//! `pcg.ts`, `expr/`).
+
+mod ast;
+pub mod det_math;
+mod error;
+mod eval;
+mod lexer;
+mod parser;
+mod value;
+
+pub use error::{ExprError, EXPR_ARITY, EXPR_SYNTAX, EXPR_UNKNOWN_IDENTIFIER};
+pub use eval::Context;
+pub use parser::MAX_DEPTH;
+pub use value::{term_number, truthy, values_equal, Value};
+
+/// A parsed expression; parse once, evaluate for many items.
+#[derive(Debug, Clone)]
+pub struct Expr {
+    root: ast::Node,
+    source: String,
+}
+
+/// Parses an expression (`spec/expr.peg`). Errors carry the code (`expr_syntax`,
+/// `expr_unknown_identifier`, `expr_arity`) and the code-point offset of the first error
+/// in reading order.
+pub fn parse(src: &str) -> Result<Expr, ExprError> {
+    Ok(Expr {
+        root: parser::parse_node(src)?,
+        source: src.to_string(),
+    })
+}
+
+impl Expr {
+    /// Evaluates the expression for one item. Never fails.
+    pub fn eval(&self, ctx: &Context) -> Value {
+        eval::eval(&self.root, ctx).into_value()
     }
-    pub fn ln_1p(x: f64) -> f64 {
-        x.ln_1p()
+
+    /// `truthy(self.eval(ctx))` without materializing the result (where-clauses).
+    pub fn matches(&self, ctx: &Context) -> bool {
+        eval::truthy_v(&eval::eval(&self.root, ctx))
     }
-    pub fn exp(x: f64) -> f64 {
-        x.exp()
+
+    /// `term_number(&self.eval(ctx))` without materializing the result (priority terms).
+    pub fn eval_number(&self, ctx: &Context) -> Option<f64> {
+        eval::term_number_v(&eval::eval(&self.root, ctx))
     }
-    pub fn pow(x: f64, y: f64) -> f64 {
-        x.powf(y)
-    }
-    pub fn cbrt(x: f64) -> f64 {
-        x.cbrt()
-    }
-    pub fn sin_cos_deg(deg: f64) -> (f64, f64) {
-        let r = deg.to_radians();
-        (r.sin(), r.cos())
-    }
-    pub fn atan2_deg(y: f64, x: f64) -> f64 {
-        y.atan2(x).to_degrees()
-    }
-    pub fn round_half_away(x: f64) -> f64 {
-        x.round()
-    }
-    pub struct Pcg32 {
-        state: u64,
-    }
-    impl Pcg32 {
-        const MUL: u64 = 6364136223846793005;
-        const INC: u64 = 1442695040888963407;
-        pub fn new(seed: u64) -> Self {
-            let mut p = Pcg32 { state: 0 };
-            p.step();
-            p.state = p.state.wrapping_add(seed);
-            p.step();
-            p
-        }
-        fn step(&mut self) {
-            self.state = self.state.wrapping_mul(Self::MUL).wrapping_add(Self::INC);
-        }
-        pub fn next_u32(&mut self) -> u32 {
-            let old = self.state;
-            self.step();
-            let x = (((old >> 18) ^ old) >> 27) as u32;
-            x.rotate_right((old >> 59) as u32)
-        }
-        pub fn next_f64(&mut self) -> f64 {
-            self.next_u32() as f64 / 4294967296.0
-        }
-        pub fn next_below(&mut self, n: u32) -> u32 {
-            ((self.next_u32() as u64 * n as u64) >> 32) as u32
-        }
+
+    /// The source text the expression was parsed from.
+    pub fn source(&self) -> &str {
+        &self.source
     }
 }
 
-// ---- placeholder expression API (replaced by the real implementation) ----
-use std::collections::BTreeMap;
-#[derive(Clone, Debug, PartialEq)]
-pub enum Value {
-    Null,
-    Bool(bool),
-    Num(f64),
-    Str(String),
-    List(Vec<Value>),
-    Obj(BTreeMap<String, Value>),
-}
-impl From<&serde_json::Value> for Value {
-    fn from(v: &serde_json::Value) -> Value {
-        match v {
-            serde_json::Value::Null => Value::Null,
-            serde_json::Value::Bool(b) => Value::Bool(*b),
-            serde_json::Value::Number(n) => Value::Num(n.as_f64().unwrap_or(0.0)),
-            serde_json::Value::String(s) => Value::Str(s.clone()),
-            serde_json::Value::Array(a) => Value::List(a.iter().map(Value::from).collect()),
-            serde_json::Value::Object(o) => {
-                Value::Obj(o.iter().map(|(k, v)| (k.clone(), Value::from(v))).collect())
-            }
-        }
+impl std::str::FromStr for Expr {
+    type Err = ExprError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        parse(s)
     }
 }
-#[derive(Clone, Debug)]
-pub struct ExprError {
-    pub code: &'static str,
-    pub message: String,
-    pub offset: usize,
-}
-#[derive(Clone, Debug)]
-pub struct Expr {
-    src: String,
-}
-pub fn parse(src: &str) -> Result<Expr, ExprError> {
-    if src.trim().is_empty() {
-        return Err(ExprError {
-            code: "expr_syntax",
-            message: "empty expression".into(),
-            offset: 0,
-        });
-    }
-    Ok(Expr {
-        src: src.to_string(),
-    })
-}
-pub struct Context<'a> {
-    pub attrs: &'a Value,
-    pub id: &'a str,
-    pub index: usize,
-    pub text: &'a str,
-    pub priority: Option<f64>,
-    pub tier: Option<i64>,
-    pub x: f64,
-    pub y: f64,
-}
-impl Expr {
-    pub fn eval(&self, _ctx: &Context) -> Value {
-        let _ = &self.src;
-        Value::Null
-    }
-}
-pub fn truthy(v: &Value) -> bool {
-    !matches!(v, Value::Null | Value::Bool(false)) && *v != Value::Num(0.0)
-}
-pub fn term_number(v: &Value) -> Option<f64> {
-    match v {
-        Value::Num(n) => Some(*n),
-        Value::Bool(b) => Some(if *b { 1.0 } else { 0.0 }),
-        _ => None,
-    }
-}
-pub fn values_equal(a: &Value, b: &Value) -> bool {
-    a == b
-}
+
+#[cfg(test)]
+mod tests;
