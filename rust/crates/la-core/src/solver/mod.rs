@@ -167,12 +167,6 @@ impl<'a> Solve<'a> {
         lazy: bool,
     ) -> Vec<u32> {
         let item = &self.model.items[i];
-        // While labels are placed (ladder steps, on-demand distant candidates), candidates
-        // blocked (hard) by a placed label or leader of higher or equal priority are
-        // dropped (spec §6.7): they cannot be used while that label stays, and they can
-        // never be evict_lower targets or witnesses of a priority inversion (those only
-        // involve strictly lower-priority labels). The occupancy grid rejects most of them
-        // before their leaders are built; the exact test below decides the rest.
         if models.has(Models::DISTANT)
             && self.model.placement.free_space_seeds
             && self.seeds[i].is_none()
@@ -180,111 +174,30 @@ impl<'a> Solve<'a> {
             let fs = self.obs.free_space(self.model);
             self.seeds[i] = Some(crate::leaders::item_seeds(fs, item));
         }
-        let seeds = self.seeds[i].as_deref().unwrap_or(&[]);
+        // While labels are placed (ladder steps, on-demand distant candidates), candidates
+        // blocked (hard) by a placed label or leader of higher or equal priority are
+        // dropped (spec §6.7): they cannot be used while that label stays, and they can
+        // never be evict_lower targets or witnesses of a priority inversion (those only
+        // involve strictly lower-priority labels). The occupancy grid rejects most of them
+        // before their leaders are built; the exact test below decides the rest.
         let key_i = self.pri.prio[i].key;
         let filter = self.state.n_placed > 0;
         let quick = filter
             && self.obs.dynamic.label_labels.is_hard()
             && self.state.max_placed_key().is_some_and(|k| k <= key_i);
-        let state = &self.state;
-        let variants = &self.variants[i];
-        let item_occ = self.obs.item_occ.as_ref();
-        let occ = state.occupancy();
-        // both grids cover the model extent with the same cells: one window serves both
-        let shared = item_occ.is_none_or(|o| o.same_cells(occ));
-        let dropped = std::cell::Cell::new(0u32);
-        // `keep` serves non-internal candidates only (internal labels sit on their mark)
-        let keep = |vi: usize, r: &Rect| {
-            if !(quick || item_occ.is_some()) || !candidates::is_rect_shape(&variants[vi].shape) {
-                return true;
-            }
-            let w = occ.window(r);
-            if let Some(o) = item_occ {
-                let hit = if shared {
-                    w.is_some_and(|w| o.blocked_in(&w))
-                } else {
-                    o.blocked(r)
-                };
-                if hit {
-                    dropped.set(dropped.get() + 1);
-                    return false;
-                }
-            }
-            !(quick && state.n_placed > 0 && w.is_some_and(|w| occ.blocked_in(&w)))
-        };
-        let mut fresh: Vec<Cand> = Vec::new();
-        for &vi in vis {
-            let v = &variants[vi];
-            let start = fresh.len();
-            if item.area.is_some() {
-                // area anchors: internal candidates first; external ones around the dot
-                if let Some(rank) = candidates::internal_rank(
-                    item,
-                    v,
-                    models,
-                    self.model.placement.internal_circle_ratio,
-                ) {
-                    candidates::internal(item, vi, v, rank, &mut fresh);
-                }
-                candidates::adjacent(
-                    item,
-                    vi,
-                    v,
-                    self.model.placement.slider_per_gap,
-                    models,
-                    &mut fresh,
-                );
-            } else {
-                candidates::adjacent(
-                    item,
-                    vi,
-                    v,
-                    self.model.placement.slider_per_gap,
-                    models,
-                    &mut fresh,
-                );
-                if let Some(rank) = candidates::internal_rank(
-                    item,
-                    v,
-                    models,
-                    self.model.placement.internal_circle_ratio,
-                ) {
-                    candidates::internal(item, vi, v, rank, &mut fresh);
-                }
-            }
-            if quick || item_occ.is_some() {
-                let mut w = start;
-                for r in start..fresh.len() {
-                    if fresh[r].kind == Kind::Internal || keep(vi, &fresh[r].rect) {
-                        fresh.swap(w, r);
-                        w += 1;
-                    }
-                }
-                fresh.truncate(w);
-            }
-            if models.has(Models::DISTANT) {
-                crate::leaders::distant(
-                    self.model,
-                    seeds,
-                    item,
-                    vi,
-                    v,
-                    &self.distant_dirs,
-                    &keep,
-                    &mut fresh,
-                );
-            }
-        }
-        if models.has(Models::BOUNDARY) {
-            crate::boundary::boundary_candidates(
-                self.model, self.obs, item, variants, vis, &keep, &mut fresh,
-            );
-        }
-        self.static_dropped[i] += dropped.get();
-        for c in &mut fresh {
-            c.level = level;
-            c.lshape = candidates::label_shape(&c.rect, &variants[c.variant as usize].shape);
-        }
+        let (mut fresh, dropped) = raw_candidates(
+            self.model,
+            self.obs,
+            item,
+            &self.variants[i],
+            vis,
+            models,
+            level,
+            self.seeds[i].as_deref().unwrap_or(&[]),
+            &self.distant_dirs,
+            quick.then(|| self.state.occupancy()),
+        );
+        self.static_dropped[i] += dropped;
         if filter {
             let prio = &self.pri.prio;
             let (state, cands, obs) = (&mut self.state, &self.cands, self.obs);
@@ -294,59 +207,20 @@ impl<'a> Solve<'a> {
                     .is_none()
             });
         }
-        if lazy {
-            let mut ids = Vec::with_capacity(fresh.len());
-            for c in fresh {
-                ids.push(self.cands.len() as u32);
-                self.cands.push(c);
-            }
-            self.by_item[i].extend_from_slice(&ids);
-            return ids;
+        if !lazy {
+            fresh = evaluate_and_prune(
+                self.model,
+                self.obs,
+                self.env,
+                &self.variants[i],
+                vis,
+                fresh,
+            );
         }
-        let mut ev = Evaluator::new(self.model, self.obs, self.env);
-        for c in &mut fresh {
-            let v = &self.variants[c.item as usize][c.variant as usize];
-            ev.eval(c, v, None);
-        }
-        // keep the k_distant cheapest distant candidates per variant
-        let kd = self.model.placement.k_distant;
-        let mut keep = vec![true; fresh.len()];
-        for &vi in vis {
-            let mut ds: Vec<usize> = (0..fresh.len())
-                .filter(|&k| fresh[k].variant as usize == vi && fresh[k].kind == Kind::Distant)
-                .collect();
-            ds.sort_by(|&a, &b| {
-                let ka = (!fresh[a].feasible, fresh[a].cost);
-                let kb = (!fresh[b].feasible, fresh[b].cost);
-                ka.0.cmp(&kb.0)
-                    .then(crate::math::cmp_f64(ka.1, kb.1))
-                    .then(a.cmp(&b))
-            });
-            for &k in ds.iter().skip(kd) {
-                keep[k] = false;
-            }
-        }
-        // prune expensive feasible candidates
-        let best = fresh
-            .iter()
-            .zip(&keep)
-            .filter(|(c, k)| **k && c.feasible)
-            .map(|(c, _)| c.cost)
-            .fold(f64::INFINITY, f64::min);
-        if best.is_finite() {
-            let lim = self.model.placement.prune_factor * best.abs() + 1.0 + best.min(0.0);
-            for (k, c) in fresh.iter().enumerate() {
-                if c.feasible && c.cost > lim {
-                    keep[k] = false;
-                }
-            }
-        }
-        let mut ids = Vec::new();
-        for (c, k) in fresh.into_iter().zip(keep) {
-            if k {
-                ids.push(self.cands.len() as u32);
-                self.cands.push(c);
-            }
+        let mut ids = Vec::with_capacity(fresh.len());
+        for c in fresh {
+            ids.push(self.cands.len() as u32);
+            self.cands.push(c);
         }
         self.by_item[i].extend_from_slice(&ids);
         ids
@@ -356,12 +230,60 @@ impl<'a> Solve<'a> {
     /// generated on demand (see [`Solve::ensure_distant`]).
     pub fn generate_level0(&mut self) {
         let n = self.model.items.len();
-        for i in 0..n {
-            let vis: Vec<usize> = (0..self.variants[i].len()).collect();
-            let m = self.models[i];
-            self.distant_pending[i] = m.has(Models::DISTANT);
-            self.generate(i, &vis, Models(m.0 & !Models::DISTANT), 0);
-            self.generate_warm(i);
+        // no label is placed yet, so the candidates of every item depend on the item
+        // alone: generated per item (in parallel with the `parallel` feature, unless the
+        // host evaluates costs itself) and numbered in item order
+        let (model, obs, variants, dirs) =
+            (self.model, self.obs, &self.variants, &self.distant_dirs);
+        let models: Vec<Models> = self
+            .models
+            .iter()
+            .map(|m| Models(m.0 & !Models::DISTANT))
+            .collect();
+        let per_item = |env: &dyn Env, i: usize| -> (Vec<Cand>, u32, Option<Cand>) {
+            if matches!(model.group_of.get(i), Some(Some(r)) if *r != i) {
+                return (Vec::new(), 0, None);
+            }
+            let item = &model.items[i];
+            let vis: Vec<usize> = (0..variants[i].len()).collect();
+            let (fresh, dropped) = raw_candidates(
+                model,
+                obs,
+                item,
+                &variants[i],
+                &vis,
+                models[i],
+                0,
+                &[],
+                dirs,
+                None,
+            );
+            let kept = evaluate_and_prune(model, obs, env, &variants[i], &vis, fresh);
+            (
+                kept,
+                dropped,
+                warm_candidate(model, obs, env, item, &variants[i]),
+            )
+        };
+        let generated: Vec<(Vec<Cand>, u32, Option<Cand>)> = if self.env.has_cost_callback() {
+            let env = self.env;
+            (0..n).map(|i| per_item(env, i)).collect()
+        } else {
+            // without host callbacks the evaluation does not use the environment
+            crate::par::map(n, |i| per_item(&crate::env::BasicEnv, i))
+        };
+        for (i, (kept, dropped, warm)) in generated.into_iter().enumerate() {
+            self.distant_pending[i] = self.models[i].has(Models::DISTANT);
+            self.static_dropped[i] += dropped;
+            for c in kept {
+                self.by_item[i].push(self.cands.len() as u32);
+                self.cands.push(c);
+            }
+            if let Some(c) = warm {
+                self.warm_cand[i] = Some(self.cands.len() as u32);
+                self.by_item[i].push(self.cands.len() as u32);
+                self.cands.push(c);
+            }
         }
         // auto preset: enable distant labels when crowded
         if let Some((frac, crowded_models)) = self.model.auto_crowded {
@@ -397,36 +319,6 @@ impl<'a> Solve<'a> {
             &self.model.extent,
             self.obs.index_cell,
         );
-    }
-
-    /// The warm-start box of item `i` as an extra level-0 candidate (kept when statically
-    /// feasible), for the variant of the same size.
-    fn generate_warm(&mut self, i: usize) {
-        let item = &self.model.items[i];
-        let Some(Some(b)) = self.model.warm.get(&item.id) else {
-            return;
-        };
-        if matches!(self.model.group_of.get(i), Some(Some(r)) if *r != i) {
-            return;
-        }
-        let Some(vi) = self.variants[i]
-            .iter()
-            .position(|v| (v.w - b.w()).abs() <= 0.5 && (v.h - b.h()).abs() <= 0.5)
-        else {
-            return;
-        };
-        let v = &self.variants[i][vi];
-        let Some(mut c) = candidates::warm(self.model, item, vi, v, *b) else {
-            return;
-        };
-        c.level = 0;
-        c.lshape = candidates::label_shape(&c.rect, &v.shape);
-        Evaluator::new(self.model, self.obs, self.env).eval(&mut c, v, None);
-        if c.feasible {
-            self.warm_cand[i] = Some(self.cands.len() as u32);
-            self.by_item[i].push(self.cands.len() as u32);
-            self.cands.push(c);
-        }
     }
 
     /// Generate the pending level-0 distant candidates of item `i` (once).
@@ -516,4 +408,184 @@ impl<'a> Solve<'a> {
         }
         self.cancelled
     }
+}
+
+/// The candidates of `item` for the variants `vis` with `models` (spec §6), before the
+/// dynamic filter and the static evaluation, with the number skipped because their box
+/// covers an item mark (`Obstacles::item_occ`). With `placed` (the occupancy of placed
+/// labels of higher or equal priority, when labels must not overlap), boxes over a placed
+/// label are skipped as well, before their leaders are built.
+#[allow(clippy::too_many_arguments)]
+fn raw_candidates(
+    model: &Model,
+    obs: &Obstacles,
+    item: &crate::model::Item,
+    variants: &[Variant],
+    vis: &[usize],
+    models: Models,
+    level: u8,
+    seeds: &[crate::leaders::NearSeed],
+    dirs: &[(f64, crate::geom::P)],
+    placed: Option<&crate::grid::occupancy::Occupancy>,
+) -> (Vec<Cand>, u32) {
+    let item_occ = obs.item_occ.as_ref();
+    // both grids cover the model extent with the same cells: one window serves both
+    let shared = match (item_occ, placed) {
+        (Some(o), Some(p)) => o.same_cells(p),
+        _ => true,
+    };
+    let dropped = std::cell::Cell::new(0u32);
+    // `keep` serves non-internal candidates only (internal labels sit on their mark)
+    let keep = |vi: usize, r: &Rect| {
+        if !(placed.is_some() || item_occ.is_some())
+            || !candidates::is_rect_shape(&variants[vi].shape)
+        {
+            return true;
+        }
+        let w = placed.and_then(|occ| occ.window(r));
+        if let Some(o) = item_occ {
+            let hit = if placed.is_some() && shared {
+                w.is_some_and(|w| o.blocked_in(&w))
+            } else {
+                o.blocked(r)
+            };
+            if hit {
+                dropped.set(dropped.get() + 1);
+                return false;
+            }
+        }
+        !placed.is_some_and(|occ| w.is_some_and(|w| occ.blocked_in(&w)))
+    };
+    let mut fresh: Vec<Cand> = Vec::new();
+    for &vi in vis {
+        let v = &variants[vi];
+        let start = fresh.len();
+        let internal_rank =
+            candidates::internal_rank(item, v, models, model.placement.internal_circle_ratio);
+        if item.area.is_some() {
+            // area anchors: internal candidates first; external ones around the dot
+            if let Some(rank) = internal_rank {
+                candidates::internal(item, vi, v, rank, &mut fresh);
+            }
+            candidates::adjacent(
+                item,
+                vi,
+                v,
+                model.placement.slider_per_gap,
+                models,
+                &mut fresh,
+            );
+        } else {
+            candidates::adjacent(
+                item,
+                vi,
+                v,
+                model.placement.slider_per_gap,
+                models,
+                &mut fresh,
+            );
+            if let Some(rank) = internal_rank {
+                candidates::internal(item, vi, v, rank, &mut fresh);
+            }
+        }
+        if placed.is_some() || item_occ.is_some() {
+            let mut w = start;
+            for r in start..fresh.len() {
+                if fresh[r].kind == Kind::Internal || keep(vi, &fresh[r].rect) {
+                    fresh.swap(w, r);
+                    w += 1;
+                }
+            }
+            fresh.truncate(w);
+        }
+        if models.has(Models::DISTANT) {
+            crate::leaders::distant(model, seeds, item, vi, v, dirs, &keep, &mut fresh);
+        }
+    }
+    if models.has(Models::BOUNDARY) {
+        crate::boundary::boundary_candidates(model, obs, item, variants, vis, &keep, &mut fresh);
+    }
+    for c in &mut fresh {
+        c.level = level;
+        c.lshape = candidates::label_shape(&c.rect, &variants[c.variant as usize].shape);
+    }
+    (fresh, dropped.get())
+}
+
+/// Static evaluation and pruning of an item's fresh candidates (spec §6.7): of the
+/// distant candidates the `k_distant` cheapest per variant stay, and feasible candidates
+/// costing more than `prune_factor × best + 1` are dropped.
+fn evaluate_and_prune(
+    model: &Model,
+    obs: &Obstacles,
+    env: &dyn Env,
+    variants: &[Variant],
+    vis: &[usize],
+    mut fresh: Vec<Cand>,
+) -> Vec<Cand> {
+    let mut ev = Evaluator::new(model, obs, env);
+    for c in &mut fresh {
+        ev.eval(c, &variants[c.variant as usize], None);
+    }
+    // keep the k_distant cheapest distant candidates per variant
+    let kd = model.placement.k_distant;
+    let mut keep = vec![true; fresh.len()];
+    for &vi in vis {
+        let mut ds: Vec<usize> = (0..fresh.len())
+            .filter(|&k| fresh[k].variant as usize == vi && fresh[k].kind == Kind::Distant)
+            .collect();
+        ds.sort_by(|&a, &b| {
+            let ka = (!fresh[a].feasible, fresh[a].cost);
+            let kb = (!fresh[b].feasible, fresh[b].cost);
+            ka.0.cmp(&kb.0)
+                .then(crate::math::cmp_f64(ka.1, kb.1))
+                .then(a.cmp(&b))
+        });
+        for &k in ds.iter().skip(kd) {
+            keep[k] = false;
+        }
+    }
+    // prune expensive feasible candidates
+    let best = fresh
+        .iter()
+        .zip(&keep)
+        .filter(|(c, k)| **k && c.feasible)
+        .map(|(c, _)| c.cost)
+        .fold(f64::INFINITY, f64::min);
+    if best.is_finite() {
+        let lim = model.placement.prune_factor * best.abs() + 1.0 + best.min(0.0);
+        for (k, c) in fresh.iter().enumerate() {
+            if c.feasible && c.cost > lim {
+                keep[k] = false;
+            }
+        }
+    }
+    fresh
+        .into_iter()
+        .zip(keep)
+        .filter_map(|(c, k)| k.then_some(c))
+        .collect()
+}
+
+/// The warm-start box of an item as an extra level-0 candidate (when statically
+/// feasible), for the variant of the same size.
+fn warm_candidate(
+    model: &Model,
+    obs: &Obstacles,
+    env: &dyn Env,
+    item: &crate::model::Item,
+    variants: &[Variant],
+) -> Option<Cand> {
+    let Some(Some(b)) = model.warm.get(&item.id) else {
+        return None;
+    };
+    let vi = variants
+        .iter()
+        .position(|v| (v.w - b.w()).abs() <= 0.5 && (v.h - b.h()).abs() <= 0.5)?;
+    let v = &variants[vi];
+    let mut c = candidates::warm(model, item, vi, v, *b)?;
+    c.level = 0;
+    c.lshape = candidates::label_shape(&c.rect, &v.shape);
+    Evaluator::new(model, obs, env).eval(&mut c, v, None);
+    c.feasible.then_some(c)
 }

@@ -16,9 +16,12 @@ default = ["decode"]
 # PNG, JPEG and WebP decoding through the `image` crate (pure Rust, minimal features).
 # Without it, `decode` returns a structured `unsupported` error; raw RGBA still works.
 decode = ["dep:image"]
+# Large base64 inputs are decoded on several threads (rayon); the result is the same.
+parallel = ["dep:rayon"]
 
 [dependencies]
 image = { workspace = true, optional = true, features = ["png", "jpeg", "webp"] }
+rayon = { workspace = true, optional = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }

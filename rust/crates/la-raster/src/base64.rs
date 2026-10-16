@@ -77,6 +77,12 @@ fn b64_error(message: String) -> RasterError {
 /// ```
 pub fn decode_base64(input: &str) -> Result<Vec<u8>, RasterError> {
     let bytes = input.as_bytes();
+    #[cfg(feature = "parallel")]
+    if bytes.len() >= 1 << 20 {
+        if let Some(out) = decode_parallel(bytes) {
+            return out;
+        }
+    }
     // fast path: leading whole quanta of four alphabet characters (no whitespace or
     // padding), three bytes at a time; the general decoder continues from the first
     // other character
@@ -84,17 +90,62 @@ pub fn decode_base64(input: &str) -> Result<Vec<u8>, RasterError> {
     let mut o = 0;
     let mut i = 0;
     let [t0, t1, t2, t3] = &SHIFTED;
-    for (q, dst) in bytes.chunks_exact(4).zip(out.chunks_exact_mut(3)) {
+    for (q, dst) in bytes
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .zip(out.as_chunks_mut::<3>().0)
+    {
         let v = t0[q[0] as usize] | t1[q[1] as usize] | t2[q[2] as usize] | t3[q[3] as usize];
         if v >> 31 != 0 {
             break;
         }
-        dst.copy_from_slice(&(v << 8).to_be_bytes()[..3]);
+        *dst = [(v >> 16) as u8, (v >> 8) as u8, v as u8];
         o += 3;
         i += 4;
     }
     out.truncate(o);
     decode_from(bytes, i, out)
+}
+
+/// Whole quanta of alphabet characters into `dst` (three bytes per quantum); false at the
+/// first other character.
+#[cfg(feature = "parallel")]
+fn decode_quanta(src: &[u8], dst: &mut [u8]) -> bool {
+    let [t0, t1, t2, t3] = &SHIFTED;
+    for (q, d) in src
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .zip(dst.as_chunks_mut::<3>().0)
+    {
+        let v = t0[q[0] as usize] | t1[q[1] as usize] | t2[q[2] as usize] | t3[q[3] as usize];
+        if v >> 31 != 0 {
+            return false;
+        }
+        *d = [(v >> 16) as u8, (v >> 8) as u8, v as u8];
+    }
+    true
+}
+
+/// Large inputs of whole quanta: all but the last quantum decoded in parallel slices, the
+/// last one (it may hold padding) by the general decoder. `None` (decode sequentially)
+/// when the length is not a multiple of 4 or a slice holds another character.
+#[cfg(feature = "parallel")]
+fn decode_parallel(bytes: &[u8]) -> Option<Result<Vec<u8>, RasterError>> {
+    use rayon::prelude::*;
+    if !bytes.len().is_multiple_of(4) {
+        return None;
+    }
+    let body = bytes.len() - 4;
+    let quanta = body / 4;
+    let per = quanta.div_ceil(rayon::current_num_threads() * 4).max(1024);
+    let mut out = vec![0u8; quanta * 3];
+    let ok = out
+        .par_chunks_mut(per * 3)
+        .zip(bytes[..body].par_chunks(per * 4))
+        .all(|(dst, src)| decode_quanta(src, dst));
+    ok.then(|| decode_from(bytes, body, out))
 }
 
 /// The general decoder (all rules above), from byte `start` (a quantum boundary) on,
@@ -295,6 +346,43 @@ mod tests {
                 assert_eq!(a.message, b.message, "{text:?}");
             }
         }
+    }
+
+    #[test]
+    fn large_inputs_decode_like_the_general_decoder() {
+        // above the parallel threshold: canonical, with whitespace inside, without and
+        // with broken padding
+        const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        let mut x = 0x1234_5678_9ABC_DEF1u64;
+        let mut text: Vec<u8> = (0..1 << 21)
+            .map(|_| {
+                x ^= x << 13;
+                x ^= x >> 7;
+                x ^= x << 17;
+                ALPHABET[(x % 64) as usize]
+            })
+            .collect();
+        text.extend_from_slice(b"QQ==");
+        let canonical = String::from_utf8(text.clone()).unwrap();
+        let general = |t: &str| decode_from(t.as_bytes(), 0, Vec::new());
+        assert_eq!(
+            decode_base64(&canonical).unwrap(),
+            general(&canonical).unwrap()
+        );
+        let unpadded = &canonical[..canonical.len() - 2];
+        assert_eq!(decode_base64(unpadded).unwrap(), general(unpadded).unwrap());
+        let mut spaced = text.clone();
+        spaced[1_000_001] = b'\n';
+        let spaced = String::from_utf8(spaced).unwrap();
+        assert_eq!(decode_base64(&spaced).ok(), general(&spaced).ok());
+        let mut bad = text.clone();
+        bad.truncate(bad.len() - 1);
+        bad.extend_from_slice(b"=Q");
+        let bad = String::from_utf8(bad).unwrap();
+        assert_eq!(
+            decode_base64(&bad).unwrap_err().message,
+            general(&bad).unwrap_err().message
+        );
     }
 
     #[test]

@@ -13,7 +13,8 @@ keywords.workspace = true
 categories.workspace = true
 
 [features]
-default = ["std-clock", "decode"]
+default = ["std-clock", "decode", "parallel"]
+# data-parallel phases (rayon); results do not depend on the number of threads
 std-clock = []
 decode = ["la-core/decode"]
 parallel = ["la-core/parallel"]

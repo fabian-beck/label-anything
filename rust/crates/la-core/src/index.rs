@@ -62,7 +62,10 @@ pub struct StaticIndex {
     offsets: Vec<u32>,
     ids: Vec<u32>,
     boxes: Vec<Rect>,
-    stamp: std::cell::RefCell<(Vec<u32>, u32)>,
+    /// First bucket (column, row) of every box: a query reports a box only in its first
+    /// bucket within the query range, so results need no deduplication state (and the
+    /// index can be shared between threads).
+    first: Vec<(u16, u16)>,
 }
 
 impl StaticIndex {
@@ -85,11 +88,14 @@ impl StaticIndex {
         }
         let mut fill = counts.clone();
         let mut ids = vec![0u32; *counts.last().unwrap_or(&0) as usize];
+        // bucket coordinates fit u16 (at most 4096 columns and rows)
+        let mut first = vec![(0u16, 0u16); boxes.len()];
         for (id, r) in boxes.iter().enumerate() {
             if r.is_empty() {
                 continue;
             }
             let (c0, c1, r0, r1) = b.range(r);
+            first[id] = (c0 as u16, r0 as u16);
             for row in r0..=r1 {
                 for col in c0..=c1 {
                     let k = row * b.cols + col;
@@ -98,13 +104,12 @@ impl StaticIndex {
                 }
             }
         }
-        let n = boxes.len();
         StaticIndex {
             b,
             offsets: counts,
             ids,
             boxes,
-            stamp: std::cell::RefCell::new((vec![0; n], 0)),
+            first,
         }
     }
 
@@ -135,23 +140,17 @@ impl StaticIndex {
             }
             return;
         }
-        let mut st = self.stamp.borrow_mut();
-        st.1 = st.1.wrapping_add(1);
-        if st.1 == 0 {
-            st.0.iter_mut().for_each(|x| *x = 0);
-            st.1 = 1;
-        }
-        let gen = st.1;
+        // a box is met first (in scan order) in its first row and column of the range
         for row in r0..=r1 {
             for col in c0..=c1 {
                 let k = row * self.b.cols + col;
                 for &id in &self.ids[self.offsets[k] as usize..self.offsets[k + 1] as usize] {
-                    let slot = &mut st.0[id as usize];
-                    if *slot != gen {
-                        *slot = gen;
-                        if self.boxes[id as usize].touches(r) {
-                            out.push(id);
-                        }
+                    let (fc, fr) = self.first[id as usize];
+                    if (fc as usize).max(c0) == col
+                        && (fr as usize).max(r0) == row
+                        && self.boxes[id as usize].touches(r)
+                    {
+                        out.push(id);
                     }
                 }
             }

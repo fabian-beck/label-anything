@@ -231,8 +231,8 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         })
         .collect();
     let class_of = |n: &str, classes: &[Class]| classes.iter().position(|c| c.name == n);
-    // rasterize vector primitives per class into masks, collect exact prims
-    let mut masks: Vec<Option<MaskRaster>> = (0..classes.len()).map(|_| None).collect();
+    // collect the exact primitives of the classes that matter, then rasterize them per
+    // class into masks
     let mut prims = Vec::new();
     // consecutive primitives mostly share their class (and its name)
     let mut last: Option<(&std::sync::Arc<str>, Option<usize>)> = None;
@@ -249,11 +249,12 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         if c.label == AvoidW::Ignore && c.leader == AvoidW::Ignore && c.buffer == 0.0 {
             continue;
         }
-        let m = masks[ci].get_or_insert_with(|| MaskRaster::new(grid));
-        rasterize_prim(m, prim);
         prims.push((ci, prim.clone()));
     }
-    for (ci, m) in masks.into_iter().enumerate() {
+    for (ci, m) in rasterize_classes(grid, classes.len(), &prims)
+        .into_iter()
+        .enumerate()
+    {
         if let Some(m) = m {
             classes[ci].has_prims = true;
             classes[ci].sat = Some(Sat::from_coverage(grid.cols, grid.rows, &m.into_coverage()));
@@ -313,9 +314,11 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
     );
     // items coverage (global and per item)
     let mut all_items = MaskRaster::new(grid);
-    let mut own = Vec::with_capacity(model.items.len());
     for it in &model.items {
         all_items.shape(&it.shape);
+    }
+    let own = crate::par::map(model.items.len(), |i| {
+        let it = &model.items[i];
         let (c0, c1, r0, r1) = grid.cell_range(&it.shape.bbox().inflate(cell));
         let local = GridSpec {
             ox: grid.ox + c0 as f64 * cell,
@@ -326,11 +329,11 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         };
         let mut m = MaskRaster::new(local);
         m.shape(&it.shape);
-        own.push((
+        (
             local,
             Sat::from_coverage(local.cols, local.rows, &m.into_coverage()),
-        ));
-    }
+        )
+    });
     let items_sat = Sat::from_coverage(grid.cols, grid.rows, &all_items.into_coverage());
     let item_occ = if dynamic.label_items.is_hard() && dynamic.own_mark == OwnMark::Hard {
         let mut occ = crate::grid::occupancy::Occupancy::new(&model.extent);
@@ -407,6 +410,38 @@ fn free_space(model: &Model, obs: &Obstacles) -> FreeSpace {
         seeds,
         seed_index,
     }
+}
+
+/// Masks of the classes `0..n_classes` from their primitives (`None` for a class without
+/// any). Rasterizing only sets bits, so chunks of primitives are rasterized into masks of
+/// their own (in parallel with the `parallel` feature) and merged by bitwise or: the
+/// result does not depend on the split.
+fn rasterize_classes(
+    grid: GridSpec,
+    n_classes: usize,
+    prims: &[(usize, Prim)],
+) -> Vec<Option<MaskRaster>> {
+    let chunks = crate::par::threads().min(prims.len() / 2048).max(1);
+    let len = prims.len().div_ceil(chunks).max(1);
+    let parts = crate::par::map(chunks, |k| {
+        let mut masks: Vec<Option<MaskRaster>> = (0..n_classes).map(|_| None).collect();
+        for (ci, p) in &prims[(k * len).min(prims.len())..((k + 1) * len).min(prims.len())] {
+            rasterize_prim(masks[*ci].get_or_insert_with(|| MaskRaster::new(grid)), p);
+        }
+        masks
+    });
+    let mut out: Vec<Option<MaskRaster>> = (0..n_classes).map(|_| None).collect();
+    for part in parts {
+        for (ci, m) in part.into_iter().enumerate() {
+            if let Some(m) = m {
+                match &mut out[ci] {
+                    Some(o) => o.or_from(&m),
+                    None => out[ci] = Some(m),
+                }
+            }
+        }
+    }
+    out
 }
 
 fn rasterize_prim(m: &mut MaskRaster, p: &Prim) {

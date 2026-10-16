@@ -13,6 +13,10 @@
 
 mod csv;
 
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 use clap::{Parser, Subcommand};
 use label_anything::{Env, NativeEnv, Report};
 use serde_json::{json, Value};

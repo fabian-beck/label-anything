@@ -13,7 +13,7 @@ categories.workspace = true
 
 [features]
 default = []
-parallel = ["dep:rayon"]
+parallel = ["dep:rayon", "la-raster/parallel"]
 # PNG/JPEG/WebP decoding of raster backgrounds (raw RGBA always works).
 decode = ["la-raster/decode"]
 

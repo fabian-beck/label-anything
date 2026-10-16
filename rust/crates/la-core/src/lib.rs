@@ -19,6 +19,7 @@ pub mod math;
 pub mod model;
 pub mod obstacles;
 pub mod options;
+pub mod par;
 pub mod priority;
 pub mod result;
 pub mod solver;

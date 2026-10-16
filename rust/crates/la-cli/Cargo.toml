@@ -16,9 +16,12 @@ name = "label-anything"
 path = "src/main.rs"
 
 [features]
-default = ["png"]
+default = ["png", "mimalloc"]
 # `render -o overlay.png`: rasterize the debug SVG (resvg, bundled Noto Sans)
 png = ["dep:resvg"]
+# mimalloc as the global allocator: faster allocation, and freed memory is reused instead
+# of being returned to the system after every solve (large images, repeated solves)
+mimalloc = ["dep:mimalloc"]
 
 [dependencies]
 label-anything = { workspace = true }
@@ -26,3 +29,4 @@ serde_json = { workspace = true }
 clap = { version = "4.5", features = ["derive"] }
 tiny_http = "0.12"
 resvg = { version = "0.48", default-features = false, features = ["text"], optional = true }
+mimalloc = { version = "0.1.52", default-features = false, optional = true }

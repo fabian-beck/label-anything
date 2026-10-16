@@ -50,11 +50,6 @@ pub fn distance_transform(g: &GridSpec, occupied: impl Fn(usize) -> bool) -> Vec
             *cell = 0.0;
         }
     }
-    let n = cols.max(rows);
-    let mut f = vec![0.0; n];
-    let mut d = vec![0.0; n];
-    let mut v = vec![0usize; n];
-    let mut z = vec![0.0; n + 1];
     // columns: the squared distance to the nearest occupied cell of the column, by a
     // downward and an upward sweep over the rows (the 1-D transform of this binary
     // input: the same exact integers; columns without an occupied cell stay INF, which
@@ -86,19 +81,31 @@ pub fn distance_transform(g: &GridSpec, occupied: impl Fn(usize) -> bool) -> Vec
             }
         }
     }
-    // rows
-    for r in 0..rows {
-        f[..cols].copy_from_slice(&grid[r * cols..(r + 1) * cols]);
-        dt1d(&f[..cols], &mut d[..cols], &mut v, &mut z);
-        for c in 0..cols {
-            let sq = d[c];
-            grid[r * cols + c] = if sq >= INF * 0.5 {
-                1e9
-            } else {
-                sq.sqrt() * g.cell
-            };
-        }
-    }
+    // rows (independent of each other: in parallel with the `parallel` feature)
+    let cell = g.cell;
+    crate::par::chunks_mut(
+        &mut grid,
+        cols,
+        || {
+            (
+                vec![0.0; cols],
+                vec![0.0; cols],
+                vec![0usize; cols],
+                vec![0.0; cols + 1],
+            )
+        },
+        |_, row, (f, d, v, z)| {
+            f.copy_from_slice(row);
+            dt1d(f, d, v, z);
+            for (out, &sq) in row.iter_mut().zip(d.iter()) {
+                *out = if sq >= INF * 0.5 {
+                    1e9
+                } else {
+                    sq.sqrt() * cell
+                };
+            }
+        },
+    );
     grid
 }
 
