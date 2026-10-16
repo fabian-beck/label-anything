@@ -1,7 +1,6 @@
 //! Obstacle preparation (spec §4): class policies, coverage grids with SATs, exact
 //! primitive indexes and the distance transform of the static hard classes.
 
-use crate::env::Env;
 use crate::geom::{dist_point_seg, dist_seg_rect, polygon, seg_overlaps_rect, Rect, EPS, P};
 use crate::grid::dt::distance_transform;
 use crate::grid::raster::MaskRaster;
@@ -120,7 +119,7 @@ pub fn grid_cell(model: &Model, min_font: f64) -> f64 {
     }
 }
 
-pub fn prepare(model: &Model, env: &dyn Env, min_font: f64) -> Obstacles {
+pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
     let cell = grid_cell(model, min_font);
     let grid = GridSpec::covering(&model.extent, cell);
     // class names
@@ -129,13 +128,13 @@ pub fn prepare(model: &Model, env: &dyn Env, min_font: f64) -> Obstacles {
         names.insert(c.clone());
     }
     let mut raster_cov: Vec<(String, Vec<u8>)> = Vec::new();
-    if let Some(rb) = env.raster() {
-        for r in &model.rasters {
-            for (c, cov) in rb.coverage(&r.img, &r.opts, &grid) {
-                if c != "ignore" && cov.len() == grid.cells() {
-                    names.insert(c.clone());
-                    raster_cov.push((c, cov));
-                }
+    let rgrid = la_raster::GridSpec { origin_x: grid.ox, origin_y: grid.oy, cell: grid.cell, cols: grid.cols, rows: grid.rows };
+    for r in &model.rasters {
+        let place = la_raster::RasterPlacement { scale: r.opts.scale, offset: [r.opts.offset.x, r.opts.offset.y] };
+        for cc in la_raster::process(&r.img, &r.opts.mode, &r.opts.class, &place, &rgrid) {
+            if cc.class != "ignore" && cc.coverage.len() == grid.cells() {
+                names.insert(cc.class.clone());
+                raster_cov.push((cc.class, cc.coverage));
             }
         }
     }

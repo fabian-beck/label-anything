@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: 20000 x 20000 RGB exceeds the 512 MiB limit",
+  "image": {
+    "file": "images/limit-exceeded.png"
+  },
+  "decode": {
+    "error": "limit_exceeded"
+  }
+}

@@ -1,0 +1,272 @@
+{
+  "kind": "raster",
+  "name": "alpha and ink with transparency (straight alpha, colour of transparent pixels ignored)",
+  "image": {
+    "file": "images/alpha-rgba8.png"
+  },
+  "decode": {
+    "width": 48,
+    "height": 32,
+    "rgba_fnv1a32": "4295c4fe"
+  },
+  "background": [
+    41,
+    41,
+    165
+  ],
+  "runs": [
+    {
+      "name": "alpha 0.1, cell 2",
+      "mode": {
+        "kind": "alpha",
+        "threshold": 0.1
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 24,
+        "rows": 16
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "0bff4161",
+          "sum": 41510,
+          "nonzero": 184,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////////wAAQL///79AAAAAAAAAAAD//////////wBA////////QAAAAAAAAAD//////////wC/////////vwAAAAAAAAD//////////wD//////////wAAAAAAAAD//////////wD//////////wAAAAAAAAAAAAAAAAAAAAC/////////vwAAAAAAAAAAAAAAAAAAAABA////////QACAgEAAAAAAAAAAAAAAAAAAQL//////////v0AAAAAAAAAAAAAAQICA/////7+AgAAAAAAAAAAAAICAv/////+AgEAAAAAAAAAAAAAAQL//////gIBAAAAAAAAAAAAAAAAAAAAAQICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACA////////////////////////////AACA////////////////////////////"
+        }
+      ]
+    },
+    {
+      "name": "alpha 0.5, scale 2, cell 1, offset (0.5, 0.5)",
+      "mode": {
+        "kind": "alpha",
+        "threshold": 0.5
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 2,
+        "offset": [
+          0.5,
+          0.5
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 25,
+        "rows": 17
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "57c2e6d3",
+          "sum": 21836,
+          "nonzero": 127,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAECAgICAgICAQAAAAAAAAAAAAAAAAAAAAACA/////////4AAAAAAAAAAAAAAAAAAAAAAgP////////+AAAAAAAAAAAAAAAAAAAAAAID/////////gAAAAAAAAAAAAAAAAAAAAACA/////////4AAAAAAAAAAAAAAAAAAAAAAQICAgICAgIBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQICAv/8AAAAAAAAAAAAAAAAAAABAgP///7+AgAAAAAAAAAAAAAAAAICAgP//gICAAAAAAAAAAAAAAAAAgIC///+AgEAAAAAAAAAAAAAAAAAAAAD/v4CAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAgICAgICAgICAgIBAAAAAAAAAAAAAAAAAgP//////////////gAAAAAAAAAAAAAAAAECAgICAgICAgICAgEA="
+        }
+      ]
+    },
+    {
+      "name": "ink, auto background from the (mostly transparent) border",
+      "mode": {
+        "kind": "ink",
+        "background": null,
+        "threshold": 0.12,
+        "dilate": 1
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 24,
+        "rows": 16
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "803a5260",
+          "sum": 52479,
+          "nonzero": 228,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////////////8AgP////+AAAAAAAAAAP////////////+/////////vwAAAAAAAP///////////////////////4AAAAAAAP////////////////////////8AAAAAAP////////////////////////8AAAAAAP////////////////////////8AAAAAAP////////////////////////+AgIBAAAAAAAAAAAAAAID/////////////v4BAAAAAAAAAAAAAgIC/////////////v4BAAAAAAICAv/////+A////////////v4BAgL//////v/////+A/////7+AgAAAAAAAgL//////v/////+AgIAAAAAAAAAAAAAAgL//////gIBAAAAAAAAAAAAAAAAAAAAAgICAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ]
+    },
+    {
+      "name": "ink over an explicit black background",
+      "mode": {
+        "kind": "ink",
+        "background": "#000000",
+        "threshold": 0.12,
+        "dilate": 0
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 24,
+        "rows": 16
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "cdf7ea09",
+          "sum": 34874,
+          "nonzero": 144,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////////wAAQP////9AAAAAAAAAAAD//////////wBA////////QAAAAAAAAAD//////////wD//////////wAAAAAAAAD//////////wD//////////wAAAAAAAAD//////////wD//////////wAAAAAAAAAAAAAAAAAAAAD//////////wAAAAAAAAAAAAAAAAAAAABA////////QAAAAAAAAAAAAAAAAAAAAAAAQP///79AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACA////////////////////////////AACA////////////////////////////"
+        }
+      ]
+    },
+    {
+      "name": "cost over white",
+      "mode": {
+        "kind": "cost",
+        "invert": false
+      },
+      "class": "cost",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 24,
+        "rows": 16
+      },
+      "expect": [
+        {
+          "class": "cost",
+          "fnv1a32": "2ffd367c",
+          "sum": 20035,
+          "nonzero": 190,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC5ubm5ubm5uQAACCQyMiQIAAAAAAAAAAC5ubm5ubm5uQAIMTQ0NDQxCAAAAAAAAAC5ubm5ubm5uQAkNDQ0NDQ0JAAAAAAAAAC5ubm5ubm5uQAyNDQ0NDQ0MgAAAAAAAAC5ubm5ubm5uQAyNDQ0NDQ0MgAAAAAAAAAAAAAAAAAAAAAkNDQ0NDQ0JAAAAAAAAAAAAAAAAAAAAAAIMTQ0NDQxCAQsXCwAAAAAAAAAAAAAAAAACCQ8XIeey+e7kCwAAAAAAAAAAAAAFER0qNPjsIRQIAAAAAAAAAAAACBQhLDj06h0RBQAAAAAAAAAAAAALJC758uYbDQMAAAAAAAAAAAAAAAAAAAALFwsBAAAAAAAAAAAAAAAAAAAAAAAAAAAAgsUHSUvNz9IUlpibHR9ho+XoKmyusTMAgsUHSUvNz9IUlpibHR9ho+XoKmyusTM"
+        }
+      ]
+    },
+    {
+      "name": "saliency",
+      "mode": {
+        "kind": "saliency"
+      },
+      "class": "salient",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 24,
+        "rows": 16
+      },
+      "expect": [
+        {
+          "class": "salient",
+          "fnv1a32": "cfddbe2c",
+          "sum": 15431,
+          "nonzero": 264,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABNDU1NTU1NTQxMBAwwVFQwDAQAAAAAAAEOGU1NTU1NThkMGGR4ZGR4ZBgEAAAAAAFNTAAAAAAAAU1YZGAQBAQQYGQMAAAAAAFNTAAAAAAAAU18eBAEAAAEEHgwAAAAAAFNTAAAAAAAAU2gZAQAAAAABGRUAAAAAAEOGU1NTU1NThlgZAQAAAAABGRUAAAAAABNDU1NTU1NTQx8eBAEAAAEEHg4GCQYCAAAAAAAAAAAAAAMZGAQBBgsYV212o28GAAAAAAAAAAABBAobP0pXYpKQm8iLrHIGAAAAAQULGjhccYq7i6OwiLeYcGVBHwkCDB9BZXCZuY7Crou7inFcOBoLBQEAAAAAeayLyaCgtnxvUjAUCQQBAAAAAAAAAAAAd6F0cls8KiQjJSksMTQ4PEBESExQVFhbDQ4MDRMXGx8jJysvMzY6P0NGSk9SVltfBQUFBAUFBAQFBAQFBQQEBQQEBQUEBQUF"
+        }
+      ]
+    },
+    {
+      "name": "classmap red/green",
+      "mode": {
+        "kind": "classmap",
+        "palette": [
+          [
+            "#dc1e1e",
+            "roads"
+          ],
+          [
+            "#14a03c",
+            "parks"
+          ]
+        ],
+        "tolerance": 0.1,
+        "unmatched_ink": true,
+        "background": null,
+        "ink_threshold": 0.12
+      },
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 24,
+        "rows": 16
+      },
+      "expect": [
+        {
+          "class": "roads",
+          "fnv1a32": "8e4303dd",
+          "sum": 10200,
+          "nonzero": 40,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////////wAAAAAAAAAAAAAAAAAAAAD//////////wAAAAAAAAAAAAAAAAAAAAD//////////wAAAAAAAAAAAAAAAAAAAAD//////////wAAAAAAAAAAAAAAAAAAAAD//////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        },
+        {
+          "class": "ink",
+          "fnv1a32": "76a9c3ee",
+          "sum": 17543,
+          "nonzero": 88,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAID//4AAAAAAAAAAAAAAAAAAAAAAAAAAv/////+/AAAAAAAAAAAAAAAAAAAAAACA////////gAAAAAAAAAAAAAAAAAAAAAD//////////wAAAAAAAAAAAAAAAAAAAAD//////////wAAAAAAAAAAAAAAAAAAAACA////////gAAAAAAAAAAAAAAAAAAAAAAAv/////+/AABAgEAAAAAAAAAAAAAAAAAAAID///+A//+/gEAAAAAAAAAAAAAAAICAgP//v4CAAAAAAAAAAAAAAACAgL///4CAgAAAAAAAAAAAAAAAQIC///+AgEAAAAAAAAAAAAAAAAAAAAAAQIBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ]
+    }
+  ]
+}

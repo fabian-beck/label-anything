@@ -1,0 +1,323 @@
+{
+  "kind": "raster",
+  "name": "classmap tolerance ties: identical palette colours go to the first entry",
+  "image": {
+    "file": "images/map-p4.png"
+  },
+  "decode": {
+    "width": 40,
+    "height": 30,
+    "rgba_fnv1a32": "fdbbcffe"
+  },
+  "background": [
+    247,
+    247,
+    231
+  ],
+  "runs": [
+    {
+      "name": "#dc3c32 listed twice: roads first",
+      "mode": {
+        "kind": "classmap",
+        "palette": [
+          [
+            "#dc3c32",
+            "roads"
+          ],
+          [
+            "#dc3c32",
+            "rivers"
+          ],
+          [
+            "#de3e34",
+            "streets"
+          ]
+        ],
+        "tolerance": 0.08,
+        "unmatched_ink": true,
+        "background": null,
+        "ink_threshold": 0.12
+      },
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 20,
+        "rows": 15
+      },
+      "expect": [
+        {
+          "class": "roads",
+          "fnv1a32": "3713e9e8",
+          "sum": 2617,
+          "nonzero": 20,
+          "coverage": "AABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAA"
+        },
+        {
+          "class": "streets",
+          "fnv1a32": "0977ce15",
+          "sum": 2362,
+          "nonzero": 19,
+          "coverage": "QP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAA"
+        },
+        {
+          "class": "ink",
+          "fnv1a32": "b843e78e",
+          "sum": 20279,
+          "nonzero": 93,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAvwBAAAAAAAAAAAAA//////+AAAD/vwAAAAAAAAAAAAD//////4AAAICAQAAAAAAAAAAAAP//////gAAAAAAAAAAAAAAAAAAA//////+AAAAAAAAAAAAAAAAAAAAAAAAAAAAA/////////////////////////wD/////////////////////////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgL+/AAAAAAAAAAAAAAAAAAAAAEC/v4AAAAAAAAAAAAAAAL///4AAQL+AvwAAAAAAAAAAAAAA////gAAAAAAAAAAAAAAAAAAAAACAgIBA"
+        }
+      ]
+    },
+    {
+      "name": "#dc3c32 listed twice: rivers first",
+      "mode": {
+        "kind": "classmap",
+        "palette": [
+          [
+            "#dc3c32",
+            "rivers"
+          ],
+          [
+            "#dc3c32",
+            "roads"
+          ],
+          [
+            "#de3e34",
+            "streets"
+          ]
+        ],
+        "tolerance": 0.08,
+        "unmatched_ink": true,
+        "background": null,
+        "ink_threshold": 0.12
+      },
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 20,
+        "rows": 15
+      },
+      "expect": [
+        {
+          "class": "rivers",
+          "fnv1a32": "3713e9e8",
+          "sum": 2617,
+          "nonzero": 20,
+          "coverage": "AABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAA"
+        },
+        {
+          "class": "streets",
+          "fnv1a32": "0977ce15",
+          "sum": 2362,
+          "nonzero": 19,
+          "coverage": "QP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAA"
+        },
+        {
+          "class": "ink",
+          "fnv1a32": "b843e78e",
+          "sum": 20279,
+          "nonzero": 93,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAvwBAAAAAAAAAAAAA//////+AAAD/vwAAAAAAAAAAAAD//////4AAAICAQAAAAAAAAAAAAP//////gAAAAAAAAAAAAAAAAAAA//////+AAAAAAAAAAAAAAAAAAAAAAAAAAAAA/////////////////////////wD/////////////////////////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgL+/AAAAAAAAAAAAAAAAAAAAAEC/v4AAAAAAAAAAAAAAAL///4AAQL+AvwAAAAAAAAAAAAAA////gAAAAAAAAAAAAAAAAAAAAACAgIBA"
+        }
+      ]
+    },
+    {
+      "name": "duplicate colour never wins, a near colour loses to the exact one, 'ink' as a palette class",
+      "mode": {
+        "kind": "classmap",
+        "palette": [
+          [
+            "#141414",
+            "ink"
+          ],
+          [
+            "#808080",
+            "grey"
+          ],
+          [
+            "#888",
+            "grey2"
+          ],
+          [
+            "#808080",
+            "grey3"
+          ]
+        ],
+        "tolerance": 0.03,
+        "unmatched_ink": true,
+        "background": null,
+        "ink_threshold": 0.12
+      },
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 20,
+        "rows": 15
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "4a953ad3",
+          "sum": 24236,
+          "nonzero": 124,
+          "coverage": "QP9AAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAA//////+AAAAAQP9AAAAAAAAAAAD//////4AAAAAAQP9AAAAAAAAAAP//////gAAAAAAAQP9AAAAAAAAA//////+AAAAAAAAAQP9AAAAAAAAAAAAAAAAA/////////////////////////wD/////////////////////////AAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAACAgL+/AAAAAAAAQP9AAAAAAAAAAEC/v4AAAAAAAAAAQP9AAL///4AAQL+AvwAAAAAAAAAAQP9A////gAAAAAAAAAAAAAAAAAAAQP+/gIBA"
+        },
+        {
+          "class": "grey",
+          "fnv1a32": "fce948f2",
+          "sum": 1021,
+          "nonzero": 7,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAvwBAAAAAAAAAAAAAAAAAAAAAAAD/vwAAAAAAAAAAAAAAAAAAAAAAAICAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ]
+    },
+    {
+      "name": "tolerance 0: exact palette colours only",
+      "mode": {
+        "kind": "classmap",
+        "palette": [
+          [
+            "#78aadc",
+            "water"
+          ],
+          [
+            "#dc3c32",
+            "roads"
+          ],
+          [
+            "#78be6e",
+            "parks"
+          ],
+          [
+            "#141414",
+            "text"
+          ],
+          [
+            "#808080",
+            "ignore"
+          ]
+        ],
+        "tolerance": 0.0,
+        "unmatched_ink": true,
+        "background": null,
+        "ink_threshold": 0.12
+      },
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 20,
+        "rows": 15
+      },
+      "expect": [
+        {
+          "class": "water",
+          "fnv1a32": "1c0821e1",
+          "sum": 8420,
+          "nonzero": 38,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgP///4D/////gP///4D/////gACA////gP////+A////gP////+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        },
+        {
+          "class": "roads",
+          "fnv1a32": "3713e9e8",
+          "sum": 2617,
+          "nonzero": 20,
+          "coverage": "AABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAA"
+        },
+        {
+          "class": "parks",
+          "fnv1a32": "5b152095",
+          "sum": 5612,
+          "nonzero": 24,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//////+AAAAAAAAAAAAAAAAAAAD//////4AAAAAAAAAAAAAAAAAAAP//////gAAAAAAAAAAAAAAAAAAA//////+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        },
+        {
+          "class": "text",
+          "fnv1a32": "502ee225",
+          "sum": 1786,
+          "nonzero": 12,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgL+/AAAAAAAAAAAAAAAAAAAAAEC/v4AAAAAAAAAAAAAAAAAAAAAAQL+AvwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        },
+        {
+          "class": "ink",
+          "fnv1a32": "6d8116aa",
+          "sum": 5811,
+          "nonzero": 40,
+          "coverage": "QP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAQP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAgAAAAIAAAAAAgAAAAIAAAAAAgACAAAAAgAAAAACAAAAAgAAAAACAAAAAAAAAAAAAQP8AAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAP9AAAAAAAAAAAAAAAAAAAAAAAAAQP8AAL///4AAAAAAAAAAAAAAAAAAQAAA////gAAAAAAAAAAAAAAAAAAAAAC/gIBA"
+        }
+      ]
+    },
+    {
+      "name": "everything ignored",
+      "mode": {
+        "kind": "classmap",
+        "palette": [
+          [
+            "#78aadc",
+            "ignore"
+          ]
+        ],
+        "tolerance": 1.0,
+        "unmatched_ink": false,
+        "background": null,
+        "ink_threshold": 0.12
+      },
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 20,
+        "rows": 15
+      },
+      "expect": []
+    }
+  ]
+}

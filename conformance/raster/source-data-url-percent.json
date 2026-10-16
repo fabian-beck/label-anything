@@ -1,0 +1,52 @@
+{
+  "kind": "raster",
+  "name": "data: URL (percent-encoded, upper-case prefix)",
+  "image": {
+    "source": "  DATA:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%03%00%00%00%02%08%02%00%00%01e%11%C1%DB%00%00%00%1EIDATx%DAc``%D0`%F4%E2%D2`Re%D5`%E6v%D7%D0%D6T%B4%D5%D6%00%00%16L%02|m%F1%0C%8F%00%00%00%00IEND%AEB`%82"
+  },
+  "decode": {
+    "width": 3,
+    "height": 2,
+    "rgba_fnv1a32": "efb771d0"
+  },
+  "background": [
+    0,
+    0,
+    41
+  ],
+  "runs": [
+    {
+      "name": "cost",
+      "mode": {
+        "kind": "cost",
+        "invert": false
+      },
+      "class": "cost",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 3,
+        "rows": 2
+      },
+      "expect": [
+        {
+          "class": "cost",
+          "fnv1a32": "0f861a5f",
+          "sum": 1282,
+          "nonzero": 6,
+          "coverage": "/PHlx7uu"
+        }
+      ]
+    }
+  ]
+}

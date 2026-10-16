@@ -1,0 +1,307 @@
+{
+  "kind": "raster",
+  "name": "classmap on a 4-bit palette map with tRNS (partially and fully transparent entries)",
+  "image": {
+    "file": "images/map-p4.png"
+  },
+  "decode": {
+    "width": 40,
+    "height": 30,
+    "rgba_fnv1a32": "fdbbcffe"
+  },
+  "background": [
+    247,
+    247,
+    231
+  ],
+  "runs": [
+    {
+      "name": "map classes, 'ignore' entry, unmatched -> ink",
+      "mode": {
+        "kind": "classmap",
+        "palette": [
+          [
+            "#78aadc",
+            "water"
+          ],
+          [
+            "#dc3c32",
+            "roads"
+          ],
+          [
+            "#78be6e",
+            "parks"
+          ],
+          [
+            "#141414",
+            "text"
+          ],
+          [
+            "#808080",
+            "ignore"
+          ]
+        ],
+        "tolerance": 0.08,
+        "unmatched_ink": true,
+        "background": null,
+        "ink_threshold": 0.12
+      },
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 20,
+        "rows": 15
+      },
+      "expect": [
+        {
+          "class": "water",
+          "fnv1a32": "1c0821e1",
+          "sum": 8420,
+          "nonzero": 38,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgP///4D/////gP///4D/////gACA////gP////+A////gP////+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        },
+        {
+          "class": "roads",
+          "fnv1a32": "e6f9f97c",
+          "sum": 4979,
+          "nonzero": 39,
+          "coverage": "QP9AAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAA"
+        },
+        {
+          "class": "parks",
+          "fnv1a32": "5b152095",
+          "sum": 5612,
+          "nonzero": 24,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//////+AAAAAAAAAAAAAAAAAAAD//////4AAAAAAAAAAAAAAAAAAAP//////gAAAAAAAAAAAAAAAAAAA//////+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        },
+        {
+          "class": "text",
+          "fnv1a32": "502ee225",
+          "sum": 1786,
+          "nonzero": 12,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgL+/AAAAAAAAAAAAAAAAAAAAAEC/v4AAAAAAAAAAAAAAAAAAAAAAQL+AvwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        },
+        {
+          "class": "ink",
+          "fnv1a32": "4256da65",
+          "sum": 3450,
+          "nonzero": 22,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAIAAAAAAgAAAAIAAAAAAgACAAAAAgAAAAACAAAAAgAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAL///4AAAAAAAAAAAAAAAAAAAAAA////gAAAAAAAAAAAAAAAAAAAAACAgIBA"
+        }
+      ]
+    },
+    {
+      "name": "unmatched ignored, tolerance 0.3, scale 2, offset (1, 1), cell 1",
+      "mode": {
+        "kind": "classmap",
+        "palette": [
+          [
+            "#78aadc",
+            "water"
+          ],
+          [
+            "#dc3c32",
+            "roads"
+          ],
+          [
+            "#78be6e",
+            "parks"
+          ],
+          [
+            "#141414",
+            "text"
+          ],
+          [
+            "#808080",
+            "ignore"
+          ]
+        ],
+        "tolerance": 0.3,
+        "unmatched_ink": false,
+        "background": null,
+        "ink_threshold": 0.12
+      },
+      "placement": {
+        "scale": 2,
+        "offset": [
+          1,
+          1
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 22,
+        "rows": 17
+      },
+      "expect": [
+        {
+          "class": "water",
+          "fnv1a32": "7f078735",
+          "sum": 9690,
+          "nonzero": 38,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/////////////////////////AAAA/////////////////////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "class": "roads",
+          "fnv1a32": "faa1541e",
+          "sum": 4979,
+          "nonzero": 39,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAABA/0AAAAAAAAAAAAAAAAAAAAAAAAAAAED/QAAAAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAAABA/0AAAAAAAAAAAAAAAAAAAAAAAAAAAED/QAAAAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAAABA/0AAAAAAAAAAAAAAAAAAAAAAAAAAAED/QAAAAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAAABA/0AAAAAAAAAAAAAAAAAAAAAAAAAAAED/QAAAAAAAAAAAAAAAAAAAAAAAAAAAQP9AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "class": "parks",
+          "fnv1a32": "a2b16c0d",
+          "sum": 5612,
+          "nonzero": 24,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP//////gAAAAAAAAAAAAAAAAAAAAAD//////4AAAAAAAAAAAAAAAAAAAAAA//////+AAAAAAAAAAAAAAAAAAAAAAP//////gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "class": "text",
+          "fnv1a32": "651b3ddd",
+          "sum": 1786,
+          "nonzero": 12,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgL+/AAAAAAAAAAAAAAAAAAAAAAAAQL+/gAAAAAAAAAAAAAAAAAAAAAAAAEC/gL8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        }
+      ]
+    },
+    {
+      "name": "explicit background, ink threshold 0.5",
+      "mode": {
+        "kind": "classmap",
+        "palette": [
+          [
+            "#78aadc",
+            "water"
+          ],
+          [
+            "#dc3c32",
+            "roads"
+          ],
+          [
+            "#78be6e",
+            "parks"
+          ],
+          [
+            "#141414",
+            "text"
+          ],
+          [
+            "#808080",
+            "ignore"
+          ]
+        ],
+        "tolerance": 0.08,
+        "unmatched_ink": true,
+        "background": "#f5f0e1",
+        "ink_threshold": 0.5
+      },
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 20,
+        "rows": 15
+      },
+      "expect": [
+        {
+          "class": "text",
+          "fnv1a32": "502ee225",
+          "sum": 1786,
+          "nonzero": 12,
+          "coverage": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgL+/AAAAAAAAAAAAAAAAAAAAAEC/v4AAAAAAAAAAAAAAAAAAAAAAQL+AvwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ]
+    },
+    {
+      "name": "ink on the palette image, dilate 3, cell 1",
+      "mode": {
+        "kind": "ink",
+        "background": null,
+        "threshold": 0.12,
+        "dilate": 3
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 40,
+        "rows": 30
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "60e7617b",
+          "sum": 263160,
+          "nonzero": 1032,
+          "coverage": "/////////////wAAAAAAAAAAAAAAAAD/////////////////////////////////////AAAAAAAAAAAAAAAA//////////////////////////////////////8AAAAAAAAAAAAAAP///////////////////////////////////////wAAAAAAAAAAAAD/////////////////////////////////////////AAAAAAAAAAAA//////////////////////////////////////////8AAAAAAAAAAP///////////////////////////////////////////wAAAAAAAAD/////////////////////////////////////////////AAAAAAAA//////////////////////////////////////////////8AAAAAAP////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8A////////////////////AAAAAAAAAAAAAAD/////////////////AAD///////////////////8AAAAAAAAAAAAA/////////////////wAAAP////////////////////////////////////////////////8AAAAA////////////////////////////////////////////////AAAAAAD//////////////////////////////////////////////wAAAAAAAP////////////////////////////////////////////8AAAAAAAAA////////////////////////////////////////////AAAAAAAAAAD//////////////////////////////////////////wAAAAAAAAAAAP////////////////////////////////////////8AAAAAAAAAAAAA////////////////////////////////////////AAAAAAAAAAAAAAD/////////////////////"
+        }
+      ]
+    },
+    {
+      "name": "alpha 0.5 from tRNS",
+      "mode": {
+        "kind": "alpha",
+        "threshold": 0.5
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 20,
+        "rows": 15
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "ee81b24b",
+          "sum": 74652,
+          "nonzero": 296,
+          "coverage": "////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////v////////////////////////wAAgP////////////////////+/AABA//////////////////////+AQL//////////////////////////////////////////////////////////"
+        }
+      ]
+    }
+  ]
+}

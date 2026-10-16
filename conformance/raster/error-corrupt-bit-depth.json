@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: bit depth 4 for RGB",
+  "image": {
+    "file": "images/corrupt-bit-depth.png"
+  },
+  "decode": {
+    "error": "corrupt_image"
+  }
+}

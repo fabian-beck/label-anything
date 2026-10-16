@@ -20,9 +20,6 @@ impl Env for CEnv {
     fn svg(&self) -> Option<&dyn label_anything::SvgBackend> {
         self.inner.svg()
     }
-    fn raster(&self) -> Option<&dyn label_anything::RasterBackend> {
-        self.inner.raster()
-    }
     fn raster_override(&self) -> Option<RgbaImage> {
         self.rgba.clone()
     }

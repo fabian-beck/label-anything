@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: PLTE length not a multiple of 3",
+  "image": {
+    "file": "images/corrupt-plte-length.png"
+  },
+  "decode": {
+    "error": "corrupt_image"
+  }
+}

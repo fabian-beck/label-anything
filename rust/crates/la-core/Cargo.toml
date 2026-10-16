@@ -14,6 +14,8 @@ categories.workspace = true
 [features]
 default = []
 parallel = ["dep:rayon"]
+# PNG/JPEG/WebP decoding of raster backgrounds (raw RGBA always works).
+decode = ["la-raster/decode"]
 
 [dependencies]
 serde = { workspace = true }
@@ -22,3 +24,8 @@ rayon = { workspace = true, optional = true }
 la-expr = { workspace = true }
 regex-lite = { workspace = true }
 la-text = { workspace = true }
+la-raster = { workspace = true, default-features = false }
+
+[dev-dependencies]
+# the sample problems include a PNG raster background
+la-raster = { workspace = true, features = ["decode"] }

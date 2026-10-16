@@ -1,0 +1,120 @@
+{
+  "kind": "raster",
+  "name": "decode: 1-bit palette, odd width",
+  "image": {
+    "file": "images/p1-odd-width.png"
+  },
+  "decode": {
+    "width": 17,
+    "height": 9,
+    "rgba_fnv1a32": "8ea99406"
+  },
+  "background": [
+    255,
+    255,
+    255
+  ],
+  "runs": [
+    {
+      "name": "ink, cell 1",
+      "mode": {
+        "kind": "ink",
+        "background": null,
+        "threshold": 0.12,
+        "dilate": 0
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 8,
+        "rows": 8
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "827f9ae3",
+          "sum": 7650,
+          "nonzero": 30,
+          "coverage": "//8A//8A//8AAP8AAP8AAAD/AP//AP8A/wAAAAAAAP8AAP////8AAP//AAAAAP//AAD/AAD/AAD//wD//wD//w=="
+        }
+      ]
+    },
+    {
+      "name": "cost, scale 2, cell 1",
+      "mode": {
+        "kind": "cost",
+        "invert": false
+      },
+      "class": "cost",
+      "placement": {
+        "scale": 2,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 6,
+        "rows": 6
+      },
+      "expect": [
+        {
+          "class": "cost",
+          "fnv1a32": "1c61fadc",
+          "sum": 2679,
+          "nonzero": 30,
+          "coverage": "b29vb29vbzo6bzpvb29vb29vb29vb29vAzc3AzcDAAAAAAAA"
+        }
+      ]
+    },
+    {
+      "name": "alpha 0.5, cell 2",
+      "mode": {
+        "kind": "alpha",
+        "threshold": 0.5
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 6,
+        "rows": 6
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "1cffa6fd",
+          "sum": 6888,
+          "nonzero": 30,
+          "coverage": "////////////////////////////////gICAgICAAAAAAAAA"
+        }
+      ]
+    }
+  ]
+}

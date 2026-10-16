@@ -14,6 +14,7 @@ Every file is one JSON object with a `kind`:
 | `validate/` | `validate` | `validate(problem)` → valid flag, error/warning pointers and codes |
 | `place/` | `place` | `place(problem)` → properties of the result |
 | `text/` | `text` | text widths (±0.01 px), line breaking, wrapping, truncation |
+| `raster/` | `raster` | image decoding, background estimation, pixel modes, coverage grids (byte for byte); see `raster/README.md` |
 | `expr/` | `expr` | expression language results and errors |
 
 ## `validate` cases

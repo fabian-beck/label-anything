@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: IDAT CRC mismatch",
+  "image": {
+    "file": "images/corrupt-idat-crc.png"
+  },
+  "decode": {
+    "error": "corrupt_image"
+  }
+}

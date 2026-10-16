@@ -1,11 +1,11 @@
 //! The environment of a solve: pluggable backends and host callbacks (spec §6.4).
 //!
-//! The core has no I/O. SVG parsing, image decoding, file access, the clock and host
-//! callbacks are injected through [`Env`]. The `label-anything` facade crate provides a
+//! The core has no I/O. SVG parsing, file access, the clock and host callbacks are
+//! injected through [`Env`]; raster pixel modes come from `label-anything-raster` (image
+//! decoding with the `decode` feature). The `label-anything` facade crate provides a
 //! complete environment; tests use [`BasicEnv`].
 
 use crate::geom::{Rect, P};
-use crate::grid::GridSpec;
 
 /// Font selection passed to a host `measure` callback.
 #[derive(Clone, Debug, PartialEq)]
@@ -71,37 +71,10 @@ pub trait SvgBackend {
     ) -> Result<Box<dyn SvgDoc>, String>;
 }
 
-/// RGBA8 image, row-major, straight alpha.
-#[derive(Clone, Debug)]
-pub struct RgbaImage {
-    pub width: u32,
-    pub height: u32,
-    pub data: Vec<u8>,
-}
-
+/// RGBA8 image, row-major, straight alpha (from `label-anything-raster`).
+pub use la_raster::Rgba as RgbaImage;
 /// Raster processing mode with its parameters (spec §4.6).
-#[derive(Clone, Debug, PartialEq)]
-pub enum RasterMode {
-    Ink {
-        background: Option<[u8; 3]>,
-        threshold: f64,
-        dilate: u32,
-    },
-    Alpha {
-        threshold: f64,
-    },
-    Cost {
-        invert: bool,
-    },
-    ClassMap {
-        palette: Vec<([u8; 3], String)>,
-        tolerance: f64,
-        unmatched_ink: bool,
-        background: Option<[u8; 3]>,
-        ink_threshold: f64,
-    },
-    Saliency,
-}
+pub use la_raster::Mode as RasterMode;
 
 /// Resolved options of one raster source.
 #[derive(Clone, Debug, PartialEq)]
@@ -112,27 +85,9 @@ pub struct RasterOpts {
     pub offset: P,
 }
 
-/// Decodes images and computes per-class grid coverage.
-pub trait RasterBackend {
-    /// Decode a data URL or bare base64 string.
-    fn decode_source(&self, source: &str) -> Result<RgbaImage, String>;
-    /// Decode encoded image bytes (PNG, JPEG, WebP).
-    fn decode_bytes(&self, bytes: &[u8]) -> Result<RgbaImage, String>;
-    /// Coverage (0..255 per cell) of each produced class on `grid`.
-    fn coverage(
-        &self,
-        img: &RgbaImage,
-        opts: &RasterOpts,
-        grid: &GridSpec,
-    ) -> Vec<(String, Vec<u8>)>;
-}
-
 /// Everything the core needs from its host.
 pub trait Env {
     fn svg(&self) -> Option<&dyn SvgBackend> {
-        None
-    }
-    fn raster(&self) -> Option<&dyn RasterBackend> {
         None
     }
     /// A raster background supplied directly by the host (C ABI / bindings): replaces the

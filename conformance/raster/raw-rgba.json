@@ -1,0 +1,276 @@
+{
+  "kind": "raster",
+  "name": "raw RGBA (rgba.data base64): every mode, odd sizes",
+  "image": {
+    "rgba": {
+      "width": 5,
+      "height": 3,
+      "data": "/////wAAAP//AACAAP8AQAAA/wAKFB7/yMjI/4CAgAH//wD+AP//f1o8Hv////8AHh4eyPDw8P8AAAAA"
+    }
+  },
+  "decode": {
+    "width": 5,
+    "height": 3,
+    "rgba_fnv1a32": "db375502"
+  },
+  "background": [
+    0,
+    0,
+    0
+  ],
+  "runs": [
+    {
+      "name": "ink, explicit white background",
+      "mode": {
+        "kind": "ink",
+        "background": "#ffffff",
+        "threshold": 0.12,
+        "dilate": 0
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 5,
+        "rows": 3
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "ed98b0e2",
+          "sum": 2295,
+          "nonzero": 9,
+          "coverage": "AP///wD//wD///8A/wAA"
+        }
+      ]
+    },
+    {
+      "name": "ink, scale 2, dilate 1",
+      "mode": {
+        "kind": "ink",
+        "background": null,
+        "threshold": 0.12,
+        "dilate": 1
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 2,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 3,
+        "rows": 2
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "db6f046f",
+          "sum": 1146,
+          "nonzero": 6,
+          "coverage": "v7+/v7+/"
+        }
+      ]
+    },
+    {
+      "name": "alpha 0.25",
+      "mode": {
+        "kind": "alpha",
+        "threshold": 0.25
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 5,
+        "rows": 3
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "5e06cf4c",
+          "sum": 2805,
+          "nonzero": 11,
+          "coverage": "/////wD//wD///8A//8A"
+        }
+      ]
+    },
+    {
+      "name": "cost",
+      "mode": {
+        "kind": "cost",
+        "invert": false
+      },
+      "class": "cost",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 5,
+        "rows": 3
+      },
+      "expect": [
+        {
+          "class": "cost",
+          "fnv1a32": "a80d4db3",
+          "sum": 1092,
+          "nonzero": 10,
+          "coverage": "AP9lEgDsNwASG78AsA8A"
+        }
+      ]
+    },
+    {
+      "name": "cost inverted, cell 2",
+      "mode": {
+        "kind": "cost",
+        "invert": true
+      },
+      "class": "cost",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 3,
+        "rows": 2
+      },
+      "expect": [
+        {
+          "class": "cost",
+          "fnv1a32": "40f45b55",
+          "sum": 684,
+          "nonzero": 6,
+          "coverage": "dt15UFBA"
+        }
+      ]
+    },
+    {
+      "name": "saliency",
+      "mode": {
+        "kind": "saliency"
+      },
+      "class": "salient",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 5,
+        "rows": 3
+      },
+      "expect": [
+        {
+          "class": "salient",
+          "fnv1a32": "9383e965",
+          "sum": 1632,
+          "nonzero": 15,
+          "coverage": "y6iVRyygX2dADLFue20s"
+        }
+      ]
+    },
+    {
+      "name": "classmap",
+      "mode": {
+        "kind": "classmap",
+        "palette": [
+          [
+            "#ff0000",
+            "red"
+          ],
+          [
+            "#0a141e",
+            "dark"
+          ]
+        ],
+        "tolerance": 0.2,
+        "unmatched_ink": true,
+        "background": null,
+        "ink_threshold": 0.12
+      },
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 5,
+        "rows": 3
+      },
+      "expect": [
+        {
+          "class": "dark",
+          "fnv1a32": "0e697206",
+          "sum": 765,
+          "nonzero": 3,
+          "coverage": "AAAA/wD/AAAAAAAA/wAA"
+        },
+        {
+          "class": "ink",
+          "fnv1a32": "2cd5382a",
+          "sum": 1785,
+          "nonzero": 7,
+          "coverage": "/wD/AAAA/wD///8AAP8A"
+        }
+      ]
+    }
+  ]
+}

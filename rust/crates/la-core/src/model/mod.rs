@@ -540,41 +540,24 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
                 String::new()
             }
         );
-        let Some(backend) = env.raster() else {
-            return Err(err(
-                ptr,
-                "unsupported",
-                "raster backgrounds need a raster backend (not available in this build)",
-            ));
+        // decoding errors keep the raster crate's code when it is `unsupported`
+        let raster_err = |at: String, e: la_raster::RasterError| {
+            let code = if e.kind == la_raster::RasterErrorKind::Unsupported { "unsupported" } else { "invalid_value" };
+            err(at, code, format!("{} ({})", e.message, e.code()))
         };
         let img = if let Some(rgba) = src.get("rgba") {
             let w = rgba["width"].as_u64().unwrap_or(0) as u32;
             let h = rgba["height"].as_u64().unwrap_or(0) as u32;
-            let data = base64_decode(rgba["data"].as_str().unwrap_or("")).unwrap_or_default();
-            if data.len() != (w as usize) * (h as usize) * 4 {
-                return Err(err(
-                    format!("{ptr}/rgba/data"),
-                    "invalid_value",
-                    format!(
-                        "expected {} bytes of RGBA data, got {}",
-                        w as usize * h as usize * 4,
-                        data.len()
-                    ),
-                ));
-            }
-            RgbaImage {
-                width: w,
-                height: h,
-                data,
-            }
+            la_raster::rgba_from_base64(w, h, rgba["data"].as_str().unwrap_or(""))
+                .map_err(|e| raster_err(format!("{ptr}/rgba/data"), e))?
         } else {
             let s = src["source"].as_str().unwrap_or("");
-            let r = if s.starts_with("data:") || looks_base64(s) {
-                backend.decode_source(s)
+            if s.starts_with("data:") || looks_base64(s) {
+                la_raster::decode_source(s).map_err(|e| raster_err(format!("{ptr}/source"), e))?
             } else {
-                env.read_file(s).and_then(|b| backend.decode_bytes(&b))
-            };
-            r.map_err(|m| err(format!("{ptr}/source"), "invalid_value", m))?
+                let bytes = env.read_file(s).map_err(|m| err(format!("{ptr}/source"), "invalid_value", m))?;
+                la_raster::decode(&bytes).map_err(|e| raster_err(format!("{ptr}/source"), e))?
+            }
         };
         let opts = raster_opts(src, &ptr)?;
         rasters.push(RasterSrc { img, opts });

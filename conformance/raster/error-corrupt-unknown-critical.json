@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: unknown critical chunk",
+  "image": {
+    "file": "images/corrupt-unknown-critical.png"
+  },
+  "decode": {
+    "error": "corrupt_image"
+  }
+}

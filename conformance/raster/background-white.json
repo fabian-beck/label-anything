@@ -1,0 +1,54 @@
+{
+  "kind": "raster",
+  "name": "background estimation without opaque border pixels -> white",
+  "image": {
+    "file": "images/bg-transparent.png"
+  },
+  "decode": {
+    "width": 4,
+    "height": 4,
+    "rgba_fnv1a32": "a50477e5"
+  },
+  "background": [
+    255,
+    255,
+    255
+  ],
+  "runs": [
+    {
+      "name": "ink",
+      "mode": {
+        "kind": "ink",
+        "background": null,
+        "threshold": 0.12,
+        "dilate": 0
+      },
+      "class": "ink",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 4,
+        "rows": 4
+      },
+      "expect": [
+        {
+          "class": "ink",
+          "fnv1a32": "360779f5",
+          "sum": 4080,
+          "nonzero": 16,
+          "coverage": "/////////////////////w=="
+        }
+      ]
+    }
+  ]
+}

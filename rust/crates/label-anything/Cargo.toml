@@ -13,8 +13,9 @@ keywords.workspace = true
 categories.workspace = true
 
 [features]
-default = ["std-clock"]
+default = ["std-clock", "decode"]
 std-clock = []
+decode = ["la-core/decode"]
 parallel = ["la-core/parallel"]
 
 [dependencies]

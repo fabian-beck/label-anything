@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "invalid data: URL (no comma)",
+  "image": {
+    "source": "data:image/png;base64"
+  },
+  "decode": {
+    "error": "invalid_data_url"
+  }
+}

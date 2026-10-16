@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: IEND without IDAT",
+  "image": {
+    "file": "images/corrupt-no-idat.png"
+  },
+  "decode": {
+    "error": "corrupt_image"
+  }
+}

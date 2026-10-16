@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: file ends right after the last IDAT chunk",
+  "image": {
+    "file": "images/corrupt-no-iend.png"
+  },
+  "decode": {
+    "error": "corrupt_image"
+  }
+}

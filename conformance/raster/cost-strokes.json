@@ -1,0 +1,84 @@
+{
+  "kind": "raster",
+  "name": "cost and saliency on near-white line art",
+  "image": {
+    "file": "images/strokes-rgb8.png"
+  },
+  "decode": {
+    "width": 64,
+    "height": 40,
+    "rgba_fnv1a32": "ff20c8f8"
+  },
+  "background": [
+    255,
+    255,
+    255
+  ],
+  "runs": [
+    {
+      "name": "cost",
+      "mode": {
+        "kind": "cost",
+        "invert": false
+      },
+      "class": "cost",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 32,
+        "rows": 20
+      },
+      "expect": [
+        {
+          "class": "cost",
+          "fnv1a32": "ad356a72",
+          "sum": 26093,
+          "nonzero": 640,
+          "coverage": "BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFERoFBQUFBQUFBQUFBQUFBQUFBQUFS0tLS0tLS0sFBQURbHUpBQUFBQUFBQUFBQUFBQUFBQVLS0tLiHpLSwUFBQUFEWN2NAUFBQUFBQUFBQUFBQUFBUtLXLnafEtLBQUFBQUFBQtYfmigoGEIBQUFBQUFBQUFS4TYwF5LS0sFBQUFBQUFBQVhqKioqGEFBQUFBQUFBRay3I9NS0tLSwUFBQUFBQUFBaCoqKiooBEFBQUFBQVN0LgrBQUFBQUFBQUFBQUFBQUFoKioqKige2YXBQUTkt5zCQUFBQUFBQUFBQUFBQUFBQVhqKioqGEFIG9vWcm/MgUFBQUFBQUFBQUFBQUFBQUFBQhhoKBhCAUFD43ewi8FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBTzGxjwRWIE6BQUFBQUFBQUFBQUXFxcXFxcXFwUFBQx93oQPBQUFC0yBRggFBQUFBQUFBRcXFxcXFxcXBQUyv8lGBQUFBQUFBQVAflgLBQUFBQUFFxcXFxcXFxcJc96SEwUFBQUFBQUFBQUFNHZjEQUFBQUXFxcXFxcXOrjQTQUFBQUFBQUFBQUFBQUFBSl1bBEFBRcXFxcXGnPbnBYFBQUFBQUFBQX1fX199X19QfUaEQUFFxcXFzC11GMFBQUFBQUFBQUFBfV99X31ffV99QUFBQUXFxdZ2KstFwUFBQUFBQUFBQUF9X31ffV99X31BQUFBQUFBUpeBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQ=="
+        }
+      ]
+    },
+    {
+      "name": "saliency",
+      "mode": {
+        "kind": "saliency"
+      },
+      "class": "salient",
+      "placement": {
+        "scale": 1,
+        "offset": [
+          0,
+          0
+        ]
+      },
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 32,
+        "rows": 20
+      },
+      "expect": [
+        {
+          "class": "salient",
+          "fnv1a32": "4a73c0c9",
+          "sum": 23430,
+          "nonzero": 410,
+          "coverage": "AQICAQAAAAAAAAAAAAAAAAAAAAAACR0lJSUlJSUdCQACJUMlBwEAAAAAAAAAAAAAAAAAAAAZMh8fHR4eHjIZAAIqb21YKwkCAAAAAAAAAAAAAAAAAB8fAQcwXVQIHx8AAQUeR2VmWzYkPj4cBAEAAAAAAAAAHx0TRVxYWQgfHwAAAAEEGENoWGZSUmQ2BAAAAAAAAAElM1pUWkkUAh8fAAAAAAABAytgDQMDH2QcAQAAAAACGGtxZWc5HR8fMhkAAAAAAAAAPlIDAAADQV8aBQEBCDmIe353NyIfHx8ZBwAAAAAAAAA+UgMAAAM2aWhOIRxeinWLUQ4BAAAAAAAAAAAAAAAAABxkHwMDH2Y9VWZkhHR4gCcFAQAAAAAAAAAAAAAAAAAABDZkUlJkNgYZbXRYYHM/DQIAAAAAAAAAAAACBwgICAgIDCJAPhwJLoJ7e4daYGpdOA4DAQAAAAAAAAgNCAgICAgIDQcBEVWHdIpaEwYVQGRqZD4TAwEAAAAACQgAAAAAAAAIDSd/eHqDMwYBAAEDETpiZmZDGAQBAAAJCAAAAAAAAQxUi3WKXhYCAAAAAAAAAg00W2ZlRx4FAQkIAAAAAQQhanx8iDkIAQAAAAAZUj8QP2RIOWdUZCoCCQgAAAELRHxvjmIYAgAAAAAAAFe4qrWqgqq5pshzJQIJCAACG2J5cXpECAEAAAAAAAAAbHyKvooginWNyW4CAQgNCAx4eoBdGwkAAAAAAAAAAABXuJ3YnYKdrZ3jVwAAAgcIE32JSRIHAgAAAAAAAAAAABlSTUxNYk1XTUcZAAAAAAADDw8EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        }
+      ]
+    }
+  ]
+}

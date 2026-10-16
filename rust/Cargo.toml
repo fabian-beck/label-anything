@@ -15,7 +15,8 @@ categories = ["visualization", "graphics", "algorithms"]
 
 [workspace.dependencies]
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+# preserve_order: objects keep the key order of the JSON text, as in JavaScript
+serde_json = { version = "1.0", features = ["preserve_order"] }
 rustybuzz = "0.20"
 usvg = { version = "0.48", default-features = false }
 resvg = { version = "0.48", default-features = false }
@@ -29,7 +30,7 @@ la-core = { package = "label-anything-core", path = "crates/la-core", version = 
 la-text = { package = "label-anything-text", path = "crates/la-text", version = "0.1.0" }
 la-expr = { package = "label-anything-expr", path = "crates/la-expr", version = "0.1.0" }
 la-svg = { package = "label-anything-svg", path = "crates/la-svg", version = "0.1.0" }
-la-raster = { package = "label-anything-raster", path = "crates/la-raster", version = "0.1.0" }
+la-raster = { package = "label-anything-raster", path = "crates/la-raster", version = "0.1.0", default-features = false }
 la-render = { package = "label-anything-render", path = "crates/la-render", version = "0.1.0" }
 label-anything = { path = "crates/label-anything", version = "0.1.0" }
 

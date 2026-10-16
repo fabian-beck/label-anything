@@ -4,10 +4,14 @@
 * Date: 2026-10-16
 
 ## Decision
-* `la-core` depends only on `serde`, `serde_json`, `la-text` and `la-expr` (all pure Rust,
-  no I/O, `wasm32-unknown-unknown` without features). Optional feature `parallel`
-  (rayon). SVG and raster decoding are injected through small traits (`SvgBackend`,
-  `RasterBackend` in `la_core::env`) so the core never depends on `usvg`/`image`.
+* `la-core` depends only on `serde`, `serde_json`, `la-text`, `la-expr` and `la-raster`
+  without default features (all pure Rust, no I/O, `wasm32-unknown-unknown` without
+  features). Optional features: `parallel` (rayon) and `decode` (PNG/JPEG/WebP through
+  `la-raster/decode`, i.e. the `image` crate; the facade enables it). The raster pixel
+  modes are pure functions shared by every host, so the core calls them directly and
+  borrows the decoded image instead of copying it through a backend trait. SVG parsing
+  is injected through a small trait (`SvgBackend` in `la_core::env`) so the core never
+  depends on `usvg`.
 * `la-text`: font parsing, simple shaping, optional full shaping (`shaping` feature →
   rustybuzz), line breaking/wrapping/truncation, embedded metrics fonts (`bundled-font`
   feature, default), WOFF2 input (`woff2` feature → `wuff`, off by default).
@@ -17,7 +21,9 @@
   measure bit-identical widths (checked by differential fuzzing). rustybuzz still uses
   `ttf-parser` internally for full shaping.
 * `la-svg`: usvg-based geometry + our selector engine on the original DOM (roxmltree).
-* `la-raster`: image decoding (`image`, minimal features) + pixel modes (pure functions).
+* `la-raster`: pixel modes, background estimation and coverage grids (pure functions,
+  identical to `@label-anything/raster` byte for byte) + image decoding (`decode` feature:
+  `image` with only the png/jpeg/webp codecs).
 * `la-render`: debug SVG writer (+ optional PNG via resvg).
 * `label-anything` (facade): wires everything into `place(&str) -> String` and the
   typed API; `la-cli`, `la-wasm`, `la-py`, `la-capi` build on it.

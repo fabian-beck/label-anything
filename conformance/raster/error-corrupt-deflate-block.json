@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: deflate block type 3",
+  "image": {
+    "file": "images/corrupt-deflate-block.png"
+  },
+  "decode": {
+    "error": "corrupt_image"
+  }
+}

@@ -1,4 +1,4 @@
-//! Runs `place` on the conformance sample problems that need no backgrounds and checks
+//! Runs `place` on the conformance sample problems that need no SVG backend and checks
 //! the hard guarantees.
 use label_anything_core::env::BasicEnv;
 use label_anything_core::place;
@@ -20,7 +20,7 @@ fn problems() -> Vec<(String, Value)> {
             )
         })
         .filter(|(_, p): &(String, Value)| {
-            p.pointer("/obstacles/svg").is_none() && p.pointer("/obstacles/raster").is_none()
+            p.pointer("/obstacles/svg").is_none()
         })
         .collect()
 }

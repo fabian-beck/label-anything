@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: unknown signature",
+  "image": {
+    "file": "images/corrupt-signature.png"
+  },
+  "decode": {
+    "error": "unsupported_format"
+  }
+}

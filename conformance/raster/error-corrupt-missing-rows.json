@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: image data ends early",
+  "image": {
+    "file": "images/corrupt-missing-rows.png"
+  },
+  "decode": {
+    "error": "corrupt_image"
+  }
+}

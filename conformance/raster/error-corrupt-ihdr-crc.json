@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: IHDR CRC mismatch",
+  "image": {
+    "file": "images/corrupt-ihdr-crc.png"
+  },
+  "decode": {
+    "error": "corrupt_image"
+  }
+}

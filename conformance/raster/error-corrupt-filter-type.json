@@ -1,0 +1,10 @@
+{
+  "kind": "raster",
+  "name": "decode error: filter type 5",
+  "image": {
+    "file": "images/corrupt-filter-type.png"
+  },
+  "decode": {
+    "error": "corrupt_image"
+  }
+}

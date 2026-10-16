@@ -134,7 +134,7 @@ pub fn place_validated(
     if !min_font.is_finite() {
         min_font = m.default_em;
     }
-    let obs = obstacles::prepare(&m, env, min_font);
+    let obs = obstacles::prepare(&m, min_font);
     let pri = priority::compute(&m, &variants, env);
     let t1 = env.now_ms();
     let measurer = labels::Measurer {

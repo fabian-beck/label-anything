@@ -18,7 +18,7 @@
 //! ```
 
 pub use la_core::env::{
-    self, Env, FontSpec, Geom, RasterBackend, RgbaImage, SvgBackend, SvgDoc, TextMetrics,
+    self, Env, FontSpec, Geom, RasterMode, RasterOpts, RgbaImage, SvgBackend, SvgDoc, TextMetrics,
 };
 pub use la_core::validate::{Issue, Report};
 pub use la_core::{model, PlaceError, VERSION};
