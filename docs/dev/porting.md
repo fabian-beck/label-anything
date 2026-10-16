@@ -50,6 +50,8 @@ language). Text measurement comes from `@label-anything/text`, raster modes from
   from the same inputs in the same order.
 * **Early-exit scans.** `State.firstConflict` walks `DynIndex.scanStart/scanNext`, which
   yield the ids of `query` in the same order, and stops at the first conflict.
+  `DynIndex` creates its buckets on first insert (a 4096 × 4096 grid of empty arrays
+  costs seconds of garbage collection in JavaScript).
 * `Cand.bbox()` is cached; the measurer caches fonts; `FontBook.resolve` is memoized.
 
 ### Parity

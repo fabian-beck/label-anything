@@ -7,7 +7,6 @@
  */
 
 import { P, Rect, bboxOf, distPointSegXY } from "./geom/index.js";
-import { polylabel } from "./geom/polygon.js";
 import { Shape, shapesOverlap } from "./geom/shape.js";
 import type { Variant } from "./labels.js";
 import { cmpF64, len2d, maxf, minf, signEps, sinCosDegInto } from "./math.js";
@@ -685,10 +684,8 @@ export function internal(item: Item, vi: number, v: Variant, rank: number, out: 
   }
   const shape = item.shape;
   const centers: P[] = [shape.reference()];
-  if (shape.kind === "polygon") {
-    const [pole] = polylabel(shape.poly.rings, shape.poly.evenOdd, 0.5);
-    centers.unshift(pole);
-  } else centers.unshift(shape.bbox().center());
+  if (shape.kind === "polygon") centers.unshift(item.pole());
+  else centers.unshift(shape.bbox().center());
   for (const c of centers) {
     if (shape.containsRect(Rect.fromCenter(c, hw, hh), pad)) push(c);
   }

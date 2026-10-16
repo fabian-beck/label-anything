@@ -207,8 +207,25 @@ export class Item {
     public raw: unknown,
   ) {}
 
+  /** Cache of {@link pole}. */
+  private poleCache: P | null = null;
+
   em(): number {
     return this.font.size;
+  }
+
+  /**
+   * The pole of inaccessibility of the mark (polygon marks; the reference point of other
+   * shapes), computed once.
+   */
+  pole(): P {
+    let p = this.poleCache;
+    if (p === null) {
+      const s = this.shape;
+      p = s.kind === "polygon" ? polylabel(s.poly.rings, s.poly.evenOdd, 0.5)[0] : s.reference();
+      this.poleCache = p;
+    }
+    return p;
   }
 }
 

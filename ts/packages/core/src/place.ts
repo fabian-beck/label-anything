@@ -14,7 +14,8 @@ import type { Rect } from "./geom/index.js";
 import { FontError, Measurer, baseVariants, bundledFonts, userFonts } from "./labels.js";
 import { maxf, minf, toIndex } from "./math.js";
 import { BuildError, type Model, Strategy, build } from "./model/index.js";
-import { prepare } from "./obstacles.js";
+import { MAX_GRID_CELLS, gridCell, gridCells, prepare } from "./obstacles.js";
+import { fmtF64 } from "./json.js";
 import { compute } from "./priority.js";
 import { type DebugData, debugSvg } from "./render.js";
 import { build as buildResult } from "./result.js";
@@ -74,6 +75,22 @@ export function placeValidated(problem: unknown, env: Env, warnings: Issue[], pr
     }
   }
   if (!Number.isFinite(minFont)) minFont = m.defaultEm;
+  // the grids cover the working extent: it must be finite and not too finely divided
+  const ew = m.extent.w();
+  const eh = m.extent.h();
+  if (!(Number.isFinite(ew) && Number.isFinite(eh))) {
+    throw new PlaceError([new Issue("", "limit", `the working extent (${fmtF64(ew)} × ${fmtF64(eh)} px) is not finite`)]);
+  }
+  const cells = gridCells(m, gridCell(m, minFont));
+  if (cells > MAX_GRID_CELLS) {
+    throw new PlaceError([
+      new Issue(
+        "/solver/grid_cell",
+        "limit",
+        `the grid would have ${fmtF64(cells)} cells (at most ${fmtF64(MAX_GRID_CELLS)}): use a larger solver.grid_cell`,
+      ),
+    ]);
+  }
   const obs = prepare(m, minFont);
   const pri = compute(m, variants, env);
   const t1 = envNow(env);

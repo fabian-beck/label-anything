@@ -265,11 +265,32 @@ export class Obstacles {
   }
 }
 
-/** Choose the grid cell size (spec §4.1). */
+/**
+ * Most grid cells (spec §4.1): enough for any practical canvas, and SAT sums of `u8`
+ * coverage stay exact (below 2³² / 255 ≈ 16.8 M cells).
+ */
+export const MAX_GRID_CELLS = 16_000_000;
+
+/** Number of cells of the grid covering the model extent with cell size `c`. */
+export function gridCells(model: Model, c: number): number {
+  return maxf(Math.ceil(model.extent.w() / c), 1) * maxf(Math.ceil(model.extent.h() / c), 1);
+}
+
+/**
+ * Choose the grid cell size (spec §4.1): `solver.grid_cell`, else `clamp(min_font / 4,
+ * 1, 4)` grown (by factors of 1.25) until the grid has at most {@link MAX_GRID_CELLS}
+ * cells. The extent must be finite; an explicit cell size may exceed the cell limit
+ * (checked by the caller).
+ */
 export function gridCell(model: Model, minFont: number): number {
-  const c = model.gridCell;
-  if (c !== null && c > 0) return c;
-  return clampf(minFont / 4, 1, 4);
+  const explicit = model.gridCell;
+  if (explicit !== null && explicit > 0) return explicit;
+  let c = clampf(minFont / 4, 1, 4);
+  if (gridCells(model, c) > MAX_GRID_CELLS) {
+    c = maxf(c, Math.sqrt((model.extent.w() * model.extent.h()) / MAX_GRID_CELLS));
+    while (gridCells(model, c) > MAX_GRID_CELLS) c *= 1.25;
+  }
+  return c;
 }
 
 export function prepare(model: Model, minFont: number): Obstacles {
