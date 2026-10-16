@@ -433,11 +433,15 @@ fn svg_to_png(svg: &str) -> Result<Vec<u8>, String> {
     fonts.load_font_data(include_bytes!("../assets/NotoSans-Regular.ttf").to_vec());
     fonts.load_font_data(include_bytes!("../assets/NotoSans-Bold.ttf").to_vec());
     fonts.set_sans_serif_family("Noto Sans");
-    let tree = usvg::Tree::from_str(svg, &opt).map_err(|e| format!("cannot render the SVG: {e}"))?;
+    let tree =
+        usvg::Tree::from_str(svg, &opt).map_err(|e| format!("cannot render the SVG: {e}"))?;
     let size = tree.size().to_int_size();
-    let mut pixmap = tiny_skia::Pixmap::new(size.width(), size.height()).ok_or("the image is empty")?;
+    let mut pixmap =
+        tiny_skia::Pixmap::new(size.width(), size.height()).ok_or("the image is empty")?;
     resvg::render(&tree, tiny_skia::Transform::default(), &mut pixmap.as_mut());
-    pixmap.encode_png().map_err(|e| format!("cannot encode the PNG: {e}"))
+    pixmap
+        .encode_png()
+        .map_err(|e| format!("cannot encode the PNG: {e}"))
 }
 
 #[cfg(not(feature = "png"))]
