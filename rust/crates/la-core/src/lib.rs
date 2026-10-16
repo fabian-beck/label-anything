@@ -105,10 +105,27 @@ pub fn place_validated(problem: &Value, env: &dyn Env, warnings: Vec<Issue>) -> 
     env.progress("greedy", 0.0);
     solver::greedy::run(&mut s);
     let t3 = env.now_ms();
-    let ver = solver::verify::verify(&mut s);
+    use model::opts::Strategy;
+    let mut strategy = "greedy";
+    if matches!(m.solver.strategy, Strategy::Local | Strategy::Auto | Strategy::Exact) && m.items.len() > 1 {
+        let budget = m.solver.time_budget_ms;
+        let iters = (m.solver.max_iterations as f64)
+            .min(budget * solver::local::MOVES_PER_MS)
+            .min(400.0 * m.items.len() as f64)
+            .max(0.0) as u64;
+        env.progress("local", 0.0);
+        let deadline = if t0 > 0.0 || env.now_ms() > 0.0 { t0 + 3.0 * budget } else { 0.0 };
+        let ls = solver::local::run(&mut s, iters, deadline);
+        s.iterations = ls.iterations;
+        if ls.iterations > 0 {
+            strategy = "local";
+        }
+    }
     let t4 = env.now_ms();
-    let phases = [("prepare", t1 - t0), ("candidates", t2 - t1), ("greedy", t3 - t2), ("verify", t4 - t3)];
-    let mut res = result::build(&mut s, &ver, &phases, env.now_ms() - t0, "greedy");
+    let ver = solver::verify::verify(&mut s);
+    let t5 = env.now_ms();
+    let phases = [("prepare", t1 - t0), ("candidates", t2 - t1), ("greedy", t3 - t2), ("local", t4 - t3), ("verify", t5 - t4)];
+    let mut res = result::build(&mut s, &ver, &phases, env.now_ms() - t0, strategy);
     let debug = if m.output.debug_svg {
         Some(DebugData {
             grid: obs.grid,

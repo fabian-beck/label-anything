@@ -2,6 +2,7 @@
 //! verification.
 
 pub mod greedy;
+pub mod local;
 pub mod state;
 pub mod verify;
 
