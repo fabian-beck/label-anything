@@ -19,3 +19,4 @@ parallel = ["dep:rayon"]
 serde = { workspace = true }
 serde_json = { workspace = true }
 rayon = { workspace = true, optional = true }
+la-expr = { workspace = true }
