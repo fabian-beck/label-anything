@@ -5,18 +5,19 @@
     python3 examples/tutorials/run.py python                      # label_anything installed
     python3 examples/tutorials/run.py c go --lib rust/target/release
     python3 examples/tutorials/run.py java --jar bindings/java/target/label-anything-0.1.0.jar
-    python3 examples/tutorials/run.py js [--js-engine cli --cli ...]
+    python3 examples/tutorials/run.py js                          # npm ci, npm run build, build:wasm
 
 Every program runs in a fresh copy of ``examples/tutorials/data`` (it reads ``scatter.png``,
-``outliers.csv``, ... from its working directory, and ``../problems/*.json``). Programs check their own results where
-the language makes that easy (Python, JavaScript, Java); for C, Go and the CLI this runner
-checks the result JSON they print or write. ``cli`` also validates and solves every
-problem in ``examples/tutorials/problems/`` and checks what its tutorial says about it.
+``outliers.csv``, ... from its working directory, and ``../problems/*.json``). Programs
+check their own results where the language makes that easy (Python, JavaScript, Java);
+for C, Go and the CLI this runner checks the result JSON they print or write. ``cli`` also
+validates and solves every problem in ``examples/tutorials/problems/`` and checks what its
+tutorial says about it. Options: ``--only NAME...`` runs the programs whose name contains
+one of the words, ``-v`` prints their whole output.
 
-``js`` runs the Node programs in ``js/`` (not ``js/browser/``, which need a page) against
-``@label-anything/core``; ``--js-engine cli`` instead maps ``@label-anything/core`` and
-``@label-anything/wasm`` to the Rust CLI (``js/harness/``), for use until the packages
-export ``place``.
+``js`` runs the Node programs in ``js/`` with the built workspace packages
+(``@label-anything/core``, ``@label-anything/wasm``, ``@label-anything/extras``);
+``js/browser-checks.mjs`` runs the browser snippets of ``js/browser/`` under jsdom.
 """
 
 from __future__ import annotations
@@ -293,16 +294,8 @@ def lang_java(args: argparse.Namespace) -> None:
 
 
 def lang_js(args: argparse.Namespace) -> None:
-    node = [args.node]
-    env: dict[str, str] = {}
-    if args.js_engine == "cli":
-        if not args.cli:
-            fail("js", "--js-engine cli needs --cli PATH")
-            return
-        node += ["--import", str(HERE / "js/harness/register.mjs")]
-        env["LA_CLI"] = str(Path(args.cli).resolve())
     for prog in sorted((HERE / "js").glob("*.mjs")):
-        run(f"js/{prog.name}", [*node, str(prog)], workdir(), env)
+        run(f"js/{prog.name}", [args.node, str(prog)], workdir())
 
 
 LANGS = {"data": lang_data, "cli": lang_cli, "python": lang_python, "c": lang_c, "go": lang_go, "java": lang_java, "js": lang_js}
@@ -318,12 +311,11 @@ def main() -> int:
     ap.add_argument("--java", default="java")
     ap.add_argument("--java-opt", action="append", default=[], help="extra JVM option (repeatable)")
     ap.add_argument("--node", default="node")
-    ap.add_argument("--js-engine", choices=["core", "cli"], default="core")
     ap.add_argument("--only", nargs="*", default=[], help="run only programs whose name contains one of these")
     ap.add_argument("-v", "--verbose", action="store_true", help="print the whole output of every program")
     args = ap.parse_args()
-    only.extend(args.only)
     global verbose
+    only.extend(args.only)
     verbose = args.verbose
     langs = list(LANGS) if "all" in args.langs else args.langs
     for lang in langs:
