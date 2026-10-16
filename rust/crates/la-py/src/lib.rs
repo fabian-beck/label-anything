@@ -217,8 +217,9 @@ fn place_json(
     progress: Option<Bound<'_, PyAny>>,
     cancelled: Option<Bound<'_, PyAny>>,
 ) -> PyResult<String> {
-    let value = parse(py, &problem, "problem")?;
-    drop(problem);
+    // The facade builds the model a second time for `output.debug_svg`; the raster is then
+    // cloned instead of moved (a conservative test on the text, parsed later without the GIL).
+    let keep_raster = problem.contains("\"debug_svg\"");
     let image = optional_raster(rgba.as_ref(), width, height)?;
     let cancel = match cancelled {
         Some(c) if !c.is_none() => match c.cast::<CancelToken>() {
@@ -241,18 +242,28 @@ fn place_json(
         // Ctrl-C is delivered to the main thread only
         signals: on_main_thread(py),
     };
-    let keep_raster = value.pointer("/output/debug_svg") == Some(&Value::Bool(true));
     let env = PyEnv::new(image, keep_raster, cb);
     if env.poll_cancel(true) {
         return Err(env.take_error().unwrap_or_else(|| cancelled_error(py)));
     }
-    let outcome = py.detach(|| {
-        catch_unwind(AssertUnwindSafe(|| {
+    let env_ref = &env;
+    // parse, validate and solve without the GIL; callbacks reattach
+    let outcome = py.detach(move || {
+        catch_unwind(AssertUnwindSafe(move || {
+            let env = env_ref;
+            let value: Value = match serde_json::from_str(&problem) {
+                Ok(v) => v,
+                Err(e) => {
+                    let msg = format!("invalid problem JSON: {e}");
+                    return Outcome::Invalid(vec![Issue::new("", "parse", msg)], vec![]);
+                }
+            };
+            drop(problem);
             let report = label_anything::validate(&value);
             if !report.valid {
                 return Outcome::Invalid(report.errors, report.warnings);
             }
-            match label_anything::place_validated(&value, &env, report) {
+            match label_anything::place_validated(&value, env, report) {
                 Ok(result) => {
                     if !env.stopped() {
                         env.progress_done();
