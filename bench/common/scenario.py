@@ -22,6 +22,7 @@ from . import paths
 from .jsonio import write_json
 from .scene import Scene
 from .sources import SOURCES
+from .truth import complete_truth
 
 
 def png_bytes(img: Image.Image, palette: bool = False) -> bytes:
@@ -58,9 +59,11 @@ class Writer:
         problem.setdefault("version", "1")
         p = write_json(d / f"{name}.json", problem, nd=3)
         files = {"problem": str(p.relative_to(self.dir))}
-        if truth is not None:
-            t = write_json(d / f"{name}.truth.json", truth, nd=3)
-            files["truth"] = str(t.relative_to(self.dir))
+        # every config gets a truth file: background geometry + the problem's vector layers + raster refs
+        from .jsonio import read_json
+        full = complete_truth(read_json(p), truth)
+        t = write_json(d / f"{name}.truth.json", full, nd=3)
+        files["truth"] = str(t.relative_to(self.dir))
         if svg is not None:
             sp = d / f"{name}.bg.svg"
             sp.write_text(svg, encoding="utf-8", newline="\n")

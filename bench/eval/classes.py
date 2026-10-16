@@ -145,9 +145,14 @@ class ObstacleClass:
 
 
 def build_classes(prob: Problem, truth: dict | None) -> dict[str, ObstacleClass]:
+    """Obstacle classes from the problem's vector layers, the truth's geometry and the raster sources.
+
+    A truth written with ``includes_problem_vectors`` already lists the vector layers (in canvas px),
+    so they are not added twice."""
     classes: dict[str, ObstacleClass] = {}
-    for cls, prims in prob.vectors.items():
-        classes.setdefault(cls, ObstacleClass(cls)).prims.extend(prims)
+    if not (truth and truth.get("includes_problem_vectors")):
+        for cls, prims in prob.vectors.items():
+            classes.setdefault(cls, ObstacleClass(cls)).prims.extend(prims)
     if truth:
         for cls, entry in (truth.get("classes") or {}).items():
             classes.setdefault(cls, ObstacleClass(cls)).prims.extend(primitives_from_truth(entry))

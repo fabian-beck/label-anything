@@ -73,6 +73,24 @@ def test_allow_outside_and_padding():
     assert evaluate(prob, res)["hard"]["canvas_edge"] == 0
 
 
+def test_generated_truth_is_equivalent_to_the_problem_layers():
+    from bench.common.truth import complete_truth
+
+    prob = problem([item("A", 5, 5), item("B", 15, 5)], width=300, height=200,
+                   transform=[10, 0, 0, 10, 0, 0], y_axis="up",
+                   obstacles={"vector": [
+                       {"class": "pts", "points": [[6, 4], [14, 6]], "r": 3},
+                       {"class": "walls", "polylines": [[[0, 9], [20, 9]]], "width": 2},
+                       {"class": "blocks", "shapes": [{"shape": "rect", "w": 20, "h": 10, "x": 10, "y": 15}]}]},
+                   avoid={"label": {"walls": "hard", "pts": 0.5, "blocks": "hard"}})
+    res = naive.solve(prob)
+    truth = complete_truth(prob)
+    assert truth["includes_problem_vectors"] and set(truth["classes"]) == {"pts", "walls", "blocks"}
+    assert truth["classes"]["pts"]["circles"][0] == [60.0, 160.0, 3.0]          # transformed + y flipped
+    a, b = evaluate(prob, res), evaluate(prob, res, truth)
+    assert a["hard"] == b["hard"] and a["coverage"] == b["coverage"]
+
+
 def test_cli_roundtrip(tmp_path):
     prob = problem([item("A", 50, 50)])
     res = naive.solve(prob)

@@ -201,8 +201,24 @@ class Scene:
         s = scale * supersample
         W, H = int(math.ceil(self.width * s)), int(math.ceil(self.height * s))
         img = Image.new("RGBA", (W, H), _rgba(self.background or "#ffffff"))
+        # consecutive primitives with the same opacity share one layer (composited once per run)
+        layer, layer_opacity = None, 1.0
+
+        def flush():
+            nonlocal layer
+            if layer is not None:
+                a = layer.getchannel("A").point(lambda v, o=layer_opacity: int(v * o))
+                layer.putalpha(a)
+                img.alpha_composite(layer)
+                layer = None
+
         for p in self.prims:
-            layer = Image.new("RGBA", (W, H), (0, 0, 0, 0)) if p.opacity < 1 else None
+            if p.opacity < 1:
+                if layer is None or layer_opacity != p.opacity:
+                    flush()
+                    layer, layer_opacity = Image.new("RGBA", (W, H), (0, 0, 0, 0)), p.opacity
+            else:
+                flush()
             dr = ImageDraw.Draw(layer if layer is not None else img)
             d = p.data
             fill = _rgba(p.fill) if p.fill and p.fill != "none" else None
@@ -241,10 +257,7 @@ class Scene:
                     img.alpha_composite(tl, (int(bx * s), int(by * s)))
                 else:
                     dr.text((d["x"] * s, d["y"] * s), d["s"], font=fnt, fill=_rgba(p.fill), anchor=anchor)
-            if layer is not None:
-                a = layer.getchannel("A").point(lambda v, o=p.opacity: int(v * o))
-                layer.putalpha(a)
-                img.alpha_composite(layer)
+        flush()
         if supersample > 1:
             img = img.resize((int(math.ceil(self.width * scale)), int(math.ceil(self.height * scale))),
                              Image.LANCZOS)
