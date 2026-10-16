@@ -25,7 +25,10 @@ or, equivalently for the Rust engine alone,
 `label-anything bench --suite full --baselines --gate --previous path/to/results.json`.
 Keep the run's `bench-report/results.json` with the release (it is the `--previous` of the next
 one). The `baselines` CI job runs the quick suite with every baseline on each tag (and weekly)
-and checks the gates on tags; the full suite with `--previous` is the release run.
+and checks the gates on tags; the full suite with `--previous` is the release run. When the CI
+run of a tag succeeds, the Pages workflow deploys the documentation site of the tag with that
+run's report under `benchmark-report/` (manually: dispatch the workflow with the ID of a CI run
+as `report_run_id`).
 
 ## Release gates
 
@@ -73,6 +76,32 @@ after the other. The Rust engine runs the order-independent phases on all cores 
 `parallel`: obstacle rasterization, level-0 candidates, the distance transform), which the
 WebAssembly and TypeScript engines cannot. Numbers from a faster machine are lower; compare
 numbers from the same machine only.
+
+## Milestone acceptance
+
+`python -m bench.milestones` checks two acceptance criteria of the design brief on a run of
+the full suite (`bench/README.md` has the command). At commit d80414b (2026-10-16), same
+machine:
+
+* **M3, leaders: passed.** 0 leader crossings on all 345 solves — every problem and every
+  frame of the two scenario-11 sequences, for the full solver and the two greedy variants
+  below.
+* **M4, optimization: passed.** On the 36 dense problems (where the greedy pass omits
+  labels), the full solve's `placed_weighted` is 57.6 % above that of the greedy pass alone
+  on average (median 28.2 %; needs 5 %), with no new priority inversions. Greedy is
+  the greedy pass of brief §5.6 without the degradation ladder (`--strategy greedy --degrade
+  omit`), since the brief runs the ladder "at the end of greedy" and counts it to M4.
+* **The local search's own share is small:** +0.7 % on average (median +0.1 %) over the
+  greedy pass *with* the ladder, and even 20 times the iterations add at most 1.7 % (six
+  airport, POI and stress problems tried). With strict priorities the greedy pass and the
+  ladder already secure the high-priority labels that dominate `placed_weighted`; the local
+  search mostly lowers costs and adds a few low-priority labels.
+* Eight problems were not compared because a solve hit the time guard: the three stress
+  problems with 5,000 to 20,000 labels and five priority problems (four with 3,221 airports,
+  one with 1,206 classes), where preparation, the candidates and the greedy pass take longer
+  than the 100 ms default budget allows (the greedy pass stops at 10 times the budget, the
+  local search starts only before 3 times). Their results depend on the machine; give such
+  problems a larger `solver.time_budget_ms`.
 
 ## Reading the report
 

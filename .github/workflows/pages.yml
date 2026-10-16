@@ -1,19 +1,33 @@
 name: Pages
 
-# Builds the documentation site (mkdocs.yml, docs/) and deploys it to GitHub Pages:
-# for every release tag and on demand. On a tag, the site's links into the repository
-# point to that tag (docs/_hooks/la_docs.py), otherwise to main.
+# Builds the documentation site (mkdocs.yml, docs/) and deploys it to GitHub Pages together
+# with the benchmark report (brief §8.4: the report is published with the docs site on
+# each release):
+#
+# * after the CI run of a release tag (v*) succeeded. Its `baselines` job ran the benchmark
+#   with every baseline and the performance targets, passed the release gates and uploaded
+#   the report (artifact bench-report-baselines); it is published at <site>/benchmark-report/.
+#   The site's links into the repository point to that tag (docs/_hooks/la_docs.py).
+# * on demand (workflow dispatch): the site of the dispatched ref, with the report of the
+#   CI run given as `report_run_id` (optional).
 #
 # One-time setup: repository Settings → Pages → Build and deployment → Source:
 # "GitHub Actions".
 
 on:
-  push:
-    tags: ["v*"]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
   workflow_dispatch:
+    inputs:
+      report_run_id:
+        description: "ID of a CI run whose benchmark report (bench-report-baselines) to publish"
+        required: false
+        default: ""
 
 permissions:
   contents: read
+  actions: read # the report artifact of the CI run
 
 concurrency:
   group: pages
@@ -22,10 +36,19 @@ concurrency:
 jobs:
   build:
     name: Build the site
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       startsWith(github.event.workflow_run.head_branch, 'v'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      REPORT_RUN: ${{ github.event.workflow_run.id || inputs.report_run_id }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -34,6 +57,16 @@ jobs:
       - run: pip install -r docs/requirements.txt
       - uses: actions/configure-pages@v5
       - run: mkdocs build --strict --site-dir site
+        env:
+          LA_DOCS_TAG: ${{ github.event.workflow_run.head_branch }}
+      - name: The benchmark report of the CI run
+        if: env.REPORT_RUN != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: bench-report-baselines
+          path: site/benchmark-report
+          run-id: ${{ env.REPORT_RUN }}
+          github-token: ${{ github.token }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

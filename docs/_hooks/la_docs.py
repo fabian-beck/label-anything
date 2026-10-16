@@ -4,7 +4,8 @@
   (new ADRs appear without editing mkdocs.yml).
 * ``<!-- la:adr-index -->`` on a page becomes a table of the ADRs (number, title, status).
 * Links written as ``gh:path/in/the/repo`` point to that file on GitHub, at the tag being
-  built (``GITHUB_REF_NAME`` on a ``v*`` tag) or at ``main``.
+  built (``LA_DOCS_TAG``, set by the Pages workflow, or ``GITHUB_REF_NAME`` on a ``v*``
+  tag) or at ``main``.
 * The JSON Schemas and presets of ``spec/`` are published with the site, under
   ``schema/`` and ``presets/``.
 """
@@ -24,6 +25,9 @@ ADR_SECTION = "Architecture decisions"
 
 
 def _ref() -> str:
+    tag = os.environ.get("LA_DOCS_TAG", "")
+    if tag.startswith("v"):
+        return tag
     ref = os.environ.get("GITHUB_REF_NAME", "")
     return ref if os.environ.get("GITHUB_REF_TYPE") == "tag" and ref.startswith("v") else "main"
 

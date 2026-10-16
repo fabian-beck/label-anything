@@ -344,16 +344,20 @@ stored in `results.json` (`gate`). Release procedure: `docs/benchmark.md`.
 
 `python -m bench.milestones results.json` checks two acceptance criteria of the design brief
 on a run: **M3**, 0 leader crossings on every problem and every sequence frame of every
-Label Anything solver; **M4**, on the dense problems (where the greedy solve omits labels)
-the full solve improves `placed_weighted` by at least 5 % over the greedy solve at the same
-budget, with no new priority inversions. The greedy solve is a second solver named
-`<name>-greedy`:
+Label Anything solver; **M4**, on the dense problems (where the greedy pass omits labels)
+the full solve improves `placed_weighted` by at least 5 % over the greedy pass alone at the
+same budget, with no new priority inversions (in the sense of each problem's omission mode).
+Greedy is a twin solver `<name>-greedy` run with `--strategy greedy --degrade omit`: the
+degradation ladder belongs to M4 like the local search. `--baseline ladder` compares with a
+twin `<name>-ladder` (`--strategy greedy`, the ladder on) instead: the local search's own share.
 
 ```sh
 E=rust/target/release/label-anything
 python bench/run.py --suite full --engine $E --runs 1 --warmup 0 --no-render --out /tmp/milestones \
-    --solver "rust-greedy=$E place {problem} -o {result} --strategy greedy"
+    --solver "rust-greedy=$E place {problem} -o {result} --strategy greedy --degrade omit" \
+    --solver "rust-ladder=$E place {problem} -o {result} --strategy greedy"
 python -m bench.milestones /tmp/milestones/results.json
+python -m bench.milestones /tmp/milestones/results.json --baseline ladder
 ```
 
 ## Docker and CI
@@ -375,7 +379,9 @@ runs `bench/run.py --suite quick --engine … --baselines --require-baselines --
 given arguments. In CI, the `bench` job runs the quick suite with the engine on pull requests
 (full suite on tags); the `baselines` job (tags, manual dispatch, weekly) runs the quick suite
 with the engine and every baseline plus the performance targets, uploads the report and, on
-tags, checks the release gates.
+tags, checks the release gates. When the CI run of a release tag succeeds, the Pages workflow
+(`.github/workflows/pages.yml`) publishes that report with the documentation site, under
+`benchmark-report/`.
 
 ## Determinism and reproducibility
 

@@ -242,5 +242,9 @@ def test_milestones_m3_and_m4():
     rep["results"][1]["summary"] = dict(full, leader_crossings=2)
     ok, lines = milestones.m3(rep)
     assert not ok and "2 crossings" in lines[1]
-    # M4 needs a -greedy twin
+    # M4 needs a -greedy twin (or the twin of --baseline)
     assert not milestones.m4({"results": [_row("rust", "a", **full)]})[0]
+    assert "*-ladder" in milestones.m4(rep, baseline="ladder")[1][0]
+    # prefix mode: the inversions are the placed items after the first omitted one
+    assert milestones.inversions({"placed": 10, "total": 100, "prefix_rate": 0.08}, "prefix") == 2
+    assert milestones.inversions({"placed": 10, "priority_inversions": 3}, "strict") == 3
