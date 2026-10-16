@@ -41,8 +41,10 @@ shapes the whole line again, ≈ 4,700 instructions per line.
   `text.shaping` `simple`, or `auto` for a text without complex scripts (its lines,
   prefixes and `…` contain only its own code points and U+2026). `Env::has_measure_callback`
   says whether `Env::measure` may return `Some`; it defaults to `true`, which is always
-  correct, and is `false` for `BasicEnv`, `NativeEnv`, the C ABI and a Python solve without
-  a `measure` callback.
+  correct, and is `false` for `BasicEnv`, `NativeEnv`, the C ABI, the clockless
+  environments of the CLI and of `place_oracle`, and a Python or WebAssembly solve without
+  a `measure` callback. The TypeScript core mirrors it (`Env.hasMeasureCallback`,
+  `Measurer.wrapMeasure`); without full shaping there, only the host measurement decides.
 
 ## Consequences
 Results are unchanged, bit for bit: the text conformance cases run through both measures

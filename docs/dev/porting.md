@@ -33,6 +33,14 @@ language). Text measurement comes from `@label-anything/text`, raster modes from
 `serde_json` accessors (`as_f64`, `as_u64`, …) and Rust's float formatting (`Display`,
 `{:.N}` with ties to even).
 
+Wrapping and truncation take a `la_text::Measure`: `Measure::Font { font, size }` is a
+`FontMeasure` (`{ font, size }`) in TypeScript, `Measure::Callback(&f)` a plain function.
+`Measurer::wrap_measure` (`Measurer.wrapMeasure`) picks the font measure when the host
+cannot measure text (`Env::has_measure_callback()` / `Env.hasMeasureCallback()` is `false`:
+`BasicEnv`, the CLIs, `place` without a `measure` option) and, in Rust, shaping is `simple`,
+or `auto` for a text without complex scripts (ADR 0018). TypeScript has no full shaping, so
+there the host measurement alone decides; both measures give identical results.
+
 ### Deliberate differences
 
 * **Per-implementation constants.** `solver.time_budget_ms` defaults to 250 in
@@ -69,13 +77,6 @@ clock) and the Rust budget profile and requires a bit-identical result (except t
 timing fields and the implementation name); `test/random-problems.test.ts` compares 40
 random problems (`LA_RANDOM_PARITY`) with the Rust CLI (`label-anything place -
 --no-clock`) when `rust/target/release/label-anything` exists.
-
-Wrapping and truncation take a `la_text::Measure`: `Measure::Font { font, size }` is a
-`FontMeasure` (`{ font, size }`) in TypeScript, `Measure::Callback(&f)` a plain function.
-`Measurer::wrap_measure` picks the font measure when there is no host measurement
-(`Env::has_measure_callback()` is `false`; in TypeScript: no `PlaceOptions.measure`) and
-shaping is `simple`, or `auto` for a text without complex scripts (ADR 0018). Both measures
-give identical results, so where TypeScript lacks full shaping either choice is correct.
 
 ## Names
 
