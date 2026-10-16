@@ -60,6 +60,18 @@ export class State {
   labelAreaSum = 0;
   private buf = new IdList();
   private occ: Occupancy;
+  /**
+   * Label boxes placed (`pendAdd` 1) or removed (0) since {@link occ} was last brought up
+   * to date: only candidate generation reads the grid, so local search, exact search and
+   * repair, which place and remove labels all the time, never pay for marking it. A box
+   * placed and removed again before that cancels out (`pendAt`: the pending placement of
+   * each item, -1 for none). The grid counts boxes per cell, so applying the remaining
+   * changes later (in order) gives the same grid.
+   */
+  private pend: (Rect | null)[] = [];
+  private pendAdd: number[] = [];
+  private pendItem: number[] = [];
+  private pendAt: Int32Array;
   /** Priority key level per item, and the number of placed labels per key level. */
   private keys: readonly number[];
   private keyCount: Uint32Array;
@@ -77,6 +89,7 @@ export class State {
     this.itemSegs = [];
     for (let i = 0; i < nItems; i++) this.itemSegs.push([]);
     this.occ = new Occupancy(extent);
+    this.pendAt = new Int32Array(nItems).fill(-1);
     this.keys = keys;
     this.keyCount = new Uint32Array(nKeys);
   }
@@ -91,11 +104,23 @@ export class State {
    * rectangular label (`false` means "unknown", not "free").
    */
   quickBlocked(r: Rect): boolean {
-    return this.nPlaced > 0 && this.occ.blocked(r);
+    return this.nPlaced > 0 && this.occupancy().blocked(r);
   }
 
   /** The placed-label occupancy grid (its windows serve grids with the same cells). */
   occupancy(): Occupancy {
+    const pend = this.pend;
+    if (pend.length > 0) {
+      for (let k = 0; k < pend.length; k++) {
+        const r = pend[k]!;
+        if (r !== null) this.occ.mark(r, this.pendAdd[k] === 1);
+      }
+      const items = this.pendItem;
+      for (let k = 0; k < items.length; k++) if (items[k]! < this.pendAt.length) this.pendAt[items[k]!] = -1;
+      pend.length = 0;
+      this.pendAdd.length = 0;
+      items.length = 0;
+    }
     return this.occ;
   }
 
@@ -109,7 +134,13 @@ export class State {
     this.placed[item] = cid;
     this.relaxed[item] = relaxed ? 1 : 0;
     this.labelIx.insert(item, c.rect);
-    if (c.lshape === null) this.occ.mark(c.rect, true);
+    if (c.lshape === null) {
+      if (item < this.pendAt.length) this.pendAt[item] = this.pend.length;
+      this.pend.push(c.rect);
+      this.pendAdd.push(1);
+      this.pendItem.push(item);
+      if (this.pend.length > 4 * this.pendAt.length + 1024) this.occupancy();
+    }
     if (item < this.keys.length) {
       const k = this.keys[item]!;
       this.keyCount[k] += 1;
@@ -147,7 +178,26 @@ export class State {
     const cid = this.placed[item]!;
     if (cid < 0) return;
     const c = cands[cid]!;
-    if (c.lshape === null) this.occ.mark(c.rect, false);
+    if (c.lshape === null) {
+      const at = item < this.pendAt.length ? this.pendAt[item]! : -1;
+      if (at >= 0 && this.pend[at] === c.rect) {
+        // placed since the last update: nothing to undo in the grid
+        this.pend[at] = null;
+        this.pendAt[item] = -1;
+        // (searches undo in LIFO order: drop cancelled entries at the end)
+        while (this.pend.length > 0 && this.pend[this.pend.length - 1] === null) {
+          this.pend.pop();
+          this.pendAdd.pop();
+          this.pendItem.pop();
+        }
+      } else {
+        this.pend.push(c.rect);
+        this.pendAdd.push(0);
+        this.pendItem.push(item);
+        // bounded log: bring the grid up to date now and then
+        if (this.pend.length > 4 * this.pendAt.length + 1024) this.occupancy();
+      }
+    }
     if (item < this.keys.length) {
       const k = this.keys[item]!;
       this.keyCount[k] -= 1;
