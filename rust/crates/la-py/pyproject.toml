@@ -41,7 +41,8 @@ python-source = "python"
 module-name = "label_anything._native"
 bindings = "pyo3"
 strip = true
-include = [{ path = "python/label_anything/py.typed", format = "wheel" }]
+# bytecode left by test runs against an editable install
+exclude = ["**/__pycache__/**", "**/*.pyc"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -44,19 +44,27 @@ ok: bool = report.valid
 '''
 
 
-def test_mypy_strict(tmp_path: Path) -> None:
-    pytest.importorskip("mypy")
-    pkg = Path(la.__file__).parent
-    user = tmp_path / "user_code.py"
-    user.write_text(USER_CODE)
+def _mypy(tmp_path: Path, *targets: str) -> None:
     config = tmp_path / "mypy.ini"
     # the plotting libraries behind the optional helpers ship no type information
     config.write_text("[mypy]\nstrict = True\n\n[mypy-plotly.*,seaborn.*,pandas.*]\nignore_missing_imports = True\n")
     cmd = [
         sys.executable, "-m", "mypy", "--config-file", str(config), "--no-incremental",
-        "--cache-dir", str(tmp_path / ".mypy_cache"),
-        str(pkg), str(user),
+        "--cache-dir", str(tmp_path / ".mypy_cache"), *targets,
     ]
     out = subprocess.run(cmd, capture_output=True, text=True, cwd=tmp_path)
     assert out.returncode == 0, out.stdout + out.stderr
-    assert (pkg / "py.typed").exists()
+
+
+def test_package_type_checks_strictly(tmp_path: Path) -> None:
+    pytest.importorskip("mypy")
+    assert (Path(la.__file__).parent / "py.typed").exists()
+    # the installed package (module mode: site-packages is not a source root)
+    _mypy(tmp_path, "-p", "label_anything")
+
+
+def test_user_code_type_checks_strictly(tmp_path: Path) -> None:
+    pytest.importorskip("mypy")
+    user = tmp_path / "user_code.py"
+    user.write_text(USER_CODE)
+    _mypy(tmp_path, str(user))

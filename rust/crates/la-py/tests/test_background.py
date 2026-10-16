@@ -169,7 +169,7 @@ def test_raster_options_reach_the_source() -> None:
 def png_bytes(img: Any) -> bytes:
     PIL = pytest.importorskip("PIL.Image")
     buf = io.BytesIO()
-    PIL.fromarray(img, "RGBA").save(buf, format="PNG")
+    PIL.fromarray(img).save(buf, format="PNG")
     return buf.getvalue()
 
 
@@ -196,7 +196,7 @@ def test_png_bytes_and_files(tmp_path: Path, reference: List[Dict[str, Any]]) ->
 
 def test_pil_images(reference: List[Dict[str, Any]]) -> None:
     Image = pytest.importorskip("PIL.Image")
-    img = Image.fromarray(image(), "RGBA")
+    img = Image.fromarray(image())
     assert placements(la.place(PTS, NAMES, canvas=(W, H), background=img, **HARD_INK)) == reference
     rgb = img.convert("RGB")
     assert placements(la.place(PTS, NAMES, canvas=(W, H), background=rgb, **HARD_INK)) == reference
