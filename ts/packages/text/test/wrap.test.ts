@@ -108,8 +108,9 @@ describe("wrapping", () => {
       "bbb…",
     ]);
     expect(wrapVariants("aaa bbb ccc ddd", { ...end, truncate: "middle" }, count)[0].lines).toEqual(["aaa…ddd"]);
-    const none = wrapVariants("aaa bbb ccc ddd", { ...end, truncate: "none" }, count);
-    expect([none[0].lines.length, none[0].truncated]).toEqual([2, false]);
+    // "none" keeps the text within maxLines; lines may exceed maxWidth
+    const none = wrapVariants("aaa bbb ccc ddd", { ...end, truncate: "none", maxLines: 2, maxWidth: 4 }, count);
+    expect([none[0].lines, none[0].truncated]).toEqual([["aaa bbb", "ccc ddd"], false]);
     expect(wrapVariants("aaa bbb ccc", { maxLines: 2 }, count).map((x) => x.lines)).toEqual([
       ["aaa bbb ccc"],
       ["aaa bbb", "ccc"],

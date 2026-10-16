@@ -324,7 +324,8 @@ export function truncateMiddle(text: string, maxWidth: number, maxLines: number,
  * (only the greedy wrap if `balance` is false), without duplicates. Otherwise the text is
  * truncated: `"end"` keeps the first `maxLines - 1` greedy lines and shortens the rest of
  * the text into the last line ({@link truncateEnd}), `"middle"` uses {@link truncateMiddle},
- * and `"none"` keeps the greedy lines (more than `maxLines`, `truncated: false`).
+ * and `"none"` keeps the whole text in the balanced wrap into `maxLines` lines without a
+ * width limit (lines may exceed `maxWidth`; `truncated: false`).
  */
 export function wrapVariants(text: string, opts: WrapOptions, measure: Measure): TextVariant[] {
   const wrapper = new Wrapper(text, measure);
@@ -342,7 +343,10 @@ export function wrapVariants(text: string, opts: WrapOptions, measure: Measure):
     }
     return variants;
   }
-  if (maxWidth === null || truncate === "none") return [wrapper.variant(wrapper.strings(greedy), false)];
+  if (maxWidth === null || truncate === "none") {
+    // keep the text, give up the width: the narrowest wrap into maxLines lines
+    return [wrapper.variant(wrapper.strings(wrapper.balanced(maxLines, null)), false)];
+  }
   let lines: string[];
   if (truncate === "end") {
     lines = wrapper.texts(greedy.slice(0, maxLines - 1));

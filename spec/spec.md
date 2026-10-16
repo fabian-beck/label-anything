@@ -358,8 +358,9 @@ variants are `balanced(n, M)` for `n = L_min … min(L_min + 2, L)` without dupl
 (`wrap.balance: false`: only `greedy(M)`). If `L_min > L`, the text is truncated per
 `truncate`: `end` keeps the first `L − 1` lines of `greedy(M)` and adds
 `truncate_end(rest, M)` for the text from the start of line `L` on; `middle` uses
-`truncate_middle(text, M, L)`; `none` keeps `greedy(M)` unchanged (more than `L` lines,
-not counted as truncated). A variant reports its lines and `width(line)` of every line.
+`truncate_middle(text, M, L)`; `none` keeps the whole text as `balanced(L)` without `M`
+(lines may be wider than `M`; not counted as truncated), because the line count bounds
+the label height. A variant reports its lines and `width(line)` of every line.
 Without wrap settings the normal variant is the single line; the `wrap` ladder step adds
 `balanced(n)` (no `M`) for `n = 2 … degrade_options.wrap_max_lines`, without duplicates and
 without single-line results.

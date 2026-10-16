@@ -398,7 +398,7 @@ def wrap_variants(text, options, measure):
         return [variant(lines + [truncate_end(rest, m, measure)], measure, True)]
     if options["truncate"] == "middle":
         return [variant(truncate_middle(text, m, max_lines, measure), measure, True)]
-    return [variant(as_lines(text, spans), measure)]
+    return [variant(balanced(text, max_lines, None, measure), measure)]
 
 
 def extra_wrap_variants(text, max_lines, measure):

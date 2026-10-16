@@ -393,8 +393,9 @@ pub fn truncate_middle(
 /// lines (only the greedy wrap if `balance` is false), without duplicates. Otherwise the
 /// text is truncated: [`Truncate::End`] keeps the first `max_lines - 1` greedy lines and
 /// [shortens](truncate_end) the rest of the text into the last line, [`Truncate::Middle`]
-/// uses [`truncate_middle`], and [`Truncate::None`] keeps the greedy lines (more than
-/// `max_lines`, `truncated == false`).
+/// uses [`truncate_middle`], and [`Truncate::None`] keeps the whole text in the
+/// [balanced](balanced_wrap) wrap into `max_lines` lines without a width limit (lines may
+/// exceed `max_width`; `truncated == false`).
 pub fn wrap_variants(
     text: &str,
     opts: &WrapOptions,
@@ -421,9 +422,12 @@ pub fn wrap_variants(
         }
         return variants;
     }
+    // `l_min > max_lines >= 1` implies a max_width
     let (Some(max_width), Truncate::End | Truncate::Middle) = (opts.max_width, opts.truncate)
     else {
-        return vec![wrapper.variant(wrapper.strings(&greedy), false)];
+        // keep the text, give up the width: the narrowest wrap into max_lines lines
+        let lines = wrapper.balanced(max_lines, None);
+        return vec![wrapper.variant(wrapper.strings(&lines), false)];
     };
     let lines = if opts.truncate == Truncate::End {
         let mut lines = wrapper.texts(&greedy[..max_lines - 1]);
@@ -605,12 +609,18 @@ mod tests {
             ["aaa…ddd"]
         );
 
+        // `none` keeps the text within max_lines; lines may exceed max_width
         let none = WrapOptions {
             truncate: Truncate::None,
+            max_lines: 2,
+            max_width: Some(4.0),
             ..end
         };
         let v = wrap_variants("aaa bbb ccc ddd", &none, &count);
-        assert_eq!((v[0].lines.len(), v[0].truncated), (2, false));
+        assert_eq!(
+            (v[0].lines.clone(), v[0].truncated),
+            (vec!["aaa bbb".to_owned(), "ccc ddd".to_owned()], false)
+        );
 
         let unbounded = WrapOptions {
             max_width: None,
