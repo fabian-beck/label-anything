@@ -1,0 +1,9 @@
+{
+  "kind": "svg",
+  "name": "root is not svg",
+  "description": "Must fail with a structured 'invalid_value' error.",
+  "svg": "<html xmlns=\"http://www.w3.org/1999/xhtml\"><body/></html>",
+  "expect": {
+    "error": "invalid_value"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "kind": "svg",
+  "name": "undefined entity",
+  "description": "Must fail with a structured 'parse' error.",
+  "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\"><text>a&nbsp;b</text></svg>",
+  "expect": {
+    "error": "parse"
+  }
+}

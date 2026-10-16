@@ -347,6 +347,7 @@ version = "0.1.0"
 dependencies = [
  "label-anything-expr",
  "label-anything-raster",
+ "label-anything-svg",
  "label-anything-text",
  "rayon",
  "regex-lite",
@@ -380,6 +381,11 @@ dependencies = [
 [[package]]
 name = "label-anything-svg"
 version = "0.1.0"
+dependencies = [
+ "roxmltree",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "label-anything-text"
@@ -521,6 +527,15 @@ name = "regex-lite"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cab834c73d247e67f4fae452806d17d3c7501756d98c8808d7c9c7aa7d18f973"
+
+[[package]]
+name = "roxmltree"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1964b10c76125c36f8afe190065a4bf9a87bf324842c05701330bba9f1cacbb"
+dependencies = [
+ "memchr",
+]
 
 [[package]]
 name = "rustybuzz"

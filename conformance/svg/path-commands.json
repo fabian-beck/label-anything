@@ -1,0 +1,195 @@
+{
+  "kind": "svg",
+  "name": "path commands",
+  "description": "All path commands, absolute and relative, implicit repetition, smooth curves, arcs (flags, rotation, radius scaling, zero radius). Cubic arch with controls at height h over base L has area 0.6*h*L; 'S' without a previous curve uses the current point as first control (area 120*50*6*B(4,3) = 600); a quadratic segment has area 2/3*base*(h/2).",
+  "tolerance": 0.05,
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"520\" height=\"360\">",
+    "  <path id=\"sq\" d=\"M10,10 h40 v40 h-40 z\"/>",
+    "  <path id=\"two\" d=\"M 100 10 l 20 0 0 20 -20 0 z m 30 0 l 10 0 0 10 -10 0 z\"/>",
+    "  <path id=\"arch\" d=\"M 10 300 C 10 260 60 260 60 300 Z\"/>",
+    "  <path id=\"archrel\" d=\"m 10 200 c 0 -40 50 -40 50 0 z\"/>",
+    "  <path id=\"smooth\" d=\"M 70 300 C 70 260 120 260 120 300 S 170 340 170 300 Z\"/>",
+    "  <path id=\"snoc\" d=\"M 180 300 S 230 260 230 300 z\"/>",
+    "  <path id=\"quad\" d=\"M 250 300 Q 275 260 300 300 Z\"/>",
+    "  <path id=\"quadt\" d=\"M 310 300 Q 320 280 330 300 T 350 300 Z\"/>",
+    "  <path id=\"quadrel\" d=\"M 360 300 q 10 -20 20 0 t 20 0 z\"/>",
+    "  <path id=\"circ\" d=\"M 260 50 A 40 40 0 1 1 180 50 A 40 40 0 1 1 260 50 Z\"/>",
+    "  <path id=\"rot\" d=\"M 354.6410161514 70 A 40 20 30 1 1 285.3589838486 30 A 40 20 30 1 1 354.6410161514 70 z\"/>",
+    "  <path id=\"scaled\" d=\"M 400 50 A 5 5 0 0 1 440 50 z\"/>",
+    "  <path id=\"zero\" d=\"M 460 20 A 0 10 0 0 1 490 20 L 490 50 L 460 50 z\"/>",
+    "  <path id=\"implicit\" d=\"M 100 150 L 140 150 140 190 100 190 Z\"/>",
+    "  <path id=\"compact\" d=\"M200,150l40,0,0,40-40,0z\"/>",
+    "  <path id=\"arcrel\" d=\"M 300 150 a 20 20 0 0 1 40 0 z\"/>",
+    "  <path id=\"error\" d=\"M 400 150 h 40 v 40 h -40 z L 99 x 1\"/>",
+    "  <path id=\"bad\" d=\"L 10 10 20 20\"/>",
+    "</svg>"
+  ],
+  "expect": {
+    "geometry": [
+      {
+        "id": "sq",
+        "count": 1,
+        "fill_area": 1600,
+        "bbox": [
+          10,
+          10,
+          40,
+          40
+        ],
+        "vertices": 4
+      },
+      {
+        "id": "two",
+        "count": 1,
+        "fill_area": 500,
+        "bbox": [
+          100,
+          10,
+          40,
+          20
+        ]
+      },
+      {
+        "id": "arch",
+        "fill_area": 1200,
+        "bbox": [
+          10,
+          270,
+          50,
+          30
+        ]
+      },
+      {
+        "id": "archrel",
+        "fill_area": 1200,
+        "bbox": [
+          10,
+          170,
+          50,
+          30
+        ]
+      },
+      {
+        "id": "smooth",
+        "fill_area": 2400,
+        "bbox": [
+          70,
+          270,
+          100,
+          60
+        ]
+      },
+      {
+        "id": "snoc",
+        "fill_area": 600
+      },
+      {
+        "id": "quad",
+        "fill_area": 666.666667,
+        "bbox": [
+          250,
+          280,
+          50,
+          20
+        ]
+      },
+      {
+        "id": "quadt",
+        "fill_area": 266.666667,
+        "bbox": [
+          310,
+          290,
+          40,
+          20
+        ]
+      },
+      {
+        "id": "quadrel",
+        "fill_area": 266.666667,
+        "bbox": [
+          360,
+          290,
+          40,
+          20
+        ]
+      },
+      {
+        "id": "circ",
+        "fill_area": 5026.548246,
+        "bbox": [
+          180,
+          10,
+          80,
+          80
+        ]
+      },
+      {
+        "id": "rot",
+        "fill_area": 2513.274123
+      },
+      {
+        "id": "scaled",
+        "fill_area": 628.318531,
+        "bbox": [
+          400,
+          30,
+          40,
+          20
+        ]
+      },
+      {
+        "id": "zero",
+        "fill_area": 900,
+        "bbox": [
+          460,
+          20,
+          30,
+          30
+        ],
+        "vertices": 4
+      },
+      {
+        "id": "implicit",
+        "fill_area": 1600,
+        "vertices": 4
+      },
+      {
+        "id": "compact",
+        "fill_area": 1600,
+        "vertices": 4
+      },
+      {
+        "id": "arcrel",
+        "fill_area": 628.318531,
+        "bbox": [
+          300,
+          130,
+          40,
+          20
+        ]
+      },
+      {
+        "id": "error",
+        "count": 1,
+        "fill_area": 1600,
+        "bbox": [
+          400,
+          150,
+          40,
+          40
+        ]
+      },
+      {
+        "id": "bad",
+        "count": 0
+      }
+    ],
+    "elements": {
+      "bad": {
+        "drawn": true,
+        "bbox": null
+      }
+    }
+  }
+}

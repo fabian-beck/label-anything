@@ -16,6 +16,7 @@ Every file is one JSON object with a `kind`:
 | `text/` | `text` | text widths (±0.01 px), line breaking, wrapping, truncation |
 | `raster/` | `raster` | image decoding, background estimation, pixel modes, coverage grids (byte for byte); see `raster/README.md` |
 | `expr/` | `expr` | expression language results and errors |
+| `svg/` | `svg` | SVG parsing, styles, geometry flattening, selectors and classification; see `svg/README.md` |
 | `math/` | `math` | deterministic math (`det_math`) and PCG32, bit-exact vectors (see `math/README.md`) |
 
 ## `validate` cases

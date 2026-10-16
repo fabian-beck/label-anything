@@ -1,0 +1,50 @@
+{
+  "kind": "svg",
+  "name": "viewport scaled to the canvas",
+  "description": "A 200x100 viewport on a 400x100 canvas is scaled non-uniformly (2, 1): a circle r=10 becomes an ellipse 20x10 (area 200 pi), stroke width 1 becomes sqrt(2), text boxes are scaled too.",
+  "canvas": {
+    "width": 400,
+    "height": 100
+  },
+  "tolerance": 0.05,
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"100\">",
+    "  <circle id=\"c\" cx=\"50\" cy=\"50\" r=\"10\" stroke=\"black\"/>",
+    "  <text id=\"t\" x=\"100\" y=\"50\" font-size=\"10\">ab</text>",
+    "</svg>"
+  ],
+  "expect": {
+    "width": 200,
+    "height": 100,
+    "canvas_width": 400,
+    "canvas_height": 100,
+    "geometry": [
+      {
+        "id": "c",
+        "polygons": 1,
+        "polylines": 1,
+        "fill_area": 628.318531,
+        "stroke_width": [
+          1.414214,
+          1.414214
+        ],
+        "bbox": [
+          80,
+          40,
+          40,
+          20
+        ]
+      },
+      {
+        "id": "t",
+        "rects": 1,
+        "bbox": [
+          200,
+          42,
+          22,
+          10
+        ]
+      }
+    ]
+  }
+}

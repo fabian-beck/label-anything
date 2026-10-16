@@ -1,0 +1,121 @@
+{
+  "kind": "svg",
+  "name": "basic shapes",
+  "description": "rect, circle, ellipse, line, polyline, polygon; areas analytic (circle/ellipse within 0.5 % at tolerance 0.1).",
+  "tolerance": 0.1,
+  "classes": [
+    {
+      "selector": "rect",
+      "class": "rects"
+    },
+    {
+      "selector": "circle, ellipse",
+      "class": "round"
+    },
+    {
+      "selector": "line, polyline",
+      "class": "lines"
+    },
+    {
+      "selector": "polygon",
+      "class": "poly"
+    }
+  ],
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"100\">",
+    "  <rect id=\"r\" x=\"10\" y=\"10\" width=\"40\" height=\"20\" fill=\"red\"/>",
+    "  <circle id=\"c\" cx=\"100\" cy=\"50\" r=\"30\" fill=\"blue\"/>",
+    "  <ellipse id=\"e\" cx=\"160\" cy=\"50\" rx=\"30\" ry=\"15\" fill=\"green\"/>",
+    "  <line id=\"l\" x1=\"10\" y1=\"90\" x2=\"190\" y2=\"90\" stroke=\"black\" stroke-width=\"2\"/>",
+    "  <polyline id=\"pl\" points=\"10,40 30,60 50,40\" fill=\"none\" stroke=\"black\"/>",
+    "  <polygon id=\"pg\" points=\"60,70 80,70 70,90\" fill=\"orange\"/>",
+    "</svg>"
+  ],
+  "expect": {
+    "width": 200,
+    "height": 100,
+    "element_count": 7,
+    "classes": {
+      "rects": {
+        "count": 1,
+        "polygons": 1,
+        "fill_area": 800,
+        "bbox": [
+          10,
+          10,
+          40,
+          20
+        ],
+        "vertices": 4
+      },
+      "round": {
+        "count": 2,
+        "polygons": 2,
+        "fill_area": 4241.150082,
+        "bbox": [
+          70,
+          20,
+          120,
+          60
+        ]
+      },
+      "lines": {
+        "count": 2,
+        "polylines": 2,
+        "stroke_length": 236.568542,
+        "stroke_width": [
+          1,
+          2
+        ],
+        "bbox": [
+          10,
+          40,
+          180,
+          50
+        ]
+      },
+      "poly": {
+        "count": 1,
+        "polygons": 1,
+        "fill_area": 200,
+        "bbox": [
+          60,
+          70,
+          20,
+          20
+        ],
+        "vertices": 3
+      }
+    },
+    "elements": {
+      "c": {
+        "tag": "circle",
+        "drawn": true,
+        "filled": true,
+        "stroked": false,
+        "bbox": [
+          70,
+          20,
+          60,
+          60
+        ]
+      },
+      "l": {
+        "tag": "line",
+        "drawn": true,
+        "filled": false,
+        "stroked": true,
+        "bbox": [
+          10,
+          90,
+          180,
+          0
+        ]
+      },
+      "pl": {
+        "filled": false,
+        "stroked": true
+      }
+    }
+  }
+}
