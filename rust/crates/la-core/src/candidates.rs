@@ -126,6 +126,8 @@ pub struct Cand {
     /// Static cost and feasibility are computed (ladder candidates are evaluated lazily,
     /// only once they are free of placed labels).
     pub evaluated: bool,
+    /// Boundary side (0 left, 1 right, 2 top, 3 bottom) of boundary candidates.
+    pub bside: u8,
 }
 
 impl Cand {
@@ -145,6 +147,7 @@ impl Cand {
             relax_cost: 0.0,
             blocked: None,
             evaluated: false,
+            bside: 255,
         }
     }
     /// Bounding box of label and leaders.
