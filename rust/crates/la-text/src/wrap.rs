@@ -1,10 +1,14 @@
 //! Wrapping, balancing and truncation of text labels (spec §5.3).
 //!
-//! Every function takes a `measure` closure that returns the width of a string (e.g.
-//! `|s| font.width(s, 12.0)`, or a host measurement), so the algorithms work with any font
-//! and size. Positions are code point indices. A line `[s..=e]` is the text from code point
-//! `s` to `e` with trailing white space removed; the next line starts after `e`, skipping
-//! white space. Blank texts produce a single empty line.
+//! Every function takes a [`Measure`]: simple shaping with a font at a size
+//! ([`Measure::Font`]), or a closure that returns the width of a string (a host
+//! measurement, full shaping, …; `&closure` converts into [`Measure::Callback`]), so the
+//! algorithms work with any font and size. With [`Measure::Font`] a text is prepared once
+//! ([`MeasuredText`]) and every candidate line is measured in constant time, with results
+//! bit-identical to the callback `|s| font.width(s, size)`; a callback is called once per
+//! distinct line. Positions are code point indices. A line `[s..=e]` is the text from code
+//! point `s` to `e` with trailing white space removed; the next line starts after `e`,
+//! skipping white space. Blank texts produce a single empty line.
 //!
 //! Searches assume that extending a line never makes it narrower: they scan candidates in
 //! ascending order and stop at the first one that does not fit, which for such widths is
@@ -14,8 +18,59 @@ use std::collections::HashMap;
 
 use crate::breaks::breaks_of;
 use crate::unicode::{is_mark, is_space};
+use crate::{Font, MeasuredText};
 
 const ELLIPSIS: char = '\u{2026}';
+
+/// How the wrapping functions measure text.
+///
+/// `&closure` converts into [`Measure::Callback`], so both
+/// `greedy_wrap(text, w, &|s: &str| font.width_shaped(s, 12.0))` and
+/// `greedy_wrap(text, w, Measure::Font { font, size: 12.0 })` work.
+#[derive(Clone, Copy)]
+pub enum Measure<'a> {
+    /// Simple shaping, [`Font::width`]: each text is prepared once ([`MeasuredText`]) and
+    /// every candidate line is measured in constant time, with the same results as the
+    /// callback `|s| font.width(s, size)`.
+    Font {
+        /// The font.
+        font: &'a Font,
+        /// The font size in px.
+        size: f64,
+    },
+    /// Any width function (a host measurement, full shaping, …), called once per distinct
+    /// candidate line.
+    Callback(&'a dyn Fn(&str) -> f64),
+}
+
+impl Measure<'_> {
+    /// The width of `text`.
+    pub fn width(&self, text: &str) -> f64 {
+        match *self {
+            Measure::Font { font, size } => font.width(text, size),
+            Measure::Callback(measure) => measure(text),
+        }
+    }
+}
+
+impl<'a, F: Fn(&str) -> f64> From<&'a F> for Measure<'a> {
+    fn from(measure: &'a F) -> Self {
+        Measure::Callback(measure)
+    }
+}
+
+impl std::fmt::Debug for Measure<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Measure::Font { font, size } => f
+                .debug_struct("Font")
+                .field("font", font)
+                .field("size", size)
+                .finish(),
+            Measure::Callback(_) => f.write_str("Callback(..)"),
+        }
+    }
+}
 
 /// How text that does not fit in `max_lines` lines of `max_width` is shortened.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
@@ -65,32 +120,44 @@ pub struct TextVariant {
     pub truncated: bool,
 }
 
-/// A text prepared for wrapping: code points, break opportunities and cached widths.
+/// A line as `(first, last)` code point indices (before trimming).
+type Span = (usize, usize);
+
+/// How a [`Wrapper`] measures its lines.
+enum Widths<'a> {
+    /// From the prepared text at a size ([`Measure::Font`]).
+    Prepared(MeasuredText, f64),
+    /// With the callback, once per line.
+    Callback(&'a dyn Fn(&str) -> f64, HashMap<Span, f64>),
+}
+
+/// A text prepared for wrapping: code points, break opportunities and line widths.
 struct Wrapper<'a> {
     text: &'a str,
     chars: Vec<char>,
     /// Byte offset of every code point, plus `text.len()`.
     bytes: Vec<usize>,
     breaks: Vec<usize>,
-    measure: &'a dyn Fn(&str) -> f64,
-    widths: HashMap<(usize, usize), f64>,
+    measure: Measure<'a>,
+    widths: Widths<'a>,
 }
 
-/// A line as `(first, last)` code point indices (before trimming).
-type Span = (usize, usize);
-
 impl<'a> Wrapper<'a> {
-    fn new(text: &'a str, measure: &'a dyn Fn(&str) -> f64) -> Self {
+    fn new(text: &'a str, measure: Measure<'a>) -> Self {
         let (mut bytes, chars): (Vec<usize>, Vec<char>) = text.char_indices().unzip();
         bytes.push(text.len());
         let breaks = breaks_of(&chars);
+        let widths = match measure {
+            Measure::Font { font, size } => Widths::Prepared(MeasuredText::new(font, text), size),
+            Measure::Callback(measure) => Widths::Callback(measure, HashMap::new()),
+        };
         Wrapper {
             text,
             chars,
             bytes,
             breaks,
             measure,
-            widths: HashMap::new(),
+            widths,
         }
     }
 
@@ -106,22 +173,31 @@ impl<'a> Wrapper<'a> {
         i
     }
 
-    /// The text of line `[s..=e]` (trailing white space removed).
-    fn line(&self, (s, e): Span) -> &'a str {
+    /// The end (exclusive) of line `[s..=e]` without its trailing white space.
+    fn line_end(&self, (s, e): Span) -> usize {
         let mut end = e + 1;
         while end > s && is_space(self.chars[end - 1]) {
             end -= 1;
         }
-        &self.text[self.bytes[s]..self.bytes[end]]
+        end
+    }
+
+    /// The text of line `[s..=e]` (trailing white space removed).
+    fn line(&self, span: Span) -> &'a str {
+        &self.text[self.bytes[span.0]..self.bytes[self.line_end(span)]]
     }
 
     fn width(&mut self, span: Span) -> f64 {
-        if let Some(&w) = self.widths.get(&span) {
-            return w;
+        let (start, end) = (span.0, self.line_end(span));
+        match &mut self.widths {
+            Widths::Prepared(text, size) => text.width(start, end, *size),
+            Widths::Callback(measure, cache) => {
+                let measure = *measure;
+                *cache
+                    .entry(span)
+                    .or_insert_with(|| measure(&self.text[self.bytes[start]..self.bytes[end]]))
+            }
         }
-        let w = (self.measure)(self.line(span));
-        self.widths.insert(span, w);
-        w
     }
 
     /// The first break opportunity at or after `s`, else the last code point.
@@ -267,11 +343,25 @@ impl<'a> Wrapper<'a> {
     }
 
     fn variant(&self, lines: Vec<String>, truncated: bool) -> TextVariant {
-        let widths = lines.iter().map(|line| (self.measure)(line)).collect();
+        let widths = lines.iter().map(|line| self.measure.width(line)).collect();
         TextVariant {
             lines,
             widths,
             truncated,
+        }
+    }
+
+    /// The variant of the lines `spans` (not truncated; `lines` are their strings). With a
+    /// prepared text the widths come from the spans, else every line is measured.
+    fn spans_variant(&mut self, spans: &[Span], lines: Vec<String>) -> TextVariant {
+        if spans.is_empty() || matches!(self.widths, Widths::Callback(..)) {
+            return self.variant(lines, false);
+        }
+        let widths = spans.iter().map(|&span| self.width(span)).collect();
+        TextVariant {
+            lines,
+            widths,
+            truncated: false,
         }
     }
 }
@@ -280,8 +370,8 @@ impl<'a> Wrapper<'a> {
 /// to the last break opportunity that fits; a segment wider than `max_width` is broken at
 /// the last code point position that fits (never before a combining mark, at least one
 /// code point).
-pub fn greedy_wrap(text: &str, max_width: f64, measure: &dyn Fn(&str) -> f64) -> Vec<String> {
-    let mut wrapper = Wrapper::new(text, measure);
+pub fn greedy_wrap<'a>(text: &str, max_width: f64, measure: impl Into<Measure<'a>>) -> Vec<String> {
+    let mut wrapper = Wrapper::new(text, measure.into());
     let lines = wrapper.greedy(max_width, usize::MAX);
     wrapper.strings(&lines)
 }
@@ -290,13 +380,13 @@ pub fn greedy_wrap(text: &str, max_width: f64, measure: &dyn Fn(&str) -> f64) ->
 /// width (the widths of the lines between break opportunities, and `max_width`; only
 /// those `<= max_width`) that needs at most `n_lines` lines, found by binary search. If
 /// even `max_width` needs more lines, the result is `greedy_wrap(text, max_width)`.
-pub fn balanced_wrap(
+pub fn balanced_wrap<'a>(
     text: &str,
     n_lines: usize,
     max_width: Option<f64>,
-    measure: &dyn Fn(&str) -> f64,
+    measure: impl Into<Measure<'a>>,
 ) -> Vec<String> {
-    let mut wrapper = Wrapper::new(text, measure);
+    let mut wrapper = Wrapper::new(text, measure.into());
     let lines = wrapper.balanced(n_lines, max_width);
     wrapper.strings(&lines)
 }
@@ -305,8 +395,9 @@ pub fn balanced_wrap(
 /// (not separated from its combining marks, trailing white space removed; lengths are
 /// tried in ascending order up to the first that does not fit) such that `prefix + "…"`
 /// fits; `"…"` if none does. A text that fits is returned unchanged.
-pub fn truncate_end(text: &str, max_width: f64, measure: &dyn Fn(&str) -> f64) -> String {
-    if measure(text) <= max_width {
+pub fn truncate_end<'a>(text: &str, max_width: f64, measure: impl Into<Measure<'a>>) -> String {
+    let measure = measure.into();
+    if measure.width(text) <= max_width {
         return text.to_owned();
     }
     let chars: Vec<(usize, char)> = text.char_indices().collect();
@@ -320,7 +411,7 @@ pub fn truncate_end(text: &str, max_width: f64, measure: &dyn Fn(&str) -> f64) -
             end -= 1;
         }
         let candidate = format!("{}{ELLIPSIS}", &text[..chars[end].0]);
-        if measure(&candidate) > max_width {
+        if measure.width(&candidate) > max_width {
             break;
         }
         best = candidate;
@@ -333,12 +424,13 @@ pub fn truncate_end(text: &str, max_width: f64, measure: &dyn Fn(&str) -> f64) -
 /// the left part keeps `ceil((n - r) / 2)` code points, the right part `floor((n - r) / 2)`,
 /// both shrunk so that no base is separated from its combining marks, with the white space
 /// next to `…` removed. Returns the wrapped lines; a text that fits is only wrapped.
-pub fn truncate_middle(
+pub fn truncate_middle<'a>(
     text: &str,
     max_width: f64,
     max_lines: usize,
-    measure: &dyn Fn(&str) -> f64,
+    measure: impl Into<Measure<'a>>,
 ) -> Vec<String> {
+    let measure = measure.into();
     let max_lines = max_lines.max(1);
     let text = text.trim_matches(is_space);
     let wrap = |t: &str| {
@@ -396,11 +488,12 @@ pub fn truncate_middle(
 /// uses [`truncate_middle`], and [`Truncate::None`] keeps the whole text in the
 /// [balanced](balanced_wrap) wrap into `max_lines` lines without a width limit (lines may
 /// exceed `max_width`; `truncated == false`).
-pub fn wrap_variants(
+pub fn wrap_variants<'a>(
     text: &str,
     opts: &WrapOptions,
-    measure: &dyn Fn(&str) -> f64,
+    measure: impl Into<Measure<'a>>,
 ) -> Vec<TextVariant> {
+    let measure = measure.into();
     let mut wrapper = Wrapper::new(text, measure);
     let max_lines = opts.max_lines.max(1);
     let greedy = match opts.max_width {
@@ -410,14 +503,15 @@ pub fn wrap_variants(
     let l_min = greedy.len().max(1);
     if l_min <= max_lines {
         if !opts.balance {
-            return vec![wrapper.variant(wrapper.strings(&greedy), false)];
+            let lines = wrapper.strings(&greedy);
+            return vec![wrapper.spans_variant(&greedy, lines)];
         }
         let mut variants: Vec<TextVariant> = Vec::new();
         for n in l_min..=(l_min.saturating_add(2)).min(max_lines) {
-            let lines = wrapper.balanced(n, opts.max_width);
-            let lines = wrapper.strings(&lines);
+            let spans = wrapper.balanced(n, opts.max_width);
+            let lines = wrapper.strings(&spans);
             if variants.iter().all(|v| v.lines != lines) {
-                variants.push(wrapper.variant(lines, false));
+                variants.push(wrapper.spans_variant(&spans, lines));
             }
         }
         return variants;
@@ -426,8 +520,9 @@ pub fn wrap_variants(
     let (Some(max_width), Truncate::End | Truncate::Middle) = (opts.max_width, opts.truncate)
     else {
         // keep the text, give up the width: the narrowest wrap into max_lines lines
-        let lines = wrapper.balanced(max_lines, None);
-        return vec![wrapper.variant(wrapper.strings(&lines), false)];
+        let spans = wrapper.balanced(max_lines, None);
+        let lines = wrapper.strings(&spans);
+        return vec![wrapper.spans_variant(&spans, lines)];
     };
     let lines = if opts.truncate == Truncate::End {
         let mut lines = wrapper.texts(&greedy[..max_lines - 1]);
@@ -443,22 +538,22 @@ pub fn wrap_variants(
 
 /// Extra variants for the `wrap` ladder step of labels without wrap settings: the balanced
 /// wraps into `2 ..= max_lines` lines, without duplicates and without single-line results.
-pub fn extra_wrap_variants(
+pub fn extra_wrap_variants<'a>(
     text: &str,
     max_lines: usize,
-    measure: &dyn Fn(&str) -> f64,
+    measure: impl Into<Measure<'a>>,
 ) -> Vec<TextVariant> {
-    let mut wrapper = Wrapper::new(text, measure);
+    let mut wrapper = Wrapper::new(text, measure.into());
     let mut variants: Vec<TextVariant> = Vec::new();
     // No wrap has more lines than code points, so larger counts only repeat variants.
     for n in 2..=max_lines.min(wrapper.len()) {
-        let lines = wrapper.balanced(n, None);
-        if lines.len() < 2 {
+        let spans = wrapper.balanced(n, None);
+        if spans.len() < 2 {
             continue;
         }
-        let lines = wrapper.strings(&lines);
+        let lines = wrapper.strings(&spans);
         if variants.iter().all(|v| v.lines != lines) {
-            variants.push(wrapper.variant(lines, false));
+            variants.push(wrapper.spans_variant(&spans, lines));
         }
     }
     variants
