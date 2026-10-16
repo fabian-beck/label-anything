@@ -24,10 +24,12 @@ export class IdList {
     this.ids = new Uint32Array(capacity > 0 ? capacity : 1);
   }
 
+  /** Remove all ids (keeps the capacity). */
   clear(): void {
     this.len = 0;
   }
 
+  /** Append an id. */
   push(id: number): void {
     if (this.len === this.ids.length) {
       const grown = new Uint32Array(this.ids.length * 2);
@@ -106,6 +108,10 @@ export class StaticIndex {
   private readonly stamp: Uint32Array;
   private gen = 0;
 
+  /**
+   * Index `boxes` (ids are their positions; empty boxes are skipped) on buckets of size
+   * `cell` covering `extent` (at most 4096 × 4096). The array is kept, not copied.
+   */
   constructor(boxes: Rect[], extent: Rect, cell: number) {
     const b = new Buckets(extent, cell);
     const counts = new Uint32Array(b.cols * b.rows + 1);
@@ -156,14 +162,17 @@ export class StaticIndex {
     this.stamp = new Uint32Array(boxes.length);
   }
 
+  /** Number of boxes. */
   len(): number {
     return this.boxes.length;
   }
 
+  /** No boxes. */
   isEmpty(): boolean {
     return this.boxes.length === 0;
   }
 
+  /** Box of `id`. */
   bbox(id: number): Rect {
     return this.boxes[id]!;
   }
@@ -229,6 +238,7 @@ export class DynIndex {
   private stamp: Uint32Array;
   private gen = 0;
 
+  /** An empty index on buckets of size `cell` covering `extent` (at most 4096 × 4096). */
   constructor(extent: Rect, cell: number) {
     const b = new Buckets(extent, cell);
     this.b = b;
@@ -266,6 +276,7 @@ export class DynIndex {
     }
   }
 
+  /** Remove `id` (no-op when absent). */
   remove(id: number): void {
     const r = id < this.boxes.length ? this.boxes[id]! : null;
     if (r === null) return;
@@ -289,6 +300,7 @@ export class DynIndex {
     this.boxes[id] = null;
   }
 
+  /** Box of `id`, or null. */
   get(id: number): Rect | null {
     return id < this.boxes.length ? this.boxes[id]! : null;
   }

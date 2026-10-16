@@ -224,6 +224,7 @@ for (let s = 1; s <= 16; s++) Q16[s] = quantize(s / 16);
 
 /** Accumulates the union of primitives of one class. */
 export class MaskRaster {
+  /** The grid. */
   readonly spec: GridSpec;
   private readonly mask: Uint32Array;
   /** Sample spacing in px. */

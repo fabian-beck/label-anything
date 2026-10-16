@@ -42,11 +42,15 @@ const QB = new Float64Array(8);
 
 /** Polygon (possibly concave, with holes) with an explicit reference point. */
 export class PolyShape {
+  /** Rings (outer boundary first, then holes). */
   readonly rings: P[][];
+  /** Even-odd fill rule (else non-zero). */
   readonly evenOdd: boolean;
   /** Convex hull, counter-clockwise in math orientation. */
   readonly hull: P[];
+  /** Bounding box of all rings. */
   readonly bbox: Rect;
+  /** Reference point (anchor). */
   readonly reference: P;
 
   constructor(rings: P[][], evenOdd: boolean, reference: P) {
@@ -402,8 +406,11 @@ export abstract class ShapeBase {
 
 /** Disc. `r = 0` is a bare point. */
 export class CircleShape extends ShapeBase {
+  /** Discriminator. */
   readonly kind = "circle" as const;
+  /** Center. */
   readonly c: P;
+  /** Radius. */
   readonly r: number;
   /** Bounding box (Rust recomputes it per call). */
   readonly bb: Rect;
@@ -420,13 +427,21 @@ export class CircleShape extends ShapeBase {
 
 /** Ellipse with semi-axes `rx`, `ry`, rotated by (cos, sin) clockwise on screen. */
 export class EllipseShape extends ShapeBase {
+  /** Discriminator. */
   readonly kind = "ellipse" as const;
+  /** Center. */
   readonly c: P;
+  /** Semi-axis along the rotated x axis. */
   readonly rx: number;
+  /** Semi-axis along the rotated y axis. */
   readonly ry: number;
+  /** Cosine of the rotation. */
   readonly cos: number;
+  /** Sine of the rotation (clockwise on screen). */
   readonly sin: number;
+  /** Bounding box (Rust recomputes it per call). */
   readonly bb: Rect;
+  /** Outline rings `[outline()]`, computed on first use (internal cache). */
   ol: P[][] | null = null;
 
   constructor(c: P, rx: number, ry: number, cos: number, sin: number) {
@@ -445,16 +460,25 @@ export class EllipseShape extends ShapeBase {
 
 /** Rectangle with half sizes and corner radius, rotated about its center. */
 export class RoundRectShape extends ShapeBase {
+  /** Discriminator. */
   readonly kind = "roundRect" as const;
+  /** Center. */
   readonly c: P;
+  /** Half width. */
   readonly hw: number;
+  /** Half height. */
   readonly hh: number;
+  /** Corner radius (at most `min(hw, hh)`). */
   readonly r: number;
+  /** Cosine of the rotation. */
   readonly cos: number;
+  /** Sine of the rotation (clockwise on screen). */
   readonly sin: number;
+  /** Bounding box (Rust recomputes it per call). */
   readonly bb: Rect;
   /** Corners of the inner (sharp) rectangle `(hw - r) × (hh - r)`, `[x0, y0, …]`. */
   readonly inner: Float64Array;
+  /** Outline rings `[outline()]`, computed on first use (internal cache). */
   ol: P[][] | null = null;
 
   constructor(c: P, hw: number, hh: number, r: number, cos: number, sin: number) {
@@ -475,6 +499,7 @@ export class RoundRectShape extends ShapeBase {
 
 /** Polygon (possibly concave, with holes) with an explicit reference point. */
 export class PolygonShape extends ShapeBase {
+  /** Discriminator. */
   readonly kind = "polygon" as const;
   /** The polygon data (Rust: the boxed `PolyShape` of `Shape::Polygon`). */
   readonly poly: PolyShape;

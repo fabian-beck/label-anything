@@ -20,7 +20,9 @@ export const EPS = 1e-6;
 
 /** A point or vector in canvas pixels (immutable). */
 export class P {
+  /** x in canvas pixels. */
   readonly x: number;
+  /** y in canvas pixels (down). */
   readonly y: number;
 
   constructor(x: number, y: number) {
@@ -28,18 +30,22 @@ export class P {
     this.y = y;
   }
 
+  /** Dot product. */
   dot(o: P): number {
     return this.x * o.x + this.y * o.y;
   }
 
+  /** 2-D cross product `x·o.y − y·o.x`. */
   cross(o: P): number {
     return this.x * o.y - this.y * o.x;
   }
 
+  /** Euclidean length. */
   len(): number {
     return len2d(this.x, this.y);
   }
 
+  /** Squared length. */
   len2(): number {
     return this.x * this.x + this.y * this.y;
   }
@@ -55,10 +61,12 @@ export class P {
     return new P(-this.y, this.x);
   }
 
+  /** Distance to `o`. */
   dist(o: P): number {
     return len2d(this.x - o.x, this.y - o.y);
   }
 
+  /** Linear interpolation `self + (o − self)·t`. */
   lerp(o: P, t: number): P {
     return new P(this.x + (o.x - this.x) * t, this.y + (o.y - this.y) * t);
   }
@@ -73,6 +81,7 @@ export class P {
     return new P(this.x * cos + this.y * sin, -this.x * sin + this.y * cos);
   }
 
+  /** Both coordinates are finite. */
   isFinite(): boolean {
     return Number.isFinite(this.x) && Number.isFinite(this.y);
   }
@@ -105,9 +114,13 @@ export class P {
 
 /** Axis-aligned rectangle `[x0, x1] × [y0, y1]` (immutable). */
 export class Rect {
+  /** Left edge. */
   readonly x0: number;
+  /** Top edge. */
   readonly y0: number;
+  /** Right edge. */
   readonly x1: number;
+  /** Bottom edge. */
   readonly y1: number;
 
   constructor(x0: number, y0: number, x1: number, y1: number) {
@@ -117,10 +130,12 @@ export class Rect {
     this.y1 = y1;
   }
 
+  /** Rectangle from its top-left corner and size. */
   static xywh(x: number, y: number, w: number, h: number): Rect {
     return new Rect(x, y, x + w, y + h);
   }
 
+  /** Rectangle from its center and half sizes. */
   static fromCenter(c: P, hw: number, hh: number): Rect {
     return new Rect(c.x - hw, c.y - hh, c.x + hw, c.y + hh);
   }
@@ -128,38 +143,47 @@ export class Rect {
   /** An "empty" rectangle for unions. */
   static readonly EMPTY: Rect = new Rect(Infinity, Infinity, -Infinity, -Infinity);
 
+  /** Width `x1 − x0`. */
   w(): number {
     return this.x1 - this.x0;
   }
 
+  /** Height `y1 − y0`. */
   h(): number {
     return this.y1 - this.y0;
   }
 
+  /** Area (0 for inverted rectangles). */
   area(): number {
     return maxf(this.w(), 0) * maxf(this.h(), 0);
   }
 
+  /** Center point. */
   center(): P {
     return new P((this.x0 + this.x1) * 0.5, (this.y0 + this.y1) * 0.5);
   }
 
+  /** Inverted or NaN (`!(x1 >= x0 && y1 >= y0)`). */
   isEmpty(): boolean {
     return !(this.x1 >= this.x0 && this.y1 >= this.y0);
   }
 
+  /** Grown by `d` on every side (shrunk for negative `d`). */
   inflate(d: number): Rect {
     return new Rect(this.x0 - d, this.y0 - d, this.x1 + d, this.y1 + d);
   }
 
+  /** Moved by `d`. */
   translate(d: P): Rect {
     return new Rect(this.x0 + d.x, this.y0 + d.y, this.x1 + d.x, this.y1 + d.y);
   }
 
+  /** Bounding box of both. */
   union(o: Rect): Rect {
     return new Rect(minf(this.x0, o.x0), minf(this.y0, o.y0), maxf(this.x1, o.x1), maxf(this.y1, o.y1));
   }
 
+  /** Bounding box of `self` and `p`. */
   addPoint(p: P): Rect {
     return new Rect(minf(this.x0, p.x), minf(this.y0, p.y), maxf(this.x1, p.x), maxf(this.y1, p.y));
   }
@@ -174,16 +198,19 @@ export class Rect {
     return this.x0 <= o.x1 && o.x0 <= this.x1 && this.y0 <= o.y1 && o.y0 <= this.y1;
   }
 
+  /** Intersection (inverted when disjoint). */
   intersection(o: Rect): Rect {
     return new Rect(maxf(this.x0, o.x0), maxf(this.y0, o.y0), minf(this.x1, o.x1), minf(this.y1, o.y1));
   }
 
+  /** Area of the intersection (0 when disjoint). */
   overlapArea(o: Rect): number {
     const w = minf(this.x1, o.x1) - maxf(this.x0, o.x0);
     const h = minf(this.y1, o.y1) - maxf(this.y0, o.y0);
     return w > 0 && h > 0 ? w * h : 0;
   }
 
+  /** `p` lies in the closed rectangle. */
   containsPoint(p: P): boolean {
     return p.x >= this.x0 && p.x <= this.x1 && p.y >= this.y0 && p.y <= this.y1;
   }
@@ -240,8 +267,10 @@ export class Affine {
     this.m = m;
   }
 
+  /** The identity map. */
   static readonly IDENTITY: Affine = new Affine([1, 0, 0, 1, 0, 0]);
 
+  /** Image of `p`. */
   apply(p: P): P {
     const m = this.m;
     return new P(m[0] * p.x + m[2] * p.y + m[4], m[1] * p.x + m[3] * p.y + m[5]);
@@ -261,6 +290,7 @@ export class Affine {
     ]);
   }
 
+  /** Equal to {@link Affine.IDENTITY}. */
   isIdentity(): boolean {
     return this.eq(Affine.IDENTITY);
   }

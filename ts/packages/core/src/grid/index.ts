@@ -10,10 +10,15 @@ import { P, Rect } from "../geom/index.js";
 
 /** Grid geometry in canvas pixels. */
 export class GridSpec {
+  /** Canvas x of the left edge. */
   readonly ox: number;
+  /** Canvas y of the top edge. */
   readonly oy: number;
+  /** Cell size in px. */
   readonly cell: number;
+  /** Number of columns. */
   readonly cols: number;
+  /** Number of rows. */
   readonly rows: number;
 
   constructor(ox: number, oy: number, cell: number, cols: number, rows: number) {
@@ -31,6 +36,7 @@ export class GridSpec {
     return new GridSpec(extent.x0, extent.y0, cell, c > 1 ? c : 1, r > 1 ? r : 1);
   }
 
+  /** Number of cells `cols × rows`. */
   cells(): number {
     return this.cols * this.rows;
   }
@@ -108,7 +114,9 @@ const YW = new Float64Array(3);
 
 /** Summed-area table of a `u8` coverage grid (wrapping `u32`). */
 export class Sat {
+  /** Columns of the coverage grid. */
   readonly cols: number;
+  /** Rows of the coverage grid. */
   readonly rows: number;
   /** `(rows + 1) × (cols + 1)` prefix sums, row-major. */
   private readonly data: Uint32Array;

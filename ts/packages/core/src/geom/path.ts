@@ -24,6 +24,7 @@ export interface SubPath {
  * non-ASCII character.
  */
 export class PathError extends Error {
+  /** Offset of the problem (UTF-8 bytes). */
   readonly offset: number;
 
   constructor(offset: number, message: string) {
