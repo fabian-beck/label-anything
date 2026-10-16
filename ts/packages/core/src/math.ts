@@ -11,6 +11,28 @@
 
 export { cbrt, exp, ln, ln1p, roundHalfAway, sinCosDeg } from "./detmath.js";
 
+/** 2^63 = `i64::MAX as f64` (the saturation value of `as i64`). */
+const I64_LIMIT = 9223372036854775808;
+
+/**
+ * Rust's `floor_fast`: `x as i64 as f64`, minus 1 when that exceeds `x`. Equals
+ * `Math.floor` for |x| < 2^63 except that it never returns -0; NaN gives 0 and larger
+ * magnitudes saturate at ±2^63 (as Rust's `as i64` does).
+ */
+export function floorFast(x: number): number {
+  let t: number;
+  if (x !== x) t = 0;
+  else if (x >= I64_LIMIT) t = I64_LIMIT;
+  else if (x <= -I64_LIMIT) t = -I64_LIMIT;
+  else t = Math.trunc(x) + 0; // `+ 0` turns -0 into +0 (i64 has no negative zero)
+  return t > x ? t - 1 : t;
+}
+
+/** Rust's `ceil_fast`: `-floorFast(-x)`. */
+export function ceilFast(x: number): number {
+  return -floorFast(-x);
+}
+
 /** Euclidean length without `hypot` (identical across implementations). */
 export function len2d(x: number, y: number): number {
   return Math.sqrt(x * x + y * y);

@@ -1,6 +1,18 @@
 // Port of the unit tests of rust/crates/la-core/src/math.rs, plus the porting helpers.
 import { describe, expect, it } from "vitest";
-import { USIZE_MAX, clampf, cmpF64, cmpStr, len2d, maxf, minf, signEps, toIndex } from "../src/math.js";
+import {
+  USIZE_MAX,
+  ceilFast,
+  clampf,
+  cmpF64,
+  cmpStr,
+  floorFast,
+  len2d,
+  maxf,
+  minf,
+  signEps,
+  toIndex,
+} from "../src/math.js";
 
 describe("math", () => {
   it("minf_maxf_ignore_nan", () => {
@@ -52,6 +64,24 @@ describe("math", () => {
     expect(toIndex(Infinity)).toBe(USIZE_MAX);
     expect(toIndex(1e30)).toBe(USIZE_MAX);
     expect(toIndex(2 ** 60 + 0.0)).toBe(2 ** 60);
+  });
+
+  it("floor_fast_ceil_fast_like_rust", () => {
+    // equal to Math.floor/ceil for |x| < 2^63, except that floorFast never returns -0
+    for (const x of [0.5, -0.5, 2, -2, 2.5, -2.5, 4503599627370495.5, 1e15 + 0.25]) {
+      expect(floorFast(x)).toBe(Math.floor(x) + 0);
+      expect(ceilFast(x)).toBe(-(Math.floor(-x) + 0));
+    }
+    expect(floorFast(-0)).toBe(0);
+    expect(ceilFast(0)).toBe(-0);
+    expect(ceilFast(-0.5)).toBe(-0);
+    // NaN maps to 0 and magnitudes beyond 2^63 saturate (Rust's `as i64`)
+    expect(floorFast(NaN)).toBe(0);
+    expect(ceilFast(NaN)).toBe(-0);
+    expect(floorFast(1e300)).toBe(2 ** 63);
+    expect(floorFast(Infinity)).toBe(2 ** 63);
+    expect(floorFast(-1e300)).toBe(-(2 ** 63));
+    expect(ceilFast(1e300)).toBe(2 ** 63);
   });
 
   it("small_helpers", () => {

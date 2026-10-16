@@ -511,6 +511,38 @@ fn section_math() -> Vec<Value> {
             ));
         }
     }
+    let xs = [
+        0.0,
+        -0.0,
+        0.5,
+        -0.5,
+        2.5,
+        -2.5,
+        4503599627370495.5,
+        -4503599627370495.5,
+        9.3e18,
+        -9.3e18,
+        9223372036854775807.0,
+        -9223372036854775808.0,
+        1e300,
+        -1e300,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NAN,
+    ];
+    out.push(case(
+        obj(vec![("floor_ceil", nums(&xs))]),
+        obj(vec![
+            (
+                "floor_fast",
+                nums(&xs.iter().map(|&x| math::floor_fast(x)).collect::<Vec<_>>()),
+            ),
+            (
+                "ceil_fast",
+                nums(&xs.iter().map(|&x| math::ceil_fast(x)).collect::<Vec<_>>()),
+            ),
+        ]),
+    ));
     out
 }
 
@@ -1425,6 +1457,72 @@ fn section_raster(g: &mut Gen) -> Vec<Value> {
             obj(vec![("coverage", Value::from(base64(&m.into_coverage())))]),
         ));
     }
+    // Non-finite and huge inputs (NaN and saturation paths of floor_fast/ceil_fast).
+    let nan = f64::NAN;
+    let grid = GridSpec {
+        ox: 0.5,
+        oy: -1.0,
+        cell: 2.0,
+        cols: 12,
+        rows: 9,
+    };
+    let mut m = MaskRaster::new(grid);
+    let mut prims = Vec::new();
+    for (c, r) in [
+        (P::new(nan, 5.0), 3.0),
+        (P::new(8.0, 6.0), nan),
+        (P::new(30.0, 4.0), 1e300),
+        (P::new(1e20, 1e20), 5.0),
+    ] {
+        m.disc(c, r);
+        prims.push(obj(vec![("disc", Value::Array(vec![pt(c), num(r)]))]));
+    }
+    for r in [
+        Rect::new(-1e20, -1e20, 1e20, 5.5),
+        Rect::new(nan, 7.0, 5.0, 9.0),
+        Rect::new(10.0, nan, 14.0, 12.0),
+        Rect::new(3.0, 11.0, 1e300, nan),
+    ] {
+        m.rect(r.x0, r.y0, r.x1, r.y1);
+        prims.push(obj(vec![("rect", rect(&r))]));
+    }
+    for (a, b, hw) in [
+        (P::new(0.0, 0.0), P::new(1e19, 3e18), 1.5),
+        (P::new(nan, 0.0), P::new(5.0, 5.0), 1.0),
+        (P::new(2.0, 14.0), P::new(20.0, 14.0), nan),
+        (P::new(-1e300, 12.0), P::new(1e300, 12.5), 0.5),
+    ] {
+        m.capsule(a, b, hw);
+        prims.push(obj(vec![(
+            "capsule",
+            Value::Array(vec![pt(a), pt(b), num(hw)]),
+        )]));
+    }
+    for (a, b) in [
+        (P::new(1e300, 1e300), P::new(-1e300, -1e300)),
+        (P::new(nan, 1.0), P::new(3.0, 3.0)),
+    ] {
+        m.touch_segment(a, b);
+        prims.push(obj(vec![("touch", Value::Array(vec![pt(a), pt(b)]))]));
+    }
+    let rings = vec![
+        vec![P::new(1.0, 1.0), P::new(nan, 9.0), P::new(9.0, 2.0)],
+        vec![P::new(-1e20, 3.0), P::new(1e20, 4.0), P::new(5.0, 1e20)],
+    ];
+    for eo in [true, false] {
+        m.polygon(&rings, eo);
+        prims.push(obj(vec![(
+            "polygon",
+            Value::Array(vec![rings_json(&rings), Value::from(eo)]),
+        )]));
+    }
+    out.push(case(
+        obj(vec![
+            ("grid", grid_json(&grid)),
+            ("prims", Value::Array(prims)),
+        ]),
+        obj(vec![("coverage", Value::from(base64(&m.into_coverage())))]),
+    ));
     out
 }
 
@@ -1475,6 +1573,13 @@ fn section_sat(g: &mut Gen) -> Vec<Value> {
             };
             rects.push(r);
         }
+        let nan = f64::NAN;
+        rects.extend([
+            Rect::new(nan, 0.0, 10.0, 10.0),
+            Rect::new(0.0, 0.0, nan, nan),
+            Rect::new(-1e300, -1e300, 1e300, 1e300),
+            Rect::new(-1e20, 3.0, 1e20, 3.5),
+        ]);
         let blocks: Vec<[u32; 4]> = (0..8)
             .map(|_| {
                 let c0 = g.int(0, grid.cols as u32);
@@ -1589,9 +1694,10 @@ fn section_grid(g: &mut Gen) -> Vec<Value> {
             g.below(grid.cols as u32) as usize,
             g.below(grid.rows as u32) as usize,
         );
-        let fs: Vec<f64> = (0..6)
+        let mut fs: Vec<f64> = (0..6)
             .map(|k| [0.0, -0.1, 1e-9, 0.5, 1.0, g.f()][k])
             .collect();
+        fs.extend([f64::NAN, f64::INFINITY, 1e300, -0.0]);
         out.push(case(
             obj(vec![
                 ("extent", rect(&extent)),
@@ -1700,6 +1806,11 @@ fn section_index(g: &mut Gen) -> Vec<Value> {
                     Rect::xywh(x, y, g.coord(0.0, 60.0), g.coord(0.0, 30.0))
                 }
             })
+            .chain([
+                Rect::new(f64::NAN, 0.0, 50.0, 50.0),
+                Rect::new(-1e300, -1e300, 1e300, 1e300),
+                Rect::new(1e20, 1e20, 2e20, 2e20),
+            ])
             .collect();
         let mut buf = Vec::new();
         let results: Vec<Value> = queries
@@ -1766,6 +1877,26 @@ fn section_index(g: &mut Gen) -> Vec<Value> {
                     results.push(ints(&buf));
                 }
             }
+        }
+        // non-finite and huge boxes and queries
+        let odd = Rect::new(f64::NAN, 5.0, 20.0, f64::NAN);
+        ix.insert(41, odd);
+        ops.push(Value::Array(vec![
+            "insert".into(),
+            Value::from(41),
+            rect(&odd),
+        ]));
+        let huge = Rect::new(-1e300, -1e300, 1e300, 1e300);
+        ix.insert(42, huge);
+        ops.push(Value::Array(vec![
+            "insert".into(),
+            Value::from(42),
+            rect(&huge),
+        ]));
+        for q in [odd, huge, Rect::new(0.0, 0.0, 15.0, 15.0)] {
+            ix.query(&q, &mut buf);
+            ops.push(Value::Array(vec!["query".into(), rect(&q)]));
+            results.push(ints(&buf));
         }
         out.push(case(
             obj(vec![

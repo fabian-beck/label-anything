@@ -30,7 +30,7 @@ import { Shape, shapesOverlap, signDir } from "../src/geom/shape.js";
 import { distanceTransform, dtMaxima } from "../src/grid/dt.js";
 import { GridSpec, Sat, quantize } from "../src/grid/index.js";
 import { MaskRaster } from "../src/grid/raster.js";
-import { clampf, cmpF64, len2d, maxf, minf, signEps } from "../src/math.js";
+import { ceilFast, clampf, cmpF64, floorFast, len2d, maxf, minf, signEps } from "../src/math.js";
 import { DynIndex, IdList, StaticIndex } from "../src/spatial.js";
 
 const FIXTURE = fileURLToPath(new URL("../../../../conformance/geometry/core-geometry.json", import.meta.url));
@@ -205,6 +205,10 @@ describe("geometry oracle (bit parity with rust/crates/la-core)", () => {
   });
 
   runSection("math", (i) => {
+    if (i.floor_ceil !== undefined) {
+      const xs = (i.floor_ceil as Json[]).map(f);
+      return { floor_fast: numsJ(xs.map(floorFast)), ceil_fast: numsJ(xs.map(ceilFast)) };
+    }
     const a = f(i.a);
     const b = f(i.b);
     return {

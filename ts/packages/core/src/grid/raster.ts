@@ -13,7 +13,7 @@
  * @module
  */
 
-import { cmpF64, len2d, maxf, minf, toIndex } from "../math.js";
+import { ceilFast, cmpF64, floorFast, len2d, maxf, minf, toIndex } from "../math.js";
 import type { P } from "../geom/index.js";
 import type { Shape } from "../geom/shape.js";
 import { GridSpec, quantize } from "./index.js";
@@ -246,8 +246,8 @@ export class MaskRaster {
 
   /** Range `[j0, j1]` of sample rows whose y lies in `[y0, y1]` (`j0 > j1` when empty). */
   private sampleRowRange(y0: number, y1: number): void {
-    const a0 = Math.ceil((y0 - this.spec.oy) / this.step - 0.5);
-    const b0 = Math.floor((y1 - this.spec.oy) / this.step - 0.5);
+    const a0 = ceilFast((y0 - this.spec.oy) / this.step - 0.5);
+    const b0 = floorFast((y1 - this.spec.oy) / this.step - 0.5);
     const n = this.spec.rows * 4;
     const a = a0 < 0 ? 0 : a0;
     const b = b0 > n - 1 ? n - 1 : b0;
@@ -264,8 +264,8 @@ export class MaskRaster {
   private span(j: number, xa: number, xb: number): void {
     if (xb <= xa) return;
     const sc = this.spec.cols * 4;
-    let k0 = Math.ceil((xa - this.spec.ox) / this.step - 0.5);
-    let k1 = Math.ceil((xb - this.spec.ox) / this.step - 0.5); // exclusive
+    let k0 = ceilFast((xa - this.spec.ox) / this.step - 0.5);
+    let k1 = ceilFast((xb - this.spec.ox) / this.step - 0.5); // exclusive
     if (k0 < 0) k0 = 0;
     if (k1 > sc) k1 = sc;
     if (k1 <= k0) return;
@@ -325,11 +325,10 @@ export class MaskRaster {
     const v1 = SEG[3]!;
     const cols = sp.cols;
     const rows = sp.rows;
-    // `+ 0` turns -0 into +0 like Rust's `as i64`
-    let cx = Math.floor(u0) + 0;
-    let cy = Math.floor(v0) + 0;
-    const ex = Math.floor(u1) + 0;
-    const ey = Math.floor(v1) + 0;
+    let cx = floorFast(u0);
+    let cy = floorFast(v0);
+    const ex = floorFast(u1);
+    const ey = floorFast(v1);
     const dx = u1 - u0;
     const dy = v1 - v0;
     const stepx = dx > 0 ? 1 : dx < 0 ? -1 : 0;

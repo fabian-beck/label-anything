@@ -5,7 +5,7 @@
  * @module
  */
 
-import { toIndex } from "../math.js";
+import { ceilFast, floorFast, toIndex } from "../math.js";
 import { P, Rect } from "../geom/index.js";
 
 /** Grid geometry in canvas pixels. */
@@ -97,13 +97,13 @@ function cellRangeInto(g: GridSpec, r: Rect): void {
 function clampFloor(v: number, n: number): number {
   if (v <= 0) return 0;
   if (v >= n) return n;
-  return toIndex(Math.floor(v));
+  return toIndex(v); // truncation == floor for v > 0
 }
 
 function clampCeil(v: number, n: number): number {
   if (v <= 0) return 0;
   if (v >= n) return n;
-  return toIndex(Math.ceil(v));
+  return toIndex(ceilFast(v));
 }
 
 /** Axis parts of {@link Sat.integral}: cells `[start, end)` and weights, 3 per axis. */
@@ -232,9 +232,9 @@ function axisParts(a: number, b: number, n: number, cells: Int32Array, w: Float6
   w[0] = 0;
   w[1] = 0;
   w[2] = 0;
-  const i0 = toIndex(Math.floor(a));
+  const i0 = toIndex(a); // a >= 0: truncation == floor
   if (i0 >= n) return;
-  const bf = Math.floor(b);
+  const bf = floorFast(b);
   const i1 = toIndex(bf); // cell containing b, or n when b == n
   if (i1 === i0) {
     cells[0] = i0;
@@ -258,7 +258,7 @@ function axisParts(a: number, b: number, n: number, cells: Int32Array, w: Float6
 /** Quantize a coverage fraction to 0..=255 (a positive fraction never maps to 0). */
 export function quantize(f: number): number {
   if (f <= 0) return 0;
-  const q = Math.floor(f * 255 + 0.5);
+  const q = floorFast(f * 255 + 0.5);
   if (q < 1) return 1;
   if (q > 255) return 255;
   return toIndex(q);

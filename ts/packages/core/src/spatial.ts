@@ -80,10 +80,11 @@ class Buckets {
 
   /** The inclusive bucket range of `r`, clamped, into {@link RANGE}. */
   range(r: Rect): void {
-    RANGE[0] = clampBucket(Math.floor((r.x0 - this.ox) / this.cell), this.cols);
-    RANGE[1] = clampBucket(Math.floor((r.x1 - this.ox) / this.cell), this.cols);
-    RANGE[2] = clampBucket(Math.floor((r.y0 - this.oy) / this.cell), this.rows);
-    RANGE[3] = clampBucket(Math.floor((r.y1 - this.oy) / this.cell), this.rows);
+    // cell of coordinate v = floor(v), clamped; truncation equals floor for v >= 0
+    RANGE[0] = clampBucket((r.x0 - this.ox) / this.cell, this.cols);
+    RANGE[1] = clampBucket((r.x1 - this.ox) / this.cell, this.cols);
+    RANGE[2] = clampBucket((r.y0 - this.oy) / this.cell, this.rows);
+    RANGE[3] = clampBucket((r.y1 - this.oy) / this.cell, this.rows);
   }
 }
 
@@ -92,7 +93,7 @@ function clampCount(n: number): number {
 }
 
 function clampBucket(v: number, n: number): number {
-  if (v < 0) return 0;
+  if (v !== v || v < 0) return 0;
   if (v >= n) return n - 1;
   return toIndex(v);
 }
