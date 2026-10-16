@@ -32,6 +32,8 @@ la-svg = { package = "label-anything-svg", path = "crates/la-svg", version = "0.
 la-raster = { package = "label-anything-raster", path = "crates/la-raster", version = "0.1.0", default-features = false }
 la-render = { package = "label-anything-render", path = "crates/la-render", version = "0.1.0" }
 label-anything = { path = "crates/label-anything", version = "0.1.0" }
+# Python binding (rust/crates/la-py, built with maturin)
+pyo3 = "0.30.1"
 
 [profile.release]
 lto = "thin"
