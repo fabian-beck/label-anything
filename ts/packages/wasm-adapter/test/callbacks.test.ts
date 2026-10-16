@@ -218,6 +218,22 @@ describe.skipIf(!built)("callbacks", () => {
       // any object with `aborted` works
       expect(la.place(problem, { signal: { aborted: true } as AbortSignal }).stats.cancelled).toBe(true);
     });
+
+    it("is read at every poll (a getter, e.g. over shared memory, can cancel from outside)", () => {
+      const problem = scatter(40);
+      const flags = new Int32Array(new SharedArrayBuffer(4));
+      let polls = 0;
+      const signal = {
+        get aborted() {
+          if (++polls === 5) Atomics.store(flags, 0, 1); // stands in for another thread
+          return Atomics.load(flags, 0) === 1;
+        },
+      } as AbortSignal;
+      const r = la.place(problem, { signal });
+      expect(polls).toBeGreaterThanOrEqual(5);
+      expect(r.stats.cancelled).toBe(true);
+      expect(r.stats.hard_violations).toBe(0);
+    });
   });
 
   it("rejects malformed options", () => {

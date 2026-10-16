@@ -16,7 +16,7 @@ native Rust build: the test suite compares every conformance problem with the CL
 npm install @label-anything/wasm
 ```
 
-The package contains the compiled module (`wasm/label_anything_bg.wasm`, about 0.9 MB
+The package contains the compiled module (`wasm/label_anything_bg.wasm`, about 950 KB
 gzip), the wasm-bindgen glue (`wasm/label_anything.js`) and the TypeScript wrapper
 (`dist/`). It depends on `@label-anything/core` for its type declarations only; no
 JavaScript of that package is loaded.
@@ -47,8 +47,8 @@ const result = place(problem);
   compiled `WebAssembly.Module` with `postMessage`.
 * `init` and `initSync` are idempotent; `isInitialized()` tells whether the module is ready.
 * Calling `place`, `validate`, `renderDebugSvg` or `features` before initialization
-  throws `Error("@label-anything/wasm is not initialized: call `await init()` (or
-  `initSync(bytes)`) before place(), validate() or renderDebugSvg()")`.
+  throws an `Error`: "@label-anything/wasm is not initialized: call \`await init()\` (or
+  \`initSync(bytes)\`) before place(), validate() or renderDebugSvg()".
 
 Without a bundler, map the bare specifier with an import map (see `examples/web/`):
 
@@ -114,7 +114,7 @@ compiled.
 
 | Option | Behaviour in the WebAssembly build |
 |---|---|
-| `priority(item, index)` | Evaluated in JavaScript before the solve, once per item. The values are written into a copy of the problem: `item.priority = score` (unless the item has a `priority`) and, for `[tier, score]`, `item.tier = tier` (unless the item has a `tier`); `priority.terms` is dropped because the callback replaces it. Tiers rules, `required` and ties still apply. This is what the Rust core does with a native priority callback, so results agree. Must return a finite number or `[integer, finite number]` (else `TypeError`). |
+| `priority(item, index)` | Evaluated in JavaScript before the solve, once per item. The values are written into a copy of the problem: `item.priority = score` (unless the item has a `priority`) and, for `[tier, score]`, `item.tier = tier` (unless the item has a `tier`); `priority.terms` is dropped because the callback replaces it. Tier rules, `required` and ties still apply. This is what the Rust core does with a native priority callback, so results agree. Must return a finite number or `[integer, finite number]` (else `TypeError`). |
 | `cost(candidate)` | Called for every candidate with `{itemId, box: {x, y, w, h}, leader}`; the value is added to its static cost. One call costs one JS↔WASM crossing (the argument object is built on the JavaScript side). Must return a finite number (else `TypeError`). |
 | `measure(text, font)` | Replaces the built-in text measurement (`font = {family, weight, italic, size}`); return `{width, ascent, descent}` in px or `null` for the built-in measurement of this text. It is also called with `""` for the vertical metrics of a font. Typical use: `CanvasRenderingContext2D.measureText` with the page's font. |
 | `progress(phase, fraction)` | Called when a phase starts (`"greedy"`, `"local"`, `"exact"`), per greedy priority band and every 256 local-search moves (spec §10.3a). |
@@ -145,22 +145,23 @@ bugs; please report them.
 
 `npm run build:wasm` (in `ts/packages/wasm-adapter`) builds the default variant.
 Sizes of `label_anything_bg.wasm` (wasm-bindgen output without name section; gzip = GNU
-`gzip -9`, brotli = quality 11) at commit 0e75308 (merge of the SVG backend):
+`gzip -9`, brotli = quality 11), at commit 98c5edf unless marked:
 
 | Variant | How to build | raw | gzip | brotli |
 |---|---|---:|---:|---:|
-| **default**: full shaping + SVG + image decoders | `npm run build:wasm` | 2,503 KB | **943 KB** | 698 KB |
-| lite: no image decoders | `npm run build:wasm -- --no-default-features` | 2,076 KB | 778 KB | 577 KB |
-| default, opt-level "s" everywhere | `npm run build:wasm -- --core-opt-level s` | 2,357 KB | 869 KB | 646 KB |
-| lite, opt-level "s" everywhere | `… -- --no-default-features --core-opt-level s` | 1,929 KB | 707 KB | 524 KB |
-| default, opt-level 3 everywhere | `npm run build:wasm -- --opt-level 3` | 2,772 KB | 1,014 KB | 736 KB |
-| without full shaping ¹ | needs a `la-core` feature | 1,948 KB | 731 KB | 552 KB |
-| without full shaping and decoders ¹ | needs a `la-core` feature | 1,520 KB | 566 KB | 429 KB |
-| without the SVG backend ¹ | needs a `la-core` feature | 2,345 KB | 877 KB | 651 KB |
-| minimal: no shaping, no SVG, no decoders ¹ | needs `la-core` features | 1,357 KB | 500 KB | 380 KB |
+| **default**: full shaping + SVG + image decoders | `npm run build:wasm` | 2,514 KB | **948 KB** | 703 KB |
+| lite: no image decoders | `npm run build:wasm -- --no-default-features` | 2,087 KB | 784 KB | 581 KB |
+| default, opt-level "s" everywhere | `npm run build:wasm -- --core-opt-level s` | 2,365 KB | 873 KB | 648 KB |
+| lite, opt-level "s" everywhere | `… -- --no-default-features --core-opt-level s` | 1,938 KB | 711 KB | 527 KB |
+| default, opt-level 3 everywhere | `npm run build:wasm -- --opt-level 3` | 2,782 KB | 1,019 KB | 740 KB |
+| without full shaping ¹ ² | needs a `la-core` feature | 1,948 KB | 731 KB | 552 KB |
+| without full shaping and decoders ¹ ² | needs a `la-core` feature | 1,520 KB | 566 KB | 429 KB |
+| without the SVG backend ¹ ² | needs a `la-core` feature | 2,345 KB | 877 KB | 651 KB |
+| minimal: no shaping, no SVG, no decoders ¹ ² | needs `la-core` features | 1,357 KB | 500 KB | 380 KB |
 
 ¹ Measured with a patched copy of the workspace: full shaping (`la-text/shaping`) and the
-SVG backend (`la-svg`) are compiled into `la-core` unconditionally today.
+SVG backend (`la-svg`) are compiled into `la-core` unconditionally today. ² At commit
+0e75308, when the default was 943 KB gzip; the differences to the default still hold.
 
 What the optional parts cost (gzip): full shaping (rustybuzz + ttf-parser, used for
 complex scripts when `text.shaping` is `auto` or `full`) 212 KB, PNG/JPEG/WebP decoding
@@ -179,32 +180,50 @@ browsers, decoding images with the platform (`createImageBitmap`, a canvas,
 
 ## Performance
 
-Node 22 (V8), the default build, on the shared 4-core development machine (load 2–3),
-merged core at commit 0e75308. Warm medians of interleaved runs against the native release
-build of the same core (`label-anything serve`, the CLI's HTTP mode, so both are measured
+Node 22 (V8), the default build, on the shared 4-core development machine (load 4–6, so
+expect ±20 %), at commit 98c5edf. Warm medians of interleaved runs against the native
+release build of the same core (`label-anything serve`, the CLI's HTTP mode, so both run
 in a warm process):
 
-| Problem | native solver | WASM solver | WASM / native | WASM `place()` | native request |
-|---|---:|---:|---:|---:|---:|
-| `p200.json` (200 labels, 10k points, greedy) | 26.2 ms | 29.3 ms | 1.12 | 42.8 ms | 37.7 ms |
-| `p2000.json` (2,000 labels, 100k points, greedy) | 666 ms | 773 ms | 1.16 | 920 ms | 776 ms |
+| Problem | native solver | WASM solver | WASM / native | WASM `place()` | native request | target |
+|---|---:|---:|---:|---:|---:|---:|
+| `p200.json` (200 labels, 10k points, greedy) | 23.3 ms | 24.6 ms | 1.06 | 37.8 ms | 35.1 ms | ≤ 30 ms |
+| `p2000.json` (2,000 labels, 100k points, greedy) | 416 ms | 455 ms | 1.10 | 572 ms | 502 ms | ≤ 250 ms |
 
 "solver" is `stats.runtime_ms` (from building the model to the result object). A
-`place()` call adds `JSON.stringify` of the problem object (2 ms / 28 ms; pass JSON text
-to skip it), copying it in, parsing and validating it in WebAssembly (7.6 ms / 58 ms;
-natively 5 ms / 43 ms), and `JSON.parse` of the result (0.9 ms / 5.5 ms). The results are
-identical to the native ones (`native.test.ts` with `LA_EXTRA_PROBLEMS`).
+`place()` call adds `JSON.stringify` of the problem object (2 ms / 28 ms; pass JSON text to
+skip it), copying it into WebAssembly memory, parsing and validating it (7.6 ms / 58 ms;
+natively 5 ms / 43 ms), and `JSON.parse` of the result (0.9 ms / 5.5 ms). The results
+are identical to the native ones (`native.test.ts` with `LA_EXTRA_PROBLEMS`).
 
-The first call after instantiation is slower: about 100 ms for p200 and 1.3–2.6 s for
-p2000. V8 compiles functions lazily with its baseline compiler and optimizes hot functions
-in the background; a long call keeps running baseline code in its outermost loops, and
-fresh memory pages are touched for the first time (natively the first request is about
-30 % slower as well). Instantiation itself takes about 10 ms. Chrome caches the
-optimized code of modules loaded with `instantiateStreaming` for later page loads.
+Against the targets: the warm solver time for p200 meets 30 ms, a complete `place()`
+call does not; p2000 misses 250 ms because the native core itself needs about 420 ms
+there, WebAssembly adds about 10 %.
 
-Against the targets of the brief (≤ 30 ms for p200, ≤ 250 ms for p2000): the warm solver
-time for p200 (29 ms) meets it, a complete `place()` call (43 ms) does not, and p2000 is
-far off because the native core itself needs 666 ms there; WebAssembly adds 12–16 %.
+**Raster backgrounds** (`npm run bench:raster -w @label-anything/wasm`): a 2048×2048 image
+passed as pixels (`options.raster`), a 1024×1024 grid, one label; the prepare phase
+(`stats.phases_ms.prepare`: the raster mode, the coverage grids and the rest of the model):
+
+| Image | ink | alpha | cost | saliency |
+|---|---:|---:|---:|---:|
+| chart (line art) | 72–99 ms | 86–115 ms | 68–110 ms | 234–331 ms |
+| photo (noise) | 190–209 ms | 92–114 ms | 92–110 ms | 275–415 ms |
+
+The target for preparing a 2048² raster (≤ 60 ms) is missed already in the cheapest case
+(chart, ink: 72 ms at best). With the same pixels as `rgba` base64 in the JSON, the
+prepare phase takes 0.8–1.35 times as long in WebAssembly as natively, so the gap is the
+core's preparation, not the binding: the raster mode alone (`process`, decode excluded)
+takes 9 ms natively for chart/ink and 91 ms for photo/ink (`la-raster` example `bench`).
+Passing pixels avoids the base64 decode of the JSON route (another 60–100 ms here).
+
+**The first call** after instantiation is slower. p200: 100–200 ms; p2000: 1.4–2.8 s,
+3–5 times the warm time. Part of it is the core (natively the first p2000 request takes
+2.2 times as long as later ones: fresh memory, cold caches); the rest is V8, which
+compiles functions lazily with its baseline compiler and optimizes hot ones in the
+background, while a long call keeps running baseline code in its outermost loops.
+Instantiation takes about 10 ms. Chrome caches the optimized code of modules loaded with
+`instantiateStreaming` for later page loads; a short warm-up solve after `init()` also
+helps a little.
 
 `npm run bench -w @label-anything/wasm -- problem.json…` reproduces the WebAssembly side.
 
@@ -259,8 +278,12 @@ Tests (`ts/packages/wasm-adapter/test`):
 
 * `place` is synchronous: it blocks the thread it runs on. For large problems in a page,
   run it in a worker (`initSync` with a `WebAssembly.Module` sent from the main thread).
-* Cancellation from outside the call (a timer, a UI event) needs the solve to run in a
-  worker; on the calling thread only the callbacks can abort it.
+* Cancellation from outside the call (a timer, a UI event): run the solve in a worker and
+  pass a signal-like object whose `aborted` getter reads shared memory, e.g.
+  `{ get aborted() { return Atomics.load(flags, 0) === 1; } }` with `flags` an
+  `Int32Array` on a `SharedArrayBuffer` (browsers need cross-origin isolation for it);
+  the getter runs at every poll. A plain `AbortSignal` cannot change during a
+  synchronous call, not even in a worker.
 * The first `place` call after instantiation is slower than later ones because V8
   compiles the module lazily and optimizes hot functions while they run; see Performance.
 * WebAssembly memory grows to the peak need of the largest solve and is not returned to

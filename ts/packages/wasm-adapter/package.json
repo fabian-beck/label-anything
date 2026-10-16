@@ -26,7 +26,8 @@
     "build:ts": "tsc -b",
     "test": "vitest run",
     "test:browser": "tsc -b && playwright test -c browser/playwright.config.mjs",
-    "bench": "node scripts/bench.mjs"
+    "bench": "node scripts/bench.mjs",
+    "bench:raster": "node scripts/bench-raster.mjs"
   },
   "dependencies": { "@label-anything/core": "0.1.0" },
   "devDependencies": { "@playwright/test": "1.56.1" }
