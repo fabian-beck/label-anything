@@ -6,6 +6,8 @@ on:
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: "23 4 * * 1" # weekly: everything, plus coverage-guided fuzzing
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -212,3 +214,24 @@ jobs:
         with:
           name: bench-report
           path: bench-report/
+
+  fuzz:
+    name: Fuzzing (cargo-fuzz)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo install cargo-fuzz --locked
+      - name: Fuzz each target for 4 minutes
+        run: |
+          rust/fuzz/seed.sh
+          cd rust/fuzz
+          for t in place_json svg_parse raster_decode; do
+            cargo +nightly fuzz run "$t" -- -max_total_time=240 -rss_limit_mb=4096 -timeout=20
+          done
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: fuzz-artifacts
+          path: rust/fuzz/artifacts/

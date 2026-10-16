@@ -422,7 +422,10 @@ name = "label-anything"
 version = "0.1.0"
 dependencies = [
  "label-anything-core",
+ "label-anything-raster",
  "label-anything-render",
+ "label-anything-svg",
+ "resvg",
  "serde_json",
 ]
 
