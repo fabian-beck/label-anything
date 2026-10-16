@@ -1,0 +1,29 @@
+# Rust
+/rust/target/
+**/*.rs.bk
+# Node
+node_modules/
+/ts/packages/*/dist/
+/ts/packages/*/tsconfig.tsbuildinfo
+/bindings/js-extras/dist/
+*.tsbuildinfo
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+/bindings/python-extras/build/
+/rust/crates/la-py/python/label_anything/*.so
+/rust/crates/la-py/python/label_anything/*.pyd
+# Java
+/bindings/java/target/
+*.class
+# Benchmark outputs and fetched data
+/bench/data/
+/bench-report/
+/bench/out/
+# Misc
+.DS_Store
+*.swp
+/scratch/

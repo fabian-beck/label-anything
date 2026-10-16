@@ -1,0 +1,19 @@
+{
+  "$comment": "Preset 'auto' (default). Spec §6.6. 'options' merge between spec/defaults.md and the problem; 'svg_classes' apply to SVG sources without 'classes'; 'auto' holds the adaptive rules.",
+  "description": "Zero-config: avoid items and labels; classify SVG/raster backgrounds; enable distant labels with leaders only when the plot is crowded.",
+  "options": {
+    "placement": { "models": ["adjacent", "slider"] },
+    "avoid": { "label": { "points": 0.3, "lines": 1.0, "ink": 0.5 }, "leader": { "points": 0.2, "lines": 0.5 } }
+  },
+  "svg_classes": [
+    { "selector": ":background", "class": "ignore" },
+    { "selector": "text", "class": "text" },
+    { "selector": "circle, ellipse, rect:small, use:small, path:small", "class": "points" },
+    { "selector": "path, line, polyline, polygon", "class": "lines" },
+    { "selector": "*", "class": "ink" }
+  ],
+  "auto": {
+    "crowded_fraction": 0.3,
+    "crowded_models": ["adjacent", "slider", "distant"]
+  }
+}

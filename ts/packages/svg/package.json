@@ -1,0 +1,16 @@
+{
+  "name": "@label-anything/svg",
+  "version": "0.1.0",
+  "description": "Label Anything label placement: SVG backgrounds to classified obstacle geometry (pure TypeScript).",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "files": ["dist", "src"],
+  "sideEffects": false,
+  "repository": { "type": "git", "url": "https://github.com/fabian-beck/label-anything", "directory": "ts/packages/svg" },
+  "keywords": ["label placement", "labeling", "visualization", "leader lines"],
+  "scripts": { "build": "tsc -b", "test": "vitest run" },
+  "dependencies": {}
+}

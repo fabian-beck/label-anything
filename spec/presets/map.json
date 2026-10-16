@@ -1,0 +1,20 @@
+{
+  "$comment": "Preset 'map': point features (cities, POIs) over map backgrounds.",
+  "description": "Maps: cartographic (Imhof) position order, labels stay adjacent, roads and ink are soft, existing map text is hard.",
+  "options": {
+    "placement": { "models": ["adjacent", "slider"], "position_order": "cartographic" },
+    "avoid": {
+      "label": { "lines": 0.8, "ink": 0.5, "areas": "ignore", "text": "hard" },
+      "leader": { "lines": 0.3, "areas": "ignore" }
+    },
+    "leaders": { "style": "straight" }
+  },
+  "svg_classes": [
+    { "selector": ":background", "class": "ignore" },
+    { "selector": "text", "class": "text" },
+    { "selector": "circle, use:small, rect:small", "class": "points" },
+    { "selector": "line, polyline, path:unfilled", "class": "lines" },
+    { "selector": "polygon, path", "class": "areas" },
+    { "selector": "*", "class": "ink" }
+  ]
+}

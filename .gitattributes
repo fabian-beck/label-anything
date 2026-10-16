@@ -1,2 +1,9 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+*.ttf binary
+*.png binary
+*.jpg binary
+*.webp binary
+# Generated files: collapse in diffs
+rust/crates/la-core/src/generated/** linguist-generated=true
+ts/packages/*/src/generated/** linguist-generated=true

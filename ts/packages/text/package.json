@@ -1,0 +1,16 @@
+{
+  "name": "@label-anything/text",
+  "version": "0.1.0",
+  "description": "Label Anything label placement: font metrics, simple shaping, line breaking and wrapping (pure TypeScript).",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "files": ["dist", "src"],
+  "sideEffects": false,
+  "repository": { "type": "git", "url": "https://github.com/fabian-beck/label-anything", "directory": "ts/packages/text" },
+  "keywords": ["label placement", "labeling", "visualization", "leader lines"],
+  "scripts": { "build": "tsc -b", "test": "vitest run" },
+  "dependencies": {}
+}

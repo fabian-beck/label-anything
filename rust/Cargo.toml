@@ -1,0 +1,43 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/fabian-beck/label-anything"
+homepage = "https://github.com/fabian-beck/label-anything"
+rust-version = "1.88"
+authors = ["Label Anything contributors"]
+keywords = ["label-placement", "labeling", "visualization", "leader-lines", "cartography"]
+categories = ["visualization", "graphics", "algorithms"]
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+ttf-parser = { version = "0.25", default-features = false, features = ["std", "opentype-layout", "glyph-names"] }
+rustybuzz = "0.20"
+usvg = { version = "0.48", default-features = false }
+resvg = { version = "0.48", default-features = false }
+roxmltree = "0.21"
+image = { version = "0.25", default-features = false }
+rayon = "1.10"
+base64 = "0.22"
+proptest = "1.5"
+la-core = { package = "label-anything-core", path = "crates/la-core", version = "0.1.0" }
+la-text = { package = "label-anything-text", path = "crates/la-text", version = "0.1.0" }
+la-expr = { package = "label-anything-expr", path = "crates/la-expr", version = "0.1.0" }
+la-svg = { package = "label-anything-svg", path = "crates/la-svg", version = "0.1.0" }
+la-raster = { package = "label-anything-raster", path = "crates/la-raster", version = "0.1.0" }
+la-render = { package = "label-anything-render", path = "crates/la-render", version = "0.1.0" }
+label-anything = { path = "crates/label-anything", version = "0.1.0" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 4
+opt-level = 3
+
+[profile.bench]
+inherits = "release"
+debug = true

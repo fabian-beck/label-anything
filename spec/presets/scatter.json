@@ -1,0 +1,19 @@
+{
+  "$comment": "Preset 'scatter': point marks over dense unlabeled points, trend lines and axes.",
+  "description": "Scatterplots: unlabeled points are cheap to cover, lines cost more, text is hard; distant labels with straight leaders.",
+  "options": {
+    "placement": { "models": ["adjacent", "slider", "distant"], "position_order": "perceptual" },
+    "avoid": {
+      "label": { "points": 0.3, "lines": 1.0, "ink": 0.5, "axes": "hard" },
+      "leader": { "points": 0.2, "lines": 0.5, "axes": 1.0 }
+    },
+    "leaders": { "style": "straight" }
+  },
+  "svg_classes": [
+    { "selector": ":background", "class": "ignore" },
+    { "selector": "text", "class": "text" },
+    { "selector": "circle, ellipse, rect:small, use:small, path:small", "class": "points" },
+    { "selector": "path, line, polyline, polygon", "class": "lines" },
+    { "selector": "*", "class": "ink" }
+  ]
+}

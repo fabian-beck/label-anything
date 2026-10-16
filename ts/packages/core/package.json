@@ -1,0 +1,16 @@
+{
+  "name": "@label-anything/core",
+  "version": "0.1.0",
+  "description": "Label Anything: host-independent label placement engine (pure TypeScript, zero native/WASM dependencies).",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "files": ["dist", "src"],
+  "sideEffects": false,
+  "repository": { "type": "git", "url": "https://github.com/fabian-beck/label-anything", "directory": "ts/packages/core" },
+  "keywords": ["label placement", "labeling", "visualization", "leader lines"],
+  "scripts": { "build": "tsc -b", "test": "vitest run" },
+  "dependencies": { "@label-anything/text": "0.1.0", "@label-anything/svg": "0.1.0", "@label-anything/raster": "0.1.0" }
+}

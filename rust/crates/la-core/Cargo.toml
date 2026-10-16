@@ -1,0 +1,21 @@
+[package]
+name = "label-anything-core"
+description = "Label Anything label placement engine core: geometry, cost grids, candidates, priority and solver (no I/O)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[features]
+default = []
+parallel = ["dep:rayon"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+rayon = { workspace = true, optional = true }

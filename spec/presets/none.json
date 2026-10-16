@@ -1,0 +1,9 @@
+{
+  "$comment": "Preset 'none': only spec/defaults.md applies.",
+  "description": "No preset: the raw defaults table.",
+  "options": {},
+  "svg_classes": [
+    { "selector": "text", "class": "text" },
+    { "selector": "*", "class": "ink" }
+  ]
+}

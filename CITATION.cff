@@ -1,0 +1,88 @@
+cff-version: 1.2.0
+message: "If you use Label Anything in research, please cite the software and the methods it builds on."
+title: "Label Anything: a host-independent label placement engine"
+type: software
+license: MIT
+version: 0.1.0
+date-released: 2026-10-16
+repository-code: "https://github.com/fabian-beck/label-anything"
+authors:
+  - name: "Label Anything contributors"
+keywords:
+  - label placement
+  - point-feature labeling
+  - external labeling
+  - leader lines
+  - visualization
+references:
+  - type: conference-paper
+    title: "Point Labeling with Leaders for Convex Polygons and Scatterplots"
+    authors:
+      - family-names: Mumtaz
+        given-names: Hamid
+      - family-names: van Garderen
+        given-names: Mereke
+      - family-names: Beck
+        given-names: Fabian
+      - family-names: Weiskopf
+        given-names: Daniel
+    collection-title: "EuroVis 2019 - Short Papers"
+    year: 2019
+    notes: "Cost-based greedy labeling of scatterplots with leaders and label buffers."
+  - type: conference-paper
+    title: "Fast and Flexible Overlap Detection for Chart Labeling with Occupancy Bitmap"
+    authors:
+      - family-names: Kittivorawong
+        given-names: Chanwut
+      - family-names: Moritz
+        given-names: Dominik
+      - family-names: Wongsuphasawat
+        given-names: Kanit
+      - family-names: Heer
+        given-names: Jeffrey
+    collection-title: "IEEE VIS 2020 Short Papers"
+    year: 2020
+  - type: article
+    title: "Rapid Labels: Point-Feature Labeling on GPU"
+    authors:
+      - family-names: Pavlovec
+        given-names: Václav
+      - family-names: Čmolík
+        given-names: Ladislav
+    journal: "IEEE Transactions on Visualization and Computer Graphics"
+    year: 2022
+  - type: article
+    title: "Mixed Labeling: Integrating Internal and External Labels"
+    authors:
+      - family-names: Čmolík
+        given-names: Ladislav
+      - family-names: Pavlovec
+        given-names: Václav
+      - family-names: Wu
+        given-names: Hsiang-Yun
+      - family-names: Nöllenburg
+        given-names: Martin
+    journal: "IEEE Transactions on Visualization and Computer Graphics"
+    year: 2022
+  - type: article
+    title: "External Labeling Techniques: A Taxonomy and Survey"
+    authors:
+      - family-names: Bekos
+        given-names: Michael A.
+      - family-names: Niedermann
+        given-names: Benjamin
+      - family-names: Nöllenburg
+        given-names: Martin
+    journal: "Computer Graphics Forum"
+    year: 2019
+  - type: conference-paper
+    title: "From Top-Right to User-Right: Perceptual Prioritization of Point-Feature Label Positions"
+    authors:
+      - family-names: Bobák
+        given-names: Petr
+      - family-names: Čmolík
+        given-names: Ladislav
+      - family-names: Čadík
+        given-names: Martin
+    collection-title: "Computational Visual Media (CVM)"
+    year: 2026

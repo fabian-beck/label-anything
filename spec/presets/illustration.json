@@ -1,0 +1,17 @@
+{
+  "$comment": "Preset 'illustration': technical/anatomical illustrations with callouts in the margins.",
+  "description": "Illustrations: labels in the left/right margins (boundary model) or distant, elbow leaders into the label's side, ink is costly.",
+  "options": {
+    "placement": { "models": ["boundary", "distant"], "internal": "never", "boundary": { "sides": ["right", "left"], "align": "stack" } },
+    "avoid": {
+      "label": { "ink": 2.0 },
+      "leader": { "ink": 0.1 }
+    },
+    "leaders": { "style": "elbow", "port": "side-center", "angles": [45, 135, 225, 315] }
+  },
+  "svg_classes": [
+    { "selector": ":background", "class": "ignore" },
+    { "selector": "text", "class": "text" },
+    { "selector": "*", "class": "ink" }
+  ]
+}

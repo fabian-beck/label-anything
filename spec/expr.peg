@@ -1,0 +1,79 @@
+# Label Anything expression language, v1 (PEG).
+#
+# Used by priority.tiers[].where, priority.terms[].expr and priority.coverage.by.
+# Small, safe and side-effect free. Every implementation parses this grammar with a
+# hand-written recursive-descent parser and is tested against conformance/expr/*.json.
+#
+# Whitespace (space, tab, CR, LF) may appear between any two tokens.
+#
+#   Expr      <- Or EOF
+#   Or        <- And ( '||' And )*
+#   And       <- Not ( '&&' Not )*
+#   Not       <- '!' Not / Cmp
+#   Cmp       <- Add ( CmpOp Add / 'in' List / 'not' 'in' List )?
+#   CmpOp     <- '==' / '!=' / '<=' / '>=' / '<' / '>'
+#   Add       <- Mul ( ( '+' / '-' ) Mul )*
+#   Mul       <- Unary ( ( '*' / '/' / '%' ) Unary )*
+#   Unary     <- '-' Unary / Postfix
+#   Postfix   <- Primary ( '.' Ident '(' Args? ')' / '.' Ident / '[' Expr ']' )*
+#   Primary   <- Number / String / 'true' / 'false' / 'null' / Call / Ident / '(' Or ')' / List
+#   Call      <- Ident '(' Args? ')'
+#   Args      <- Or ( ',' Or )*
+#   List      <- '[' ( Or ( ',' Or )* )? ']'
+#   Number    <- [0-9]+ ( '.' [0-9]+ )? ( [eE] [+-]? [0-9]+ )?  /  '.' [0-9]+ ( [eE] [+-]? [0-9]+ )?
+#   String    <- '"' ( '\\' . / [^"\\] )* '"'  /  "'" ( '\\' . / [^'\\] )* "'"
+#   Ident     <- [A-Za-z_] [A-Za-z0-9_]*
+#
+# Keywords: true false null in not. They are not identifiers.
+# String escapes: \\ \" \' \n \t \uXXXX (BMP code point). Any other escaped char is itself.
+#
+# ---------------------------------------------------------------------------------------
+# Semantics
+# ---------------------------------------------------------------------------------------
+# Values: number (IEEE 754 double), string, boolean, null, list.
+#
+# Variables (bare identifiers):
+#   attrs   the item's attrs object; attrs.x, attrs["x y"] read members (missing -> null)
+#   id      the item id (string)
+#   index   input index (number, 0-based)
+#   text    the label text ("" for non-text labels)
+#   priority  the explicit item.priority or null
+#   tier    the explicit item.tier or null
+#   x, y    anchor reference point in canvas px
+# Unknown identifiers are a parse-time error (code "expr_unknown_identifier").
+# Member access on a non-object yields null. JSON arrays in attrs are lists; [i] indexes
+# them (non-integer or out-of-range index -> null).
+#
+# Truthiness: false, null, 0, NaN, "" and [] are falsy; everything else is truthy.
+# '!' returns a boolean. '&&' and '||' return booleans (not the operand values) and
+# short-circuit.
+#
+# Arithmetic (+ - * / % and unary -) is defined on numbers only; booleans are NOT
+# coerced. Any other operand type yields null. '+' on two strings concatenates.
+# Division by zero yields null. '%' is the truncated remainder (sign of the dividend),
+# like C fmod. Results that are not finite (NaN, ±Infinity) become null.
+#
+# Comparison:
+#   == / !=  structural equality; numbers compare numerically, strings by code points,
+#            booleans and null by identity, lists elementwise. Different types are unequal.
+#   < <= > >=  numbers numerically, strings by code point sequence; any other pair of
+#            operands yields false.
+#   a in [l1, l2, ...]   a == li for some i. 'not in' negates.
+#
+# Functions (wrong arity is a parse-time error "expr_arity"; wrong argument types return null):
+#   abs(n) min(a, b, ...) max(a, b, ...) log(n) (natural; n <= 0 -> null) sqrt(n) (n < 0 -> null)
+#   floor(n) ceil(n) round(n) (half away from zero) log1p(n) (n <= -1 -> null)
+#   len(s | list) lower(s) upper(s) number(v) (string -> number via the Number rule, bool -> 0/1, else null)
+#   startsWith(s, prefix) endsWith(s, suffix) contains(s, needle)
+#   coalesce(a, b, ...) (first non-null argument)
+# Method syntax is sugar for the call with the receiver as first argument:
+#   attrs.name.startsWith("org.")  ==  startsWith(attrs.name, "org.")
+#
+# Results:
+#   where-clauses match iff the value is truthy.
+#   expr terms use the value if it is a number, 1/0 for booleans, and treat anything
+#   else as missing (missing values get normalized value 0).
+#   coverage.by groups items by the canonical JSON text of the value; null is its own group.
+#
+# Determinism: log, log1p and sqrt use the shared deterministic implementations of the
+# engine (det_math), so all implementations agree bit for bit.

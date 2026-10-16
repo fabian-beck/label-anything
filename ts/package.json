@@ -1,0 +1,26 @@
+{
+  "name": "label-anything-ts",
+  "private": true,
+  "description": "TypeScript workspace of Label Anything (label placement engine).",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "packages/text",
+    "packages/svg",
+    "packages/raster",
+    "packages/core"
+  ],
+  "scripts": {
+    "build": "tsc -b packages/text packages/svg packages/raster packages/core",
+    "test": "vitest run",
+    "typecheck": "tsc -b --noEmit packages/core",
+    "conformance": "node packages/core/dist/conformance/run.js ../conformance"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "fast-check": "^3.23.0",
+    "json-schema-to-typescript": "^15.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

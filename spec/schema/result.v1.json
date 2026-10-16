@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://label-anything.dev/schema/result.v1.json",
+  "title": "LabelResult",
+  "description": "Result of a Label Anything solve, version 1. All coordinates are canvas pixels, origin top-left, y down.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "placements", "stats"],
+  "properties": {
+    "version": { "const": "1" },
+    "placements": { "type": "array", "items": { "$ref": "#/$defs/placement" } },
+    "stats": { "$ref": "#/$defs/stats" },
+    "warnings": { "type": "array", "items": { "$ref": "#/$defs/issue" } },
+    "debug_svg": { "type": ["string", "null"] },
+    "candidates": {
+      "type": ["array", "null"],
+      "description": "All generated candidates (only with output.candidates).",
+      "items": { "$ref": "#/$defs/candidate" }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "box": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "w", "h"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "w": { "type": "number", "minimum": 0 },
+        "h": { "type": "number", "minimum": 0 }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "pointer": { "type": "string", "description": "JSON Pointer (RFC 6901) into the problem." },
+        "code": { "type": "string" },
+        "message": { "type": "string" }
+      }
+    },
+    "priorityInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tier", "score", "rank"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "tier": { "type": "integer" },
+        "reserved": { "type": "boolean", "description": "Lifted by a coverage constraint." },
+        "score": { "type": "number" },
+        "rank": { "type": "integer", "minimum": 0, "description": "Position in the total priority order (0 = highest)." },
+        "terms": { "type": "object", "additionalProperties": { "type": "number" } }
+      }
+    },
+    "textInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lines", "used", "baseline_offsets", "font_size"],
+      "properties": {
+        "lines": { "type": "array", "items": { "type": "string" } },
+        "used": { "type": "string", "pattern": "^(original|alternative:[0-9]+|truncated|group)$" },
+        "truncated": { "type": "boolean" },
+        "baseline_offsets": {
+          "type": "array",
+          "items": { "type": "number" },
+          "description": "Baseline y of each line, relative to box.y."
+        },
+        "line_widths": { "type": "array", "items": { "type": "number" } },
+        "x_offset": { "type": "number", "description": "Text start x relative to box.x (the padding)." },
+        "font_size": { "type": "number" },
+        "font_family": { "type": "string" },
+        "font_weight": { "type": "integer" },
+        "scale": { "type": "number", "description": "Font scale applied by the shrink step (1 = none)." }
+      }
+    },
+    "part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "box"],
+      "properties": {
+        "type": { "enum": ["text", "icon", "box"] },
+        "box": { "$ref": "#/$defs/box" },
+        "text": { "$ref": "#/$defs/textInfo" }
+      }
+    },
+    "leader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["points", "style", "port"],
+      "properties": {
+        "points": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/point" },
+          "minItems": 2,
+          "description": "From the item (boundary + anchor_gap, or tip) to the port."
+        },
+        "style": { "enum": ["straight", "angles", "orthogonal", "elbow", "curved"] },
+        "port": { "$ref": "#/$defs/point" },
+        "underline": {
+          "type": ["array", "null"],
+          "items": { "$ref": "#/$defs/point" },
+          "description": "For port=baseline: the underline segment below the first line."
+        },
+        "curve": {
+          "type": ["array", "null"],
+          "items": { "$ref": "#/$defs/point" },
+          "description": "For style=curved: [start, control, end] of the quadratic Bezier (points holds its flattening)."
+        },
+        "member": { "type": "string", "description": "For fan leaders of a group: the member id this leader points to." }
+      }
+    },
+    "placement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "placed"],
+      "properties": {
+        "id": { "type": "string" },
+        "placed": { "type": "boolean" },
+        "box": { "$ref": "#/$defs/box" },
+        "anchor_side": {
+          "enum": ["top", "right", "bottom", "left", "top-right", "bottom-right", "top-left", "bottom-left", "internal", "distant", "boundary"]
+        },
+        "model": { "enum": ["adjacent", "slider", "internal", "distant", "boundary"] },
+        "text": { "$ref": "#/$defs/textInfo" },
+        "parts": { "type": "array", "items": { "$ref": "#/$defs/part" } },
+        "leader": { "oneOf": [{ "$ref": "#/$defs/leader" }, { "type": "null" }] },
+        "leaders": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/leader" },
+          "description": "Fan leaders of a group label (one per member)."
+        },
+        "members": { "type": "array", "items": { "type": "string" }, "description": "Group members sharing this label." },
+        "cost": { "type": "number" },
+        "cost_breakdown": { "type": "object", "additionalProperties": { "type": "number" } },
+        "degrade_steps": { "type": "array", "items": { "type": "string" } },
+        "priority": { "$ref": "#/$defs/priorityInfo" },
+        "reason": { "enum": ["omitted_by_priority", "no_feasible_candidate", "budget_exhausted", "keep_with", "grouped"] },
+        "blocking": { "type": "array", "items": { "type": "string" }, "description": "Hard classes that rejected candidates, most frequent first." },
+        "blocked_by": { "type": "array", "items": { "type": "string" }, "description": "Placed items of higher or equal key occupying this item's space." },
+        "item_shape": { "type": "object", "description": "Resolved item geometry in canvas px (only with output.item_shape)." },
+        "displacement": { "type": "number", "description": "Distance moved relative to warm_start (px)." }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "box", "model", "cost", "feasible"],
+      "properties": {
+        "id": { "type": "string" },
+        "box": { "$ref": "#/$defs/box" },
+        "model": { "enum": ["adjacent", "slider", "internal", "distant", "boundary"] },
+        "anchor_side": { "type": "string" },
+        "variant": { "type": "integer" },
+        "level": { "type": "integer", "description": "Degradation level (0 = normal)." },
+        "cost": { "type": "number" },
+        "feasible": { "type": "boolean", "description": "Statically feasible (ignores other labels)." },
+        "leader": { "oneOf": [{ "$ref": "#/$defs/leader" }, { "type": "null" }] }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["placed", "total", "hard_violations", "leader_crossings", "runtime_ms", "seed", "omission_order", "priority_inversions"],
+      "properties": {
+        "placed": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 0 },
+        "placed_weighted": { "type": "number", "minimum": 0, "maximum": 1 },
+        "required_placed": { "type": "boolean" },
+        "hard_violations": { "type": "integer", "minimum": 0 },
+        "leader_crossings": { "type": "integer", "minimum": 0 },
+        "runtime_ms": { "type": "number", "minimum": 0 },
+        "phases_ms": { "type": "object", "additionalProperties": { "type": "number" } },
+        "strategy_used": { "enum": ["greedy", "local", "exact"] },
+        "seed": { "type": "integer", "minimum": 0 },
+        "iterations": { "type": "integer", "minimum": 0 },
+        "time_guard_hit": { "type": "boolean", "description": "The wall-clock guard stopped a phase early (result may then depend on machine speed)." },
+        "candidates": { "type": "integer", "minimum": 0 },
+        "omission_order": { "type": "array", "items": { "type": "string" } },
+        "priority_inversions": { "type": "integer", "minimum": 0 },
+        "total_cost": { "type": "number" },
+        "degraded": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" },
+          "description": "Placed labels per degradation kind: wrapped, alternative, truncated, shrunk, soft_overlap, distant, boundary."
+        },
+        "flicker": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "moved": { "type": "integer" },
+            "added": { "type": "integer" },
+            "removed": { "type": "integer" },
+            "mean_displacement": { "type": "number" }
+          }
+        },
+        "grid": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cell": { "type": "number" },
+            "cols": { "type": "integer" },
+            "rows": { "type": "integer" },
+            "classes": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "implementation": { "type": "string", "description": "e.g. rust/0.1.0, ts/0.1.0, wasm/0.1.0" }
+      }
+    }
+  }
+}
