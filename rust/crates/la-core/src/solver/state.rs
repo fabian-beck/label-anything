@@ -6,6 +6,113 @@ use crate::index::DynIndex;
 use crate::math::{maxf, minf};
 use crate::obstacles::{AvoidW, Obstacles};
 
+/// Margin of the quick rejection test (2 × `EPS`, so that a hit implies an overlap in
+/// the sense of `Rect::overlaps`).
+const OCC_MARGIN: f64 = 2.0 * EPS;
+
+/// Fine grid counting, per cell, the placed rectangular labels whose interior contains
+/// the cell center. A candidate box that contains an occupied cell center (with margin)
+/// overlaps a placed label: a quick, exact rejection test (`State::quick_blocked`).
+struct Occupancy {
+    ox: f64,
+    oy: f64,
+    cell: f64,
+    cols: usize,
+    rows: usize,
+    count: Vec<u16>,
+}
+
+impl Occupancy {
+    fn new(extent: &Rect) -> Occupancy {
+        // about 1M cells at most, and never finer than 2 px
+        let area = maxf(extent.w() * extent.h(), 1.0);
+        let cell = maxf(2.0, (area / 1.0e6).sqrt());
+        let cols = ((extent.w() / cell).ceil() as usize).clamp(1, 4096);
+        let rows = ((extent.h() / cell).ceil() as usize).clamp(1, 4096);
+        Occupancy {
+            ox: extent.x0,
+            oy: extent.y0,
+            cell,
+            cols,
+            rows,
+            count: vec![0; cols * rows],
+        }
+    }
+
+    /// Columns (or rows) whose cell centers lie strictly inside `(a, b)` shrunk by the
+    /// margin, as a half-open index range.
+    fn span(o: f64, cell: f64, n: usize, a: f64, b: f64) -> (usize, usize) {
+        let lo = a + OCC_MARGIN;
+        let hi = b - OCC_MARGIN;
+        if hi <= lo || hi.is_nan() || lo.is_nan() {
+            return (0, 0);
+        }
+        let first = ((lo - o) / cell - 0.5).floor() + 1.0;
+        let last = ((hi - o) / cell - 0.5).ceil() - 1.0;
+        let first = first.max(0.0);
+        let last = last.min(n as f64 - 1.0);
+        if last < first {
+            return (0, 0);
+        }
+        let (mut f, mut l) = (first as usize, last as usize + 1);
+        // exact strictness at the ends despite rounding
+        while f < l && o + (f as f64 + 0.5) * cell <= lo {
+            f += 1;
+        }
+        while l > f && o + ((l - 1) as f64 + 0.5) * cell >= hi {
+            l -= 1;
+        }
+        (f, l)
+    }
+
+    fn mark(&mut self, r: &Rect, add: bool) {
+        let (c0, c1) = Self::span(self.ox, self.cell, self.cols, r.x0, r.x1);
+        let (r0, r1) = Self::span(self.oy, self.cell, self.rows, r.y0, r.y1);
+        for row in r0..r1 {
+            let base = row * self.cols;
+            for v in &mut self.count[base + c0..base + c1] {
+                *v = if add {
+                    v.saturating_add(1)
+                } else {
+                    v.saturating_sub(1)
+                };
+            }
+        }
+    }
+
+    /// Whether the cell center at `(x, y)`'s cell is occupied and strictly inside `r`.
+    #[inline]
+    fn hit(&self, r: &Rect, x: f64, y: f64) -> bool {
+        // truncation == floor inside the grid
+        let gx = (x - self.ox) / self.cell;
+        let gy = (y - self.oy) / self.cell;
+        if !(gx >= 0.0 && gy >= 0.0 && gx < self.cols as f64 && gy < self.rows as f64) {
+            return false;
+        }
+        let (gx, gy) = (gx as usize, gy as usize);
+        let qx = self.ox + (gx as f64 + 0.5) * self.cell;
+        let qy = self.oy + (gy as f64 + 0.5) * self.cell;
+        self.count[gy * self.cols + gx] > 0
+            && r.x0 + OCC_MARGIN < qx
+            && qx < r.x1 - OCC_MARGIN
+            && r.y0 + OCC_MARGIN < qy
+            && qy < r.y1 - OCC_MARGIN
+    }
+
+    /// Probes the center and four inner points of `r`.
+    fn blocked(&self, r: &Rect) -> bool {
+        let c = r.center();
+        if self.hit(r, c.x, c.y) {
+            return true;
+        }
+        let (dx, dy) = (r.w() * 0.3, r.h() * 0.3);
+        self.hit(r, c.x - dx, c.y - dy)
+            || self.hit(r, c.x + dx, c.y - dy)
+            || self.hit(r, c.x - dx, c.y + dy)
+            || self.hit(r, c.x + dx, c.y + dy)
+    }
+}
+
 /// The set of placed labels with spatial indexes.
 pub struct State {
     /// Placed candidate per item.
@@ -21,10 +128,17 @@ pub struct State {
     pub n_placed: usize,
     pub label_area_sum: f64,
     buf: Vec<u32>,
+    occ: Occupancy,
+    /// Priority key level per item, and the number of placed labels per key level.
+    keys: Vec<usize>,
+    key_count: Vec<u32>,
+    max_key: Option<usize>,
 }
 
 impl State {
-    pub fn new(n_items: usize, extent: &Rect, cell: f64) -> State {
+    /// `keys`: the priority key level of every item (smaller = more important).
+    pub fn new(n_items: usize, extent: &Rect, cell: f64, keys: Vec<usize>) -> State {
+        let n_keys = keys.iter().copied().max().map(|k| k + 1).unwrap_or(0);
         State {
             placed: vec![None; n_items],
             relaxed: vec![false; n_items],
@@ -36,7 +150,22 @@ impl State {
             n_placed: 0,
             label_area_sum: 0.0,
             buf: Vec::new(),
+            occ: Occupancy::new(extent),
+            keys,
+            key_count: vec![0; n_keys],
+            max_key: None,
         }
+    }
+
+    /// The largest key level among placed labels (`None` when nothing is placed).
+    pub fn max_placed_key(&self) -> Option<usize> {
+        self.max_key
+    }
+
+    /// Quick, exact rejection: the box `r` of a rectangular label overlaps a placed
+    /// rectangular label (`false` means "unknown", not "free").
+    pub fn quick_blocked(&self, r: &Rect) -> bool {
+        self.n_placed > 0 && self.occ.blocked(r)
     }
 
     pub fn place(&mut self, item: usize, cid: u32, cands: &[Cand], relaxed: bool) {
@@ -45,6 +174,13 @@ impl State {
         self.placed[item] = Some(cid);
         self.relaxed[item] = relaxed;
         self.label_ix.insert(item as u32, c.rect);
+        if c.lshape.is_none() {
+            self.occ.mark(&c.rect, true);
+        }
+        if let Some(&k) = self.keys.get(item) {
+            self.key_count[k] += 1;
+            self.max_key = Some(self.max_key.map_or(k, |m| m.max(k)));
+        }
         for l in &c.leaders {
             for (a, b) in l.segments() {
                 let id = match self.free_segs.pop() {
@@ -75,6 +211,16 @@ impl State {
 
     pub fn unplace(&mut self, item: usize, cands: &[Cand]) {
         let Some(cid) = self.placed[item] else { return };
+        let c = &cands[cid as usize];
+        if c.lshape.is_none() {
+            self.occ.mark(&c.rect, false);
+        }
+        if let Some(&k) = self.keys.get(item) {
+            self.key_count[k] -= 1;
+            if self.max_key == Some(k) && self.key_count[k] == 0 {
+                self.max_key = (0..k).rev().find(|&j| self.key_count[j] > 0);
+            }
+        }
         self.label_area_sum -= cands[cid as usize].rect.area();
         self.placed[item] = None;
         self.relaxed[item] = false;

@@ -122,13 +122,15 @@ pub fn slot_candidate(
     c
 }
 
-/// Boundary candidates for the given variants.
+/// Boundary candidates for the given variants. Label boxes for which `keep(vi, box)` is
+/// false are skipped before their leaders are built.
 pub fn boundary_candidates(
     model: &Model,
     obs: &Obstacles,
     item: &Item,
     variants: &[Variant],
     vis: &[usize],
+    keep: &dyn Fn(usize, &Rect) -> bool,
     out: &mut Vec<Cand>,
 ) {
     let Some(area) = obs.label_area.or(model.canvas) else {
@@ -166,6 +168,9 @@ pub fn boundary_candidates(
                         }
                     }
                 };
+                if !keep(vi, &rect) {
+                    continue;
+                }
                 let start = crate::leaders::leader_start(model, item, port);
                 let pts = match style {
                     LeaderStyle::Orthogonal | LeaderStyle::Elbow => {

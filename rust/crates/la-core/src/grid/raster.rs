@@ -45,8 +45,8 @@ impl MaskRaster {
 
     /// Range of sample rows whose y lies in `[y0, y1]`.
     fn sample_row_range(&self, y0: f64, y1: f64) -> (usize, usize) {
-        let a = ((y0 - self.spec.oy) / self.step - 0.5).ceil();
-        let b = ((y1 - self.spec.oy) / self.step - 0.5).floor();
+        let a = crate::math::ceil_fast((y0 - self.spec.oy) / self.step - 0.5);
+        let b = crate::math::floor_fast((y1 - self.spec.oy) / self.step - 0.5);
         let n = self.sample_rows() as f64;
         let a = if a < 0.0 { 0.0 } else { a };
         let b = if b > n - 1.0 { n - 1.0 } else { b };
@@ -64,8 +64,8 @@ impl MaskRaster {
             return;
         }
         let sc = self.sample_cols() as f64;
-        let mut k0 = ((xa - self.spec.ox) / self.step - 0.5).ceil();
-        let mut k1 = ((xb - self.spec.ox) / self.step - 0.5).ceil(); // exclusive
+        let mut k0 = crate::math::ceil_fast((xa - self.spec.ox) / self.step - 0.5);
+        let mut k1 = crate::math::ceil_fast((xb - self.spec.ox) / self.step - 0.5); // exclusive
         if k0 < 0.0 {
             k0 = 0.0;
         }
@@ -108,10 +108,10 @@ impl MaskRaster {
         let (u1, v1) = self.spec.to_cell(b);
         let cols = self.spec.cols as i64;
         let rows = self.spec.rows as i64;
-        let mut cx = u0.floor() as i64;
-        let mut cy = v0.floor() as i64;
-        let ex = u1.floor() as i64;
-        let ey = v1.floor() as i64;
+        let mut cx = crate::math::floor_fast(u0) as i64;
+        let mut cy = crate::math::floor_fast(v0) as i64;
+        let ex = crate::math::floor_fast(u1) as i64;
+        let ey = crate::math::floor_fast(v1) as i64;
         let dx = u1 - u0;
         let dy = v1 - v0;
         let stepx: i64 = if dx > 0.0 {

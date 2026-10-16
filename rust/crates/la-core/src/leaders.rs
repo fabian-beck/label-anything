@@ -54,6 +54,15 @@ fn attach_label(t: P, d: P, hw: f64, hh: f64, port: Port) -> (Rect, P) {
     }
 }
 
+/// Leader directions of distant candidates with their unit vectors (computed once per
+/// solve; the trigonometry is the expensive part of candidate generation).
+pub fn distant_dirs(model: &Model) -> Vec<(f64, P)> {
+    directions(model)
+        .into_iter()
+        .map(|t| (t, dir_of(t)))
+        .collect()
+}
+
 fn directions(model: &Model) -> Vec<f64> {
     match model.leaders.style {
         LeaderStyle::Angles | LeaderStyle::Elbow => {
@@ -71,13 +80,17 @@ fn directions(model: &Model) -> Vec<f64> {
     }
 }
 
-/// Distant candidates of one variant.
+/// Distant candidates of one variant. Label boxes for which `keep(vi, box)` is false are
+/// skipped before their leaders are built.
+#[allow(clippy::too_many_arguments)]
 pub fn distant(
     model: &Model,
     obs: &Obstacles,
     item: &Item,
     vi: usize,
     v: &Variant,
+    dirs: &[(f64, P)],
+    keep: &dyn Fn(usize, &Rect) -> bool,
     out: &mut Vec<Cand>,
 ) {
     let hw = v.w * 0.5;
@@ -135,8 +148,7 @@ pub fn distant(
         }
         out.push(c);
     };
-    for &theta in &directions(model) {
-        let d = dir_of(theta);
+    for &(_, d) in dirs {
         let start = leader_start(model, item, item.shape.reference() + d);
         for k in 0..rings {
             let r = if rings == 1 {
@@ -155,11 +167,16 @@ pub fn distant(
                     let sx = if d.x >= 0.0 { 1.0 } else { -1.0 };
                     let p = P::new(e.x + sx * run, e.y);
                     let rect = Rect::from_center(P::new(p.x + sx * hw, p.y), hw, hh);
-                    push(rect, vec![start, e, p], k, out);
+                    if keep(vi, &rect) {
+                        push(rect, vec![start, e, p], k, out);
+                    }
                 }
                 LeaderStyle::Orthogonal => {
                     let t = start + d * r;
                     let (rect, port_pt) = attach_label(t, d, hw, hh, Port::SideCenter);
+                    if !keep(vi, &rect) {
+                        continue;
+                    }
                     if d.x.abs() < 1e-9 || d.y.abs() < 1e-9 {
                         push(rect, vec![start, port_pt], k, out);
                     } else {
@@ -171,6 +188,9 @@ pub fn distant(
                 LeaderStyle::Curved => {
                     let t = start + d * r;
                     let (rect, _) = attach_label(t, d, hw, hh, port);
+                    if !keep(vi, &rect) {
+                        continue;
+                    }
                     let port_pt = rect.closest_point(start);
                     let s0 = leader_start(model, item, port_pt);
                     let port_pt = rect.closest_point(s0);
@@ -192,6 +212,9 @@ pub fn distant(
                 _ => {
                     let t = start + d * r;
                     let (rect, mut port_pt) = attach_label(t, d, hw, hh, port);
+                    if !keep(vi, &rect) {
+                        continue;
+                    }
                     let mut s0 = start;
                     if style == LeaderStyle::Straight && port == Port::Nearest {
                         port_pt = rect.closest_point(start);
@@ -207,6 +230,9 @@ pub fn distant(
     if model.placement.free_space_seeds && !obs.dt.is_empty() {
         for seed in free_space_seeds(obs, item, hh) {
             let rect = Rect::from_center(seed, hw, hh);
+            if !keep(vi, &rect) {
+                continue;
+            }
             let start = leader_start(model, item, seed);
             let port_pt = rect.closest_point(start);
             let start = leader_start(model, item, port_pt);
