@@ -107,8 +107,12 @@ per function plus the vectors here):
 | `floor`, `ceil`, `trunc`, `round_half_away` | exact | |
 
 Results in the subnormal range may additionally be off by one ulp (double rounding).
-Against the platform functions (Rust `std`/glibc in `tests/det_math_accuracy.rs`, JS
-`Math` in `ts/packages/core/test/detmath-accuracy.test.ts`) the difference is at most
-1 ulp, except for `sin`/`cos`/`atan2` evaluated by the platform through a rounded radian
-conversion (`Math.sin(d * Math.PI / 180)`, `Math.atan2(y, x) * 180 / Math.PI`), where it
-is at most 2 ulp (the platform's conversion is the less accurate side).
+
+Against the platform functions (2·10⁶ random samples per range): glibc via Rust `std`
+(`rust/crates/la-expr/tests/det_math_accuracy.rs`) differs by at most 1 ulp, except
+`sin(d.to_radians())` (2 ulp, the platform's rounded radian conversion is the less
+accurate side); V8 `Math` (`ts/packages/core/test/detmath-accuracy.test.ts`) differs by
+at most 2 ulp (`Math.sin`/`cos`/`atan2` are fdlibm ports with errors up to ~1 ulp).
+`atan2_deg` is compared in radians (its degrees converted with a double-double π/180):
+`Math.atan2(y, x) * 180 / Math.PI` itself has errors up to 2.5 ulp (checked with mpmath),
+so a 3-ulp difference to that formula does not indicate an error of `atan2_deg`.
