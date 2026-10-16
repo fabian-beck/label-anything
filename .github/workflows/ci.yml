@@ -24,6 +24,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     defaults:
       run:
         working-directory: rust
@@ -43,18 +44,19 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Test (workspace, release)
         # the Python extension is built and tested by the python job (it needs an interpreter on Windows)
-        run: cargo test --workspace --release --exclude label-anything-py
+        run: cargo test --workspace --profile ci --exclude label-anything-py
       - name: Conformance (place cases)
-        run: cargo test -p label-anything --release --test conformance
+        run: cargo test -p label-anything --profile ci --test conformance
       - name: Randomized guarantees (more cases)
         if: runner.os == 'Linux'
-        run: cargo test -p label-anything-core --release --test random_problems
+        run: cargo test -p label-anything-core --profile ci --test random_problems
         env:
           LA_RANDOM_CASES: "1000"
 
   wasm32:
     name: Core for wasm32
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -69,6 +71,7 @@ jobs:
   typescript:
     name: TypeScript and JS helpers
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -90,6 +93,7 @@ jobs:
   generated:
     name: Generated files are current
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -115,6 +119,7 @@ jobs:
   licenses:
     name: Dependency licenses
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -130,6 +135,7 @@ jobs:
       matrix:
         python: ["3.9", "3.13"]
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -155,6 +161,7 @@ jobs:
   examples:
     name: C, Go and CLI examples
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -178,6 +185,7 @@ jobs:
     name: Benchmark (${{ startsWith(github.ref, 'refs/tags/') && 'full' || 'quick' }})
     if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -221,6 +229,7 @@ jobs:
     name: Fuzzing (cargo-fuzz)
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly

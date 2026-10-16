@@ -43,3 +43,11 @@ opt-level = 3
 [profile.bench]
 inherits = "release"
 debug = true
+
+# CI tests: optimized like release (the property tests need speed) but without LTO,
+# which would link every test binary slowly
+[profile.ci]
+inherits = "release"
+lto = false
+codegen-units = 16
+incremental = false
