@@ -189,11 +189,16 @@ function emit(rel, content) {
 }
 
 // Published crates cannot include files outside their directory, so la-text embeds copies
-// of the metrics fonts (and their license) from rust/crates/la-text/assets/.
+// of the metrics fonts (and their license) from rust/crates/la-text/assets/, and the CLI
+// the fonts with outlines (for PNG rendering) from rust/crates/la-cli/assets/.
 function copyRustFonts() {
   let changed = false;
-  for (const file of ["NotoSans-Regular.metrics.ttf", "NotoSans-Bold.metrics.ttf", "OFL.txt"]) {
-    const rel = `rust/crates/la-text/assets/${file}`;
+  const copies = [
+    ...["NotoSans-Regular.metrics.ttf", "NotoSans-Bold.metrics.ttf", "OFL.txt"].map((f) => [f, "la-text"]),
+    ...["NotoSans-Regular.ttf", "NotoSans-Bold.ttf", "OFL.txt"].map((f) => [f, "la-cli"]),
+  ];
+  for (const [file, crate] of copies) {
+    const rel = `rust/crates/${crate}/assets/${file}`;
     const source = readFileSync(join(root, "fonts", file));
     const target = join(root, rel);
     if (existsSync(target) && readFileSync(target).equals(source)) continue;

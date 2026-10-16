@@ -145,9 +145,11 @@ jobs:
         run: |
           pip install rust/target/wheels/label_anything-*.whl "./bindings/python-extras[all,test]" pytest numpy pillow
           pytest -q rust/crates/la-py/tests bindings/python-extras/tests
+      - name: Brief example (§6.1), verbatim
+        run: python examples/brief/python_6_1.py --out "$RUNNER_TEMP"
 
   examples:
-    name: C and Go examples (C ABI)
+    name: C, Go and CLI examples
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -158,13 +160,15 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-      - run: cargo build --release --manifest-path rust/Cargo.toml -p label-anything-capi
+      - run: cargo build --release --manifest-path rust/Cargo.toml -p label-anything-capi -p label-anything-cli
       - name: C
         run: |
           cc examples/c/main.c -Irust/crates/la-capi/include -Lrust/target/release -llabelanything -o la-c
           LD_LIBRARY_PATH=rust/target/release ./la-c
       - name: Go
         run: cd examples/go && LD_LIBRARY_PATH=../../rust/target/release go run .
+      - name: CLI (brief §6.5)
+        run: examples/brief/cli_6_5.sh rust/target/release/label-anything
 
   bench:
     name: Benchmark (${{ startsWith(github.ref, 'refs/tags/') && 'full' || 'quick' }})
