@@ -54,6 +54,20 @@ fn attach_label(t: P, d: P, hw: f64, hh: f64, port: Port) -> (Rect, P) {
     }
 }
 
+/// The box (width `w`, height `h`) of a label whose leader ends at `t` on its `baseline`
+/// port: on the side edge facing the leader (the left edge when the label lies to the
+/// right of the anchor, `d.x ≥ 0`), at the height `u` of the underline (from the box top).
+fn attach_baseline(t: P, d: P, w: f64, h: f64, u: f64) -> Rect {
+    let x0 = if d.x >= 0.0 { t.x } else { t.x - w };
+    Rect::new(x0, t.y - u, x0 + w, t.y - u + h)
+}
+
+/// Height of the underline of the `baseline` port below the box top: below the first
+/// line's baseline, halfway into its descent (at most 0.25 em).
+pub fn underline_offset(t: &crate::labels::TextLayout, h: f64, em: f64) -> f64 {
+    t.baselines[0] + minf(h - t.baselines[0], em * 0.25) * 0.5
+}
+
 /// Leader directions of distant candidates with their unit vectors (computed once per
 /// solve; the trigonometry is the expensive part of candidate generation).
 pub fn distant_dirs(model: &Model) -> Vec<(f64, P)> {
@@ -101,27 +115,27 @@ pub fn distant(
     let style = model.leaders.style;
     let port = model.leaders.port;
     let it = item.index as u32;
-    let push = |rect: Rect, pts: Vec<P>, ring: usize, out: &mut Vec<Cand>| {
+    // baseline port (straight, angles and elbow leaders, and free-space seeds): the
+    // leader ends on the box's side edge at the height of an underline below the first
+    // text line, which continues it to the far end of that line (spec §7)
+    let under = match (port, &v.text) {
+        (Port::Baseline, Some(t)) => Some(underline_offset(t, v.h, em)),
+        _ => None,
+    };
+    let push = |rect: Rect, pts: Vec<P>, ring: usize, underline: bool, out: &mut Vec<Cand>| {
         let mut l = Leader::new(pts, style);
         if l.len < len.leader_min || l.len > len.leader_max + 1e-9 {
             return;
         }
-        if port == Port::Baseline {
-            if let Some(t) = &v.text {
-                let y = rect.y0 + t.baselines[0] + (rect.h() - t.baselines[0]).min(em * 0.25) * 0.5;
-                let x0 = rect.x0 + t.x_offset;
-                let x1 = x0 + t.widths[0];
-                let end = *l.pts.last().unwrap();
-                let (near, far) = if (end.x - x0).abs() <= (end.x - x1).abs() {
-                    (x0, x1)
-                } else {
-                    (x1, x0)
-                };
-                let last = l.pts.len() - 1;
-                l.pts[last] = P::new(near, y);
-                l = Leader::new(l.pts, style);
-                l.underline = Some((P::new(near, y), P::new(far, y)));
-            }
+        if let (true, Some(t)) = (underline, &v.text) {
+            let p = l.port;
+            let x0 = rect.x0 + t.x_offset;
+            let far = if p.x <= rect.center().x {
+                x0 + t.widths[0]
+            } else {
+                x0
+            };
+            l.underline = Some((p, P::new(far, p.y)));
         }
         let mut c = Cand::new(
             it,
@@ -166,9 +180,12 @@ pub fn distant(
                     let run = 0.75 * em;
                     let sx = if d.x >= 0.0 { 1.0 } else { -1.0 };
                     let p = P::new(e.x + sx * run, e.y);
-                    let rect = Rect::from_center(P::new(p.x + sx * hw, p.y), hw, hh);
+                    let rect = match under {
+                        Some(u) => attach_baseline(p, d, v.w, v.h, u),
+                        None => Rect::from_center(P::new(p.x + sx * hw, p.y), hw, hh),
+                    };
                     if keep(vi, &rect) {
-                        push(rect, vec![start, e, p], k, out);
+                        push(rect, vec![start, e, p], k, under.is_some(), out);
                     }
                 }
                 LeaderStyle::Orthogonal => {
@@ -178,11 +195,11 @@ pub fn distant(
                         continue;
                     }
                     if d.x.abs() < 1e-9 || d.y.abs() < 1e-9 {
-                        push(rect, vec![start, port_pt], k, out);
+                        push(rect, vec![start, port_pt], k, false, out);
                     } else {
                         // po: vertical then horizontal into the side-center port
                         let bend = P::new(start.x, port_pt.y);
-                        push(rect, vec![start, bend, port_pt], k, out);
+                        push(rect, vec![start, bend, port_pt], k, false, out);
                     }
                 }
                 LeaderStyle::Curved => {
@@ -199,7 +216,7 @@ pub fn distant(
                         let pts = curve_points(s0, port_pt, bow);
                         let ctrl = curve_control(s0, port_pt, bow);
                         let mut c = out.len();
-                        push(rect, pts, k, out);
+                        push(rect, pts, k, false, out);
                         if out.len() > c {
                             c = out.len() - 1;
                             if let Some(l) = out[c].leaders.first_mut() {
@@ -211,7 +228,10 @@ pub fn distant(
                 }
                 _ => {
                     let t = start + d * r;
-                    let (rect, mut port_pt) = attach_label(t, d, hw, hh, port);
+                    let (rect, mut port_pt) = match under {
+                        Some(u) => (attach_baseline(t, d, v.w, v.h, u), t),
+                        None => attach_label(t, d, hw, hh, port),
+                    };
                     if !keep(vi, &rect) {
                         continue;
                     }
@@ -221,7 +241,7 @@ pub fn distant(
                         s0 = leader_start(model, item, port_pt);
                         port_pt = rect.closest_point(s0);
                     }
-                    push(rect, vec![s0, port_pt], k, out);
+                    push(rect, vec![s0, port_pt], k, under.is_some(), out);
                 }
             }
         }
@@ -234,7 +254,15 @@ pub fn distant(
                 continue;
             }
             let start = leader_start(model, item, seed);
-            let port_pt = rect.closest_point(start);
+            let baseline = under.filter(|_| style != LeaderStyle::Orthogonal);
+            let port_pt = match baseline {
+                // the side edge facing the item, at the underline's height
+                Some(u) => P::new(
+                    if start.x <= seed.x { rect.x0 } else { rect.x1 },
+                    rect.y0 + u,
+                ),
+                None => rect.closest_point(start),
+            };
             let start = leader_start(model, item, port_pt);
             let pts = match style {
                 LeaderStyle::Orthogonal => {
@@ -250,7 +278,7 @@ pub fn distant(
             if matches!(style, LeaderStyle::Angles | LeaderStyle::Elbow) {
                 continue; // angle-restricted styles only use their rays
             }
-            push(rect, pts, rings, out);
+            push(rect, pts, rings, baseline.is_some(), out);
         }
     }
 }

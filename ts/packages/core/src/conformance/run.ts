@@ -94,6 +94,40 @@ function segCross(a: Pt, b: Pt, c: Pt, d: Pt): boolean {
   return ((d1 > 1e-9 && d2 < -1e-9) || (d1 < -1e-9 && d2 > 1e-9)) && ((d3 > 1e-9 && d4 < -1e-9) || (d3 < -1e-9 && d4 > 1e-9));
 }
 
+/**
+ * The leader has an underline (baseline port) that starts at the leader's end, on a side
+ * edge of the box, runs horizontally inside the box below its vertical middle.
+ */
+function underlineAtPort(p: Json): boolean {
+  const l = get(p, "leader");
+  const pts = get(l, "points");
+  const u = get(l, "underline");
+  if (!Array.isArray(pts) || !Array.isArray(u) || pts.length === 0 || u.length < 2) return false;
+  const xy = (q: unknown): Pt | null =>
+    Array.isArray(q) && typeof q[0] === "number" && typeof q[1] === "number" ? [q[0], q[1]] : null;
+  const end = xy(pts[pts.length - 1]);
+  const a = xy(u[0]);
+  const b = xy(u[1]);
+  if (end === null || a === null || b === null) return false;
+  const bx = get(p, "box");
+  const num = (k: string): number => {
+    const v = get(bx, k);
+    return typeof v === "number" ? v : NaN;
+  };
+  const [x, y, w, h] = [num("x"), num("y"), num("w"), num("h")];
+  const near = (s: number, t: number): boolean => Math.abs(s - t) <= 1e-6;
+  return (
+    near(end[0], a[0]) &&
+    near(end[1], a[1]) &&
+    near(a[1], b[1]) &&
+    (near(a[0], x) || near(a[0], x + w)) &&
+    a[1] > y + h * 0.5 &&
+    a[1] < y + h &&
+    b[0] >= x - 1e-6 &&
+    b[0] <= x + w + 1e-6
+  );
+}
+
 function leaderSegments(p: Json): [Pt, Pt][] {
   const out: [Pt, Pt][] = [];
   const ls: unknown[] = [];
@@ -180,6 +214,14 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
       const p = placementOf(r, id);
       const got = p !== undefined ? leaderSegments(p).length > 0 : false;
       if (got !== hl[id]) f.push(`has_leader.${id}: expected ${show(hl[id])}, got ${got}`);
+    }
+  }
+  const ul = get(exp, "underline");
+  if (isObj(ul)) {
+    for (const id of Object.keys(ul)) {
+      const p = placementOf(r, id);
+      const got = p !== undefined && underlineAtPort(p);
+      if (got !== ul[id]) f.push(`underline.${id}: expected ${show(ul[id])}, got ${got}`);
     }
   }
   const tl = get(exp, "text_lines");

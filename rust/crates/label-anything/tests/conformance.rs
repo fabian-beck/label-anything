@@ -75,6 +75,39 @@ fn seg_cross(a: [f64; 2], b: [f64; 2], c: [f64; 2], d: [f64; 2]) -> bool {
 
 type Segment = ([f64; 2], [f64; 2]);
 
+/// The leader has an underline (baseline port) that starts at the leader's end, on a
+/// side edge of the box, runs horizontally inside the box below its vertical middle.
+fn underline_at_port(p: &Value) -> bool {
+    let l = &p["leader"];
+    let (Some(pts), Some(u)) = (l["points"].as_array(), l["underline"].as_array()) else {
+        return false;
+    };
+    let xy = |q: &Value| Some((q[0].as_f64()?, q[1].as_f64()?));
+    let (Some(end), Some(a), Some(b)) = (
+        pts.last().and_then(xy),
+        u.first().and_then(xy),
+        u.get(1).and_then(xy),
+    ) else {
+        return false;
+    };
+    let bx = &p["box"];
+    let (x, y, w, h) = (
+        bx["x"].as_f64().unwrap_or(f64::NAN),
+        bx["y"].as_f64().unwrap_or(f64::NAN),
+        bx["w"].as_f64().unwrap_or(f64::NAN),
+        bx["h"].as_f64().unwrap_or(f64::NAN),
+    );
+    let near = |s: f64, t: f64| (s - t).abs() <= 1e-6;
+    near(end.0, a.0)
+        && near(end.1, a.1)
+        && near(a.1, b.1)
+        && (near(a.0, x) || near(a.0, x + w))
+        && a.1 > y + h * 0.5
+        && a.1 < y + h
+        && b.0 >= x - 1e-6
+        && b.0 <= x + w + 1e-6
+}
+
 fn leader_segments(p: &Value) -> Vec<Segment> {
     let mut out = Vec::new();
     let mut ls: Vec<&Value> = Vec::new();
@@ -176,6 +209,14 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
                 .unwrap_or(false);
             if Some(got) != want.as_bool() {
                 f.push(format!("has_leader.{id}: expected {want}, got {got}"));
+            }
+        }
+    }
+    if let Some(Value::Object(m)) = exp.get("underline") {
+        for (id, want) in m {
+            let got = placement(&r, id).is_some_and(underline_at_port);
+            if Some(got) != want.as_bool() {
+                f.push(format!("underline.{id}: expected {want}, got {got}"));
             }
         }
     }

@@ -1,0 +1,227 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 200
+    },
+    "placement": {
+      "models": [
+        "adjacent",
+        "slider",
+        "distant"
+      ]
+    },
+    "leaders": {
+      "port": "baseline"
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "class": "ring",
+          "circles": [
+            [
+              150,
+              100,
+              40
+            ]
+          ]
+        }
+      ]
+    },
+    "avoid": {
+      "label": {
+        "ring": "hard"
+      },
+      "leader": {
+        "ring": 0.5
+      }
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 95
+        },
+        "label": {
+          "type": "text",
+          "text": "Beta"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "a",
+        "placed": true,
+        "box": {
+          "x": 197.5,
+          "y": 83.872,
+          "w": 35.891999999999996,
+          "h": 19.944000000000003
+        },
+        "anchor_side": "distant",
+        "model": "distant",
+        "text": {
+          "lines": [
+            "Alpha"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            32.292
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              153.5,
+              100.0
+            ],
+            [
+              197.5,
+              100.0
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            197.5,
+            100.0
+          ],
+          "underline": [
+            [
+              197.5,
+              100.0
+            ],
+            [
+              231.592,
+              100.0
+            ]
+          ]
+        },
+        "cost": 2.962532679738562,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "b",
+        "placed": true,
+        "box": {
+          "x": 87.18042789363898,
+          "y": 45.284427893639,
+          "w": 29.232,
+          "h": 19.94400000000001
+        },
+        "anchor_side": "distant",
+        "model": "distant",
+        "text": {
+          "lines": [
+            "Beta"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            25.632
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              147.52512626584706,
+              92.52512626584709
+            ],
+            [
+              116.41242789363898,
+              61.412427893639
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            116.41242789363898,
+            61.412427893639
+          ],
+          "underline": [
+            [
+              116.41242789363898,
+              61.412427893639
+            ],
+            [
+              88.98042789363897,
+              61.412427893639
+            ]
+          ]
+        },
+        "cost": 2.9166503267973853,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 1
+        }
+      }
+    ],
+    "stats": {
+      "placed": 2,
+      "total": 2,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 800,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 110,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 5.879183006535947,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 100,
+        "rows": 67,
+        "classes": [
+          "ring"
+        ]
+      }
+    },
+    "debug_svg": null
+  }
+}

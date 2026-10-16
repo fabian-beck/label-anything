@@ -176,6 +176,25 @@ CASES["distant-when-crowded"] = case(
      "items": [pt("a", 150, 100, "Alpha", label={"type": "text", "text": "Alpha"})]},
     {"placed": 1, "has_leader": {"a": True}, "model": {"a": "distant"}})
 
+CASES["leader-baseline-port"] = case(
+    "baseline port: the leader ends on the box side at an underline below the first line",
+    {"canvas": {"width": 300, "height": 200}, "placement": {"models": ["adjacent", "slider", "distant"]},
+     "leaders": {"port": "baseline"},
+     "obstacles": {"vector": [{"class": "ring", "circles": [[150, 100, 40]]}]},
+     "avoid": {"label": {"ring": "hard"}, "leader": {"ring": 0.5}},
+     "items": [pt("a", 150, 100, "Alpha"), pt("b", 150, 95, "Beta")]},
+    {"placed": 2, "has_leader": {"a": True, "b": True}, "underline": {"a": True, "b": True},
+     "model": {"a": "distant", "b": "distant"}})
+
+CASES["leader-baseline-elbow"] = case(
+    "elbow leaders into the baseline port: horizontal last run into the underline",
+    {"canvas": {"width": 300, "height": 200}, "placement": {"models": ["adjacent", "slider", "distant"]},
+     "leaders": {"port": "baseline", "style": "elbow"},
+     "obstacles": {"vector": [{"class": "ring", "circles": [[150, 100, 40]]}]},
+     "avoid": {"label": {"ring": "hard"}, "leader": {"ring": 0.5}},
+     "items": [pt("a", 150, 100, "Alpha"), pt("b", 150, 95, "Beta")]},
+    {"placed": 2, "has_leader": {"a": True, "b": True}, "underline": {"a": True, "b": True}})
+
 CASES["boundary-labels"] = case(
     "boundary model: labels in the margins with leaders",
     {"canvas": {"width": 400, "height": 240}, "placement": {"models": ["boundary"],

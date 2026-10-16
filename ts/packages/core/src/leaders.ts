@@ -81,6 +81,25 @@ function attachCenter(tx: number, ty: number, dx: number, dy: number, hw: number
 }
 
 /**
+ * The box (width `w`, height `h`) of a label whose leader ends at `(tx, ty)` on its
+ * `baseline` port: on the side edge facing the leader (the left edge when the label lies
+ * to the right of the anchor, `dx >= 0`), at the height `u` of the underline (from the
+ * box top). Mirrors `attach_baseline`.
+ */
+function attachBaseline(tx: number, ty: number, dx: number, w: number, h: number, u: number): Rect {
+  const x0 = dx >= 0 ? tx : tx - w;
+  return new Rect(x0, ty - u, x0 + w, ty - u + h);
+}
+
+/**
+ * Height of the underline of the `baseline` port below the box top: below the first
+ * line's baseline, halfway into its descent (at most 0.25 em). Mirrors `underline_offset`.
+ */
+export function underlineOffset(t: { baselines: ArrayLike<number> }, h: number, em: number): number {
+  return t.baselines[0]! + minf(h - t.baselines[0]!, em * 0.25) * 0.5;
+}
+
+/**
  * Leader directions of distant candidates with their unit vectors (computed once per
  * solve; the trigonometry is the expensive part of candidate generation).
  */
@@ -131,22 +150,19 @@ export function distant(
   const port = model.leaders.port;
   const it = item.index;
   const kb = KEEP_BOX;
-  const push = (rect: Rect, pts: P[], ring: number): void => {
-    let l = new Leader(pts, style);
+  // baseline port (straight, angles and elbow leaders, and free-space seeds): the leader
+  // ends on the box's side edge at the height of an underline below the first text
+  // line, which continues it to the far end of that line (spec §7)
+  const under = port === Port.Baseline && v.text !== null ? underlineOffset(v.text, v.h, em) : null;
+  const push = (rect: Rect, pts: P[], ring: number, underline: boolean): void => {
+    const l = new Leader(pts, style);
     if (l.len < len.leaderMin || l.len > len.leaderMax + 1e-9) return;
-    if (port === Port.Baseline) {
-      const t = v.text;
-      if (t !== null) {
-        const y = rect.y0 + t.baselines[0]! + minf(rect.h() - t.baselines[0]!, em * 0.25) * 0.5;
-        const x0 = rect.x0 + t.xOffset;
-        const x1 = x0 + t.widths[0]!;
-        const end = l.pts[l.pts.length - 1]!;
-        const [near, far] = Math.abs(end.x - x0) <= Math.abs(end.x - x1) ? [x0, x1] : [x1, x0];
-        const p2 = l.pts.slice();
-        p2[p2.length - 1] = new P(near, y);
-        l = new Leader(p2, style);
-        l.underline = [new P(near, y), new P(far, y)];
-      }
+    const t = v.text;
+    if (underline && t !== null) {
+      const p = l.port;
+      const x0 = rect.x0 + t.xOffset;
+      const far = p.x <= rect.center().x ? x0 + t.widths[0]! : x0;
+      l.underline = [p, new P(far, p.y)];
     }
     const c = new Cand(it, vi, v.level, Kind.Distant, SIDE_DISTANT, 8 + ring * 0.5, rect);
     const members = model.groupMembers(item.index);
@@ -188,13 +204,26 @@ export function distant(
           const sx = dx >= 0 ? 1 : -1;
           const px = tx + sx * run;
           const cx = px + sx * hw;
-          kb[0] = cx - hw;
-          kb[1] = ty - hh;
-          kb[2] = cx + hw;
-          kb[3] = ty + hh;
+          const rect = under !== null ? attachBaseline(px, ty, dx, v.w, v.h, under) : null;
+          if (rect !== null) {
+            kb[0] = rect.x0;
+            kb[1] = rect.y0;
+            kb[2] = rect.x1;
+            kb[3] = rect.y1;
+          } else {
+            kb[0] = cx - hw;
+            kb[1] = ty - hh;
+            kb[2] = cx + hw;
+            kb[3] = ty + hh;
+          }
           if (keep(vi)) {
             start ??= startAtRef ? ref : new P(sx0, sy0);
-            push(new Rect(cx - hw, ty - hh, cx + hw, ty + hh), [start, new P(tx, ty), new P(px, ty)], k);
+            push(
+              rect ?? new Rect(cx - hw, ty - hh, cx + hw, ty + hh),
+              [start, new P(tx, ty), new P(px, ty)],
+              k,
+              rect !== null,
+            );
           }
           break;
         }
@@ -210,11 +239,11 @@ export function distant(
           start ??= startAtRef ? ref : new P(sx0, sy0);
           const rect = new Rect(cx - hw, cy - hh, cx + hw, cy + hh);
           const portPt = new P(tx, ty);
-          if (Math.abs(dx) < 1e-9 || Math.abs(dy) < 1e-9) push(rect, [start, portPt], k);
+          if (Math.abs(dx) < 1e-9 || Math.abs(dy) < 1e-9) push(rect, [start, portPt], k, false);
           else {
             // po: vertical then horizontal into the side-center port
             const bend = new P(start.x, portPt.y);
-            push(rect, [start, bend, portPt], k);
+            push(rect, [start, bend, portPt], k, false);
           }
           break;
         }
@@ -237,7 +266,7 @@ export function distant(
             const pts = curvePoints(s0, portPt, bow);
             const ctrl = curveControl(s0, portPt, bow);
             const before = out.length;
-            push(rect, pts, k);
+            push(rect, pts, k, false);
             if (out.length > before) {
               const l = out[out.length - 1]!.leaders[0];
               if (l !== undefined) {
@@ -249,13 +278,25 @@ export function distant(
           break;
         }
         default: {
-          attachCenter(tx, ty, dx, dy, hw, hh, port);
-          const cx = AC[0]!;
-          const cy = AC[1]!;
-          const x0 = cx - hw;
-          const y0 = cy - hh;
-          const x1 = cx + hw;
-          const y1 = cy + hh;
+          let x0: number;
+          let y0: number;
+          let x1: number;
+          let y1: number;
+          if (under !== null) {
+            const b = attachBaseline(tx, ty, dx, v.w, v.h, under);
+            x0 = b.x0;
+            y0 = b.y0;
+            x1 = b.x1;
+            y1 = b.y1;
+          } else {
+            attachCenter(tx, ty, dx, dy, hw, hh, port);
+            const cx = AC[0]!;
+            const cy = AC[1]!;
+            x0 = cx - hw;
+            y0 = cy - hh;
+            x1 = cx + hw;
+            y1 = cy + hh;
+          }
           kb[0] = x0;
           kb[1] = y0;
           kb[2] = x1;
@@ -270,10 +311,10 @@ export function distant(
             const s0AtRef = leaderStartIn(model, item);
             const s0x = LS[0]!;
             const s0y = LS[1]!;
-            push(rect, [s0AtRef ? ref : new P(s0x, s0y), new P(clampf(s0x, x0, x1), clampf(s0y, y0, y1))], k);
+            push(rect, [s0AtRef ? ref : new P(s0x, s0y), new P(clampf(s0x, x0, x1), clampf(s0y, y0, y1))], k, false);
           } else {
             start ??= startAtRef ? ref : new P(sx0, sy0);
-            push(rect, [start, new P(tx, ty)], k);
+            push(rect, [start, new P(tx, ty)], k, under !== null);
           }
         }
       }
@@ -290,7 +331,11 @@ export function distant(
       if (style === LeaderStyle.Angles || style === LeaderStyle.Elbow) continue; // angle-restricted styles only use their rays
       const rect = Rect.fromCenter(seed, hw, hh);
       const start0 = leaderStart(model, item, seed);
-      const portPt = rect.closestPoint(start0);
+      const baseline = under !== null && style !== LeaderStyle.Orthogonal;
+      // baseline: the side edge facing the item, at the underline's height
+      const portPt = baseline
+        ? new P(start0.x <= seed.x ? rect.x0 : rect.x1, rect.y0 + under)
+        : rect.closestPoint(start0);
       const start = leaderStart(model, item, portPt);
       let pts: P[];
       if (style === LeaderStyle.Orthogonal) {
@@ -298,7 +343,7 @@ export function distant(
         pts =
           Math.abs(bend.x - portPt.x) < 1e-9 || Math.abs(bend.y - start.y) < 1e-9 ? [start, portPt] : [start, bend, portPt];
       } else pts = [start, portPt];
-      push(rect, pts, rings);
+      push(rect, pts, rings, baseline);
     }
   }
 }

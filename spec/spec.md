@@ -677,8 +677,11 @@ Filtering while generating (ADR 0015), always exact:
   center.
 * `curved`: quadratic Bézier, flattened for collision tests (reported in `curve`).
 * `port`: `nearest` = point of the label box closest to the leader's previous point;
-  `side-center` = midpoint of the side facing the anchor; `baseline` = end of the
-  underline below the first text line (the underline is part of the leader).
+  `side-center` = midpoint of the side facing the anchor; `baseline` = the point of the
+  side edge facing the leader at the height of an underline below the first text line,
+  which continues the leader to the far end of that line (the underline is part of the
+  leader; straight, angles and elbow leaders — curved and orthogonal leaders keep their
+  own ports, and labels without text use `side-center`).
 * Leaders never enter their own label except at the port, never pass through other
   labels (`avoid.leader.labels`, default hard), and never cross other leaders
   (`avoid.leader.leaders`, default hard). Leaders shorter than `min_length` are dropped
