@@ -1,4 +1,6 @@
 //! Runs every case of `conformance/raster` (format: `conformance/raster/README.md`).
+//! The cases decode PNG files, so this needs the `decode` feature.
+#![cfg(feature = "decode")]
 
 mod support;
 
