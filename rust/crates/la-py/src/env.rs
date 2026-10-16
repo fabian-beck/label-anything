@@ -329,6 +329,10 @@ impl Env for PyEnv {
         }
     }
 
+    fn has_measure_callback(&self) -> bool {
+        self.cb.measure.is_some()
+    }
+
     fn extra_cost(&self, item_id: &str, bbox: &Rect, leader: bool) -> f64 {
         let Some(f) = &self.cb.cost else { return 0.0 };
         if self.stopped() {

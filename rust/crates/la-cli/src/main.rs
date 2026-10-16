@@ -153,6 +153,9 @@ impl Env for Clockless<'_> {
     fn now_ms(&self) -> f64 {
         0.0
     }
+    fn has_measure_callback(&self) -> bool {
+        false
+    }
 }
 
 fn read_input(path: &str) -> Result<String, String> {

@@ -117,7 +117,9 @@ Callbacks are host extensions, not schema fields; they are passed to `place`,
 * `measure(text, font: la.FontSpec) -> la.TextMetrics | {width, ascent, descent} |
   (w, a, d) | None`: measure text with the host's engine (`font.size` in px; `None` uses
   the bundled font). `measure("", font)` asks for the vertical metrics. Results are
-  cached per `(text, font)` during a solve.
+  cached per `(text, font)` during a solve. Wrapping then calls it for every distinct
+  candidate line; without a callback the fonts measure candidate lines in constant time
+  (ADR 0018).
 * `cost(candidate: la.Candidate) -> float ≥ 0`: an extra cost term per candidate
   (`candidate.id`, `.box`, `.leader`), evaluated once per candidate.
 * `progress(phase, fraction)`: `"greedy"`, `"local"`, `"exact"` as they start, then

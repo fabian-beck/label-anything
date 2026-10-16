@@ -171,6 +171,13 @@ export interface Env {
   nowMs?(): number;
   /** Host text measurement (overrides the built-in shaper when it returns metrics). */
   measure?(text: string, font: FontSpec): TextMetrics | null;
+  /**
+   * Whether {@link Env.measure} may return metrics. Return `false` when it never does: text
+   * is then measured with the fonts alone, so wrapping can measure the candidate lines in
+   * constant time (`FontMeasure`, ADR 0018). The default, `true`, is correct for every
+   * environment.
+   */
+  hasMeasureCallback?(): boolean;
   /** Host priority callback: `[tier, score]` per item, evaluated once per item. */
   priority?(item: unknown, index: number): [tier: number | null, score: number] | null;
   /** Whether a host priority callback is installed. */
@@ -186,7 +193,11 @@ export interface Env {
 }
 
 /** An environment without clock, files and callbacks (vector, SVG and inline rasters). */
-export class BasicEnv implements Env {}
+export class BasicEnv implements Env {
+  hasMeasureCallback(): boolean {
+    return false;
+  }
+}
 
 // --- calls with Rust's defaults ------------------------------------------------------
 
@@ -209,6 +220,11 @@ export function envReadFile(env: Env, path: string): Uint8Array {
 /** `env.now_ms()` (default 0). */
 export function envNow(env: Env): number {
   return env.nowMs ? env.nowMs() : 0;
+}
+
+/** `env.has_measure_callback()` (default true). */
+export function envHasMeasureCallback(env: Env): boolean {
+  return env.hasMeasureCallback ? env.hasMeasureCallback() : true;
 }
 
 /** `env.cancelled()` (default false). */

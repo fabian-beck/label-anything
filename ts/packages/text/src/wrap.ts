@@ -1,22 +1,43 @@
 // Wrapping, balancing and truncation of text labels (spec §5.3), identical to the Rust
 // crate `label-anything-text`.
 //
-// Every function takes a `measure` callback that returns the width of a string (e.g.
-// `(s) => font.width(s, 12)`, or a host measurement such as canvas `measureText`), so the
-// algorithms work with any font and size. Positions are code point indices. A line [s..e]
-// is the text from code point s to e with trailing white space removed; the next line
-// starts after e, skipping white space. Blank texts produce a single empty line.
+// Every function takes a measure: simple shaping with a font at a size (a `FontMeasure`,
+// `{ font, size }`), or a callback that returns the width of a string (a host measurement such
+// as canvas `measureText`, …), so the algorithms work with any font and size. With a
+// `FontMeasure` a text is prepared once (`MeasuredText`) and every candidate line is measured
+// in constant time, with results bit-identical to the callback `(s) => font.width(s, size)`; a
+// callback is called once per distinct line. Positions are code point indices. A line [s..e]
+// is the text from code point s to e with trailing white space removed; the next line starts
+// after e, skipping white space. Blank texts produce a single empty line.
 //
 // Searches assume that extending a line never makes it narrower: they scan candidates in
 // ascending order and stop at the first one that does not fit, which for such widths is the
 // same as taking the largest one that fits, but measures far fewer long lines.
 import { breaksOf } from "./breaks.js";
+import type { Font } from "./font.js";
+import { MeasuredText } from "./measured.js";
 import { codePoints, isMark, isSpace } from "./unicode.js";
 
 const ELLIPSIS = "…";
 
 /** Measures the width of a string. */
 export type Measure = (text: string) => number;
+
+/**
+ * Simple shaping with a font at a size, {@link Font.width}: the wrapping functions prepare
+ * each text once ({@link MeasuredText}) and measure every candidate line in constant time,
+ * with the same results as the callback `(s) => font.width(s, size)`.
+ */
+export interface FontMeasure {
+  readonly font: Font;
+  /** The font size in px. */
+  readonly size: number;
+}
+
+/** The width of `text` with a measure. */
+function widthOf(measure: Measure | FontMeasure, text: string): number {
+  return typeof measure === "function" ? measure(text) : measure.font.width(text, measure.size);
+}
 
 /** How text that does not fit in `maxLines` lines of `maxWidth` is shortened. */
 export type Truncate = "none" | "end" | "middle";
@@ -53,21 +74,32 @@ function utf16Offsets(cps: readonly number[]): number[] {
   return offsets;
 }
 
-/** A text prepared for wrapping: code points, break opportunities and cached widths. */
+/** A text prepared for wrapping: code points, break opportunities and line widths. */
 class Wrapper {
   private readonly cps: number[];
   /** UTF-16 offset of every code point, plus `text.length`. */
   private readonly offsets: number[];
   private readonly breaks: number[];
+  /** The prepared text of a {@link FontMeasure} (with its size), else `null`. */
+  private readonly measured: MeasuredText | null;
+  private readonly size: number;
+  /** Line widths of a callback, by span. */
   private readonly widths = new Map<number, number>();
 
   constructor(
     private readonly text: string,
-    private readonly measure: Measure,
+    private readonly measure: Measure | FontMeasure,
   ) {
     this.cps = codePoints(text);
     this.offsets = utf16Offsets(this.cps);
     this.breaks = breaksOf(this.cps);
+    if (typeof measure === "function") {
+      this.measured = null;
+      this.size = 0;
+    } else {
+      this.measured = new MeasuredText(measure.font, text);
+      this.size = measure.size;
+    }
   }
 
   get length(): number {
@@ -80,18 +112,24 @@ class Wrapper {
     return i;
   }
 
-  /** The text of line [s..e] (trailing white space removed). */
-  line(s: number, e: number): string {
+  /** The end (exclusive) of line [s..e] without its trailing white space. */
+  private lineEnd(s: number, e: number): number {
     let end = e + 1;
     while (end > s && isSpace(this.cps[end - 1])) end--;
-    return this.text.slice(this.offsets[s], this.offsets[end]);
+    return end;
+  }
+
+  /** The text of line [s..e] (trailing white space removed). */
+  line(s: number, e: number): string {
+    return this.text.slice(this.offsets[s], this.offsets[this.lineEnd(s, e)]);
   }
 
   private width(s: number, e: number): number {
+    if (this.measured !== null) return this.measured.width(s, this.lineEnd(s, e), this.size);
     const key = s * (this.cps.length + 1) + e;
     let w = this.widths.get(key);
     if (w === undefined) {
-      w = this.measure(this.line(s, e));
+      w = widthOf(this.measure, this.line(s, e));
       this.widths.set(key, w);
     }
     return w;
@@ -213,7 +251,16 @@ class Wrapper {
   }
 
   variant(lines: string[], truncated: boolean): TextVariant {
-    return { lines, widths: lines.map((line) => this.measure(line)), truncated };
+    return { lines, widths: lines.map((line) => widthOf(this.measure, line)), truncated };
+  }
+
+  /**
+   * The variant of the lines `spans` (not truncated; `lines` are their strings). With a prepared
+   * text the widths come from the spans, else every line is measured.
+   */
+  spansVariant(spans: readonly Span[], lines: string[]): TextVariant {
+    if (spans.length === 0 || this.measured === null) return this.variant(lines, false);
+    return { lines, widths: spans.map(([s, e]) => this.width(s, e)), truncated: false };
   }
 }
 
@@ -225,7 +272,7 @@ const sameLines = (a: readonly string[], b: readonly string[]): boolean =>
  * the last break opportunity that fits; a segment wider than `maxWidth` is broken at the last
  * code point position that fits (never before a combining mark, at least one code point).
  */
-export function greedyWrap(text: string, maxWidth: number, measure: Measure): string[] {
+export function greedyWrap(text: string, maxWidth: number, measure: Measure | FontMeasure): string[] {
   const wrapper = new Wrapper(text, measure);
   return wrapper.strings(wrapper.greedy(maxWidth, Infinity));
 }
@@ -240,7 +287,7 @@ export function balancedWrap(
   text: string,
   nLines: number,
   maxWidth: number | null | undefined,
-  measure: Measure,
+  measure: Measure | FontMeasure,
 ): string[] {
   const wrapper = new Wrapper(text, measure);
   return wrapper.strings(wrapper.balanced(nLines, maxWidth ?? null));
@@ -252,8 +299,8 @@ export function balancedWrap(
  * ascending order up to the first that does not fit) such that `prefix + "…"` fits; `"…"` if
  * none does. A text that fits is returned unchanged.
  */
-export function truncateEnd(text: string, maxWidth: number, measure: Measure): string {
-  if (measure(text) <= maxWidth) return text;
+export function truncateEnd(text: string, maxWidth: number, measure: Measure | FontMeasure): string {
+  if (widthOf(measure, text) <= maxWidth) return text;
   const cps = codePoints(text);
   const offsets = utf16Offsets(cps);
   let best = ELLIPSIS;
@@ -262,7 +309,7 @@ export function truncateEnd(text: string, maxWidth: number, measure: Measure): s
     let end = keep;
     while (end > 0 && isSpace(cps[end - 1])) end--;
     const candidate = text.slice(0, offsets[end]) + ELLIPSIS;
-    if (measure(candidate) > maxWidth) break;
+    if (widthOf(measure, candidate) > maxWidth) break;
     best = candidate;
   }
   return best;
@@ -286,7 +333,12 @@ function trimSpaces(text: string): string {
  * shrunk so that no base is separated from its combining marks, with the white space next to
  * `…` removed. Returns the wrapped lines; a text that fits is only wrapped.
  */
-export function truncateMiddle(text: string, maxWidth: number, maxLines: number, measure: Measure): string[] {
+export function truncateMiddle(
+  text: string,
+  maxWidth: number,
+  maxLines: number,
+  measure: Measure | FontMeasure,
+): string[] {
   maxLines = Math.max(1, Math.floor(maxLines));
   const trimmed = trimSpaces(text);
   const full = new Wrapper(trimmed, measure);
@@ -327,7 +379,7 @@ export function truncateMiddle(text: string, maxWidth: number, maxLines: number,
  * and `"none"` keeps the whole text in the balanced wrap into `maxLines` lines without a
  * width limit (lines may exceed `maxWidth`; `truncated: false`).
  */
-export function wrapVariants(text: string, opts: WrapOptions, measure: Measure): TextVariant[] {
+export function wrapVariants(text: string, opts: WrapOptions, measure: Measure | FontMeasure): TextVariant[] {
   const wrapper = new Wrapper(text, measure);
   const maxWidth = opts.maxWidth ?? null;
   const maxLines = Math.max(1, Math.floor(opts.maxLines ?? Infinity));
@@ -335,17 +387,19 @@ export function wrapVariants(text: string, opts: WrapOptions, measure: Measure):
   const greedy = maxWidth === null ? wrapper.singleLine() : wrapper.greedy(maxWidth, Infinity);
   const lMin = Math.max(greedy.length, 1);
   if (lMin <= maxLines) {
-    if (opts.balance === false) return [wrapper.variant(wrapper.strings(greedy), false)];
+    if (opts.balance === false) return [wrapper.spansVariant(greedy, wrapper.strings(greedy))];
     const variants: TextVariant[] = [];
     for (let n = lMin; n <= Math.min(lMin + 2, maxLines); n++) {
-      const lines = wrapper.strings(wrapper.balanced(n, maxWidth));
-      if (variants.every((v) => !sameLines(v.lines, lines))) variants.push(wrapper.variant(lines, false));
+      const spans = wrapper.balanced(n, maxWidth);
+      const lines = wrapper.strings(spans);
+      if (variants.every((v) => !sameLines(v.lines, lines))) variants.push(wrapper.spansVariant(spans, lines));
     }
     return variants;
   }
   if (maxWidth === null || truncate === "none") {
     // keep the text, give up the width: the narrowest wrap into maxLines lines
-    return [wrapper.variant(wrapper.strings(wrapper.balanced(maxLines, null)), false)];
+    const spans = wrapper.balanced(maxLines, null);
+    return [wrapper.spansVariant(spans, wrapper.strings(spans))];
   }
   let lines: string[];
   if (truncate === "end") {
@@ -362,7 +416,7 @@ export function wrapVariants(text: string, opts: WrapOptions, measure: Measure):
  * Extra variants for the `wrap` ladder step of labels without wrap settings: the balanced
  * wraps into `2 ..= maxLines` lines, without duplicates and without single-line results.
  */
-export function extraWrapVariants(text: string, maxLines: number, measure: Measure): TextVariant[] {
+export function extraWrapVariants(text: string, maxLines: number, measure: Measure | FontMeasure): TextVariant[] {
   const wrapper = new Wrapper(text, measure);
   const variants: TextVariant[] = [];
   // No wrap has more lines than code points, so larger counts only repeat variants.
@@ -370,7 +424,7 @@ export function extraWrapVariants(text: string, maxLines: number, measure: Measu
     const spans = wrapper.balanced(n, null);
     if (spans.length < 2) continue;
     const lines = wrapper.strings(spans);
-    if (variants.every((v) => !sameLines(v.lines, lines))) variants.push(wrapper.variant(lines, false));
+    if (variants.every((v) => !sameLines(v.lines, lines))) variants.push(wrapper.spansVariant(spans, lines));
   }
   return variants;
 }

@@ -11,6 +11,8 @@
 import {
   type Font,
   FontBook,
+  type FontMeasure,
+  type Measure,
   balancedWrap,
   extraWrapVariants,
   truncateEnd,
@@ -18,7 +20,7 @@ import {
   wrapVariants,
   type WrapOptions,
 } from "@label-anything/text";
-import { type Env, envReadFile } from "./env.js";
+import { type Env, envHasMeasureCallback, envReadFile } from "./env.js";
 import { P, Rect } from "./geom/index.js";
 import { fmtFixed } from "./json.js";
 import { maxf } from "./math.js";
@@ -137,6 +139,18 @@ export class Measurer {
       if (m !== null && m !== undefined) return m.width;
     }
     return this.fontOf(font).width(text, size);
+  }
+
+  /**
+   * The measure for wrapping and truncating a text: `width`, a callback over
+   * {@link Measurer.width}, unless that measures every string they produce with simple
+   * shaping, i.e. without a host measurement (TypeScript has no full shaping, so the shaping
+   * mode and the text do not matter, unlike in Rust). Then the font itself, which measures
+   * each candidate line in constant time with identical widths (ADR 0018).
+   */
+  wrapMeasure(font: FontSel, scale: number, width: Measure): Measure | FontMeasure {
+    if (envHasMeasureCallback(this.env)) return width;
+    return { font: this.fontOf(font), size: font.size * scale };
   }
 
   /** `[ascent, descent]` in px, both positive. */
@@ -308,7 +322,7 @@ function textVariants(m: Measurer, spec: TextSpec, text: string, pad: number, sc
   const measure = (s: string): number => m.width(spec.font, scale, s);
   const opts = toWrapOpts(spec, scale);
   if (opts === null) return [textVariant(m, spec, pad, scale, [text], used, false)];
-  return wrapVariants(text, opts, measure).map((tv) => {
+  return wrapVariants(text, opts, m.wrapMeasure(spec.font, scale, measure)).map((tv) => {
     const u = tv.truncated ? "truncated" : used;
     const v = textVariant(m, spec, pad, scale, tv.lines, u, tv.truncated);
     v.penalty += 0.25 * (v.lines() - 1) + (tv.truncated ? 1 : 0);
@@ -333,7 +347,8 @@ function extraWrap(
   wrapMaxLines: number,
 ): Variant[] {
   if (spec.explicit !== null) return [];
-  const measure = (s: string): number => m.width(spec.font, scale, s);
+  const width = (s: string): number => m.width(spec.font, scale, s);
+  const measure = m.wrapMeasure(spec.font, scale, width);
   let normalMax: number;
   const w = spec.wrap;
   if (w !== null) {
@@ -373,8 +388,9 @@ function truncated(m: Measurer, spec: TextSpec, text: string, pad: number, scale
   const mw = spec.wrap !== null ? spec.wrap.maxWidth : null;
   const target = mw !== null ? mw * scale : full * 0.6;
   if (target >= full) return [];
+  const wrapMeasure = m.wrapMeasure(spec.font, scale, measure);
   const out: Variant[] = [];
-  const candidates = [[truncateEnd(text, target, measure)], truncateMiddle(text, target, 1, measure)];
+  const candidates = [[truncateEnd(text, target, wrapMeasure)], truncateMiddle(text, target, 1, wrapMeasure)];
   for (const lines of candidates) {
     if (!out.some((v) => sameLines(v, lines))) {
       const v = textVariant(m, spec, pad, scale, lines, "truncated", true);

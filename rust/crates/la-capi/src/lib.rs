@@ -37,6 +37,9 @@ impl Env for CEnv {
     fn now_ms(&self) -> f64 {
         self.inner.now_ms()
     }
+    fn has_measure_callback(&self) -> bool {
+        false
+    }
 }
 
 fn out_string(dst: *mut *mut c_char, s: String) {

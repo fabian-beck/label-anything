@@ -1,6 +1,8 @@
 // Runs the `text` conformance cases in conformance/text/*.json (keys: see
 // tools/text/gen_text_cases.py). Widths must match within the case's tolerance and,
-// stricter, be bit-identical to the reference values.
+// stricter, be bit-identical to the reference values. The wrapping cases run twice: with the
+// callback `(s) => font.width(s, size)` and with a `FontMeasure` (lines measured with
+// `MeasuredText`), whose variants must be bit-identical to the callback's.
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,6 +17,8 @@ import {
   truncateMiddle,
   wrapVariants,
   type Font,
+  type FontMeasure,
+  type Measure,
   type TextVariant,
   type Truncate,
 } from "../src/index.js";
@@ -71,6 +75,12 @@ function expectVariants(got: TextVariant[], expected: ExpectedVariant[]): void {
   });
 }
 
+/** Variants of a `FontMeasure` must be bit-identical to the callback's. */
+function expectSameBits(got: TextVariant[], callback: TextVariant[]): void {
+  expect(got.map((v) => [v.lines, v.truncated])).toEqual(callback.map((v) => [v.lines, v.truncated]));
+  got.forEach((v, i) => v.widths.forEach((w, j) => expect(Object.is(w, callback[i].widths[j])).toBe(true)));
+}
+
 const files = readdirSync(caseDir)
   .filter((f) => f.endsWith(".json"))
   .sort();
@@ -82,7 +92,7 @@ describe("text conformance", () => {
     describe(file, () => {
       const c = JSON.parse(readFileSync(join(caseDir, file), "utf8")) as TextCase;
       const font = loadFont(c.font);
-      const measure = (s: string): number => font.width(s, c.size);
+      const callback = (s: string): number => font.width(s, c.size);
 
       it("is a text case", () => expect(c.kind).toBe("text"));
 
@@ -114,51 +124,63 @@ describe("text conformance", () => {
         });
       }
 
-      if (c.wrap !== undefined) {
-        it("greedy wrap", () => {
-          for (const e of c.wrap!) expect(greedyWrap(e.text, e.max_width, measure), e.text).toEqual(e.lines);
-        });
-      }
+      const measures: [string, Measure | FontMeasure][] = [
+        ["", callback],
+        [" with a FontMeasure", { font, size: c.size }],
+      ];
+      for (const [suffix, measure] of measures) {
+        if (c.wrap !== undefined) {
+          it(`greedy wrap${suffix}`, () => {
+            for (const e of c.wrap!) expect(greedyWrap(e.text, e.max_width, measure), e.text).toEqual(e.lines);
+          });
+        }
 
-      if (c.balanced !== undefined) {
-        it("balanced wrap", () => {
-          for (const e of c.balanced!) {
-            expect(balancedWrap(e.text, e.lines_target, e.max_width, measure), e.text).toEqual(e.lines);
-          }
-        });
-      }
+        if (c.balanced !== undefined) {
+          it(`balanced wrap${suffix}`, () => {
+            for (const e of c.balanced!) {
+              expect(balancedWrap(e.text, e.lines_target, e.max_width, measure), e.text).toEqual(e.lines);
+            }
+          });
+        }
 
-      if (c.truncate !== undefined) {
-        it("truncation", () => {
-          for (const e of c.truncate!) {
-            const got =
-              e.mode === "end"
-                ? [truncateEnd(e.text, e.max_width, measure)]
-                : truncateMiddle(e.text, e.max_width, e.max_lines ?? 1, measure);
-            expect(got, `${e.mode} ${e.text} ${e.max_width}`).toEqual(e.result !== undefined ? [e.result] : e.lines);
-          }
-        });
-      }
+        if (c.truncate !== undefined) {
+          it(`truncation${suffix}`, () => {
+            for (const e of c.truncate!) {
+              const got =
+                e.mode === "end"
+                  ? [truncateEnd(e.text, e.max_width, measure)]
+                  : truncateMiddle(e.text, e.max_width, e.max_lines ?? 1, measure);
+              expect(got, `${e.mode} ${e.text} ${e.max_width}`).toEqual(e.result !== undefined ? [e.result] : e.lines);
+            }
+          });
+        }
 
-      if (c.variants !== undefined) {
-        it("wrap variants", () => {
-          for (const e of c.variants!) {
-            const o = e.options;
-            const got = wrapVariants(
-              e.text,
-              { maxWidth: o.max_width, maxLines: o.max_lines, balance: o.balance, truncate: o.truncate },
-              measure,
-            );
-            expectVariants(got, e.variants);
-          }
-        });
-      }
+        if (c.variants !== undefined) {
+          it(`wrap variants${suffix}`, () => {
+            for (const e of c.variants!) {
+              const o = e.options;
+              const options = {
+                maxWidth: o.max_width,
+                maxLines: o.max_lines,
+                balance: o.balance,
+                truncate: o.truncate,
+              };
+              const got = wrapVariants(e.text, options, measure);
+              expectVariants(got, e.variants);
+              if (measure !== callback) expectSameBits(got, wrapVariants(e.text, options, callback));
+            }
+          });
+        }
 
-      if (c.extra_variants !== undefined) {
-        it("extra wrap variants", () => {
-          for (const e of c.extra_variants!)
-            expectVariants(extraWrapVariants(e.text, e.max_lines, measure), e.variants);
-        });
+        if (c.extra_variants !== undefined) {
+          it(`extra wrap variants${suffix}`, () => {
+            for (const e of c.extra_variants!) {
+              const got = extraWrapVariants(e.text, e.max_lines, measure);
+              expectVariants(got, e.variants);
+              if (measure !== callback) expectSameBits(got, extraWrapVariants(e.text, e.max_lines, callback));
+            }
+          });
+        }
       }
     });
   }

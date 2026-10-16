@@ -189,6 +189,10 @@ export class OptionsEnv implements Env {
     return r ?? null;
   }
 
+  hasMeasureCallback(): boolean {
+    return this.options.measure !== undefined;
+  }
+
   priority(item: unknown, index: number): [number | null, number] | null {
     const p = this.options.priority;
     if (p === undefined) return null;

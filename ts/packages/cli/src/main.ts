@@ -141,6 +141,9 @@ function envFor(problemPath: string | null, clock: boolean): Env {
         throw new Error(`cannot read ${p}: ${e instanceof Error ? e.message : String(e)}`);
       }
     },
+    hasMeasureCallback(): boolean {
+      return false;
+    },
   };
   if (clock) env.nowMs = () => performance.now();
   return env;

@@ -98,6 +98,35 @@ impl<'a> Measurer<'a> {
         }
     }
 
+    /// The measure for wrapping and truncating `text`: `width`, a closure over
+    /// [`Measurer::width`], unless that measures every string they produce with simple
+    /// shaping — no host measurement, and shaping `simple`, or `auto` for a text without
+    /// complex scripts (its lines, prefixes and `…` have none either). Then the font itself,
+    /// which measures each candidate line in constant time with identical widths.
+    pub fn wrap_measure<'m>(
+        &'m self,
+        font: &FontSel,
+        scale: f64,
+        text: &str,
+        width: &'m dyn Fn(&str) -> f64,
+    ) -> la_text::Measure<'m> {
+        let simple = !self.env.has_measure_callback()
+            && match self.shaping {
+                "full" => false,
+                "auto" => !la_text::needs_complex_shaping(text),
+                _ => true,
+            };
+        if !simple {
+            return la_text::Measure::Callback(width);
+        }
+        la_text::Measure::Font {
+            font: self
+                .fonts
+                .font(self.fonts.resolve(&font.family, font.weight, font.italic)),
+            size: font.spec(scale).size,
+        }
+    }
+
     /// (ascent, descent) in px, both positive.
     pub fn vmetrics(&self, font: &FontSel, scale: f64) -> (f64, f64) {
         let spec: FontSpec = font.spec(scale);
@@ -287,21 +316,25 @@ fn text_variants(
             used,
             false,
         )],
-        Some(opts) => la_text::wrap_variants(text, &opts, &measure)
-            .into_iter()
-            .map(|tv| {
-                let u = if tv.truncated { "truncated" } else { used };
-                let mut v = text_variant(m, spec, pad, scale, tv.lines, u, tv.truncated);
-                v.penalty += 0.25 * (v.lines() as f64 - 1.0) + if tv.truncated { 1.0 } else { 0.0 };
-                if v.lines() > 1 {
-                    v.steps.push("wrap".into());
-                }
-                if tv.truncated {
-                    v.steps.push("truncate".into());
-                }
-                v
-            })
-            .collect(),
+        Some(opts) => la_text::wrap_variants(
+            text,
+            &opts,
+            m.wrap_measure(&spec.font, scale, text, &measure),
+        )
+        .into_iter()
+        .map(|tv| {
+            let u = if tv.truncated { "truncated" } else { used };
+            let mut v = text_variant(m, spec, pad, scale, tv.lines, u, tv.truncated);
+            v.penalty += 0.25 * (v.lines() as f64 - 1.0) + if tv.truncated { 1.0 } else { 0.0 };
+            if v.lines() > 1 {
+                v.steps.push("wrap".into());
+            }
+            if tv.truncated {
+                v.steps.push("truncate".into());
+            }
+            v
+        })
+        .collect(),
     }
 }
 
@@ -318,16 +351,17 @@ fn extra_wrap(
     if spec.explicit.is_some() {
         return vec![];
     }
-    let measure = |s: &str| m.width(&spec.font, scale, s);
+    let width = |s: &str| m.width(&spec.font, scale, s);
+    let measure = m.wrap_measure(&spec.font, scale, text, &width);
     let normal_max = match &spec.wrap {
         Some(w) => {
             // lines beyond the normal variants, up to max_lines
             let opts = to_wrap_opts(spec, scale).unwrap();
-            let normal = la_text::wrap_variants(text, &opts, &measure);
+            let normal = la_text::wrap_variants(text, &opts, measure);
             let have = normal.iter().map(|v| v.lines.len()).max().unwrap_or(1);
             let mut out = Vec::new();
             for n in (have + 1)..=w.max_lines {
-                let lines = la_text::balanced_wrap(text, n, opts.max_width, &measure);
+                let lines = la_text::balanced_wrap(text, n, opts.max_width, measure);
                 if lines.len() > have
                     && !out
                         .iter()
@@ -343,7 +377,7 @@ fn extra_wrap(
         }
         None => wrap_max_lines,
     };
-    la_text::extra_wrap_variants(text, normal_max, &measure)
+    la_text::extra_wrap_variants(text, normal_max, measure)
         .into_iter()
         .map(|tv| {
             let mut v = text_variant(m, spec, pad, scale, tv.lines, used, tv.truncated);
@@ -370,10 +404,11 @@ fn truncated(m: &Measurer, spec: &TextSpec, text: &str, pad: f64, scale: f64) ->
     if target >= full {
         return vec![];
     }
+    let wrap_measure = m.wrap_measure(&spec.font, scale, text, &measure);
     let mut out = Vec::new();
     for lines in [
-        vec![la_text::truncate_end(text, target, &measure)],
-        la_text::truncate_middle(text, target, 1, &measure),
+        vec![la_text::truncate_end(text, target, wrap_measure)],
+        la_text::truncate_middle(text, target, 1, wrap_measure),
     ] {
         if !out
             .iter()
@@ -682,4 +717,49 @@ pub fn label_size_em2(item: &Item, variants: &[Variant]) -> f64 {
         .first()
         .map(|v| v.w * v.h / (em * em))
         .unwrap_or(0.0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::env::{BasicEnv, Env};
+
+    /// An environment that declares a host measurement callback.
+    struct HostMeasure;
+
+    impl Env for HostMeasure {}
+
+    #[test]
+    fn wrap_measure_uses_the_font_for_simple_shaping_without_host_measurement() {
+        let font = FontSel {
+            family: "default".into(),
+            weight: 400,
+            italic: false,
+            size: 12.0,
+            line_height: 1.2,
+            file: None,
+        };
+        let width = |_: &str| 0.0;
+        let prepared = |env: &dyn Env, shaping: &str, text: &str| {
+            let m = Measurer {
+                fonts: bundled_fonts(),
+                env,
+                shaping,
+            };
+            match m.wrap_measure(&font, 1.5, text, &width) {
+                la_text::Measure::Font { size, .. } => {
+                    assert_eq!(size, 18.0);
+                    true
+                }
+                la_text::Measure::Callback(_) => false,
+            }
+        };
+        let hebrew = "\u{5e9}\u{5dc}\u{5d5}\u{5dd}";
+        assert!(prepared(&BasicEnv, "auto", "org.example.Foo"));
+        assert!(prepared(&BasicEnv, "simple", "org.example.Foo"));
+        assert!(prepared(&BasicEnv, "simple", hebrew));
+        assert!(!prepared(&BasicEnv, "auto", hebrew));
+        assert!(!prepared(&BasicEnv, "full", "org.example.Foo"));
+        assert!(!prepared(&HostMeasure, "simple", "org.example.Foo"));
+    }
 }
