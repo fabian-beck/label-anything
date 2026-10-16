@@ -10,7 +10,7 @@ use crate::error::{RasterError, RasterErrorKind};
 /// `data.len()` must be `width * height * 4`; [`Rgba::new`] checks this. [`process`]
 /// and [`estimate_background`] treat an inconsistent value as an empty image.
 ///
-/// [`process`]: crate::process
+/// [`process`]: crate::process()
 /// [`estimate_background`]: crate::estimate_background
 #[derive(Clone, PartialEq, Eq, Hash, Default)]
 pub struct Rgba {

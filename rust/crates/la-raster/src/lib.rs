@@ -29,7 +29,7 @@
 //! ## Features
 //!
 //! * `decode` (default): PNG, JPEG and WebP decoding through the `image` crate (pure
-//!   Rust, only the `png`, `jpeg` and `webp` codecs). Without it, [`decode`] returns an
+//!   Rust, only the `png`, `jpeg` and `webp` codecs). Without it, [`decode()`] returns an
 //!   `unsupported` error and raw RGBA input still works. The crate builds for
 //!   `wasm32-unknown-unknown` with and without the feature.
 #![forbid(unsafe_code)]
