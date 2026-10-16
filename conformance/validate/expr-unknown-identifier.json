@@ -1,0 +1,28 @@
+{
+  "kind": "validate",
+  "name": "expr-unknown-identifier",
+  "problem": {
+    "items": [],
+    "priority": {
+      "terms": [
+        {
+          "expr": "nope > 1"
+        },
+        {
+          "attr": "x"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/priority/terms/0/expr",
+        "code": "expr_unknown_identifier"
+      }
+    ],
+    "warnings": [],
+    "exact": true
+  }
+}
