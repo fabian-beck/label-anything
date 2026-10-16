@@ -3,10 +3,11 @@
 Every adapter reports the problem's own label box (spec §5 measurement, padding
 included) at the position the tool chose, so the evaluator and the renderer
 treat all solvers alike. A connector line becomes a ``leader`` only when the
-tool drew one *and* the label does not touch its mark's offset ring (gap >
-``offset + 0.5`` px); shorter stubs between an adjacent label and its mark are
-not leaders. Emulations and unsupported features are listed in ``warnings``
-(codes ``baseline_emulation`` / ``baseline_unsupported``).
+tool drew one *and* the label box is farther than ``offset + 0.5`` px from the
+mark's bounding box along x or y (max-norm): the tools' adjacent positions,
+diagonal ones offset along both axes included, get a short stub at most, which
+is not a leader. Emulations and unsupported features are listed in
+``warnings`` (codes ``baseline_emulation`` / ``baseline_unsupported``).
 """
 from __future__ import annotations
 
@@ -21,8 +22,10 @@ def leader_for(lab: LabelItem, box: Box, port: Point | None) -> dict | None:
     """Straight leader from the mark's boundary to ``port`` on the box, or None for adjacent labels."""
     if port is None:
         return None
-    gap = lab.shape.sdist_box(box)
-    if gap <= lab.offset + TOL:
+    mb = lab.mark_box
+    dx = max(mb.x0 - box.x1, box.x0 - mb.x1, 0.0)
+    dy = max(mb.y0 - box.y1, box.y0 - mb.y1, 0.0)
+    if max(dx, dy) <= lab.offset + TOL:
         return None
     start = clip_start(lab.shape, (lab.x, lab.y), port)
     if start is None or (abs(start[0] - port[0]) < 1e-9 and abs(start[1] - port[1]) < 1e-9):

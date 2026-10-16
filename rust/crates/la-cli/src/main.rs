@@ -6,7 +6,7 @@
 //!                      --background bg.png --preset map -o out.json
 //! label-anything render problem.json result.json -o overlay.svg
 //! label-anything validate problem.json
-//! label-anything bench [--suite full|quick] [--baselines] -o bench-report/
+//! label-anything bench [--suite full|quick] [--baselines] [--perf] [--gate] [--previous old.json] -o bench-report/ [-- ARGS]
 //! label-anything serve --port 7077
 //! ```
 //! `-` reads stdin / writes stdout.
@@ -96,17 +96,36 @@ enum Cmd {
         #[arg(long)]
         json: bool,
     },
-    /// Run the real-world benchmark (delegates to bench/run.py).
+    /// Run the real-world benchmark (delegates to bench/run.py with this binary as the `rust` solver).
+    ///
+    /// Python: $LA_BENCH_PYTHON, else bench/.venv's interpreter when present, else python3.
+    /// Arguments after `--` are passed to bench/run.py unchanged.
     Bench {
         #[arg(long, default_value = "quick")]
         suite: String,
+        /// Also run the baselines (naive, greedy, textalloc, adjustText, vega-label, ggrepel).
         #[arg(long)]
         baselines: bool,
+        /// Measure the performance targets.
+        #[arg(long)]
+        perf: bool,
+        /// Evaluate the release gates (implies --perf); the exit code reflects them.
+        #[arg(long)]
+        gate: bool,
+        /// results.json of the previous release (changes and the regression gate).
+        #[arg(long)]
+        previous: Option<PathBuf>,
+        /// Runs per problem.
+        #[arg(long)]
+        runs: Option<u32>,
         #[arg(short, long, default_value = "bench-report")]
         output: PathBuf,
         /// Repository root (defaults to the nearest ancestor containing bench/run.py).
         #[arg(long)]
         repo: Option<PathBuf>,
+        /// Further arguments for bench/run.py (after `--`).
+        #[arg(last = true)]
+        args: Vec<String>,
     },
     /// HTTP server: POST /place and POST /validate with a JSON body.
     Serve {
@@ -348,8 +367,13 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
         Cmd::Bench {
             suite,
             baselines,
+            perf,
+            gate,
+            previous,
+            runs,
             output,
             repo,
+            args,
         } => {
             let root = match repo {
                 Some(r) => r,
@@ -366,7 +390,18 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
                 }
             };
             let exe = std::env::current_exe().map_err(|e| e.to_string())?;
-            let mut cmd = std::process::Command::new("python3");
+            let python = std::env::var_os("LA_BENCH_PYTHON")
+                .map(PathBuf::from)
+                .or_else(|| {
+                    [
+                        root.join("bench/.venv/bin/python"),
+                        root.join("bench/.venv/Scripts/python.exe"),
+                    ]
+                    .into_iter()
+                    .find(|p| p.exists())
+                })
+                .unwrap_or_else(|| PathBuf::from("python3"));
+            let mut cmd = std::process::Command::new(&python);
             cmd.arg(root.join("bench/run.py"))
                 .arg("--suite")
                 .arg(&suite)
@@ -377,7 +412,22 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
             if baselines {
                 cmd.arg("--baselines");
             }
-            let status = cmd.status().map_err(|e| format!("python3: {e}"))?;
+            if perf {
+                cmd.arg("--perf");
+            }
+            if gate {
+                cmd.arg("--gate");
+            }
+            if let Some(p) = previous {
+                cmd.arg("--previous").arg(p);
+            }
+            if let Some(n) = runs {
+                cmd.arg("--runs").arg(n.to_string());
+            }
+            cmd.args(&args);
+            let status = cmd
+                .status()
+                .map_err(|e| format!("{}: {e}", python.display()))?;
             Ok(if status.success() {
                 ExitCode::SUCCESS
             } else {

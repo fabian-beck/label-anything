@@ -15,7 +15,8 @@ mode="${1:-auto}"
 if [ "$mode" != "--cran" ] && command -v apt-get >/dev/null 2>&1 \
     && grep -q '^VERSION_CODENAME=noble$' /etc/os-release 2>/dev/null; then
   apt-get update
-  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+  # --allow-downgrades: a runner image may come with a newer R from another repository
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --allow-downgrades \
     r-base-core=4.3.3-2build2 \
     r-cran-ggrepel=0.9.5-1 \
     r-cran-ggplot2=3.4.4+dfsg-1 \

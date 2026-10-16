@@ -6,6 +6,9 @@ on:
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
+  schedule:
+    # weekly (Mondays 03:17 UTC): benchmark with the baselines (job `baselines`)
+    - cron: "17 3 * * 1"
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -208,3 +211,65 @@ jobs:
         with:
           name: bench-report
           path: bench-report/
+
+  baselines:
+    # The quick suite with the Rust engine and every baseline (textalloc, adjustText, vega-label,
+    # ggrepel, naive, greedy) plus the performance targets; on tags also the release gates.
+    # The same setup as one image: bench/Dockerfile.
+    name: Benchmark with baselines (quick)
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: bench/baselines/package-lock.json
+      - name: R, ggplot2 and ggrepel (Ubuntu 24.04 packages at the pinned versions)
+        run: sudo bash bench/baselines/install-r.sh
+      - name: Cache fetched data and built problems
+        uses: actions/cache@v4
+        with:
+          path: |
+            bench/data
+            bench/out
+          key: bench-${{ hashFiles('bench/common/sources.py', 'bench/scenarios/**/*.py', 'bench/common/*.py') }}
+      - run: cargo build --release --manifest-path rust/Cargo.toml -p label-anything-cli
+      - name: Python and Node dependencies
+        run: |
+          python3 -m venv bench/.venv
+          bench/.venv/bin/pip install -r bench/requirements.txt -r bench/baselines/requirements.txt
+          npm ci --prefix bench/baselines --no-audit --no-fund
+          bench/.venv/bin/python -m bench.baselines --list
+      - name: Fetch and build scenarios
+        run: |
+          bench/.venv/bin/python -m bench.scenarios fetch
+          bench/.venv/bin/python -m bench.scenarios build
+      - name: Adapter, report and gate tests
+        run: bench/.venv/bin/python -m pytest -q bench/eval/tests bench/baselines/tests bench/tests
+      - name: Run (quick suite, Rust engine, all baselines, performance targets)
+        run: >
+          bench/.venv/bin/python bench/run.py --suite quick --runs 3
+          --engine "$PWD/rust/target/release/label-anything"
+          --baselines --require-baselines --perf
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bench-report-baselines
+          path: bench-report/
+      - name: Release gates
+        if: startsWith(github.ref, 'refs/tags/')
+        run: bench/.venv/bin/python -m bench.gates bench-report/results.json
