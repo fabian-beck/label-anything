@@ -1,0 +1,498 @@
+{
+  "kind": "parity",
+  "problem_file": "../problems/leaders-angles.json",
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "d0",
+        "placed": true,
+        "box": {
+          "x": 258.8284271247462,
+          "y": 202.8284271247462,
+          "w": 79.23599999999999,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "bottom-right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Dense label 0"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            75.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.9618586094082932,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "d1",
+        "placed": true,
+        "box": {
+          "x": 213.62381383520884,
+          "y": 226.5488259088474,
+          "w": 79.23599999999996,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "distant",
+        "model": "distant",
+        "text": {
+          "lines": [
+            "Dense label 1"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            75.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              253.24181383520883,
+              208.5488259088474
+            ],
+            [
+              253.24181383520883,
+              226.5488259088474
+            ]
+          ],
+          "style": "angles",
+          "port": [
+            253.24181383520883,
+            226.5488259088474
+          ]
+        },
+        "cost": 2.308067049976319,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 1
+        }
+      },
+      {
+        "id": "d2",
+        "placed": true,
+        "box": {
+          "x": 164.3004607105849,
+          "y": 205.97117001669704,
+          "w": 79.23599999999999,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "bottom-left",
+        "model": "slider",
+        "text": {
+          "lines": [
+            "Dense label 2"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            75.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 1.1289301028076326,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 2
+        }
+      },
+      {
+        "id": "d3",
+        "placed": true,
+        "box": {
+          "x": 367.5600450203973,
+          "y": 190.8747200483592,
+          "w": 79.23599999999999,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "distant",
+        "model": "distant",
+        "text": {
+          "lines": [
+            "Dense label 3"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            75.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              247.56004502039733,
+              200.8467200483592
+            ],
+            [
+              367.5600450203973,
+              200.8467200483592
+            ]
+          ],
+          "style": "angles",
+          "port": [
+            367.5600450203973,
+            200.8467200483592
+          ]
+        },
+        "cost": 11.401132279885402,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 3
+        }
+      },
+      {
+        "id": "d4",
+        "placed": true,
+        "box": {
+          "x": 8.0,
+          "y": 178.28718502815244,
+          "w": 40.656,
+          "h": 34.343999999999994
+        },
+        "anchor_side": "boundary",
+        "model": "boundary",
+        "text": {
+          "lines": [
+            "Dense",
+            "label 4"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628,
+            29.028
+          ],
+          "line_widths": [
+            35.46,
+            37.056
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              242.57813827481831,
+              195.45918502815243
+            ],
+            [
+              48.656,
+              195.45918502815243
+            ]
+          ],
+          "style": "angles",
+          "port": [
+            48.656,
+            195.45918502815243
+          ]
+        },
+        "cost": 5.973377880725382,
+        "degrade_steps": [
+          "wrap",
+          "boundary"
+        ],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 4
+        }
+      },
+      {
+        "id": "d5",
+        "placed": true,
+        "box": {
+          "x": 169.63754598803317,
+          "y": 171.47402722727495,
+          "w": 79.23599999999999,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top-left",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Dense label 5"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            75.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 1.003273516988373,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 5
+        }
+      },
+      {
+        "id": "d6",
+        "placed": true,
+        "box": {
+          "x": 258.5894488446484,
+          "y": 175.55107988606022,
+          "w": 79.23599999999999,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top-right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Dense label 6"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            75.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.7519658635998334,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 6
+        }
+      },
+      {
+        "id": "d7",
+        "placed": true,
+        "box": {
+          "x": 214.90541352605985,
+          "y": 128.4979195923127,
+          "w": 79.23600000000002,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "distant",
+        "model": "distant",
+        "text": {
+          "lines": [
+            "Dense label 7"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            75.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              254.52341352605984,
+              200.44191959231273
+            ],
+            [
+              254.52341352605984,
+              148.44191959231273
+            ]
+          ],
+          "style": "angles",
+          "port": [
+            254.52341352605984,
+            148.44191959231273
+          ]
+        },
+        "cost": 8.751173389289406,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 7
+        }
+      },
+      {
+        "id": "d8",
+        "placed": true,
+        "box": {
+          "x": 80.39099979714834,
+          "y": 195.96414947974029,
+          "w": 79.23599999999999,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "distant",
+        "model": "distant",
+        "text": {
+          "lines": [
+            "Dense label 8"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            75.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              245.62699979714833,
+              205.9361494797403
+            ],
+            [
+              159.62699979714833,
+              205.9361494797403
+            ]
+          ],
+          "style": "angles",
+          "port": [
+            159.62699979714833,
+            205.9361494797403
+          ]
+        },
+        "cost": 6.5474660343757405,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 8
+        }
+      },
+      {
+        "id": "d9",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items",
+          "leaders",
+          "labels"
+        ],
+        "blocked_by": [
+          "d2",
+          "d4",
+          "d5",
+          "d8"
+        ],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 9
+        },
+        "degrade_steps": [
+          "alternatives",
+          "wrap",
+          "distant",
+          "boundary",
+          "evict_lower",
+          "shrink:0.85",
+          "soft_overlap",
+          "omit"
+        ]
+      }
+    ],
+    "stats": {
+      "placed": 9,
+      "total": 10,
+      "placed_weighted": 0.9363792118010483,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 4000,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 182,
+      "omission_order": [
+        "d9"
+      ],
+      "priority_inversions": 0,
+      "total_cost": 38.827244727056375,
+      "degraded": {
+        "boundary": 1,
+        "wrapped": 1
+      },
+      "grid": {
+        "cell": 3.0,
+        "cols": 167,
+        "rows": 134,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

@@ -40,6 +40,8 @@ const CURVE_SEGMENTS = 64;
 /** Scratch quadrilaterals `[x0, y0, …, x3, y3]` of the allocation-free tests. */
 const QA = new Float64Array(8);
 const QB = new Float64Array(8);
+/** Scratch point of {@link ShapeBase.boundaryPoint}. */
+const BP = new Float64Array(2);
 
 /** Polygon (possibly concave, with holes) with an explicit reference point. */
 export class PolyShape {
@@ -323,20 +325,45 @@ export abstract class ShapeBase {
 
   /** First boundary point along the ray from the reference point in direction `dir`. */
   boundaryPoint(dir: P): P {
+    BP[0] = dir.x;
+    BP[1] = dir.y;
+    this.boundaryPointIn(BP);
+    return new P(BP[0]!, BP[1]!);
+  }
+
+  /**
+   * {@link boundaryPoint} in place: the direction in `io[0..2]` is replaced by the point
+   * (the same operations, without allocating or passing coordinates as arguments).
+   */
+  boundaryPointIn(io: Float64Array): void {
     const s = this as unknown as Shape;
-    const d = dir.norm();
+    const out = io;
+    const dirX = io[0]!;
+    const dirY = io[1]!;
+    // d = dir.norm()
+    const l = len2d(dirX, dirY);
+    const dx = l > 0 ? dirX / l : 0;
+    const dy = l > 0 ? dirY / l : 0;
     const o = this.reference();
     switch (s.kind) {
       case "circle":
-        return new P(s.c.x + d.x * s.r, s.c.y + d.y * s.r);
+        out[0] = s.c.x + dx * s.r;
+        out[1] = s.c.y + dy * s.r;
+        return;
       case "ellipse": {
         const { c, rx, ry, cos, sin } = s;
-        const lx = d.x * cos + d.y * sin;
-        const ly = -d.x * sin + d.y * cos;
+        const lx = dx * cos + dy * sin;
+        const ly = -dx * sin + dy * cos;
         const den = (lx * lx) / (rx * rx) + (ly * ly) / (ry * ry);
-        if (den <= 0) return c;
+        if (den <= 0) {
+          out[0] = c.x;
+          out[1] = c.y;
+          return;
+        }
         const k = 1 / Math.sqrt(den);
-        return new P(c.x + d.x * k, c.y + d.y * k);
+        out[0] = c.x + dx * k;
+        out[1] = c.y + dy * k;
+        return;
       }
       default: {
         // bisection on the signed distance along the ray (the reference point may be
@@ -345,16 +372,21 @@ export abstract class ShapeBase {
         const far = len2d(bb.w(), bb.h()) + len2d(o.x - (bb.x0 + bb.x1) * 0.5, o.y - (bb.y0 + bb.y1) * 0.5) + 1;
         let lo = 0;
         let hi = far;
-        if (!this.contains(o)) return o;
+        if (!this.containsXY(o.x, o.y)) {
+          out[0] = o.x;
+          out[1] = o.y;
+          return;
+        }
         for (let i = 0; i < 48; i++) {
           const mid = (lo + hi) * 0.5;
-          if (this.containsXY(o.x + d.x * mid, o.y + d.y * mid)) {
+          if (this.containsXY(o.x + dx * mid, o.y + dy * mid)) {
             lo = mid;
           } else {
             hi = mid;
           }
         }
-        return new P(o.x + d.x * lo, o.y + d.y * lo);
+        out[0] = o.x + dx * lo;
+        out[1] = o.y + dy * lo;
       }
     }
   }

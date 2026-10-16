@@ -1,0 +1,204 @@
+{
+  "kind": "parity",
+  "problem_file": "../problems/groups-keepwith.json",
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "g1",
+        "placed": true,
+        "box": {
+          "x": 124.07000000000001,
+          "y": 126.0535880070592,
+          "w": 151.86,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Coincident A, Coincident B"
+          ],
+          "used": "group",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            148.26
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.5414656672549356,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        },
+        "members": [
+          "g1",
+          "g2"
+        ]
+      },
+      {
+        "id": "g2",
+        "placed": false,
+        "reason": "grouped",
+        "blocking": [],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 1
+        }
+      },
+      {
+        "id": "k1",
+        "placed": true,
+        "box": {
+          "x": 71.11952722987307,
+          "y": 56.05600000000137,
+          "w": 47.087999999999994,
+          "h": 19.943999999999996
+        },
+        "anchor_side": "top",
+        "model": "slider",
+        "text": {
+          "lines": [
+            "Pair left"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            43.488
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.15874999999996592,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 2
+        }
+      },
+      {
+        "id": "k2",
+        "placed": true,
+        "box": {
+          "x": 134.0,
+          "y": 70.02799999999999,
+          "w": 55.94400000000002,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Pair right"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            52.344
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.125,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 3
+        }
+      },
+      {
+        "id": "x",
+        "placed": true,
+        "box": {
+          "x": 286.098,
+          "y": 196.05599999999998,
+          "w": 27.803999999999974,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Solo"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            24.204
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.049999999999999996,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 4
+        }
+      }
+    ],
+    "stats": {
+      "placed": 4,
+      "total": 5,
+      "placed_weighted": 0.7860137352654725,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 2000,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 142,
+      "omission_order": [
+        "g2"
+      ],
+      "priority_inversions": 0,
+      "total_cost": 0.8752156672549016,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 134,
+        "rows": 100,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

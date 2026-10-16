@@ -1,0 +1,131 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 120
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "class": "wall",
+          "rects": [
+            [
+              0,
+              0,
+              60,
+              120
+            ]
+          ]
+        }
+      ]
+    },
+    "avoid": {
+      "label": {
+        "wall": "hard"
+      }
+    },
+    "placement": {
+      "models": [
+        "adjacent",
+        "slider"
+      ]
+    },
+    "degrade": [
+      "omit"
+    ],
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 200,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Free"
+        },
+        "keep_with": "pair"
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 30,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Walled in"
+        },
+        "keep_with": "pair"
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "a",
+        "placed": false,
+        "reason": "keep_with",
+        "blocking": [],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "b",
+        "placed": false,
+        "reason": "no_feasible_candidate",
+        "blocking": [
+          "canvas_edge",
+          "wall"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 1
+        },
+        "degrade_steps": [
+          "omit"
+        ]
+      }
+    ],
+    "stats": {
+      "placed": 0,
+      "total": 2,
+      "placed_weighted": -0.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 800,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 80,
+      "omission_order": [
+        "b",
+        "a"
+      ],
+      "priority_inversions": 0,
+      "total_cost": 0.0,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 100,
+        "rows": 40,
+        "classes": [
+          "wall"
+        ]
+      }
+    },
+    "debug_svg": null
+  }
+}

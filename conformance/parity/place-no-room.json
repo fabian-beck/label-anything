@@ -1,0 +1,80 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 40,
+      "height": 30
+    },
+    "items": [
+      {
+        "id": "long",
+        "anchor": {
+          "type": "point",
+          "x": 20,
+          "y": 15
+        },
+        "label": {
+          "type": "text",
+          "text": "A label much wider than the whole canvas"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "long",
+        "placed": false,
+        "reason": "no_feasible_candidate",
+        "blocking": [
+          "canvas_edge",
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        },
+        "degrade_steps": [
+          "alternatives",
+          "wrap",
+          "distant",
+          "boundary",
+          "evict_lower",
+          "shrink:0.85",
+          "soft_overlap",
+          "omit"
+        ]
+      }
+    ],
+    "stats": {
+      "placed": 0,
+      "total": 1,
+      "placed_weighted": -0.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 896,
+      "omission_order": [
+        "long"
+      ],
+      "priority_inversions": 0,
+      "total_cost": 0.0,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 14,
+        "rows": 10,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

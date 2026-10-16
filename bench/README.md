@@ -39,12 +39,14 @@ packages; scenario 01 also needs a JDK ≥ 11 (`java` on PATH) to run `CkLite.ja
 Building takes ≈ 12 minutes the first time, ≈ 10 of them for the t-SNE of scenario 04,
 which is cached (later builds: ≈ 2 minutes, dominated by the Cora force layout).
 
-**Engine runs.** The engine CLI is not part of this branch yet; once it exists:
+**Engine runs.** Build the Rust CLI (`cargo build --release --manifest-path
+rust/Cargo.toml -p label-anything-cli`) and the TypeScript packages (`npm run build`,
+which includes the `label-anything-ts` CLI), then:
 
 ```sh
 bench/.venv/bin/python bench/run.py --suite full \
     --solver naive --solver greedy \
-    --solver 'rust=label-anything place {problem} -o {result}' \
+    --solver 'rust=rust/target/release/label-anything place {problem} -o {result}' \
     --solver 'ts=node ts/packages/cli/dist/main.js place {problem} -o {result}'
 ```
 

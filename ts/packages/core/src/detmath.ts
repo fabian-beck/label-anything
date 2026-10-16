@@ -753,6 +753,13 @@ export function sinCosDeg(deg: number): [number, number] {
   return [oSin, oCos];
 }
 
+/** {@link sinCosDeg} into `out[0]` (sin) and `out[1]` (cos), without allocating. */
+export function sinCosDegInto(deg: number, out: Float64Array): void {
+  sinCosInto(deg);
+  out[0] = oSin;
+  out[1] = oCos;
+}
+
 /** sin(deg°), identical to sinCosDeg(deg)[0]. */
 export function sinDeg(deg: number): number {
   sinCosInto(deg);

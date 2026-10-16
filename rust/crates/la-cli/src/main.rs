@@ -14,7 +14,7 @@
 mod csv;
 
 use clap::{Parser, Subcommand};
-use label_anything::{NativeEnv, Report};
+use label_anything::{Env, NativeEnv, Report};
 use serde_json::{json, Value};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -81,6 +81,9 @@ enum Cmd {
         font_size: Option<f64>,
         #[arg(long)]
         max_labels: Option<u64>,
+        /// Solve without a clock (no wall-clock guards; deterministic, for parity tests).
+        #[arg(long, hide = true)]
+        no_clock: bool,
     },
     /// Render the debug overlay of a problem and a result.
     Render {
@@ -115,6 +118,22 @@ enum Cmd {
         #[arg(long, default_value = "127.0.0.1")]
         host: String,
     },
+}
+
+/// An environment without a clock (`now_ms() = 0`): no wall-clock guards, so results
+/// depend only on the iteration budgets (`place --no-clock`, used by parity tests).
+struct Clockless<'a>(&'a NativeEnv);
+
+impl Env for Clockless<'_> {
+    fn svg(&self) -> Option<&dyn label_anything::SvgBackend> {
+        self.0.svg()
+    }
+    fn read_file(&self, path: &str) -> Result<Vec<u8>, String> {
+        self.0.read_file(path)
+    }
+    fn now_ms(&self) -> f64 {
+        0.0
+    }
 }
 
 fn read_input(path: &str) -> Result<String, String> {
@@ -200,6 +219,7 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
             canvas,
             font_size,
             max_labels,
+            no_clock,
         } => {
             let (mut p, env) = match (&problem, &anchors) {
                 (Some(path), None) => {
@@ -280,8 +300,10 @@ fn run(cli: Cli) -> Result<ExitCode, String> {
                 print_report(&report);
                 return Ok(ExitCode::from(1));
             }
+            let clockless = Clockless(&env);
+            let env: &dyn Env = if no_clock { &clockless } else { &env };
             let mut result =
-                label_anything::place_validated(&p, &env, report).map_err(|e| e.to_string())?;
+                label_anything::place_validated(&p, env, report).map_err(|e| e.to_string())?;
             if let Some(path) = debug_svg {
                 if let Some(svg) = result.get("debug_svg").and_then(|s| s.as_str()) {
                     std::fs::write(&path, svg).map_err(|e| format!("{}: {e}", path.display()))?;
