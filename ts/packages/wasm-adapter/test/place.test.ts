@@ -51,6 +51,8 @@ describe.skipIf(!built)("place", () => {
     expect(la.features()).toContain("svg"); // initializes the module
     expect(la.VERSION).toBe(pkg.version);
     expect(testHooks.coreVersion()).toBe(la.VERSION);
+    // results name the WebAssembly build (result schema: wasm/<version>)
+    expect(la.place(scatter(3)).stats.implementation).toBe(`wasm/${la.VERSION}`);
   });
 
   for (const file of problemFiles) {

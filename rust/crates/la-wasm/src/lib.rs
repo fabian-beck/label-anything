@@ -81,7 +81,13 @@ fn place_impl(problem_json: &str, options: &JsValue) -> Result<String, JsValue> 
         return Err(e);
     }
     Ok(match out {
-        Ok(result) => result.to_string(),
+        Ok(mut result) => {
+            // the Rust core, compiled to WebAssembly (result schema: `wasm/<version>`)
+            if let Some(stats) = result.get_mut("stats") {
+                stats["implementation"] = Value::from(concat!("wasm/", env!("CARGO_PKG_VERSION")));
+            }
+            result.to_string()
+        }
         Err(e) => issues_json(&e.errors),
     })
 }

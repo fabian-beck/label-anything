@@ -34,7 +34,13 @@ export function readProblem(name: string): AnyProblem {
  * runtime printed in the stats line of `debug_svg`.
  */
 export function untimed(r: LabelResult): unknown {
-  const { runtime_ms: _r, phases_ms: _p, ...stats } = r.stats as unknown as Record<string, unknown>;
+  // timing differs, and so does `implementation` (wasm/… vs rust/…)
+  const {
+    runtime_ms: _r,
+    phases_ms: _p,
+    implementation: _i,
+    ...stats
+  } = r.stats as unknown as Record<string, unknown>;
   const svg = (r as { debug_svg?: unknown }).debug_svg;
   return {
     ...r,
