@@ -34,6 +34,50 @@ statistics, ambiguity, the gap between labels and their shapes, position ranks, 
 degradation, runtime, and — for scenario 11 — displacement, flips and nesting between
 frames. The full list is in [`bench/README.md`](gh:bench/README.md).
 
+## What the results show
+
+From the quick suite with every baseline (CI, commit fd09957, 2026-10-17): labels placed
+of the problem's items, and in parentheses the hard violations the evaluator finds
+(overlapping labels, covered marks, crossing leaders, …); "n/a": the tool cannot run the
+problem (adjustText's pairwise overlap test would need gigabytes).
+
+| Problem | Label Anything | greedy | textalloc | adjustText | vega-label | ggrepel |
+|---|---:|---:|---:|---:|---:|---:|
+| Gapminder 2005, 46 bubbles | **32** (0) | 18 (0) | 29 (26) | 46 (128) | 16 (0) | 23 (17) |
+| 300 airports, world map | **209** (0) | 175 (0) | 177 (205) | n/a | 84 (0) | 117 (36) |
+| 375 POIs on Monaco tiles | **206** (0) | 172 (0) | 67 (61) | n/a | 2 (0) | 76 (21) |
+| Les Misérables, 77 nodes | **77** (0) | 77 (0) | 70 (8) | 77 (19) | 39 (0) | 30 (2) |
+| 200 points, stress | **199** (0) | 183 (0) | 193 (14) | 200 (41) | 174 (0) | 200 (26) |
+| 1,206 classes, strict priority | **57** (0) | 39 (0) | 36 (290) | n/a | 36 (0) | 18 (15) |
+
+* **Guarantees hold.** Every Label Anything result of the benchmark, every frame of the
+  sequences included, has 0 hard violations and 0 leader crossings, and the Rust,
+  WebAssembly and TypeScript implementations give identical placements. Among the tools
+  that avoid every overlap it places the most labels; the tools that place more pay with
+  overlaps.
+* **Dense data loses labels.** A label that would overlap is left out, with the reason
+  and the labels in its way in the result: of 1,000 airports on the world map 501 get a
+  label, of 2,000 random points (the performance problem) 872. The label margin of
+  [ADR 0028](../adr/0028-label-margin.md) trades labels for space between them: 1–4 % of
+  the labels in typical scenes, 10 % of the 2,000 points.
+* **Leaders where it is crowded.** In crowded scenes many labels need leaders (14 of the
+  32 Gapminder labels, 58 of 149 in the Cora network), up to 8 and 11 em long, some
+  across large marks; crowded line ends get a column in the margin
+  ([ADR 0030](../adr/0030-boundary-columns.md)), 35 of the 62 life-expectancy lines.
+* **Moving labels move.** Solving each frame of an animation warm-started with the
+  previous result, labels move 2.3 px per frame on average while one node of the Les
+  Misérables graph is dragged, 2.6 px in a running force layout and 3.4 px while panning
+  and zooming over 1,000 airports. vega-label, whose labels keep to fixed positions,
+  moves them less in the graph (0.8 and 1.2 px) but labels only half of its nodes, and
+  more over the airports (4.1 px); textalloc and ggrepel 3–22 px.
+* **Not as fast as the brief asks.** Hundreds of labels take milliseconds; 2,000 labels
+  over 100,000 points take about 300 ms natively on one core (2.3 to 2.6 times the
+  target) and 0.8 s in TypeScript (1.4 times its target)
+  ([where the time goes](../benchmark.md#where-the-performance-targets-stand)).
+
+The [gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/) shows
+the renderings, and what the defaults still do badly.
+
 ## Running it
 
 ```sh

@@ -163,6 +163,9 @@ The [real-world benchmark](project/benchmark.md) scores Label Anything and six b
 open data — software metrics, volcano plots, embeddings, airports on a world map, city
 POIs on map tiles, node-link diagrams, illustrations, line charts, stress sizes,
 interactive zooming and priority — with one implementation-independent evaluator.
+[What the results show](project/benchmark.md#what-the-results-show): no overlaps and no
+crossing leaders anywhere, more labels than the other tools that avoid every overlap — and
+where it still falls short: dense data, moving labels, the largest problems' speed.
 
 ## Where next
 

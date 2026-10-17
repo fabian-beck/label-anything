@@ -24,8 +24,9 @@ draws leader lines when labels must sit at a distance, and never lets leaders cr
 * **Shape-aware.** Labeled items can be circles, ellipses, (rounded, rotated)
   rectangles, polygons, paths or pins; labels touch the true shape, large shapes get
   internal labels, small ones external labels or leaders.
-* **Fast, deterministic, everywhere.** A Rust core (native, WASM, Python, C ABI, Java)
-  and a pure TypeScript implementation pass the same conformance suite.
+* **Deterministic, everywhere.** A Rust core (native, WASM, Python, C ABI, Java) and a
+  pure TypeScript implementation pass the same conformance suite and give the same
+  placements. Hundreds of labels take milliseconds, thousands a few hundred milliseconds.
 
 Design decisions are recorded in `docs/adr/`, the real-world benchmark is in `bench/`.
 
@@ -117,6 +118,12 @@ targets; `--gate` enforces the release gates (`docs/benchmark.md`, `bench/README
 also lists where the performance targets stand). `python -m bench.gallery` turns a run into a
 [gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/) of
 renderings, published with each release's report.
+
+How good the results are, in short: no overlaps and no crossing leaders anywhere in the
+benchmark, and more labels than the other tools that avoid every overlap; but in dense
+data many labels are left out or need leaders, labels in animations move a few pixels per
+frame, and the largest performance problems miss their targets. The numbers are on the
+[benchmark page](https://fabian-beck.github.io/label-anything/project/benchmark/#what-the-results-show).
 
 ## Repository layout
 
