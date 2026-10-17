@@ -756,12 +756,12 @@ def notes_html(figs: dict[str, dict]) -> str:
     ends = [(k, t) for k, t in (("09-line-end-labels/unemployment-14-vector", "unemployment"),) if n(k)]
     margin = [(k, t) for k, t in (("09-line-end-labels/life-62-boundary", "life expectancy"),) if n(k)]
     if ends or margin:
-        text = ("Where line ends crowd, their labels stand in a column beside them with fanning leaders. A "
-                "column grows only as far as its leaders stay within <code>leaders.max_length</code> (10 em) "
-                "and clear of the other marks; ends beyond that stay without a label"
-                + (f" ({', '.join(ref(k, t) for k, t in ends)} placed)" if ends else "") + ". "
-                "With the <code>boundary</code> model the column stands in the margin, where leaders may be "
-                "longer" + (f" ({', '.join(ref(k, t) for k, t in margin)} placed)" if margin else "") + ".")
+        text = ("Where line ends crowd, their labels stand in a column beside them with fanning leaders"
+                + (f" ({', '.join(ref(k, t) for k, t in ends)} placed)" if ends else "") + ". A column grows "
+                "only as far as its leaders stay within <code>leaders.max_length</code> (10 em) and clear of "
+                "the other marks; ends beyond that stay without a label. With the <code>boundary</code> model "
+                "the column stands in the margin, where leaders may be longer"
+                + (f" ({', '.join(ref(k, t) for k, t in margin)} placed)" if margin else "") + ".")
         notes.append(("Crowded line ends", text))
     return "".join(f'<div class="note"><h3>{E(h)}</h3><p>{p}</p></div>' for h, p in notes)
 
