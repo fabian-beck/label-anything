@@ -20,6 +20,7 @@ from ..common.model import (DIRECTIONS, PERCEPTUAL, Item, Problem, adjacent_box,
                             position_order)
 from . import classes as clsmod
 from . import priority as pr
+from . import visual as vis
 
 TOL = 0.5
 SIDES = tuple(DIRECTIONS)
@@ -139,7 +140,8 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
         shape_index.insert(it.index, it.own_shape.bbox())
 
     hard = {"label_label": 0, "label_item": 0, "own_mark": 0, "internal_outside": 0, "canvas_edge": 0,
-            "leader_leader": 0, "leader_label": 0, "leader_own_label": 0, "leader_item": 0, "leader_canvas": 0}
+            "leader_leader": 0, "leader_near": 0, "leader_angle": 0, "leader_label": 0, "leader_own_label": 0,
+            "leader_item": 0, "leader_canvas": 0}
     examples: dict[str, list] = {}
 
     def note(kind, what):
@@ -228,12 +230,51 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
             if geom.segments_cross(a, b, c, d, tol):
                 crossing_pairs.add((min(k, k2), max(k, k2)))
     leader_crossings = len(crossing_pairs)
+    lopts = opts.get("leaders", {})
+
+    def clearance(it):
+        return spec.length(lopts.get("clearance", 3), it.label.em)
+
     if spec.is_hard(a_leader, "leaders"):
         hard["leader_leader"] = leader_crossings
         for a, b in sorted(crossing_pairs)[:max_list]:
             note("leader_leader", [placed[a].id, placed[b].id])
+        # leaders closer than the clearance (except where both start), and distant leaders
+        # starting within 1 em in nearly the same direction (spec §7)
+        min_angle = float(lopts.get("min_angle_between", 10))
+        with_leaders = [k for k, p in enumerate(placed) if p.leaders]
+        reach = max((max(clearance(placed[k].item), placed[k].item.label.em) for k in with_leaders), default=0.0)
+        lb_index = GridIndex(32.0)
+        lbox = {}
+        for k in with_leaders:
+            pts = [q for pl in placed[k].leaders + placed[k].underlines for q in pl]
+            lbox[k] = Box(min(q[0] for q in pts), min(q[1] for q in pts), max(q[0] for q in pts), max(q[1] for q in pts))
+            lb_index.insert(k, lbox[k])
+        near_pairs, angle_pairs = set(), set()
+        for k in with_leaders:
+            pk = placed[k]
+            for k2 in sorted(set(lb_index.query(lbox[k].grow(reach)))):
+                if k2 <= k or (k, k2) in crossing_pairs:
+                    continue
+                pk2 = placed[k2]
+                clr = max(clearance(pk.item), clearance(pk2.item))
+                near = max(pk.item.label.em, pk2.item.label.em)
+                for A in vis.label_leaders(pk):
+                    for B in vis.label_leaders(pk2):
+                        d = vis.leader_approach(A, B)
+                        if d is not None and d < clr - tol:
+                            near_pairs.add((k, k2))
+                        if (min_angle > 0 and pk.model == "distant" and pk2.model == "distant"
+                                and vis.leaders_parallel(A, B, near, min_angle - 0.05)):
+                            angle_pairs.add((k, k2))
+        hard["leader_near"] = len(near_pairs)
+        hard["leader_angle"] = len(angle_pairs)
+        for a, b in sorted(near_pairs)[:max_list]:
+            note("leader_near", [placed[a].id, placed[b].id])
+        for a, b in sorted(angle_pairs)[:max_list]:
+            note("leader_angle", [placed[a].id, placed[b].id])
     leader_label_pairs = set()
-    leader_hits_items = 0
+    leader_item_pairs = set()
     leader_class_hits: dict[str, int] = {}
     lengths_em, bends = [], []
     leader_items_hard = spec.is_hard(a_leader, "items")
@@ -269,13 +310,14 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                     hard["leader_own_label"] += 1
                     note("leader_own_label", p.id)
                 if leader_items_hard:
-                    for j in item_index.query(q.grow(1.0)):
+                    # leaders keep the clearance from other marks (spec §7)
+                    r = clearance(p.item) - tol
+                    for j in (item_index.query(q.grow(r)) if r > 0 else ()):
                         other = prob.items[j]
-                        if other.id != p.id and other.shape.intersects_segment(a, b, 0.0):
-                            # contacts within tol of the endpoints are not crossings
-                            if other.shape.sdist(a) > tol and other.shape.sdist(b) > tol:
-                                leader_hits_items += 1
-                                note("leader_item", [p.id, other.id])
+                        if (j, k) not in leader_item_pairs and not vis.exempt_mark(p.item, other) \
+                                and other.shape.intersects_segment(a, b, r):
+                            leader_item_pairs.add((j, k))
+                            note("leader_item", [p.id, other.id])
                 for c in leader_hard_classes:
                     if classes[c].segment_hits(a, b):
                         leader_class_hits[c] = leader_class_hits.get(c, 0) + 1
@@ -285,7 +327,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
         for a, b in sorted(leader_label_pairs)[:max_list]:
             note("leader_label", [placed[a].id, placed[b].id])
     if leader_items_hard:
-        hard["leader_item"] = leader_hits_items
+        hard["leader_item"] = len(leader_item_pairs)
     for c, v in leader_class_hits.items():
         hard[f"leader_class:{c}"] = v
     hard_total = int(sum(v for v in hard.values()))
@@ -464,6 +506,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
         "reported": {k: stats.get(k) for k in ("placed", "total", "hard_violations", "leader_crossings",
                                                 "priority_inversions", "placed_weighted")},
         "result_check": {k: v[:max_list] for k, v in checks.items()},
+        "visual": vis.evaluate_visual(prob, placed, classes, a_label, a_leader, max_list),
     }
     out["summary"] = summary(out)
     return out
@@ -491,6 +534,7 @@ def summary(m: dict) -> dict:
         "coverage_satisfaction": (m["priority"]["coverage"] or {}).get("satisfaction"),
         "soft_coverage_mean": _mean(soft), "runtime_ms": m["runtime"]["runtime_ms"],
         "schema_errors": len(m["result_check"]["schema_errors"]),
+        **(vis.summary_fields(m["visual"]) if "visual" in m else {}),
     }
 
 

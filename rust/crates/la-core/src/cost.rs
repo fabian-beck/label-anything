@@ -86,6 +86,8 @@ impl<'a> Evaluator<'a> {
         let em = item.em();
         let r = c.rect;
         let area = maxf(r.area(), 1e-9);
+        // coverage costs count covered em², whatever the label's size (spec §8)
+        let em2 = em * em;
         let w = &model.weights;
         let dy = &obs.dynamic;
         let soft_w = model.degrade.soft_overlap_weight;
@@ -104,7 +106,7 @@ impl<'a> Evaluator<'a> {
                 match dy.label_edge {
                     AvoidW::Hard => acc.violate(Block::Edge, false, 0.0),
                     AvoidW::Soft(wt) => {
-                        acc.add("canvas_edge", wt * (area - la.overlap_area(&r)) / area)
+                        acc.add("canvas_edge", wt * (area - la.overlap_area(&r)) / em2)
                     }
                     AvoidW::Ignore => {}
                 }
@@ -154,7 +156,7 @@ impl<'a> Evaluator<'a> {
             }
         }
         if let AvoidW::Soft(wt) = dy.label_items {
-            acc.add("items", wt * obs.other_items_covered(i, &r) / area);
+            acc.add("items", wt * obs.other_items_covered(i, &r) / em2);
         }
         // the ring only sees other items when the item query found any besides the own
         if dy.buffer_items > 0.0 && self.buf.iter().any(|&j| j as usize != i) {
@@ -168,7 +170,9 @@ impl<'a> Evaluator<'a> {
         if !acc.relaxed {
             return finish(c, acc);
         }
-        // 3. static classes
+        // 3. static classes (an internal label of a mark covers only the mark, which hides
+        // what lies under it: no soft coverage costs)
+        let on_mark = c.kind == Kind::Internal && item.area.is_none();
         let mut hard_prims_checked = false;
         for (ci, cl) in obs.classes.iter().enumerate() {
             let Some(sat) = &cl.sat else { continue };
@@ -189,13 +193,13 @@ impl<'a> Evaluator<'a> {
                         });
                     }
                     if hit {
-                        let extra = soft_w * sat.covered_area(&obs.grid, &r) / area;
+                        let extra = soft_w * sat.covered_area(&obs.grid, &r) / em2;
                         acc.violate(Block::Class(ci as u16), cl.relaxable, extra);
                     }
                 }
                 AvoidW::Soft(wt) => {
-                    if sat.any(&obs.grid, &r) {
-                        acc.add(&cl.name, wt * sat.covered_area(&obs.grid, &r) / area);
+                    if !on_mark && sat.any(&obs.grid, &r) {
+                        acc.add(&cl.name, wt * sat.covered_area(&obs.grid, &r) / em2);
                     }
                 }
                 AvoidW::Ignore => {}
@@ -359,17 +363,25 @@ impl<'a> Evaluator<'a> {
                 acc.violate(Block::Labels, false, 0.0);
             }
         }
-        // other items: clearance
+        // other items: clearance (not from the group's members, and not from a mark that
+        // covers the leader's anchor: no leader avoids it)
         let bb = l.bbox().inflate(item.len.clearance);
         self.buf.clear();
         obs.item_index.query(&bb, &mut self.buf);
         let clearance = item.len.clearance;
+        let anchor = match l.member {
+            Some(m) => model.items[m as usize].anchor,
+            None => item.anchor,
+        };
         for &j in &self.buf {
             let j = j as usize;
-            if j == i {
+            if j == i || model.group_of.get(j).copied().flatten() == Some(i) {
                 continue;
             }
             let sj = &model.items[j].shape;
+            if sj.contains(anchor) {
+                continue;
+            }
             let mut dmin = f64::INFINITY;
             for &(a, b) in &segs {
                 dmin = minf(dmin, sj.dist_segment(a, b));
@@ -423,7 +435,7 @@ impl<'a> Evaluator<'a> {
                             .iter()
                             .map(|&(a, b)| obs.covered_len(sat, a, b))
                             .sum::<f64>()
-                            / maxf(l.len, 1e-9);
+                            / em;
                         acc.violate(
                             Block::Class(ci as u16),
                             cl.relaxable,
@@ -433,7 +445,7 @@ impl<'a> Evaluator<'a> {
                 }
                 AvoidW::Soft(wt) => {
                     let cov: f64 = segs.iter().map(|&(a, b)| obs.covered_len(sat, a, b)).sum();
-                    acc.add(&format!("leader:{}", cl.name), wt * cov / maxf(l.len, 1e-9));
+                    acc.add(&format!("leader:{}", cl.name), wt * cov / em);
                 }
                 AvoidW::Ignore => {}
             }

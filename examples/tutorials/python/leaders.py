@@ -41,7 +41,7 @@ res = la.place(anchors, names, ids=names, canvas=(480, 300), mark=la.Mark.circle
 # --8<-- [end:boundary]
 same = la.place_problem(Path("../problems/leaders-boundary.json"))
 assert [(p.id, p.box) for p in same.placements] == [(p.id, p.box) for p in res.placements]
-assert sum(p.model == "boundary" for p in res.placed) >= 10, res
+assert sum(p.model == "boundary" for p in res.placed) >= 7, res
 
 # --8<-- [start:read]
 for p in res.placed:

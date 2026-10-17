@@ -11,7 +11,8 @@ import label_anything as la
 
 
 def crowded() -> la.Result:
-    pts = [(100.0 + (i % 5) * 3.0, 100.0 + (i // 5) * 3.0) for i in range(15)]
+    # 6 px apart: some labels need leaders, which keep clear of the neighbouring marks
+    pts = [(100.0 + (i % 5) * 6.0, 100.0 + (i // 5) * 6.0) for i in range(15)]
     return la.place(pts, [f"label {i}" for i in range(15)], canvas=(300, 220), models=["adjacent", "distant"], leaders="straight", priority=la.Priority.input_order())
 
 

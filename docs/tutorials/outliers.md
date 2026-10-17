@@ -83,14 +83,14 @@ default) at a 2 px offset, and no two labels overlap. In detail:
   more than an OKLab distance of 0.12 is *ink*, and the ink is averaged into a coverage
   grid of 3 px cells (a quarter of the 12 px font size). The light grid lines are close
   enough to white not to count. Without a `canvas`, the canvas is the image size.
-* **The preset.** `scatter` makes covering ink cost 0.5 per unit of covered area: labels
+* **The preset.** `scatter` makes covering ink cost 0.1 per em² of covered area: labels
   prefer empty space but may touch a dot when nothing better exists. Labels never overlap
   other labels, other items' marks or their own mark (`hard` by default) and stay 4 px
   inside the canvas. [Avoidance](../concepts/avoidance.md) explains the classes.
 * **The candidates.** Each label is tried at 8 positions around its mark (top first), at
   4 sliding positions between each pair and — with the `scatter` preset — at a distance
   with a leader. When none of them is free, the degradation ladder tries shorter
-  alternatives, wrapping, the margins, evicting a less important label, shrinking — and
+  alternatives, wrapping, a leader, evicting a less important label, shrinking — and
   finally omits the label ([candidates](../concepts/candidates.md)).
 * **The result.** One placement per item, in input order: `box` (x, y, w, h in canvas
   px), `anchor_side` (`right`, `top-left`, …), `model` (`adjacent`, `slider`, …), `leader`

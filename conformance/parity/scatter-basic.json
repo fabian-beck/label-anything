@@ -34,7 +34,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05021775878035147,
+        "cost": 0.051295294117647106,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -72,7 +72,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05709545526349573,
+        "cost": 0.09220588235294117,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -110,7 +110,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.052223123430197076,
+        "cost": 0.06322380065359441,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -186,7 +186,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05547363691755388,
+        "cost": 0.08255882352941193,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -224,7 +224,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.21475844717554102,
+        "cost": 0.26923152431757313,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -262,7 +262,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.4112664356807835,
+        "cost": 0.4437670284685854,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -376,7 +376,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13088328600645258,
+        "cost": 0.14143942088578215,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -452,7 +452,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2754781304668106,
+        "cost": 0.2782986039215687,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -490,7 +490,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.056288243498250026,
+        "cost": 0.09338235294117611,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -604,7 +604,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05564498105713897,
+        "cost": 0.08894450980392155,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -680,7 +680,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05238029556148463,
+        "cost": 0.06642156862745109,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -780,7 +780,7 @@
       "candidates": 729,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 1.86170979383806,
+      "total_cost": 2.1207688096196526,
       "degraded": {},
       "grid": {
         "cell": 3.0,

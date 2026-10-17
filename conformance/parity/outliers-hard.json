@@ -34,7 +34,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05366039330946287,
+        "cost": 0.07667647058823526,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -46,12 +46,12 @@
         "id": "o1",
         "placed": true,
         "box": {
-          "x": 294.9,
-          "y": 97.72800000000001,
+          "x": 263.59,
+          "y": 112.69999999999999,
           "w": 52.620000000000005,
-          "h": 19.94399999999999
+          "h": 19.944000000000017
         },
-        "anchor_side": "right",
+        "anchor_side": "bottom",
         "model": "adjacent",
         "text": {
           "lines": [
@@ -72,7 +72,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13639524426526947,
+        "cost": 0.19999999999999965,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -110,7 +110,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.054114550768758374,
+        "cost": 0.07998631111111107,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -148,7 +148,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05432974351122306,
+        "cost": 0.08155460784313723,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -186,7 +186,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.050427211798822896,
+        "cost": 0.05311346405228743,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -262,7 +262,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.06057935725968724,
+        "cost": 0.1271009803921569,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -300,7 +300,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.058027547896737475,
+        "cost": 0.10850372549019602,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -338,7 +338,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05387428619303679,
+        "cost": 0.07823529411764706,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -376,7 +376,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.20538018141721764,
+        "cost": 0.2392100627450981,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -414,7 +414,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05196890397647703,
+        "cost": 0.06622088235294121,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -426,12 +426,12 @@
         "id": "o11",
         "placed": true,
         "box": {
-          "x": 616.058,
-          "y": 170.356,
+          "x": 650.8,
+          "y": 185.328,
           "w": 59.483999999999924,
           "h": 19.944000000000017
         },
-        "anchor_side": "top",
+        "anchor_side": "right",
         "model": "adjacent",
         "text": {
           "lines": [
@@ -452,7 +452,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.06290946884958121,
+        "cost": 0.14136705882352935,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -476,7 +476,7 @@
       "candidates": 461,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 0.891666889246274,
+      "total_cost": 1.3019688575163393,
       "degraded": {},
       "grid": {
         "cell": 3.0,

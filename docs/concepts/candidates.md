@@ -47,9 +47,9 @@ The cost of a candidate is a sum of terms, each with a weight in `weights`:
 
 | Term | Weight (default) | |
 |---|---|---|
-| obstacles | `avoid.label` weights | covered area of each soft class / label area |
+| obstacles | `avoid.label` weights | covered area of each soft class in em² (font size²): what the label hides, whatever its size |
 | buffer | `avoid.buffer` | covered area of the ring around the label / ring area |
-| leader | `leader` (1.0), `leader_length` (0.25 per em), `bends` (0.3 per bend), `avoid.leader` | a leader costs; longer and bent ones more |
+| leader | `leader` (1.0), `leader_length` (0.25 per em), `bends` (0.3 per bend), `avoid.leader` (per em of leader over a class) | a leader costs; longer and bent ones more, and those running over soft classes |
 | position | `position` (0.6) | rank of the position in `position_order` / number of positions |
 | distance | `distance` (0.3) | gap between label and mark, in em |
 | shape | `shape` (0.5) | wrapped lines, alternatives, truncation, shrinking, relaxed overlap |
@@ -78,14 +78,16 @@ result reports each placed label's cost per term.
 | `soft_overlap` | turn the hard classes of `avoid.relaxable` into weight `soft_overlap_weight` (10) |
 | `omit` | give up: the label is reported with its reason |
 
-The default ladder is `["alternatives", "wrap", "distant", "boundary", "evict_lower",
-"shrink:0.85", "soft_overlap", "omit"]`. Each step adds to the label's shape cost, so a
-degraded label wins only when nothing better is free. The result lists the steps tried
-per label (`degrade_steps`) and counts degraded labels per kind (`stats.degraded`).
+The default ladder is `["alternatives", "wrap", "distant", "evict_lower", "shrink:0.85",
+"soft_overlap", "omit"]`. Each step adds to the label's shape cost, so a degraded label
+wins only when nothing better is free. The result lists the steps tried per label
+(`degrade_steps`) and counts degraded labels per kind (`stats.degraded`).
 
-Shorten the ladder to forbid what your output cannot show: without `boundary`, no label
-ends up in a margin far from its point; without `shrink`, all labels keep their size;
-`["omit"]` alone keeps every label as specified or omits it.
+`boundary` is not in the default ladder: a label that fits nowhere near its point would
+get a leader across half the picture. Add it where margin labels are intended (or use the
+`boundary` model, as the `illustration` preset does). Shorten the ladder to forbid what
+your output cannot show: without `shrink`, all labels keep their size; `["omit"]` alone
+keeps every label as specified or omits it.
 
 ## How the solver chooses
 

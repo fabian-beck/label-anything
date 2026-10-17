@@ -88,11 +88,11 @@ CI runs):
 | Priority | explicit `item.priority`, else input order; omission `strict`; `evict_lower` on |
 | Text | 12 px bundled sans (Noto Sans) · padding 0.15 em · buffer 0.3 em |
 | Candidates | models adjacent + slider + distant (preset `auto`: distant only when crowded) · perceptual position order (top first) |
-| Leaders | straight, crossings hard, clearance 3 px |
-| Label vs. | labels, items, text, canvas edge: **hard** · ink 0.5 |
-| Leader vs. | labels **hard** · items 2.0 |
+| Leaders | straight, crossings hard, 0.4 em clear of other marks and leaders |
+| Label vs. | labels, items, text, canvas edge: **hard** · ink 0.1 per em² |
+| Leader vs. | labels, items, leaders **hard** |
 | Solver | time budget 100 ms (Rust) / 250 ms (TS) · seed 0 · deterministic |
-| Degradation | alternatives → wrap → distant → boundary → evict_lower → shrink 0.85 → soft_overlap → omit |
+| Degradation | alternatives → wrap → distant → evict_lower → shrink 0.85 → soft_overlap → omit |
 
 The complete table is `spec/defaults.md`; presets (`scatter`, `map`, `graph`,
 `illustration`, `auto`) are in `spec/presets/`.

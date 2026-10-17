@@ -1,7 +1,7 @@
 // Smoke tests of `label-anything-ts` (place, validate, render), in process and as a Node
 // process, and its agreement with the Rust CLI when that has been built.
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -100,7 +100,12 @@ describe("label-anything-ts", () => {
 
   it("--degrade sets the degradation ladder", () => {
     const out = join(tmp, "degrade.json");
-    const prefix = join(PROBLEMS, "priority-prefix.json");
+    // a row of long labels where the prefix grows only through the ladder
+    const ladderCase = JSON.parse(readFileSync(join(ROOT, "conformance/place/prefix-ladder.json"), "utf8")) as {
+      problem: unknown;
+    };
+    const prefix = join(tmp, "prefix-ladder.json");
+    writeFileSync(prefix, JSON.stringify(ladderCase.problem));
     expect(run(["place", prefix, "-o", out, "--degrade", "omit"], io())).toBe(0);
     const plain = JSON.parse(readFileSync(out, "utf8")) as Result;
     expect(run(["place", prefix, "-o", out, "--degrade", "wrap,distant,shrink:0.85,omit"], io())).toBe(0);

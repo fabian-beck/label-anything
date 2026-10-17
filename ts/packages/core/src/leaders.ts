@@ -6,7 +6,7 @@
  */
 
 import { Cand, KEEP_BOX, type KeepFn, Kind, Leader, SIDE_DISTANT, dirOf } from "./candidates.js";
-import { P, Rect } from "./geom/index.js";
+import { EPS, P, Rect, distPointSeg, segIntersects } from "./geom/index.js";
 import type { Variant } from "./labels.js";
 import { clampf, cmpF64, len2d, maxf, minf, signEps } from "./math.js";
 import { Attach, type Item, LeaderStyle, type Model, Port } from "./model/index.js";
@@ -474,4 +474,79 @@ export function polylineLen(pts: readonly P[]): number {
   let l = 0;
   for (let i = 0; i + 1 < pts.length; i++) l += pts[i]!.dist(pts[i + 1]!);
   return maxf(minf(l, Number.MAX_VALUE), 0);
+}
+
+/** Spacing rules between the leaders of two items (spec §7). */
+export interface Spacing {
+  /** `leaders.clearance` (the larger of the two items'). */
+  clr: number;
+  /** Distant leaders starting closer than this (the larger font size) must diverge. */
+  near: number;
+  /** Cosine of `leaders.min_angle_between`; 1 turns the angle rule off. */
+  cosMin: number;
+}
+
+/**
+ * Whether two leaders of different labels conflict when `avoid.leader.leaders` is hard
+ * (spec §7): a segment of one intersects a segment of the other, or the leaders come
+ * closer than `clr` anywhere except where both start (leaders of neighbouring marks
+ * start close together).
+ */
+export function leadersConflict(a: Leader, b: Leader, clr: number): boolean {
+  const na = a.segCount();
+  const nb = b.segCount();
+  for (let i = 0; i < na; i++) {
+    const p = a.segA(i);
+    const q = a.segB(i);
+    for (let k = 0; k < nb; k++) if (segIntersects(p, q, b.segA(k), b.segB(k))) return true;
+  }
+  return clr > 0 && (vertexNear(a, b, clr) || vertexNear(b, a, clr));
+}
+
+/**
+ * A vertex of `a` closer than `clr` to `b`, except `a`'s start when `b`'s start is the point
+ * of `b` nearest to it. Leaders that do not intersect are closest at a vertex of one of them.
+ */
+function vertexNear(a: Leader, b: Leader, clr: number): boolean {
+  if (b.pts.length === 0) return false;
+  const b0 = b.pts[0]!;
+  const nb = b.segCount();
+  const nv = a.pts.length + (a.underline !== null ? 2 : 0);
+  for (let k = 0; k < nv; k++) {
+    const p = k < a.pts.length ? a.pts[k]! : a.underline![k - a.pts.length]!;
+    let d = Infinity;
+    for (let s = 0; s < nb; s++) d = minf(d, distPointSeg(p, b.segA(s), b.segB(s)));
+    if (d < clr - EPS && !(k === 0 && p.dist(b0) <= d)) return true;
+  }
+  return false;
+}
+
+/**
+ * Whether two leaders start closer than `near` and leave in directions less than
+ * `leaders.min_angle_between` apart (`cosMin` its cosine).
+ */
+export function leadersParallel(a: Leader, b: Leader, near: number, cosMin: number): boolean {
+  if (a.pts.length < 2 || b.pts.length < 2 || cosMin >= 1) return false;
+  const a0 = a.pts[0]!;
+  const b0 = b.pts[0]!;
+  if (a0.dist(b0) >= near) return false;
+  const u = a.pts[1]!.sub(a0);
+  const v = b.pts[1]!.sub(b0);
+  const lu = u.len();
+  const lv = v.len();
+  return lu > EPS && lv > EPS && u.dot(v) > cosMin * lu * lv;
+}
+
+/**
+ * Hard leader conflict between two candidates of different items: their leaders intersect
+ * or come too close, or (both distant) start close together in nearly the same direction.
+ */
+export function candLeadersConflict(a: Cand, b: Cand, sp: Spacing): boolean {
+  const angle = a.kind === Kind.Distant && b.kind === Kind.Distant;
+  for (const la of a.leaders) {
+    for (const lb of b.leaders) {
+      if (leadersConflict(la, lb, sp.clr) || (angle && leadersParallel(la, lb, sp.near, sp.cosMin))) return true;
+    }
+  }
+  return false;
 }

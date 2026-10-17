@@ -41,13 +41,52 @@ def test_leader_entering_its_own_label():
 
 
 def test_leader_through_other_item_when_hard():
-    prob = problem([item("A", 20, 50), item("B", 50, 50, r=4)], avoid={"leader": {"items": "hard"}})
+    prob = problem([item("A", 20, 50), item("B", 50, 50, r=4)])
+    L = {"points": [[22, 50], [90, 50]], "style": "straight", "port": [90, 50]}
+    m = evaluate(prob, result([placed("A", 90, 45, side="distant", model="distant", leader=L), omitted("B")]))
+    assert m["hard"]["leader_item"] == 1          # items are hard for leaders by default
+    prob["avoid"] = {"leader": {"items": 2.0}}
+    m = evaluate(prob, result([placed("A", 90, 45, side="distant", model="distant", leader=L), omitted("B")]))
+    assert m["hard"]["leader_item"] == 0
+
+
+def test_leader_clearance_from_marks():
+    # B's edge is 4 px below the leader: within the default clearance (0.4 em = 4.8 px at 12 px)
+    prob = problem([item("A", 20, 50), item("B", 50, 58, r=4)])
     L = {"points": [[22, 50], [90, 50]], "style": "straight", "port": [90, 50]}
     m = evaluate(prob, result([placed("A", 90, 45, side="distant", model="distant", leader=L), omitted("B")]))
     assert m["hard"]["leader_item"] == 1
-    prob["avoid"] = {}
+    prob["leaders"] = {"clearance": 3}
     m = evaluate(prob, result([placed("A", 90, 45, side="distant", model="distant", leader=L), omitted("B")]))
-    assert m["hard"]["leader_item"] == 0          # items are soft (2.0) for leaders by default
+    assert m["hard"]["leader_item"] == 0
+    # a mark covering the own anchor is no obstacle: no leader of A avoids it
+    prob = problem([item("A", 20, 50), item("B", 24, 50, r=10)])
+    m = evaluate(prob, result([placed("A", 90, 45, side="distant", model="distant", leader=L), omitted("B")]))
+    assert m["hard"]["leader_item"] == 0
+
+
+def test_leaders_near_and_parallel():
+    # C's leader ends 2 px from A's leader: a near crossing; B starts next to A (exempt)
+    prob = problem([item("A", 20, 50), item("B", 20, 57), item("C", 60, 90)])
+    LA = {"points": [[22, 50], [120, 50]], "style": "straight", "port": [120, 50]}
+    LB = {"points": [[22, 57], [100, 110]], "style": "straight", "port": [100, 110]}
+    LC = {"points": [[60, 88], [60, 52]], "style": "straight", "port": [60, 52]}
+    res = result([placed("A", 120, 45, side="distant", model="distant", leader=LA),
+                  placed("B", 100, 110, side="distant", model="distant", leader=LB),
+                  placed("C", 40, 30, side="distant", model="distant", leader=LC)])
+    m = evaluate(prob, res)
+    assert m["hard"]["leader_near"] == 1
+    assert m["hard"]["examples"]["leader_near"] == [["A", "C"]]
+    assert m["hard"]["leader_leader"] == 1          # C crosses B
+    assert m["visual"]["near_crossings"]["count"] == 1
+    # B leaves 7 px below A, 31 degrees apart: neither near nor parallel
+    assert m["hard"]["leader_angle"] == 0
+    LB["points"] = [[22, 57], [120, 60]]
+    LB["port"] = [120, 60]
+    m = evaluate(prob, result([placed("A", 120, 45, side="distant", model="distant", leader=LA),
+                               placed("B", 120, 60, side="distant", model="distant", leader=LB)]))
+    assert m["hard"]["leader_angle"] == 1
+    assert m["visual"]["near_crossings"]["parallel"] == 1
 
 
 def test_area_anchor_internal_label():

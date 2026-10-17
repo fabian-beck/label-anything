@@ -104,20 +104,23 @@ CASES["prefix-mode"] = case(
     {"problem_file": "../problems/priority-prefix.json"},
     {"prefix": True})
 
-# a dense cluster: from the third item on, every position next to the mark is taken by a
-# label or covers another mark, so the prefix grows only through the ladder (leaders)
+# a row of long labels: from the third item on, the positions next to the mark are taken by
+# the labels before it, so the prefix grows only through the ladder (wrapped and distant)
 CASES["prefix-ladder"] = case(
     "prefix omission runs the degradation ladder before it cuts the order",
-    {"problem_file": "../problems/priority-prefix.json"},
-    {"prefix": True, "placed_min": 5})
+    {"canvas": {"width": 480, "height": 120}, "priority": {"omission": "prefix"},
+     "items": [pt(f"t{k}", 40 + 36 * k, 60, f"Top item number {k}", priority=100.0 - k) for k in range(10)]},
+    {"prefix": True, "placed_min": 5, "model": {"t2": "distant"}})
 
-# t7 sits inside the cluster: every position next to its mark covers another mark, and its
-# distant positions, statically fine, are taken by the labels and leaders placed before it
-# (they were dropped while generated, spec §6.7, and count for the explanation)
+# low has only distant candidates, generated once high's label fills the canvas: every one is
+# dropped while generated (spec §6.7) but statically fine, and counts for the explanation
 CASES["explain-blocked-by-labels"] = case(
     "an item whose statically feasible candidates placed labels block is omitted_by_priority",
-    {"problem_file": "../problems/priority-prefix.json"},
-    {"reasons": {"t7": "omitted_by_priority"}})
+    {"canvas": {"width": 400, "height": 300},
+     "items": [{"id": "high", "anchor": {"type": "point", "x": 10, "y": 10},
+                "label": {"type": "box", "width": 370, "height": 270}, "priority": 2.0},
+               pt("low", 388, 288, "Low", priority=1.0, placement={"models": ["distant"]})]},
+    {"placed_ids": ["high"], "reasons": {"low": "omitted_by_priority"}})
 
 CASES["max-labels"] = case(
     "a label budget keeps the highest priorities",
@@ -225,10 +228,11 @@ CASES["area-internal"] = case(
                 "label": {"type": "text", "text": "Lake"}}]},
     {"placed": 1, "model": {"lake": "internal"}})
 
+# leaders keep their clearance from the other marks of the cluster (spec §7)
 CASES["leader-angles"] = case(
     "angle-restricted leaders on a crowded sample",
     {"problem_file": "../problems/leaders-angles.json"},
-    {"placed_min": 8})
+    {"placed_min": 6})
 
 CASES["elbow-boundary"] = case(
     "elbow leaders to boundary labels",

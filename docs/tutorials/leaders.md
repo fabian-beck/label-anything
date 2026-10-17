@@ -3,8 +3,9 @@
 When the space next to a feature is taken, a label can sit at a distance and point back
 with a **leader**. Label Anything generates such *distant* candidates on rings around the
 feature, draws the leader in one of five styles, and guarantees that leaders never cross
-each other and never pass through labels. With *boundary* labels, the labels line up in
-the margins instead.
+each other, never pass through labels and keep clear of other marks and other leaders —
+a leader that grazes a dot seems to point at it, and two leaders closer than a few pixels
+read as a crossing. With *boundary* labels, the labels line up in the margins instead.
 
 All examples label the same dense cluster of twelve asteroids among 60 unlabeled dots
 (`points`, soft obstacles). Only the `leaders` line differs between the problems:
@@ -74,10 +75,13 @@ All examples label the same dense cluster of twelve asteroids among 60 unlabeled
 
     ![Curved leaders](../assets/gallery/leaders-curved.png)
 
-A red cross marks a label that was omitted: in the straight, angles and orthogonal
-versions one asteroid finds no candidate that is free of the other labels, marks and
-leaders. Its placement says so — `reason: "omitted_by_priority"` (all items have the same
-priority here, so it lost to items processed before it), `blocking` lists the classes
+A red cross marks a label that was omitted. In a cluster this dense, a leader leaving
+an inner asteroid passes close to its neighbours; such leaders are not generated, so
+two to four asteroids find no candidate free of the other labels, marks and leaders —
+fewer with curved leaders, which bend around them, more with elbows, whose first
+segments run in four directions only. Each omitted placement says why —
+`reason: "omitted_by_priority"` (all items have the same priority here, so it lost to
+items processed before it) or `"no_feasible_candidate"`, `blocking` lists the classes
 that rejected its candidates and `blocked_by` the labels in its way. See
 [priority and omission](priority.md).
 
@@ -91,8 +95,8 @@ that rejected its candidates and `blocked_by` the labels in its way. See
 | `attach` | `"auto"` | where it leaves the feature: the mark's `boundary`, its `center`, or an icon's `tip` (`auto`: tip for icons, else boundary) |
 | `anchor_gap` | 1.5 px | gap between the mark and the leader's start |
 | `min_length` / `max_length` | 6 px / 10 em | shorter leaders are dropped (the label counts as adjacent); longer ones are not generated |
-| `clearance` | 3 px | distance from other items' shapes and other leaders |
-| `min_angle_between` | 10° | leaders of nearby items differ at least this much in direction |
+| `clearance` | 0.4 em | distance from other items' marks and from other leaders (except where two leaders of neighbouring marks start) |
+| `min_angle_between` | 10° | distant leaders starting within 1 em of each other diverge at least this much |
 | `width` | 1 px | stroke width for the collision tests |
 
 Where distant labels go is set in `placement`: `min_distance` / `max_distance` (1.5 em /
@@ -101,7 +105,8 @@ Where distant labels go is set in `placement`: `min_distance` / `max_distance` (
 kept per item, 24).
 
 What leaders may cross is a separate map, `avoid.leader`: by default other leaders
-(crossings) and labels are hard, item marks cost 2.0 and everything else 0.2.
+(crossings and approaches closer than `clearance`), labels and other items' marks are
+hard, everything else costs 0.2 per em of leader length over it (ink 0.05).
 [Avoidance](../concepts/avoidance.md) has the details.
 
 ## Boundary labels
@@ -121,7 +126,8 @@ leaders from crossing.
 `placement.boundary` also has `gap` (between stacked labels, 2 px) and `margin` (distance
 from the canvas edge, 4 px). The `illustration` preset combines boundary and distant labels
 with elbow leaders ([presets](../reference/presets.md)). Boundary is also a step of the
-degradation ladder: a label that fits nowhere else may end up in a margin
+degradation ladder that you can add to `degrade`; it is not in the default ladder, because
+a label that fits nowhere else would get a leader across the picture
 ([candidates](../concepts/candidates.md#the-degradation-ladder)).
 
 ## In Python

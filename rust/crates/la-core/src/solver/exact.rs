@@ -154,15 +154,17 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
         return false;
     }
     let dy = s.obs.dynamic;
+    let reach = s.state.leader_reach(s.obs);
     let mut conflicts: std::collections::BTreeMap<u32, Vec<u32>> =
         std::collections::BTreeMap::new();
     for (x, &a) in pool.iter().enumerate() {
         for &b in &pool[x + 1..] {
             let (ca, cb) = (&s.cands[a as usize], &s.cands[b as usize]);
-            if ca.item == cb.item || !ca.bbox().touches(&cb.bbox()) {
+            if ca.item == cb.item || !ca.bbox().inflate(reach).touches(&cb.bbox()) {
                 continue;
             }
-            if pair_conflict(ca, cb, &dy) {
+            let sp = s.state.spacing(ca.item as usize, cb.item as usize);
+            if pair_conflict(ca, cb, &dy, sp) {
                 conflicts.entry(a).or_default().push(b);
                 conflicts.entry(b).or_default().push(a);
             }

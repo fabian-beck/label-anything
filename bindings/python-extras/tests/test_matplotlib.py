@@ -189,12 +189,13 @@ def test_matplotlib_svg_file_as_background() -> None:
             assert not (inside_x and inside_y), (p.id, p.box)
     # A label in empty axes space: with the explicit rules the axes background patch is
     # ignored; with the preset rules it (< 90 % of the figure, so not `:background`) is
-    # classed `lines` and costs the full `lines` weight.
+    # classed `lines` and the whole label covers it: the `lines` weight per em² of label.
     empty = [(w * 0.75, h * 0.2)]
     explicit = la.place(empty, ["x"], canvas=(w, h), background=svg, svg_classes=svg_classes(), cost_breakdown=True)
     preset = la.place(empty, ["x"], canvas=(w, h), background=svg, cost_breakdown=True)
     assert explicit.placements[0].raw["cost_breakdown"].get("lines", 0.0) < 0.2  # spines only
-    assert preset.placements[0].raw["cost_breakdown"]["lines"] == pytest.approx(1.0)
+    box = preset.placements[0].box
+    assert preset.placements[0].raw["cost_breakdown"]["lines"] == pytest.approx(box.w * box.h / 12 ** 2)
 
 
 def test_figure_region_and_log_scale() -> None:

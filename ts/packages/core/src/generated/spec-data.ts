@@ -66,7 +66,7 @@ export const DEFAULTS: Readonly<Record<string, unknown>> = {
   "leaders.min_length": 6,
   "leaders.max_length": "10em",
   "leaders.anchor_gap": 1.5,
-  "leaders.clearance": 3,
+  "leaders.clearance": "0.4em",
   "leaders.min_angle_between": 10,
   "leaders.width": 1,
   "avoid.label": {
@@ -75,14 +75,14 @@ export const DEFAULTS: Readonly<Record<string, unknown>> = {
     "text": "hard",
     "canvas_edge": "hard",
     "own_mark": "hard",
-    "ink": 0.5,
+    "ink": 0.1,
     "*": 1
   },
   "avoid.leader": {
     "leaders": "hard",
     "labels": "hard",
-    "items": 2,
-    "ink": 0.2,
+    "items": "hard",
+    "ink": 0.05,
     "*": 0.2
   },
   "avoid.buffer": {
@@ -120,7 +120,6 @@ export const DEFAULTS: Readonly<Record<string, unknown>> = {
     "alternatives",
     "wrap",
     "distant",
-    "boundary",
     "evict_lower",
     "shrink:0.85",
     "soft_overlap",
@@ -181,7 +180,7 @@ export const PRESETS: Readonly<Record<string, PresetData>> = {
         "label": {
           "points": 0.3,
           "lines": 1,
-          "ink": 0.5
+          "ink": 0.1
         },
         "leader": {
           "points": 0.2,
@@ -244,7 +243,7 @@ export const PRESETS: Readonly<Record<string, PresetData>> = {
       "avoid": {
         "label": {
           "lines": 1,
-          "ink": 0.5
+          "ink": 0.1
         },
         "leader": {
           "lines": 0.5
@@ -302,10 +301,10 @@ export const PRESETS: Readonly<Record<string, PresetData>> = {
       },
       "avoid": {
         "label": {
-          "ink": 2
+          "ink": 0.15
         },
         "leader": {
-          "ink": 0.1
+          "ink": 0.025
         }
       },
       "leaders": {
@@ -347,7 +346,7 @@ export const PRESETS: Readonly<Record<string, PresetData>> = {
       "avoid": {
         "label": {
           "lines": 0.8,
-          "ink": 0.5,
+          "ink": 0.1,
           "areas": "ignore",
           "text": "hard"
         },
@@ -402,7 +401,7 @@ export const PRESETS: Readonly<Record<string, PresetData>> = {
     ]
   },
   "scatter": {
-    "description": "Scatterplots: unlabeled points are cheap to cover, lines cost more, text is hard; distant labels with straight leaders; no boundary step in the ladder (margin labels would need leaders across the plot).",
+    "description": "Scatterplots: unlabeled points are cheap to cover, lines cost more, text is hard; distant labels with straight leaders.",
     "options": {
       "placement": {
         "models": [
@@ -416,7 +415,7 @@ export const PRESETS: Readonly<Record<string, PresetData>> = {
         "label": {
           "points": 0.3,
           "lines": 1,
-          "ink": 0.5,
+          "ink": 0.1,
           "axes": "hard"
         },
         "leader": {
@@ -427,16 +426,7 @@ export const PRESETS: Readonly<Record<string, PresetData>> = {
       },
       "leaders": {
         "style": "straight"
-      },
-      "degrade": [
-        "alternatives",
-        "wrap",
-        "distant",
-        "evict_lower",
-        "shrink:0.85",
-        "soft_overlap",
-        "omit"
-      ]
+      }
     },
     "svg_classes": [
       {

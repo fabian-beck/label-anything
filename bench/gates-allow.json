@@ -1,4 +1,453 @@
 {
   "$comment": "Accepted metric regressions for the release gate (bench/gates.py, bench/run.py --gate). Each entry: metric (a summary key of bench/report.py METRICS / SEQ_METRICS), scenario, optional config and solver (fnmatch patterns, default *), the ADR that justifies the change (docs/adr/<adr>-*.md; entries without an existing ADR are ignored) and a reason. Example: {\"metric\": \"placed_rate\", \"scenario\": \"05-airports\", \"config\": \"*\", \"solver\": \"rust\", \"adr\": \"0018\", \"reason\": \"...\"}",
-  "allow": []
+  "allow": [
+    {
+      "metric": "placed_rate",
+      "scenario": "03-gapminder",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "labels whose only positions needed a leader through other marks or across the picture are omitted"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "labels whose only positions needed a leader through other marks or across the picture are omitted"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "06-city-pois",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "labels whose only positions needed a leader through other marks or across the picture are omitted"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "07-node-link",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "labels whose only positions needed a leader through other marks or across the picture are omitted"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "09-line-end-labels",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "labels whose only positions needed a leader through other marks or across the picture are omitted"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "10-stress",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "labels whose only positions needed a leader through other marks or across the picture are omitted"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "labels whose only positions needed a leader through other marks or across the picture are omitted"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "03-gapminder",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "labels whose only positions needed a leader through other marks or across the picture are omitted"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "labels whose only positions needed a leader through other marks or across the picture are omitted"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "06-city-pois",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "labels whose only positions needed a leader through other marks or across the picture are omitted"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "07-node-link",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "labels whose only positions needed a leader through other marks or across the picture are omitted"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "09-line-end-labels",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "labels whose only positions needed a leader through other marks or across the picture are omitted"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "10-stress",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "labels whose only positions needed a leader through other marks or across the picture are omitted"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "labels whose only positions needed a leader through other marks or across the picture are omitted"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "02-volcano",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "the first label without a clean leader ends the prefix earlier"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "03-gapminder",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "the first label without a clean leader ends the prefix earlier"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "the first label without a clean leader ends the prefix earlier"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "06-city-pois",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "the first label without a clean leader ends the prefix earlier"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "07-node-link",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "the first label without a clean leader ends the prefix earlier"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "09-line-end-labels",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "the first label without a clean leader ends the prefix earlier"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "10-stress",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "the first label without a clean leader ends the prefix earlier"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "the first label without a clean leader ends the prefix earlier"
+    },
+    {
+      "metric": "ndcg_at_k",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "fewer labels with leaders in dense clusters"
+    },
+    {
+      "metric": "ndcg_at_k",
+      "scenario": "07-node-link",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "fewer labels with leaders in dense clusters"
+    },
+    {
+      "metric": "ndcg_at_k",
+      "scenario": "09-line-end-labels",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "fewer labels with leaders in dense clusters"
+    },
+    {
+      "metric": "ndcg_at_k",
+      "scenario": "10-stress",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "fewer labels with leaders in dense clusters"
+    },
+    {
+      "metric": "ndcg_at_k",
+      "scenario": "12-priority",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "fewer labels with leaders in dense clusters"
+    },
+    {
+      "metric": "coverage_satisfaction",
+      "scenario": "12-priority",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "fewer labels with leaders in dense clusters"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "01-software-metrics",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "covering data costs per em²: labels move off points and lines at the expense of the preferred position"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "02-volcano",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "covering data costs per em²: labels move off points and lines at the expense of the preferred position"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "03-gapminder",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "covering data costs per em²: labels move off points and lines at the expense of the preferred position"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "04-embedding",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "covering data costs per em²: labels move off points and lines at the expense of the preferred position"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "covering data costs per em²: labels move off points and lines at the expense of the preferred position"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "06-city-pois",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "covering data costs per em²: labels move off points and lines at the expense of the preferred position"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "07-node-link",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "covering data costs per em²: labels move off points and lines at the expense of the preferred position"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "10-stress",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "covering data costs per em²: labels move off points and lines at the expense of the preferred position"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "12-priority",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "covering data costs per em²: labels move off points and lines at the expense of the preferred position"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "01-software-metrics",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "different labels placed; the suite total improves (12.2 -> 9.6)"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "02-volcano",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "different labels placed; the suite total improves (12.2 -> 9.6)"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "06-city-pois",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "different labels placed; the suite total improves (12.2 -> 9.6)"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "07-node-link",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "different labels placed; the suite total improves (12.2 -> 9.6)"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "10-stress",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "different labels placed; the suite total improves (12.2 -> 9.6)"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "12-priority",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "different labels placed; the suite total improves (12.2 -> 9.6)"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "03-gapminder",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "coverage costs count em² (the mean coverage fraction weighs long and short labels differently)"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "coverage costs count em² (the mean coverage fraction weighs long and short labels differently)"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "06-city-pois",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "coverage costs count em² (the mean coverage fraction weighs long and short labels differently)"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "07-node-link",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "coverage costs count em² (the mean coverage fraction weighs long and short labels differently)"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "08-illustration",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "coverage costs count em² (the mean coverage fraction weighs long and short labels differently)"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "02-volcano",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "leaders avoid other marks and run around clusters; illustration labels move off the picture"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "08-illustration",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "leaders avoid other marks and run around clusters; illustration labels move off the picture"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "09-line-end-labels",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "leaders avoid other marks and run around clusters; illustration labels move off the picture"
+    },
+    {
+      "metric": "label_points_hidden",
+      "scenario": "02-volcano",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "different labels placed; the suite total improves (1,862 -> 1,524)"
+    },
+    {
+      "metric": "label_points_hidden",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "different labels placed; the suite total improves (1,862 -> 1,524)"
+    },
+    {
+      "metric": "label_lines_em",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "different labels placed; the suite total improves (3,506 -> 2,855 em)"
+    },
+    {
+      "metric": "label_lines_em",
+      "scenario": "07-node-link",
+      "config": "*",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "different labels placed; the suite total improves (3,506 -> 2,855 em)"
+    },
+    {
+      "metric": "priority_inversions",
+      "scenario": "12-priority",
+      "config": "*-prefix",
+      "solver": "*",
+      "adr": "0019",
+      "reason": "prefix mode: the removal test of strict mode counts every placed label after an earlier omission"
+    }
+  ]
 }

@@ -114,6 +114,13 @@ impl<'a> Solve<'a> {
                 &model.extent,
                 obs.index_cell,
                 pri.prio.iter().map(|p| p.key).collect(),
+                model.items.iter().map(|it| it.len.clearance).collect(),
+                model.items.iter().map(|it| it.em()).collect(),
+                if model.leaders.min_angle_between > 0.0 {
+                    la_expr::det_math::cos_deg(model.leaders.min_angle_between)
+                } else {
+                    1.0
+                },
             ),
             reasons: vec![None; n],
             steps_tried: vec![Vec::new(); n],

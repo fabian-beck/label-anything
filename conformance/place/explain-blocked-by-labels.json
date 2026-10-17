@@ -1,14 +1,56 @@
 {
   "kind": "place",
   "name": "an item whose statically feasible candidates placed labels block is omitted_by_priority",
-  "problem_file": "../problems/priority-prefix.json",
+  "problem": {
+    "canvas": {
+      "width": 400,
+      "height": 300
+    },
+    "items": [
+      {
+        "id": "high",
+        "anchor": {
+          "type": "point",
+          "x": 10,
+          "y": 10
+        },
+        "label": {
+          "type": "box",
+          "width": 370,
+          "height": 270
+        },
+        "priority": 2.0
+      },
+      {
+        "id": "low",
+        "anchor": {
+          "type": "point",
+          "x": 388,
+          "y": 288
+        },
+        "label": {
+          "type": "text",
+          "text": "Low"
+        },
+        "priority": 1.0,
+        "placement": {
+          "models": [
+            "distant"
+          ]
+        }
+      }
+    ]
+  },
   "expect": {
     "hard_violations": 0,
     "leader_crossings": 0,
     "priority_inversions": 0,
     "deterministic": true,
+    "placed_ids": [
+      "high"
+    ],
     "reasons": {
-      "t7": "omitted_by_priority"
+      "low": "omitted_by_priority"
     }
   }
 }

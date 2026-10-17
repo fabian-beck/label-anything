@@ -377,3 +377,144 @@ pub fn polyline_len(pts: &[P]) -> f64 {
     }
     maxf(minf(l, f64::MAX), 0.0)
 }
+
+/// Spacing rules between the leaders of two items (spec §7).
+#[derive(Clone, Copy, Debug)]
+pub struct Spacing {
+    /// `leaders.clearance` (the larger of the two items').
+    pub clr: f64,
+    /// Distant leaders starting closer than this (the larger font size) must diverge.
+    pub near: f64,
+    /// Cosine of `leaders.min_angle_between`; 1 turns the angle rule off.
+    pub cos_min: f64,
+}
+
+/// Whether two leaders of different labels conflict when `avoid.leader.leaders` is hard
+/// (spec §7): a segment of one intersects a segment of the other, or the leaders come
+/// closer than `clr` anywhere except where both start (leaders of neighbouring marks
+/// start close together).
+pub fn leaders_conflict(a: &Leader, b: &Leader, clr: f64) -> bool {
+    for (p, q) in a.segments() {
+        if b.segments()
+            .any(|(r, t)| crate::geom::seg_intersects(p, q, r, t))
+        {
+            return true;
+        }
+    }
+    clr > 0.0 && (vertex_near(a, b, clr) || vertex_near(b, a, clr))
+}
+
+/// Whether two leaders start closer than `near` and leave in directions less than
+/// `leaders.min_angle_between` apart (`cos_min` its cosine).
+pub fn leaders_parallel(a: &Leader, b: &Leader, near: f64, cos_min: f64) -> bool {
+    if a.pts.len() < 2 || b.pts.len() < 2 || cos_min >= 1.0 {
+        return false;
+    }
+    let (a0, b0) = (a.pts[0], b.pts[0]);
+    if a0.dist(b0) >= near {
+        return false;
+    }
+    let (u, v) = (a.pts[1] - a0, b.pts[1] - b0);
+    let (lu, lv) = (u.len(), v.len());
+    lu > crate::geom::EPS && lv > crate::geom::EPS && u.dot(v) > cos_min * lu * lv
+}
+
+/// Hard leader conflict between two candidates of different items: their leaders
+/// intersect or come too close, or (both distant) start close together in nearly the
+/// same direction.
+pub fn cand_leaders_conflict(a: &Cand, b: &Cand, sp: Spacing) -> bool {
+    let angle = a.kind == Kind::Distant && b.kind == Kind::Distant;
+    a.leaders.iter().any(|la| {
+        b.leaders.iter().any(|lb| {
+            leaders_conflict(la, lb, sp.clr)
+                || (angle && leaders_parallel(la, lb, sp.near, sp.cos_min))
+        })
+    })
+}
+
+/// A vertex of `a` closer than `clr` to `b`, except `a`'s start when `b`'s start is the
+/// point of `b` nearest to it. Leaders that do not intersect are closest at a vertex of
+/// one of them.
+fn vertex_near(a: &Leader, b: &Leader, clr: f64) -> bool {
+    let Some(&b0) = b.pts.first() else {
+        return false;
+    };
+    let under = a.underline.iter().flat_map(|&(u, v)| [u, v]);
+    for (k, p) in a.pts.iter().copied().chain(under).enumerate() {
+        let mut d = f64::INFINITY;
+        for (r, t) in b.segments() {
+            d = minf(d, crate::geom::dist_point_seg(p, r, t));
+        }
+        if d < clr - crate::geom::EPS && !(k == 0 && p.dist(b0) <= d) {
+            return true;
+        }
+    }
+    false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn leader(pts: &[(f64, f64)]) -> Leader {
+        Leader::new(
+            pts.iter().map(|&(x, y)| P::new(x, y)).collect(),
+            LeaderStyle::Straight,
+        )
+    }
+
+    #[test]
+    fn crossing_and_near_leaders_conflict() {
+        let a = leader(&[(0.0, 0.0), (100.0, 0.0)]);
+        // crossing
+        assert!(leaders_conflict(
+            &a,
+            &leader(&[(50.0, -20.0), (50.0, 20.0)]),
+            0.0
+        ));
+        // a port 2 px from the other leader reads as a crossing (T-junction)
+        let t = leader(&[(50.0, 40.0), (50.0, 2.0)]);
+        assert!(leaders_conflict(&a, &t, 4.8));
+        assert!(leaders_conflict(&t, &a, 4.8));
+        assert!(!leaders_conflict(&a, &t, 1.5));
+        // a bend near the other leader counts too
+        let bend = leader(&[(30.0, 40.0), (30.0, 3.0), (-20.0, 3.0)]);
+        assert!(leaders_conflict(&a, &bend, 4.8));
+    }
+
+    #[test]
+    fn neighbouring_starts_may_be_close() {
+        // starts 3 px apart, leaving in different directions: no conflict
+        let a = leader(&[(0.0, 0.0), (0.0, -50.0)]);
+        let b = leader(&[(3.0, 0.0), (40.0, -40.0)]);
+        assert!(!leaders_conflict(&a, &b, 4.8));
+        // parallel at 3 px: the far ends are close as well
+        let c = leader(&[(3.0, 0.0), (3.0, -50.0)]);
+        assert!(leaders_conflict(&a, &c, 4.8));
+        // a leader passing another leader's start is no start-start approach
+        let d = leader(&[(-20.0, 2.0), (20.0, 2.0)]);
+        assert!(leaders_conflict(&a, &d, 4.8));
+    }
+
+    #[test]
+    fn underline_ends_count_as_vertices() {
+        let a = leader(&[(0.0, 0.0), (100.0, 0.0)]);
+        let mut u = leader(&[(60.0, 40.0), (60.0, 10.0)]);
+        u.underline = Some((P::new(60.0, 10.0), P::new(80.0, 3.0)));
+        assert!(leaders_conflict(&a, &u, 4.8));
+        assert!(!leaders_conflict(&a, &u, 2.5));
+    }
+
+    #[test]
+    fn diverging_leaders() {
+        let cos10 = la_expr::det_math::cos_deg(10.0);
+        let a = leader(&[(0.0, 0.0), (100.0, 0.0)]);
+        let nearly = leader(&[(0.0, 7.0), (98.0, 10.0)]);
+        let apart = leader(&[(0.0, 7.0), (78.0, 60.0)]);
+        assert!(leaders_parallel(&a, &nearly, 12.0, cos10));
+        assert!(!leaders_parallel(&a, &apart, 12.0, cos10));
+        // starts farther apart than `near`, or the rule off
+        assert!(!leaders_parallel(&a, &nearly, 6.0, cos10));
+        assert!(!leaders_parallel(&a, &nearly, 12.0, 1.0));
+    }
+}

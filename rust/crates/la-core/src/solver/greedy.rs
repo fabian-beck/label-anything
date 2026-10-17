@@ -2,14 +2,16 @@
 
 use super::{Reason, Solve};
 use crate::candidates::Cand;
-use crate::geom::{seg_intersects, seg_overlaps_rect};
+use crate::geom::seg_overlaps_rect;
+use crate::leaders::{cand_leaders_conflict, Spacing};
 use crate::model::opts::{Omission, Step};
 use crate::obstacles::Dynamic;
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 
-/// Exact hard conflict between two candidates of different items.
-pub fn pair_conflict(a: &Cand, b: &Cand, dy: &Dynamic) -> bool {
+/// Exact hard conflict between two candidates of different items; `sp`: the spacing
+/// rules between their leaders.
+pub fn pair_conflict(a: &Cand, b: &Cand, dy: &Dynamic, sp: Spacing) -> bool {
     if dy.label_labels.is_hard() && a.label_overlaps(b) {
         return true;
     }
@@ -25,18 +27,7 @@ pub fn pair_conflict(a: &Cand, b: &Cand, dy: &Dynamic) -> bool {
             }
         }
     }
-    if dy.leader_leaders.is_hard() && !a.leaders.is_empty() && !b.leaders.is_empty() {
-        for la in &a.leaders {
-            for (p, q) in la.segments() {
-                for lb in &b.leaders {
-                    if lb.segments().any(|(r, s)| seg_intersects(p, q, r, s)) {
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-    false
+    dy.leader_leaders.is_hard() && cand_leaders_conflict(a, b, sp)
 }
 
 /// Number of lookahead-evaluated cheapest candidates.
@@ -354,7 +345,8 @@ fn commit(s: &mut Solve, g: &mut Greedy, i: usize, c: u32, relaxed: bool) {
     // kill conflicting level-0 candidates of other undecided items
     let bb = s.cands[c as usize].bbox();
     let mut ids = Vec::new();
-    s.cand_ix.query(&bb.inflate(1e-6), &mut ids);
+    s.cand_ix
+        .query(&bb.inflate(1e-6 + s.state.leader_reach(s.obs)), &mut ids);
     let dy = s.obs.dynamic;
     for k in ids {
         let k = k as usize;
@@ -365,7 +357,8 @@ fn commit(s: &mut Solve, g: &mut Greedy, i: usize, c: u32, relaxed: bool) {
         if j == i || s.state.placed[j].is_some() {
             continue;
         }
-        if pair_conflict(&s.cands[k], &s.cands[c as usize], &dy) {
+        let sp = s.state.spacing(i, j);
+        if pair_conflict(&s.cands[k], &s.cands[c as usize], &dy, sp) {
             g.alive[k] = false;
             g.live[j] -= 1;
             // re-queue with its new live count, but only within the running band (items
@@ -400,7 +393,8 @@ fn unplace_item(s: &mut Solve, g: &mut Greedy, i: usize) {
     // revive level-0 candidates that only conflicted with this label
     let bb = s.cands[c as usize].bbox();
     let mut ids = Vec::new();
-    s.cand_ix.query(&bb.inflate(1e-6), &mut ids);
+    s.cand_ix
+        .query(&bb.inflate(1e-6 + s.state.leader_reach(s.obs)), &mut ids);
     let mut scratch = Vec::new();
     for k in ids {
         let k = k as usize;
@@ -484,7 +478,10 @@ fn best_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<u32> {
 fn lookahead(s: &Solve, g: &mut Greedy, i: usize, c: u32) -> f64 {
     let cand = &s.cands[c as usize];
     let mut ids = Vec::new();
-    s.cand_ix.query(&cand.bbox().inflate(1e-6), &mut ids);
+    s.cand_ix.query(
+        &cand.bbox().inflate(1e-6 + s.state.leader_reach(s.obs)),
+        &mut ids,
+    );
     let dy = s.obs.dynamic;
     for k in ids {
         let k = k as usize;
@@ -495,7 +492,7 @@ fn lookahead(s: &Solve, g: &mut Greedy, i: usize, c: u32) -> f64 {
         if j == i || g.done[j] {
             continue;
         }
-        if pair_conflict(&s.cands[k], cand, &dy) {
+        if pair_conflict(&s.cands[k], cand, &dy, s.state.spacing(i, j)) {
             if g.killed[j] == 0 {
                 g.touched.push(j);
             }

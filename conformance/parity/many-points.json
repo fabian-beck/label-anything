@@ -110,7 +110,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2055777278689449,
+        "cost": 0.21294117647058822,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -148,7 +148,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2235972031311809,
+        "cost": 0.25474909803921536,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -186,7 +186,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.06093585383080721,
+        "cost": 0.07537284313725498,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -224,7 +224,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.7410120664002571,
+        "cost": 0.7449968979142383,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -262,7 +262,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.23496094747975305,
+        "cost": 0.2552337417556295,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -300,7 +300,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.5966671062110646,
+        "cost": 0.5977026516402031,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -338,7 +338,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.37311991591210125,
+        "cost": 0.3810838348706299,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -376,7 +376,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.21608008237999812,
+        "cost": 0.23730823529411735,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -414,7 +414,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.21077772665423966,
+        "cost": 0.2352519607843136,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -452,7 +452,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.38811530403245265,
+        "cost": 0.4046618311827745,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -490,7 +490,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13536429621304066,
+        "cost": 0.1588997058823529,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -528,7 +528,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.06016988529144161,
+        "cost": 0.08326382352941183,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -566,7 +566,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.44323339647469095,
+        "cost": 0.4846380849237608,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -604,7 +604,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05631185060877295,
+        "cost": 0.07064490196078434,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -642,7 +642,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.5310476581560943,
+        "cost": 0.5589733770594834,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -680,7 +680,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2847731203563185,
+        "cost": 0.3069660784313723,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -718,7 +718,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.07482003859171704,
+        "cost": 0.13118177934640535,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -730,13 +730,13 @@
         "id": "m19",
         "placed": true,
         "box": {
-          "x": 229.19999999999519,
-          "y": 394.1942183103808,
+          "x": 229.2,
+          "y": 386.32800000000003,
           "w": 23.615999999999985,
           "h": 19.94399999999996
         },
-        "anchor_side": "bottom-right",
-        "model": "slider",
+        "anchor_side": "right",
+        "model": "adjacent",
         "text": {
           "lines": [
             "L19"
@@ -756,7 +756,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.32414425933278707,
+        "cost": 0.15255764705882335,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -768,13 +768,13 @@
         "id": "m20",
         "placed": true,
         "box": {
-          "x": 305.97054554025385,
-          "y": 524.7560000000032,
+          "x": 299.992,
+          "y": 552.7,
           "w": 23.615999999999985,
           "h": 19.94399999999996
         },
-        "anchor_side": "top",
-        "model": "slider",
+        "anchor_side": "bottom",
+        "model": "adjacent",
         "text": {
           "lines": [
             "L20"
@@ -794,7 +794,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.20515465988889672,
+        "cost": 0.21640960784313718,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -832,7 +832,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.1689285281013984,
+        "cost": 0.1920420925705906,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -870,7 +870,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05503562054095801,
+        "cost": 0.06647058823529411,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -908,7 +908,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.1269355666454307,
+        "cost": 0.1313308823529411,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -946,7 +946,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.34933597506613856,
+        "cost": 0.41424946462259193,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -984,7 +984,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05804147835843759,
+        "cost": 0.07630219607843135,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1060,7 +1060,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.8535015119056938,
+        "cost": 0.9091246399393479,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1098,7 +1098,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05858837072833105,
+        "cost": 0.07809098039215683,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1110,13 +1110,13 @@
         "id": "m29",
         "placed": true,
         "box": {
-          "x": 228.3999999999968,
-          "y": 351.7838544597462,
+          "x": 228.4,
+          "y": 357.028,
           "w": 23.615999999999985,
           "h": 19.94399999999996
         },
         "anchor_side": "right",
-        "model": "slider",
+        "model": "adjacent",
         "text": {
           "lines": [
             "L29"
@@ -1136,7 +1136,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2466496103946254,
+        "cost": 0.16706401960784287,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1174,7 +1174,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.061698465891008525,
+        "cost": 0.08826352941176482,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1212,7 +1212,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.27292703594770473,
+        "cost": 0.32782863601059237,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1250,7 +1250,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.22175151337757373,
+        "cost": 0.2666551835440015,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1288,7 +1288,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05539305967757065,
+        "cost": 0.06763970588235287,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1326,7 +1326,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.14858272980045514,
+        "cost": 0.19361920995509255,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1364,7 +1364,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.342507493785297,
+        "cost": 0.37524777413344995,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1402,7 +1402,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.27898458326387376,
+        "cost": 0.2880328386928105,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1440,7 +1440,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13847975670950877,
+        "cost": 0.16908980392156855,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1478,7 +1478,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.7394691098496469,
+        "cost": 0.7590208626484447,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1516,7 +1516,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2181534420240854,
+        "cost": 0.25937656862745095,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1554,7 +1554,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.27557549949039517,
+        "cost": 0.27688235294117647,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1592,7 +1592,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05049259175492077,
+        "cost": 0.051611176993463716,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1630,7 +1630,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.4692227601887233,
+        "cost": 0.4782163155393678,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1668,7 +1668,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.06746748859503894,
+        "cost": 0.10713294117647075,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1706,7 +1706,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05787925800083366,
+        "cost": 0.0757716031372547,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1744,7 +1744,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.49482057204552776,
+        "cost": 0.5232176841756566,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1782,7 +1782,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.06253389931789889,
+        "cost": 0.09099607843137267,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1794,12 +1794,12 @@
         "id": "m47",
         "placed": true,
         "box": {
-          "x": 614.5,
-          "y": 303.028,
+          "x": 598.692,
+          "y": 317.0,
           "w": 23.615999999999985,
           "h": 19.94399999999996
         },
-        "anchor_side": "right",
+        "anchor_side": "bottom",
         "model": "adjacent",
         "text": {
           "lines": [
@@ -1820,7 +1820,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13776904481280244,
+        "cost": 0.22985965333333327,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1896,7 +1896,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.12043633905370901,
+        "cost": 0.17036767001329864,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1934,7 +1934,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.29986797672074317,
+        "cost": 0.3137607761459213,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1972,7 +1972,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.1451890616538363,
+        "cost": 0.1910347058823533,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2010,7 +2010,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.0684025253972721,
+        "cost": 0.11019127450980376,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2048,7 +2048,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13966258225086675,
+        "cost": 0.17295860862745088,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2086,7 +2086,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05779322226576834,
+        "cost": 0.07549019607843128,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2124,7 +2124,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.688318877901761,
+        "cost": 0.7094408968000131,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2136,13 +2136,13 @@
         "id": "m56",
         "placed": true,
         "box": {
-          "x": 367.092,
-          "y": 65.69999999999999,
+          "x": 351.2840000000016,
+          "y": 49.10592722987308,
           "w": 23.615999999999985,
-          "h": 19.944000000000017
+          "h": 19.943999999999996
         },
-        "anchor_side": "bottom",
-        "model": "adjacent",
+        "anchor_side": "left",
+        "model": "slider",
         "text": {
           "lines": [
             "L56"
@@ -2162,7 +2162,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2705771061648178,
+        "cost": 0.3537099999999583,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2200,7 +2200,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13472603153856208,
+        "cost": 0.14829649957292032,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2238,7 +2238,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.07052598087653558,
+        "cost": 0.11713670666666642,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2276,7 +2276,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.29184498997959507,
+        "cost": 0.3300968627450983,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2288,12 +2288,12 @@
         "id": "m60",
         "placed": true,
         "box": {
-          "x": 211.2999999999952,
-          "y": 371.86178168961925,
+          "x": 179.68400000000324,
+          "y": 384.97214554025385,
           "w": 23.615999999999985,
           "h": 19.94399999999996
         },
-        "anchor_side": "top-right",
+        "anchor_side": "left",
         "model": "slider",
         "text": {
           "lines": [
@@ -2314,7 +2314,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.7637583328623205,
+        "cost": 0.939807980436588,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2326,12 +2326,12 @@
         "id": "m61",
         "placed": true,
         "box": {
-          "x": 123.99200000000002,
-          "y": 451.2,
+          "x": 108.18400000000003,
+          "y": 437.228,
           "w": 23.615999999999985,
           "h": 19.94399999999996
         },
-        "anchor_side": "bottom",
+        "anchor_side": "left",
         "model": "adjacent",
         "text": {
           "lines": [
@@ -2352,7 +2352,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.21026990830182954,
+        "cost": 0.32813715032679697,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2428,7 +2428,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.26392184939104885,
+        "cost": 0.2983743277380071,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2440,13 +2440,13 @@
         "id": "m64",
         "placed": true,
         "box": {
-          "x": 708.484,
-          "y": 251.72799999999998,
+          "x": 721.3027272298731,
+          "y": 237.75600000000153,
           "w": 23.615999999999985,
           "h": 19.94399999999999
         },
-        "anchor_side": "left",
-        "model": "adjacent",
+        "anchor_side": "top",
+        "model": "slider",
         "text": {
           "lines": [
             "L64"
@@ -2466,7 +2466,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2862795282394083,
+        "cost": 0.19591657532137252,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2478,13 +2478,13 @@
         "id": "m65",
         "placed": true,
         "box": {
-          "x": 332.4241816896192,
-          "y": 525.4560000000047,
+          "x": 325.584,
+          "y": 539.428,
           "w": 23.615999999999985,
           "h": 19.94399999999996
         },
-        "anchor_side": "top-left",
-        "model": "slider",
+        "anchor_side": "left",
+        "model": "adjacent",
         "text": {
           "lines": [
             "L65"
@@ -2504,7 +2504,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.34869307922455345,
+        "cost": 0.3048644705882346,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2517,11 +2517,11 @@
         "placed": true,
         "box": {
           "x": 350.492,
-          "y": 97.6,
+          "y": 69.65599999999998,
           "w": 23.615999999999985,
           "h": 19.944000000000017
         },
-        "anchor_side": "bottom",
+        "anchor_side": "top",
         "model": "adjacent",
         "text": {
           "lines": [
@@ -2542,7 +2542,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2234255407409198,
+        "cost": 0.13009635668032407,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2580,7 +2580,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.19626987360143386,
+        "cost": 0.21334612289372487,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2618,7 +2618,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.6761380506701735,
+        "cost": 0.6919792925827177,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2656,7 +2656,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.06018644888614951,
+        "cost": 0.08331799999999993,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2694,7 +2694,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05787283302860634,
+        "cost": 0.07575058823529401,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2770,7 +2770,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.06718543389688164,
+        "cost": 0.10621039215686269,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2808,7 +2808,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2815100082718459,
+        "cost": 0.29629303921568595,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2846,7 +2846,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13797193835709856,
+        "cost": 0.1674288235294116,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2884,7 +2884,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13262390392125525,
+        "cost": 0.1499363869281044,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2922,7 +2922,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.07098525920401128,
+        "cost": 0.11863892156862738,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2960,7 +2960,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.14107390906558132,
+        "cost": 0.17757479895424846,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2972,13 +2972,13 @@
         "id": "m78",
         "placed": true,
         "box": {
-          "x": 553.8,
-          "y": 493.728,
+          "x": 540.9812727701269,
+          "y": 479.75600000000156,
           "w": 23.615999999999985,
-          "h": 19.944000000000017
+          "h": 19.94399999999996
         },
-        "anchor_side": "right",
-        "model": "adjacent",
+        "anchor_side": "top",
+        "model": "slider",
         "text": {
           "lines": [
             "L78"
@@ -2998,7 +2998,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.1453547493958693,
+        "cost": 0.17625242427823912,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3036,7 +3036,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.1312019661748256,
+        "cost": 0.14528549019607837,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3074,7 +3074,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.32370903553824165,
+        "cost": 0.3576782527832237,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3112,7 +3112,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.21322352155619664,
+        "cost": 0.24325170588235284,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3150,7 +3150,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.9744252642766478,
+        "cost": 0.9854790663811834,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3162,13 +3162,13 @@
         "id": "m83",
         "placed": true,
         "box": {
-          "x": 176.0999999999984,
-          "y": 434.15007277012694,
+          "x": 160.292,
+          "y": 417.55600000000004,
           "w": 23.615999999999985,
           "h": 19.94399999999996
         },
-        "anchor_side": "right",
-        "model": "slider",
+        "anchor_side": "top",
+        "model": "adjacent",
         "text": {
           "lines": [
             "L83"
@@ -3188,7 +3188,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2515780391464516,
+        "cost": 0.1206981372549022,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3226,7 +3226,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.14979623117527918,
+        "cost": 0.1810637209644795,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3264,7 +3264,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.1990769254035285,
+        "cost": 0.2402114990725467,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3302,7 +3302,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.44220804983060613,
+        "cost": 0.47276880471501653,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3340,7 +3340,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.1282513323292785,
+        "cost": 0.13563450980392133,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3378,7 +3378,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.06243906179771076,
+        "cost": 0.0906858823529412,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3416,7 +3416,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.5389203536178651,
+        "cost": 0.5659272606601818,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3454,7 +3454,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.07577620253975595,
+        "cost": 0.13430921568627452,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3530,7 +3530,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.8388375544231708,
+        "cost": 0.8507918511582533,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3568,7 +3568,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.3453545482874434,
+        "cost": 0.36035226221160715,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3606,7 +3606,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.20760219240367533,
+        "cost": 0.22486537254901967,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3644,7 +3644,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05630028067110148,
+        "cost": 0.07060705882352945,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3682,7 +3682,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.06546909658857337,
+        "cost": 0.1005965686274511,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3720,7 +3720,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.15014926778240675,
+        "cost": 0.20725862745098034,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3758,7 +3758,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05381843911877215,
+        "cost": 0.06248941176470586,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3834,7 +3834,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2207196810810145,
+        "cost": 0.27538716929000945,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3872,7 +3872,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.34391706316874326,
+        "cost": 0.40888485382558626,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3884,13 +3884,13 @@
         "id": "m102",
         "placed": true,
         "box": {
-          "x": 698.66,
-          "y": 278.25600000000003,
+          "x": 717.8999999999984,
+          "y": 289.6059272298731,
           "w": 30.480000000000018,
           "h": 19.94399999999996
         },
-        "anchor_side": "top",
-        "model": "adjacent",
+        "anchor_side": "right",
+        "model": "slider",
         "text": {
           "lines": [
             "L102"
@@ -3910,7 +3910,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.07730598431513738,
+        "cost": 0.2646097334195349,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3948,7 +3948,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.27659954310234475,
+        "cost": 0.28175243921568627,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3986,7 +3986,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.0611910849219872,
+        "cost": 0.09724294117647062,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4024,7 +4024,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.14848952425754522,
+        "cost": 0.2241605568627442,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4062,7 +4062,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.20917868843941045,
+        "cost": 0.23874764967320242,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4100,7 +4100,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.20680708763602712,
+        "cost": 0.260950784313728,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4112,12 +4112,12 @@
         "id": "m108",
         "placed": true,
         "box": {
-          "x": 560.56,
-          "y": 460.4,
+          "x": 541.3199999999999,
+          "y": 446.428,
           "w": 30.480000000000018,
           "h": 19.94399999999996
         },
-        "anchor_side": "bottom",
+        "anchor_side": "left",
         "model": "adjacent",
         "text": {
           "lines": [
@@ -4138,7 +4138,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2166245762954862,
+        "cost": 0.2997328431372547,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4150,12 +4150,12 @@
         "id": "m109",
         "placed": true,
         "box": {
-          "x": 388.9113455402539,
-          "y": 123.85600000000292,
+          "x": 400.7999999999984,
+          "y": 135.20592722987308,
           "w": 30.480000000000018,
           "h": 19.944000000000017
         },
-        "anchor_side": "top",
+        "anchor_side": "right",
         "model": "slider",
         "text": {
           "lines": [
@@ -4176,7 +4176,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2041418698153053,
+        "cost": 0.2163598096234985,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4214,7 +4214,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.3445946685327749,
+        "cost": 0.4117453513177363,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4252,7 +4252,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05847444637481472,
+        "cost": 0.08577470588235289,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4290,7 +4290,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.7810264714302454,
+        "cost": 0.8025732832815671,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4328,7 +4328,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13652318664562765,
+        "cost": 0.1736449019607843,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4366,7 +4366,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.0624810562674144,
+        "cost": 0.10268852941176448,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4404,7 +4404,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.5258187783003649,
+        "cost": 0.5593289728863295,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4442,7 +4442,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.06017491557803877,
+        "cost": 0.09295320261437906,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4480,7 +4480,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13171523619539066,
+        "cost": 0.15334823529411773,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4518,7 +4518,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.26830443403644055,
+        "cost": 0.28297645219641393,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4556,7 +4556,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.3738995635207966,
+        "cost": 0.3972001960784332,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4594,7 +4594,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05859610862863139,
+        "cost": 0.0862883006535948,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4632,7 +4632,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.14938718174668594,
+        "cost": 0.2279499999999999,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4670,7 +4670,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.06283196563160547,
+        "cost": 0.10416988627450993,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4708,7 +4708,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.29024574505697937,
+        "cost": 0.33935960784313723,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4746,7 +4746,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.061472463332717955,
+        "cost": 0.09843077450980338,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4784,7 +4784,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.8892759568256201,
+        "cost": 0.9006574616635279,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4822,7 +4822,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13860603499358476,
+        "cost": 0.17035705460483497,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4834,13 +4834,13 @@
         "id": "m127",
         "placed": true,
         "box": {
-          "x": 217.71999999999997,
-          "y": 540.528,
+          "x": 225.93298168961923,
+          "y": 526.5560000000045,
           "w": 30.480000000000018,
           "h": 19.94399999999996
         },
-        "anchor_side": "left",
-        "model": "adjacent",
+        "anchor_side": "top-left",
+        "model": "slider",
         "text": {
           "lines": [
             "L127"
@@ -4860,7 +4860,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2959915229061009,
+        "cost": 0.3965196078430281,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4898,7 +4898,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.9606523404349412,
+        "cost": 1.0147870023031569,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -4936,7 +4936,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.138139244725435,
+        "cost": 0.18046705882352937,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5012,7 +5012,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2504735341310258,
+        "cost": 0.25602586486368095,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5050,7 +5050,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.35723641388105326,
+        "cost": 0.41276317647058824,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5088,7 +5088,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.26658224324692836,
+        "cost": 0.32402845822228027,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5138,12 +5138,12 @@
         "id": "m135",
         "placed": true,
         "box": {
-          "x": 735.46,
-          "y": 230.4,
+          "x": 716.22,
+          "y": 216.428,
           "w": 30.480000000000018,
           "h": 19.944000000000017
         },
-        "anchor_side": "bottom",
+        "anchor_side": "left",
         "model": "adjacent",
         "text": {
           "lines": [
@@ -5164,7 +5164,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2138348004333393,
+        "cost": 0.36496024509803904,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5202,7 +5202,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.06094514385531923,
+        "cost": 0.09620470588235311,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5240,7 +5240,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.24064462305441484,
+        "cost": 0.26285551333200974,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5278,7 +5278,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.19821185906993055,
+        "cost": 0.2286930488267684,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5316,7 +5316,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.8170006247128418,
+        "cost": 0.8496023915018966,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5354,7 +5354,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.20973290289234123,
+        "cost": 0.24108725490196078,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5366,8 +5366,8 @@
         "id": "m141",
         "placed": true,
         "box": {
-          "x": 269.5999999999952,
-          "y": 548.6942183103807,
+          "x": 261.38701831038077,
+          "y": 554.7999999999955,
           "w": 30.480000000000018,
           "h": 19.94399999999996
         },
@@ -5392,7 +5392,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.33453787816742336,
+        "cost": 0.35788726709015395,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5430,7 +5430,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13323390718653258,
+        "cost": 0.15975927450980357,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5468,7 +5468,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.14195860033847443,
+        "cost": 0.19659039215686291,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5506,7 +5506,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13873627560593643,
+        "cost": 0.1709068627450676,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5544,7 +5544,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.07465714421872675,
+        "cost": 0.15408964117647048,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5620,7 +5620,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.3933780655775609,
+        "cost": 0.3975490196078142,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5658,7 +5658,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.7611794972593291,
+        "cost": 0.7710551193578515,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5670,12 +5670,12 @@
         "id": "m149",
         "placed": true,
         "box": {
-          "x": 447.69999999999675,
-          "y": 36.18385445974616,
+          "x": 439.4870183103808,
+          "y": 27.45600000000441,
           "w": 30.480000000000018,
           "h": 19.944000000000003
         },
-        "anchor_side": "right",
+        "anchor_side": "top-right",
         "model": "slider",
         "text": {
           "lines": [
@@ -5696,7 +5696,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2452753890995408,
+        "cost": 0.2780882352940246,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5734,7 +5734,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.28436797186824353,
+        "cost": 0.31454670588235284,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5772,7 +5772,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.20819816010911163,
+        "cost": 0.27085001893765037,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5810,7 +5810,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13283518539265204,
+        "cost": 0.1580760784313727,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5848,7 +5848,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.21453188891842964,
+        "cost": 0.26134607843137253,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5886,7 +5886,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 1.0231589723773638,
+        "cost": 1.0507562468137215,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5924,7 +5924,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2572544544591391,
+        "cost": 0.28465138441040433,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -5936,12 +5936,12 @@
         "id": "m156",
         "placed": true,
         "box": {
-          "x": 120.78432722987306,
-          "y": 380.0560000000015,
+          "x": 113.43298168961921,
+          "y": 380.0560000000045,
           "w": 30.480000000000004,
           "h": 19.94399999999996
         },
-        "anchor_side": "top",
+        "anchor_side": "top-left",
         "model": "slider",
         "text": {
           "lines": [
@@ -5962,7 +5962,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.16329607779035785,
+        "cost": 0.3720588235293235,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6000,7 +6000,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.16804959142659132,
+        "cost": 0.19800803921564528,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6038,7 +6038,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.20045191380701544,
+        "cost": 0.20190774509803952,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6076,7 +6076,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05793402629725435,
+        "cost": 0.08349333333333334,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6114,7 +6114,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.34912944624949377,
+        "cost": 0.4070889440057567,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6152,7 +6152,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2067756285454762,
+        "cost": 0.22860318039215702,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6190,7 +6190,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.4216672269568307,
+        "cost": 0.4503412343913345,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6202,12 +6202,12 @@
         "id": "m163",
         "placed": true,
         "box": {
-          "x": 164.35334172986774,
-          "y": 411.71538545574293,
+          "x": 202.7999999999968,
+          "y": 406.47214554025385,
           "w": 30.480000000000018,
           "h": 19.94399999999996
         },
-        "anchor_side": "bottom-left",
+        "anchor_side": "right",
         "model": "slider",
         "text": {
           "lines": [
@@ -6228,7 +6228,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.5551492042513815,
+        "cost": 0.29073529411756677,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6266,7 +6266,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.694845284330041,
+        "cost": 0.7285428404059973,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6304,7 +6304,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2557599593792224,
+        "cost": 0.2783424033204356,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6342,7 +6342,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.15611702465839328,
+        "cost": 0.19085647058823824,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6380,7 +6380,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.058808406010195824,
+        "cost": 0.08718450980392153,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6392,13 +6392,13 @@
         "id": "m168",
         "placed": true,
         "box": {
-          "x": 170.1999999999984,
-          "y": 455.75007277012696,
+          "x": 170.2,
+          "y": 453.12800000000004,
           "w": 30.480000000000018,
           "h": 19.94399999999996
         },
         "anchor_side": "right",
-        "model": "slider",
+        "model": "adjacent",
         "text": {
           "lines": [
             "L168"
@@ -6418,7 +6418,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.22001415937757376,
+        "cost": 0.1864968470588233,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6456,7 +6456,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05420594059847431,
+        "cost": 0.06775529411764733,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6468,13 +6468,13 @@
         "id": "m170",
         "placed": true,
         "box": {
-          "x": 51.0,
-          "y": 461.82800000000003,
+          "x": 50.999999999998394,
+          "y": 464.45007277012695,
           "w": 30.47999999999999,
           "h": 19.94399999999996
         },
         "anchor_side": "right",
-        "model": "adjacent",
+        "model": "slider",
         "text": {
           "lines": [
             "L170"
@@ -6494,7 +6494,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.18086454522872022,
+        "cost": 0.2228302109788713,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6532,7 +6532,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.06433857970450658,
+        "cost": 0.11053002745098052,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6570,7 +6570,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.13036193328350412,
+        "cost": 0.14763529411764692,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6608,7 +6608,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.14700394546137246,
+        "cost": 0.2178892156862745,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6646,7 +6646,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.05923846613036185,
+        "cost": 0.089,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6684,7 +6684,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.20694975110485367,
+        "cost": 0.22933823529411762,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6722,7 +6722,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.057211019943382,
+        "cost": 0.08044117647058822,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6760,7 +6760,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.051857911740645926,
+        "cost": 0.05784313725490197,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6798,7 +6798,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.5144641513766595,
+        "cost": 0.5436104424205646,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6836,7 +6836,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.21079637250164293,
+        "cost": 0.24557667058823526,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6874,7 +6874,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.236897934875361,
+        "cost": 0.26448862745097845,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6912,7 +6912,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.1635130880223632,
+        "cost": 0.17885728082476482,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6950,7 +6950,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.5834667505983446,
+        "cost": 0.5975058451952213,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -6988,7 +6988,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.4945404906994311,
+        "cost": 0.5515585819549773,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7026,7 +7026,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.061211057473199174,
+        "cost": 0.09732725490196081,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7064,7 +7064,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.22845100161876294,
+        "cost": 0.28117911764702674,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7102,7 +7102,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.20419850895151168,
+        "cost": 0.21772392156862755,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7178,7 +7178,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.18037242540654627,
+        "cost": 0.18264601307189504,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7208,7 +7208,6 @@
           "alternatives",
           "wrap",
           "distant",
-          "boundary",
           "evict_lower",
           "shrink:0.85",
           "soft_overlap",
@@ -7245,7 +7244,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.16601429216060096,
+        "cost": 0.18941606407025266,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7283,7 +7282,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.7610943455751078,
+        "cost": 0.7826411574264294,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7321,7 +7320,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.12721672094555816,
+        "cost": 0.13435784313725485,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7359,7 +7358,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.6669522629069387,
+        "cost": 0.725590488816763,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7397,7 +7396,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.45342273469898786,
+        "cost": 0.49386216043100534,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7435,7 +7434,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.7621246644194977,
+        "cost": 0.7873160213481475,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7447,13 +7446,13 @@
         "id": "m196",
         "placed": true,
         "box": {
-          "x": 639.7356727701268,
-          "y": 302.8999999999985,
+          "x": 636.06,
+          "y": 302.9,
           "w": 30.480000000000018,
           "h": 19.94399999999996
         },
         "anchor_side": "bottom",
-        "model": "slider",
+        "model": "adjacent",
         "text": {
           "lines": [
             "L196"
@@ -7473,7 +7472,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.27846766027046566,
+        "cost": 0.24582431372548955,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7511,7 +7510,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.47512126000287347,
+        "cost": 0.5320368862490857,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7549,7 +7548,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.21145142480464518,
+        "cost": 0.24834196078431373,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7561,13 +7560,13 @@
         "id": "m199",
         "placed": true,
         "box": {
-          "x": 154.45999999999998,
-          "y": 391.1,
+          "x": 147.10865445974613,
+          "y": 391.09999999999707,
           "w": 30.480000000000018,
           "h": 19.94399999999996
         },
         "anchor_side": "bottom",
-        "model": "adjacent",
+        "model": "slider",
         "text": {
           "lines": [
             "L199"
@@ -7587,7 +7586,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.6441984221305705,
+        "cost": 0.8224251884974461,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7613,7 +7612,7 @@
         "m189"
       ],
       "priority_inversions": 0,
-      "total_cost": 51.945617504283575,
+      "total_cost": 57.39783821686498,
       "degraded": {},
       "grid": {
         "cell": 3.0,

@@ -638,6 +638,9 @@ polygons are not obstacles of other labels.
 
 ### 6.6 Boundary
 
+Boundary candidates come from the `boundary` model or the `boundary` ladder step; the
+default ladder has no `boundary` step, since a label that fits nowhere near its anchor
+would get a leader across the picture (ADR 0019).
 Slots in the margins along `placement.boundary.sides`, `margin` from the edge. Labels on
 one side are stacked by 1-D isotonic packing around their anchors' coordinates (`stack`)
 or evenly spread (`spread`); the assignment of items to slots minimizes total leader
@@ -689,6 +692,25 @@ Filtering while generating (ADR 0015), always exact:
   (`avoid.leader.leaders`, default hard). Leaders shorter than `min_length` are dropped
   (the label is then reported as adjacent) and longer than `max_length` are not
   generated.
+* **Clearance from marks** (`avoid.leader.items`, default hard): every segment of a
+  leader stays at least `clearance` (the item's `leaders.clearance`) away from the marks of
+  other items — a leader passing a mark seems to point at it. Exempt are the marks of
+  the item's own group and marks that contain the leader's anchor (the item's reference
+  point; for a fan leader its member's): no leader of the item avoids those. With a soft
+  weight `w`, every mark closer than `clearance` costs `w · (1 − d / clearance)`.
+* **Spacing between leaders** (with `avoid.leader.leaders` hard): two leaders of
+  different labels conflict when a segment of one intersects a segment of the other, or
+  when a vertex of one (start, bends, port, underline ends) is closer than `clr` to a
+  segment of the other, `clr` being the larger `leaders.clearance` of the two items;
+  leaders that do not intersect are closest at such a vertex. The start of one leader is
+  exempt when the start of the other is the point of that leader nearest to it: leaders
+  of neighbouring marks start close together and diverge. Two leaders closer than the
+  clearance read as a crossing.
+* **Diverging leaders** (with `avoid.leader.leaders` hard): two leaders of distant
+  labels whose starts are closer than the larger font size of the two items conflict
+  when the directions of their first segments differ by less than
+  `leaders.min_angle_between` (`u·v > cos(α)·|u|·|v|`, `cos` from the deterministic math;
+  0 turns the rule off). Boundary leaders run in parallel by design and are exempt.
 
 ---
 
@@ -697,9 +719,9 @@ Filtering while generating (ADR 0015), always exact:
 For candidate `k` of item `i` (all terms ≥ 0, summed in this order):
 
 ```
-cost = Σ_class w_label[class] · covered(label_k, class) / area(label_k)
+cost = Σ_class w_label[class] · covered(label_k, class) / em²
      + Σ_class w_buffer[class] · covered(ring_k, class) / area(ring_k)
-     + [leader] (w_leader + w_leader_length · len/em + Σ_class w_leader[class] · covered_len/len + w_bends · bends)
+     + [leader] (w_leader + w_leader_length · len/em + Σ_class w_leader[class] · covered_len/em + w_bends · bends)
      + w_position · rank / n_positions
      + w_distance · gap(label_k, S_i) / em
      + w_shape · shape_penalty(variant)
@@ -708,6 +730,15 @@ cost = Σ_class w_label[class] · covered(label_k, class) / area(label_k)
      + w_stability · min(1, displacement_from_warm_start / em)
 ```
 
+* Coverage costs count the covered amount in units of the item's font size: covered px²
+  / em² for labels, covered length / em for leaders — what a label hides, whatever its
+  size (a thin line across a long label costs as much as across a short one), and what a
+  leader runs over, whatever its length. A weight `w` is thus the cost of hiding one em²
+  of a class (`w_leader` = 1 costs as much as hiding 1 em² of weight 1). The same holds
+  for `canvas_edge` (the label area outside the canvas), soft `items` and the relaxed
+  costs of `soft_overlap`. Internal labels of point items cover only their own mark,
+  which hides what lies under it: they have no soft class costs (hard classes still
+  apply).
 * `ring_k` = the label box grown by `buffer`, minus the label box.
 * `covered_len` of a leader: the segment is sampled every `c/2` px; each sample adds the
   class coverage of its cell × the sample spacing.
@@ -715,7 +746,9 @@ cost = Σ_class w_label[class] · covered(label_k, class) / area(label_k)
   closer to the label box (signed distance) than `d_own + 0.5 em`, else 0. For leaders
   the port is used instead of the box.
 * Dynamic terms (other labels and leaders, only for soft settings) are added the same way
-  using exact intersection areas/lengths.
+  using exact intersection areas/lengths: overlap area / em², a leader's length inside
+  another label / em, a placed leader's stroke area inside the label / em² (em of the
+  candidate's item).
 * `lookahead_k = w_lookahead · Σ_j fraction of j's live candidates killed by k +
   w_starve · #{j : all live candidates of j killed}` over unplaced items `j` of the same
   or lower key (greedy only).

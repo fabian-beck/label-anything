@@ -4,7 +4,7 @@
   "options": {
     "placement": { "models": ["adjacent", "slider"], "position_order": "cartographic" },
     "avoid": {
-      "label": { "lines": 0.8, "ink": 0.5, "areas": "ignore", "text": "hard" },
+      "label": { "lines": 0.8, "ink": 0.1, "areas": "ignore", "text": "hard" },
       "leader": { "lines": 0.3, "areas": "ignore" }
     },
     "leaders": { "style": "straight" }

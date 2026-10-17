@@ -1,9 +1,10 @@
 //! Placement state: placed candidates, dynamic indexes, exact conflicts and dynamic costs.
 
 use crate::candidates::Cand;
-use crate::geom::{seg_intersects, seg_len_in_rect, seg_overlaps_rect, seg_seg_dist, Rect, EPS, P};
+use crate::geom::{seg_len_in_rect, seg_overlaps_rect, seg_seg_dist, Rect, EPS, P};
 use crate::grid::occupancy::Occupancy;
 use crate::index::DynIndex;
+use crate::leaders::{cand_leaders_conflict, Spacing};
 use crate::math::{maxf, minf};
 use crate::obstacles::{AvoidW, Obstacles};
 
@@ -27,12 +28,34 @@ pub struct State {
     keys: Vec<usize>,
     key_count: Vec<u32>,
     max_key: Option<usize>,
+    /// Leader spacing rules: clearance and font size per item, the cosine of
+    /// `leaders.min_angle_between`, and how far they reach beyond a candidate's box.
+    clr: Vec<f64>,
+    em: Vec<f64>,
+    cos_min: f64,
+    reach: f64,
+    /// Placed items already tested by a conflict query.
+    seen: Vec<u32>,
 }
 
 impl State {
-    /// `keys`: the priority key level of every item (smaller = more important).
-    pub fn new(n_items: usize, extent: &Rect, cell: f64, keys: Vec<usize>) -> State {
+    /// `keys`: the priority key level of every item (smaller = more important); `clr`
+    /// and `em`: the leader clearance and font size of every item; `cos_min`: the cosine
+    /// of `leaders.min_angle_between`.
+    pub fn new(
+        n_items: usize,
+        extent: &Rect,
+        cell: f64,
+        keys: Vec<usize>,
+        clr: Vec<f64>,
+        em: Vec<f64>,
+        cos_min: f64,
+    ) -> State {
         let n_keys = keys.iter().copied().max().map(|k| k + 1).unwrap_or(0);
+        let mut reach = clr.iter().copied().fold(0.0, maxf);
+        if cos_min < 1.0 {
+            reach = em.iter().copied().fold(reach, maxf);
+        }
         State {
             placed: vec![None; n_items],
             relaxed: vec![false; n_items],
@@ -48,6 +71,31 @@ impl State {
             keys,
             key_count: vec![0; n_keys],
             max_key: None,
+            clr,
+            em,
+            cos_min,
+            reach,
+            seen: Vec::new(),
+        }
+    }
+
+    /// How far leader conflicts reach beyond a candidate's bounding box when leaders may
+    /// not come close (`avoid.leader.leaders` hard): the largest clearance, and the
+    /// largest font size with the angle rule.
+    pub fn leader_reach(&self, obs: &Obstacles) -> f64 {
+        if obs.dynamic.leader_leaders.is_hard() {
+            self.reach
+        } else {
+            0.0
+        }
+    }
+
+    /// Spacing rules between the leaders of items `i` and `j`.
+    pub fn spacing(&self, i: usize, j: usize) -> Spacing {
+        Spacing {
+            clr: maxf(self.clr[i], self.clr[j]),
+            near: maxf(self.em[i], self.em[j]),
+            cos_min: self.cos_min,
         }
     }
 
@@ -166,25 +214,44 @@ impl State {
                 out.push(j);
             }
         }
-        // leader segments near the candidate (placed leaders through the candidate label,
-        // leader crossings)
-        self.seg_ix.query(&bb.inflate(EPS * 2.0), &mut self.buf);
+        // leaders near the candidate (placed leaders through the candidate label, leaders
+        // crossing or coming closer than the clearance)
+        let reach = if c.leaders.is_empty() {
+            0.0
+        } else {
+            self.leader_reach(obs)
+        };
+        self.seg_ix
+            .query(&bb.inflate(EPS * 2.0 + reach), &mut self.buf);
+        self.seen.clear();
         for &s in &self.buf {
-            let (j, a, b) = self.segs[s as usize];
-            if j as usize == skip || out.contains(&j) {
+            let j = self.segs[s as usize].0;
+            if j as usize == skip || out.contains(&j) || self.seen.contains(&j) {
                 continue;
             }
-            let hit_label = dy.leader_labels.is_hard() && seg_overlaps_rect(a, b, &c.rect);
-            let hit_cross = dy.leader_leaders.is_hard()
-                && c.leaders
-                    .iter()
-                    .any(|l| l.segments().any(|(p, q)| seg_intersects(a, b, p, q)));
-            if hit_label || hit_cross {
+            self.seen.push(j);
+            let p = &cands[self.placed[j as usize].expect("placed leader") as usize];
+            if self.leaders_hit(c, p, dy, j as usize) {
                 out.push(j);
             }
         }
         out.sort_unstable();
         out.dedup();
+    }
+
+    /// Whether the placed candidate `p` of item `j` has a leader through the label of `c`,
+    /// or a leader that conflicts with a leader of `c`.
+    fn leaders_hit(&self, c: &Cand, p: &Cand, dy: &crate::obstacles::Dynamic, j: usize) -> bool {
+        if dy.leader_labels.is_hard()
+            && p.leaders
+                .iter()
+                .any(|l| l.segments().any(|(a, b)| seg_overlaps_rect(a, b, &c.rect)))
+        {
+            return true;
+        }
+        dy.leader_leaders.is_hard()
+            && !c.leaders.is_empty()
+            && cand_leaders_conflict(c, p, self.spacing(c.item as usize, j))
     }
 
     /// Whether candidate `c` conflicts with nothing placed (except `skip`); stops at the
@@ -232,19 +299,23 @@ impl State {
             }
         }
         if self.segs.len() > self.free_segs.len() {
-            self.seg_ix.query(&bb.inflate(EPS * 2.0), &mut self.buf);
-            for &s in &self.buf {
-                let (j, a, b) = self.segs[s as usize];
+            let reach = if c.leaders.is_empty() {
+                0.0
+            } else {
+                self.leader_reach(obs)
+            };
+            self.seg_ix
+                .query(&bb.inflate(EPS * 2.0 + reach), &mut self.buf);
+            self.seen.clear();
+            for k in 0..self.buf.len() {
+                let j = self.segs[self.buf[k] as usize].0;
                 let ju = j as usize;
-                if ju == skip || !pred(ju) {
+                if ju == skip || !pred(ju) || self.seen.contains(&j) {
                     continue;
                 }
-                let hit_label = dy.leader_labels.is_hard() && seg_overlaps_rect(a, b, &c.rect);
-                let hit_cross = dy.leader_leaders.is_hard()
-                    && c.leaders
-                        .iter()
-                        .any(|l| l.segments().any(|(p, q)| seg_intersects(a, b, p, q)));
-                if hit_label || hit_cross {
+                self.seen.push(j);
+                let p = &cands[self.placed[ju].expect("placed leader") as usize];
+                if self.leaders_hit(c, p, dy, ju) {
                     return Some(ju);
                 }
             }
@@ -279,6 +350,9 @@ impl State {
         let mut cost = 0.0;
         let r = c.rect;
         let area = maxf(r.area(), 1e-9);
+        // covered em² and em, as the static terms (spec §8)
+        let em = self.em[c.item as usize];
+        let em2 = em * em;
         let ring = r.inflate(buffer);
         let ring_area = maxf(ring.area() - area, 1e-9);
         if need_labels {
@@ -292,7 +366,7 @@ impl State {
                 };
                 let p = &cands[pid as usize];
                 if let AvoidW::Soft(w) = dy.label_labels {
-                    cost += w * r.overlap_area(&p.rect) / area;
+                    cost += w * r.overlap_area(&p.rect) / em2;
                 }
                 if dy.buffer_labels > 0.0 {
                     cost += dy.buffer_labels
@@ -302,7 +376,7 @@ impl State {
                 if let AvoidW::Soft(w) = dy.leader_labels {
                     for l in &c.leaders {
                         for (a, b) in l.segments() {
-                            cost += w * seg_len_in_rect(a, b, &p.rect) / maxf(l.len, 1e-9);
+                            cost += w * seg_len_in_rect(a, b, &p.rect) / em;
                         }
                     }
                 }
@@ -324,7 +398,7 @@ impl State {
                     cost += dy.buffer_leaders * in_ring * maxf(leader_w, 1.0) / ring_area;
                 }
                 if let AvoidW::Soft(w) = dy.leader_labels {
-                    cost += w * seg_len_in_rect(a, b, &r) * maxf(leader_w, 1.0) / area;
+                    cost += w * seg_len_in_rect(a, b, &r) * maxf(leader_w, 1.0) / em2;
                 }
                 for l in &c.leaders {
                     for (p, q) in l.segments() {

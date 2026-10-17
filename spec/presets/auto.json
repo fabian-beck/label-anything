@@ -3,7 +3,7 @@
   "description": "Zero-config: avoid items and labels; classify SVG/raster backgrounds (matplotlib SVGs too: texts drawn as glyphs in text_N groups and legends are text, tick marks ink, the white axes background ignored); enable distant labels with leaders only when the plot is crowded.",
   "options": {
     "placement": { "models": ["adjacent", "slider"] },
-    "avoid": { "label": { "points": 0.3, "lines": 1.0, "ink": 0.5 }, "leader": { "points": 0.2, "lines": 0.5 } }
+    "avoid": { "label": { "points": 0.3, "lines": 1.0, "ink": 0.1 }, "leader": { "points": 0.2, "lines": 0.5 } }
   },
   "svg_classes": [
     { "selector": ":background", "class": "ignore" },

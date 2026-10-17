@@ -4,7 +4,7 @@
   "options": {
     "placement": { "models": ["internal", "adjacent", "slider", "distant"], "internal": "auto", "position_order": "perceptual" },
     "avoid": {
-      "label": { "lines": 1.0, "ink": 0.5 },
+      "label": { "lines": 1.0, "ink": 0.1 },
       "leader": { "lines": 0.5 }
     },
     "leaders": { "style": "angles", "angles": [0, 45, 90, 135, 180, 225, 270, 315] }

@@ -23,6 +23,7 @@ import { type Env, envCancelled, envNow } from "../env.js";
 import { type P, Rect } from "../geom/index.js";
 import { type Measurer, type Variant, ladderVariants } from "../labels.js";
 import { distant, distantDirs } from "../leaders.js";
+import { cosDeg } from "../detmath.js";
 import { cmpF64, minf } from "../math.js";
 import { type Model, Models } from "../model/index.js";
 import type { Obstacles } from "../obstacles.js";
@@ -108,6 +109,9 @@ export class Solve {
       model.extent,
       obs.indexCell,
       pri.prio.map((p) => p.key),
+      model.items.map((it) => it.len.clearance),
+      model.items.map((it) => it.em()),
+      model.leaders.minAngleBetween > 0 ? cosDeg(model.leaders.minAngleBetween) : 1,
     );
     this.reasons = new Array<Reason | null>(n).fill(null);
     this.stepsTried = [];

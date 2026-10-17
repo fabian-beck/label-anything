@@ -168,15 +168,17 @@ export function run(s: Solve, maxNodes: number): boolean {
     }
     v.push(b);
   };
+  const reach = s.state.leaderReach(s.obs);
   const bboxes = pool.map((c) => s.cands[c]!.bbox());
   for (let x = 0; x < pool.length; x++) {
     const a = pool[x]!;
     const ca = s.cands[a]!;
+    const bba = bboxes[x]!.inflate(reach);
     for (let y = x + 1; y < pool.length; y++) {
       const b = pool[y]!;
       const cb = s.cands[b]!;
-      if (ca.item === cb.item || !bboxes[x]!.touches(bboxes[y]!)) continue;
-      if (pairConflict(ca, cb, dy)) {
+      if (ca.item === cb.item || !bba.touches(bboxes[y]!)) continue;
+      if (pairConflict(ca, cb, dy, s.state.spacing(ca.item, cb.item))) {
         addConflict(a, b);
         addConflict(b, a);
       }

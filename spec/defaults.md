@@ -61,11 +61,11 @@ are stale.
 | `leaders.min_length` | `6` | length ≥ 0 | Shorter leaders are not drawn (label counts as adjacent). |
 | `leaders.max_length` | `"10em"` | length ≥ 0 | Longest leader. |
 | `leaders.anchor_gap` | `1.5` | length ≥ 0 | Leaders stop this far from the mark boundary. |
-| `leaders.clearance` | `3` | length ≥ 0 | Clearance of leaders from other items' shapes and from other leaders. |
-| `leaders.min_angle_between` | `10` | 0–90 degrees | Leaders of nearby items must differ at least this much in direction. |
+| `leaders.clearance` | `"0.4em"` | length ≥ 0 | Distance leaders keep from other items' marks and from other leaders (spec §7). |
+| `leaders.min_angle_between` | `10` | 0–90 degrees | Distant leaders starting within 1 em of each other must diverge at least this much. |
 | `leaders.width` | `1` | ≥ 0 | Leader stroke width for collision tests. |
-| `avoid.label` | `{"labels":"hard","items":"hard","text":"hard","canvas_edge":"hard","own_mark":"hard","ink":0.5,"*":1.0}` | map | Label box vs. classes. |
-| `avoid.leader` | `{"leaders":"hard","labels":"hard","items":2.0,"ink":0.2,"*":0.2}` | map | Leader vs. classes (`leaders` = crossings). |
+| `avoid.label` | `{"labels":"hard","items":"hard","text":"hard","canvas_edge":"hard","own_mark":"hard","ink":0.1,"*":1.0}` | map | Label box vs. classes. |
+| `avoid.leader` | `{"leaders":"hard","labels":"hard","items":"hard","ink":0.05,"*":0.2}` | map | Leader vs. classes (`leaders` = crossings and approaches closer than `leaders.clearance`, `items` = other marks within `leaders.clearance`). |
 | `avoid.buffer` | `{"items":1.0,"leaders":0.5}` | map | Soft ambiguity buffer ring vs. classes. |
 | `avoid.relaxable` | `["points","ink","lines"]` | list | Classes the `soft_overlap` step may relax from hard to soft. |
 | `priority.terms` | `[]` | list | No terms: score = explicit `item.priority`, else 0 (ties by `priority.ties`). |
@@ -87,7 +87,7 @@ are stale.
 | `solver.max_iterations` | `200000` | int ≥ 0 | Cap on local-search iterations. |
 | `solver.seed` | `0` | 0 – 2³²−1 | Seed of the PCG32 generator. |
 | `solver.grid_cell` | `"auto"` | auto or > 0 | auto = clamp(min font size / 4, 1, 4) px. |
-| `degrade` | `["alternatives","wrap","distant","boundary","evict_lower","shrink:0.85","soft_overlap","omit"]` | list | Degradation ladder (spec §5.7). |
+| `degrade` | `["alternatives","wrap","distant","evict_lower","shrink:0.85","soft_overlap","omit"]` | list | Degradation ladder (spec §10.1). No `boundary` step: margin labels need leaders across the picture; use the `boundary` model or step where they are intended. |
 | `degrade_options.min_scale` | `0.7` | (0,1] | Smallest font scale of `shrink:f` steps (f, f², … ≥ min_scale). |
 | `degrade_options.wrap_max_lines` | `3` | int ≥ 1 | Line limit of the `wrap` step for labels without wrap settings. |
 | `degrade_options.soft_overlap_weight` | `10` | ≥ 0 | Weight replacing `hard` for relaxed classes. |
@@ -133,7 +133,9 @@ are stale.
   solve is deterministic for a given input and seed on every machine. A wall-clock guard at 3 × the budget stops the
   search on pathologically slow machines and sets `stats.time_guard_hit`. See ADR 0007.
 * **Hard vs. soft.** `"hard"` classes are filters: a candidate touching them is discarded.
-  Numbers are soft weights per unit of covered fraction (covered px² / label px²).
+  Numbers are soft weights per em² of covered area for labels (covered px² / em²) and per
+  em of covered length for leaders (spec §8): a label hiding one em² of a class of weight
+  1 costs as much as having a leader (`weights.leader`).
   `"ignore"` means no interaction.
 * **Reserved classes:** `items` (all anchored marks), `labels` (placed labels), `leaders`
   (placed leaders), `canvas_edge`, `ink`, `text`. Everything else is a free string.

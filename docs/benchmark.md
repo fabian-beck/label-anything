@@ -112,6 +112,30 @@ machine:
   local search starts only before 3 times). Their results depend on the machine; give such
   problems a larger `solver.time_budget_ms`.
 
+## Visual quality
+
+Hard constraints do not catch everything a reader perceives as clutter. The evaluator
+also measures leader length (relative to the canvas diagonal), near crossings (two
+leaders closer than 4 px without crossing), parallel leaders of neighbouring marks,
+leaders passing other marks and data primitives, and the points and line length hidden
+by labels (`bench/README.md`, *Evaluator metrics*; columns *near cross.*, *leader–mark*,
+*far leaders*, *leader p90 em*, *points hidden* and *lines hidden em* of the report).
+They motivated the leader spacing rules, the default ladder without margin labels and the
+coverage costs per em² of [ADR 0019](adr/0019-visual-quality-defaults.md). Full suite,
+deterministic solves (`--no-clock`, default budgets), before → after that change:
+
+| | before | after |
+|---|---|---|
+| labels placed | 13,307 | 13,000 (−2.3 %) |
+| leaders longer than ¼ of the canvas diagonal | 169 | 0 |
+| near crossings | 1,424 | 1 |
+| leader–mark touches | 25,505 | 0 |
+| points hidden by labels | 1,862 | 1,524 (−18 %) |
+| line length hidden by labels | 3,506 em | 2,855 em (−19 %) |
+
+The labels that are lost are those whose only positions needed a leader through a dense
+cluster of marks or across the picture.
+
 ## Reading the report
 
 * **Summary** — one row per solver. Label Anything rows must show 0 hard violations; baselines

@@ -39,10 +39,12 @@ produces is reported as a validation **warning** (`unknown_class`) — usually a
   geometry (vector layers, SVG, marks, labels, leaders) the test is exact; against raster
   classes it is conservative at the grid resolution (a label touches the class when it
   overlaps a cell with any coverage).
-* a number `w ≥ 0` — a soft cost: `w × covered area / label area` for labels,
-  `w × covered length / leader length` for leaders. Covering a whole label's area with a
-  class of weight 1 costs as much as one unit of the other cost terms
-  ([costs](candidates.md#costs)).
+* a number `w ≥ 0` — a soft cost per covered amount, measured in the label's font size:
+  `w × covered area / em²` for labels, `w × covered length / em` for leaders. A label
+  hiding one em² of a class of weight 1 costs as much as having a leader; a thin line
+  across a long label costs as much as across a short one
+  ([costs](candidates.md#costs)). Internal labels of marks cover only their own mark,
+  which hides what lies under it, and pay no soft class costs.
 * `"ignore"` — no interaction at all.
 
 The key `"*"` sets the value of every class the map does not list.
@@ -51,8 +53,8 @@ The key `"*"` sets the value of every class the map does not list.
 
 | Map | Default | |
 |---|---|---|
-| `avoid.label` | `labels`, `items`, `text`, `canvas_edge`, `own_mark`: hard · `ink`: 0.5 · `*`: 1.0 | label box vs. class |
-| `avoid.leader` | `leaders`, `labels`: hard · `items`: 2.0 · `ink`: 0.2 · `*`: 0.2 | leader vs. class; `leaders` = crossings, `labels` = passing through other labels |
+| `avoid.label` | `labels`, `items`, `text`, `canvas_edge`, `own_mark`: hard · `ink`: 0.1 · `*`: 1.0 | label box vs. class |
+| `avoid.leader` | `leaders`, `labels`, `items`: hard · `ink`: 0.05 · `*`: 0.2 | leader vs. class; `leaders` = crossings and leaders closer than `leaders.clearance`, `labels` = passing through other labels, `items` = passing other items' marks closer than `leaders.clearance` |
 | `avoid.buffer` | `items`: 1.0 · `leaders`: 0.5 | soft weights of the ring around each label (width `defaults.buffer`, 0.3 em): keeps labels from sitting so close to another item that they look like its label |
 | `avoid.relaxable` | `["points", "ink", "lines"]` | hard classes the `soft_overlap` ladder step may turn into a weight (`degrade_options.soft_overlap_weight`, 10) |
 
@@ -71,11 +73,11 @@ example:
 
 | Preset | `avoid.label` | `avoid.leader` |
 |---|---|---|
-| `auto` | points 0.3, lines 1.0, ink 0.5 | points 0.2, lines 0.5 |
-| `scatter` | points 0.3, lines 1.0, ink 0.5, axes hard | points 0.2, lines 0.5, axes 1.0 |
-| `map` | lines 0.8, ink 0.5, areas ignore, text hard | lines 0.3, areas ignore |
-| `graph` | lines 1.0, ink 0.5 | lines 0.5 |
-| `illustration` | ink 2.0 | ink 0.1 |
+| `auto` | points 0.3, lines 1.0, ink 0.1 | points 0.2, lines 0.5 |
+| `scatter` | points 0.3, lines 1.0, ink 0.1, axes hard | points 0.2, lines 0.5, axes 1.0 |
+| `map` | lines 0.8, ink 0.1, areas ignore, text hard | lines 0.3, areas ignore |
+| `graph` | lines 1.0, ink 0.1 | lines 0.5 |
+| `illustration` | ink 0.15 | ink 0.025 |
 
 ## Choosing values
 
@@ -83,9 +85,13 @@ example:
   text, a legend, data the reader must see. Hard classes reduce the space; more labels
   will need leaders or be omitted.
 * Use **weights** for things that may be covered when it helps: dense unlabeled points,
-  grid lines, background shading. Weights between 0.2 and 2 are typical; the other cost
-  terms (position, distance, leaders) are of order 1.
+  grid lines, background shading. Weights between 0.1 and 2 per em² are typical; the
+  other cost terms (position, distance, leaders) are of order 1. Ink is everywhere in
+  images and maps, so its weights are small.
 * **Ignore** what does not matter for legibility: plot backgrounds, area fills under
   labels, faint grid lines.
 * Leaders are thin: they can cross many things that labels must not. By default they may
-  cross obstacles at a small cost (0.2), items at 2.0, and never labels or other leaders.
+  cross obstacles at a small cost (0.2 per em), but never labels or other leaders, and
+  they keep `leaders.clearance` (0.4 em) from other items' marks and from other leaders: a
+  leader grazing a dot seems to point at it, and two leaders closer than that read as a
+  crossing ([leaders](../tutorials/leaders.md)).

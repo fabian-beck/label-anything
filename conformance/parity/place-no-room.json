@@ -41,7 +41,6 @@
           "alternatives",
           "wrap",
           "distant",
-          "boundary",
           "evict_lower",
           "shrink:0.85",
           "soft_overlap",

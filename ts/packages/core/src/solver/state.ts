@@ -10,8 +10,9 @@
 import type { Cand } from "../candidates.js";
 import { EPS, P, Rect, segLenInRect, segOverlapsRectXY, segSegDistXY } from "../geom/index.js";
 import { Occupancy } from "../grid/occupancy.js";
+import { type Spacing, candLeadersConflict } from "../leaders.js";
 import { maxf, minf } from "../math.js";
-import { AvoidKind, type Obstacles } from "../obstacles.js";
+import { AvoidKind, type Dynamic, type Obstacles } from "../obstacles.js";
 import { DynIndex, IdList } from "../spatial.js";
 
 /** Whether any segment of `c`'s leaders passes through the interior of `r`. */
@@ -27,18 +28,6 @@ export function leadersOverlapRect(c: Cand, r: Rect): boolean {
   return false;
 }
 
-/** Whether segment `(ax, ay)–(bx, by)` intersects any segment of `c`'s leaders (`seg_intersects`). */
-export function leadersCrossSeg(c: Cand, ax: number, ay: number, bx: number, by: number): boolean {
-  for (const l of c.leaders) {
-    const n = l.segCount();
-    for (let k = 0; k < n; k++) {
-      const p = l.segA(k);
-      const q = l.segB(k);
-      if (segSegDistXY(ax, ay, bx, by, p.x, p.y, q.x, q.y) <= EPS) return true;
-    }
-  }
-  return false;
-}
 
 /** The set of placed labels with spatial indexes. */
 export class State {
@@ -77,11 +66,40 @@ export class State {
   private keyCount: Uint32Array;
   /** Largest key level among placed labels (-1: nothing placed). */
   private maxKey = -1;
+  /**
+   * Leader spacing rules: clearance and font size per item, the cosine of
+   * `leaders.min_angle_between`, and how far they reach beyond a candidate's box.
+   */
+  private clr: readonly number[];
+  private em: readonly number[];
+  private cosMin: number;
+  private reach: number;
+  /** Placed items already tested by a conflict query. */
+  private seen: number[] = [];
 
-  /** `keys`: the priority key level of every item (smaller = more important). */
-  constructor(nItems: number, extent: Rect, cell: number, keys: readonly number[]) {
+  /**
+   * `keys`: the priority key level of every item (smaller = more important); `clr` and
+   * `em`: the leader clearance and font size of every item; `cosMin`: the cosine of
+   * `leaders.min_angle_between`.
+   */
+  constructor(
+    nItems: number,
+    extent: Rect,
+    cell: number,
+    keys: readonly number[],
+    clr: readonly number[],
+    em: readonly number[],
+    cosMin: number,
+  ) {
     let nKeys = 0;
     for (const k of keys) if (k + 1 > nKeys) nKeys = k + 1;
+    let reach = 0;
+    for (const v of clr) reach = maxf(reach, v);
+    if (cosMin < 1) for (const v of em) reach = maxf(reach, v);
+    this.clr = clr;
+    this.em = em;
+    this.cosMin = cosMin;
+    this.reach = reach;
     this.placed = new Int32Array(nItems).fill(-1);
     this.relaxed = new Uint8Array(nItems);
     this.labelIx = new DynIndex(extent, cell);
@@ -92,6 +110,20 @@ export class State {
     this.pendAt = new Int32Array(nItems).fill(-1);
     this.keys = keys;
     this.keyCount = new Uint32Array(nKeys);
+  }
+
+  /**
+   * How far leader conflicts reach beyond a candidate's bounding box when leaders may not
+   * come close (`avoid.leader.leaders` hard): the largest clearance, and the largest font
+   * size with the angle rule.
+   */
+  leaderReach(obs: Obstacles): number {
+    return obs.dynamic.leaderLeaders.kind === AvoidKind.Hard ? this.reach : 0;
+  }
+
+  /** Spacing rules between the leaders of items `i` and `j`. */
+  spacing(i: number, j: number): Spacing {
+    return { clr: maxf(this.clr[i]!, this.clr[j]!), near: maxf(this.em[i]!, this.em[j]!), cosMin: this.cosMin };
   }
 
   /** The largest key level among placed labels (null when nothing is placed). */
@@ -234,7 +266,6 @@ export class State {
     const dy = obs.dynamic;
     const llHard = dy.labelLabels.kind === AvoidKind.Hard;
     const lbHard = dy.leaderLabels.kind === AvoidKind.Hard;
-    const leHard = dy.leaderLeaders.kind === AvoidKind.Hard;
     const bb = c.bbox();
     const buf = this.buf;
     // labels near the candidate (label-label, candidate leaders through placed labels)
@@ -251,21 +282,17 @@ export class State {
       }
       if (lbHard && leadersOverlapRect(c, p.rect)) out.push(j);
     }
-    // leader segments near the candidate (placed leaders through the candidate label,
-    // leader crossings)
-    this.segIx.query(bb.inflate(EPS * 2), buf);
-    const r = c.rect;
+    // leaders near the candidate (placed leaders through the candidate label, leaders
+    // crossing or coming closer than the clearance)
+    const reach = c.leaders.length === 0 ? 0 : this.leaderReach(obs);
+    this.segIx.query(bb.inflate(EPS * 2 + reach), buf);
+    const seen = this.seen;
+    seen.length = 0;
     for (let q = 0; q < buf.len; q++) {
-      const s = buf.get(q);
-      const j = this.segItem[s]!;
-      if (j === skip || out.includes(j)) continue;
-      const ax = this.segAx[s]!;
-      const ay = this.segAy[s]!;
-      const bx = this.segBx[s]!;
-      const by = this.segBy[s]!;
-      const hitLabel = lbHard && segOverlapsRectXY(ax, ay, bx, by, r.x0, r.y0, r.x1, r.y1);
-      const hitCross = leHard && leadersCrossSeg(c, ax, ay, bx, by);
-      if (hitLabel || hitCross) out.push(j);
+      const j = this.segItem[buf.get(q)]!;
+      if (j === skip || out.includes(j) || seen.includes(j)) continue;
+      seen.push(j);
+      if (this.leadersHit(c, cands[this.placed[j]!]!, dy, j)) out.push(j);
     }
     if (out.length > 1) {
       out.sort((a, b) => a - b);
@@ -288,7 +315,6 @@ export class State {
     const dy = obs.dynamic;
     const llHard = dy.labelLabels.kind === AvoidKind.Hard;
     const lbHard = dy.leaderLabels.kind === AvoidKind.Hard;
-    const leHard = dy.leaderLeaders.kind === AvoidKind.Hard;
     const keys = this.keys;
     const bb = c.bbox();
     // scans in query order that stop at the first conflict
@@ -303,23 +329,33 @@ export class State {
       if (lbHard && leadersOverlapRect(c, p.rect)) return j;
     }
     if (this.hasSegs()) {
-      // segments near bb.inflate(2 EPS)
+      // segments near bb grown by 2 EPS and the leader reach
+      const reach = c.leaders.length === 0 ? 0 : this.leaderReach(obs);
       const six = this.segIx;
-      six.scanStart(bb, EPS * 2);
-      const r = c.rect;
+      six.scanStart(bb, EPS * 2 + reach);
+      const seen = this.seen;
+      seen.length = 0;
       for (let s = six.scanNext(); s >= 0; s = six.scanNext()) {
         const j = this.segItem[s]!;
-        if (j === skip || !(keys[j]! <= keyLimit)) continue;
-        const ax = this.segAx[s]!;
-        const ay = this.segAy[s]!;
-        const bx = this.segBx[s]!;
-        const by = this.segBy[s]!;
-        const hitLabel = lbHard && segOverlapsRectXY(ax, ay, bx, by, r.x0, r.y0, r.x1, r.y1);
-        const hitCross = leHard && leadersCrossSeg(c, ax, ay, bx, by);
-        if (hitLabel || hitCross) return j;
+        if (j === skip || !(keys[j]! <= keyLimit) || seen.includes(j)) continue;
+        seen.push(j);
+        if (this.leadersHit(c, cands[this.placed[j]!]!, dy, j)) return j;
       }
     }
     return -1;
+  }
+
+  /**
+   * Whether the placed candidate `p` of item `j` has a leader through the label of `c`, or
+   * a leader that conflicts with a leader of `c`.
+   */
+  private leadersHit(c: Cand, p: Cand, dy: Dynamic, j: number): boolean {
+    if (dy.leaderLabels.kind === AvoidKind.Hard && leadersOverlapRect(p, c.rect)) return true;
+    return (
+      dy.leaderLeaders.kind === AvoidKind.Hard &&
+      c.leaders.length > 0 &&
+      candLeadersConflict(c, p, this.spacing(c.item, j))
+    );
   }
 
   /** Soft costs of `c` against placed labels and leaders. */
@@ -341,6 +377,9 @@ export class State {
     let cost = 0;
     const r = c.rect;
     const area = maxf(r.area(), 1e-9);
+    // covered em² and em, as the static terms (spec §8)
+    const em = this.em[c.item]!;
+    const em2 = em * em;
     const ring = r.inflate(buffer);
     const ringArea = maxf(ring.area() - area, 1e-9);
     const buf = this.buf;
@@ -352,7 +391,7 @@ export class State {
         const pid = this.placed[j]!;
         if (pid < 0) continue;
         const p = cands[pid]!;
-        if (llSoft) cost += (dy.labelLabels.w * r.overlapArea(p.rect)) / area;
+        if (llSoft) cost += (dy.labelLabels.w * r.overlapArea(p.rect)) / em2;
         if (dy.bufferLabels > 0) {
           cost += (dy.bufferLabels * maxf(ring.overlapArea(p.rect) - r.overlapArea(p.rect), 0)) / ringArea;
         }
@@ -360,7 +399,7 @@ export class State {
           const w = dy.leaderLabels.w;
           for (const l of c.leaders) {
             const n = l.segCount();
-            for (let k = 0; k < n; k++) cost += (w * segLenInRect(l.segA(k), l.segB(k), p.rect)) / maxf(l.len, 1e-9);
+            for (let k = 0; k < n; k++) cost += (w * segLenInRect(l.segA(k), l.segB(k), p.rect)) / em;
           }
         }
       }
@@ -385,7 +424,7 @@ export class State {
             const inRing = maxf(segLenInRect(a, b, ring) - segLenInRect(a, b, r), 0);
             cost += (dy.bufferLeaders * inRing * llw) / ringArea;
           }
-          if (lbSoft) cost += (dy.leaderLabels.w * segLenInRect(a, b, r) * llw) / area;
+          if (lbSoft) cost += (dy.leaderLabels.w * segLenInRect(a, b, r) * llw) / em2;
         }
         for (const l of c.leaders) {
           const n = l.segCount();

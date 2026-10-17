@@ -7,7 +7,7 @@
 
 import type { Cand } from "../candidates.js";
 import { envProgress } from "../env.js";
-import { EPS, segSegDistXY } from "../geom/index.js";
+import { type Spacing, candLeadersConflict } from "../leaders.js";
 import { cmpF64, maxf, minf } from "../math.js";
 import { Omission, stepEq, stepName } from "../model/index.js";
 import { AvoidKind, type Dynamic } from "../obstacles.js";
@@ -16,31 +16,17 @@ import { IdList } from "../spatial.js";
 import { Reason, type Solve } from "./index.js";
 import { leadersOverlapRect } from "./state.js";
 
-/** Exact hard conflict between two candidates of different items. */
-export function pairConflict(a: Cand, b: Cand, dy: Dynamic): boolean {
+/**
+ * Exact hard conflict between two candidates of different items; `sp`: the spacing rules
+ * between their leaders.
+ */
+export function pairConflict(a: Cand, b: Cand, dy: Dynamic, sp: Spacing): boolean {
   if (dy.labelLabels.kind === AvoidKind.Hard && a.labelOverlaps(b)) return true;
   if (dy.leaderLabels.kind === AvoidKind.Hard) {
     if (leadersOverlapRect(a, b.rect)) return true;
     if (leadersOverlapRect(b, a.rect)) return true;
   }
-  if (dy.leaderLeaders.kind === AvoidKind.Hard && a.leaders.length > 0 && b.leaders.length > 0) {
-    for (const la of a.leaders) {
-      const n = la.segCount();
-      for (let k = 0; k < n; k++) {
-        const p = la.segA(k);
-        const q = la.segB(k);
-        for (const lb of b.leaders) {
-          const m = lb.segCount();
-          for (let t = 0; t < m; t++) {
-            const r = lb.segA(t);
-            const s = lb.segB(t);
-            if (segSegDistXY(p.x, p.y, q.x, q.y, r.x, r.y, s.x, s.y) <= EPS) return true;
-          }
-        }
-      }
-    }
-  }
-  return false;
+  return dy.leaderLeaders.kind === AvoidKind.Hard && candLeadersConflict(a, b, sp);
 }
 
 /** Number of lookahead-evaluated cheapest candidates. */
@@ -390,14 +376,14 @@ function commit(s: Solve, g: Greedy, i: number, c: number, relaxed: boolean): vo
   // kill conflicting level-0 candidates of other undecided items
   const cand = s.cands[c]!;
   const ids = g.ids;
-  s.candIx.query(cand.bbox().inflate(1e-6), ids);
+  s.candIx.query(cand.bbox().inflate(1e-6 + s.state.leaderReach(s.obs)), ids);
   const dy = s.obs.dynamic;
   for (let q = 0; q < ids.len; q++) {
     const k = ids.get(q);
     if (!g.alive[k]) continue;
     const j = s.cands[k]!.item;
     if (j === i || s.state.placed[j]! >= 0) continue;
-    if (pairConflict(s.cands[k]!, cand, dy)) {
+    if (pairConflict(s.cands[k]!, cand, dy, s.state.spacing(i, j))) {
       g.alive[k] = 0;
       g.live[j] -= 1;
       // re-queue with its new live count, but only within the running band (items of
@@ -423,7 +409,7 @@ function unplaceItem(s: Solve, g: Greedy, i: number): void {
   g.live[i] = live;
   // revive level-0 candidates that only conflicted with this label
   const ids = new IdList();
-  s.candIx.query(s.cands[c]!.bbox().inflate(1e-6), ids);
+  s.candIx.query(s.cands[c]!.bbox().inflate(1e-6 + s.state.leaderReach(s.obs)), ids);
   for (let q = 0; q < ids.len; q++) {
     const k = ids.get(q);
     if (g.alive[k] || !s.cands[k]!.feasible) continue;
@@ -491,14 +477,14 @@ function bestLevel0(s: Solve, g: Greedy, i: number): number | null {
 function lookahead(s: Solve, g: Greedy, i: number, c: number): number {
   const cand = s.cands[c]!;
   const ids = g.ids;
-  s.candIx.query(cand.bbox().inflate(1e-6), ids);
+  s.candIx.query(cand.bbox().inflate(1e-6 + s.state.leaderReach(s.obs)), ids);
   const dy = s.obs.dynamic;
   for (let q = 0; q < ids.len; q++) {
     const k = ids.get(q);
     if (!g.alive[k]) continue;
     const j = s.cands[k]!.item;
     if (j === i || g.done[j]) continue;
-    if (pairConflict(s.cands[k]!, cand, dy)) {
+    if (pairConflict(s.cands[k]!, cand, dy, s.state.spacing(i, j))) {
       if (g.killed[j] === 0) g.touched.push(j);
       g.killed[j] += 1;
     }

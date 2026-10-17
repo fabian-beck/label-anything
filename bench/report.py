@@ -37,10 +37,17 @@ METRICS = [
     ("internal_rate", "internal", "{:.1%}", 0),
     ("position_rank_mean", "pos. rank", "{:.2f}", -1),
     ("soft_coverage_mean", "soft cov.", "{:.3f}", -1),
+    ("leader_near_crossings", "near cross.", "{:d}", -1),
+    ("leader_mark_touches", "leader–mark", "{:d}", -1),
+    ("leaders_far", "far leaders", "{:d}", -1),
+    ("leader_len_p90_em", "leader p90 em", "{:.1f}", -1),
+    ("label_points_hidden", "points hidden", "{:d}", -1),
+    ("label_lines_em", "lines hidden em", "{:.1f}", -1),
     ("schema_errors", "schema err.", "{:d}", -1),
 ]
-TABLE_COLS = ["placed_rate", "hard_violations", "leader_crossings", "ambiguity_rate", "priority_inversions",
-              "ndcg_at_k", "adjacent_gap_abs_mean", "position_rank_mean", "soft_coverage_mean"]
+TABLE_COLS = ["placed_rate", "hard_violations", "leader_crossings", "leader_near_crossings", "leader_mark_touches",
+              "ambiguity_rate", "priority_inversions", "ndcg_at_k", "adjacent_gap_abs_mean", "position_rank_mean",
+              "soft_coverage_mean"]
 SEQ_METRICS = [
     ("displacement_mean_px", "displacement px", "{:.2f}", -1),
     ("flip_rate", "flip rate", "{:.1%}", -1),

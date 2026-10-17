@@ -75,6 +75,8 @@ export class Evaluator {
     const em = item.em();
     const r = c.rect;
     const area = maxf(r.area(), 1e-9);
+    // coverage costs count covered em², whatever the label's size (spec §8)
+    const em2 = em * em;
     const w = model.weights;
     const dy = obs.dynamic;
     const softW = model.degrade.softOverlapWeight;
@@ -86,7 +88,7 @@ export class Evaluator {
     if (la !== null && !la.containsRect(r)) {
       const e = dy.labelEdge;
       if (e.kind === AvoidKind.Hard) acc.violate(BLOCK_EDGE, false, 0);
-      else if (e.kind === AvoidKind.Soft) acc.add("canvas_edge", (e.w * (area - la.overlapArea(r))) / area);
+      else if (e.kind === AvoidKind.Soft) acc.add("canvas_edge", (e.w * (area - la.overlapArea(r))) / em2);
     }
     if (!acc.relaxed) return finish(c, acc);
     // 2. items (exact); one query serves the buffer ring and the ambiguity term
@@ -117,7 +119,7 @@ export class Evaluator {
       otherFound = true;
       if (labelItemsHard && c.labelOverlapsShape(sj)) acc.violate(BLOCK_ITEMS, false, 0);
     }
-    if (dy.labelItems.kind === AvoidKind.Soft) acc.add("items", (dy.labelItems.w * obs.otherItemsCovered(i, r)) / area);
+    if (dy.labelItems.kind === AvoidKind.Soft) acc.add("items", (dy.labelItems.w * obs.otherItemsCovered(i, r)) / em2);
     // the ring only sees other items when the item query found any besides the own
     if (dy.bufferItems > 0 && otherFound) {
       const ringArea = maxf(ring.area() - area, 1e-9);
@@ -125,7 +127,9 @@ export class Evaluator {
       acc.add("buffer:items", (dy.bufferItems * cov) / ringArea);
     }
     if (!acc.relaxed) return finish(c, acc);
-    // 3. static classes
+    // 3. static classes (an internal label of a mark covers only the mark, which hides what
+    // lies under it: no soft coverage costs)
+    const onMark = c.kind === Kind.Internal && item.area === null;
     let hardPrimsChecked = false;
     const classes = obs.classes;
     const grid = obs.grid;
@@ -153,11 +157,11 @@ export class Evaluator {
           }
         }
         if (hit) {
-          const extra = (softW * sat.coveredArea(grid, r)) / area;
+          const extra = (softW * sat.coveredArea(grid, r)) / em2;
           acc.violate(ci, cl.relaxable, extra);
         }
       } else if (lk === AvoidKind.Soft) {
-        if (sat.any(grid, r)) acc.add(cl.name, (cl.label.w * sat.coveredArea(grid, r)) / area);
+        if (!onMark && sat.any(grid, r)) acc.add(cl.name, (cl.label.w * sat.coveredArea(grid, r)) / em2);
       }
       if (cl.buffer > 0 && sat.any(grid, ring)) {
         const ringArea = maxf(ring.area() - area, 1e-9);
@@ -269,16 +273,19 @@ export class Evaluator {
       // not into the own label except at the port (underline is on the label edge)
       if (k < nMain && segOverlapsRectXY(a.x, a.y, b.x, b.y, ox0, oy0, ox1, oy1)) acc.violate(BLOCK_LABELS, false, 0);
     }
-    // other items: clearance
+    // other items: clearance (not from the group's members, and not from a mark that
+    // covers the leader's anchor: no leader avoids it)
     const clearance = item.len.clearance;
     const buf = this.buf;
     obs.itemIndex.query(l.bbox().inflate(clearance), buf);
     const li = dy.leaderItems;
+    const anchor = l.member !== null ? model.items[l.member]!.anchor : item.anchor;
     for (let q = 0; q < buf.len; q++) {
       const j = buf.get(q);
-      if (j === i) continue;
+      if (j === i || (model.groupOf[j] ?? null) === i) continue;
       if (li.kind === AvoidKind.Ignore) continue;
       const sj = model.items[j]!.shape;
+      if (sj.contains(anchor)) continue;
       let dmin = Infinity;
       for (let k = 0; k < nseg; k++) {
         const a = l.segA(k);
@@ -327,13 +334,13 @@ export class Evaluator {
         if (hit) {
           let sum = -0;
           for (let k = 0; k < nseg; k++) sum += obs.coveredLen(sat, l.segA(k), l.segB(k));
-          const extra = sum / maxf(l.len, 1e-9);
+          const extra = sum / em;
           acc.violate(ci, cl.relaxable, model.degrade.softOverlapWeight * extra);
         }
       } else if (lk === AvoidKind.Soft) {
         let cov = -0;
         for (let k = 0; k < nseg; k++) cov += obs.coveredLen(sat, l.segA(k), l.segB(k));
-        acc.add(`leader:${cl.name}`, (cl.leader.w * cov) / maxf(l.len, 1e-9));
+        acc.add(`leader:${cl.name}`, (cl.leader.w * cov) / em);
       }
     }
   }

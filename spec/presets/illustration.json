@@ -4,8 +4,8 @@
   "options": {
     "placement": { "models": ["boundary", "distant"], "internal": "never", "boundary": { "sides": ["right", "left"], "align": "stack" } },
     "avoid": {
-      "label": { "ink": 2.0 },
-      "leader": { "ink": 0.1 }
+      "label": { "ink": 0.15 },
+      "leader": { "ink": 0.025 }
     },
     "leaders": { "style": "elbow", "port": "side-center", "angles": [45, 135, 225, 315] }
   },

@@ -34,7 +34,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.3549023006105074,
+        "cost": 0.39815490196078424,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -46,12 +46,12 @@
         "id": "v1",
         "placed": true,
         "box": {
-          "x": 31.168,
-          "y": 231.05599999999998,
+          "x": 44.0,
+          "y": 245.028,
           "w": 17.664,
-          "h": 19.944000000000017
+          "h": 19.94399999999999
         },
-        "anchor_side": "top",
+        "anchor_side": "right",
         "model": "adjacent",
         "text": {
           "lines": [
@@ -72,7 +72,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.10177049874345528,
+        "cost": 0.1414235294117647,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -122,12 +122,12 @@
         "id": "v3",
         "placed": true,
         "box": {
-          "x": 111.168,
-          "y": 261.05600000000004,
+          "x": 124.0,
+          "y": 275.028,
           "w": 17.663999999999987,
           "h": 19.94399999999996
         },
-        "anchor_side": "top",
+        "anchor_side": "right",
         "model": "adjacent",
         "text": {
           "lines": [
@@ -148,7 +148,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.17675026305539587,
+        "cost": 0.30786666666666634,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -236,12 +236,12 @@
         "id": "v6",
         "placed": true,
         "box": {
-          "x": 231.168,
-          "y": 261.05600000000004,
+          "x": 244.0,
+          "y": 275.028,
           "w": 17.663999999999987,
           "h": 19.94399999999996
         },
-        "anchor_side": "top",
+        "anchor_side": "right",
         "model": "adjacent",
         "text": {
           "lines": [
@@ -262,7 +262,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.17675026305539604,
+        "cost": 0.31556339869281014,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -338,7 +338,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.10177049874345526,
+        "cost": 0.17665466143790853,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -376,7 +376,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.061336088874936884,
+        "cost": 0.07773333333333352,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -400,7 +400,7 @@
       "candidates": 400,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 1.1732799130831468,
+      "total_cost": 1.6173964915032675,
       "degraded": {},
       "grid": {
         "cell": 3.0,
