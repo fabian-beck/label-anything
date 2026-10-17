@@ -85,8 +85,7 @@ between frames:
 For animation:
 
 * **Re-solve every few ticks** (or ~10 times per second) rather than on every frame, and
-  let the labels follow their nodes in between: draw each box moved by its node's
-  movement since the solve.
+  draw the labels with smooth transitions in between (next section).
 * **Use a short time budget.** `solver.time_budget_ms: 10` makes a frame of the 77-node
   graph take about 12 ms natively, 18 ms with `@label-anything/wasm` and 22 ms with
   `@label-anything/core` in Node (31 and 42 ms with the default budget), and the labels
@@ -95,11 +94,33 @@ For animation:
   best static layout: warm-started labels that had to shrink keep that size while their
   place stays free.
 
+### Smooth transitions
+
+Warm starts keep most labels in place, but each solve still moves some and adds or
+removes others; about half of the labels that disappear come back a solve or two later.
+Drawn as they come, these changes jump and blink. `LabelMotion` from
+`@label-anything/extras` turns them into transitions: labels glide to their new places
+(a critically damped spring, 300 ms by default: no overshoot, and a move that changes
+direction mid-way bends into the new one), fade in and out instead of popping, and follow
+their points meanwhile. A label that is gone for a single solve only dims. Give it every
+result, and draw what it returns on every frame:
+
+```js
+--8<-- "examples/tutorials/js/browser/force.mjs:force-motion"
+```
+
+`frame()` returns the placements as they are drawn at that moment (the text scaled with a
+box that grows or shrinks, leaders attached to the gliding box) and the opacities of the
+labels and leaders that fade; `renderLabels` draws them, or any renderer reads them. The
+Leaflet, MapLibre and sigma.js helpers below do this after every solve (option
+`transition`, in ms; 0 draws each solve as it is; [ADR 0026](../adr/0026-smooth-label-transitions.md)).
+
 ## Leaflet
 
 `labelLayer` from `@label-anything/extras/leaflet` is a Leaflet layer that collects the
 visible points in container pixels, solves, draws the labels in an SVG pane, and after
-every move re-solves warm-started from the previous result.
+every move re-solves warm-started from the previous result; the labels glide into their
+new places and fade in and out.
 
 ```js
 --8<-- "examples/tutorials/js/browser/leaflet.mjs:leaflet"
@@ -111,7 +132,7 @@ avoid the whole pin. Other layers' geometry can be passed as `obstacles`.
 ## MapLibre GL and Mapbox GL
 
 `labelMapLibre` draws labels in an SVG overlay that follows the map while it moves and
-re-solves on `moveend`. `avoidLayers` turns the rendered features of style layers into
+re-solves on `moveend`, with the same transitions. `avoidLayers` turns the rendered features of style layers into
 obstacle classes named after the layers.
 
 ```js

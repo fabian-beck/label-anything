@@ -15,6 +15,7 @@ import { addStationLabels } from "./browser/maplibre.mjs";
 import { labelNodes } from "./browser/cytoscape.mjs";
 import { labelGraph } from "./browser/sigma.mjs";
 import { serve, solveInWorker } from "./browser/worker.mjs";
+import { forceLabels } from "./browser/force.mjs";
 
 const items = JSON.parse(readFileSync("../problems/priority-cities.json", "utf8")).items;
 const cities = items.map((c) => ({ id: c.id, name: c.label.text, x: c.anchor.x, y: c.anchor.y, population: c.attrs.pop }));
@@ -106,6 +107,22 @@ const renderer = {
 const sigmaLabels = labelGraph(renderer);
 ok("sigma", sigmaLabels.result, 10);
 sigmaLabels.remove();
+
+// d3-force with smooth transitions (the graph of force.mjs): the simulation runs on d3's
+// timer for a moment
+const forceSvg = document.body.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+const services = ["core", "api", "db", "cache", "auth", "web", "mobile", "admin", "queue", "worker",
+  "search", "index", "metrics", "logs", "billing", "mail", "cdn", "dns"];
+const calls = [["core", "api"], ["core", "db"], ["core", "cache"], ["core", "auth"], ["core", "queue"],
+  ["api", "web"], ["api", "mobile"], ["api", "auth"], ["auth", "admin"], ["queue", "worker"],
+  ["worker", "db"], ["db", "search"], ["search", "index"], ["cache", "metrics"], ["worker", "metrics"],
+  ["core", "logs"], ["api", "logs"], ["billing", "core"], ["billing", "mail"], ["web", "cdn"], ["cdn", "dns"]];
+const force = forceLabels(forceSvg, services.map((id) => ({ id })), calls.map(([source, target]) => ({ source, target })), 640, 420);
+await new Promise((r) => setTimeout(r, 1500));
+force.sim.stop();
+ok("d3-force with LabelMotion", force.result(), 15);
+assert.ok(force.result().stats.flicker, "warm-started");
+assert.equal(forceSvg.querySelectorAll("text").length >= force.result().stats.placed, true, "force labels drawn");
 
 // Web Worker (stand-in: the worker side runs serveEngine in this thread)
 const workerListeners = { message: [], error: [] };

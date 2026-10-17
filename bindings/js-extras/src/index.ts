@@ -10,5 +10,6 @@ export { canvasMeasure, cssFont, type CssFont, type MeasureFn } from "./measure.
 export { buildProblem, resolveFont, type FontOptions, type LabelOptions, type LeaderStyle } from "./options.js";
 export { followAnchors, leaderPath, renderLabels, type RenderOptions } from "./render.js";
 export { LabelMemory } from "./stable.js";
+export { LabelMotion, type MotionFrame, type MotionOptions } from "./motion.js";
 export { Overlay, type OverlayConfig, type OverlayItem } from "./overlay.js";
 export { snapshotSvg, type SnapshotOptions, type SvgSnapshot } from "./svg.js";

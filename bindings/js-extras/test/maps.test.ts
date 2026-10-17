@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import L from "leaflet";
-import { describe, expect, it } from "vitest";
+import type { LabelResult } from "@label-anything/core";
+import { describe, expect, it, vi } from "vitest";
 import { labelLayer } from "../src/leaflet.js";
 import { labelMapLibre, type MapLibreLike } from "../src/maplibre.js";
 import { cliEngine, fakeEngine, overlaps } from "./engines.js";
@@ -66,6 +67,58 @@ describe("Leaflet labelLayer", () => {
     const layer = labelLayer(L, towns, { engine: cliEngine!, latLng: (d) => [d.lat, d.lng], text: (d) => d.name, measure: false }).addTo(map);
     expect(layer.result!.placements.filter((p) => p.placed).length).toBe(3);
     expect(overlaps(layer.result!)).toEqual([]);
+  });
+});
+
+describe("label transitions", () => {
+  it("glides moved labels into place and fades out omitted ones", () => {
+    vi.useFakeTimers({ toFake: ["requestAnimationFrame", "cancelAnimationFrame", "performance"] });
+    try {
+      const map = fakeMap();
+      const base = fakeEngine();
+      // the second solve moves Bamberg's label 12 px down and omits Nuremberg's
+      let second = false;
+      const engine = {
+        place(problem: Parameters<typeof base.place>[0], options?: Parameters<typeof base.place>[1]) {
+          const r = base.place(problem, options) as LabelResult;
+          if (!second) return r;
+          const placements = r.placements.map((p) =>
+            p.id === "n" ? { id: "n", placed: false } : p.id === "ba" ? { ...p, box: { ...p.box!, y: p.box!.y + 12 } } : p,
+          );
+          return { ...r, placements } as LabelResult;
+        },
+      };
+      const labels = labelMapLibre(map, towns, { engine, lngLat: (d) => [d.lng, d.lat], text: "name", id: (d) => d.id, measure: false });
+      const svg = map.getCanvasContainer().querySelector("svg")!;
+      const y = () => Number(svg.querySelector('g[data-id="ba"] text')!.getAttribute("y"));
+      const y0 = y(); // the first solve is drawn at once
+      second = true;
+      map.fire("moveend");
+      expect(y()).toBeCloseTo(y0, 6);
+      vi.advanceTimersByTime(150);
+      expect(y()).toBeGreaterThan(y0 + 1);
+      expect(y()).toBeLessThan(y0 + 12);
+      const fading = Number(svg.querySelector('g[data-id="n"]')!.getAttribute("opacity"));
+      expect(fading).toBeGreaterThan(0);
+      expect(fading).toBeLessThan(1);
+      vi.advanceTimersByTime(400);
+      expect(y()).toBeCloseTo(y0 + 12, 6);
+      expect(svg.querySelector('g[data-id="n"]')).toBeNull();
+      labels.remove();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("draws every solve as it is with transition 0", () => {
+    const map = fakeMap();
+    const labels = labelMapLibre(map, towns, { engine: fakeEngine(), lngLat: (d) => [d.lng, d.lat], text: "name", id: (d) => d.id, measure: false, transition: 0 });
+    const svg = map.getCanvasContainer().querySelector("svg")!;
+    map.state.dx = 30;
+    map.fire("moveend");
+    expect(svg.querySelectorAll("[opacity]").length).toBe(0);
+    expect(labels.result!.placements.filter((p) => p.placed).length).toBe(svg.querySelectorAll("text").length);
+    labels.remove();
   });
 });
 

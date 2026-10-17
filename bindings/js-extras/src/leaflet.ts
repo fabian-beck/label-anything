@@ -47,6 +47,8 @@ export interface LeafletLabelOptions<D> extends LabelOptions<D>, Omit<RenderOpti
   pane?: string;
   /** Obstacles in container px, e.g. from other layers. */
   obstacles?: (map: LeafletMapLike) => NonNullable<import("@label-anything/core").LabelProblem["obstacles"]> | undefined;
+  /** Transition time in ms (default 300): labels glide into new places and fade in and out; 0: none. */
+  transition?: number;
   onResult?: (result: LabelResult) => void;
   onError?: (error: unknown) => void;
 }
@@ -90,6 +92,7 @@ export function labelLayer<D>(L: LeafletLike, data: readonly D[], options: Leafl
     if (!map || !overlay) return;
     L.DomUtil.setPosition(overlay.svg, map.containerPointToLayerPoint([0, 0]));
     overlay.setVisible(true);
+    overlay.follow(); // the labels at the new view until the solve is in
     overlay.update();
   };
   const hide = () => overlay?.setVisible(false);
@@ -111,6 +114,7 @@ export function labelLayer<D>(L: LeafletLike, data: readonly D[], options: Leafl
         },
         collect,
         obstacles: options.obstacles ? () => options.obstacles!(m) : undefined,
+        transition: options.transition,
         onResult: options.onResult,
         onError: options.onError,
       });

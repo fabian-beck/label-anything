@@ -26,6 +26,10 @@ export interface RenderOptions {
   renderPart?: (part: NonNullable<Placement["parts"]>[number], placement: Placement, parent: SVGGElement) => void;
   /** Called for each label element, e.g. to add event handlers or titles. */
   decorate?: (text: SVGTextElement, placement: Placement) => void;
+  /** Opacity per label id, e.g. of labels fading in or out (`LabelMotion`); absent: 1. */
+  opacity?: ReadonlyMap<string, number>;
+  /** Opacity of the leaders per label id (absent: the label's). */
+  leaderOpacity?: ReadonlyMap<string, number>;
 }
 
 function el<K extends keyof SVGElementTagNameMap>(doc: Document, tag: K, attrs: Record<string, string | number>): SVGElementTagNameMap[K] {
@@ -35,6 +39,7 @@ function el<K extends keyof SVGElementTagNameMap>(doc: Document, tag: K, attrs: 
 }
 
 const r2 = (v: number) => Math.round(v * 100) / 100;
+const r3 = (v: number) => Math.round(v * 1000) / 1000;
 
 /** SVG path data of a leader (polyline, quadratic curve, plus the underline if any). */
 export function leaderPath(leader: Leader): string {
@@ -102,11 +107,15 @@ export function renderLabels(group: SVGGElement | Element, result: LabelResult, 
   const texts = el(doc, "g", textAttrs);
   for (const p of result.placements) {
     if (!p.placed || !p.box) continue;
+    const op = options.opacity?.get(p.id);
+    const lop = options.leaderOpacity?.get(p.id) ?? op;
     for (const leader of p.leaders ?? (p.leader ? [p.leader] : [])) {
       const path = el(doc, "path", { class: `${cls}-leader`, d: leaderPath(leader), "data-id": leader.member ?? p.id });
+      if (lop !== undefined && lop < 1) path.setAttribute("opacity", String(r3(lop)));
       leaders.appendChild(path);
     }
     const g = el(doc, "g", { class: `${cls}-item`, "data-id": p.id });
+    if (op !== undefined && op < 1) g.setAttribute("opacity", String(r3(op)));
     if (p.parts && p.parts.length) {
       for (const part of p.parts) {
         if (part.type === "text" && part.text) g.appendChild(textElement(doc, part.box, part.text, options, cls));

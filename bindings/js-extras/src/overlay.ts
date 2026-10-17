@@ -1,13 +1,15 @@
 /**
  * An SVG label overlay over an interactive view (maps, graphs): solves on demand with the
- * previous result as warm start, follows moving anchors between solves, and keeps only the
- * latest solve when updates overlap.
+ * previous result as warm start, follows moving anchors between solves, moves labels
+ * smoothly into the places of a new solve (`LabelMotion`), and keeps only the latest solve
+ * when updates overlap.
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
 import { LatestRunner, resolveEngine } from "./engine.js";
 import type { CssFont } from "./measure.js";
 import { buildProblem, placeOptionsOf, type Item, type Label, type LabelOptions, type Mark } from "./options.js";
-import { followAnchors, renderLabels, type RenderOptions } from "./render.js";
+import { LabelMotion } from "./motion.js";
+import { renderLabels, type RenderOptions } from "./render.js";
 import { LabelMemory, type Anchors } from "./stable.js";
 import { SVG_NS } from "./svg.js";
 
@@ -34,6 +36,11 @@ export interface OverlayConfig<D> {
   collect(): OverlayItem[];
   /** Obstacles of the current view (overlay px). */
   obstacles?(): LabelProblem["obstacles"] | undefined;
+  /**
+   * Transition time in ms (default 300): labels glide into the places of a new solve and
+   * fade in and out; 0 draws each solve as it is.
+   */
+  transition?: number;
   onResult?(result: LabelResult): void;
   onError?(error: unknown): void;
 }
@@ -42,11 +49,14 @@ export class Overlay<D> {
   readonly svg: SVGSVGElement;
   readonly group: SVGGElement;
   readonly memory = new LabelMemory();
+  readonly motion: LabelMotion;
   readonly runner: LatestRunner;
   #config: OverlayConfig<D>;
+  #frame: number | undefined;
 
   constructor(config: OverlayConfig<D>) {
     this.#config = config;
+    this.motion = new LabelMotion({ duration: config.transition ?? 300 });
     this.runner = new LatestRunner(resolveEngine(config.options.engine));
     const doc = config.container.ownerDocument;
     this.svg = doc.createElementNS(SVG_NS, "svg") as SVGSVGElement;
@@ -97,19 +107,42 @@ export class Overlay<D> {
       placeOptionsOf(c.options),
       (result) => {
         this.memory.remember(result, anchors);
+        this.motion.target(result, anchors);
         this.follow();
+        this.#animate();
         c.onResult?.(result);
       },
       (error) => (c.onError ? c.onError(error) : console.error(error)),
     );
   }
 
-  /** Redraws the last result with every label moved along with its anchor (no solve). */
+  /** Redraws the labels, every one moved along with its anchor (no solve). */
   follow(anchors?: Anchors): void {
-    const result = this.memory.result;
-    if (!result) return;
-    const now = anchors ?? this.#anchors(this.#config.collect());
-    renderLabels(this.group, followAnchors(result, this.memory.anchors, now), { ...this.#config.render, font: this.#config.font });
+    if (!this.motion.result) return;
+    const f = this.motion.frame(anchors ?? this.#anchors(this.#config.collect()));
+    renderLabels(this.group, f.result, {
+      ...this.#config.render,
+      font: this.#config.font,
+      opacity: f.opacity,
+      leaderOpacity: f.leaderOpacity,
+    });
+  }
+
+  /** Redraws on every animation frame until the labels have settled (at once without rAF). */
+  #animate(): void {
+    if (this.#frame !== undefined || !this.motion.moving) return;
+    const raf = globalThis.requestAnimationFrame;
+    if (typeof raf !== "function") {
+      this.motion.finish();
+      this.follow();
+      return;
+    }
+    const step = () => {
+      this.#frame = undefined;
+      this.follow();
+      if (this.motion.moving) this.#frame = raf(step);
+    };
+    this.#frame = raf(step);
   }
 
   setVisible(visible: boolean): void {
@@ -117,8 +150,11 @@ export class Overlay<D> {
   }
 
   destroy(): void {
+    if (this.#frame !== undefined) globalThis.cancelAnimationFrame?.(this.#frame);
+    this.#frame = undefined;
     this.runner.cancel();
     this.svg.remove();
     this.memory.clear();
+    this.motion.clear();
   }
 }

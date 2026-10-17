@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import cytoscape from "cytoscape";
-import { describe, expect, it } from "vitest";
+import type { LabelResult } from "@label-anything/core";
+import { describe, expect, it, vi } from "vitest";
 import { labelCytoscape } from "../src/cytoscape.js";
 import { labelSigma, type SigmaLike } from "../src/sigma.js";
 import { cliEngine, fakeEngine, overlaps } from "./engines.js";
@@ -126,5 +127,43 @@ describe("sigma labels", () => {
     expect(engine.last.problem.warm_start?.placements.length).toBe(3);
     labels.remove();
     expect(r.settings.nodeReducer).toBeNull();
+  });
+
+  it("moves labels smoothly into the places of a new solve", async () => {
+    vi.useFakeTimers({ toFake: ["requestAnimationFrame", "cancelAnimationFrame", "performance", "setTimeout", "clearTimeout"] });
+    try {
+      const r = fakeSigma();
+      const base = fakeEngine();
+      let second = false;
+      const engine = {
+        place(problem: Parameters<typeof base.place>[0], options?: Parameters<typeof base.place>[1]) {
+          const res = base.place(problem, options) as LabelResult;
+          if (!second) return res;
+          return { ...res, placements: res.placements.map((p) => (p.id === "a" ? { ...p, box: { ...p.box!, y: p.box!.y + 20 } } : p)) } as LabelResult;
+        },
+      };
+      const labels = labelSigma(r, { engine, debounce: 1, measure: false });
+      const draw = r.settings.defaultDrawNodeLabel as (c: CanvasRenderingContext2D, d: object, s: object) => void;
+      const yAt = () => {
+        let y = NaN;
+        const ctx = { save() {}, restore() {}, fillText: (_t: string, _x: number, yy: number) => (y = yy) } as unknown as CanvasRenderingContext2D;
+        draw(ctx, { key: "a", x: 10, y: 10, size: 5 }, {});
+        return y;
+      };
+      const y0 = yAt();
+      second = true;
+      r.fire();
+      vi.advanceTimersByTime(5); // the debounced solve
+      const refreshes = r.refreshes();
+      vi.advanceTimersByTime(150);
+      expect(r.refreshes()).toBeGreaterThan(refreshes + 3); // redrawn on animation frames
+      expect(yAt()).toBeGreaterThan(y0 + 1);
+      expect(yAt()).toBeLessThan(y0 + 20);
+      vi.advanceTimersByTime(400);
+      expect(yAt()).toBeCloseTo(y0 + 20, 6);
+      labels.remove();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

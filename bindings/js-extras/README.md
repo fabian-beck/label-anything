@@ -84,3 +84,21 @@ Interactive helpers keep the previous result and pass it, moved with the anchors
 `warm_start`: labels keep their side while you pan or zoom and only move when they must.
 Use stable `id`s and the same `priority` across updates so that label sets nest when
 zooming (labels are only added or removed in priority order).
+
+## Smooth transitions
+
+After a solve, the Leaflet, MapLibre and sigma.js helpers do not redraw the labels at
+once: labels glide into their new places and fade in and out (option `transition`,
+default 300 ms; 0 draws each solve as it is). The same is available for any renderer:
+
+```js
+import { LabelMotion, renderLabels } from "@label-anything/extras";
+
+const motion = new LabelMotion({ duration: 300 });
+motion.target(result);                         // after every solve
+const frame = motion.frame(anchors);           // every animation frame while motion.moving
+renderLabels(group, frame.result, { font, opacity: frame.opacity, leaderOpacity: frame.leaderOpacity });
+```
+
+`anchors` maps item ids to their current positions, so labels follow moving points
+between solves.

@@ -117,6 +117,14 @@ describe("renderLabels", () => {
     expect(g.querySelectorAll("text").length).toBe(0);
   });
 
+  it("dims labels and leaders that fade", () => {
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    renderLabels(g, result, { font, opacity: new Map([["a", 0.5]]), leaderOpacity: new Map([["a", 0.25]]) });
+    expect(g.querySelector('g[data-id="a"]')!.getAttribute("opacity")).toBe("0.5");
+    expect(g.querySelector('path[data-id="a"]')!.getAttribute("opacity")).toBe("0.25");
+    expect(g.querySelector('g[data-id="b"]')!.hasAttribute("opacity")).toBe(false);
+  });
+
   it("writes leader paths, curves and underlines", () => {
     expect(leaderPath({ points: [[0, 0], [1.234, 2]], style: "straight", port: [1.234, 2] })).toBe("M0,0L1.23,2");
     expect(

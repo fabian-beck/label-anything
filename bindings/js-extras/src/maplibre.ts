@@ -51,6 +51,8 @@ export interface MapLibreLabelOptions<D> extends LabelOptions<D>, Omit<RenderOpt
   pointRadius?: number;
   /** Further obstacles in container px. */
   obstacles?: (map: MapLibreLike) => NonNullable<LabelProblem["obstacles"]> | undefined;
+  /** Transition time in ms (default 300): labels glide into new places and fade in and out; 0: none. */
+  transition?: number;
   onResult?: (result: LabelResult) => void;
   onError?: (error: unknown) => void;
 }
@@ -97,6 +99,7 @@ export function labelMapLibre<D>(map: MapLibreLike, data: readonly D[], options:
     size,
     collect,
     obstacles,
+    transition: options.transition,
     onResult: options.onResult,
     onError: options.onError,
   });

@@ -53,7 +53,8 @@ if enabled, go into an SVG overlay.
 `labelSigma` replaces sigma's label renderer. Sigma draws labels at a fixed pixel size
 while nodes move under the camera, so the solve runs in viewport pixels after camera moves
 (debounced), warm-started from the previous result; in between, labels follow their
-nodes.
+nodes, and after a solve they glide into their new places and fade in and out
+([smooth transitions](interactive-maps.md#smooth-transitions)).
 
 ```js
 --8<-- "examples/tutorials/js/browser/sigma.mjs:sigma"
@@ -70,5 +71,6 @@ labels must never cross them; expect more leaders and omissions then.
 
 While a force-directed layout runs or the user drags a node, solve every few ticks with
 the previous result as `warm_start`: each label follows its node and moves on only when
-its place is taken. [Moving points](interactive-maps.md#moving-points) has a d3-force
-example and the measurements.
+its place is taken. Draw the labels with `LabelMotion` so that they glide into new places
+and fade in and out instead of jumping and blinking. [Moving points](interactive-maps.md#moving-points)
+has d3-force examples and the measurements.

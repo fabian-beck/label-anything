@@ -8,12 +8,14 @@
  *
  * Sigma draws labels at a fixed pixel size while nodes move under the camera, so the solve
  * runs in viewport pixels: after camera moves and graph changes (debounced), warm-started
- * from the previous result. In between, labels follow their nodes. Labels are drawn by a
+ * from the previous result. In between, labels follow their nodes; after a solve they glide
+ * into their new places and fade in and out (`transition`). Labels are drawn by a
  * replacement of sigma's label renderer; omitted labels are hidden via `nodeReducer`.
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
 import { LatestRunner, resolveEngine } from "./engine.js";
 import { cssFont, numericWeight } from "./measure.js";
+import { LabelMotion } from "./motion.js";
 import { buildProblem, labelOf, placeOptionsOf, resolveFont, type LabelOptions } from "./options.js";
 import { LabelMemory } from "./stable.js";
 
@@ -63,6 +65,8 @@ export interface SigmaLabelOptions extends Omit<LabelOptions<SigmaNode>, "id" | 
   avoidEdges?: boolean;
   /** Re-solve delay after camera moves and graph changes in ms (default 120). */
   debounce?: number;
+  /** Transition time in ms (default 300): labels glide into new places and fade in and out; 0: none. */
+  transition?: number;
   onResult?: (result: LabelResult) => void;
   onError?: (error: unknown) => void;
 }
@@ -91,7 +95,36 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
     text: undefined,
     priority: typeof options.priority === "function" ? (n) => (options.priority as (k: string, a: Attrs) => number)(n.key, n.attributes) : options.priority,
   };
-  let placed = new Map<string, Placement>();
+  const motion = new LabelMotion({ duration: options.transition ?? 300 });
+  // the labels as drawn now (moving or fading), at the positions of their last solve
+  let shown = new Map<string, { p: Placement; opacity: number; leaderOpacity: number }>();
+  const snapshot = () => {
+    const f = motion.frame();
+    shown = new Map(
+      f.result.placements.map((p) => {
+        const opacity = f.opacity.get(p.id) ?? 1;
+        return [p.id, { p, opacity, leaderOpacity: f.leaderOpacity.get(p.id) ?? opacity }];
+      }),
+    );
+  };
+  let frame: number | undefined;
+  const animate = () => {
+    if (frame !== undefined || !motion.moving) return;
+    const raf = globalThis.requestAnimationFrame;
+    if (typeof raf !== "function") {
+      motion.finish();
+      snapshot();
+      renderer.refresh?.();
+      return;
+    }
+    const step = () => {
+      frame = undefined;
+      snapshot();
+      renderer.refresh?.();
+      if (motion.moving) frame = raf(step);
+    };
+    frame = raf(step);
+  };
 
   const viewport = (key: string): (DisplayData & P) | undefined => {
     const d = renderer.getNodeDisplayData(key);
@@ -100,16 +133,17 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
     return { ...d, x: p.x, y: p.y };
   };
 
-  // Labels: drawn at the solved offset from the node's current position.
+  // Labels: drawn at their offset from the node's current position.
   const draw: DrawLabel = (ctx, data) => {
-    const p = placed.get(data.key);
-    const a = memory.anchors.get(data.key);
-    if (!p || !p.box || !a) return;
-    const dx = data.x - a[0];
-    const dy = data.y - a[1];
+    const s = shown.get(data.key);
+    const p = s?.p;
+    if (!s || !p || !p.box || !p.anchor) return;
+    const dx = data.x - p.anchor[0];
+    const dy = data.y - p.anchor[1];
     ctx.save();
     const leaders = p.leaders ?? (p.leader ? [p.leader] : []);
     if (leaders.length) {
+      ctx.globalAlpha = s.leaderOpacity;
       ctx.strokeStyle = fill;
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -118,6 +152,7 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
     }
     const t = p.text;
     if (t) {
+      ctx.globalAlpha = s.opacity;
       ctx.fillStyle = fill;
       ctx.font = cssFont({ ...font, size: t.font_size });
       ctx.textAlign = "left";
@@ -133,7 +168,7 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
   renderer.setSetting(drawKey, draw);
   renderer.setSetting("nodeReducer", (key: string, data: Attrs) => {
     const out = previousReducer ? previousReducer(key, data) : data;
-    return placed.has(key) ? { ...out, forceLabel: true } : { ...out, label: null };
+    return shown.has(key) ? { ...out, forceLabel: true } : { ...out, label: null };
   });
 
   const solve = () => {
@@ -185,8 +220,10 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
       placeOptionsOf(helper),
       (r) => {
         memory.remember(r, anchors);
-        placed = new Map(r.placements.filter((p) => p.placed).map((p) => [p.id, p]));
+        motion.target(r, anchors);
+        snapshot();
         renderer.refresh?.();
+        animate();
         options.onResult?.(r);
       },
       (e) => (options.onError ? options.onError(e) : console.error(e)),
@@ -215,13 +252,16 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
     update: solve,
     remove() {
       if (timer !== undefined) clearTimeout(timer);
+      if (frame !== undefined) globalThis.cancelAnimationFrame?.(frame);
+      frame = undefined;
+      motion.clear();
       runner.cancel();
       off(camera, "updated", schedule);
       off(renderer, "resize", schedule);
       for (const e of graphEvents) off(graph, e, schedule);
       renderer.setSetting(drawKey, previousDraw);
       renderer.setSetting("nodeReducer", previousReducer ?? null);
-      placed = new Map();
+      shown = new Map();
       renderer.refresh?.();
     },
     get result() {
