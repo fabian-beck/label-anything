@@ -307,10 +307,14 @@ def greedy(text, w, measure):
 
 
 def balanced(text, n_lines, max_width, measure):
+    return as_lines(text, balanced_spans(text, n_lines, max_width, measure))
+
+
+def balanced_spans(text, n_lines, max_width, measure):
     n, bks = len(text), breaks(text)
     first = skip_spaces(text, 0)
     if first >= n:
-        return [""]
+        return []
     starts = [first] + [skip_spaces(text, k + 1) for k in bks]
     starts = [s for s in starts if s < n]
     cands = set()
@@ -333,7 +337,7 @@ def balanced(text, n_lines, max_width, measure):
     spans = greedy_spans(text, cands[lo], measure)
     if len(spans) > n_lines and max_width is not None:
         spans = greedy_spans(text, max_width, measure)
-    return as_lines(text, spans)
+    return spans
 
 
 def truncate_end(text, w, measure):
@@ -402,10 +406,13 @@ def wrap_variants(text, options, measure):
 
 
 def extra_wrap_variants(text, max_lines, measure):
-    out = []
+    out, bks = [], set(breaks(text))
     for n in range(2, max_lines + 1):
-        lines = balanced(text, n, None, measure)
-        if len(lines) >= 2 and all(v["lines"] != lines for v in out):
+        spans = balanced_spans(text, n, None, measure)
+        if len(spans) < 2 or any(e + 1 < len(text) and e not in bks for _, e in spans):
+            continue  # single line, or a line ends inside a word (emergency break)
+        lines = as_lines(text, spans)
+        if all(v["lines"] != lines for v in out):
             out.append(variant(lines, measure))
     return out
 

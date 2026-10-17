@@ -259,6 +259,14 @@ impl<'a> Wrapper<'a> {
         end.unwrap_or(segment_end)
     }
 
+    /// Whether every line ends at a break opportunity or at the end of the text (none at
+    /// an emergency break).
+    fn at_breaks(&self, lines: &[Span]) -> bool {
+        lines
+            .iter()
+            .all(|&(_, e)| e + 1 >= self.len() || self.breaks.binary_search(&e).is_ok())
+    }
+
     /// Whether `greedy(w)` needs at most `n` lines.
     fn fits(&mut self, w: f64, n: usize) -> bool {
         self.greedy(w, n).len() <= n
@@ -537,7 +545,9 @@ pub fn wrap_variants<'a>(
 }
 
 /// Extra variants for the `wrap` ladder step of labels without wrap settings: the balanced
-/// wraps into `2 ..= max_lines` lines, without duplicates and without single-line results.
+/// wraps into `2 ..= max_lines` lines, without duplicates, single-line results and results
+/// with a line that ends inside a word (an emergency break: more lines than the break
+/// opportunities allow).
 pub fn extra_wrap_variants<'a>(
     text: &str,
     max_lines: usize,
@@ -548,7 +558,7 @@ pub fn extra_wrap_variants<'a>(
     // No wrap has more lines than code points, so larger counts only repeat variants.
     for n in 2..=max_lines.min(wrapper.len()) {
         let spans = wrapper.balanced(n, None);
-        if spans.len() < 2 {
+        if spans.len() < 2 || !wrapper.at_breaks(&spans) {
             continue;
         }
         let lines = wrapper.strings(&spans);

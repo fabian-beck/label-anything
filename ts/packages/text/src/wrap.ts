@@ -241,6 +241,18 @@ class Wrapper {
     return first < this.cps.length ? [[first, this.cps.length - 1]] : [];
   }
 
+  /**
+   * Whether every line ends at a break opportunity or at the end of the text (none at an
+   * emergency break).
+   */
+  atBreaks(lines: readonly Span[]): boolean {
+    return lines.every(([, e]) => {
+      if (e + 1 >= this.cps.length) return true;
+      const i = this.firstBreak(e);
+      return i < this.breaks.length && this.breaks[i] === e;
+    });
+  }
+
   /** The lines as strings; a blank text is one empty line. */
   strings(lines: readonly Span[]): string[] {
     return lines.length === 0 ? [""] : this.texts(lines);
@@ -414,7 +426,9 @@ export function wrapVariants(text: string, opts: WrapOptions, measure: Measure |
 
 /**
  * Extra variants for the `wrap` ladder step of labels without wrap settings: the balanced
- * wraps into `2 ..= maxLines` lines, without duplicates and without single-line results.
+ * wraps into `2 ..= maxLines` lines, without duplicates, single-line results and results
+ * with a line that ends inside a word (an emergency break: more lines than the break
+ * opportunities allow).
  */
 export function extraWrapVariants(text: string, maxLines: number, measure: Measure | FontMeasure): TextVariant[] {
   const wrapper = new Wrapper(text, measure);
@@ -422,7 +436,7 @@ export function extraWrapVariants(text: string, maxLines: number, measure: Measu
   // No wrap has more lines than code points, so larger counts only repeat variants.
   for (let n = 2; n <= Math.min(maxLines, wrapper.length); n++) {
     const spans = wrapper.balanced(n, null);
-    if (spans.length < 2) continue;
+    if (spans.length < 2 || !wrapper.atBreaks(spans)) continue;
     const lines = wrapper.strings(spans);
     if (variants.every((v) => !sameLines(v.lines, lines))) variants.push(wrapper.spansVariant(spans, lines));
   }

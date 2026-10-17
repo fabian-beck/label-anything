@@ -569,8 +569,10 @@ variants are `balanced(n, M)` for `n = L_min … min(L_min + 2, L)` without dupl
 (lines may be wider than `M`; not counted as truncated), because the line count bounds
 the label height. A variant reports its lines and `width(line)` of every line.
 Without wrap settings the normal variant is the single line; the `wrap` ladder step adds
-`balanced(n)` (no `M`) for `n = 2 … degrade_options.wrap_max_lines`, without duplicates and
-without single-line results.
+`balanced(n)` (no `M`) for `n = 2 … degrade_options.wrap_max_lines`, without duplicates,
+without single-line results and without results with an emergency break (a line ending
+neither at a break opportunity nor at the end of the text: `United Kingdom` in three lines
+would split a word).
 
 ### 5.4 Label variants
 

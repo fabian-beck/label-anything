@@ -399,7 +399,7 @@
     {"text": "Crème brûlée à la carte", "max_lines": 3, "variants": [{"lines": ["Crème brûlée", "à la carte"], "widths": [76.56, 51.348], "truncated": false}, {"lines": ["Crème", "brûlée à", "la carte"], "widths": [37.056, 46.236, 41.496], "truncated": false}]},
     {"text": "e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301", "max_lines": 3, "variants": []},
     {"text": "multiple   spaces   between   words", "max_lines": 3, "variants": [{"lines": ["multiple   spaces", "between   words"], "widths": [93.9, 92.76], "truncated": false}, {"lines": ["multiple", "spaces", "between   words"], "widths": [46.404, 38.136, 92.76], "truncated": false}]},
-    {"text": "  leading and trailing  ", "max_lines": 3, "variants": [{"lines": ["leading", "and trailing"], "widths": [41.868, 64.512], "truncated": false}, {"lines": ["leadin", "g and", "trailing"], "widths": [34.488, 32.028, 39.864], "truncated": false}]},
+    {"text": "  leading and trailing  ", "max_lines": 3, "variants": [{"lines": ["leading", "and trailing"], "widths": [41.868, 64.512], "truncated": false}]},
     {"text": "AVAVAV AVAVAV", "max_lines": 3, "variants": [{"lines": ["AVAVAV", "AVAVAV"], "widths": [42.204, 42.204], "truncated": false}]},
     {"text": "x", "max_lines": 3, "variants": []}
   ]
