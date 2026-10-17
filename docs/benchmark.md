@@ -63,28 +63,38 @@ Entries naming an ADR that does not exist are ignored and reported.
 The targets of brief §5.8 hold for one thread, so `bench.perf` runs the native engine with
 `RAYON_NUM_THREADS=1` (`--threads`; the WebAssembly and TypeScript engines are single-threaded
 anyway). `python -m bench.perf --engine rust/target/release/label-anything --ts --wasm --runs 7`
-at commit 89e2f1c (2026-10-16) on a 4-core cloud VM (Intel Xeon @ 2.1 GHz, Linux, Node 22),
+at commit a0a4eab (2026-10-17) on a 4-core cloud VM (Intel Xeon @ 2.1 GHz, Linux, Node 22),
 median engine time in ms (target in parentheses):
 
 | problem | Rust | WASM | TS |
 |---|---:|---:|---:|
-| 200 labels + 10k points | 16.4 (15) | **26.4** (30) | **47.3** (60) |
-| 2,000 labels + 100k points, greedy | 286.0 (120) | 317.7 (250) | 639.1 (600) |
-| 2048² raster preparation | **24.9** (25) | **38.5** (60) | **92.2** (150) |
+| 200 labels + 10k points | 23.3 (15) | **26.2** (30) | **59.1** (60) |
+| 2,000 labels + 100k points, greedy | 313.5 (120) | 385.0 (250) | 825.4 (600) |
+| 2048² raster preparation | 27.9 (25) | **36.8** (60) | **113.3** (150) |
 
-Five of the nine targets are met on this machine (the native raster preparation only just;
-runs on this VM vary by about ±10 %). The brief sets them for a 2023 laptop, whose
-cores are faster than this VM's, but the gate checks them as measured, on whatever machine runs
-the benchmark. The 2,000-label problem misses in every implementation. Single-threaded, about
-40 % of its time goes to the degradation ladder of the ≈ 1,400 labels that find no room at
-level 0 (≈ 1,025 of them are omitted in the end): their wrapped and shrunk variants get
-adjacent, slider and distant candidates (about 1.3 million boxes in all), which are tested
-against the item marks and the placed labels, one item after the other. The level-0 pass
-(lookahead) takes about 17 %, preparing the 100k obstacle points 14 %, the level-0 candidates
-10 %. With all cores (`--threads 0`) the native engine runs the order-independent phases in
-parallel (feature `parallel`: obstacle rasterization, level-0 candidates, the distance
-transform): 14.1, 244 and 21.7 ms on this VM. Numbers from a faster machine are lower; compare
-numbers from the same machine only.
+Four of the nine targets are met on this VM, the TypeScript one for 200 labels only just;
+runs vary by about ±10 %. The same native engine on the GitHub-hosted runner of the CI
+benchmark (weekly or dispatched, `ubuntu-24.04`) took 18.1, 272.4 and 20.8 ms: there the
+raster target is met. The brief sets the targets for a 2023 laptop, whose cores are faster
+than either machine's, but the gate checks them as measured, on whatever machine runs the
+benchmark. The 2,000-label problem misses in every implementation, natively by a factor of
+2.3 to 2.6.
+
+Where its time goes (native engine, instruction counts of one solve, which do not depend on
+the machine): two thirds in the greedy pass. Of the 2,000 labels, 1,509 find no room at
+level 0 and run the degradation ladder; 1,128 of them are omitted in the end. Their wrapped
+and shrunk variants get adjacent, slider and distant candidates, about a hundred boxes per
+variant and a million in all, and each box is tested against the marks of the other items
+and against the placed labels: 57 % of the greedy pass. The on-demand distant candidates at
+level 0 take 18 %, explaining why a label was omitted (the `reason` and `blocked_by` of the
+result) 13 %. Preparing the 100k obstacle points takes 13 % of the solve, building the
+model from the problem and the result about 10 %. No function takes more than 5 %: removing
+allocations, filtering boxes before their candidates are built, other inlining and link-time
+optimization changed the time by less than the noise. What would help is less work per
+omitted label — fewer ladder variants, no distant candidates for shrunk ones — and each such
+change places fewer labels. The label margin of [ADR 0028](adr/0028-label-margin.md) costs time here too:
+without it (`defaults.margin: 0`, `placement.offset: 2`) the problem places 972 labels instead
+of 872, and solves about 10 % faster, as fewer labels go through the ladder.
 
 ## Milestone acceptance
 
