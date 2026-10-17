@@ -93,7 +93,7 @@ bench/out/problems/<scenario>/<config>.json          problem (validates against 
 bench/out/problems/<scenario>/<config>.truth.json    exact geometry of every obstacle class
 bench/out/problems/<scenario>/<config>.bg.svg|.png   background for rendering
 bench/out/problems/<scenario>/scenario.json          manifest: configs (quick flag, size, files), sources
-bench/out/problems/11-stability/<seq>/f000…f029.json + sequence.json
+bench/out/problems/11-stability/<seq>/f000….json + sequence.json
 bench/out/perf/scatter-200.json, scatter-2000.json, raster-2048.json   performance-target problems
 bench-report/results.json, index.html, results/<solver>/…, metrics/<solver>/…, img/<solver>/…,
              overlay/<solver>/… (engine debug overlays), plots/runtime-{engine,wall}.svg
@@ -126,11 +126,11 @@ the definitions of spec §4.6. Item marks are defined by the problem's anchors (
 | 08 | technical / anatomical illustration | `astronaut-boundary`, `retina-boundary`, `rocket-distant` | scikit-image sample photos + hand-made CC0 polygons | no |
 | 09 | line chart end labels | `unemployment-14-vector`, `stocks-5-svg`, `life-62-boundary` | vega-datasets unemployment, stocks, gapminder | no |
 | 10 | stress / scale | `n00200` … `n20000` (7 sizes) | scenario 05 at 10× density (jittered copies) | **yes** |
-| 11 | interactive stability | sequences `zoom-pan-1000` (quick), `zoom-pan-3000` (30 frames each) | scenario 05 | camera path only |
+| 11 | interactive stability | sequences `zoom-pan-1000` (quick), `zoom-pan-3000` (30 frames each), `force-lesmis` (quick, 61 frames), `drag-lesmis` (quick, 41 frames) | scenarios 05 and 07 | camera path and force simulation only |
 | 12 | priority showcase | `metrics-attr-strict` (quick) + 17 more `<dataset>-<type>-<mode>` (types attr, outlier, coverage; modes strict, prefix, weighted) | scenarios 01 and 05 | no |
 
-115 problems in the full suite (incl. 60 sequence frames), all valid against the schema,
-each ≤ 3.5 MB; the quick suite (11 configs + the 30-frame quick sequence) is ≈ 5.2 MB.
+217 problems in the full suite (incl. 162 sequence frames), all valid against the schema,
+each ≤ 3.5 MB; the quick suite (11 configs + the three quick sequences, 132 frames) is ≈ 7.5 MB.
 Every scenario directory documents what and why, the configs and the rendering recipe
 (`README.md`) and the data licenses (`LICENSE.md`).
 
@@ -152,7 +152,7 @@ Every scenario directory documents what and why, the configs and the rendering r
   paper ids (with the last four digits as an `alternatives` fallback).
 * **10, 11 — synthetic.** Scenario 10 jitters copies of real airports (σ = 0.6°, seed 10)
   to reach 10× density and 20,000 anchors; scenario 11 is a synthetic camera path over
-  real data.
+  real data and a force simulation of a real graph (`bench/common/forcesim.py`).
 * **Everywhere — SVG `ignore`.** Elements that must not interact with labels are mapped
   to the class `background` with `avoid.label/leader.background = "ignore"` because the
   literal class `"ignore"` does not validate in v1 (see *Spec findings*).
@@ -254,7 +254,7 @@ NAME=COMMAND` (`{problem}`, `{result}`, `{svg}`) renders the engine's debug over
 grids, candidates) from one extra untimed run; `--engine` sets it up for `rust` with `place
 --debug-svg`. Sequences are solved frame by frame; frame t+1 gets `warm_start.placements` =
 frame t's placements with each box shifted by its anchor's movement. `--suite quick` =
-configs marked `quick` (one small config per scenario) + the quick sequence; `--suite full` =
+configs marked `quick` (one small config per scenario) + the quick sequences; `--suite full` =
 everything; `--scenario` restricts to scenario ids. Further flags: `--perf` (performance
 targets), `--previous OLD/results.json` (changes), `--gate` (release gates, implies `--perf`;
 the exit code reflects them), `--require-baselines` (a missing toolchain is an error instead

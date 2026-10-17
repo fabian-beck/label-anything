@@ -22,7 +22,7 @@ renders an engine debug overlay next to the benchmark rendering, from one extra 
 
 Problems are discovered from ``bench/out/problems/*/scenario.json``: the quick suite
 takes the configs marked ``quick`` (one small config per scenario) and the quick
-sequence of scenario 11; the full suite takes everything. Each (solver, problem) is
+sequences of scenario 11; the full suite takes everything. Each (solver, problem) is
 run ``--runs`` times (built-in and third-party baselines ``--baseline-runs`` times);
 runtime = median and p95 (nearest rank) of the wall time and of ``stats.runtime_ms``;
 the last result is evaluated (and compared with the first for determinism). Sequences
