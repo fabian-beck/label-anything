@@ -127,9 +127,9 @@ SECTIONS = (
         Fig("07-node-link/lesmis-shapes", "Les Misérables, with UML-like nodes",
             "77 characters; rounded rectangles hold internal labels, ellipses get external ones."),
         Fig("07-node-link/cora-circles", "Cora citation network",
-            "150 papers of a citation graph, the best-connected first. Edges are obstacles; a label "
-            "that would need a leader through other nodes is left out instead ({placed} of {total} "
-            "placed)."),
+            "150 papers of a citation graph, the best-connected first, in a ForceAtlas2 layout. Edges "
+            "are obstacles; a label that would need a leader through other nodes is left out instead "
+            "({placed} of {total} placed)."),
     )),
     Section("priority", "Priority decides what is left out", "",
             "3,221 airports, scored by how isolated they are. With <code>strict</code> omission, a label "
@@ -737,8 +737,7 @@ def notes_html(figs: dict[str, dict]) -> str:
         return f'<a href="#{key.replace("/", "--")}">{E(name)}</a> {m["placed"]:,} of {m["total"]:,}'
 
     notes = []
-    crowd = [(k, t) for k, t in (("07-node-link/cora-circles", "Cora"),
-                                 ("06-city-pois/monaco-pins-ink", "Monaco"),
+    crowd = [(k, t) for k, t in (("06-city-pois/monaco-pins-ink", "Monaco"),
                                  ("05-airports/world-iata-1000-vector", "world airports")) if n(k)]
     if crowd:
         notes.append(("Crowds keep few labels",

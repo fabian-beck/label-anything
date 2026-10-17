@@ -1,9 +1,10 @@
 """Build scenario 07: node-link diagrams.
 
-Layouts are deterministic force layouts (networkx ``spring_layout``, fixed seed)
-scaled into the canvas. Edges are straight center-to-center segments given as
-``obstacles.vector`` polylines of class ``lines`` (soft, preset ``graph``);
-leaders use the preset's octilinear ``angles`` style.
+Layouts are deterministic force layouts (networkx ``forceatlas2_layout`` with strong
+gravity, fixed seed), rotated so their principal axis is horizontal, scaled into the
+canvas and freed of node overlaps. Edges are straight center-to-center segments given as
+``obstacles.vector`` polylines of class ``lines`` (soft, preset ``graph``); leaders use
+the preset's octilinear ``angles`` style.
 
 Configs:
 * ``lesmis-circles`` (quick)  Les Misérables co-occurrence (77 nodes, 254 edges), circular nodes,
@@ -22,6 +23,8 @@ import sys
 from pathlib import Path
 
 import networkx as nx
+import numpy as np
+from scipy.spatial import cKDTree
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -47,6 +50,56 @@ def fit(pos: dict, w: float, h: float, margin: float) -> dict:
     return {n: (round(ox + s * (p[0] - min(xs)), 3), round(oy + s * (p[1] - min(ys)), 3)) for n, p in pos.items()}
 
 
+def orient(pos: dict) -> dict:
+    """Rotate a layout about its centroid so that its principal axis is horizontal."""
+    keys = sorted(pos, key=str)
+    xy = np.array([pos[k] for k in keys], dtype=np.float64)
+    xy -= xy.mean(axis=0)
+    c = np.cov(xy.T)
+    a = -0.5 * math.atan2(2 * c[0, 1], c[0, 0] - c[1, 1])
+    co, si = math.cos(a), math.sin(a)
+    return {k: (co * x - si * y, si * x + co * y) for k, (x, y) in zip(keys, xy.tolist())}
+
+
+def separate(pos: dict, half: dict, w: float, h: float, margin: float, gap: float = 2.0,
+             rounds: int = 500) -> dict:
+    """Push overlapping node boxes (half extents ``half``, canvas px) apart until ``gap`` px
+    separate them: each overlapping pair moves apart by half the overlap each along the axis
+    of the smaller overlap, all pairs at once, staying inside the canvas margin."""
+    keys = sorted(pos, key=str)
+    xy = np.array([pos[k] for k in keys], dtype=np.float64)
+    hw = np.array([half[k] for k in keys], dtype=np.float64) + gap / 2
+    reach = float(np.hypot(*(2 * hw.max(axis=0))))
+    for _ in range(rounds):
+        pairs = cKDTree(xy).query_pairs(reach, output_type="ndarray")
+        if len(pairs) == 0:
+            break
+        pairs = pairs[np.lexsort((pairs[:, 1], pairs[:, 0]))]
+        i, j = pairs[:, 0], pairs[:, 1]
+        d = xy[j] - xy[i]
+        ox = hw[i, 0] + hw[j, 0] - np.abs(d[:, 0])
+        oy = hw[i, 1] + hw[j, 1] - np.abs(d[:, 1])
+        hit = (ox > 1e-9) & (oy > 1e-9)
+        if not hit.any():
+            break
+        i, j, d, ox, oy = i[hit], j[hit], d[hit], ox[hit], oy[hit]
+        along_x = ox <= oy
+        delta = np.zeros((len(i), 2))
+        delta[along_x, 0] = np.where(d[along_x, 0] >= 0, 0.5, -0.5) * ox[along_x]
+        delta[~along_x, 1] = np.where(d[~along_x, 1] >= 0, 0.5, -0.5) * oy[~along_x]
+        move = np.zeros_like(xy)
+        np.add.at(move, i, -delta)
+        np.add.at(move, j, delta)
+        xy += move
+        xy[:, 0] = np.clip(xy[:, 0], margin, w - margin)
+        xy[:, 1] = np.clip(xy[:, 1], margin, h - margin)
+    return {k: (round(x, 3), round(y, 3)) for k, (x, y) in zip(keys, xy.tolist())}
+
+
+def floats(pos: dict) -> dict:
+    return {n: (float(p[0]), float(p[1])) for n, p in pos.items()}
+
+
 def lesmis():
     tgz = fetch.ensure("vega-datasets-3.2.1", verbose=False)
     d = json.loads(fetch.read_tar_member(tgz, "package/data/miserables.json"))
@@ -55,8 +108,21 @@ def lesmis():
         G.add_node(n["index"], name=n["name"], group=n["group"])
     for e in d["links"]:
         G.add_edge(e["source"], e["target"], weight=e["value"])
-    pos = nx.spring_layout(G, seed=7, iterations=300, weight=None, k=0.35)
-    return G, fit(pos, 1000.0, 760.0, 60.0)
+    # node sizes (layout units) make ForceAtlas2 keep the nodes apart; the overlap removal
+    # then uses the larger node of the two configs (lesmis-shapes)
+    size = {n: 3 + 1.5 * math.sqrt(G.degree(n)) for n in G}
+    pos = nx.forceatlas2_layout(G, seed=7, max_iter=600, strong_gravity=True, gravity=0.05, node_size=size)
+    pos = fit(orient(floats(pos)), 1000.0, 760.0, 60.0)
+    f = text.font(400)
+    half = {}
+    for n in G:
+        deg = G.degree(n)
+        if deg >= 8:
+            half[n] = ((f.width(G.nodes[n]["name"], 10.0) + 16) / 2, 12.0)
+        else:
+            rx = 5 + 1.5 * math.sqrt(deg)
+            half[n] = (rx, max(0.65 * rx, 3 + 1.5 * math.sqrt(deg)))
+    return G, separate(pos, half, 1000.0, 760.0, 60.0)
 
 
 def cora():
@@ -79,8 +145,10 @@ def cora():
     H = nx.Graph()
     H.add_nodes_from(sorted(lcc))
     H.add_edges_from(sorted((min(a, b), max(a, b)) for a, b in G.subgraph(lcc).edges()))
-    pos = nx.spring_layout(H, seed=7, iterations=120)
-    return H, fit(pos, 1600.0, 1200.0, 30.0), topic, citations
+    pos = nx.forceatlas2_layout(H, seed=7, max_iter=300, strong_gravity=True, gravity=0.05)
+    pos = fit(orient(floats(pos)), 1600.0, 1200.0, 30.0)
+    half = {n: (1.5 + 0.8 * math.sqrt(H.degree(n)),) * 2 for n in H}
+    return H, separate(pos, half, 1600.0, 1200.0, 30.0), topic, citations
 
 
 def edge_layer(G, pos, width=0.8) -> dict:
@@ -90,7 +158,8 @@ def edge_layer(G, pos, width=0.8) -> dict:
 
 def main() -> None:
     wr = Writer(SCENARIO, "Node-link diagrams", SOURCES,
-                notes="Deterministic networkx spring layouts (seed 7); edges as soft 'lines'.")
+                notes="Deterministic networkx ForceAtlas2 layouts (strong gravity, seed 7), "
+                      "nodes kept apart; edges as soft 'lines'.")
     G, pos = lesmis()
     items = []
     for n in sorted(G.nodes()):
