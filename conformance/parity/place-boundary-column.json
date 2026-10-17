@@ -1,0 +1,756 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 320,
+      "height": 240
+    },
+    "placement": {
+      "models": [
+        "adjacent",
+        "boundary"
+      ],
+      "position_order": [
+        "right"
+      ],
+      "fan": "off",
+      "boundary": {
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "items": [
+      {
+        "id": "alpha",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      },
+      {
+        "id": "beta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 104
+        },
+        "label": {
+          "type": "text",
+          "text": "Beta"
+        }
+      },
+      {
+        "id": "gamma",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 108
+        },
+        "label": {
+          "type": "text",
+          "text": "Gamma"
+        }
+      },
+      {
+        "id": "delta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 112
+        },
+        "label": {
+          "type": "text",
+          "text": "Delta"
+        }
+      },
+      {
+        "id": "epsilon",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 116
+        },
+        "label": {
+          "type": "text",
+          "text": "Epsilon"
+        }
+      },
+      {
+        "id": "zeta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 120
+        },
+        "label": {
+          "type": "text",
+          "text": "Zeta"
+        }
+      },
+      {
+        "id": "eta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 124
+        },
+        "label": {
+          "type": "text",
+          "text": "Eta"
+        }
+      },
+      {
+        "id": "theta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 128
+        },
+        "label": {
+          "type": "text",
+          "text": "Theta"
+        }
+      },
+      {
+        "id": "iota",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 132
+        },
+        "label": {
+          "type": "text",
+          "text": "Iota"
+        }
+      },
+      {
+        "id": "kappa",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 136
+        },
+        "label": {
+          "type": "text",
+          "text": "Kappa"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "alpha",
+        "placed": true,
+        "box": {
+          "x": 263.76,
+          "y": 7.480000000000011,
+          "w": 35.891999999999996,
+          "h": 19.944000000000003
+        },
+        "anchor": [
+          150.0,
+          100.0
+        ],
+        "anchor_side": "boundary",
+        "model": "boundary",
+        "text": {
+          "lines": [
+            "Alpha"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            32.292
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              152.83278429438786,
+              97.94443848511666
+            ],
+            [
+              263.76,
+              17.452000000000012
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            263.76,
+            17.452000000000012
+          ]
+        },
+        "cost": 4.86174504797454,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "beta",
+        "placed": true,
+        "box": {
+          "x": 263.76,
+          "y": 29.824000000000012,
+          "w": 29.23199999999997,
+          "h": 19.944000000000003
+        },
+        "anchor": [
+          150.0,
+          104.0
+        ],
+        "anchor_side": "boundary",
+        "model": "boundary",
+        "text": {
+          "lines": [
+            "Beta"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            25.632
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              153.04806118916298,
+              102.27973171071537
+            ],
+            [
+              263.76,
+              39.796000000000014
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            263.76,
+            39.796000000000014
+          ]
+        },
+        "cost": 4.541500593222953,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 1
+        }
+      },
+      {
+        "id": "gamma",
+        "placed": true,
+        "box": {
+          "x": 263.76,
+          "y": 52.16800000000001,
+          "w": 48.24000000000001,
+          "h": 19.94400000000001
+        },
+        "anchor": [
+          150.0,
+          108.0
+        ],
+        "anchor_side": "boundary",
+        "model": "boundary",
+        "text": {
+          "lines": [
+            "Gamma"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            44.64
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              153.24615368801005,
+              106.69138002696782
+            ],
+            [
+              263.76,
+              62.140000000000015
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            263.76,
+            62.140000000000015
+          ]
+        },
+        "cost": 4.417580775355857,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 2
+        }
+      },
+      {
+        "id": "delta",
+        "placed": true,
+        "box": {
+          "x": 263.76,
+          "y": 74.51200000000003,
+          "w": 33.28800000000001,
+          "h": 19.94399999999999
+        },
+        "anchor": [
+          150.0,
+          112.0
+        ],
+        "anchor_side": "boundary",
+        "model": "boundary",
+        "text": {
+          "lines": [
+            "Delta"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            29.688
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              153.40190068162394,
+              111.17715630137515
+            ],
+            [
+              263.76,
+              84.48400000000002
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            263.76,
+            84.48400000000002
+          ]
+        },
+        "cost": 4.1101643316643255,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 3
+        }
+      },
+      {
+        "id": "epsilon",
+        "placed": true,
+        "box": {
+          "x": 263.76,
+          "y": 96.85600000000002,
+          "w": 44.26800000000003,
+          "h": 19.94399999999999
+        },
+        "anchor": [
+          150.0,
+          116.0
+        ],
+        "anchor_side": "boundary",
+        "model": "boundary",
+        "text": {
+          "lines": [
+            "Epsilon"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            40.668
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              153.48867923181282,
+              115.71872217023393
+            ],
+            [
+              263.76,
+              106.82800000000002
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            263.76,
+            106.82800000000002
+          ]
+        },
+        "cost": 4.136865051068474,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 4
+        }
+      },
+      {
+        "id": "zeta",
+        "placed": true,
+        "box": {
+          "x": 263.76,
+          "y": 119.20000000000002,
+          "w": 28.295999999999992,
+          "h": 19.944000000000017
+        },
+        "anchor": [
+          150.0,
+          120.0
+        ],
+        "anchor_side": "boundary",
+        "model": "boundary",
+        "text": {
+          "lines": [
+            "Zeta"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            24.696
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              153.48867923181282,
+              120.28127782976607
+            ],
+            [
+              263.76,
+              129.17200000000003
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            263.76,
+            129.17200000000003
+          ]
+        },
+        "cost": 4.107231717735141,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 5
+        }
+      },
+      {
+        "id": "eta",
+        "placed": true,
+        "box": {
+          "x": 263.76,
+          "y": 141.544,
+          "w": 21.336000000000013,
+          "h": 19.944000000000017
+        },
+        "anchor": [
+          150.0,
+          124.0
+        ],
+        "anchor_side": "boundary",
+        "model": "boundary",
+        "text": {
+          "lines": [
+            "Eta"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            17.736
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              153.40190068162394,
+              124.82284369862485
+            ],
+            [
+              263.76,
+              151.51600000000002
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            263.76,
+            151.51600000000002
+          ]
+        },
+        "cost": 4.222664331664324,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 6
+        }
+      },
+      {
+        "id": "theta",
+        "placed": true,
+        "box": {
+          "x": 263.76,
+          "y": 163.888,
+          "w": 35.51999999999998,
+          "h": 19.944000000000017
+        },
+        "anchor": [
+          150.0,
+          128.0
+        ],
+        "anchor_side": "boundary",
+        "model": "boundary",
+        "text": {
+          "lines": [
+            "Theta"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            31.92
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              153.24615368801005,
+              129.3086199730322
+            ],
+            [
+              263.76,
+              173.86
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            263.76,
+            173.86
+          ]
+        },
+        "cost": 4.2654974420225225,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 7
+        }
+      },
+      {
+        "id": "iota",
+        "placed": true,
+        "box": {
+          "x": 263.76,
+          "y": 186.232,
+          "w": 25.99200000000002,
+          "h": 19.944000000000017
+        },
+        "anchor": [
+          150.0,
+          132.0
+        ],
+        "anchor_side": "boundary",
+        "model": "boundary",
+        "text": {
+          "lines": [
+            "Iota"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            22.392
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              153.04806118916298,
+              133.72026828928463
+            ],
+            [
+              263.76,
+              196.204
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            263.76,
+            196.204
+          ]
+        },
+        "cost": 4.485250593222953,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 8
+        }
+      },
+      {
+        "id": "kappa",
+        "placed": true,
+        "box": {
+          "x": 263.76,
+          "y": 208.576,
+          "w": 39.25200000000001,
+          "h": 19.944000000000017
+        },
+        "anchor": [
+          150.0,
+          136.0
+        ],
+        "anchor_side": "boundary",
+        "model": "boundary",
+        "text": {
+          "lines": [
+            "Kappa"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            35.652
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              152.83278429438786,
+              138.05556151488335
+            ],
+            [
+              263.76,
+              218.548
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            263.76,
+            218.548
+          ]
+        },
+        "cost": 4.701328381307874,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 9
+        }
+      }
+    ],
+    "stats": {
+      "placed": 10,
+      "total": 10,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 4000,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 114,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 43.84982826523896,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 107,
+        "rows": 80,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

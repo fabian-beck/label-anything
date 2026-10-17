@@ -245,7 +245,13 @@ impl<'a> Evaluator<'a> {
         }
         // 4. leaders
         for l in &c.leaders {
-            self.leader_terms(i, l, &r, c.kind == Kind::Fan, &mut acc);
+            self.leader_terms(
+                i,
+                l,
+                &r,
+                matches!(c.kind, Kind::Fan | Kind::Boundary),
+                &mut acc,
+            );
         }
         if !acc.relaxed {
             return finish(c, acc);
@@ -358,7 +364,7 @@ impl<'a> Evaluator<'a> {
         }
     }
 
-    fn leader_terms(&mut self, i: usize, l: &Leader, own_rect: &Rect, fan: bool, acc: &mut Acc) {
+    fn leader_terms(&mut self, i: usize, l: &Leader, own_rect: &Rect, column: bool, acc: &mut Acc) {
         let model = self.model;
         let obs = self.obs;
         let item = &model.items[i];
@@ -394,9 +400,10 @@ impl<'a> Evaluator<'a> {
             }
         }
         // other items: clearance (not from the group's members, and not from a mark that
-        // covers the leader's anchor, or a fan leader's start: no leader avoids it); a fan
-        // leader must only not cross a mark closer than the clearance to its start (it
-        // leaves a crowd of touching marks, in the order of its column)
+        // covers the leader's anchor, or a column leader's start: no leader avoids it); the
+        // leader of a fan or boundary label must only not cross a mark closer than the
+        // clearance to its start (it leaves a crowd of touching marks, in the order of its
+        // column)
         let bb = l.bbox().inflate(item.len.clearance);
         self.buf.clear();
         obs.item_index.query(&bb, &mut self.buf);
@@ -412,7 +419,7 @@ impl<'a> Evaluator<'a> {
                 continue;
             }
             let sj = &model.items[j].shape;
-            if sj.contains(anchor) || (fan && sj.contains(start)) {
+            if sj.contains(anchor) || (column && sj.contains(start)) {
                 continue;
             }
             let mut dmin = f64::INFINITY;
@@ -421,7 +428,7 @@ impl<'a> Evaluator<'a> {
             }
             match dy.leader_items {
                 AvoidW::Hard => {
-                    let lim = if fan && sj.signed_distance(start) < clearance {
+                    let lim = if column && sj.signed_distance(start) < clearance {
                         EPS
                     } else {
                         clearance - EPS

@@ -3,12 +3,12 @@
 
 use super::greedy::explain;
 use super::{Reason, Solve};
-use crate::boundary::{slot_area, slot_candidate};
+use crate::boundary::{column_candidate, column_port, slot_area};
 use crate::candidates::{Cand, Kind};
 use crate::cost::Evaluator;
-use crate::geom::seg_intersects;
+use crate::geom::{seg_intersects, Rect};
 use crate::math::maxf;
-use crate::model::opts::{LeaderStyle, Omission, Step};
+use crate::model::opts::{LeaderStyle, Models, Omission, Step};
 
 /// Bounded isotonic stacking: positions `y_i` (sorted order) minimizing Σ (y_i − d_i)²
 /// subject to `y_{i+1} − y_i ≥ g_i` and `lo ≤ y_0`, `y_{n−1} ≤ hi` (pool adjacent violators).
@@ -141,6 +141,130 @@ fn total_cost(s: &mut Solve, items: &[usize]) -> f64 {
     t
 }
 
+/// The labels of a boundary column along `side` (spec §6.6): `members` ordered by their
+/// anchors along the side, stacked (`stack`, or evenly spread), matched to the slots by
+/// total leader length (straight and `angles` leaders; else in order) and aligned on the
+/// column's line facing the picture; each keeps its placed variant (else its first), its
+/// rank and its level, and is evaluated. In the members' order along the side.
+fn column_cands(s: &Solve, area: &Rect, side: u8, members: &[usize]) -> Vec<(usize, Cand)> {
+    let model = s.model;
+    let items = &model.items;
+    let horizontal_side = side <= 1;
+    let key = |i: usize| {
+        if horizontal_side {
+            items[i].anchor.y
+        } else {
+            items[i].anchor.x
+        }
+    };
+    let mut order: Vec<usize> = members.to_vec();
+    crate::sort::sort_by(&mut order, |&a, &b| {
+        crate::math::cmp_f64(key(a), key(b)).then(a.cmp(&b))
+    });
+    // a member without a label takes its first variant, at the level its boundary
+    // candidates have: 0 with the boundary model, else that of the ladder's boundary step
+    let step_level = model
+        .ladder
+        .iter()
+        .position(|st| matches!(st, Step::Boundary))
+        .map_or(0, |si| (si + 1) as u8);
+    let placed: Vec<Option<&Cand>> = order
+        .iter()
+        .map(|&j| s.state.placed[j].map(|c| &s.cands[c as usize]))
+        .collect();
+    let vis: Vec<usize> = placed
+        .iter()
+        .map(|c| c.map_or(0, |c| c.variant as usize))
+        .collect();
+    let (along, across): (Vec<f64>, Vec<f64>) = order
+        .iter()
+        .zip(&vis)
+        .map(|(&j, &v)| {
+            let v = &s.variants[j][v];
+            if horizontal_side {
+                (v.h, v.w)
+            } else {
+                (v.w, v.h)
+            }
+        })
+        .unzip();
+    let depth = across.iter().copied().fold(0.0, f64::max);
+    let gap = items[order[0]].len.boundary_gap;
+    let (lo, hi) = if horizontal_side {
+        (area.y0, area.y1)
+    } else {
+        (area.x0, area.x1)
+    };
+    let positions: Vec<f64> = if model.placement.boundary.spread {
+        let k = order.len() as f64;
+        (0..order.len())
+            .map(|j| lo + (hi - lo) * (j as f64 + 0.5) / k)
+            .collect()
+    } else {
+        let desired: Vec<f64> = order.iter().map(|&i| key(i)).collect();
+        // at least the larger margin of the two labels apart
+        let gaps: Vec<f64> = (1..order.len())
+            .map(|j| {
+                let m = maxf(items[order[j - 1]].len.margin, items[order[j]].len.margin);
+                (along[j - 1] + along[j]) * 0.5 + maxf(gap, m)
+            })
+            .collect();
+        stack(
+            &desired,
+            &gaps,
+            lo + along[0] * 0.5,
+            hi - along[along.len() - 1] * 0.5,
+        )
+    };
+    // assignment: straight leaders → min total length (to the ports, all on the column's
+    // line); otherwise keep the order
+    let assign: Vec<usize> = if matches!(
+        model.leaders.style,
+        LeaderStyle::Straight | LeaderStyle::Angles
+    ) {
+        let cost: Vec<Vec<f64>> = order
+            .iter()
+            .map(|&i| {
+                let a = items[i].anchor;
+                positions
+                    .iter()
+                    .map(|&p| a.dist(column_port(area, &items[i], side, p, depth)))
+                    .collect()
+            })
+            .collect();
+        hungarian(&cost)
+    } else {
+        (0..order.len()).collect()
+    };
+    let mut ev = Evaluator::new(model, s.obs, s.env);
+    let mut fresh: Vec<(usize, Cand)> = Vec::with_capacity(order.len());
+    for (k, &j) in order.iter().enumerate() {
+        let v = &s.variants[j][vis[k]];
+        let item = &items[j];
+        let rank = placed[k].map_or(9.0, |c| c.rank);
+        let mut c = column_candidate(
+            model,
+            area,
+            item,
+            vis[k],
+            v,
+            side,
+            positions[assign[k]],
+            depth,
+            rank,
+        );
+        c.level = match placed[k] {
+            Some(p) => p.level,
+            None if item.models.has(Models::BOUNDARY) => v.level,
+            None => step_level,
+        };
+        c.lshape = crate::candidates::label_shape(&c.rect, &v.shape);
+        ev.eval(&mut c, v, None);
+        fresh.push((j, c));
+    }
+    fresh
+}
+
 /// Re-stack the boundary labels of each side jointly; keep the result when every label
 /// stays feasible and the total cost drops.
 pub fn boundary_pass(s: &mut Solve) {
@@ -162,120 +286,16 @@ pub fn boundary_pass(s: &mut Solve) {
         if members.len() < 2 {
             continue;
         }
-        let horizontal_side = side <= 1;
-        let key = |i: usize| {
-            if horizontal_side {
-                s.model.items[i].anchor.y
-            } else {
-                s.model.items[i].anchor.x
-            }
-        };
-        let mut order = members.clone();
-        crate::sort::sort_by(&mut order, |&a, &b| {
-            crate::math::cmp_f64(key(a), key(b)).then(a.cmp(&b))
-        });
-        let sizes: Vec<f64> = order
-            .iter()
-            .map(|&i| {
-                let c = &s.cands[s.state.placed[i].unwrap() as usize];
-                if horizontal_side {
-                    c.rect.h()
-                } else {
-                    c.rect.w()
-                }
-            })
-            .collect();
-        let gap = s.model.items[order[0]].len.boundary_gap;
-        let (lo, hi) = if horizontal_side {
-            (area.y0, area.y1)
-        } else {
-            (area.x0, area.x1)
-        };
-        let positions: Vec<f64> = if s.model.placement.boundary.spread {
-            let k = order.len() as f64;
-            (0..order.len())
-                .map(|j| lo + (hi - lo) * (j as f64 + 0.5) / k)
-                .collect()
-        } else {
-            let desired: Vec<f64> = order.iter().map(|&i| key(i)).collect();
-            // at least the larger margin of the two labels apart
-            let gaps: Vec<f64> = (1..order.len())
-                .map(|j| {
-                    let m = maxf(
-                        s.model.items[order[j - 1]].len.margin,
-                        s.model.items[order[j]].len.margin,
-                    );
-                    (sizes[j - 1] + sizes[j]) * 0.5 + maxf(gap, m)
-                })
-                .collect();
-            stack(
-                &desired,
-                &gaps,
-                lo + sizes[0] * 0.5,
-                hi - sizes[sizes.len() - 1] * 0.5,
-            )
-        };
-        // assignment: straight leaders → min total length; otherwise keep the order
-        let assign: Vec<usize> = if s.model.leaders.style == LeaderStyle::Straight
-            || s.model.leaders.style == LeaderStyle::Angles
-        {
-            let m = order.len();
-            let cost: Vec<Vec<f64>> = order
-                .iter()
-                .map(|&i| {
-                    let a = s.model.items[i].anchor;
-                    (0..m)
-                        .map(|j| {
-                            let p = if horizontal_side {
-                                crate::geom::P::new(
-                                    if side == 0 { area.x0 } else { area.x1 },
-                                    positions[j],
-                                )
-                            } else {
-                                crate::geom::P::new(
-                                    positions[j],
-                                    if side == 2 { area.y0 } else { area.y1 },
-                                )
-                            };
-                            a.dist(p)
-                        })
-                        .collect()
-                })
-                .collect();
-            hungarian(&cost)
-        } else {
-            (0..order.len()).collect()
-        };
-        // build the new candidates
+        let fresh = column_cands(s, &area, side, &members);
+        if fresh.iter().any(|(_, c)| !c.feasible) {
+            continue;
+        }
+        let order: Vec<usize> = fresh.iter().map(|&(i, _)| i).collect();
         let old: Vec<(usize, u32)> = order
             .iter()
             .map(|&i| (i, s.state.placed[i].unwrap()))
             .collect();
         let before = total_cost(s, &order);
-        let mut fresh: Vec<(usize, Cand)> = Vec::new();
-        for (k, &i) in order.iter().enumerate() {
-            let oc = &s.cands[s.state.placed[i].unwrap() as usize];
-            let vi = oc.variant as usize;
-            let v = &s.variants[i][vi];
-            let mut c = slot_candidate(
-                s.model,
-                &area,
-                &s.model.items[i],
-                vi,
-                v,
-                side,
-                positions[assign[k]],
-                oc.rank,
-            );
-            c.level = oc.level;
-            c.lshape = crate::candidates::label_shape(&c.rect, &v.shape);
-            let mut ev = Evaluator::new(s.model, s.obs, s.env);
-            ev.eval(&mut c, v, None);
-            fresh.push((i, c));
-        }
-        if fresh.iter().any(|(_, c)| !c.feasible) {
-            continue;
-        }
         for &i in &order {
             s.state.unplace(i, &s.cands);
         }
@@ -307,6 +327,178 @@ pub fn boundary_pass(s: &mut Solve) {
             let relaxed = !s.cands[c as usize].feasible;
             s.state.place(i, c, &s.cands, relaxed);
         }
+    }
+}
+
+/// Label evaluations of the boundary fill: at least this many, or this many per item.
+const FILL_WORK_MIN: usize = 20_000;
+const FILL_WORK_PER_ITEM: usize = 20;
+
+/// Boundary columns (spec §6.6): on each side in `placement.boundary.sides`, items without a
+/// label that may take a boundary label join the side's column one after the other, in
+/// priority order, when the column stacked again with them stays feasible and free. A placed
+/// label in the way of a member whose item may take a boundary label, and that stands on
+/// the column's side of its anchor, moves into the column too. Not with `prefix` omission,
+/// after a cancellation or the time guard.
+pub fn boundary_fill(s: &mut Solve) {
+    if s.model.omission == Omission::Prefix || s.cancelled || s.time_guard_hit {
+        return;
+    }
+    let Some(area) = slot_area(s.model, s.obs) else {
+        return;
+    };
+    let model = s.model;
+    let n = model.items.len();
+    // items that may take a boundary label: the boundary model or the ladder's step
+    let capable: Vec<bool> = (0..n)
+        .map(|i| {
+            let it = &model.items[i];
+            s.models[i].has(Models::BOUNDARY)
+                && !s.variants[i].is_empty()
+                && it.keep_with.is_none()
+                && !model.group_of.get(i).is_some_and(|g| g.is_some())
+        })
+        .collect();
+    let mut work = FILL_WORK_MIN.max(FILL_WORK_PER_ITEM * n);
+    for side_name in &model.placement.boundary.sides {
+        let side = crate::boundary::side_code(side_name);
+        // a placed label that may move into the column: not internal, on the column's
+        // side of its anchor
+        let movable = |s: &Solve, i: usize| {
+            s.state.placed[i].is_some_and(|c| {
+                let c = &s.cands[c as usize];
+                let (a, m) = (model.items[i].anchor, c.rect.center());
+                c.kind != Kind::Internal
+                    && match side {
+                        0 => m.x < a.x,
+                        1 => m.x >= a.x,
+                        2 => m.y < a.y,
+                        _ => m.y >= a.y,
+                    }
+            })
+        };
+        let mut members: Vec<usize> = (0..n)
+            .filter(|&i| {
+                s.state.placed[i].is_some_and(|c| {
+                    let c = &s.cands[c as usize];
+                    c.kind == Kind::Boundary && c.bside == side
+                })
+            })
+            .collect();
+        for u in s.pri.order.clone() {
+            if s.state.placed[u].is_some()
+                || !capable[u]
+                || !matches!(
+                    s.reasons[u],
+                    None | Some(Reason::OmittedByPriority) | Some(Reason::NoFeasibleCandidate)
+                )
+            {
+                continue;
+            }
+            if model.max_labels.is_some_and(|m| s.state.n_placed >= m) {
+                return;
+            }
+            let mut trial = members.clone();
+            trial.push(u);
+            loop {
+                if work == 0 || s.poll_cancel() {
+                    return;
+                }
+                work = work.saturating_sub(trial.len());
+                match side_layout(s, &area, side, &trial) {
+                    Ok(cands) => {
+                        if !within_ink(s, &cands) {
+                            break;
+                        }
+                        let added: Vec<usize> = vec![u];
+                        let cost = cands.iter().map(|(_, c)| c.cost).sum();
+                        let plan = super::fan::Plan { cands, added, cost };
+                        if super::fan::apply_unless_inverting(s, plan) {
+                            members = trial;
+                        }
+                        break;
+                    }
+                    Err(fails) => {
+                        // a placed label in the way joins the column
+                        let joins = fails
+                            .iter()
+                            .filter_map(|&(_, b)| b)
+                            .find(|&k| capable[k] && !trial.contains(&k) && movable(s, k));
+                        match joins {
+                            Some(k) => trial.push(k),
+                            None => break,
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Whether the labels `cands` (replacing the members' own) keep the label area within
+/// `priority.budget.max_ink_fraction`.
+fn within_ink(s: &Solve, cands: &[(usize, Cand)]) -> bool {
+    let (Some(f), Some(canvas)) = (s.model.max_ink_fraction, s.model.canvas) else {
+        return true;
+    };
+    let mut ink = s.state.label_area_sum;
+    for (j, c) in cands {
+        if let Some(p) = s.state.placed[*j] {
+            ink -= s.cands[p as usize].rect.area();
+        }
+        ink += c.rect.area();
+    }
+    ink / canvas.area().max(1e-9) <= f
+}
+
+/// Lay out a boundary column of `members` (`column_cands`) and test it against everything
+/// else placed, the members' own labels lifted meanwhile. `Err`: the members that fail, each
+/// with the placed item in its way (none: a reason of its own).
+#[allow(clippy::type_complexity)]
+fn side_layout(
+    s: &mut Solve,
+    area: &Rect,
+    side: u8,
+    members: &[usize],
+) -> Result<Vec<(usize, Cand)>, Vec<(usize, Option<usize>)>> {
+    let fresh = column_cands(s, area, side, members);
+    let saved: Vec<(usize, u32)> = fresh
+        .iter()
+        .filter_map(|&(j, _)| s.state.placed[j].map(|c| (j, c)))
+        .collect();
+    for &(j, _) in &saved {
+        s.state.unplace(j, &s.cands);
+    }
+    let base = s.cands.len();
+    let mut failed: Vec<(usize, Option<usize>)> = Vec::new();
+    let mut placed_now: Vec<usize> = Vec::new();
+    for (j, c) in &fresh {
+        if !c.feasible {
+            failed.push((*j, None));
+            continue;
+        }
+        match s.state.first_conflict(c, &s.cands, s.obs, *j, |_| true) {
+            Some(k) => failed.push((*j, Some(k))),
+            None => {
+                let id = s.cands.len() as u32;
+                s.cands.push(c.clone());
+                s.state.place(*j, id, &s.cands, false);
+                placed_now.push(*j);
+            }
+        }
+    }
+    for &j in &placed_now {
+        s.state.unplace(j, &s.cands);
+    }
+    s.cands.truncate(base);
+    for &(j, c) in &saved {
+        let relaxed = !s.cands[c as usize].feasible;
+        s.state.place(j, c, &s.cands, relaxed);
+    }
+    if failed.is_empty() {
+        Ok(fresh)
+    } else {
+        Err(failed)
     }
 }
 

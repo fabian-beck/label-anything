@@ -6,12 +6,13 @@
  * @module
  */
 
-import { slotArea, slotCandidate } from "../boundary.js";
+import { columnCandidate, columnPort, sideCode, slotArea } from "../boundary.js";
 import { Cand, Kind, Leader, labelShape } from "../candidates.js";
 import { EPS, P, Rect, segSegDistXY } from "../geom/index.js";
 import { leaderStart } from "../leaders.js";
 import { clampf, cmpF64, maxf } from "../math.js";
-import { LeaderStyle, Omission } from "../model/index.js";
+import { LeaderStyle, Models, Omission } from "../model/index.js";
+import { applyUnlessInverting } from "./fan.js";
 import { explain } from "./greedy.js";
 import { Reason, type Solve } from "./index.js";
 
@@ -128,6 +129,81 @@ function totalCost(s: Solve, items: readonly number[]): number {
 }
 
 /**
+ * The labels of a boundary column along `side` (spec §6.6): `members` ordered by their
+ * anchors along the side, stacked (`stack`, or evenly spread), matched to the slots by
+ * total leader length (straight and `angles` leaders; else in order) and aligned on the
+ * column's line facing the picture; each keeps its placed variant (else its first), its
+ * rank and its level, and is evaluated. In the members' order along the side.
+ */
+function columnCands(s: Solve, area: Rect, side: number, members: readonly number[]): [number, Cand][] {
+  const model = s.model;
+  const items = model.items;
+  const horizontalSide = side <= 1;
+  const key = (i: number): number => (horizontalSide ? items[i]!.anchor.y : items[i]!.anchor.x);
+  const order = members.slice().sort((a, b) => cmpF64(key(a), key(b)) || a - b);
+  // a member without a label takes its first variant, at the level its boundary
+  // candidates have: 0 with the boundary model, else that of the ladder's boundary step
+  const si = model.ladder.findIndex((st) => st.kind === "boundary");
+  const stepLevel = si < 0 ? 0 : si + 1;
+  const placed: (Cand | null)[] = order.map((j) => {
+    const c = s.state.placed[j]!;
+    return c >= 0 ? s.cands[c]! : null;
+  });
+  const vis = placed.map((c) => (c === null ? 0 : c.variant));
+  const along: number[] = [];
+  const across: number[] = [];
+  for (let k = 0; k < order.length; k++) {
+    const v = s.variants[order[k]!]![vis[k]!]!;
+    along.push(horizontalSide ? v.h : v.w);
+    across.push(horizontalSide ? v.w : v.h);
+  }
+  let depth = 0;
+  for (const d of across) depth = maxf(depth, d);
+  const gap = items[order[0]!]!.len.boundaryGap;
+  const lo = horizontalSide ? area.y0 : area.x0;
+  const hi = horizontalSide ? area.y1 : area.x1;
+  let positions: number[];
+  if (model.placement.boundary.spread) {
+    const k = order.length;
+    positions = order.map((_, j) => lo + ((hi - lo) * (j + 0.5)) / k);
+  } else {
+    const desired = order.map((i) => key(i));
+    // at least the larger margin of the two labels apart
+    const gaps: number[] = [];
+    for (let j = 1; j < order.length; j++) {
+      const m = maxf(items[order[j - 1]!]!.len.margin, items[order[j]!]!.len.margin);
+      gaps.push((along[j - 1]! + along[j]!) * 0.5 + maxf(gap, m));
+    }
+    positions = stack(desired, gaps, lo + along[0]! * 0.5, hi - along[along.length - 1]! * 0.5);
+  }
+  // assignment: straight leaders → min total length (to the ports, all on the column's
+  // line); otherwise keep the order
+  let assign: number[];
+  const style = model.leaders.style;
+  if (style === LeaderStyle.Straight || style === LeaderStyle.Angles) {
+    const cost = order.map((i) => {
+      const a = items[i]!.anchor;
+      return positions.map((p) => a.dist(columnPort(area, items[i]!, side, p, depth)));
+    });
+    assign = hungarian(cost);
+  } else assign = order.map((_, k) => k);
+  const fresh: [number, Cand][] = [];
+  for (let k = 0; k < order.length; k++) {
+    const j = order[k]!;
+    const v = s.variants[j]![vis[k]!]!;
+    const item = items[j]!;
+    const p = placed[k]!;
+    const rank = p === null ? 9 : p.rank;
+    const c = columnCandidate(model, area, item, vis[k]!, v, side, positions[assign[k]!]!, depth, rank);
+    c.level = p !== null ? p.level : (item.models & Models.BOUNDARY) !== 0 ? v.level : stepLevel;
+    c.lshape = labelShape(c.rect, v.shape);
+    s.evaluator.eval(c, v, null);
+    fresh.push([j, c]);
+  }
+  return fresh;
+}
+
+/**
  * Re-stack the boundary labels of each side jointly; keep the result when every label
  * stays feasible and the total cost drops.
  */
@@ -142,63 +218,11 @@ export function boundaryPass(s: Solve): void {
       if (c >= 0 && s.cands[c]!.kind === Kind.Boundary && s.cands[c]!.bside === side) members.push(i);
     }
     if (members.length < 2) continue;
-    const horizontalSide = side <= 1;
-    const key = (i: number): number => (horizontalSide ? s.model.items[i]!.anchor.y : s.model.items[i]!.anchor.x);
-    const order = members.slice().sort((a, b) => cmpF64(key(a), key(b)) || a - b);
-    const sizes = order.map((i) => {
-      const c = s.cands[s.state.placed[i]!]!;
-      return horizontalSide ? c.rect.h() : c.rect.w();
-    });
-    const gap = s.model.items[order[0]!]!.len.boundaryGap;
-    const lo = horizontalSide ? area.y0 : area.x0;
-    const hi = horizontalSide ? area.y1 : area.x1;
-    let positions: number[];
-    if (s.model.placement.boundary.spread) {
-      const k = order.length;
-      positions = order.map((_, j) => lo + ((hi - lo) * (j + 0.5)) / k);
-    } else {
-      const desired = order.map((i) => key(i));
-      // at least the larger margin of the two labels apart
-      const gaps: number[] = [];
-      for (let j = 1; j < order.length; j++) {
-        const m = maxf(s.model.items[order[j - 1]!]!.len.margin, s.model.items[order[j]!]!.len.margin);
-        gaps.push((sizes[j - 1]! + sizes[j]!) * 0.5 + maxf(gap, m));
-      }
-      positions = stack(desired, gaps, lo + sizes[0]! * 0.5, hi - sizes[sizes.length - 1]! * 0.5);
-    }
-    // assignment: straight leaders → min total length; otherwise keep the order
-    let assign: number[];
-    const style = s.model.leaders.style;
-    if (style === LeaderStyle.Straight || style === LeaderStyle.Angles) {
-      const m = order.length;
-      const cost = order.map((i) => {
-        const a = s.model.items[i]!.anchor;
-        const row: number[] = [];
-        for (let j = 0; j < m; j++) {
-          const p = horizontalSide
-            ? new P(side === 0 ? area.x0 : area.x1, positions[j]!)
-            : new P(positions[j]!, side === 2 ? area.y0 : area.y1);
-          row.push(a.dist(p));
-        }
-        return row;
-      });
-      assign = hungarian(cost);
-    } else assign = order.map((_, k) => k);
-    // build the new candidates
+    const fresh = columnCands(s, area, side, members);
+    if (fresh.some(([, c]) => !c.feasible)) continue;
+    const order = fresh.map(([i]) => i);
     const old: [number, number][] = order.map((i) => [i, s.state.placed[i]!]);
     const before = totalCost(s, order);
-    const fresh: [number, Cand][] = [];
-    order.forEach((i, k) => {
-      const oc = s.cands[s.state.placed[i]!]!;
-      const vi = oc.variant;
-      const v = s.variants[i]![vi]!;
-      const c = slotCandidate(s.model, area, s.model.items[i]!, vi, v, side, positions[assign[k]!]!, oc.rank);
-      c.level = oc.level;
-      c.lshape = labelShape(c.rect, v.shape);
-      s.evaluator.eval(c, v, null);
-      fresh.push([i, c]);
-    });
-    if (fresh.some(([, c]) => !c.feasible)) continue;
     for (const i of order) s.state.unplace(i, s.cands);
     let ok = true;
     const placedNow: number[] = [];
@@ -220,6 +244,164 @@ export function boundaryPass(s: Solve): void {
     for (const i of placedNow) s.state.unplace(i, s.cands);
     for (const [i, c] of old) s.state.place(i, c, s.cands, !s.cands[c]!.feasible);
   }
+}
+
+/** Label evaluations of the boundary fill: at least this many, or this many per item. */
+const FILL_WORK_MIN = 20000;
+const FILL_WORK_PER_ITEM = 20;
+
+/** A failing member and the placed item in its way (-1: a reason of its own). */
+type Fail = [number, number];
+
+/**
+ * Boundary columns (spec §6.6): on each side in `placement.boundary.sides`, items without a
+ * label that may take a boundary label join the side's column one after the other, in
+ * priority order, when the column stacked again with them stays feasible and free. A placed
+ * label in the way of a member whose item may take a boundary label, and that stands on
+ * the column's side of its anchor, moves into the column too. Not with `prefix` omission,
+ * after a cancellation or the time guard.
+ */
+export function boundaryFill(s: Solve): void {
+  const model = s.model;
+  if (model.omission === Omission.Prefix || s.cancelled || s.timeGuardHit) return;
+  const area = slotArea(model, s.obs);
+  if (area === null) return;
+  const n = model.items.length;
+  // items that may take a boundary label: the boundary model or the ladder's step
+  const capable: boolean[] = [];
+  for (let i = 0; i < n; i++) {
+    const it = model.items[i]!;
+    const g = model.groupOf[i];
+    capable.push(
+      (s.models[i]! & Models.BOUNDARY) !== 0 &&
+        s.variants[i]!.length > 0 &&
+        it.keepWith === null &&
+        !(g !== undefined && g !== null),
+    );
+  }
+  let work = Math.max(FILL_WORK_MIN, FILL_WORK_PER_ITEM * n);
+  for (const sideName of model.placement.boundary.sides) {
+    const side = sideCode(sideName);
+    // a placed label that may move into the column: not internal, on the column's side
+    // of its anchor
+    const movable = (i: number): boolean => {
+      const ci = s.state.placed[i]!;
+      if (ci < 0) return false;
+      const c = s.cands[ci]!;
+      if (c.kind === Kind.Internal) return false;
+      const a = model.items[i]!.anchor;
+      const m = c.rect.center();
+      switch (side) {
+        case 0:
+          return m.x < a.x;
+        case 1:
+          return m.x >= a.x;
+        case 2:
+          return m.y < a.y;
+        default:
+          return m.y >= a.y;
+      }
+    };
+    let members: number[] = [];
+    for (let i = 0; i < n; i++) {
+      const ci = s.state.placed[i]!;
+      if (ci >= 0 && s.cands[ci]!.kind === Kind.Boundary && s.cands[ci]!.bside === side) members.push(i);
+    }
+    for (const u of s.pri.order.slice()) {
+      const r = s.reasons[u]!;
+      if (
+        s.state.placed[u]! >= 0 ||
+        !capable[u]! ||
+        !(r === null || r === Reason.OmittedByPriority || r === Reason.NoFeasibleCandidate)
+      ) {
+        continue;
+      }
+      const maxLabels = model.maxLabels;
+      if (maxLabels !== null && s.state.nPlaced >= maxLabels) return;
+      const trial = members.slice();
+      trial.push(u);
+      for (;;) {
+        if (work === 0 || s.pollCancel()) return;
+        work = Math.max(0, work - trial.length);
+        const res = sideLayout(s, area, side, trial);
+        if (res.fails === null) {
+          if (!withinInk(s, res.cands)) break;
+          let cost = 0;
+          for (const [, c] of res.cands) cost += c.cost;
+          if (applyUnlessInverting(s, { cands: res.cands, added: [u], cost })) members = trial;
+          break;
+        }
+        // a placed label in the way joins the column
+        let joins = -1;
+        for (const [, b] of res.fails) {
+          if (b >= 0 && capable[b]! && !trial.includes(b) && movable(b)) {
+            joins = b;
+            break;
+          }
+        }
+        if (joins < 0) break;
+        trial.push(joins);
+      }
+    }
+  }
+}
+
+/**
+ * Whether the labels `cands` (replacing the members' own) keep the label area within
+ * `priority.budget.max_ink_fraction`.
+ */
+function withinInk(s: Solve, cands: readonly [number, Cand][]): boolean {
+  const f = s.model.maxInkFraction;
+  const canvas = s.model.canvas;
+  if (f === null || canvas === null) return true;
+  let ink = s.state.labelAreaSum;
+  for (const [j, c] of cands) {
+    const p = s.state.placed[j]!;
+    if (p >= 0) ink -= s.cands[p]!.rect.area();
+    ink += c.rect.area();
+  }
+  return ink / maxf(canvas.area(), 1e-9) <= f;
+}
+
+/**
+ * Lay out a boundary column of `members` ({@link columnCands}) and test it against
+ * everything else placed, the members' own labels lifted meanwhile. `fails`: the members
+ * that fail, each with the placed item in its way (-1: a reason of its own).
+ */
+function sideLayout(
+  s: Solve,
+  area: Rect,
+  side: number,
+  members: readonly number[],
+): { cands: [number, Cand][]; fails: Fail[] | null } {
+  const fresh = columnCands(s, area, side, members);
+  const saved: [number, number][] = [];
+  for (const [j] of fresh) {
+    const c = s.state.placed[j]!;
+    if (c >= 0) saved.push([j, c]);
+  }
+  for (const [j] of saved) s.state.unplace(j, s.cands);
+  const base = s.cands.length;
+  const failed: Fail[] = [];
+  const placedNow: number[] = [];
+  for (const [j, c] of fresh) {
+    if (!c.feasible) {
+      failed.push([j, -1]);
+      continue;
+    }
+    const k = s.state.firstConflict(c, s.cands, s.obs, j, Infinity);
+    if (k >= 0) failed.push([j, k]);
+    else {
+      const id = s.cands.length;
+      s.cands.push(c.clone());
+      s.state.place(j, id, s.cands, false);
+      placedNow.push(j);
+    }
+  }
+  for (const j of placedNow) s.state.unplace(j, s.cands);
+  s.cands.length = base;
+  for (const [j, c] of saved) s.state.place(j, c, s.cands, !s.cands[c]!.feasible);
+  return failed.length === 0 ? { cands: fresh, fails: null } : { cands: fresh, fails: failed };
 }
 
 /** Whether any leader segments of `a` and `b` intersect (`seg_intersects`). */

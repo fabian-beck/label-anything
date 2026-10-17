@@ -60,10 +60,25 @@ pub fn boundary_leader(model: &Model, item: &Item, side: u8, port: P) -> Leader 
     Leader::new(pts, style)
 }
 
-/// A boundary candidate of variant `vi` whose label center coordinate along the side is
-/// `pos` (y for left/right, x for top/bottom).
+/// The port of a label in a column along `side` whose label center coordinate along the
+/// side is `pos` (y for left/right, x for top/bottom), and whose labels reach `depth` into
+/// the margin (the widest label for left and right, the tallest for top and bottom): on the
+/// column's line facing the picture, `margin + depth` from the edge.
+pub fn column_port(area: &Rect, item: &Item, side: u8, pos: f64, depth: f64) -> P {
+    let d = item.len.boundary_margin + depth;
+    match side {
+        0 => P::new(area.x0 + d, pos),
+        1 => P::new(area.x1 - d, pos),
+        2 => P::new(pos, area.y0 + d),
+        _ => P::new(pos, area.y1 - d),
+    }
+}
+
+/// A label of variant `vi` in a column along `side` (spec §6.6), at `pos` along the side and
+/// aligned on the column's line facing the picture (see [`column_port`]), so that every
+/// leader of the column ends on that line.
 #[allow(clippy::too_many_arguments)]
-pub fn slot_candidate(
+pub fn column_candidate(
     model: &Model,
     area: &Rect,
     item: &Item,
@@ -71,39 +86,16 @@ pub fn slot_candidate(
     v: &Variant,
     side: u8,
     pos: f64,
+    depth: f64,
     rank: f64,
 ) -> Cand {
-    let margin = item.len.boundary_margin;
     let (hw, hh) = (v.w * 0.5, v.h * 0.5);
-    let (rect, port) = match side {
-        0 => {
-            let x0 = area.x0 + margin;
-            (
-                Rect::new(x0, pos - hh, x0 + v.w, pos + hh),
-                P::new(x0 + v.w, pos),
-            )
-        }
-        1 => {
-            let x1 = area.x1 - margin;
-            (
-                Rect::new(x1 - v.w, pos - hh, x1, pos + hh),
-                P::new(x1 - v.w, pos),
-            )
-        }
-        2 => {
-            let y0 = area.y0 + margin;
-            (
-                Rect::new(pos - hw, y0, pos + hw, y0 + v.h),
-                P::new(pos, y0 + v.h),
-            )
-        }
-        _ => {
-            let y1 = area.y1 - margin;
-            (
-                Rect::new(pos - hw, y1 - v.h, pos + hw, y1),
-                P::new(pos, y1 - v.h),
-            )
-        }
+    let port = column_port(area, item, side, pos, depth);
+    let rect = match side {
+        0 => Rect::new(port.x - v.w, pos - hh, port.x, pos + hh),
+        1 => Rect::new(port.x, pos - hh, port.x + v.w, pos + hh),
+        2 => Rect::new(pos - hw, port.y - v.h, pos + hw, port.y),
+        _ => Rect::new(pos - hw, port.y, pos + hw, port.y + v.h),
     };
     let mut c = Cand::new(
         item.index as u32,

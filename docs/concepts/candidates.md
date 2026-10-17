@@ -37,7 +37,8 @@ point, when the label fits with `inner_padding` (0.2 em) to spare; `placement.in
 kept ([leaders](../tutorials/leaders.md)).
 
 **`boundary`** — in the canvas margins along `placement.boundary.sides`, stacked or
-spread, with leaders.
+spread, with leaders. The labels of a side form one column, aligned toward the picture;
+after the search, items left without a label join it while it stays feasible.
 
 Candidates that violate a hard constraint by themselves (a hard class, the canvas edge,
 the own mark) are infeasible; candidates far more expensive than the item's best

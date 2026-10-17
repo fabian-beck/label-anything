@@ -246,6 +246,25 @@ CASES["elbow-boundary"] = case(
     {"problem_file": "../problems/elbow-boundary.json"},
     {"placed_min": 8, "inside_canvas": True})
 
+_GREEK = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta", "Iota", "Kappa"]
+CASES["boundary-column"] = case(
+    "boundary labels for crowded line ends: one column, aligned toward the picture",
+    {"canvas": {"width": 320, "height": 240},
+     "placement": {"models": ["adjacent", "boundary"], "position_order": ["right"], "fan": "off",
+                   "boundary": {"sides": ["right"]}},
+     "items": [pt(n.lower(), 150, 100 + 4 * k, n) for k, n in enumerate(_GREEK)]},
+    {"placed": 10, "inside_canvas": True,
+     "model": {n.lower(): "boundary" for n in _GREEK},
+     "has_leader": {n.lower(): True for n in _GREEK},
+     "box": {"alpha": {"x": 263.76, "y": 7.48, "w": 35.892, "h": 19.944, "tol": 0.01},
+             "kappa": {"x": 263.76, "y": 208.576, "w": 39.252, "h": 19.944, "tol": 0.01}}},
+    "Ten ends 4 px apart that allow only `right`; no fans. Next to the ends a label would overlap "
+    "the other ends' marks, and boundary labels at their ends' heights leave no room for each "
+    "other. The right side's column takes all ten (spec §6.6): stacked around the ends' heights, "
+    "matched to the slots by leader length and left-aligned on one line, x = 320 − 4 (canvas "
+    "padding) − 4 (boundary margin) − 48.24 (Gamma, the widest label) = 263.76; its leaders leave "
+    "the crowd past the neighbouring marks, which they only must not cross.")
+
 # --- backgrounds and coordinates ------------------------------------------------------
 CASES["svg-background"] = case(
     "SVG background geometry is avoided",

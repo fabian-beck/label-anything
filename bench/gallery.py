@@ -91,9 +91,11 @@ SECTIONS = (
             "The whole scatterplot is a PNG. The engine finds axes, points and text in the pixels "
             "(raster ink mode) and keeps the 30 labels off them."),
         Fig("09-line-end-labels/life-62-boundary", "Life expectancy of 62 countries",
-            "A label right of its line end, or in a stack in the right margin. The crowded ends at the "
-            "top get a column of {fans} fan labels instead, as tall as leaders of at most 10 em allow; "
-            "the others are left out ({placed} of {total} placed)."),
+            "The ends crowd at the top. Their labels stand in one column in the right margin (models "
+            "<code>adjacent</code> and <code>boundary</code>), stacked around the ends' heights and "
+            "aligned toward the chart; the leaders are matched to the slots so that none cross. Ends of "
+            "the densest band, whose leaders would run too close together, are left out ({placed} of "
+            "{total} placed)."),
     )),
     Section("maps", "Maps", "vector, SVG and raster backgrounds", "", (
         Fig("05-airports/europe-names-400-svg", "400 European airports, by city name",
@@ -751,14 +753,16 @@ def notes_html(figs: dict[str, dict]) -> str:
                       f"another leader is left out rather than drawn ambiguously ({', '.join(ref(k, t) for k, t in crowd)} "
                       "placed). Omitted items are reported with the reason; showing more of them takes a larger "
                       "canvas, smaller text or fewer items."))
-    ends = [(k, t) for k, t in (("09-line-end-labels/unemployment-14-vector", "unemployment"),
-                                ("09-line-end-labels/life-62-boundary", "life expectancy")) if n(k)]
-    if ends:
-        notes.append(("Crowded line ends",
-                      "Where line ends crowd, their labels stand in a column beside them with fanning leaders. A "
-                      "column grows only as far as its leaders stay within <code>leaders.max_length</code> (10 em) "
-                      "and clear of the other marks; ends beyond that stay without a label "
-                      f"({', '.join(ref(k, t) for k, t in ends)} placed). A larger limit gives taller columns."))
+    ends = [(k, t) for k, t in (("09-line-end-labels/unemployment-14-vector", "unemployment"),) if n(k)]
+    margin = [(k, t) for k, t in (("09-line-end-labels/life-62-boundary", "life expectancy"),) if n(k)]
+    if ends or margin:
+        text = ("Where line ends crowd, their labels stand in a column beside them with fanning leaders. A "
+                "column grows only as far as its leaders stay within <code>leaders.max_length</code> (10 em) "
+                "and clear of the other marks; ends beyond that stay without a label"
+                + (f" ({', '.join(ref(k, t) for k, t in ends)} placed)" if ends else "") + ". "
+                "With the <code>boundary</code> model the column stands in the margin, where leaders may be "
+                "longer" + (f" ({', '.join(ref(k, t) for k, t in margin)} placed)" if margin else "") + ".")
+        notes.append(("Crowded line ends", text))
     return "".join(f'<div class="note"><h3>{E(h)}</h3><p>{p}</p></div>' for h, p in notes)
 
 

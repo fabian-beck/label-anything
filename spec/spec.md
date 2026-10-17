@@ -21,7 +21,7 @@ report = validate(problem)         // { valid, errors[], warnings[] }
 
 Pipeline: `validate → normalize → measure label variants → priority (font classes:
 rescale and measure again) → prepare obstacles → candidates → greedy (+ ladder) → local
-search → (exact) → fan labels → uncross repair → verify → finalize`.
+search → (exact) → fan labels → boundary columns → uncross repair → verify → finalize`.
 
 Two implementations (Rust, TypeScript) MUST satisfy the conformance suite
 (`conformance/`). Results need not be bit-identical, but hard-constraint guarantees MUST
@@ -668,11 +668,46 @@ polygons are not obstacles of other labels.
 Boundary candidates come from the `boundary` model or the `boundary` ladder step; the
 default ladder has no `boundary` step, since a label that fits nowhere near its anchor
 would get a leader across the picture (ADR 0019).
-Slots in the margins along `placement.boundary.sides`, `margin` from the edge. Labels on
-one side are stacked by 1-D isotonic packing around their anchors' coordinates (`stack`)
-or evenly spread (`spread`), with gaps of the larger of `placement.boundary.gap` and the
-two labels' margin (§4.4); the assignment of items to slots minimizes total leader
-length (min-cost bipartite matching), which is crossing-free for straight leaders.
+Slots in the margins along `placement.boundary.sides`, `margin` from the edge: an item's
+candidates stand at its anchor's height (left and right; its x for top and bottom) and one,
+two and three label heights (widths) above and below it. After the search and the fans
+(§6.8), the labels on each side form a **column** (ADR 0030):
+
+* **Layout.** The members, ordered by their anchors along the side (then index), keep their
+  placed variant (else the first, at level 0 with the `boundary` model, else at the level
+  of the ladder's `boundary` step) and are stacked by 1-D isotonic packing around their
+  anchors' coordinates (`stack`) or evenly spread (`spread`), with gaps of the larger of
+  `placement.boundary.gap` and the two labels' margin (§4.4). The labels align on the
+  column's line facing the picture, `margin + depth` from the edge (`depth` the widest
+  label on the left and right sides, the tallest on the top and bottom), where every
+  leader ends. With `straight` and `angles` leaders the items are assigned to the slots by
+  minimum total leader length (min-cost bipartite matching to the ports on that line),
+  which keeps the leaders from crossing; with the other styles they keep their order.
+  Labels the search placed keep their rank and level; others get rank 9.
+* **Re-stacking.** The labels the search placed on a side (at least two) are laid out as
+  one column; it replaces them when every label stays feasible and free and their total
+  cost drops.
+* **Filling.** Then, side by side in the order of `sides`, items without a label that may
+  take a boundary label (with `boundary` among their models, from the model or the ladder
+  step; not `keep_with` members and grouped items; reason `omitted_by_priority`,
+  `no_feasible_candidate` or none) join the side's column one at a time, in total order:
+  the column with the item is laid out and its labels are tested, in column order, against
+  everything placed, the members' own labels lifted; a member fails for a reason of its own
+  (statically infeasible) or because of the first placed label in conflict, the one in its
+  way. While the column fails, the first label in the way of a failing member (in column
+  order) whose item may take a boundary label, and whose label is not internal and stands
+  on the column's side of its anchor (center x < the anchor's for the left side, ≥ for the
+  right, y likewise for top and bottom), brings its item into the column, which is laid
+  out again; when no such label is left, the item stays without a label. A column without
+  failures replaces its members' labels, unless it
+  inverts priorities (the priority rule of §6.8) or takes the label area past
+  `priority.budget.max_ink_fraction` (the item stays without a label); the fill stops when
+  the labels reach `max_labels`. Not with `prefix` omission, after a cancellation or after
+  the time guard; at most `max(20000, 20 × n_items)` label evaluations (one per label of
+  each laid-out column).
+* **Leaders** run from the anchor to the port (§7) and keep no `leaders.max_length`. Like
+  fan leaders they leave a crowd of touching marks: a mark closer than the clearance to
+  the leader's start they must only not cross (§7).
 
 ### 6.7 Static cost and pruning
 
@@ -809,15 +844,15 @@ its font size.
   labels (`avoid.leader.labels`, default hard), and never cross other leaders
   (`avoid.leader.leaders`, default hard). Leaders shorter than `min_length` are dropped
   (the label is then reported as adjacent) and longer than `max_length` are not
-  generated.
+  generated, except those of boundary labels (§6.6).
 * **Clearance from marks** (`avoid.leader.items`, default hard): every segment of a
   leader stays at least `clearance` (the item's `leaders.clearance`) away from the marks of
   other items — a leader passing a mark seems to point at it. Exempt are the marks of
   the item's own group and marks that contain the leader's anchor (the item's reference
   point; for a group label's leader to a member, the member's): no leader of the item
-  avoids those. A fan label's leader (§6.8) is also exempt from marks that contain its
-  start, and a mark closer than `clearance` to its start it must only not cross (it
-  leaves a crowd of touching marks in the order of its column). With a soft weight `w`,
+  avoids those. The leader of a fan or boundary label (§6.8, §6.6) is also exempt from
+  marks that contain its start, and a mark closer than `clearance` to its start it must
+  only not cross (it leaves a crowd of touching marks in the order of its column). With a soft weight `w`,
   every mark closer than `clearance` costs `w · (1 − d / clearance)`.
 * **Spacing between leaders** (with `avoid.leader.leaders` hard): two leaders of
   different labels conflict when a segment of one intersects a segment of the other, or
@@ -1023,7 +1058,8 @@ probe moves) to `T₀/1000` over the iteration budget. The iteration budget is
 ### 10.3 Uncross repair and verification
 
 After search: fan labels (§6.8); the boundary labels of each side are re-stacked jointly
-(§6.6) when that keeps them feasible and lowers their cost; any two crossing leaders (only
+(§6.6) when that keeps them feasible and lowers their cost, and the sides' columns take in
+items without a label (§6.6, filling); any two crossing leaders (only
 possible when `avoid.leader.leaders` is soft) are uncrossed by exchanging label positions when that shortens the total leader
 length. With `strict` omission, the **priority repair** then visits the omitted items in
 total order (except `keep_with` members and items cut by the time guard): an item with a

@@ -63,10 +63,31 @@ export function boundaryLeader(model: Model, item: Item, side: number, port: P):
 }
 
 /**
- * A boundary candidate of variant `vi` whose label center coordinate along the side is
- * `pos` (y for left/right, x for top/bottom).
+ * The port of a label in a column along `side` whose label center coordinate along the
+ * side is `pos` (y for left/right, x for top/bottom), and whose labels reach `depth` into
+ * the margin (the widest label for left and right, the tallest for top and bottom): on the
+ * column's line facing the picture, `margin + depth` from the edge.
  */
-export function slotCandidate(
+export function columnPort(area: Rect, item: Item, side: number, pos: number, depth: number): P {
+  const d = item.len.boundaryMargin + depth;
+  switch (side) {
+    case 0:
+      return new P(area.x0 + d, pos);
+    case 1:
+      return new P(area.x1 - d, pos);
+    case 2:
+      return new P(pos, area.y0 + d);
+    default:
+      return new P(pos, area.y1 - d);
+  }
+}
+
+/**
+ * A label of variant `vi` in a column along `side` (spec §6.6), at `pos` along the side and
+ * aligned on the column's line facing the picture (see {@link columnPort}), so that every
+ * leader of the column ends on that line.
+ */
+export function columnCandidate(
   model: Model,
   area: Rect,
   item: Item,
@@ -74,37 +95,25 @@ export function slotCandidate(
   v: Variant,
   side: number,
   pos: number,
+  depth: number,
   rank: number,
 ): Cand {
-  const margin = item.len.boundaryMargin;
   const hw = v.w * 0.5;
   const hh = v.h * 0.5;
+  const port = columnPort(area, item, side, pos, depth);
   let rect: Rect;
-  let port: P;
   switch (side) {
-    case 0: {
-      const x0 = area.x0 + margin;
-      rect = new Rect(x0, pos - hh, x0 + v.w, pos + hh);
-      port = new P(x0 + v.w, pos);
+    case 0:
+      rect = new Rect(port.x - v.w, pos - hh, port.x, pos + hh);
       break;
-    }
-    case 1: {
-      const x1 = area.x1 - margin;
-      rect = new Rect(x1 - v.w, pos - hh, x1, pos + hh);
-      port = new P(x1 - v.w, pos);
+    case 1:
+      rect = new Rect(port.x, pos - hh, port.x + v.w, pos + hh);
       break;
-    }
-    case 2: {
-      const y0 = area.y0 + margin;
-      rect = new Rect(pos - hw, y0, pos + hw, y0 + v.h);
-      port = new P(pos, y0 + v.h);
+    case 2:
+      rect = new Rect(pos - hw, port.y - v.h, pos + hw, port.y);
       break;
-    }
-    default: {
-      const y1 = area.y1 - margin;
-      rect = new Rect(pos - hw, y1 - v.h, pos + hw, y1);
-      port = new P(pos, y1 - v.h);
-    }
+    default:
+      rect = new Rect(pos - hw, port.y, pos + hw, port.y + v.h);
   }
   const c = new Cand(item.index, vi, v.level, Kind.Boundary, SIDE_BOUNDARY, rank, rect);
   c.bside = side;

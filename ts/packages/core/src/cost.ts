@@ -186,7 +186,7 @@ export class Evaluator {
     }
     if (!acc.relaxed) return finish(c, acc);
     // 4. leaders
-    for (const l of c.leaders) this.leaderTerms(i, l, r, c.kind === Kind.Fan, acc);
+    for (const l of c.leaders) this.leaderTerms(i, l, r, c.kind === Kind.Fan || c.kind === Kind.Boundary, acc);
     if (!acc.relaxed) return finish(c, acc);
     // 5. position
     acc.add("position", (w.position * c.rank) / 8);
@@ -263,7 +263,7 @@ export class Evaluator {
     return dOther < reach && dOther < own ? clampf(1 - dOther / reach, 0, 1) : 0;
   }
 
-  private leaderTerms(i: number, l: Leader, ownRect: Rect, fan: boolean, acc: Acc): void {
+  private leaderTerms(i: number, l: Leader, ownRect: Rect, column: boolean, acc: Acc): void {
     const model = this.model;
     const obs = this.obs;
     const item = model.items[i]!;
@@ -292,9 +292,10 @@ export class Evaluator {
       if (k < nMain && segOverlapsRectXY(a.x, a.y, b.x, b.y, ox0, oy0, ox1, oy1)) acc.violate(BLOCK_LABELS, false, 0);
     }
     // other items: clearance (not from the group's members, and not from a mark that
-    // covers the leader's anchor, or a fan leader's start: no leader avoids it); a fan
-    // leader must only not cross a mark closer than the clearance to its start (it
-    // leaves a crowd of touching marks, in the order of its column)
+    // covers the leader's anchor, or a column leader's start: no leader avoids it); the
+    // leader of a fan or boundary label must only not cross a mark closer than the
+    // clearance to its start (it leaves a crowd of touching marks, in the order of its
+    // column)
     const clearance = item.len.clearance;
     const buf = this.buf;
     obs.itemIndex.query(l.bbox().inflate(clearance), buf);
@@ -306,7 +307,7 @@ export class Evaluator {
       if (j === i || (model.groupOf[j] ?? null) === i) continue;
       if (li.kind === AvoidKind.Ignore) continue;
       const sj = model.items[j]!.shape;
-      if (sj.contains(anchor) || (fan && sj.contains(start))) continue;
+      if (sj.contains(anchor) || (column && sj.contains(start))) continue;
       let dmin = Infinity;
       for (let k = 0; k < nseg; k++) {
         const a = l.segA(k);
@@ -314,7 +315,7 @@ export class Evaluator {
         dmin = minf(dmin, sj.distSegmentXY(a.x, a.y, b.x, b.y));
       }
       if (li.kind === AvoidKind.Hard) {
-        const lim = fan && sj.signedDistance(start) < clearance ? EPS : clearance - EPS;
+        const lim = column && sj.signedDistance(start) < clearance ? EPS : clearance - EPS;
         if (dmin < lim) acc.violate(BLOCK_ITEMS, false, 0);
       } else if (dmin < clearance) {
         const f = clearance > 0 ? 1 - dmin / clearance : 1;

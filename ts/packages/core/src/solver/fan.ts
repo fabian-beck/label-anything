@@ -49,7 +49,7 @@ const WORK_MIN = 20000;
 const WORK_PER_ITEM = 20;
 
 /** A column: its candidates and the members it gives a label. */
-interface Plan {
+export interface Plan {
   cands: [number, Cand][];
   added: number[];
   cost: number;
@@ -444,7 +444,7 @@ function layout(
  * not before: the items watched are those with a candidate meeting a label the column
  * places or lifts. Returns whether the column stays.
  */
-function applyUnlessInverting(s: Solve, plan: Plan): boolean {
+export function applyUnlessInverting(s: Solve, plan: Plan): boolean {
   const n = s.model.items.length;
   const reach = s.state.leaderReach(s.obs) + s.state.marginMax() + 2 * EPS;
   const changed: Rect[] = [];

@@ -311,8 +311,8 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                     hard["leader_own_label"] += 1
                     note("leader_own_label", p.id)
                 if leader_items_hard:
-                    # leaders keep the clearance from other marks (spec §7); a fan leader must only
-                    # not cross a mark closer than the clearance to its start (crowded marks)
+                    # leaders keep the clearance from other marks (spec §7); a fan or boundary leader
+                    # must only not cross a mark closer than the clearance to its start (crowded marks)
                     r = clearance(p.item) - tol
                     start = pl[0]
                     for j in (item_index.query(q.grow(r)) if r > 0 else ()):
@@ -320,7 +320,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                         if (j, k) in leader_item_pairs or vis.exempt_mark(p.item, other):
                             continue
                         rr = r
-                        if p.model == "fan":
+                        if p.model in ("fan", "boundary"):
                             if other.own_shape.contains(start):
                                 continue
                             if other.own_shape.sdist(start) < clearance(p.item):

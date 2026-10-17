@@ -119,7 +119,11 @@ Technical illustrations and some charts put the labels into the margins and conn
 with leaders. The `boundary` model stacks them along the chosen sides, as close to their
 anchors' heights as possible (`align: "stack"`) or evenly spread (`"spread"`), and assigns
 items to slots so that the total leader length is minimal — which also keeps straight
-leaders from crossing.
+leaders from crossing. The labels of a side form one column, aligned on its side facing
+the picture, where every leader ends. After the search, items left without a label join
+their side's column while it stays feasible (a label in the way moves into the column
+too), so that crowded line ends get a whole column
+([ADR 0030](../adr/0030-boundary-columns.md)).
 
 ```json
 --8<-- "examples/tutorials/problems/leaders-boundary.json:1:5"

@@ -134,6 +134,7 @@ export function placeValidated(problem: unknown, env: Env, warnings: Issue[], pr
   }
   fanPass(s);
   repair.boundaryPass(s);
+  repair.boundaryFill(s);
   repair.uncross(s);
   repair.priorityRepair(s);
   const t4 = envNow(env);

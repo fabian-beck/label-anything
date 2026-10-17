@@ -107,11 +107,11 @@ def test_leaders_starting_together():
 
 def test_fan_leaders_leave_crowded_marks():
     # A's leader leaves the crowd up and to the right; B's mark is 2.2 px from its start and
-    # 1.7 px from the leader: a distant leader keeps the clearance, a fan leader must only
-    # not cross a mark that close to its start (spec §7)
+    # 1.7 px from the leader: a distant leader keeps the clearance, a fan or boundary leader
+    # must only not cross a mark that close to its start (spec §7)
     L = {"points": [[22, 50], [90, 30]], "style": "straight", "port": [90, 30]}
     prob = problem([item("A", 20, 50), item("B", 25, 53)])
-    for model, hard in (("distant", 1), ("fan", 0)):
+    for model, hard in (("distant", 1), ("fan", 0), ("boundary", 0)):
         m = evaluate(prob, result([placed("A", 90, 25, side=model, model=model, leader=L), omitted("B")]))
         assert m["hard"]["leader_item"] == hard, model
     # ... but crossing it counts
@@ -120,7 +120,7 @@ def test_fan_leaders_leave_crowded_marks():
     assert m["hard"]["leader_item"] == 1
     # a mark covering a fan leader's start (not its anchor) is no obstacle of that leader
     prob = problem([item("A", 20, 50), item("B", 23.5, 50, r=1.6)])
-    for model, hard in (("distant", 1), ("fan", 0)):
+    for model, hard in (("distant", 1), ("fan", 0), ("boundary", 0)):
         m = evaluate(prob, result([placed("A", 90, 25, side=model, model=model, leader=L), omitted("B")]))
         assert m["hard"]["leader_item"] == hard, model
 

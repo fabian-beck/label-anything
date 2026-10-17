@@ -43,10 +43,10 @@ const WORK_MIN: usize = 20_000;
 const WORK_PER_ITEM: usize = 20;
 
 /// A column: its candidates and the members it gives a label.
-struct Plan {
-    cands: Vec<(usize, Cand)>,
-    added: Vec<usize>,
-    cost: f64,
+pub(super) struct Plan {
+    pub(super) cands: Vec<(usize, Cand)>,
+    pub(super) added: Vec<usize>,
+    pub(super) cost: f64,
 }
 
 /// The pass's mode, the items it leaves alone, and the label evaluations it has left.
@@ -536,7 +536,7 @@ fn layout(
 /// lower key are removed (the removal test of the verification, spec §9.2), where it was
 /// not before: the items watched are those with a candidate meeting a label the column
 /// places or lifts. Returns whether the column stays.
-fn apply_unless_inverting(s: &mut Solve, plan: Plan) -> bool {
+pub(super) fn apply_unless_inverting(s: &mut Solve, plan: Plan) -> bool {
     let n = s.model.items.len();
     let keys: Vec<usize> = s.pri.prio.iter().map(|p| p.key).collect();
     let reach = s.state.leader_reach(s.obs) + s.state.margin_max() + 2.0 * crate::geom::EPS;
