@@ -675,7 +675,15 @@ Filtering while generating (ADR 0015), always exact:
   blocks them under a hard policy. With hard label–label overlaps and every placed
   label of key ≤ the item's, rectangular candidates are first tested against the same
   kind of occupancy grid of placed rectangular labels.
-* The warm-start box of an item is an extra level-0 candidate (ADR 0016).
+* The warm-start box of an item is an extra level-0 candidate of the level-0 variant of
+  its size (width and height within 0.5 px; ADR 0016): slider-kind on the allowed
+  position its center points to when it is at most `offset + 1` px from the mark, else a
+  distant candidate with a straight leader (straight style only, within the leader
+  length limits); none when it overlaps the own mark or is statically infeasible. A
+  `warm_start` entry with an `anchor` (the anchor point it was placed for, as a result
+  reports it) is first moved by the item's anchor movement: `box + (reference − anchor)`,
+  the reference point of §11. The same box can become a candidate of a ladder variant
+  (§10.1).
 
 ### 6.8 Fan labels
 
@@ -947,6 +955,18 @@ with the item's best candidate (fewest evictions, then cost) and re-queues them.
 `degrade_options.soft_overlap_weight`. `omit` gives up. Required items are a band of
 their own above everything and therefore run first.
 
+Warm starts (`warm_start`, with `weights.stability` > 0; ADR 0016, ADR 0025):
+
+* Before a band's level-0 pass, its items (except `keep_with` members) whose level-0
+  warm-start candidate (§6.7) is live take it, in total order.
+* An item whose level-0 attempt failed and whose warm box has the size of no level-0
+  variant (the previous solve degraded the label) first tries that box: the ladder's
+  steps run in order, as the ladder runs them (`evict_lower` and `soft_overlap` skipped;
+  up to `omit`), until one creates a variant of the box's size; the box becomes a
+  candidate of that variant and level as for level 0 (§6.7). When it is statically
+  feasible and free, the item takes it; otherwise the ladder runs as usual. The steps
+  run only once per item (the ladder reuses their candidates).
+
 ### 10.2 Local search
 
 Moves: relocate one item; swap (relocate an item into a position that conflicts with one
@@ -1033,4 +1053,7 @@ is valid; `stats.cancelled` is `true`. Progress is reported per greedy band and 
 
 See `schema/result.v1.json`. Placements are reported in input order. `cost` is the final
 total cost of the label (static + dynamic). `stats.hard_violations` and
-`stats.leader_crossings` are computed by the independent verification pass.
+`stats.leader_crossings` are computed by the independent verification pass. A placed
+label reports `anchor`, its item's reference point in canvas px (point items: the
+anchor; area items: the pole of their polygon, §6.5), so that a result passed as
+`warm_start` moves with the anchors (§6.7).

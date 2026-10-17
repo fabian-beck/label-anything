@@ -234,6 +234,7 @@ export type WarmStart = {
   placements: {
     id: string;
     placed?: boolean;
+    anchor?: Point2;
     box?: {
       x: number;
       y: number;
@@ -242,10 +243,18 @@ export type WarmStart = {
     };
   }[];
 } & WarmStart1;
+/**
+ * The anchor point (canvas px) the box was placed for, as in a result: the box moves with the item's anchor to its position in this problem.
+ *
+ * @minItems 2
+ * @maxItems 2
+ */
+export type Point2 = [number, number];
 export type WarmStart1 = {
   placements: {
     id: string;
     placed?: boolean;
+    anchor?: Point2;
     box?: {
       x: number;
       y: number;

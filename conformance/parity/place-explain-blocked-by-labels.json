@@ -52,6 +52,10 @@
           "w": 373.6,
           "h": 273.6
         },
+        "anchor": [
+          10.0,
+          10.0
+        ],
         "anchor_side": "bottom-right",
         "model": "adjacent",
         "parts": [

@@ -68,6 +68,9 @@ class Placement:
     id: str
     placed: bool
     box: Optional[BBox] = None
+    #: The item's anchor point (area items: the pole of the polygon). Passed back as
+    #: ``warm_start``, the label box moves with it.
+    anchor: Optional[Point] = None
     #: ``top``, ``right``, ..., ``bottom-left``, ``internal``, ``distant``, ``boundary`` or
     #: ``fan``.
     anchor_side: Optional[str] = None
@@ -109,6 +112,7 @@ class Placement:
             id=str(d["id"]),
             placed=bool(d.get("placed", False)),
             box=BBox(float(b["x"]), float(b["y"]), float(b["w"]), float(b["h"])) if b else None,
+            anchor=_pt(d["anchor"]) if d.get("anchor") is not None else None,
             anchor_side=d.get("anchor_side"),
             model=d.get("model"),
             leader=Leader.from_dict(leader) if leader else None,

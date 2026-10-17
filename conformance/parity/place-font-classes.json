@@ -112,6 +112,10 @@
           "w": 23.864999999999995,
           "h": 24.930000000000007
         },
+        "anchor": [
+          40.0,
+          100.0
+        ],
         "anchor_side": "right",
         "model": "adjacent",
         "text": {
@@ -154,6 +158,10 @@
           "w": 18.0,
           "h": 19.944000000000017
         },
+        "anchor": [
+          140.0,
+          100.0
+        ],
         "anchor_side": "right",
         "model": "adjacent",
         "text": {
@@ -196,6 +204,10 @@
           "w": 13.5,
           "h": 14.957999999999998
         },
+        "anchor": [
+          240.0,
+          100.0
+        ],
         "anchor_side": "right",
         "model": "adjacent",
         "text": {
@@ -238,6 +250,10 @@
           "w": 13.5,
           "h": 14.957999999999998
         },
+        "anchor": [
+          340.0,
+          100.0
+        ],
         "anchor_side": "right",
         "model": "adjacent",
         "text": {

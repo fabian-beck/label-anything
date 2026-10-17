@@ -141,6 +141,8 @@ pub fn build(
                     "box".into(),
                     json!({"x": c.rect.x0, "y": c.rect.y0, "w": c.rect.w(), "h": c.rect.h()}),
                 );
+                let a = item.shape.reference();
+                m.insert("anchor".into(), json!([a.x, a.y]));
                 m.insert("anchor_side".into(), json!(c.side.name()));
                 m.insert("model".into(), json!(c.kind.name()));
                 let fam = item.font.family.clone();

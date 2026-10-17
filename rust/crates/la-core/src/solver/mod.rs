@@ -72,6 +72,9 @@ pub struct Solve<'a> {
     pub static_dropped: Vec<u32>,
     /// The warm-start candidate of each item (see `Solve::generate_warm`).
     pub warm_cand: Vec<Option<u32>>,
+    /// The warm-start candidate of each item for a ladder variant, once computed (see
+    /// [`Solve::warm_ladder_candidate`]).
+    pub warm_ladder: Vec<Option<Option<u32>>>,
     /// Directions of distant candidates (see `leaders::distant_dirs`).
     pub distant_dirs: Vec<(f64, crate::geom::P)>,
     /// Free-space seeds near each item (`leaders::item_seeds`), once needed.
@@ -128,6 +131,7 @@ impl<'a> Solve<'a> {
             level_done: vec![0; n],
             distant_pending: vec![false; n],
             warm_cand: vec![None; n],
+            warm_ladder: vec![None; n],
             static_dropped: vec![0; n],
             distant_dirs: crate::leaders::distant_dirs(model),
             seeds: vec![None; n],
@@ -460,6 +464,63 @@ impl<'a> Solve<'a> {
             }
             _ => vec![],
         }
+    }
+
+    /// The warm box of item `i` as a candidate of the ladder variant of its size, when no
+    /// level-0 variant has that size (the previous solve degraded the label): the ladder
+    /// steps run in order, as the ladder would run them, until one creates a variant of
+    /// that size. Like the level-0 warm candidate (`warm_candidate`), it is slider-kind or
+    /// distant with a straight leader, and only statically feasible ones count. Computed
+    /// once per item.
+    pub fn warm_ladder_candidate(&mut self, i: usize) -> Option<u32> {
+        if let Some(c) = self.warm_ladder[i] {
+            return c;
+        }
+        self.warm_ladder[i] = Some(None);
+        let Some(Some(b)) = self.model.warm.get(&self.model.items[i].id) else {
+            return None;
+        };
+        let b = *b;
+        let same = |v: &Variant| (v.w - b.w()).abs() <= 0.5 && (v.h - b.h()).abs() <= 0.5;
+        if self.variants[i].iter().any(|v| v.level == 0 && same(v)) {
+            return None;
+        }
+        let steps = self.model.ladder.clone();
+        for (si, step) in steps.iter().enumerate() {
+            match step {
+                Step::Omit => break,
+                Step::EvictLower | Step::SoftOverlap => continue,
+                _ => {}
+            }
+            let level = (si + 1) as u8;
+            self.ladder_candidates(i, si);
+            if !matches!(
+                step,
+                Step::Alternatives | Step::Wrap | Step::Truncate | Step::Shrink(_)
+            ) {
+                continue;
+            }
+            let Some(vi) = (0..self.variants[i].len())
+                .find(|&k| self.variants[i][k].level == level && same(&self.variants[i][k]))
+            else {
+                continue;
+            };
+            let item = &self.model.items[i];
+            let v = &self.variants[i][vi];
+            let mut c = candidates::warm(self.model, item, vi, v, b)?;
+            c.level = level;
+            c.lshape = candidates::label_shape(&c.rect, &v.shape);
+            Evaluator::new(self.model, self.obs, self.env).eval(&mut c, v, None);
+            if !c.feasible {
+                return None;
+            }
+            let id = self.cands.len() as u32;
+            self.by_item[i].push(id);
+            self.cands.push(c);
+            self.warm_ladder[i] = Some(Some(id));
+            return Some(id);
+        }
+        None
     }
 
     pub fn now(&self) -> f64 {

@@ -36,6 +36,10 @@
           "w": 77.57999999999998,
           "h": 48.744
         },
+        "anchor": [
+          200.0,
+          100.0
+        ],
         "anchor_side": "top",
         "model": "adjacent",
         "text": {

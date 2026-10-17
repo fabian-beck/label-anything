@@ -65,3 +65,10 @@ The edge geometry can come from anywhere: straight segments as above, polylines 
 orthogonal or bundled edges, or the edges of an SVG drawing (classified as `lines` by the
 `graph` preset's SVG rules). Make edges hard (`"avoid": {"label": {"lines": "hard"}}`) when
 labels must never cross them; expect more leaders and omissions then.
+
+## Layouts that move
+
+While a force-directed layout runs or the user drags a node, solve every few ticks with
+the previous result as `warm_start`: each label follows its node and moves on only when
+its place is taken. [Moving points](interactive-maps.md#moving-points) has a d3-force
+example and the measurements.

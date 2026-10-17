@@ -82,6 +82,10 @@
           "w": 18.264,
           "h": 19.94400000000001
         },
+        "anchor": [
+          120.0,
+          60.0
+        ],
         "anchor_side": "boundary",
         "model": "boundary",
         "text": {
@@ -136,6 +140,10 @@
           "w": 18.264,
           "h": 19.944000000000017
         },
+        "anchor": [
+          160.0,
+          90.0
+        ],
         "anchor_side": "boundary",
         "model": "boundary",
         "text": {
@@ -190,6 +198,10 @@
           "w": 18.264,
           "h": 19.944000000000017
         },
+        "anchor": [
+          200.0,
+          120.0
+        ],
         "anchor_side": "boundary",
         "model": "boundary",
         "text": {
@@ -244,6 +256,10 @@
           "w": 18.26400000000001,
           "h": 19.944000000000017
         },
+        "anchor": [
+          240.0,
+          150.0
+        ],
         "anchor_side": "boundary",
         "model": "boundary",
         "text": {

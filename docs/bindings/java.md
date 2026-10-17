@@ -129,7 +129,8 @@ embedded as base64. Do not modify the buffer while a solve runs.
 ## Results
 
 `LabelAnything.place(..)` returns a `LabelResult` record: `placements()` (one
-`LabelPlacement` per item, in input order: `id`, `placed`, `box`, `anchorSide`, `model`,
+`LabelPlacement` per item, in input order: `id`, `placed`, `box`, `anchor` (the item's
+point; passed back with `warmStart(result)` the boxes move with it), `anchorSide`, `model`,
 `leader` with its polyline `points()`, `fanLeaders`, `lines`, `reason`, `members`,
 `degradeSteps`, `blocking`, `blockedBy`, `priority`, and the complete JSON object as
 `raw()`), `omissionOrder()`, `stats()` (a `Stats` record plus `raw()`), `warnings()`,

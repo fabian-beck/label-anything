@@ -950,6 +950,10 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   }
 
   // --- warm start ---
+  // a box that comes with the anchor it was placed for moves with the item's anchor
+  // (spec §6.7): the previous result can be passed as it is
+  const refs = new Map<string, P>();
+  for (const it of items) refs.set(it.id, it.shape.reference());
   const warm = new Map<string, Rect | null>();
   for (const p of itemsOf(lookup(problem, "warm_start.placements"))) {
     const id = asStr(get(p, "id"));
@@ -963,6 +967,13 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
       const w = asF64(get(b, "w"));
       const h = asF64(get(b, "h"));
       if (x !== null && y !== null && w !== null && h !== null) rect = Rect.xywh(x, y, w, h);
+    }
+    const av = get(p, "anchor");
+    const a = av === undefined ? null : pointsOfSingle(av);
+    const r = refs.get(id);
+    if (rect !== null && a !== null && r !== undefined) {
+      const d = r.sub(a);
+      if (Number.isFinite(d.x) && Number.isFinite(d.y)) rect = rect.translate(d);
     }
     warm.set(id, placed ? rect : null);
   }

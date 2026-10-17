@@ -279,6 +279,15 @@ def test_priority_algebra() -> None:
         P.attr("x") + 1  # type: ignore[operator]
 
 
+def test_warm_start_follows_the_anchors() -> None:
+    first = la.place([(50, 50), (60, 52)], ["one", "two"], canvas=(200, 200))
+    assert first.placed[0].anchor == (50.0, 50.0)
+    # the points moved by (30, 20): the previous result moves the labels along
+    moved = la.place([(80, 70), (90, 72)], ["one", "two"], canvas=(200, 200), warm_start=first)
+    for a, b in zip(first.placed, moved.placed):
+        assert b.box.x == pytest.approx(a.box.x + 30) and b.box.y == pytest.approx(a.box.y + 20)
+
+
 def test_warm_start_from_a_result() -> None:
     first = la.place([(50, 50), (60, 52)], ["one", "two"], canvas=(200, 200))
     again = la.place([(50, 50), (60, 52)], ["one", "two"], canvas=(200, 200), warm_start=first)

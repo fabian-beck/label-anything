@@ -33,7 +33,7 @@ The result (numbers rounded, `b` shortened):
   "placements": [
     {
       "id": "a", "placed": true,
-      "box": { "x": 20.108, "y": 50.028, "w": 35.892, "h": 19.944 },
+      "box": { "x": 20.108, "y": 50.028, "w": 35.892, "h": 19.944 }, "anchor": [60, 60],
       "anchor_side": "left", "model": "adjacent", "leader": null,
       "text": {
         "lines": ["Alpha"], "used": "original", "truncated": false,
@@ -46,7 +46,7 @@ The result (numbers rounded, `b` shortened):
     { "id": "b", "placed": true, "box": { "x": 68, "y": 53.028, "w": 29.232, "h": 19.944 }, "anchor_side": "right", "model": "adjacent" },
     {
       "id": "c", "placed": true,
-      "box": { "x": 134.008, "y": 50.028, "w": 42.492, "h": 19.944 },
+      "box": { "x": 134.008, "y": 50.028, "w": 42.492, "h": 19.944 }, "anchor": [250, 60],
       "anchor_side": "distant", "model": "distant",
       "leader": { "points": [[246.5, 60], [176.5, 60]], "style": "straight", "port": [176.5, 60] },
       "priority": { "tier": 0, "score": 1, "rank": 2 }
@@ -75,6 +75,7 @@ The result (numbers rounded, `b` shortened):
 |---|---|
 | `id`, `placed` | the item and whether its label is placed |
 | `box` | the label box `{x, y, w, h}`: the collision box, including the label's padding |
+| `anchor` | `[x, y]`: the item's anchor in canvas px (area items: the pole of the polygon); a result passed back as `warm_start` moves each box with its anchor ([interactive maps](../tutorials/interactive-maps.md#warm-starts)) |
 | `anchor_side` | `top`, `right`, `bottom`, `left`, `top-right`, `bottom-right`, `top-left`, `bottom-left`; `internal`, `distant`, `boundary` or `fan` |
 | `model` | the candidate model: `adjacent`, `slider`, `internal`, `distant`, `boundary`, or `fan` for a label in a crowd's column ([fan labels](candidates.md#fan-labels)) |
 | `text` | the text as placed: `lines` (wrapped, truncated or an alternative), `used` (`original`, `alternative:i`, `truncated`, `group`), `baseline_offsets` (y of each baseline relative to `box.y`), `x_offset` (the text starts at `box.x + x_offset`), `line_widths`, `font_size`, `font_family`, `font_weight`, `scale` (< 1 when shrunk) |

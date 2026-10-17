@@ -299,6 +299,23 @@ fn place_item(s: &mut Solve, g: &mut Greedy, i: usize, ladder: bool) -> bool {
         s.reasons[i] = Some(explain(s, i));
         return false;
     }
+    // a label the previous solve degraded keeps its box while that is free (ADR 0025)
+    if s.model.weights.stability > 0.0 {
+        if let Some(c) = s.warm_ladder_candidate(i) {
+            let mut scratch = Vec::new();
+            if s.state
+                .is_free(&s.cands[c as usize], &s.cands, s.obs, i, &mut scratch)
+            {
+                if !cap_allows(s, &s.cands[c as usize]) {
+                    g.cap_reached = true;
+                    s.reasons[i] = Some(Reason::OmittedByPriority);
+                    return false;
+                }
+                commit(s, g, i, c, false);
+                return true;
+            }
+        }
+    }
     let steps = s.model.ladder.clone();
     for (si, step) in steps.iter().enumerate() {
         s.steps_tried[i].push(step.name());

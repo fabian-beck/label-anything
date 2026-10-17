@@ -195,6 +195,25 @@ class PlaceIT {
   }
 
   @Test
+  void warmStartFollowsTheAnchors() {
+    LabelResult first = LabelAnything.place(LabelProblem.builder().canvas(300, 200)
+        .item("a", 100, 100, Label.text("Alpha"))
+        .item("b", 108, 104, Label.text("Beta")).build());
+    assertEquals(new Point(100, 100), first.placement("a").orElseThrow().anchor());
+    // the points moved by (40, 20): the previous result as warm start moves the labels along
+    LabelResult moved = LabelAnything.place(LabelProblem.builder().canvas(300, 200)
+        .item("a", 140, 120, Label.text("Alpha"))
+        .item("b", 148, 124, Label.text("Beta"))
+        .warmStart(first).build());
+    for (String id : List.of("a", "b")) {
+      Box before = first.placement(id).orElseThrow().box();
+      Box after = moved.placement(id).orElseThrow().box();
+      assertEquals(before.x() + 40, after.x(), 1e-9, id);
+      assertEquals(before.y() + 20, after.y(), 1e-9, id);
+    }
+  }
+
+  @Test
   void rawJsonEntryPoints() {
     String json = TestSupport.problem("minimal.json");
     String raw = LabelAnything.placeJson(json);

@@ -157,6 +157,8 @@ export function build(s: Solve, ver: Verification, phases: readonly [string, num
       const v = s.variants[i]![c.variant]!;
       m.placed = true;
       m.box = boxJson(c.rect.x0, c.rect.y0, c.rect.w(), c.rect.h());
+      const a = item.shape.reference();
+      m.anchor = [a.x, a.y];
       m.anchor_side = sideName(c.side);
       m.model = kindName(c.kind);
       const fam = item.font.family;

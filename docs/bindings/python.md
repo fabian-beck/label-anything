@@ -101,7 +101,8 @@ Invalid problems raise `la.ValidationError` (a `ValueError`); `e.errors` lists
 ## Results
 
 `Result.placements` holds one frozen `Placement` per item in input order: `id`, `placed`,
-`box` (`BBox(x, y, w, h)` in canvas px, y down), `anchor_side`, `model`, `leader`
+`box` (`BBox(x, y, w, h)` in canvas px, y down), `anchor` (the item's point; passed back
+as `warm_start`, the boxes move with it), `anchor_side`, `model`, `leader`
 (`Leader(points, style, port, underline, curve, member)`), `lines`, `baselines`,
 `reason` (why it was omitted), `priority` (`{tier, score, rank}`), `degrade_steps`,
 `blocking`, `blocked_by`, `members`/`leaders` (group labels), `parts` (composite labels)

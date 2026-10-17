@@ -347,6 +347,41 @@ CASES["font-class-shrink-floor"] = case(
     "min_scale 0.7): a, in a class of scale 1, gets it; b's class (0.9) keeps it at or above "
     "0.7 × 10 px, i.e. factors down to 0.7 / 0.9 = 0.778: 0.85 × 9 px is too wide.")
 
+# --- warm starts -------------------------------------------------------------------------
+CASES["warm-start-follows-anchor"] = case(
+    "a previous box that comes with its anchor moves with the item",
+    {"canvas": {"width": 240, "height": 160},
+     "items": [pt("a", 150, 100, "Alpha")],
+     "warm_start": {"placements": [
+         {"id": "a", "placed": True, "anchor": [100, 80],
+          "box": {"x": 104, "y": 70.028, "w": 35.892, "h": 19.944}}]}},
+    {"placed": 1, "anchor_side": {"a": "right"}, "model": {"a": "slider"},
+     "box": {"a": {"x": 154, "y": 90.028, "w": 35.892, "h": 19.944, "tol": 0.01}}},
+    "The previous result placed Alpha right of its point at (100, 80); the point is now at "
+    "(150, 100), and the box moves by the same (50, 20): it stays right of the point (top "
+    "would be first otherwise). Without the shift the old box, 50 px away, would be "
+    "kept as a distant label.")
+
+CASES["warm-start-degraded"] = case(
+    "a label shrunk in the previous solve keeps its box instead of running the ladder again",
+    {"canvas": {"width": 240, "height": 180},
+     "placement": {"models": ["adjacent", "slider"]},
+     "obstacles": {"vector": [{"class": "walls", "rects": [
+         [60, 60, 34, 80], [94, 60, 24, 28], [94, 112, 60, 28], [138, 88, 16, 24]]}]},
+     "avoid": {"label": {"walls": "hard"}, "leader": {"walls": "hard"}},
+     "items": [pt("a", 100, 100, "Alpha")],
+     "warm_start": {"placements": [
+         {"id": "a", "placed": True, "anchor": [100, 100],
+          "box": {"x": 104, "y": 91.524, "w": 30.508, "h": 16.952}}]}},
+    {"placed": 1, "anchor_side": {"a": "right"}, "model": {"a": "slider"},
+     "font": {"a": {"size": 10.2}},
+     "box": {"a": {"x": 104, "y": 91.524, "w": 30.508, "h": 16.952, "tol": 0.01}}},
+    "Walls (hard for labels and leaders) leave a pocket around the point: the full-size "
+    "label fits nowhere next to it, the label shrunk to 0.85 (the box in warm_start) fits "
+    "on its right. An opening in the top wall lets the ladder's distant step place the "
+    "full-size label with a leader, but the previous, shrunk box is still free and is "
+    "kept (ADR 0025).")
+
 CASES["raster-background"] = case(
     "raster background ink is avoided",
     {"problem_file": "../problems/raster-ink.json"},

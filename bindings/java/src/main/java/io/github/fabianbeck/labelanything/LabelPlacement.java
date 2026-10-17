@@ -10,6 +10,8 @@ import java.util.Map;
  * @param id item id
  * @param placed whether the label is placed
  * @param box the label box (null when not placed)
+ * @param anchor the item's anchor point (area items: the pole of the polygon; null when not
+ *     placed); passed back as warm start, the box moves with it
  * @param anchorSide where the label sits relative to the anchor (null when not placed)
  * @param model the candidate model (null when not placed)
  * @param leader the leader, or null
@@ -27,6 +29,7 @@ public record LabelPlacement(
     String id,
     boolean placed,
     Box box,
+    Point anchor,
     AnchorSide anchorSide,
     Model model,
     Leader leader,
@@ -71,6 +74,7 @@ public record LabelPlacement(
         Parse.str(m.get("id")),
         Parse.bool(m.get("placed"), false),
         Box.fromJson(m.get("box")),
+        Parse.point(m.get("anchor")),
         AnchorSide.fromJson(Parse.str(m.get("anchor_side"))),
         Model.fromJson(Parse.str(m.get("model"))),
         Leader.fromJson(m.get("leader")),

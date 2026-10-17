@@ -74,6 +74,11 @@ export class Solve {
   staticDropped: number[];
   /** The warm-start candidate of each item (see `generateWarm`). */
   warmCand: (number | null)[];
+  /**
+   * The warm-start candidate of each item for a ladder variant, once computed (see
+   * `warmLadderCandidate`): `undefined` = not computed yet.
+   */
+  warmLadder: (number | null | undefined)[];
   /** Directions of distant candidates (see `distantDirs`). */
   distantDirs: [number, P][];
   /**
@@ -119,6 +124,7 @@ export class Solve {
     this.levelDone = new Array<number>(n).fill(0);
     this.distantPending = new Array<boolean>(n).fill(false);
     this.warmCand = new Array<number | null>(n).fill(null);
+    this.warmLadder = new Array<number | null | undefined>(n).fill(undefined);
     this.staticDropped = new Array<number>(n).fill(0);
     this.distantDirs = distantDirs(model);
     this.blockedFeasible = [];
@@ -455,6 +461,52 @@ export class Solve {
       default:
         return [];
     }
+  }
+
+  /**
+   * The warm box of item `i` as a candidate of the ladder variant of its size, when no
+   * level-0 variant has that size (the previous solve degraded the label): the ladder
+   * steps run in order, as the ladder would run them, until one creates a variant of that
+   * size. Like the level-0 warm candidate (`generateWarm`), it is slider-kind or distant
+   * with a straight leader, and only statically feasible ones count. Computed once per
+   * item.
+   */
+  warmLadderCandidate(i: number): number | null {
+    const known = this.warmLadder[i];
+    if (known !== undefined) return known;
+    this.warmLadder[i] = null;
+    const item = this.model.items[i]!;
+    const b = this.model.warm.get(item.id);
+    if (b === undefined || b === null) return null;
+    const same = (v: Variant) => Math.abs(v.w - b.w()) <= 0.5 && Math.abs(v.h - b.h()) <= 0.5;
+    if (this.variants[i]!.some((v) => v.level === 0 && same(v))) return null;
+    const steps = this.model.ladder.slice();
+    for (let si = 0; si < steps.length; si++) {
+      const step = steps[si]!;
+      if (step.kind === "omit") break;
+      if (step.kind === "evict_lower" || step.kind === "soft_overlap") continue;
+      const level = (si + 1) & 0xff;
+      this.ladderCandidates(i, si);
+      if (step.kind !== "alternatives" && step.kind !== "wrap" && step.kind !== "truncate" && step.kind !== "shrink") {
+        continue;
+      }
+      const vs = this.variants[i]!;
+      const vi = vs.findIndex((v) => v.level === level && same(v));
+      if (vi < 0) continue;
+      const v = vs[vi]!;
+      const c = warm(this.model, item, vi, v, b);
+      if (c === null) return null;
+      c.level = level;
+      c.lshape = labelShape(c.rect, v.shape);
+      this.evaluator.eval(c, v, null);
+      if (!c.feasible) return null;
+      const id = this.cands.length;
+      this.byItem[i]!.push(id);
+      this.cands.push(c);
+      this.warmLadder[i] = id;
+      return id;
+    }
+    return null;
   }
 
   now(): number {

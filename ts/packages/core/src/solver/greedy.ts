@@ -339,6 +339,19 @@ function placeItem(s: Solve, g: Greedy, i: number, ladder: boolean): boolean {
     s.reasons[i] = explain(s, i);
     return false;
   }
+  // a label the previous solve degraded keeps its box while that is free (ADR 0025)
+  if (s.model.weights.stability > 0) {
+    const c = s.warmLadderCandidate(i);
+    if (c !== null && s.state.isFree(s.cands[c]!, s.cands, s.obs, i)) {
+      if (!capAllows(s, s.cands[c]!)) {
+        g.capReached = true;
+        s.reasons[i] = Reason.OmittedByPriority;
+        return false;
+      }
+      commit(s, g, i, c, false);
+      return true;
+    }
+  }
   const steps = s.model.ladder.slice();
   for (let si = 0; si < steps.length; si++) {
     const step = steps[si]!;

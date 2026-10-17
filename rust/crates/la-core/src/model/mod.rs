@@ -1129,6 +1129,12 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     };
 
     // --- warm start ---
+    // a box that comes with the anchor it was placed for moves with the item's anchor
+    // (spec §6.7): the previous result can be passed as it is
+    let refs: BTreeMap<&str, P> = items
+        .iter()
+        .map(|it| (it.id.as_str(), it.shape.reference()))
+        .collect();
     let mut warm = BTreeMap::new();
     for p in lookup(problem, "warm_start.placements")
         .and_then(|v| v.as_array())
@@ -1145,6 +1151,16 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
                     b.get("h")?.as_f64()?,
                 ))
             });
+            let shift = p
+                .get("anchor")
+                .and_then(points_of_single)
+                .zip(refs.get(id))
+                .map(|(a, r)| *r - a)
+                .filter(|d| d.x.is_finite() && d.y.is_finite());
+            let b = match (b, shift) {
+                (Some(b), Some(d)) => Some(b.translate(d)),
+                (b, _) => b,
+            };
             warm.insert(id.to_string(), if placed { b } else { None });
         }
     }

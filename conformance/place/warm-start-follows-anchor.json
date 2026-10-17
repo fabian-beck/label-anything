@@ -1,0 +1,65 @@
+{
+  "kind": "place",
+  "name": "a previous box that comes with its anchor moves with the item",
+  "$comment": "The previous result placed Alpha right of its point at (100, 80); the point is now at (150, 100), and the box moves by the same (50, 20): it stays right of the point (top would be first otherwise). Without the shift the old box, 50 px away, would be kept as a distant label.",
+  "problem": {
+    "canvas": {
+      "width": 240,
+      "height": 160
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      }
+    ],
+    "warm_start": {
+      "placements": [
+        {
+          "id": "a",
+          "placed": true,
+          "anchor": [
+            100,
+            80
+          ],
+          "box": {
+            "x": 104,
+            "y": 70.028,
+            "w": 35.892,
+            "h": 19.944
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "anchor_side": {
+      "a": "right"
+    },
+    "model": {
+      "a": "slider"
+    },
+    "box": {
+      "a": {
+        "x": 154,
+        "y": 90.028,
+        "w": 35.892,
+        "h": 19.944,
+        "tol": 0.01
+      }
+    }
+  }
+}

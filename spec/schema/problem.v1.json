@@ -1722,6 +1722,10 @@
               "placed": {
                 "type": "boolean"
               },
+              "anchor": {
+                "$ref": "#/$defs/point",
+                "description": "The anchor point (canvas px) the box was placed for, as in a result: the box moves with the item's anchor to its position in this problem."
+              },
               "box": {
                 "type": "object",
                 "required": [

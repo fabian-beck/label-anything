@@ -125,6 +125,7 @@
         "id": { "type": "string" },
         "placed": { "type": "boolean" },
         "box": { "$ref": "#/$defs/box" },
+        "anchor": { "$ref": "#/$defs/point", "description": "The item's reference point in canvas px (point items: the anchor; area items: the pole). Passed back in warm_start, the box moves with the item's anchor." },
         "anchor_side": {
           "enum": ["top", "right", "bottom", "left", "top-right", "bottom-right", "top-left", "bottom-left", "internal", "distant", "boundary", "fan"]
         },
