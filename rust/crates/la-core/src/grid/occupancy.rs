@@ -95,22 +95,46 @@ impl Occupancy {
         self.sat = None;
         let (c0, c1) = self.span(self.ox, self.cols, r.x0, r.x1);
         let (r0, r1) = self.span(self.oy, self.rows, r.y0, r.y1);
+        if c0 >= c1 {
+            return;
+        }
+        // the bits of the span, word by word: (word, mask)
+        let (w0, w1) = (c0 / 64, (c1 - 1) / 64);
+        let mask = |w: usize| {
+            let lo = if w == w0 { c0 % 64 } else { 0 };
+            let hi = if w == w1 { (c1 - 1) % 64 + 1 } else { 64 };
+            (u64::MAX >> (64 - (hi - lo))) << lo
+        };
         for row in r0..r1 {
             let base = row * self.cols;
-            let wbase = row * self.words;
-            for c in c0..c1 {
-                let v = &mut self.count[base + c];
-                *v = if add {
-                    v.saturating_add(1)
-                } else {
-                    v.saturating_sub(1)
-                };
-                let bit = 1u64 << (c % 64);
-                if *v > 0 {
-                    self.bits[wbase + c / 64] |= bit;
-                } else {
-                    self.bits[wbase + c / 64] &= !bit;
+            let cells = &mut self.count[base + c0..base + c1];
+            let bits = &mut self.bits[row * self.words..(row + 1) * self.words];
+            if add {
+                for v in cells.iter_mut() {
+                    *v = v.saturating_add(1);
                 }
+                for (w, b) in bits.iter_mut().enumerate().take(w1 + 1).skip(w0) {
+                    *b |= mask(w);
+                }
+                continue;
+            }
+            let mut left = 0u16;
+            for v in cells.iter_mut() {
+                *v = v.saturating_sub(1);
+                left |= *v;
+            }
+            for (w, b) in bits.iter_mut().enumerate().take(w1 + 1).skip(w0) {
+                let m = mask(w);
+                if left == 0 {
+                    *b &= !m;
+                    continue;
+                }
+                // another label still covers some cells of this word
+                let mut free = 0u64;
+                for c in (w * 64).max(c0)..((w + 1) * 64).min(c1) {
+                    free |= u64::from(self.count[base + c] == 0) << (c % 64);
+                }
+                *b &= !(m & free);
             }
         }
     }
@@ -202,5 +226,42 @@ impl Occupancy {
     /// Whether nothing is marked.
     pub fn is_empty(&self) -> bool {
         self.bits.iter().all(|&w| w == 0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use la_expr::det_math::Pcg32;
+
+    /// Marking word by word keeps the bits equal to "count > 0", with overlapping boxes
+    /// added and removed in any order, across word boundaries and at the grid's edges.
+    #[test]
+    fn bits_mirror_the_counts() {
+        let mut occ = Occupancy::new(&Rect::new(0.0, 0.0, 300.0, 40.0));
+        let mut rng = Pcg32::new(7);
+        let mut placed: Vec<Rect> = Vec::new();
+        for _ in 0..2000 {
+            if placed.is_empty() || rng.next_f64() < 0.55 {
+                let x = rng.next_f64() * 340.0 - 20.0;
+                let y = rng.next_f64() * 50.0 - 5.0;
+                let r = Rect::new(x, y, x + rng.next_f64() * 160.0, y + rng.next_f64() * 12.0);
+                occ.mark(&r, true);
+                placed.push(r);
+            } else {
+                let k = rng.next_below(placed.len() as u32) as usize;
+                occ.mark(&placed.swap_remove(k), false);
+            }
+            for row in 0..occ.rows {
+                for c in 0..occ.cols {
+                    let bit = occ.bits[row * occ.words + c / 64] >> (c % 64) & 1;
+                    assert_eq!(bit == 1, occ.count[row * occ.cols + c] > 0);
+                }
+            }
+        }
+        for r in placed.drain(..) {
+            occ.mark(&r, false);
+        }
+        assert!(occ.is_empty() && occ.count.iter().all(|&v| v == 0));
     }
 }

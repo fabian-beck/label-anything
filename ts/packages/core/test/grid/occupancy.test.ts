@@ -1,6 +1,7 @@
-// Tests of the occupancy grid (rust/crates/la-core/src/grid/occupancy.rs has none): the
-// window of a box against a per-cell reference, and the frozen (summed-area) answers
-// against the bitset ones.
+// Tests of the occupancy grid: the bits against the cell counts while boxes come and go
+// (as the unit test of rust/crates/la-core/src/grid/occupancy.rs), the window of a box
+// against a per-cell reference, and the frozen (summed-area) answers against the bitset
+// ones.
 import { describe, expect, it } from "vitest";
 import { Rect } from "../../src/geom/index.js";
 import { OCC_MARGIN, Occupancy, newWindow } from "../../src/grid/occupancy.js";
@@ -28,6 +29,49 @@ function randomBox(rng: Pcg32, w: number, h: number): Rect {
 }
 
 describe("occupancy", () => {
+  it("bits_mirror_the_counts", () => {
+    // marking word by word keeps the bits equal to "count > 0", with overlapping boxes
+    // added and removed in any order, across word boundaries and at the grid's edges
+    const occ = new Occupancy(new Rect(0, 0, 300, 40)); // cell 2: 150 × 20 cells
+    const rng = new Pcg32(7);
+    const placed: Rect[] = [];
+    const probe = newWindow();
+    let wrong = 0;
+    for (let n = 0; n < 2000; n++) {
+      if (placed.length === 0 || rng.nextF64() < 0.55) {
+        const x = rng.nextF64() * 340 - 20;
+        const y = rng.nextF64() * 50 - 5;
+        const r = new Rect(x, y, x + rng.nextF64() * 160, y + rng.nextF64() * 12);
+        occ.mark(r, true);
+        placed.push(r);
+      } else {
+        const k = rng.nextBelow(placed.length);
+        occ.mark(placed[k]!, false);
+        placed.splice(k, 1);
+      }
+      // every cell: blocked iff a placed box covers its center
+      for (let row = 0; row < 20; row++) {
+        for (let c = 0; c < 150; c++) {
+          const cx = 2 * c + 1;
+          const cy = 2 * row + 1;
+          let covered = false;
+          for (const r of placed) {
+            if (r.x0 + OCC_MARGIN < cx && cx < r.x1 - OCC_MARGIN && r.y0 + OCC_MARGIN < cy && cy < r.y1 - OCC_MARGIN) {
+              covered = true;
+              break;
+            }
+          }
+          if (!occ.window(new Rect(cx - 0.5, cy - 0.5, cx + 0.5, cy + 0.5), probe) || occ.blockedIn(probe) !== covered) {
+            wrong++;
+          }
+        }
+      }
+    }
+    expect(wrong).toBe(0);
+    for (const r of placed) occ.mark(r, false);
+    expect(occ.isEmpty()).toBe(true);
+  });
+
   it("window_matches_the_cell_definition", () => {
     const extent = new Rect(-5, -3, 795, 597);
     const occ = new Occupancy(extent);

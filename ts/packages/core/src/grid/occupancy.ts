@@ -29,6 +29,13 @@ export function newWindow(): Window {
   return new Int32Array(4);
 }
 
+/** The bits of word `w` among the cells `c0..c1` (words `w0..=w1`). */
+function spanMask(w: number, w0: number, w1: number, c0: number, c1: number): number {
+  const lo = w === w0 ? c0 & 31 : 0;
+  const hi = w === w1 ? ((c1 - 1) & 31) + 1 : 32;
+  return hi - lo === 32 ? -1 : ((1 << (hi - lo)) - 1) << lo;
+}
+
 /**
  * Fine grid counting, per cell, the placed rectangular labels whose interior contains the
  * cell center, mirrored in a per-row bitset of non-zero cells. A candidate box whose
@@ -130,18 +137,41 @@ export class Occupancy {
     this.span(this.oy, this.rows, r.y0, r.y1);
     const r0 = SPAN[0]!;
     const r1 = SPAN[1]!;
+    if (c0 >= c1) return;
     const count = this.count;
     const bits = this.bits;
+    // the bits of the span, word by word
+    const w0 = c0 >>> 5;
+    const w1 = (c1 - 1) >>> 5;
     for (let row = r0; row < r1; row++) {
       const base = row * this.cols;
       const wbase = row * this.words;
+      if (add) {
+        for (let c = c0; c < c1; c++) {
+          const v = count[base + c]!;
+          if (v < 65535) count[base + c] = v + 1;
+        }
+        for (let w = w0; w <= w1; w++) bits[wbase + w] |= spanMask(w, w0, w1, c0, c1);
+        continue;
+      }
+      let left = 0;
       for (let c = c0; c < c1; c++) {
-        let v = count[base + c]!;
-        v = add ? (v < 65535 ? v + 1 : v) : v > 0 ? v - 1 : 0;
-        count[base + c] = v;
-        const bit = 1 << (c & 31);
-        if (v > 0) bits[wbase + (c >>> 5)] |= bit;
-        else bits[wbase + (c >>> 5)] &= ~bit;
+        const v = count[base + c]!;
+        const nv = v > 0 ? v - 1 : 0;
+        count[base + c] = nv;
+        left |= nv;
+      }
+      for (let w = w0; w <= w1; w++) {
+        const m = spanMask(w, w0, w1, c0, c1);
+        if (left === 0) {
+          bits[wbase + w] &= ~m;
+          continue;
+        }
+        // another label still covers some cells of this word
+        let free = 0;
+        const hi = Math.min((w + 1) << 5, c1);
+        for (let c = Math.max(w << 5, c0); c < hi; c++) if (count[base + c] === 0) free |= 1 << (c & 31);
+        bits[wbase + w] &= ~(m & free);
       }
     }
   }
