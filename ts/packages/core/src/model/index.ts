@@ -294,6 +294,9 @@ export class Item {
   /** Cache of {@link pole}. */
   private poleCache: P | null = null;
 
+  /** The scale of the item's font class (1 without one). */
+  classScale = 1;
+
   em(): number {
     return this.font.size;
   }
@@ -324,6 +327,7 @@ export class Item {
       for (const p of l.parts) if (p.kind === "text") text(p.spec);
     }
     this.len = resolveLengths(this.lenSpec, this.font.size);
+    this.classScale *= f;
   }
 
   /**

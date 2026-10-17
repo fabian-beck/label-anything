@@ -23,7 +23,7 @@ import {
 import { type Env, envHasMeasureCallback, envReadFile } from "./env.js";
 import { P, Rect } from "./geom/index.js";
 import { fmtFixed } from "./json.js";
-import { maxf } from "./math.js";
+import { maxf, minf } from "./math.js";
 import {
   FixedKind,
   type FontSel,
@@ -581,10 +581,12 @@ export function ladderVariants(
     }
     case "shrink": {
       const f = step.f;
+      // never below minScale of the size before a smaller font class (spec §9.4)
+      const floor = minScale / minf(item.classScale, 1);
       const out: Variant[] = [];
       let s = f;
       let k = 0;
-      while (s >= minScale - 1e-12 && s < 1 && k < 8) {
+      while (s >= floor - 1e-12 && s < 1 && k < 8) {
         for (const e of existing) {
           if (e.scale !== 1) continue;
           const v = rescale(m, item, e, s);

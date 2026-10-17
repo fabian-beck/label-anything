@@ -661,6 +661,8 @@ pub fn ladder_variants(
         }
         (Step::Truncate, LabelSpec::Text(spec)) => dedup(truncated(m, spec, &spec.text, pad, 1.0)),
         (Step::Shrink(f), _) => {
+            // never below min_scale of the size before a smaller font class (spec §9.4)
+            let min_scale = min_scale / item.class_scale.min(1.0);
             let mut out = Vec::new();
             let mut s = *f;
             let mut k = 0;

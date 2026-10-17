@@ -1,0 +1,93 @@
+{
+  "kind": "place",
+  "name": "the shrink step stops at min_scale of the size before a smaller font class",
+  "$comment": "The text fits the canvas only at 0.7225 of 10 px (0.85², the last shrink factor above min_scale 0.7): a, in a class of scale 1, gets it; b's class (0.9) keeps it at or above 0.7 × 10 px, i.e. factors down to 0.7 / 0.9 = 0.778: 0.85 × 9 px is too wide.",
+  "problem": {
+    "canvas": {
+      "width": 54,
+      "height": 60,
+      "padding": 0
+    },
+    "defaults": {
+      "font": {
+        "size": 10
+      }
+    },
+    "degrade": [
+      "shrink:0.85",
+      "omit"
+    ],
+    "placement": {
+      "models": [
+        "adjacent"
+      ],
+      "position_order": [
+        "right"
+      ]
+    },
+    "priority": {
+      "font_classes": [
+        {
+          "first": 1,
+          "scale": 1
+        },
+        {
+          "scale": 0.9
+        }
+      ]
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 10,
+          "y": 15
+        },
+        "label": {
+          "type": "text",
+          "text": "Abcdefghij"
+        },
+        "priority": 2
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 10,
+          "y": 45
+        },
+        "label": {
+          "type": "text",
+          "text": "Abcdefghij"
+        },
+        "priority": 1
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "placed_ids": [
+      "a"
+    ],
+    "unplaced_ids": [
+      "b"
+    ],
+    "reasons": {
+      "b": "no_feasible_candidate"
+    },
+    "font": {
+      "a": {
+        "size": 7.225,
+        "class": 0
+      },
+      "b": {
+        "class": 1
+      }
+    }
+  }
+}

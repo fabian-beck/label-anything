@@ -335,6 +335,18 @@ CASES["font-classes"] = case(
     "40 + 2 (mark) + 7.5, of b at 140 + 2 + 6, of c at 240 + 2 + 4.5; regular 'Aa' is 1.2 em wide "
     "and 1.362 em high, plus twice the padding.")
 
+CASES["font-class-shrink-floor"] = case(
+    "the shrink step stops at min_scale of the size before a smaller font class",
+    {"canvas": {"width": 54, "height": 60, "padding": 0}, "defaults": {"font": {"size": 10}},
+     "degrade": ["shrink:0.85", "omit"], "placement": {"models": ["adjacent"], "position_order": ["right"]},
+     "priority": {"font_classes": [{"first": 1, "scale": 1}, {"scale": 0.9}]},
+     "items": [pt("a", 10, 15, "Abcdefghij", priority=2), pt("b", 10, 45, "Abcdefghij", priority=1)]},
+    {"placed": 1, "placed_ids": ["a"], "unplaced_ids": ["b"], "reasons": {"b": "no_feasible_candidate"},
+     "font": {"a": {"size": 7.225, "class": 0}, "b": {"class": 1}}},
+    "The text fits the canvas only at 0.7225 of 10 px (0.85², the last shrink factor above "
+    "min_scale 0.7): a, in a class of scale 1, gets it; b's class (0.9) keeps it at or above "
+    "0.7 × 10 px, i.e. factors down to 0.7 / 0.9 = 0.778: 0.85 × 9 px is too wide.")
+
 CASES["raster-background"] = case(
     "raster background ink is avoided",
     {"problem_file": "../problems/raster-ink.json"},

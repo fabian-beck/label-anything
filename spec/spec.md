@@ -924,8 +924,10 @@ most important labels first.
   composite label); lengths in px, icons and boxes keep their size.
 * The priorities are those of the nominal sizes (the `label_size` term measures the label
   before its class applies). The labels are then measured again, and everything after
-  (grid cell, candidates, the ladder, whose `shrink` steps start from the class size) uses
-  the scaled sizes.
+  (grid cell, candidates, the ladder) uses the scaled sizes. The `shrink` steps start from
+  the class size but never go below `degrade_options.min_scale` of the size before a
+  smaller class: with class scale `c < 1`, the factors `f, f², …` stop at
+  `min_scale / c`.
 * `placements[].priority.font_class` reports the class index; `text.font_size` and
   `text.font_weight` the size and weight drawn.
 

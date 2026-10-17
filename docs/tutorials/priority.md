@@ -176,9 +176,11 @@ that lines break as at the nominal size); lengths in em, such as the offset and 
 padding, follow the scaled size, while lengths in px, icons and boxes keep theirs. The
 priorities themselves are computed with the nominal sizes. Each placement reports its class
 (`priority.font_class`) and the size and weight drawn (`text.font_size`,
-`text.font_weight`). A smaller last class leaves room for more labels in a crowded chart:
-in the benchmark, the top 5 % bold at 1.25 × and the rest at 0.9 × place 1 029 instead of
-920 of 3 000 airports on a world map.
+`text.font_weight`). The ladder's `shrink` step starts from the class size but never goes
+below `degrade_options.min_scale` of the size before a smaller class. In the benchmark,
+the top 5 % bold at 1.25 × and the rest at 0.9 × keep about as many labels as one size
+(911 instead of 920 of 3 000 airports on a world map) and shrink fewer of them (13 instead
+of 22 %).
 
 ```json
 {

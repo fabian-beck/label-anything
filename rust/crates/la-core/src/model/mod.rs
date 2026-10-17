@@ -283,6 +283,8 @@ pub struct Item {
     pub len: ItemLengths,
     /// The lengths before resolution (resolved again when a font class rescales the item).
     pub len_spec: ItemLengthSpec,
+    /// The scale of the item's font class (1 without one).
+    pub class_scale: f64,
     pub models: Models,
     pub internal: InternalPolicy,
     pub positions: Vec<Pos>,
@@ -340,6 +342,7 @@ impl Item {
             LabelSpec::Fixed { .. } => {}
         }
         self.len = self.len_spec.resolve(self.font.size);
+        self.class_scale *= f;
     }
 
     /// The pole of inaccessibility of the mark (polygon marks; the reference point of
@@ -1719,6 +1722,7 @@ fn build_item(
         font,
         len,
         len_spec,
+        class_scale: 1.0,
         models,
         internal,
         positions,

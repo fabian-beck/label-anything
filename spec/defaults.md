@@ -90,7 +90,7 @@ are stale.
 | `solver.seed` | `0` | 0 – 2³²−1 | Seed of the PCG32 generator. |
 | `solver.grid_cell` | `"auto"` | auto or > 0 | auto = clamp(min font size / 4, 1, 4) px. |
 | `degrade` | `["alternatives","wrap","distant","evict_lower","shrink:0.85","soft_overlap","omit"]` | list | Degradation ladder (spec §10.1). No `boundary` step: margin labels need leaders across the picture; use the `boundary` model or step where they are intended. |
-| `degrade_options.min_scale` | `0.7` | (0,1] | Smallest font scale of `shrink:f` steps (f, f², … ≥ min_scale). |
+| `degrade_options.min_scale` | `0.7` | (0,1] | Smallest font scale of `shrink:f` steps (f, f², … ≥ min_scale), relative to the size before a smaller font class (spec §9.4). |
 | `degrade_options.wrap_max_lines` | `3` | int ≥ 1 | Line limit of the `wrap` step for labels without wrap settings. |
 | `degrade_options.soft_overlap_weight` | `10` | ≥ 0 | Weight replacing `hard` for relaxed classes. |
 | `weights.position` | `0.6` | ≥ 0 | × position rank / number of positions. |

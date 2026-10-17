@@ -27,8 +27,11 @@ priority function.
   and boxes keep their size.
 * **Priorities of the nominal sizes.** The priorities are computed first, from the nominal
   labels, then the labels are scaled and measured again, before the obstacles' grid (whose
-  cell follows the smallest font) and the candidates. The `shrink` ladder step starts from
-  the class size.
+  cell follows the smallest font) and the candidates.
+* **Shrinking stops at the nominal floor.** The `shrink` ladder step starts from the class
+  size, but `degrade_options.min_scale` still bounds the size relative to the size before a
+  smaller class (factors down to `min_scale / scale` for `scale < 1`): the classes may make
+  text smaller, the ladder must not make it smaller than it could without them.
 * `placements[].priority.font_class` reports the class.
 
 Considered and rejected:
@@ -39,6 +42,10 @@ Considered and rejected:
   are what the priority function promises.
 * *Priorities recomputed after scaling*: circular through the `label_size` term.
 * *Scaling icons and boxes with the class*: classes are about type; a host sizes its icons.
+* *Shrinking from the class size down to `min_scale` of it*: with a rest class of 0.9 the
+  benchmark placed 3 775 instead of 3 579 labels, but by shrinking labels to 0.65 of their
+  nominal size (5.9 px on the 9 px airport maps); the gain was the ladder's, not the
+  classes'.
 
 ## Consequences
 Scenarios 01–07 of the benchmark opt in with two sets (`bench/common/scenario.py`): charts
@@ -47,20 +54,25 @@ type at 1.3 × and the next 20 % 1.1 ×; dense charts and maps (software metrics
 airports, Monaco) the top 5 % bold at 1.25 × and the rest 0.9 ×. Against the same
 problems without classes (deterministic solves, the engine otherwise unchanged):
 
-* placed 3 579 → 3 775 (+196), 0 hard violations and 0 priority inversions in both: world
-  airports 920 → 1 029 of 3 000 and 531 → 566 of 1 000, European airports 375 → 381, Monaco
-  209 → 219 (pins) and 231 → 237, React Native classes 61 → 67 of 100, gapminder 1955 56 → 58,
-  Cora 148 → 149; the volcano plots and embeddings place what they placed before.
-  `placed_weighted` rises in every changed problem (world airports 0.320 → 0.350, React
-  Native 0.689 → 0.734). Shrunk labels: React Native 26 → 16 %, Monaco 15.6 → 13.1 %.
-* Larger top labels need room: the ambiguity rate rises in some problems (software metrics
-  30: 0.10 → 0.13, gapminder 1955: 0.20 → 0.24, world airports: 0.37 → 0.39) and falls in
-  others (gapminder 2005: 0.42 → 0.31, Monaco: 0.21 → 0.16); the mean position rank of React
-  Native rises 2.63 → 3.28; leader lengths in em rise where the rest is smaller (gapminder
-  p90 5.8 → 8.0 em). In the Monaco pins a POI that has a near-duplicate of equal key at the
-  same spot gives way to it, so NDCG@k drops 0.967 → 0.902.
+* Placed 3 579 → 3 563 (−0.4 %), 0 hard violations and 0 priority inversions in both: the
+  larger top labels cost a few labels in the densest maps (world airports 920 → 911 of
+  3 000, 531 → 527 of 1 000; Monaco 231 → 228), the smaller rest wins a few elsewhere
+  (gapminder 1955 56 → 57, European airports 375 → 376, Cora 148 → 149); the volcano plots
+  and embeddings place what they placed before. The classes buy hierarchy, not labels.
+* Fewer labels are shrunk by the ladder, because the floor now counts from the nominal
+  size: React Native classes 26 → 7 %, world airports 14 → 7 % (1 000) and 22 → 13 %
+  (3 000), Monaco 16 → 8 %, gapminder 6 → 0 %. The smallest text drawn rises from
+  0.7225 to 0.765 of the nominal size.
+* Ambiguity falls in most dense problems (gapminder 2005: 0.42 → 0.29, Monaco: 0.21 → 0.18,
+  world airports 300: 0.23 → 0.18) and rises in some others (software metrics 30:
+  0.10 → 0.14, gapminder 1955: 0.20 → 0.25, volcano 50: 0.08 → 0.10). NDCG@k falls where a
+  large top label gives way to its equal-key neighbours (world airports 3 000: 0.818 →
+  0.794; in the Monaco pins a POI with a near-duplicate of equal key at the same spot gives
+  way to it: 0.967 → 0.895); leader lengths in em of the smaller labels rise (gapminder
+  p90 5.8 → 8.0 em).
 * The evaluator applies the classes with the result's ranks (with the reference priority
   for the baselines, whose labels get the class sizes), so a class size is not counted as
   shrunk. The release-gate allow list names this ADR for the metric changes above.
 * Conformance: `font-classes` (sizes, weights, classes and boxes of four labels, the
-  offset in em following the class) and its parity fixture.
+  offset in em following the class) and `font-class-shrink-floor` (a label of a 0.9 class
+  is not shrunk below 0.7 of its nominal size), with their parity fixtures.
