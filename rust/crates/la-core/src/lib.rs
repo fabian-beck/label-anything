@@ -209,6 +209,7 @@ pub fn place_validated(
     }
     solver::repair::boundary_pass(&mut s);
     solver::repair::uncross(&mut s);
+    solver::repair::priority_repair(&mut s);
     let t4 = env.now_ms();
     let ver = solver::verify::verify(&mut s);
     let t5 = env.now_ms();

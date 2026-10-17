@@ -20,6 +20,7 @@
     "../problems/region.json",
     "../problems/scatter-basic.json",
     "../problems/shapes-nodes.json",
+    "../problems/strict-repair.json",
     "../problems/svg-background.json",
     "../problems/unbounded.json",
     "../problems/units.json",

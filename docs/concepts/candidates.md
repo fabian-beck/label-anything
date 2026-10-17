@@ -97,6 +97,9 @@ cheapest free candidate, counting what it would take away from items still waiti
 a band, its unplaced items run the ladder. Local search then relocates, swaps and
 re-inserts labels, accepting changes that keep every hard constraint and never make the
 priority outcome worse. An exact branch-and-bound search runs for small problems with a
-large budget. Finally, a verification pass re-checks every hard constraint exactly.
+large budget. With `strict` omission, a priority repair then gives every omitted item a
+position that only lower-priority labels hold (those labels are tried again), so no
+label is missing in favour of a less important one. Finally, a verification pass
+re-checks every hard constraint exactly.
 [The solver](solver.md) describes budgets and determinism; the
 [specification](../reference/spec.md#10-solver) the algorithms.

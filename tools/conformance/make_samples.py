@@ -7,6 +7,7 @@ The JSON files are the canonical test inputs; this script documents how they wer
 import base64
 import json
 import math
+import random
 import struct
 import zlib
 from pathlib import Path
@@ -153,6 +154,18 @@ problems["weighted-coverage"] = {
     "priority": {"terms": [{"attr": "traffic", "normalize": "minmax"}], "omission": "weighted",
                  "coverage": {"by": "attrs.region", "min_per_group": 2}, "ties": "anchor_x"},
 }
+
+# 80 random points with random priorities: the local search frees a position that a label of
+# lower priority then takes; the priority repair (spec §10.3) gives it back to the higher one
+_rnd = random.Random(315)
+_n = _rnd.choice([25, 40, 60, 80])                                # the search that found it
+_w, _h = _rnd.choice([(200, 150), (260, 180), (300, 200)])
+_items = []
+for _i in range(_n):
+    _x, _y = _rnd.uniform(10, _w - 10), _rnd.uniform(10, _h - 10)
+    _items.append({"id": f"p{_i}", "anchor": {"type": "point", "x": round(_x, 1), "y": round(_y, 1)},
+                   "label": {"type": "text", "text": "x" * _rnd.randint(2, 9)}, "priority": _rnd.randint(0, 9)})
+problems["strict-repair"] = {"canvas": {"width": _w, "height": _h}, "items": _items}
 
 problems["leaders-angles"] = {
     "canvas": {"width": 500, "height": 400},

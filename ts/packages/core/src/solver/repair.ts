@@ -1,6 +1,7 @@
 /**
- * Post-search repairs: joint boundary slot assignment (spec §6.6) and leader uncrossing
- * (spec §10.3); port of `rust/crates/la-core/src/solver/repair.rs`.
+ * Post-search repairs: joint boundary slot assignment (spec §6.6), leader uncrossing and
+ * the priority repair of strict omission (spec §10.3); port of
+ * `rust/crates/la-core/src/solver/repair.rs`.
  *
  * @module
  */
@@ -9,9 +10,10 @@ import { slotArea, slotCandidate } from "../boundary.js";
 import { Cand, Kind, Leader, labelShape } from "../candidates.js";
 import { EPS, P, Rect, segSegDistXY } from "../geom/index.js";
 import { leaderStart } from "../leaders.js";
-import { clampf, cmpF64 } from "../math.js";
-import { LeaderStyle } from "../model/index.js";
-import type { Solve } from "./index.js";
+import { clampf, cmpF64, maxf } from "../math.js";
+import { LeaderStyle, Omission } from "../model/index.js";
+import { explain } from "./greedy.js";
+import { Reason, type Solve } from "./index.js";
 
 /**
  * Bounded isotonic stacking: positions `y_i` (sorted order) minimizing Σ (y_i − d_i)²
@@ -313,4 +315,79 @@ function movedTo(s: Solve, i: number, from: number, center: P): Cand {
   c.leaders.push(new Leader([start, rect.closestPoint(start)], f.leaders.length > 0 ? f.leaders[0]!.style : LeaderStyle.Straight));
   s.evaluator.eval(c, v, null);
   return c;
+}
+
+/**
+ * Strict omission (spec §9.2, §10.3): an omitted item that has a usable candidate in
+ * conflict with no placed label or only with labels of strictly lower priority takes it,
+ * in priority order, and those labels are tried again in their turn. The search keeps the
+ * priority objective, but a move can free a position that a lower label then takes; after
+ * this pass the removal test of the verification finds no inversion.
+ */
+export function priorityRepair(s: Solve): void {
+  if (s.model.omission !== Omission.Strict || s.cancelled) return;
+  const softOk = s.model.ladder.some((x) => x.kind === "soft_overlap");
+  const prio = s.pri.prio;
+  const items = s.model.items;
+  const order = s.pri.order.slice();
+  const confl: number[] = [];
+  for (const h of order) {
+    if (s.state.placed[h]! >= 0 || items[h]!.keepWith !== null) continue;
+    // null: removed by this pass
+    const rh = s.reasons[h];
+    if (rh !== null && rh !== Reason.OmittedByPriority && rh !== Reason.NoFeasibleCandidate) continue;
+    const keyH = prio[h]!.key;
+    let bestN = 0;
+    let bestGain = 0;
+    let bestCost = 0;
+    let bestC = -1;
+    let bestRemoved: number[] = [];
+    let bestRelaxed = false;
+    for (const c of s.byItem[h]!.slice()) {
+      let cand = s.cands[c]!;
+      if (cand.evaluated && !(cand.feasible || (softOk && cand.relaxed))) continue;
+      if (s.state.firstConflict(cand, s.cands, s.obs, h, keyH) >= 0) continue;
+      s.ensureEval(c);
+      cand = s.cands[c]!;
+      if (!(cand.feasible || (softOk && cand.relaxed))) continue;
+      s.state.conflicts(cand, s.cands, s.obs, h, confl);
+      if (!confl.every((j) => prio[j]!.key > keyH && !items[j]!.required)) continue;
+      const maxLabels = s.model.maxLabels;
+      if (maxLabels !== null && s.state.nPlaced + 1 > maxLabels + confl.length) continue;
+      const f = s.model.maxInkFraction;
+      const canvas = s.model.canvas;
+      if (f !== null && canvas !== null) {
+        let area = s.state.labelAreaSum;
+        for (const j of confl) area -= s.cands[s.state.placed[j]!]!.rect.area();
+        if ((area + cand.rect.area()) / maxf(canvas.area(), 1e-9) > f) continue;
+      }
+      const relaxed = !cand.feasible;
+      const cost = cand.cost + (relaxed ? cand.relaxCost : 0);
+      let gain = -0;
+      for (const j of confl) gain += prio[j]!.gain;
+      const n = confl.length;
+      const better =
+        bestC < 0 ||
+        n < bestN ||
+        (n === bestN && (gain < bestGain || (gain === bestGain && (cost < bestCost || (cost === bestCost && c < bestC)))));
+      if (better) {
+        bestN = n;
+        bestGain = gain;
+        bestCost = cost;
+        bestC = c;
+        bestRemoved = confl.slice();
+        bestRelaxed = relaxed;
+      }
+    }
+    if (bestC >= 0) {
+      for (const j of bestRemoved) {
+        s.state.unplace(j, s.cands);
+        s.reasons[j] = null;
+      }
+      s.state.place(h, bestC, s.cands, bestRelaxed);
+      s.reasons[h] = null;
+    } else if (s.reasons[h] === null) {
+      s.reasons[h] = explain(s, h);
+    }
+  }
 }

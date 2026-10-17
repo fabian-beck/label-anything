@@ -1,0 +1,1048 @@
+{
+  "canvas": {
+    "width": 300,
+    "height": 200
+  },
+  "items": [
+    {
+      "id": "p0",
+      "anchor": {
+        "type": "point",
+        "x": 125.9,
+        "y": 12.7
+      },
+      "label": {
+        "type": "text",
+        "text": "xx"
+      },
+      "priority": 1
+    },
+    {
+      "id": "p1",
+      "anchor": {
+        "type": "point",
+        "x": 53.6,
+        "y": 55.2
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxx"
+      },
+      "priority": 1
+    },
+    {
+      "id": "p2",
+      "anchor": {
+        "type": "point",
+        "x": 151.3,
+        "y": 172.3
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxx"
+      },
+      "priority": 3
+    },
+    {
+      "id": "p3",
+      "anchor": {
+        "type": "point",
+        "x": 150.3,
+        "y": 175.0
+      },
+      "label": {
+        "type": "text",
+        "text": "xxx"
+      },
+      "priority": 4
+    },
+    {
+      "id": "p4",
+      "anchor": {
+        "type": "point",
+        "x": 232.5,
+        "y": 80.6
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxxx"
+      },
+      "priority": 5
+    },
+    {
+      "id": "p5",
+      "anchor": {
+        "type": "point",
+        "x": 20.4,
+        "y": 92.1
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxx"
+      },
+      "priority": 3
+    },
+    {
+      "id": "p6",
+      "anchor": {
+        "type": "point",
+        "x": 21.8,
+        "y": 162.0
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxx"
+      },
+      "priority": 1
+    },
+    {
+      "id": "p7",
+      "anchor": {
+        "type": "point",
+        "x": 289.1,
+        "y": 177.0
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxx"
+      },
+      "priority": 2
+    },
+    {
+      "id": "p8",
+      "anchor": {
+        "type": "point",
+        "x": 50.1,
+        "y": 27.8
+      },
+      "label": {
+        "type": "text",
+        "text": "xx"
+      },
+      "priority": 5
+    },
+    {
+      "id": "p9",
+      "anchor": {
+        "type": "point",
+        "x": 114.8,
+        "y": 100.5
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxxxx"
+      },
+      "priority": 4
+    },
+    {
+      "id": "p10",
+      "anchor": {
+        "type": "point",
+        "x": 246.1,
+        "y": 144.7
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxxx"
+      },
+      "priority": 7
+    },
+    {
+      "id": "p11",
+      "anchor": {
+        "type": "point",
+        "x": 166.4,
+        "y": 147.5
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxxxx"
+      },
+      "priority": 9
+    },
+    {
+      "id": "p12",
+      "anchor": {
+        "type": "point",
+        "x": 140.5,
+        "y": 23.2
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxx"
+      },
+      "priority": 0
+    },
+    {
+      "id": "p13",
+      "anchor": {
+        "type": "point",
+        "x": 33.0,
+        "y": 165.2
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxx"
+      },
+      "priority": 2
+    },
+    {
+      "id": "p14",
+      "anchor": {
+        "type": "point",
+        "x": 262.8,
+        "y": 15.6
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxx"
+      },
+      "priority": 5
+    },
+    {
+      "id": "p15",
+      "anchor": {
+        "type": "point",
+        "x": 67.4,
+        "y": 140.7
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxx"
+      },
+      "priority": 1
+    },
+    {
+      "id": "p16",
+      "anchor": {
+        "type": "point",
+        "x": 224.8,
+        "y": 58.7
+      },
+      "label": {
+        "type": "text",
+        "text": "xxx"
+      },
+      "priority": 3
+    },
+    {
+      "id": "p17",
+      "anchor": {
+        "type": "point",
+        "x": 221.2,
+        "y": 107.7
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxx"
+      },
+      "priority": 0
+    },
+    {
+      "id": "p18",
+      "anchor": {
+        "type": "point",
+        "x": 153.7,
+        "y": 51.7
+      },
+      "label": {
+        "type": "text",
+        "text": "xx"
+      },
+      "priority": 9
+    },
+    {
+      "id": "p19",
+      "anchor": {
+        "type": "point",
+        "x": 278.3,
+        "y": 59.5
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxx"
+      },
+      "priority": 0
+    },
+    {
+      "id": "p20",
+      "anchor": {
+        "type": "point",
+        "x": 44.7,
+        "y": 131.1
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxx"
+      },
+      "priority": 4
+    },
+    {
+      "id": "p21",
+      "anchor": {
+        "type": "point",
+        "x": 98.1,
+        "y": 175.3
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxx"
+      },
+      "priority": 2
+    },
+    {
+      "id": "p22",
+      "anchor": {
+        "type": "point",
+        "x": 255.6,
+        "y": 154.5
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxx"
+      },
+      "priority": 6
+    },
+    {
+      "id": "p23",
+      "anchor": {
+        "type": "point",
+        "x": 232.0,
+        "y": 51.0
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxx"
+      },
+      "priority": 4
+    },
+    {
+      "id": "p24",
+      "anchor": {
+        "type": "point",
+        "x": 94.0,
+        "y": 124.8
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxxxx"
+      },
+      "priority": 9
+    },
+    {
+      "id": "p25",
+      "anchor": {
+        "type": "point",
+        "x": 82.1,
+        "y": 100.3
+      },
+      "label": {
+        "type": "text",
+        "text": "xx"
+      },
+      "priority": 7
+    },
+    {
+      "id": "p26",
+      "anchor": {
+        "type": "point",
+        "x": 187.3,
+        "y": 55.7
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxx"
+      },
+      "priority": 9
+    },
+    {
+      "id": "p27",
+      "anchor": {
+        "type": "point",
+        "x": 25.4,
+        "y": 80.1
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxx"
+      },
+      "priority": 8
+    },
+    {
+      "id": "p28",
+      "anchor": {
+        "type": "point",
+        "x": 117.1,
+        "y": 119.2
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxx"
+      },
+      "priority": 9
+    },
+    {
+      "id": "p29",
+      "anchor": {
+        "type": "point",
+        "x": 64.4,
+        "y": 91.4
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxx"
+      },
+      "priority": 8
+    },
+    {
+      "id": "p30",
+      "anchor": {
+        "type": "point",
+        "x": 153.9,
+        "y": 70.4
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxx"
+      },
+      "priority": 0
+    },
+    {
+      "id": "p31",
+      "anchor": {
+        "type": "point",
+        "x": 151.6,
+        "y": 47.8
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxx"
+      },
+      "priority": 3
+    },
+    {
+      "id": "p32",
+      "anchor": {
+        "type": "point",
+        "x": 30.9,
+        "y": 139.8
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxx"
+      },
+      "priority": 0
+    },
+    {
+      "id": "p33",
+      "anchor": {
+        "type": "point",
+        "x": 50.1,
+        "y": 189.4
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxx"
+      },
+      "priority": 2
+    },
+    {
+      "id": "p34",
+      "anchor": {
+        "type": "point",
+        "x": 105.1,
+        "y": 136.7
+      },
+      "label": {
+        "type": "text",
+        "text": "xxx"
+      },
+      "priority": 0
+    },
+    {
+      "id": "p35",
+      "anchor": {
+        "type": "point",
+        "x": 89.1,
+        "y": 105.2
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxxxx"
+      },
+      "priority": 2
+    },
+    {
+      "id": "p36",
+      "anchor": {
+        "type": "point",
+        "x": 202.4,
+        "y": 155.0
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxxxx"
+      },
+      "priority": 5
+    },
+    {
+      "id": "p37",
+      "anchor": {
+        "type": "point",
+        "x": 100.9,
+        "y": 109.5
+      },
+      "label": {
+        "type": "text",
+        "text": "xxx"
+      },
+      "priority": 5
+    },
+    {
+      "id": "p38",
+      "anchor": {
+        "type": "point",
+        "x": 271.6,
+        "y": 169.8
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxx"
+      },
+      "priority": 2
+    },
+    {
+      "id": "p39",
+      "anchor": {
+        "type": "point",
+        "x": 44.3,
+        "y": 169.3
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxx"
+      },
+      "priority": 8
+    },
+    {
+      "id": "p40",
+      "anchor": {
+        "type": "point",
+        "x": 42.0,
+        "y": 165.5
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxx"
+      },
+      "priority": 6
+    },
+    {
+      "id": "p41",
+      "anchor": {
+        "type": "point",
+        "x": 30.9,
+        "y": 60.0
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxx"
+      },
+      "priority": 9
+    },
+    {
+      "id": "p42",
+      "anchor": {
+        "type": "point",
+        "x": 245.9,
+        "y": 110.5
+      },
+      "label": {
+        "type": "text",
+        "text": "xx"
+      },
+      "priority": 8
+    },
+    {
+      "id": "p43",
+      "anchor": {
+        "type": "point",
+        "x": 230.9,
+        "y": 46.5
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxx"
+      },
+      "priority": 1
+    },
+    {
+      "id": "p44",
+      "anchor": {
+        "type": "point",
+        "x": 109.0,
+        "y": 87.4
+      },
+      "label": {
+        "type": "text",
+        "text": "xx"
+      },
+      "priority": 5
+    },
+    {
+      "id": "p45",
+      "anchor": {
+        "type": "point",
+        "x": 48.6,
+        "y": 75.6
+      },
+      "label": {
+        "type": "text",
+        "text": "xxx"
+      },
+      "priority": 1
+    },
+    {
+      "id": "p46",
+      "anchor": {
+        "type": "point",
+        "x": 245.9,
+        "y": 47.6
+      },
+      "label": {
+        "type": "text",
+        "text": "xx"
+      },
+      "priority": 9
+    },
+    {
+      "id": "p47",
+      "anchor": {
+        "type": "point",
+        "x": 42.4,
+        "y": 123.0
+      },
+      "label": {
+        "type": "text",
+        "text": "xxx"
+      },
+      "priority": 7
+    },
+    {
+      "id": "p48",
+      "anchor": {
+        "type": "point",
+        "x": 60.5,
+        "y": 88.1
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxx"
+      },
+      "priority": 4
+    },
+    {
+      "id": "p49",
+      "anchor": {
+        "type": "point",
+        "x": 197.0,
+        "y": 101.8
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxx"
+      },
+      "priority": 5
+    },
+    {
+      "id": "p50",
+      "anchor": {
+        "type": "point",
+        "x": 124.8,
+        "y": 14.8
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxx"
+      },
+      "priority": 0
+    },
+    {
+      "id": "p51",
+      "anchor": {
+        "type": "point",
+        "x": 204.0,
+        "y": 19.2
+      },
+      "label": {
+        "type": "text",
+        "text": "xxx"
+      },
+      "priority": 9
+    },
+    {
+      "id": "p52",
+      "anchor": {
+        "type": "point",
+        "x": 261.2,
+        "y": 167.4
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxxx"
+      },
+      "priority": 4
+    },
+    {
+      "id": "p53",
+      "anchor": {
+        "type": "point",
+        "x": 254.1,
+        "y": 133.2
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxxx"
+      },
+      "priority": 6
+    },
+    {
+      "id": "p54",
+      "anchor": {
+        "type": "point",
+        "x": 60.3,
+        "y": 184.7
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxxxx"
+      },
+      "priority": 8
+    },
+    {
+      "id": "p55",
+      "anchor": {
+        "type": "point",
+        "x": 188.8,
+        "y": 72.8
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxx"
+      },
+      "priority": 7
+    },
+    {
+      "id": "p56",
+      "anchor": {
+        "type": "point",
+        "x": 196.0,
+        "y": 119.1
+      },
+      "label": {
+        "type": "text",
+        "text": "xxx"
+      },
+      "priority": 8
+    },
+    {
+      "id": "p57",
+      "anchor": {
+        "type": "point",
+        "x": 20.5,
+        "y": 134.8
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxx"
+      },
+      "priority": 0
+    },
+    {
+      "id": "p58",
+      "anchor": {
+        "type": "point",
+        "x": 16.0,
+        "y": 33.3
+      },
+      "label": {
+        "type": "text",
+        "text": "xx"
+      },
+      "priority": 6
+    },
+    {
+      "id": "p59",
+      "anchor": {
+        "type": "point",
+        "x": 23.6,
+        "y": 111.8
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxx"
+      },
+      "priority": 6
+    },
+    {
+      "id": "p60",
+      "anchor": {
+        "type": "point",
+        "x": 111.1,
+        "y": 138.2
+      },
+      "label": {
+        "type": "text",
+        "text": "xx"
+      },
+      "priority": 3
+    },
+    {
+      "id": "p61",
+      "anchor": {
+        "type": "point",
+        "x": 61.2,
+        "y": 185.1
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxx"
+      },
+      "priority": 9
+    },
+    {
+      "id": "p62",
+      "anchor": {
+        "type": "point",
+        "x": 30.8,
+        "y": 73.9
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxxxx"
+      },
+      "priority": 2
+    },
+    {
+      "id": "p63",
+      "anchor": {
+        "type": "point",
+        "x": 191.9,
+        "y": 120.5
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxx"
+      },
+      "priority": 0
+    },
+    {
+      "id": "p64",
+      "anchor": {
+        "type": "point",
+        "x": 138.3,
+        "y": 53.9
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxx"
+      },
+      "priority": 3
+    },
+    {
+      "id": "p65",
+      "anchor": {
+        "type": "point",
+        "x": 125.2,
+        "y": 58.0
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxxxx"
+      },
+      "priority": 7
+    },
+    {
+      "id": "p66",
+      "anchor": {
+        "type": "point",
+        "x": 262.7,
+        "y": 141.0
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxxx"
+      },
+      "priority": 1
+    },
+    {
+      "id": "p67",
+      "anchor": {
+        "type": "point",
+        "x": 274.9,
+        "y": 174.5
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxxxx"
+      },
+      "priority": 2
+    },
+    {
+      "id": "p68",
+      "anchor": {
+        "type": "point",
+        "x": 116.2,
+        "y": 25.5
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxx"
+      },
+      "priority": 8
+    },
+    {
+      "id": "p69",
+      "anchor": {
+        "type": "point",
+        "x": 140.6,
+        "y": 33.6
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxx"
+      },
+      "priority": 3
+    },
+    {
+      "id": "p70",
+      "anchor": {
+        "type": "point",
+        "x": 102.5,
+        "y": 152.1
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxxx"
+      },
+      "priority": 9
+    },
+    {
+      "id": "p71",
+      "anchor": {
+        "type": "point",
+        "x": 143.7,
+        "y": 11.0
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxx"
+      },
+      "priority": 0
+    },
+    {
+      "id": "p72",
+      "anchor": {
+        "type": "point",
+        "x": 205.7,
+        "y": 188.8
+      },
+      "label": {
+        "type": "text",
+        "text": "xx"
+      },
+      "priority": 6
+    },
+    {
+      "id": "p73",
+      "anchor": {
+        "type": "point",
+        "x": 198.6,
+        "y": 86.7
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxx"
+      },
+      "priority": 8
+    },
+    {
+      "id": "p74",
+      "anchor": {
+        "type": "point",
+        "x": 194.9,
+        "y": 108.5
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxx"
+      },
+      "priority": 9
+    },
+    {
+      "id": "p75",
+      "anchor": {
+        "type": "point",
+        "x": 192.2,
+        "y": 87.4
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxx"
+      },
+      "priority": 6
+    },
+    {
+      "id": "p76",
+      "anchor": {
+        "type": "point",
+        "x": 30.5,
+        "y": 80.0
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxx"
+      },
+      "priority": 7
+    },
+    {
+      "id": "p77",
+      "anchor": {
+        "type": "point",
+        "x": 255.3,
+        "y": 107.7
+      },
+      "label": {
+        "type": "text",
+        "text": "xx"
+      },
+      "priority": 4
+    },
+    {
+      "id": "p78",
+      "anchor": {
+        "type": "point",
+        "x": 146.0,
+        "y": 155.2
+      },
+      "label": {
+        "type": "text",
+        "text": "xx"
+      },
+      "priority": 5
+    },
+    {
+      "id": "p79",
+      "anchor": {
+        "type": "point",
+        "x": 42.3,
+        "y": 37.2
+      },
+      "label": {
+        "type": "text",
+        "text": "xxxxxxx"
+      },
+      "priority": 3
+    }
+  ]
+}

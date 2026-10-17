@@ -91,6 +91,11 @@
       "errors": [],
       "warnings": []
     },
+    "problems/strict-repair.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
     "problems/svg-background.json": {
       "valid": true,
       "errors": [],

@@ -858,7 +858,16 @@ probe moves) to `T₀/1000` over the iteration budget. The iteration budget is
 
 After search: any two crossing leaders (only possible when `avoid.leader.leaders` is
 soft) are uncrossed by exchanging label positions when that shortens the total leader
-length; then all hard constraints are re-verified exactly. A violation found here is a
+length. With `strict` omission, the **priority repair** then visits the omitted items in
+total order (except `keep_with` members and items cut by the time guard): an item with a
+usable candidate (statically feasible, or relaxed with `soft_overlap` in the ladder) that
+conflicts with no placed label, or only with labels of strictly lower key (not required),
+takes the candidate with the fewest such labels (then the smallest sum of their gains,
+then the lowest cost, then the lowest candidate id) within the label budgets, and those
+labels are removed and visited in their turn. The search keeps the priority objective,
+but a move can free a position that a lower label then takes; after the repair the
+removal test of §9.2 finds no inversion. Then all hard constraints are re-verified
+exactly. A violation found here is a
 bug; the offending lower-key label is removed and the item reported as omitted.
 
 ### 10.3a Cancellation and progress

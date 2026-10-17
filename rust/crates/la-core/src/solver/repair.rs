@@ -1,12 +1,13 @@
-//! Post-search repairs: joint boundary slot assignment (spec §6.6) and leader uncrossing
-//! (spec §10.3).
+//! Post-search repairs: joint boundary slot assignment (spec §6.6), leader uncrossing and
+//! the priority repair of strict omission (spec §10.3).
 
-use super::Solve;
+use super::greedy::explain;
+use super::{Reason, Solve};
 use crate::boundary::{slot_area, slot_candidate};
 use crate::candidates::{Cand, Kind};
 use crate::cost::Evaluator;
 use crate::geom::seg_intersects;
-use crate::model::opts::LeaderStyle;
+use crate::model::opts::{LeaderStyle, Omission, Step};
 
 /// Bounded isotonic stacking: positions `y_i` (sorted order) minimizing Σ (y_i − d_i)²
 /// subject to `y_{i+1} − y_i ≥ g_i` and `lo ≤ y_0`, `y_{n−1} ≤ hi` (pool adjacent violators).
@@ -403,6 +404,106 @@ fn moved_to(s: &Solve, i: usize, from: u32, center: crate::geom::P) -> Option<Ca
     let mut ev = Evaluator::new(s.model, s.obs, s.env);
     ev.eval(&mut c, v, None);
     Some(c)
+}
+
+/// Strict omission (spec §9.2, §10.3): an omitted item that has a usable candidate in
+/// conflict with no placed label or only with labels of strictly lower priority takes it,
+/// in priority order, and those labels are tried again in their turn. The search keeps
+/// the priority objective, but a move can free a position that a lower label then takes;
+/// after this pass the removal test of the verification finds no inversion.
+pub fn priority_repair(s: &mut Solve) {
+    if s.model.omission != Omission::Strict || s.cancelled {
+        return;
+    }
+    let soft_ok = s.model.ladder.contains(&Step::SoftOverlap);
+    let keys: Vec<usize> = s.pri.prio.iter().map(|p| p.key).collect();
+    let order = s.pri.order.clone();
+    let mut confl = Vec::new();
+    for h in order {
+        if s.state.placed[h].is_some() || s.model.items[h].keep_with.is_some() {
+            continue;
+        }
+        // `None`: removed by this pass
+        if !matches!(
+            s.reasons[h],
+            None | Some(Reason::OmittedByPriority) | Some(Reason::NoFeasibleCandidate)
+        ) {
+            continue;
+        }
+        let key_h = keys[h];
+        // ((removed labels, their gain, cost), candidate, removed, relaxed)
+        type Choice = ((usize, f64, f64), u32, Vec<u32>, bool);
+        let mut best: Option<Choice> = None;
+        for c in s.by_item[h].clone() {
+            let cand = &s.cands[c as usize];
+            if cand.evaluated && !(cand.feasible || soft_ok && cand.relaxed) {
+                continue;
+            }
+            if s.state
+                .first_conflict(cand, &s.cands, s.obs, h, |j| keys[j] <= key_h)
+                .is_some()
+            {
+                continue;
+            }
+            s.ensure_eval(c);
+            let cand = &s.cands[c as usize];
+            if !(cand.feasible || soft_ok && cand.relaxed) {
+                continue;
+            }
+            s.state.conflicts(cand, &s.cands, s.obs, h, &mut confl);
+            if !confl
+                .iter()
+                .all(|&j| keys[j as usize] > key_h && !s.model.items[j as usize].required)
+            {
+                continue;
+            }
+            if let Some(m) = s.model.max_labels {
+                if s.state.n_placed + 1 > m + confl.len() {
+                    continue;
+                }
+            }
+            if let (Some(f), Some(canvas)) = (s.model.max_ink_fraction, s.model.canvas) {
+                let mut area = s.state.label_area_sum;
+                for &j in &confl {
+                    area -= s.cands[s.state.placed[j as usize].unwrap() as usize]
+                        .rect
+                        .area();
+                }
+                if (area + cand.rect.area()) / canvas.area().max(1e-9) > f {
+                    continue;
+                }
+            }
+            let relaxed = !cand.feasible;
+            let cost = cand.cost + if relaxed { cand.relax_cost } else { 0.0 };
+            let gain: f64 = confl.iter().map(|&j| s.pri.prio[j as usize].gain).sum();
+            let score = (confl.len(), gain, cost);
+            let better = match &best {
+                None => true,
+                Some((b, bc, _, _)) => {
+                    score.0 < b.0
+                        || (score.0 == b.0
+                            && (score.1 < b.1
+                                || (score.1 == b.1
+                                    && (score.2 < b.2 || (score.2 == b.2 && c < *bc)))))
+                }
+            };
+            if better {
+                best = Some((score, c, confl.clone(), relaxed));
+            }
+        }
+        match best {
+            Some((_, c, removed, relaxed)) => {
+                for j in removed {
+                    s.state.unplace(j as usize, &s.cands);
+                    s.reasons[j as usize] = None;
+                }
+                s.state.place(h, c, &s.cands, relaxed);
+                s.reasons[h] = None;
+            }
+            None if s.reasons[h].is_none() => s.reasons[h] = Some(explain(s, h)),
+            None => {}
+        }
+    }
 }
 
 #[cfg(test)]

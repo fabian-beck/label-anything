@@ -122,6 +122,13 @@ CASES["explain-blocked-by-labels"] = case(
                pt("low", 388, 288, "Low", priority=1.0, placement={"models": ["distant"]})]},
     {"placed_ids": ["high"], "reasons": {"low": "omitted_by_priority"}})
 
+# found by a search over random problems: before the priority repair (spec §10.3) the local
+# search left one item omitted whose position only a label of lower priority occupied
+CASES["strict-repair"] = case(
+    "strict omission: no omitted item is blocked only by labels of lower priority",
+    {"problem_file": "../problems/strict-repair.json"},
+    {"placed_min": 50})
+
 CASES["max-labels"] = case(
     "a label budget keeps the highest priorities",
     {"canvas": {"width": 600, "height": 200}, "priority": {"budget": {"max_labels": 2}},

@@ -55,7 +55,7 @@ describe("conformance/validate", () => {
     for (const [f, c] of cases) for (const [key] of caseProblems(f, c)) referenced.add(key);
     // every sample problem is validated by some case (the M0 acceptance criterion)
     const samples = jsonFiles("problems").map((f) => `problems/${f}`);
-    expect(samples.length).toBe(24);
+    expect(samples.length).toBe(25);
     for (const s of samples) expect(referenced.has(s), s).toBe(true);
   });
 
