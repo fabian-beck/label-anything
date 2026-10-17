@@ -721,7 +721,7 @@ pub fn internal(item: &Item, vi: usize, v: &Variant, rank: f64, out: &mut Vec<Ca
             }
             y += step;
         }
-        pts.sort_by(|a, b| crate::math::cmp_f64(b.0, a.0));
+        crate::sort::sort_by(&mut pts, |a, b| crate::math::cmp_f64(b.0, a.0));
         for (_, c) in pts.into_iter().take(8) {
             push(c, out);
         }

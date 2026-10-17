@@ -23,6 +23,7 @@ pub mod par;
 pub mod priority;
 pub mod result;
 pub mod solver;
+pub mod sort;
 pub mod units;
 pub mod validate;
 

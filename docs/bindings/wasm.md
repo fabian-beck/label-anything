@@ -149,7 +149,7 @@ Sizes of `label_anything_bg.wasm` (wasm-bindgen output without name section; gzi
 
 | Variant | How to build | raw | gzip | brotli |
 |---|---|---:|---:|---:|
-| **default**: full shaping + SVG + image decoders | `npm run build:wasm` | 2,524 KB ³ | **961 KB** ³ | – |
+| **default**: full shaping + SVG + image decoders | `npm run build:wasm` | 2,554 KB ⁴ | **969 KB** ⁴ | 720 KB ⁴ |
 | lite: no image decoders | `npm run build:wasm -- --no-default-features` | 2,087 KB | 784 KB | 581 KB |
 | default, opt-level "s" everywhere | `npm run build:wasm -- --core-opt-level s` | 2,365 KB | 873 KB | 648 KB |
 | lite, opt-level "s" everywhere | `… -- --no-default-features --core-opt-level s` | 1,938 KB | 711 KB | 527 KB |
@@ -163,7 +163,10 @@ Sizes of `label_anything_bg.wasm` (wasm-bindgen output without name section; gzi
 SVG backend (`la-svg`) are compiled into `la-core` unconditionally today. ² At commit
 0e75308, when the default was 943 KB gzip; the differences to the default still hold.
 ³ Since the raster crate is compiled at opt-level 3 as well (13 KB gzip more; the other
-rows predate that change).
+rows predate that change). ⁴ With font classes and fan labels, after the solver crate's
+sorts were reduced to one copy of the standard library's sort per element type (its 27
+call sites had one each, 35 KB gzip; native builds are unchanged, see
+`la-core/src/sort.rs`).
 
 What the optional parts cost (gzip): full shaping (rustybuzz + ttf-parser, used for
 complex scripts when `text.shaping` is `auto` or `full`) 212 KB, PNG/JPEG/WebP decoding

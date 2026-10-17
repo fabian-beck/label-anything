@@ -184,7 +184,7 @@ pub fn run(s: &mut Solve) {
         }
         g.band_key = None;
         // ladder pass in total order
-        deferred.sort_by_key(|&i| s.pri.prio[i].rank);
+        crate::sort::sort_by_key(&mut deferred, |&i| s.pri.prio[i].rank);
         for i in deferred {
             if !g.done[i] && !s.poll_cancel() {
                 process_unit(s, &mut g, i, true);
@@ -231,7 +231,7 @@ fn process_unit(s: &mut Solve, g: &mut Greedy, i: usize, ladder: bool) -> bool {
     if let Some(si) = g.sets[i] {
         let members = g.set_members[si].clone();
         let mut members_sorted = members.clone();
-        members_sorted.sort_by_key(|&m| s.pri.prio[m].rank);
+        crate::sort::sort_by_key(&mut members_sorted, |&m| s.pri.prio[m].rank);
         let mut placed_now = Vec::new();
         let mut failed: Option<usize> = None;
         for &m in &members_sorted {
@@ -459,7 +459,9 @@ fn best_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<u32> {
     if scored.is_empty() {
         return None;
     }
-    scored.sort_by(|a, b| crate::math::cmp_f64(a.0, b.0).then(a.1.cmp(&b.1)));
+    crate::sort::sort_by(&mut scored, |a, b| {
+        crate::math::cmp_f64(a.0, b.0).then(a.1.cmp(&b.1))
+    });
     let w = &s.model.weights;
     if w.lookahead == 0.0 && w.starve == 0.0 {
         return Some(scored[0].1);

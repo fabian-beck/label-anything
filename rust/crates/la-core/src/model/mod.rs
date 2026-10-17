@@ -607,7 +607,7 @@ fn resolve_groups(m: &mut Model) {
         .filter(|v| v.len() >= 2)
         .map(|v| (v[0], v))
         .collect();
-    groups.sort_by_key(|g| g.0);
+    crate::sort::sort_by_key(&mut groups, |g| g.0);
     for (rep, members) in &groups {
         let mut pts: Vec<P> = Vec::new();
         let mut centroid = P::new(0.0, 0.0);

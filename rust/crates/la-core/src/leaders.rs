@@ -348,7 +348,7 @@ pub fn item_seeds(fs: &FreeSpace, item: &Item) -> Vec<NearSeed> {
             });
         }
     }
-    seeds.sort_by(|a, b| {
+    crate::sort::sort_by(&mut seeds, |a, b| {
         crate::math::cmp_f64(b.key, a.key)
             .then(a.row.cmp(&b.row))
             .then(a.col.cmp(&b.col))

@@ -94,7 +94,7 @@ pub fn fan_pass(s: &mut Solve) {
     };
     // anchors by height, for the crowd queries
     let mut by_y: Vec<usize> = (0..n).collect();
-    by_y.sort_by(|&a, &b| {
+    crate::sort::sort_by(&mut by_y, |&a, &b| {
         crate::math::cmp_f64(model.items[a].anchor.y, model.items[b].anchor.y).then(a.cmp(&b))
     });
     let ys: Vec<f64> = by_y.iter().map(|&i| model.items[i].anchor.y).collect();
@@ -211,7 +211,9 @@ fn crowd_of(
                 near.push((pa.dist(pj), j));
             }
         }
-        near.sort_by(|x, y| crate::math::cmp_f64(x.0, y.0).then(x.1.cmp(&y.1)));
+        crate::sort::sort_by(&mut near, |x, y| {
+            crate::math::cmp_f64(x.0, y.0).then(x.1.cmp(&y.1))
+        });
         for (_, j) in near {
             if crowd.len() == MAX_CROWD {
                 break;
@@ -373,7 +375,7 @@ fn layout(
     let model = s.model;
     let items = &model.items;
     let mut order: Vec<usize> = members.to_vec();
-    order.sort_by(|&a, &b| {
+    crate::sort::sort_by(&mut order, |&a, &b| {
         crate::math::cmp_f64(items[a].anchor.y, items[b].anchor.y)
             .then(crate::math::cmp_f64(items[a].anchor.x, items[b].anchor.x))
             .then(a.cmp(&b))

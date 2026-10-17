@@ -160,7 +160,7 @@ fn knn_gaps(model: &Model, k: usize) -> Vec<f64> {
                 }
                 gaps.push(maxf(c.dist(it.anchor) - r - ri, 0.0));
             }
-            gaps.sort_by(|a, b| cmp_f64(*a, *b));
+            crate::sort::sort_by(&mut gaps, |a, b| cmp_f64(*a, *b));
             // enough neighbours within the searched square guarantee correctness
             if gaps.len() >= k && gaps[k - 1] + ri <= radius {
                 out.push(gaps[k - 1]);
@@ -227,7 +227,7 @@ pub fn normalize(vals: &[Option<f64>], how: &str) -> Vec<f64> {
         _ => {
             let n = present.len();
             let mut sorted = present.clone();
-            sorted.sort_by(|a, b| cmp_f64(a.1, b.1).then(a.0.cmp(&b.0)));
+            crate::sort::sort_by(&mut sorted, |a, b| cmp_f64(a.1, b.1).then(a.0.cmp(&b.0)));
             let mut k = 0;
             while k < n {
                 let mut e = k;
@@ -382,7 +382,7 @@ pub fn compute(model: &Model, variants: &[Vec<Variant>], env: &dyn Env) -> Prior
                 .unwrap_or(1) as usize;
             let mut order: Vec<usize> = (0..n).collect();
             let none = vec![false; n];
-            order.sort_by(|&a, &b| cmp_items(a, b, &none));
+            crate::sort::sort_by(&mut order, |&a, &b| cmp_items(a, b, &none));
             let mut groups: Vec<(la_expr::Value, usize)> = Vec::new();
             for &i in &order {
                 let v = eval(&e, &model.items[i], &attrs[i]);
@@ -403,7 +403,7 @@ pub fn compute(model: &Model, variants: &[Vec<Variant>], env: &dyn Env) -> Prior
     }
     // total order
     let mut order: Vec<usize> = (0..n).collect();
-    order.sort_by(|&a, &b| cmp_items(a, b, &reserved));
+    crate::sort::sort_by(&mut order, |&a, &b| cmp_items(a, b, &reserved));
     // key levels with bands
     let mut prio: Vec<Prio> = (0..n)
         .map(|i| Prio {

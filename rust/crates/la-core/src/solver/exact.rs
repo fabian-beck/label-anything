@@ -143,7 +143,7 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
             .copied()
             .filter(|&c| s.cands[c as usize].feasible)
             .collect();
-        v.sort_by(|&a, &b| {
+        crate::sort::sort_by(&mut v, |&a, &b| {
             crate::math::cmp_f64(s.cands[a as usize].cost, s.cands[b as usize].cost).then(a.cmp(&b))
         });
         v.truncate(24);

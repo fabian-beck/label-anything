@@ -367,7 +367,7 @@ impl MaskRaster {
         if edges.is_empty() {
             return;
         }
-        edges.sort_by(|p, q| crate::math::cmp_f64(p.ymin, q.ymin));
+        crate::sort::sort_by(&mut edges, |p, q| crate::math::cmp_f64(p.ymin, q.ymin));
         let (j0, j1) = self.sample_row_range(ylo, yhi);
         let mut next = 0usize;
         let mut active: Vec<usize> = Vec::new();
@@ -387,7 +387,9 @@ impl MaskRaster {
                     xs.push((ed.x_at_ymin + (y - ed.ymin) * ed.slope, ed.dir));
                 }
             }
-            xs.sort_by(|p, q| crate::math::cmp_f64(p.0, q.0).then(p.1.cmp(&q.1)));
+            crate::sort::sort_by(&mut xs, |p, q| {
+                crate::math::cmp_f64(p.0, q.0).then(p.1.cmp(&q.1))
+            });
             if even_odd {
                 let mut k = 0;
                 while k + 1 < xs.len() {

@@ -284,12 +284,14 @@ pub fn build(
                 if s.static_dropped[i] > 0 {
                     *counts.entry("items".into()).or_insert(0) += s.static_dropped[i] as usize;
                 }
-                feas.sort_by(|a, b| crate::math::cmp_f64(a.0, b.0).then(a.1.cmp(&b.1)));
+                crate::sort::sort_by(&mut feas, |a, b| {
+                    crate::math::cmp_f64(a.0, b.0).then(a.1.cmp(&b.1))
+                });
                 let probes: Vec<Cand> = if feas.is_empty() {
                     // no kept feasible candidate: the feasible ones the placed labels had
                     // blocked while they were generated (stable: ties in generation order)
                     let mut u = s.blocked_feasible[i].clone();
-                    u.sort_by(|a, b| crate::math::cmp_f64(a.cost, b.cost));
+                    crate::sort::sort_by(&mut u, |a, b| crate::math::cmp_f64(a.cost, b.cost));
                     u
                 } else {
                     feas.iter()
@@ -313,12 +315,12 @@ pub fn build(
                     }
                 }
                 let mut cv: Vec<(String, usize)> = counts.into_iter().collect();
-                cv.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
+                crate::sort::sort_by(&mut cv, |a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
                 m.insert(
                     "blocking".into(),
                     json!(cv.into_iter().map(|x| x.0).collect::<Vec<_>>()),
                 );
-                blockers.sort_by_key(|&j| s.pri.prio[j as usize].rank);
+                crate::sort::sort_by_key(&mut blockers, |&j| s.pri.prio[j as usize].rank);
                 m.insert(
                     "blocked_by".into(),
                     json!(blockers
@@ -345,7 +347,7 @@ pub fn build(
         .map(|i| s.pri.prio[i].gain)
         .sum();
     let mut omitted: Vec<usize> = (0..n).filter(|&i| s.state.placed[i].is_none()).collect();
-    omitted.sort_by_key(|&i| std::cmp::Reverse(s.pri.prio[i].rank));
+    crate::sort::sort_by_key(&mut omitted, |&i| std::cmp::Reverse(s.pri.prio[i].rank));
     let required_placed = (0..n)
         .filter(|&i| model.items[i].required)
         .all(|i| s.state.placed[i].is_some());

@@ -600,7 +600,7 @@ fn evaluate_and_prune(
         let mut ds: Vec<usize> = (0..fresh.len())
             .filter(|&k| fresh[k].variant as usize == vi && fresh[k].kind == Kind::Distant)
             .collect();
-        ds.sort_by(|&a, &b| {
+        crate::sort::sort_by(&mut ds, |&a, &b| {
             let ka = (!fresh[a].feasible, fresh[a].cost);
             let kb = (!fresh[b].feasible, fresh[b].cost);
             ka.0.cmp(&kb.0)

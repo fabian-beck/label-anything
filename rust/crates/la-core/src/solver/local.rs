@@ -115,7 +115,7 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
             probes.push(b - a);
         }
     }
-    probes.sort_by(|a, b| crate::math::cmp_f64(*a, *b));
+    crate::sort::sort_by(&mut probes, |a, b| crate::math::cmp_f64(*a, *b));
     let t0 = probes
         .get(probes.len() / 2)
         .copied()
@@ -371,7 +371,9 @@ fn try_insert(
             c,
         ));
     }
-    scored.sort_by(|a, b| crate::math::cmp_f64(a.0, b.0).then(a.1.cmp(&b.1)));
+    crate::sort::sort_by(&mut scored, |a, b| {
+        crate::math::cmp_f64(a.0, b.0).then(a.1.cmp(&b.1))
+    });
     let tries = scored.len().min(INSERT_TRIES);
     let offset = if tries > 0 {
         rng.next_below(tries as u32) as usize

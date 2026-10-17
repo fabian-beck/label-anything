@@ -84,7 +84,9 @@ pub fn dist_boundary(rings: &[Vec<P>], p: P) -> f64 {
 /// orientation, without collinear points. Deterministic for identical input.
 pub fn convex_hull(points: &[P]) -> Vec<P> {
     let mut pts: Vec<P> = points.iter().copied().filter(|p| p.is_finite()).collect();
-    pts.sort_by(|a, b| crate::math::cmp_f64(a.x, b.x).then(crate::math::cmp_f64(a.y, b.y)));
+    crate::sort::sort_by(&mut pts, |a, b| {
+        crate::math::cmp_f64(a.x, b.x).then(crate::math::cmp_f64(a.y, b.y))
+    });
     pts.dedup();
     if pts.len() < 3 {
         return pts;

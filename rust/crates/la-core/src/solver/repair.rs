@@ -170,7 +170,9 @@ pub fn boundary_pass(s: &mut Solve) {
             }
         };
         let mut order = members.clone();
-        order.sort_by(|&a, &b| crate::math::cmp_f64(key(a), key(b)).then(a.cmp(&b)));
+        crate::sort::sort_by(&mut order, |&a, &b| {
+            crate::math::cmp_f64(key(a), key(b)).then(a.cmp(&b))
+        });
         let sizes: Vec<f64> = order
             .iter()
             .map(|&i| {

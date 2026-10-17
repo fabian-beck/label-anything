@@ -246,7 +246,7 @@ impl LeaderOpts {
             .into_iter()
             .map(|a| a.rem_euclid(360.0))
             .collect();
-        angles.sort_by(|a, b| crate::math::cmp_f64(*a, *b));
+        crate::sort::sort_by(&mut angles, |a, b| crate::math::cmp_f64(*a, *b));
         angles.dedup();
         LeaderOpts {
             style: LeaderStyle::parse(&o.string("leaders.style")),
