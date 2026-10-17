@@ -38,7 +38,12 @@ blocked the label's previous box:
 * **Near moves.** The stability term grows on beyond 1 em, by 1/4 per em up to 5 em:
   `w_stability · (min(1, d/em) + min(1, max(0, d/em − 1)/4))`, at most 2. A label that
   must move goes to a near free place rather than to the best one anywhere, and leaves
-  its place for a better one only when that is clearly better.
+  its place for a better one only when that is clearly better. ADR 0025 rejected a
+  similar term because it traded jumps for labels added and removed. On top of the nudges
+  and the kept leaders it does not (labels added and removed per frame: force 2.05 →
+  2.02, drag 1.48 → 1.43, pan and zoom 52.8 → 53.3), and it removes about 40 % of the
+  jumps in the solves in which the median node moves less than 1 px (force 0.66 → 0.39,
+  drag 1.20 → 0.70 per solve), the moves this decision is about.
 
 Considered and rejected:
 * *A higher `weights.stability` (2 or 4)*: fewer jumps late in the force layout (0.34 and

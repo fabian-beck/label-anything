@@ -1,6 +1,6 @@
 # 0016 — Warm starts: the previous box as a candidate, kept first when still free
 
-* Status: accepted
+* Status: accepted; the stability term amended by ADR 0027
 * Date: 2026-10-16
 
 ## Context

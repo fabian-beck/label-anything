@@ -1,6 +1,7 @@
 # 0025 — Warm starts follow their anchors; degraded labels keep their box
 
-* Status: accepted (spec §6.7, §10.1, §11)
+* Status: accepted (spec §6.7, §10.1, §11); the stability cost growing beyond 1 em,
+  rejected below, was adopted in another form by ADR 0027
 * Date: 2026-10-17
 
 ## Context
