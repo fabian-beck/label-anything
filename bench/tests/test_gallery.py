@@ -54,10 +54,21 @@ def test_gallery_from_a_run(tmp_path, monkeypatch):
     assert (fig["placed"], fig["total"], fig["hard_violations"]) == (3, 3, 0)
     with Image.open(out / fig["img"]) as im:
         assert im.format == "WEBP" and list(im.size) == fig["size"]
+    # one rendering at twice the page scale for the viewer, the page image scaled down from it
+    assert fig["full"] == "img/full/03-gapminder__y2005-vector.webp" and fig["full_size"] == [2 * fig["size"][0],
+                                                                                                2 * fig["size"][1]]
+    with Image.open(out / fig["full"]) as im:
+        assert list(im.size) == fig["full_size"]
+    assert (f'href="{fig["full"]}" target="_blank" rel="noopener" data-w="{fig["full_size"][0]}" '
+            f'data-h="{fig["full_size"][1]}"') in page
+    assert '<dialog class="viewer" id="viewer"' in page and "dlg.showModal()" in page
     # the run's renderings of the same problem: Label Anything and the greedy baseline (naive is not shown)
     (cmp,) = data["comparisons"]
     assert [c["solver"] for c in cmp["cells"]] == ["rust", "greedy"]
-    assert all((out / c["img"]).exists() for c in cmp["cells"]) and 'class="cell mine"' in page
+    assert all((out / c["img"]).exists() and (out / c["full"]).exists() for c in cmp["cells"])
+    assert [c["full"] for c in cmp["cells"]] == [f"img/full/cmp/{s}/03-gapminder__y2005-vector.webp"
+                                                 for s in ("rust", "greedy")]
+    assert 'class="cell mine"' in page
     # self-contained (fonts and their licence), linked from and to the report
     assert (out / "fonts" / "NotoSans-Regular.ttf").exists() and (out / "fonts" / "OFL.txt").exists()
     assert "fonts.googleapis" not in page and 'href="../index.html"' in page
@@ -79,6 +90,7 @@ def test_stability_frames(tmp_path):
          "metrics": {"steps": steps, "displacement_median_px": 3.0, "nesting_fraction_mean": 0.8}}]}
     st = gallery.stability(rep, report, tmp_path / "out")
     assert [f["frame"] for f in st["frames"]] == [1, 16, 30]
+    assert all(f["full"] == f["img"] for f in st["frames"])  # frames are zoomed as the run rendered them
     assert (st["zoom_steps"], st["pan_steps"], st["flips_zoom"], st["flips_pan"]) == (19, 10, 0.25, 0.05)
     assert all((tmp_path / "out" / f["img"]).exists() for f in st["frames"])
     html = gallery.stability_html(st)

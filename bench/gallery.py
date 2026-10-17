@@ -12,8 +12,10 @@ rendered its results, the page adds the run's renderings of the same problems by
 baselines and the frames of its stability sequence.
 
 Output (default ``<run>/gallery``, else ``bench-report/gallery``): ``index.html``,
-``img/*.webp``, ``fonts/`` (Noto Sans and its licence: the page loads nothing from other
-servers) and ``gallery.json`` (the numbers of every figure). A gallery written into its run
+``img/*.webp`` (the page's images), ``img/full/*.webp`` (the same renderings at twice the
+resolution, loaded by the page's image viewer: pinch, double-tap or scroll to zoom, drag to
+pan, swipe or the arrow keys for the next image), ``fonts/`` (Noto Sans and its licence: the
+page loads nothing from other servers) and ``gallery.json`` (the numbers of every figure). A gallery written into its run
 directory is linked from the run's report (``index.html`` is rebuilt). CI's ``baselines`` job
 does that, so the Pages workflow publishes it at ``<site>/benchmark-report/gallery/``.
 """
@@ -194,10 +196,24 @@ def render_scale(width: float) -> float:
     return 1.0 if width >= 1200 else 1.5 if width >= 700 else 2.0
 
 
-def save_webp(img: Image.Image, path: Path) -> list[int]:
+def save_webp(img: Image.Image, path: Path, quality: int = 90) -> list[int]:
     path.parent.mkdir(parents=True, exist_ok=True)
-    img.convert("RGB").save(path, "WEBP", quality=90, method=6)
+    img.convert("RGB").save(path, "WEBP", quality=quality, method=6)
     return list(img.size)
+
+
+ZOOM = 2.0  # pixels of the zoomable image (img/full/…) per pixel of the page image
+
+
+def render_pair(problem: dict, result: dict, background: Path | None, out: Path, rel: str) -> dict:
+    """Render once at ZOOM × the page scale: the image the viewer zooms into and, scaled down, the page image.
+    Labels, leaders and marks stay sharp at that scale; background images keep their own resolution."""
+    width = float((problem.get("canvas") or {}).get("width", 800))
+    full = render.render_png(problem, result, background, render_scale(width) * ZOOM)
+    page = full.resize((max(1, round(full.width / ZOOM)), max(1, round(full.height / ZOOM))), Image.LANCZOS)
+    full_rel = "img/full/" + rel.removeprefix("img/")
+    return {"img": rel, "size": save_webp(page, out / rel), "full": full_rel,
+            "full_size": save_webp(full, out / full_rel, quality=85)}
 
 
 def solve_figure(fig: Fig, files: dict, solve: Solve, out: Path, tmp: Path) -> dict:
@@ -207,11 +223,9 @@ def solve_figure(fig: Fig, files: dict, solve: Solve, out: Path, tmp: Path) -> d
     result = solve(files["problem"], tmp / f"{name}.json")
     truth = read_json(files["truth"]) if files.get("truth") else None
     s = evaluate(problem, result, truth, removal_test=False)["summary"]
-    width = float((problem.get("canvas") or {}).get("width", 800))
-    img = render.render_png(problem, result, files["background"], render_scale(width))
+    images = render_pair(problem, result, files["background"], out, f"img/{name}.webp")
     leaders = sum(1 for p in result.get("placements", []) if p.get("placed") and p.get("leader"))
-    return {"key": fig.key, "img": f"img/{name}.webp", "size": save_webp(img, out / "img" / f"{name}.webp"),
-            "placed": s["placed"], "total": s["total"], "omitted": s["total"] - s["placed"], "leaders": leaders,
+    return {"key": fig.key, **images, "placed": s["placed"], "total": s["total"], "omitted": s["total"] - s["placed"], "leaders": leaders,
             "hard_violations": s["hard_violations"], "leader_len_max_em": s.get("leader_len_max_em"),
             "leader_near_crossings": s.get("leader_near_crossings"),
             "leader_mark_touches": s.get("leader_mark_touches"),
@@ -221,8 +235,9 @@ def solve_figure(fig: Fig, files: dict, solve: Solve, out: Path, tmp: Path) -> d
 # ---------------------------------------------------------------------------
 # the run's baselines and stability frames
 # ---------------------------------------------------------------------------
-def comparisons(run: Path, report: dict, out: Path) -> list[dict]:
-    """The run's renderings of COMPARISONS, by every solver of COMPARE_SOLVERS it has."""
+def comparisons(run: Path, report: dict, out: Path, problems: Path = paths.PROBLEMS) -> list[dict]:
+    """The run's results for COMPARISONS, by every solver of COMPARE_SOLVERS it has, rendered like the
+    figures (the run's own rendering when its result or problem file is gone)."""
     rows = {(r["solver"], r["scenario"], r["config"]): r for r in report.get("results", [])}
     figs = []
     for scenario, config, title, text in COMPARISONS:
@@ -235,11 +250,18 @@ def comparisons(run: Path, report: dict, out: Path) -> list[dict]:
             src = run / r["image"] if r.get("image") else None
             if src is not None and src.exists() and "summary" in r:
                 rel = f"img/cmp/{s}/{scenario}__{config}.webp"
-                with Image.open(src) as im:
-                    cell["size"] = save_webp(im, out / rel)
+                res = run / r["result"] if r.get("result") else None
+                prob = paths.REPO / r["problem"] if r.get("problem") else None
+                if res is not None and res.exists() and prob is not None and prob.exists():
+                    files = problem_files(problems, f"{scenario}/{config}") or {}
+                    bg = files.get("background") or render.default_background_png(prob)
+                    cell.update(render_pair(read_json(prob), read_json(res), bg, out, rel))
+                else:
+                    with Image.open(src) as im:
+                        size = save_webp(im, out / rel)
+                    cell.update(img=rel, size=size, full=rel, full_size=size)
                 sm = r["summary"]
-                cell.update(img=rel, placed=sm["placed"], total=sm["total"],
-                            hard_violations=sm.get("hard_violations") or 0)
+                cell.update(placed=sm["placed"], total=sm["total"], hard_violations=sm.get("hard_violations") or 0)
             else:
                 cell["why"] = r.get("skipped") or r.get("error") or "no rendering"
             cells.append(cell)
@@ -262,7 +284,8 @@ def stability(run: Path, report: dict, out: Path) -> dict | None:
         dst = f"img/seq/{seq['sequence']}/{stem}.webp"
         with Image.open(src) as im:
             size = save_webp(im, out / dst)
-        frames.append({"img": dst, "size": size, "frame": int(stem.removeprefix("frame")) + 1})
+        frames.append({"img": dst, "size": size, "full": dst, "full_size": size,
+                       "frame": int(stem.removeprefix("frame")) + 1})
     m = seq.get("metrics") or {}
     steps = m.get("steps") or []
 
@@ -291,6 +314,8 @@ CSS = r"""
   --label: #3b6aa0; --label-soft: #e6edf6; --omit: #c0352f; --good: #2d7a4c;
   --body: "Noto Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
   --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  /* the image viewer is dark in both themes */
+  --scrim: #0d1218; --scrim-ink: #e8edf2; --scrim-muted: #9eabb8; --scrim-btn: #1c2631; --scrim-line: #3a4856;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
@@ -328,7 +353,7 @@ section > p.lede { margin: -10px 0 0; color: var(--muted); max-width: 72ch; }
 .fig, .cmp { margin: 0; background: var(--card); border: 1px solid var(--rule); border-radius: 4px;
   display: grid; align-content: start; min-width: 0; overflow: hidden; scroll-margin-top: 16px; }
 .fig.wide { grid-column: 1 / -1; }
-.shot { display: block; background: #fff; border-bottom: 1px solid var(--rule); line-height: 0; }
+.shot { display: block; background: #fff; border-bottom: 1px solid var(--rule); line-height: 0; cursor: zoom-in; }
 .shot img { width: 100%; height: auto; display: block; }
 .shot:focus-visible { outline: 3px solid var(--label); outline-offset: -3px; }
 figcaption { padding: 14px 16px 16px; display: grid; gap: 6px; min-width: 0; }
@@ -357,13 +382,46 @@ figcaption p { margin: 0; color: var(--muted); max-width: 75ch; }
 footer { color: var(--muted); font-size: 13px; display: grid; gap: 8px; max-width: 80ch; }
 code { font-family: var(--mono); font-size: 0.9em; background: var(--label-soft); padding: 1px 4px; border-radius: 2px; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: no-preference) { .shot img { transition: filter 0.15s ease; } .shot:hover img { filter: brightness(0.97); } }
+/* image viewer: the stage takes every touch (pinch, pan, double-tap); the bars float over it */
+html.viewing { overflow: hidden; }
+dialog.viewer { position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0;
+  padding: 0; border: 0; background: var(--scrim); color: var(--scrim-ink); overscroll-behavior: contain; touch-action: none; }
+dialog.viewer::backdrop { background: var(--scrim); }
+.stage { position: absolute; inset: 0; overflow: hidden; touch-action: none; cursor: zoom-in; }
+.stage.zoomed { cursor: grab; }
+.stage.zoomed.dragging { cursor: grabbing; }
+.stage img { position: absolute; left: 0; top: 0; max-width: none; transform-origin: 0 0; background: #fff;
+  user-select: none; -webkit-user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none; will-change: transform; }
+.vbar { position: absolute; left: 0; right: 0; display: flex; align-items: center; gap: 8px; pointer-events: none;
+  padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
+.vbar > * { pointer-events: auto; }
+.vbar.top { top: 0; padding-top: max(10px, env(safe-area-inset-top, 0px)); padding-bottom: 18px;
+  background: linear-gradient(var(--scrim) 45%, transparent); }
+.vbar.bottom { bottom: 0; justify-content: center; padding-top: 18px; padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(transparent, var(--scrim) 55%); }
+.vtitle { flex: 1; min-width: 0; display: grid; gap: 2px; pointer-events: none; }
+.vcap { margin: 0; font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vhint { margin: 0; font-size: 12px; color: var(--scrim-muted); }
+@media (pointer: coarse) { .vhint .fine { display: none; } }
+@media (pointer: fine) { .vhint .touch { display: none; } }
+.vbtn { flex: none; min-width: 44px; height: 44px; padding: 0 10px; border-radius: 22px; border: 1px solid var(--scrim-line);
+  background: var(--scrim-btn); color: var(--scrim-ink); font: 700 15px/1 var(--body); display: inline-grid;
+  place-items: center; cursor: pointer; }
+.vbtn svg { width: 20px; height: 20px; }
+.vbtn:disabled { opacity: 0.35; cursor: default; }
+.vbtn:focus-visible { outline: 2px solid var(--scrim-ink); outline-offset: 2px; }
+.vpct { min-width: 4.5em; text-align: center; font-family: var(--mono); font-size: 12px; color: var(--scrim-muted);
+  font-variant-numeric: tabular-nums; }
 """
 
 
-def _img(src: str, alt: str, size: list[int], lazy: bool) -> str:
+def _img(m: dict, alt: str, caption: str, lazy: bool) -> str:
+    """The page image, linked to the image the viewer zooms into (``data-w``/``data-h``: its size)."""
     load = ' loading="lazy" decoding="async"' if lazy else ""
-    return (f'<a class="shot" href="{E(src)}" target="_blank" rel="noopener"><img src="{E(src)}" alt="{E(alt)}" '
-            f'width="{size[0]}" height="{size[1]}"{load}></a>')
+    full, fs = m.get("full", m["img"]), m.get("full_size", m["size"])
+    return (f'<a class="shot" href="{E(full)}" target="_blank" rel="noopener" data-w="{fs[0]}" data-h="{fs[1]}" '
+            f'data-caption="{E(caption)}"><img src="{E(m["img"])}" alt="{E(alt)}" width="{m["size"][0]}" '
+            f'height="{m["size"][1]}"{load}></a>')
 
 
 def _chips(items: list[tuple[str, str]]) -> str:
@@ -384,11 +442,221 @@ def _fig_chips(m: dict) -> str:
     return _chips(chips)
 
 
+def _icon(d: str) -> str:
+    return (f'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="{d}" fill="none" stroke="currentColor" '
+            'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+
+
+VIEWER_HTML = f"""<dialog class="viewer" id="viewer" aria-label="Image viewer">
+  <div class="stage" id="v-stage"><img id="v-img" alt="" draggable="false"></div>
+  <div class="vbar top">
+    <div class="vtitle"><p class="vcap" id="v-cap"></p>
+      <p class="vhint"><span class="touch">Pinch or double-tap to zoom, swipe for the next image</span><span
+        class="fine">Scroll or double-click to zoom, drag to pan, arrow keys for the next image</span></p></div>
+    <button type="button" class="vbtn" id="v-close" aria-label="Close">{_icon("M5 5L15 15M15 5L5 15")}</button>
+  </div>
+  <div class="vbar bottom">
+    <button type="button" class="vbtn" id="v-prev" aria-label="Previous image">{_icon("M12 4L6 10L12 16")}</button>
+    <button type="button" class="vbtn" id="v-out" aria-label="Zoom out">{_icon("M4 10H16")}</button>
+    <span class="vpct" id="v-pct">100 %</span>
+    <button type="button" class="vbtn" id="v-in" aria-label="Zoom in">{_icon("M4 10H16M10 4V16")}</button>
+    <button type="button" class="vbtn" id="v-fit">Fit</button>
+    <button type="button" class="vbtn" id="v-next" aria-label="Next image">{_icon("M8 4L14 10L8 16")}</button>
+  </div>
+</dialog>"""
+
+# Pinch, double-tap, the wheel or the buttons zoom; a drag pans; a swipe at fit, the arrow buttons or
+# keys step through the images and keep the view between images of the same size (one problem drawn
+# by several labelers). Without <dialog> support the links open the images.
+VIEWER_JS = r"""(() => {
+  const dlg = document.getElementById("viewer");
+  if (!dlg || typeof dlg.showModal !== "function") return;
+  const $ = (id) => document.getElementById(id);
+  const stage = $("v-stage"), img = $("v-img"), cap = $("v-cap"), pct = $("v-pct");
+  const prev = $("v-prev"), next = $("v-next");
+  const shots = Array.from(document.querySelectorAll("a.shot"));
+  const still = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const ptrs = new Map();
+  let cur = -1, natW = 1, natH = 1, fw = 1, fh = 1, s = 1, X = 0, Y = 0, nudge = 0, g = null, tap = null;
+
+  const rect = () => stage.getBoundingClientRect();
+  const at = (e) => { const r = rect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+  const maxScale = () => Math.max(4, (4 * natW) / fw); // up to 4 screen px per image px
+
+  function fit() {
+    const r = rect();
+    const k = Math.min(r.width / natW, r.height / natH);
+    fw = natW * k;
+    fh = natH * k;
+    img.style.width = fw + "px";
+    img.style.height = fh + "px";
+  }
+  function apply(animate) {
+    const r = rect();
+    s = Math.min(Math.max(s, 1), maxScale());
+    const w = fw * s, h = fh * s;
+    X = w <= r.width ? (r.width - w) / 2 : Math.min(0, Math.max(r.width - w, X));
+    Y = h <= r.height ? (r.height - h) / 2 : Math.min(0, Math.max(r.height - h, Y));
+    img.style.transition = animate && !still.matches ? "transform 0.2s ease-out" : "none";
+    img.style.transform = "translate(" + (X + nudge) + "px, " + Y + "px) scale(" + s + ")";
+    pct.textContent = Math.round((100 * w) / natW) + " %";
+    stage.classList.toggle("zoomed", s > 1.001);
+  }
+  function zoomAt(px, py, ns, animate) {
+    ns = Math.min(Math.max(ns, 1), maxScale());
+    X = px - ((px - X) / s) * ns;
+    Y = py - ((py - Y) / s) * ns;
+    s = ns;
+    apply(animate);
+  }
+  function zoomBy(k) {
+    const r = rect();
+    zoomAt(r.width / 2, r.height / 2, s * k, true);
+  }
+  function show(i, keepView) {
+    const a = shots[i];
+    if (!a) return;
+    const w = Number(a.dataset.w) || 1, h = Number(a.dataset.h) || 1;
+    const keep = keepView && w === natW && h === natH;
+    const thumb = a.querySelector("img");
+    cur = i;
+    natW = w;
+    natH = h;
+    img.src = thumb.currentSrc || thumb.src;
+    img.alt = thumb.alt;
+    cap.textContent = a.dataset.caption || thumb.alt;
+    if (a.href !== img.src) {
+      const hi = new Image();
+      hi.onload = () => { if (cur === i) img.src = a.href; };
+      hi.src = a.href;
+    }
+    prev.disabled = i === 0;
+    next.disabled = i === shots.length - 1;
+    fit();
+    if (!keep) s = 1;
+    nudge = 0;
+    apply(false);
+  }
+  function step(d) {
+    if (cur + d >= 0 && cur + d < shots.length) show(cur + d, true);
+  }
+
+  shots.forEach((a, i) => a.addEventListener("click", (e) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    document.documentElement.classList.add("viewing");
+    if (!dlg.open) dlg.showModal();
+    show(i, false);
+  }));
+  dlg.addEventListener("close", () => {
+    document.documentElement.classList.remove("viewing");
+    cur = -1;
+    ptrs.clear();
+    g = null;
+  });
+  $("v-close").addEventListener("click", () => dlg.close());
+  $("v-in").addEventListener("click", () => zoomBy(1.6));
+  $("v-out").addEventListener("click", () => zoomBy(1 / 1.6));
+  $("v-fit").addEventListener("click", () => { s = 1; apply(true); });
+  prev.addEventListener("click", () => step(-1));
+  next.addEventListener("click", () => step(1));
+  dlg.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") step(-1);
+    else if (e.key === "ArrowRight") step(1);
+    else if (e.key === "+" || e.key === "=") zoomBy(1.6);
+    else if (e.key === "-" || e.key === "_") zoomBy(1 / 1.6);
+    else if (e.key === "0") { s = 1; apply(true); }
+    else return;
+    e.preventDefault();
+  });
+  window.addEventListener("resize", () => { if (dlg.open) { fit(); apply(false); } });
+
+  // one pointer pans (at fit: swipes), two pinch around their midpoint; a second tap toggles the zoom
+  function begin(before) {
+    const p = Array.from(ptrs.values());
+    if (p.length >= 2) {
+      const a = p[0], b = p[1];
+      g = { pinch: true, d: Math.hypot(b.x - a.x, b.y - a.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, s, X, Y };
+    } else if (p.length === 1) {
+      g = { pinch: false, x: p[0].x, y: p[0].y, s, X, Y, t: performance.now(), moved: false, multi: !!before };
+    } else g = null;
+  }
+  stage.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    e.preventDefault();
+    stage.setPointerCapture(e.pointerId);
+    ptrs.set(e.pointerId, at(e));
+    begin(ptrs.size > 1 ? g : null);
+    stage.classList.add("dragging");
+  });
+  stage.addEventListener("pointermove", (e) => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.set(e.pointerId, at(e));
+    if (!g) return;
+    const p = Array.from(ptrs.values());
+    if (g.pinch) {
+      if (p.length < 2) return;
+      const a = p[0], b = p[1];
+      const ns = Math.min(Math.max((g.s * Math.hypot(b.x - a.x, b.y - a.y)) / g.d, 1), maxScale());
+      X = (a.x + b.x) / 2 - ((g.mx - g.X) / g.s) * ns;
+      Y = (a.y + b.y) / 2 - ((g.my - g.Y) / g.s) * ns;
+      s = ns;
+      apply(false);
+      return;
+    }
+    const dx = p[0].x - g.x, dy = p[0].y - g.y;
+    if (!g.moved && Math.abs(dx) + Math.abs(dy) > 8) g.moved = true;
+    if (!g.moved) return;
+    if (g.s > 1.001) {
+      X = g.X + dx;
+      Y = g.Y + dy;
+    } else if (!g.multi) nudge = dx * 0.6;
+    apply(false);
+  });
+  function end(e) {
+    if (!ptrs.has(e.pointerId)) return;
+    const q = e.type === "pointercancel" ? ptrs.get(e.pointerId) : at(e);
+    ptrs.delete(e.pointerId);
+    const was = g;
+    if (ptrs.size > 0) { begin(was); return; }
+    g = null;
+    stage.classList.remove("dragging");
+    const swiping = nudge !== 0;
+    nudge = 0;
+    if (!was || was.pinch || was.multi || e.type === "pointercancel") { apply(true); return; }
+    if (!was.moved) {
+      const now = performance.now();
+      if (now - was.t > 350) { tap = null; return; }
+      if (tap && now - tap.t < 400 && Math.hypot(q.x - tap.x, q.y - tap.y) < 32) {
+        tap = null;
+        if (s > 1.001) { s = 1; apply(true); }
+        else zoomAt(q.x, q.y, Math.max(2.5, natW / 2 / fw), true);
+      } else tap = { t: now, x: q.x, y: q.y };
+      return;
+    }
+    tap = null;
+    const dx = q.x - was.x, dy = q.y - was.y;
+    const d = dx < 0 ? 1 : -1;
+    if (was.s <= 1.001 && Math.abs(dx) > 60 && Math.abs(dx) > 1.5 * Math.abs(dy) && cur + d >= 0 && cur + d < shots.length) {
+      step(d);
+    } else if (swiping) apply(true);
+  }
+  stage.addEventListener("pointerup", end);
+  stage.addEventListener("pointercancel", end);
+  stage.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const p = at(e);
+    const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
+    zoomAt(p.x, p.y, s * Math.exp(-e.deltaY * unit * (e.ctrlKey ? 0.01 : 0.0015)), false);
+  }, { passive: false });
+})();"""
+
+
 def figure_html(fig: Fig, m: dict, lazy: bool) -> str:
     title = fig.title.format(**m)
     scenario, _, config = fig.key.partition("/")
     return f"""<figure class="fig{' wide' if fig.wide else ''}" id="{E(fig.key.replace('/', '--'))}">
-  {_img(m['img'], title, m['size'], lazy)}
+  {_img(m, title, f"{title} · {scenario} · {config}", lazy)}
   <figcaption>
     <span class="src">{E(scenario)} · {E(config)}</span>
     <h3>{E(title)}</h3>
@@ -410,7 +678,7 @@ def comparison_html(c: dict) -> str:
         chips = _chips([(f"{x['placed']:,} of {x['total']:,} placed", ""),
                         ("no hard violations", "ok") if hv == 0 else (f"{hv:,} hard violations", "bad")])
         cells.append(f'<div class="cell{mine}"><div class="cellhead">{E(x["name"])}</div>'
-                     f'{_img(x["img"], c["title"] + ", " + x["name"], x["size"], True)}{chips}</div>')
+                     f'{_img(x, c["title"] + ", " + x["name"], c["title"] + " · " + x["name"], True)}{chips}</div>')
     return f"""<figure class="cmp">
   <figcaption class="pairhead"><span class="src">{E(c['scenario'])} · {E(c['config'])}</span><h3>{E(c['title'])}</h3><p>{c['text']}</p></figcaption>
   <div class="cmpgrid">{''.join(cells)}</div>
@@ -419,9 +687,12 @@ def comparison_html(c: dict) -> str:
 
 def stability_html(st: dict) -> str:
     n = st["n_frames"] or len(st["frames"])
-    cells = "".join(f'<div class="cell"><div class="cellhead">Frame {f["frame"]} of {n}</div>'
-                    f'{_img(f["img"], "Zoom sequence, frame " + str(f["frame"]), f["size"], True)}</div>'
-                    for f in st["frames"])
+    cells = []
+    for f in st["frames"]:
+        label = f"Frame {f['frame']} of {n}"
+        cells.append(f'<div class="cell"><div class="cellhead">{label}</div>'
+                     f'{_img(f, "Zoom sequence, " + label.lower(), label, True)}</div>')
+    cells = "".join(cells)
     chips = []
     if st["displacement_median_px"] is not None:
         chips.append((f"median movement {st['displacement_median_px']:.0f} px per frame", ""))
@@ -534,7 +805,8 @@ def page(meta: dict, figs: dict[str, dict], sections=SECTIONS, cmps=(), stab=Non
   <p>Problems of the project's real-world benchmark, solved by the engine at commit <code>{E(meta['commit'])}</code>
   ({E(meta['date'])}): real data sets, each problem with its own settings and the engine's defaults otherwise.
   Every picture comes from the benchmark's renderer; the numbers under it from its evaluator, which checks the result
-  independently of the engine.{report} Select an image to open it at full size.</p>
+  independently of the engine.{report} Select an image to inspect it: pinch or double-tap to zoom on a phone,
+  scroll or double-click with a mouse.</p>
   {key_html()}
   {nav}
 </header>
@@ -549,6 +821,10 @@ def page(meta: dict, figs: dict[str, dict], sections=SECTIONS, cmps=(), stab=Non
   <a href="{REPO_URL}">{E(REPO_URL.removeprefix('https://'))}</a>.</p>
 </footer>
 </div>
+{VIEWER_HTML}
+<script>
+{VIEWER_JS}
+</script>
 </body>
 </html>
 """
@@ -597,7 +873,7 @@ def build(out: Path, solve: Solve, problems: Path = paths.PROBLEMS, run: Path | 
                     continue
                 log(f"{f.key}: placed {m['placed']}/{m['total']}, {m['leaders']} leaders, "
                     f"hard {m['hard_violations']} ({time.time() - t0:.1f} s)")
-    cmps = comparisons(run, report, out) if report is not None else []
+    cmps = comparisons(run, report, out, problems) if report is not None else []
     stab = stability(run, report, out) if report is not None else None
     for name in ("NotoSans-Regular.ttf", "NotoSans-Bold.ttf", "OFL.txt"):
         (out / "fonts").mkdir(exist_ok=True)
