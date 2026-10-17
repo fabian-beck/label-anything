@@ -1,0 +1,105 @@
+{
+  "kind": "place",
+  "name": "distant labels keep to the sides of an explicit position order",
+  "$comment": "Both items allow only `right`. Left of them everything is free, but distant labels keep to directions within 22.5° of the listed positions: a, walled in on the right for labels and leaders, is omitted; b goes up-right, its leader over the soft-for-leaders box.",
+  "problem": {
+    "canvas": {
+      "width": 400,
+      "height": 160
+    },
+    "placement": {
+      "position_order": [
+        "right"
+      ]
+    },
+    "avoid": {
+      "label": {
+        "wall": "hard",
+        "box": "hard"
+      },
+      "leader": {
+        "wall": "hard"
+      }
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "class": "wall",
+          "rects": [
+            [
+              103,
+              0,
+              297,
+              80
+            ]
+          ]
+        },
+        {
+          "class": "box",
+          "rects": [
+            [
+              103,
+              105,
+              60,
+              30
+            ]
+          ]
+        }
+      ]
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 40
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 120
+        },
+        "label": {
+          "type": "text",
+          "text": "Beta"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "unplaced_ids": [
+      "a"
+    ],
+    "reasons": {
+      "a": "no_feasible_candidate"
+    },
+    "model": {
+      "b": "distant"
+    },
+    "has_leader": {
+      "b": true
+    },
+    "box": {
+      "b": {
+        "x": 143.884,
+        "y": 81.879,
+        "w": 29.232,
+        "h": 19.944,
+        "tol": 0.01
+      }
+    }
+  }
+}

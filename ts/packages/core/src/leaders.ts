@@ -9,7 +9,7 @@ import { Cand, KEEP_BOX, type KeepFn, Kind, Leader, SIDE_DISTANT, dirOf } from "
 import { EPS, P, Rect, distPointSeg, segIntersects } from "./geom/index.js";
 import type { Variant } from "./labels.js";
 import { clampf, cmpF64, len2d, maxf, minf, signEps } from "./math.js";
-import { Attach, type Item, LeaderStyle, type Model, Port } from "./model/index.js";
+import { Attach, type Item, LeaderStyle, type Model, Port, posDir } from "./model/index.js";
 import type { Obstacles } from "./obstacles.js";
 import { IdList } from "./spatial.js";
 
@@ -100,6 +100,29 @@ export function underlineOffset(t: { baselines: ArrayLike<number> }, h: number, 
 }
 
 /**
+ * cos 22.5° (half the angle between neighbouring fixed positions), less a tolerance so
+ * that a ray on the boundary of two octants belongs to both.
+ */
+const COS_HALF_OCTANT = 0.9238795325112867 - 1e-9;
+
+/**
+ * Whether a distant label in direction `v` from its item keeps to the item's positions:
+ * an explicit `position_order` with fewer than the 8 fixed positions allows only the
+ * directions within 22.5° of a listed position's direction (spec §6.4), so that labels
+ * restricted to the right of line ends do not move left over the lines.
+ */
+export function keepsToPositions(item: Item, vx: number, vy: number): boolean {
+  if (item.positions.length >= 8) return true;
+  const n = len2d(vx, vy);
+  if (n === 0) return true;
+  for (const p of item.positions) {
+    const u = posDir(p);
+    if (vx * u.x + vy * u.y >= COS_HALF_OCTANT * n * u.len()) return true;
+  }
+  return false;
+}
+
+/**
  * Leader directions of distant candidates with their unit vectors (computed once per
  * solve; the trigonometry is the expensive part of candidate generation).
  */
@@ -184,6 +207,7 @@ export function distant(
     const d = dirs[di]![1];
     const dx = d.x;
     const dy = d.y;
+    if (!keepsToPositions(item, dx, dy)) continue;
     // start = leader_start(item.shape.reference() + d), as scalars; the point itself is
     // only built for kept candidates
     LS[0] = ref.x + dx;
@@ -327,7 +351,7 @@ export function distant(
       kb[1] = seed.y - hh;
       kb[2] = seed.x + hw;
       kb[3] = seed.y + hh;
-      if (!keep(vi)) continue;
+      if (!keepsToPositions(item, seed.x - ref.x, seed.y - ref.y) || !keep(vi)) continue;
       if (style === LeaderStyle.Angles || style === LeaderStyle.Elbow) continue; // angle-restricted styles only use their rays
       const rect = Rect.fromCenter(seed, hw, hh);
       const start0 = leaderStart(model, item, seed);

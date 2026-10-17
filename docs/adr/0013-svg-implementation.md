@@ -47,7 +47,8 @@ deterministic output. Findings while evaluating the options:
   Primitives are emitted in paint order, which is non-decreasing in `element`, so the
   primitives of an element subtree form one contiguous slice.
 * **Text** uses the injected `measure(text, size, family, weight)` (default 0.55 em per
-  code point) and ascent/descent (0.8/0.2 em); one box per text chunk.
+  code point) and ascent/descent (default 0.8/0.2 em; the engine passes its bundled font's,
+  ADR 0020); one box per text chunk.
 * **Differential testing** (`ts/packages/svg/scripts/parity.mjs`): the conformance cases
   plus seeded random documents (random features, invalid values, DTD entities, namespaces,
   mutated/truncated markup) produce identical scenes, classifications and selections in

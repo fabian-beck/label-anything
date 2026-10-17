@@ -626,13 +626,18 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
       markup = utf8Lossy.decode(b);
     } else markup = "";
     const tol = asF64(sourceOpt(src, "obstacles.svg", "tolerance")) ?? 0.25;
-    // SVG text is measured with the bundled fonts (simple shaping)
+    // SVG text is measured with the bundled fonts (simple shaping); its boxes span their
+    // ascender and descender (the same for every bundled font), like label boxes
     const book = bundledFonts();
     const measure = (t: string, size: number, fam: string, w: number): number =>
       book.font(book.resolve(fam, w, false)).width(t, size);
+    const font = book.font(book.resolve("default", 400, false));
+    const upm = font.unitsPerEm;
+    const ascent = font.ascender / upm;
+    const descent = -font.descender / upm;
     let doc: SvgDoc;
     try {
-      doc = backend.load(markup, canvas !== null ? [canvas.w(), canvas.h()] : null, tol, measure);
+      doc = backend.load(markup, canvas !== null ? [canvas.w(), canvas.h()] : null, tol, measure, ascent, descent);
     } catch (e) {
       throw err(`${ptr}/source`, "invalid_value", errorMessage(e));
     }

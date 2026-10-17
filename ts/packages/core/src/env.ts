@@ -61,14 +61,18 @@ export interface SvgDoc {
 export interface SvgBackend {
   /**
    * `canvas`: target canvas size (the viewport is scaled onto it), or null to keep SVG
-   * user units. `measure(text, fontSizePx, family, weight)` gives text widths. Throws an
-   * `Error` whose message describes the failure.
+   * user units. `measure(text, fontSizePx, family, weight)` gives text widths; text boxes
+   * extend `ascent` em above and `descent` em below the baseline (the ascender and
+   * descender of the measuring font). Throws an `Error` whose message describes the
+   * failure.
    */
   load(
     markup: string,
     canvas: [number, number] | null,
     tolerance: number,
     measure: (text: string, size: number, family: string, weight: number) => number,
+    ascent: number,
+    descent: number,
   ): SvgDoc;
 }
 
@@ -142,11 +146,13 @@ class BuiltinDoc implements SvgDoc {
 
 /** The built-in SVG backend (`@label-anything/svg`, identical to `label-anything-svg`). */
 export const BUILTIN_SVG: SvgBackend = {
-  load(markup, canvas, tolerance, measure) {
+  load(markup, canvas, tolerance, measure, ascent, descent) {
     const r = svg.parseSvg(markup, {
       canvas: canvas === null ? null : { width: canvas[0], height: canvas[1] },
       tolerance,
       measure,
+      ascent,
+      descent,
     });
     if (!r.ok) throw new Error(`${r.error.message} (${r.error.code})`);
     return new BuiltinDoc(r.value);

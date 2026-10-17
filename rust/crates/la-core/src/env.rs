@@ -62,13 +62,17 @@ pub trait SvgDoc {
 /// Parses SVG markup into an [`SvgDoc`] mapped onto the canvas.
 pub trait SvgBackend {
     /// `canvas`: target canvas size (the viewport is scaled onto it), or `None` to keep
-    /// SVG user units. `measure(text, font_size_px, family, weight)` gives text widths.
+    /// SVG user units. `measure(text, font_size_px, family, weight)` gives text widths;
+    /// text boxes extend `ascent` em above and `descent` em below the baseline (the
+    /// ascender and descender of the measuring font).
     fn load(
         &self,
         markup: &str,
         canvas: Option<(f64, f64)>,
         tolerance: f64,
         measure: &dyn Fn(&str, f64, &str, u16) -> f64,
+        ascent: f64,
+        descent: f64,
     ) -> Result<Box<dyn SvgDoc>, String>;
 }
 
@@ -173,12 +177,15 @@ impl SvgBackend for BuiltinSvg {
         canvas: Option<(f64, f64)>,
         tolerance: f64,
         measure: &dyn Fn(&str, f64, &str, u16) -> f64,
+        ascent: f64,
+        descent: f64,
     ) -> Result<Box<dyn SvgDoc>, String> {
         let opts = la_svg::ParseOptions {
             canvas,
             tolerance,
             measure: Some(measure),
-            ..Default::default()
+            ascent,
+            descent,
         };
         let scene = la_svg::parse(markup, &opts)
             .map_err(|e| format!("{} ({})", e.message, e.code.as_str()))?;

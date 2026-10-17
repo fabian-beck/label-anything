@@ -249,11 +249,14 @@ the polyline is within `tol` of it.
 both ends (`xml:space="preserve"`: tabs and newlines become spaces). `<tspan>`, `<a>` and
 `<textPath>` content is laid out in order; the first value of `x`, `y`, `dx`, `dy`
 (lengths, em, %) positions it, and an absolute `x` or `y` starts a new chunk. A run spans
-`measure(text, font_size, first font family, weight)` horizontally (default 0.55 em per
-code point) and 0.8 em above / 0.2 em below the baseline (`dominant-baseline` `middle`,
+`measure(text, font_size, first font family, weight)` horizontally and the measuring
+font's ascent above / descent below the baseline (`dominant-baseline` `middle`,
 `central`, `mathematical`: centred on y; `hanging`, `text-top`, `text-before-edge`: top at
-y; `ideographic`, `text-bottom`, `text-after-edge`: bottom at y). `text-anchor` shifts a
-chunk by 0, ½ or 1 times its advance. The box of each chunk (union of its visible,
+y; `ideographic`, `text-bottom`, `text-after-edge`: bottom at y). The engine measures SVG
+text with the bundled fonts (§5.2): their advances, and their ascender and descender
+(1.069 em and 0.293 em, the vertical extent of a label line), as a browser's `getBBox`
+does; an SVG parser without fonts uses 0.55 em per code point, 0.8 em and 0.2 em.
+`text-anchor` shifts a chunk by 0, ½ or 1 times its advance. The box of each chunk (union of its visible,
 painted runs) is transformed by the CTM; its axis-aligned bounding box is the `Rect`
 primitive, attributed to the `<text>` element.
 
@@ -627,6 +630,11 @@ listed angles; `orthogonal`: 8 octilinear directions), plus free-space seeds (lo
 maxima of the distance transform within `max_distance` whose clearance ≥ label
 half-height). For each target the label is attached by its port side facing the anchor
 and the leader is built per style (§7). The `k_distant` cheapest (static cost) are kept.
+An item whose `position_order` lists fewer than the 8 fixed positions keeps its distant
+labels on those sides: only directions (and seeds, seen from the reference point) within
+22.5° of a listed position's direction are used (`u·v ≥ cos 22.5° · |u|·|v|` less 10⁻⁹,
+so that a direction between two octants belongs to both), e.g. `["right"]` keeps end
+labels of a line chart off the lines to the left.
 
 ### 6.5 Area anchors
 

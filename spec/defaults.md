@@ -37,7 +37,7 @@ are stale.
 | `defaults.truncate` | `"none"` | none \| end \| middle | Truncation when wrapped text exceeds `max_lines`. |
 | `text.shaping` | `"auto"` | auto \| simple \| full | `simple` is identical in every implementation. |
 | `placement.models` | `["adjacent","slider","distant"]` | list | Candidate models. Preset `auto` adds `distant` only when crowded. |
-| `placement.position_order` | `"perceptual"` | enum or list | perceptual = top, right, bottom, left, top-right, bottom-right, top-left, bottom-left. |
+| `placement.position_order` | `"perceptual"` | enum or list | perceptual = top, right, bottom, left, top-right, bottom-right, top-left, bottom-left. A list also keeps distant labels on its sides (spec §6.4). |
 | `placement.offset` | `2` | length ≥ 0 | Gap between the (inflated) mark and an adjacent label. |
 | `placement.max_distance` | `"8em"` | length ≥ 0 | Largest anchor–label distance of distant labels. |
 | `placement.min_distance` | `"1.5em"` | length ≥ 0 | Innermost ring of distant candidates. |

@@ -448,6 +448,22 @@
       "solver": "*",
       "adr": "0019",
       "reason": "prefix mode: the removal test of strict mode counts every placed label after an earlier omission"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "05-airports",
+      "config": "*-svg",
+      "solver": "*",
+      "adr": "0020",
+      "reason": "SVG text boxes as tall as the font's: labels next to map text take other positions, some with leaders"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "09-line-end-labels",
+      "config": "*",
+      "solver": "*",
+      "adr": "0021",
+      "reason": "distant end labels keep to the right of the line ends; the labels kept use lower-ranked positions"
     }
   ]
 }

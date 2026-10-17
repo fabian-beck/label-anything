@@ -645,13 +645,27 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         let tol = source_opt(src, "obstacles.svg", "tolerance")
             .as_f64()
             .unwrap_or(0.25);
-        // SVG text is measured with the bundled fonts (simple shaping)
+        // SVG text is measured with the bundled fonts (simple shaping); its boxes span their
+        // ascender and descender (the same for every bundled font), like label boxes
         let book = crate::labels::bundled_fonts();
         let measure = |t: &str, size: f64, fam: &str, w: u16| {
             book.font(book.resolve(fam, w, false)).width(t, size)
         };
+        let font = book.font(book.resolve("default", 400, false));
+        let upm = f64::from(font.units_per_em());
+        let (ascent, descent) = (
+            f64::from(font.ascender()) / upm,
+            -f64::from(font.descender()) / upm,
+        );
         let doc = backend
-            .load(&markup, canvas.map(|c| (c.w(), c.h())), tol, &measure)
+            .load(
+                &markup,
+                canvas.map(|c| (c.w(), c.h())),
+                tol,
+                &measure,
+                ascent,
+                descent,
+            )
             .map_err(|m| err(format!("{ptr}/source"), "invalid_value", m))?;
         if canvas.is_none() {
             let (w, h) = doc.size();

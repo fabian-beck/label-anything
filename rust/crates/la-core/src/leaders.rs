@@ -68,6 +68,26 @@ pub fn underline_offset(t: &crate::labels::TextLayout, h: f64, em: f64) -> f64 {
     t.baselines[0] + minf(h - t.baselines[0], em * 0.25) * 0.5
 }
 
+/// cos 22.5° (half the angle between neighbouring fixed positions), less a tolerance so
+/// that a ray on the boundary of two octants belongs to both.
+const COS_HALF_OCTANT: f64 = 0.923_879_532_511_286_7 - 1e-9;
+
+/// Whether a distant label in direction `v` from its item keeps to the item's positions:
+/// an explicit `position_order` with fewer than the 8 fixed positions allows only the
+/// directions within 22.5° of a listed position's direction (spec §6.4), so that labels
+/// restricted to the right of line ends do not move left over the lines.
+pub fn keeps_to_positions(item: &Item, v: P) -> bool {
+    if item.positions.len() >= 8 {
+        return true;
+    }
+    let n = v.len();
+    n == 0.0
+        || item.positions.iter().any(|p| {
+            let u = p.dir();
+            v.dot(u) >= COS_HALF_OCTANT * n * u.len()
+        })
+}
+
 /// Leader directions of distant candidates with their unit vectors (computed once per
 /// solve; the trigonometry is the expensive part of candidate generation).
 pub fn distant_dirs(model: &Model) -> Vec<(f64, P)> {
@@ -163,6 +183,9 @@ pub fn distant(
         out.push(c);
     };
     for &(_, d) in dirs {
+        if !keeps_to_positions(item, d) {
+            continue;
+        }
         let start = leader_start(model, item, item.shape.reference() + d);
         for k in 0..rings {
             let r = if rings == 1 {
@@ -250,7 +273,7 @@ pub fn distant(
     if model.placement.free_space_seeds {
         for seed in free_space_seeds(seeds, hh) {
             let rect = Rect::from_center(seed, hw, hh);
-            if !keep(vi, &rect) {
+            if !keeps_to_positions(item, seed - item.shape.reference()) || !keep(vi, &rect) {
                 continue;
             }
             let start = leader_start(model, item, seed);

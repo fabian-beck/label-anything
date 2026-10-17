@@ -1,0 +1,104 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 200,
+      "height": 120
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 70
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      }
+    ],
+    "obstacles": {
+      "svg": {
+        "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"120\"><text x=\"100\" y=\"36.056\" font-size=\"40\" text-anchor=\"middle\">MMMM</text></svg>",
+        "classes": [
+          {
+            "selector": "text",
+            "class": "text"
+          }
+        ]
+      }
+    }
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "a",
+        "placed": true,
+        "box": {
+          "x": 104.0,
+          "y": 60.028,
+          "w": 35.891999999999996,
+          "h": 19.94400000000001
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Alpha"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            32.292
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.125,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 1,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 40,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.125,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 67,
+        "rows": 40,
+        "classes": [
+          "text"
+        ]
+      }
+    },
+    "debug_svg": null
+  }
+}

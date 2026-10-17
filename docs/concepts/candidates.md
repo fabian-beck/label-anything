@@ -20,7 +20,9 @@ touches the mark inflated by `placement.offset` (2 px), in the direction of the 
   bottom-left;
 * `cartographic` (the `map` preset, after Imhof): top-right, top-left, bottom-right,
   bottom-left, right, left, top, bottom;
-* a list of position names: only those positions, in that order.
+* a list of position names: only those positions, in that order. Distant labels then keep
+  to the same sides: only directions within 22.5° of a listed position (`["right"]` keeps
+  the end labels of a line chart off the lines, ADR 0021).
 
 **`slider`** — `slider_per_quadrant` (4) positions between each pair of neighbouring fixed
 positions, sliding along the mark while touching it.

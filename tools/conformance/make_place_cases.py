@@ -252,6 +252,32 @@ CASES["svg-background"] = case(
     {"problem_file": "../problems/svg-background.json"},
     {"placed": 2})
 
+CASES["svg-text-box"] = case(
+    "SVG text boxes span the bundled font's ascender and descender",
+    {"canvas": {"width": 200, "height": 120}, "items": [pt("a", 100, 70, "Alpha")],
+     "obstacles": {"svg": {
+         "source": '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120">'
+                   '<text x="100" y="36.056" font-size="40" text-anchor="middle">MMMM</text></svg>',
+         "classes": [{"selector": "text", "class": "text"}]}}},
+    {"placed": 1, "anchor_side": {"a": "right"}, "inside_canvas": True},
+    "The top position (box top at y = 46.056) is free of the text's box only if the box ends 0.2 em "
+    "below the baseline (44.056); with the descender of the bundled font (0.293 em, 47.776) it is "
+    "blocked and the label goes right.")
+
+CASES["distant-keeps-sides"] = case(
+    "distant labels keep to the sides of an explicit position order",
+    {"canvas": {"width": 400, "height": 160}, "placement": {"position_order": ["right"]},
+     "avoid": {"label": {"wall": "hard", "box": "hard"}, "leader": {"wall": "hard"}},
+     "obstacles": {"vector": [{"class": "wall", "rects": [[103, 0, 297, 80]]},
+                              {"class": "box", "rects": [[103, 105, 60, 30]]}]},
+     "items": [pt("a", 100, 40, "Alpha"), pt("b", 100, 120, "Beta")]},
+    {"placed": 1, "unplaced_ids": ["a"], "reasons": {"a": "no_feasible_candidate"},
+     "model": {"b": "distant"}, "has_leader": {"b": True},
+     "box": {"b": {"x": 143.884, "y": 81.879, "w": 29.232, "h": 19.944, "tol": 0.01}}},
+    "Both items allow only `right`. Left of them everything is free, but distant labels keep to "
+    "directions within 22.5° of the listed positions: a, walled in on the right for labels and "
+    "leaders, is omitted; b goes up-right, its leader over the soft-for-leaders box.")
+
 CASES["raster-background"] = case(
     "raster background ink is avoided",
     {"problem_file": "../problems/raster-ink.json"},
