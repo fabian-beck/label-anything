@@ -43,6 +43,15 @@ impl Acc<'_> {
             }
         }
     }
+    /// `add` for the term `prefix` + `name`, a name built only for a breakdown.
+    #[inline]
+    fn add_named(&mut self, prefix: &str, name: &str, v: f64) {
+        if self.breakdown.is_some() {
+            self.add(&format!("{prefix}{name}"), v);
+        } else if v != 0.0 {
+            self.cost += v;
+        }
+    }
     #[inline]
     fn violate(&mut self, why: Block, relaxable: bool, extra: f64) {
         if self.feasible {
@@ -228,7 +237,7 @@ impl<'a> Evaluator<'a> {
                     sat.covered_area(&obs.grid, &ring) - sat.covered_area(&obs.grid, &r),
                     0.0,
                 );
-                acc.add(&format!("buffer:{}", cl.name), cl.buffer * cov / ring_area);
+                acc.add_named("buffer:", &cl.name, cl.buffer * cov / ring_area);
             }
         }
         if !acc.relaxed {
@@ -474,7 +483,7 @@ impl<'a> Evaluator<'a> {
                 }
                 AvoidW::Soft(wt) => {
                     let cov: f64 = segs.iter().map(|&(a, b)| obs.covered_len(sat, a, b)).sum();
-                    acc.add(&format!("leader:{}", cl.name), wt * cov / em);
+                    acc.add_named("leader:", &cl.name, wt * cov / em);
                 }
                 AvoidW::Ignore => {}
             }

@@ -36,6 +36,12 @@ class Acc {
     }
   }
 
+  /** `add` for the term `prefix` + `name`, a name built only for a breakdown. */
+  addNamed(prefix: string, name: string, v: number): void {
+    if (this.breakdown !== null) this.add(prefix + name, v);
+    else if (v !== 0) this.cost += v;
+  }
+
   violate(why: Block, relaxable: boolean, extra: number): void {
     if (this.feasible) {
       this.feasible = false;
@@ -175,7 +181,7 @@ export class Evaluator {
       if (cl.buffer > 0 && sat.any(grid, ring)) {
         const ringArea = maxf(ring.area() - area, 1e-9);
         const cov = maxf(sat.coveredArea(grid, ring) - sat.coveredArea(grid, r), 0);
-        acc.add(`buffer:${cl.name}`, (cl.buffer * cov) / ringArea);
+        acc.addNamed("buffer:", cl.name, (cl.buffer * cov) / ringArea);
       }
     }
     if (!acc.relaxed) return finish(c, acc);
@@ -356,7 +362,7 @@ export class Evaluator {
       } else if (lk === AvoidKind.Soft) {
         let cov = -0;
         for (let k = 0; k < nseg; k++) cov += obs.coveredLen(sat, l.segA(k), l.segB(k));
-        acc.add(`leader:${cl.name}`, (cl.leader.w * cov) / em);
+        acc.addNamed("leader:", cl.name, (cl.leader.w * cov) / em);
       }
     }
   }

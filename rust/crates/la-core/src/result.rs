@@ -392,12 +392,15 @@ pub fn build(
             "mean_displacement": if flicker.4 > 0 { flicker.3 / flicker.4 as f64 } else { 0.0 },
         });
     }
+    // moved in: `json!` would copy the placements
     let mut out = json!({
         "version": "1",
-        "placements": placements,
-        "stats": stats,
+        "placements": [],
+        "stats": {},
         "debug_svg": Value::Null,
     });
+    out["placements"] = Value::Array(placements);
+    out["stats"] = stats;
     if !model.warnings.is_empty() {
         out["warnings"] = json!(model.warnings);
     }
