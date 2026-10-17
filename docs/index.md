@@ -145,6 +145,10 @@ leaders in black, omitted labels as red crosses.
 
 </div>
 
+Real data — charts, maps, photos, embeddings and networks from the benchmark, next to other
+labelers — is in [the gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/),
+published with each release's benchmark report.
+
 ## Benchmark
 
 The [real-world benchmark](project/benchmark.md) scores Label Anything and six baselines

@@ -47,10 +47,21 @@ rust/target/release/label-anything bench --suite quick --baselines --perf -o ben
 against problem size, the parity of the implementations, the changes against a previous
 run, and per scenario the metric tables with every solver's rendering side by side.
 
+## Gallery
+
+`bench/.venv/bin/python -m bench.gallery --engine rust/target/release/label-anything --run
+bench-report` adds `bench-report/gallery/`: one page of renderings of real-data problems —
+charts, maps, photos, embeddings, networks, priority — solved by the engine, with the
+evaluator's numbers under each, the same problems by the other labelers, frames of an
+interactive zoom, and what the defaults still do badly. It is published with each release's
+report: [the gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/).
+
+## In CI
+
 CI runs the quick suite on every pull request and the full suite on release tags
 (job `bench`); the job `baselines` runs the quick suite with every baseline and the
-performance targets on tags, weekly and on demand, and checks the release gates on tags.
-Both upload the report as a workflow artifact.
+performance targets on tags, weekly and on demand, builds the gallery and checks the
+release gates on tags. Both upload the report as a workflow artifact.
 
 ## Release gates
 

@@ -107,7 +107,9 @@ adjustText, vega-label and ggrepel — scored the same way.
 `label-anything bench --baselines --perf` writes `bench-report/index.html`: metric tables,
 renderings side by side, runtime-vs-size plots, Rust/TypeScript parity and the performance
 targets; `--gate` enforces the release gates (`docs/benchmark.md`, `bench/README.md`, which
-also lists where the performance targets stand).
+also lists where the performance targets stand). `python -m bench.gallery` turns a run into a
+[gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/) of
+renderings, published with each release's report.
 
 ## Repository layout
 

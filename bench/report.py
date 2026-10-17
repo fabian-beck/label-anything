@@ -740,7 +740,9 @@ def write_html(out: Path, report: dict, plots: dict | None = None) -> Path:
          "</li>"
          + "".join(f"<li><a href='#sc-{esc(s)}'>{esc(s)}</a></li>" for s in scen)
          + ("<li><a href='#sequences'>Stability sequences</a></li>" if report.get("sequences") else "")
-         + "<li><a href='#baselines'>Baseline methods</a></li></ul></nav>",
+         + "<li><a href='#baselines'>Baseline methods</a></li>"
+         + ("<li><a href='gallery/'>Gallery</a></li>" if (out / "gallery" / "index.html").exists() else "")
+         + "</ul></nav>",
          "<h2 id='summary'>Summary</h2>"]
     o += _summary_table(report)
     o += _perf_section(report.get("perf"))

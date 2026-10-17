@@ -97,6 +97,7 @@ bench/out/problems/11-stability/<seq>/f000…f029.json + sequence.json
 bench/out/perf/scatter-200.json, scatter-2000.json, raster-2048.json   performance-target problems
 bench-report/results.json, index.html, results/<solver>/…, metrics/<solver>/…, img/<solver>/…,
              overlay/<solver>/… (engine debug overlays), plots/runtime-{engine,wall}.svg
+bench-report/gallery/index.html, img/…, fonts/…, gallery.json      the gallery (python -m bench.gallery)
 ```
 
 **truth.json** (every config; `bench/common/truth.py`) — `{"version": 1, "canvas": [W, H],
@@ -336,6 +337,21 @@ the analyses and `index.html` of an existing run without solving anything again.
 happen at the precision `results.json` stores (6 decimals), so a stored run and a fresh one
 with identical results show no change.
 
+## Gallery
+
+`python -m bench.gallery --engine rust/target/release/label-anything --run bench-report` writes
+`bench-report/gallery/` (`index.html`, `img/*.webp`, `fonts/`, `gallery.json`): selected
+problems of the full suite — charts, maps, photos, embeddings, networks, priority — each solved
+once with the engine (`--warmup 3`, as by the runner) and drawn by the renderer, under it the
+evaluator's numbers (placed, leaders and the longest one, hard violations) and the engine's
+runtime; from the run, its renderings of three problems by every baseline and three frames of
+its stability sequence; and what the defaults still do badly. The problems must be built
+(`python -m bench.scenarios build` builds every config); a figure whose problem is missing is
+left out. The page loads nothing from other servers (Noto Sans is copied next to it). A gallery
+written into its run directory is linked from the run's report; the CI `baselines` job builds
+both, so the Pages workflow publishes the gallery at `<site>/benchmark-report/gallery/`.
+`bench/gallery.py` lists the figures and their captions.
+
 ## Release gates
 
 `--gate` (or `python -m bench.gates results.json [--previous OLD/results.json]` on an existing run)
@@ -384,8 +400,8 @@ The entrypoint (`bench/docker-run.sh`) fetches the data, builds the scenarios on
 runs `bench/run.py --suite quick --engine … --baselines --require-baselines --perf` plus the
 given arguments. In CI, the `bench` job runs the quick suite with the engine on pull requests
 (full suite on tags); the `baselines` job (tags, manual dispatch, weekly) runs the quick suite
-with the engine and every baseline plus the performance targets, uploads the report and, on
-tags, checks the release gates. When the CI run of a release tag succeeds, the Pages workflow
+with the engine and every baseline plus the performance targets, builds the gallery into the
+report, uploads it and, on tags, checks the release gates. When the CI run of a release tag succeeds, the Pages workflow
 (`.github/workflows/pages.yml`) publishes that report with the documentation site, under
 `benchmark-report/`.
 

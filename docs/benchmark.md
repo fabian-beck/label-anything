@@ -24,11 +24,12 @@ and, for JavaScript, compiling the engine).
 or, equivalently for the Rust engine alone,
 `label-anything bench --suite full --baselines --gate --previous path/to/results.json`.
 Keep the run's `bench-report/results.json` with the release (it is the `--previous` of the next
-one). The `baselines` CI job runs the quick suite with every baseline on each tag (and weekly)
-and checks the gates on tags; the full suite with `--previous` is the release run. When the CI
-run of a tag succeeds, the Pages workflow deploys the documentation site of the tag with that
-run's report under `benchmark-report/` (manually: dispatch the workflow with the ID of a CI run
-as `report_run_id`).
+one). The `baselines` CI job runs the quick suite with every baseline on each tag (and weekly),
+builds the gallery into the report (`python -m bench.gallery`, see `bench/README.md`) and checks
+the gates on tags; the full suite with `--previous` is the release run. When the CI run of a tag
+succeeds, the Pages workflow deploys the documentation site of the tag with that run's report
+under `benchmark-report/` and the gallery under `benchmark-report/gallery/` (manually: dispatch
+the workflow with the ID of a CI run as `report_run_id`).
 
 ## Release gates
 
