@@ -8,7 +8,8 @@
 * ``docs/assets/figures/debug-overlay.svg``: a debug overlay written during the solve
   (``place --debug-svg``), with the cost heatmap of every obstacle class.
 * ``docs/assets/figures/*.png``: what a host would draw over a raster background: the
-  image, the marks, and the labels and leaders of the result (Pillow, bundled Noto Sans).
+  image, the marks, and the labels and leaders of the result (Pillow, bundled Noto Sans;
+  labels in black on white boxes at 75 % opacity, as in all renderings).
 
 The figures are committed; re-run this script after changing a tutorial problem or the
 engine (it needs Pillow). Solves are deterministic, so unchanged inputs give unchanged
@@ -95,7 +96,7 @@ def composite(problem_path: Path, result: dict[str, Any], out: Path, ss: int = 2
             pts = [(x * ss, y * ss) for x, y in leader["points"]]
             d.line(pts, fill=(40, 40, 40, 255), width=ss, joint="curve")
         b = p["box"]
-        d.rectangle([b["x"] * ss, b["y"] * ss, (b["x"] + b["w"]) * ss, (b["y"] + b["h"]) * ss], fill=(255, 255, 255, 200))
+        d.rectangle([b["x"] * ss, b["y"] * ss, (b["x"] + b["w"]) * ss, (b["y"] + b["h"]) * ss], fill=(255, 255, 255, 191))
         t = p.get("text")
         if not t:
             continue
@@ -103,7 +104,7 @@ def composite(problem_path: Path, result: dict[str, Any], out: Path, ss: int = 2
         font = fonts.setdefault(size, ImageFont.truetype(str(FONT), size))
         for line, base in zip(t["lines"], t["baseline_offsets"]):
             pos = ((b["x"] + t.get("x_offset", 0)) * ss, (b["y"] + base) * ss)
-            d.text(pos, line, font=font, fill=(25, 25, 25, 255), anchor="ls")
+            d.text(pos, line, font=font, fill=(0, 0, 0, 255), anchor="ls")
     img = img.resize((w, h), Image.LANCZOS).convert("RGB")
     img.save(out, optimize=True)
 

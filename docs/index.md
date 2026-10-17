@@ -114,8 +114,8 @@ and the TypeScript port reproduces the Rust core bit for bit.
 ## Gallery
 
 Debug renderings of the tutorial problems (`label-anything render problem.json
-result.json -o x.png`): item shapes in blue, obstacles in grey, label boxes in yellow,
-leaders in black, omitted labels as red crosses.
+result.json -o x.png`): item shapes in blue, obstacles in grey, labels in black on white
+boxes, leaders in black, omitted labels as red crosses.
 
 <div class="grid cards la-gallery" markdown>
 

@@ -37,7 +37,9 @@ from bench.common.model import load_problem, raster_bytes  # noqa: E402
 
 MARK_FILL = "#7aa6d8"
 MARK_STROKE = "#2c5d8f"
-LABEL_STROKE = "#3b6aa0"
+LABEL_FILL_OPACITY = 0.75
+"""Label boxes: white at this opacity, no outline; label text and icons black (no colors)."""
+LABEL_TEXT = "#000000"
 LEADER = "#333333"
 OBST = "#b8b8b8"
 UNPLACED = "#d62728"
@@ -68,7 +70,7 @@ def _shape_svg(shp, fill: str, stroke: str, opacity: float = 0.55, dash: str | N
     return f'<path d="{d}" fill-rule="evenodd" {style}/>'
 
 
-def _text_svg(x0: float, y0: float, t: dict, color: str = "#111") -> list[str]:
+def _text_svg(x0: float, y0: float, t: dict, color: str = LABEL_TEXT) -> list[str]:
     out = []
     size = t.get("font_size", 12)
     weight = t.get("font_weight", 400)
@@ -159,7 +161,7 @@ def render_svg(problem: dict, result: dict, font_href: str | None = None, title:
             continue
         b = p["box"]
         o.append(f'<rect x="{_fmt(b["x"])}" y="{_fmt(b["y"])}" width="{_fmt(b["w"])}" height="{_fmt(b["h"])}" '
-                 f'fill="#ffffff" fill-opacity="0.55" stroke="{LABEL_STROKE}" stroke-width="0.6"/>')
+                 f'fill="#ffffff" fill-opacity="{LABEL_FILL_OPACITY}"/>')
         if p.get("text"):
             o += _text_svg(b["x"], b["y"], p["text"])
         for part in p.get("parts") or []:
@@ -168,7 +170,8 @@ def render_svg(problem: dict, result: dict, font_href: str | None = None, title:
                 o += _text_svg(pb["x"], pb["y"], part["text"])
             elif part.get("type") in ("icon", "box"):
                 o.append(f'<rect x="{_fmt(pb["x"])}" y="{_fmt(pb["y"])}" width="{_fmt(pb["w"])}" '
-                         f'height="{_fmt(pb["h"])}" rx="{_fmt(min(pb["w"], pb["h"]) / 4)}" fill="#f28e2b"/>')
+                         f'height="{_fmt(pb["h"])}" rx="{_fmt(min(pb["w"], pb["h"]) / 4)}" fill="{LABEL_TEXT}" '
+                         f'fill-opacity="0.5"/>')
     o.append("</g>")
     o.append(f'<g class="unplaced" stroke="{UNPLACED}" stroke-width="1.2">')
     for it in prob.items:
@@ -205,7 +208,7 @@ def _draw_text(dr: ImageDraw.ImageDraw, x0: float, y0: float, t: dict, s: float)
         for ch, px in zip(line, pos):
             if ch == " ":
                 continue
-            dr.text(((x0 + xo + px) * s, (y0 + base) * s), ch, font=pf, fill=(17, 17, 17, 255), anchor="ls")
+            dr.text(((x0 + xo + px) * s, (y0 + base) * s), ch, font=pf, fill=_hex(LABEL_TEXT), anchor="ls")
 
 
 def _shape_png(dr: ImageDraw.ImageDraw, shp, s: float, fill, outline) -> None:
@@ -285,12 +288,12 @@ def render_png(problem: dict, result: dict, background_png: str | Path | None = 
             continue
         b = p["box"]
         dr.rectangle([b["x"] * s, b["y"] * s, (b["x"] + b["w"]) * s, (b["y"] + b["h"]) * s],
-                     fill=(255, 255, 255, 140), outline=_hex(LABEL_STROKE, 220), width=max(1, int(round(0.6 * s))))
+                     fill=(255, 255, 255, round(255 * LABEL_FILL_OPACITY)))
         for part in p.get("parts") or []:
             pb = part["box"]
             if not part.get("text") and part.get("type") in ("icon", "box"):
                 dr.rounded_rectangle([pb["x"] * s, pb["y"] * s, (pb["x"] + pb["w"]) * s, (pb["y"] + pb["h"]) * s],
-                                     radius=min(pb["w"], pb["h"]) / 4 * s, fill=_hex("#f28e2b"))
+                                     radius=min(pb["w"], pb["h"]) / 4 * s, fill=_hex(LABEL_TEXT, 128))
     img.alpha_composite(over)
     dr = ImageDraw.Draw(img)
     for it in prob.items:

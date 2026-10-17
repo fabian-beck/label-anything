@@ -311,10 +311,12 @@ def stability(run: Path, report: dict, out: Path) -> dict | None:
 CSS = r"""
 @font-face { font-family: "Noto Sans"; src: url("fonts/NotoSans-Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "Noto Sans"; src: url("fonts/NotoSans-Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
-/* A contact sheet of figure cards on a cool grey ground; chips framed like the engine's label boxes */
+/* A contact sheet of figure cards on a cool grey ground; chips drawn like the label boxes of the images:
+   black text on white in both themes */
 :root {
   --paper: #f3f5f8; --card: #ffffff; --ink: #16202a; --muted: #586474; --rule: #d6dce4;
   --label: #3b6aa0; --label-soft: #e6edf6; --omit: #c0352f; --good: #2d7a4c;
+  --chip: #ffffff; --chip-ink: #000000;
   --body: "Noto Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
   --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
   /* the image viewer is dark in both themes */
@@ -338,7 +340,7 @@ header { display: grid; gap: 14px; max-width: 72ch; }
 .eyebrow a { color: inherit; text-decoration: none; }
 .eyebrow a:hover { text-decoration: underline; }
 h1 { font-weight: 700; font-size: clamp(2.1rem, 5vw, 3.4rem); line-height: 1.1; margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
-h1 .box { display: inline-block; margin-top: 0.06em; border: 2px solid var(--label); padding: 0 0.18em; background: var(--card); }
+h1 .box { display: inline-block; margin-top: 0.06em; padding: 0 0.18em; background: var(--chip); color: var(--chip-ink); }
 header p { margin: 0; color: var(--muted); font-size: 16px; }
 .key { display: flex; flex-wrap: wrap; gap: 10px 22px; font-size: 13px; color: var(--muted); align-items: center; }
 .key span { display: inline-flex; align-items: center; gap: 8px; }
@@ -365,7 +367,7 @@ figcaption h3 { margin: 0; font-weight: 700; font-size: 1.08rem; line-height: 1.
 figcaption p { margin: 0; color: var(--muted); max-width: 75ch; }
 .chips { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .chips li { font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; padding: 1px 7px;
-  border: 1px solid var(--label); background: var(--label-soft); color: var(--ink); border-radius: 1px; }
+  border: 1px solid var(--rule); background: var(--chip); color: var(--chip-ink); border-radius: 1px; }
 .chips li.bad { border-color: var(--omit); color: var(--omit); background: transparent; }
 .chips li.ok { border-color: var(--good); color: var(--good); background: transparent; }
 .pairhead { border-bottom: 1px solid var(--rule); }
@@ -720,9 +722,9 @@ def stability_html(st: dict) -> str:
 
 
 def key_html() -> str:
-    lab, mark, lead, omit = render.LABEL_STROKE, render.MARK_STROKE, render.LEADER, render.UNPLACED
+    mark, lead, omit = render.MARK_STROKE, render.LEADER, render.UNPLACED
     return f"""<div class="key" aria-label="How to read the images">
-  <span><svg width="44" height="18" viewBox="0 0 44 18" aria-hidden="true"><rect x="1" y="2" width="42" height="14" fill="#fff" stroke="{lab}" stroke-width="1.5"/><text x="22" y="13" font-size="10" text-anchor="middle" fill="#111" font-family="Noto Sans, sans-serif">Label</text></svg>label box as reported by the engine</span>
+  <span><svg width="44" height="18" viewBox="0 0 44 18" aria-hidden="true"><rect width="44" height="18" fill="{render.OBST}"/><rect x="3" y="2" width="38" height="14" fill="#fff" fill-opacity="{render.LABEL_FILL_OPACITY}"/><text x="22" y="13" font-size="10" text-anchor="middle" fill="{render.LABEL_TEXT}" font-family="Noto Sans, sans-serif">Label</text></svg>label box as reported by the engine</span>
   <span><svg width="44" height="18" viewBox="0 0 44 18" aria-hidden="true"><circle cx="6" cy="12" r="4" fill="{render.MARK_FILL}" stroke="{mark}"/><polyline points="10,10 30,4 42,4" fill="none" stroke="{lead}" stroke-width="1.5"/></svg>item mark and leader</span>
   <span><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4 L14 14 M14 4 L4 14" stroke="{omit}" stroke-width="2.2"/></svg>item whose label was omitted</span>
 </div>"""

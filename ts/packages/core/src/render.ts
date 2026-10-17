@@ -224,7 +224,7 @@ export function debugSvg(model: Model | null, result: unknown, debug: DebugData 
     const bases = itemsOf(get(t, "baseline_offsets"));
     let out = "";
     for (let k = 0; k < lines.length && k < bases.length; k++) {
-      out += `<text x="${f(ox + xo)}" y="${f(oy + num(bases[k], 0))}" font-size="${f(size)}" font-weight="${weight}" fill="#212121">${esc(str(lines[k]))}</text>`;
+      out += `<text x="${f(ox + xo)}" y="${f(oy + num(bases[k], 0))}" font-size="${f(size)}" font-weight="${weight}" fill="#000000">${esc(str(lines[k]))}</text>`;
     }
     return out;
   };
@@ -252,7 +252,7 @@ export function debugSvg(model: Model | null, result: unknown, debug: DebugData 
       }
       const cost = num(get(p, "cost"), 0);
       const title = `${id} · ${str(get(p, "anchor_side"))} · cost ${fmtFixed(cost, 3)} · rank ${jsonDisplay(get(get(p, "priority"), "rank"))}`;
-      labels += `<g class="label" data-id="${esc(id)}"><title>${esc(title)}</title><rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" fill="#fffde7" fill-opacity="0.85" stroke="#f9a825" stroke-width="0.75"/>`;
+      labels += `<g class="label" data-id="${esc(id)}"><title>${esc(title)}</title><rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" fill="#ffffff" fill-opacity="0.75"/>`;
       const t = get(p, "text");
       if (t !== undefined) labels += drawText(t, x, y);
       for (const part of itemsOf(get(p, "parts"))) {
@@ -265,7 +265,7 @@ export function debugSvg(model: Model | null, result: unknown, debug: DebugData 
           const pt = get(part, "text");
           if (pt !== undefined) labels += drawText(pt, px, py);
         } else {
-          labels += `<rect x="${f(px)}" y="${f(py)}" width="${f(pw)}" height="${f(ph)}" fill="#6a1b9a" fill-opacity="0.6"/>`;
+          labels += `<rect x="${f(px)}" y="${f(py)}" width="${f(pw)}" height="${f(ph)}" fill="#000000" fill-opacity="0.5"/>`;
         }
       }
       labels += "</g>";

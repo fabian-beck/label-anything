@@ -308,7 +308,7 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
             );
             let _ = write!(
                 labels,
-                r##"<g class="label" data-id="{}"><title>{}</title><rect x="{}" y="{}" width="{}" height="{}" fill="#fffde7" fill-opacity="0.85" stroke="#f9a825" stroke-width="0.75"/>"##,
+                r##"<g class="label" data-id="{}"><title>{}</title><rect x="{}" y="{}" width="{}" height="{}" fill="#ffffff" fill-opacity="0.75"/>"##,
                 esc(id),
                 esc(&title),
                 f(x),
@@ -328,7 +328,7 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
                 {
                     let _ = write!(
                         out,
-                        r##"<text x="{}" y="{}" font-size="{}" font-weight="{}" fill="#212121">{}</text>"##,
+                        r##"<text x="{}" y="{}" font-size="{}" font-weight="{}" fill="#000000">{}</text>"##,
                         f(ox + xo),
                         f(oy + base.as_f64().unwrap_or(0.0)),
                         f(size),
@@ -362,7 +362,7 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
                     _ => {
                         let _ = write!(
                             labels,
-                            r##"<rect x="{}" y="{}" width="{}" height="{}" fill="#6a1b9a" fill-opacity="0.6"/>"##,
+                            r##"<rect x="{}" y="{}" width="{}" height="{}" fill="#000000" fill-opacity="0.5"/>"##,
                             f(px),
                             f(py),
                             f(pw),
