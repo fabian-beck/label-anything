@@ -731,6 +731,10 @@ its font size.
   label would take the number of labels past `max_labels`, or its labels (replacing the
   members' own) the label area past `max_ink_fraction`, the lowest-priority member without
   a label leaves (the ink is checked once the column is laid out without failures).
+* **Priority.** A column is not applied when it would make an omitted item placeable once
+  labels of strictly lower key were removed (the removal test of §9.2) where it was not
+  before: the items checked are those with a candidate meeting (within the leader spacing
+  reach) a label the column places or lifts.
 * **Work.** At most `max(20000, 20 × n_items)` label evaluations in all (one per label
   of each laid-out column).
 

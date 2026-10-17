@@ -29,8 +29,10 @@ A post-search pass (`placement.fan`, default `auto`; spec §6.8) builds columns 
   crowd's strip join the column; placed members that cannot move keep their labels; the
   lowest-priority failing member leaves. A column is applied only when it places more
   labels (`always`: at least as many), within the label budgets (`priority.budget`:
-  unlabeled members leave, lowest priority first); it never removes a placed label without
-  placing it again.
+  unlabeled members leave, lowest priority first), and not when it inverts priorities (an
+  omitted item placeable once less important labels were removed, which it was not
+  before: a column's labels, or the room a moved label leaves, can cause that); it never
+  removes a placed label without placing it again.
 * **Leaders** are built like boundary leaders, are at most `leaders.max_length` long and
   keep every hard rule, with two changes for leaders that leave a crowd of touching marks
   (§7): a fan leader ignores marks containing its start and only must not cross marks

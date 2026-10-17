@@ -13,7 +13,8 @@
 //! joins the column; a placed member that cannot move into it keeps its label; a member
 //! without a label that fails leaves it (lowest priority first). The column is applied when
 //! it places more labels (`always`: at least as many, in a column of two or more), within
-//! the label budgets (`priority.budget`).
+//! the label budgets (`priority.budget`), and unless it inverts priorities: an omitted item
+//! that would become placeable once less important labels were removed.
 //!
 //! Fan leaders are built like boundary leaders (straight, or per the `orthogonal`, `elbow`
 //! style) and keep to `leaders.max_length`; the `angles` style, whose leaders run along the
@@ -22,7 +23,7 @@
 //! `boundary`), items kept with another, area anchors and grouped items stay out.
 
 use super::repair::{hungarian, stack};
-use super::{Reason, Solve};
+use super::{verify, Reason, Solve};
 use crate::boundary::{boundary_leader, slot_area};
 use crate::candidates::{label_shape, Cand, Kind, Side};
 use crate::cost::Evaluator;
@@ -145,7 +146,7 @@ pub fn fan_pass(s: &mut Solve) {
                 }
             }
             let Some((right, plan)) = best else { break };
-            apply(s, plan);
+            apply_unless_inverting(s, plan);
             sides.retain(|&x| x != right);
         }
     }
@@ -522,6 +523,66 @@ fn layout(
     } else {
         Err(failed)
     }
+}
+
+/// Apply a column, unless it lets an omitted item become placeable once labels of strictly
+/// lower key are removed (the removal test of the verification, spec §9.2), where it was
+/// not before: the items watched are those with a candidate meeting a label the column
+/// places or lifts. Returns whether the column stays.
+fn apply_unless_inverting(s: &mut Solve, plan: Plan) -> bool {
+    let n = s.model.items.len();
+    let keys: Vec<usize> = s.pri.prio.iter().map(|p| p.key).collect();
+    let reach = s.state.leader_reach(s.obs) + 2.0 * crate::geom::EPS;
+    let mut changed: Vec<Rect> = Vec::new();
+    for (j, c) in &plan.cands {
+        changed.push(c.bbox().inflate(reach));
+        if let Some(p) = s.state.placed[*j] {
+            changed.push(s.cands[p as usize].bbox().inflate(reach));
+        }
+    }
+    let watch: Vec<usize> = (0..n)
+        .filter(|&h| {
+            s.state.placed[h].is_none()
+                && !plan.cands.iter().any(|&(j, _)| j == h)
+                && s.by_item[h].iter().any(|&c| {
+                    let b = s.cands[c as usize].bbox();
+                    changed.iter().any(|r| r.touches(&b))
+                })
+        })
+        .collect();
+    let mut buf = Vec::new();
+    let before: Vec<bool> = watch
+        .iter()
+        .map(|&h| verify::inverted(s, h, &keys, &mut buf))
+        .collect();
+    let old: Vec<(usize, Option<u32>, Option<Reason>)> = plan
+        .cands
+        .iter()
+        .map(|&(j, _)| (j, s.state.placed[j], s.reasons[j]))
+        .collect();
+    let base = s.cands.len();
+    apply(s, plan);
+    let inverts = watch
+        .iter()
+        .zip(&before)
+        .any(|(&h, &b)| !b && verify::inverted(s, h, &keys, &mut buf));
+    if !inverts {
+        return true;
+    }
+    // undo: the members' labels as they were, the column's candidates gone
+    for &(j, _, _) in &old {
+        s.state.unplace(j, &s.cands);
+        s.by_item[j].retain(|&c| (c as usize) < base);
+    }
+    s.cands.truncate(base);
+    for &(j, c, r) in &old {
+        if let Some(c) = c {
+            let relaxed = !s.cands[c as usize].feasible;
+            s.state.place(j, c, &s.cands, relaxed);
+        }
+        s.reasons[j] = r;
+    }
+    false
 }
 
 fn apply(s: &mut Solve, plan: Plan) {

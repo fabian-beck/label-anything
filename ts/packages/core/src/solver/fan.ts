@@ -14,7 +14,8 @@
  * joins the column; a placed member that cannot move into it keeps its label; a member
  * without a label that fails leaves it (lowest priority first). The column is applied when
  * it places more labels (`always`: at least as many, in a column of two or more), within
- * the label budgets (`priority.budget`).
+ * the label budgets (`priority.budget`), and unless it inverts priorities: an omitted item
+ * that would become placeable once less important labels were removed.
  *
  * Fan leaders are built like boundary leaders (straight, or per the `orthogonal`, `elbow`
  * style) and keep to `leaders.max_length`; the `angles` style, whose leaders run along the
@@ -27,11 +28,12 @@
 
 import { boundaryLeader, slotArea } from "../boundary.js";
 import { Cand, Kind, SIDE_FAN, labelShape } from "../candidates.js";
-import { P, Rect } from "../geom/index.js";
+import { EPS, P, Rect } from "../geom/index.js";
 import { cmpF64, maxf, minf } from "../math.js";
 import { FanMode, LeaderStyle, Models, Omission, Pos } from "../model/index.js";
 import { hungarian, stack } from "./repair.js";
 import { Reason, type Solve } from "./index.js";
+import { inverted } from "./verify.js";
 
 /** Largest crowd a seed gathers, and most labels a column takes in. */
 export const MAX_CROWD = 24;
@@ -133,7 +135,7 @@ export function fanPass(s: Solve): void {
         if (p !== null && (best === null || betterPlan(s, p, best[1]))) best = [right, p];
       }
       if (best === null) break;
-      apply(s, best[1]);
+      applyUnlessInverting(s, best[1]);
       const done = best[0];
       for (let k = sides.length - 1; k >= 0; k--) if (sides[k] === done) sides.splice(k, 1);
     }
@@ -430,6 +432,54 @@ function layout(
   s.cands.length = base;
   for (const [j, c] of saved) s.state.place(j, c, s.cands, !s.cands[c]!.feasible);
   return failed.length === 0 ? { cands: fresh, fails: null } : { cands: fresh, fails: failed };
+}
+
+/**
+ * Apply a column, unless it lets an omitted item become placeable once labels of strictly
+ * lower key are removed (the removal test of the verification, spec §9.2), where it was
+ * not before: the items watched are those with a candidate meeting a label the column
+ * places or lifts. Returns whether the column stays.
+ */
+function applyUnlessInverting(s: Solve, plan: Plan): boolean {
+  const n = s.model.items.length;
+  const reach = s.state.leaderReach(s.obs) + 2 * EPS;
+  const changed: Rect[] = [];
+  for (const [j, c] of plan.cands) {
+    changed.push(c.bbox().inflate(reach));
+    const p = s.state.placed[j]!;
+    if (p >= 0) changed.push(s.cands[p]!.bbox().inflate(reach));
+  }
+  const watch: number[] = [];
+  for (let h = 0; h < n; h++) {
+    if (s.state.placed[h]! >= 0 || plan.cands.some(([j]) => j === h)) continue;
+    const meets = s.byItem[h]!.some((c) => {
+      const b = s.cands[c]!.bbox();
+      return changed.some((r) => r.touches(b));
+    });
+    if (meets) watch.push(h);
+  }
+  const buf: number[] = [];
+  const before = watch.map((h) => inverted(s, h, buf));
+  const old = plan.cands.map(([j]) => [j, s.state.placed[j]!, s.reasons[j]!] as const);
+  const base = s.cands.length;
+  apply(s, plan);
+  let inverts = false;
+  for (let k = 0; k < watch.length && !inverts; k++) {
+    if (!before[k] && inverted(s, watch[k]!, buf)) inverts = true;
+  }
+  if (!inverts) return true;
+  // undo: the members' labels as they were, the column's candidates gone
+  for (const [j] of old) {
+    s.state.unplace(j, s.cands);
+    const ids = s.byItem[j]!;
+    s.byItem[j] = ids.filter((c) => c < base);
+  }
+  s.cands.length = base;
+  for (const [j, c, r] of old) {
+    if (c >= 0) s.state.place(j, c, s.cands, !s.cands[c]!.feasible);
+    s.reasons[j] = r;
+  }
+  return false;
 }
 
 function apply(s: Solve, plan: Plan): void {

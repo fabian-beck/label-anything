@@ -85,32 +85,35 @@ export function inversions(s: Solve): number {
     for (let k = r; k < order.length; k++) if (s.state.placed[order[k]!]! >= 0) count += 1;
     return count;
   }
-  const softOk = s.model.ladder.some((x) => x.kind === "soft_overlap");
   let count = 0;
   const buf: number[] = [];
-  for (let h = 0; h < n; h++) {
-    if (s.state.placed[h]! >= 0) continue;
-    const rh = s.reasons[h];
-    if (rh !== Reason.OmittedByPriority && rh !== Reason.NoFeasibleCandidate) continue;
-    const keyH = s.pri.prio[h]!.key;
-    const ids = s.byItem[h]!.slice();
-    let inverted = false;
-    for (const c of ids) {
-      // cheap rejection first: a conflict with a higher- or equal-key label
-      let cand = s.cands[c]!;
-      if (cand.evaluated && !(cand.feasible || (softOk && cand.relaxed))) continue;
-      if (s.state.firstConflict(cand, s.cands, s.obs, h, keyH) >= 0) continue;
-      s.ensureEval(c);
-      cand = s.cands[c]!;
-      if (!(cand.feasible || (softOk && cand.relaxed))) continue;
-      s.state.conflicts(cand, s.cands, s.obs, h, buf);
-      // placeable once the (strictly) lower-key labels in its way are removed
-      if (buf.length > 0 && buf.every((j) => s.pri.prio[j]!.key > keyH)) {
-        inverted = true;
-        break;
-      }
-    }
-    if (inverted) count += 1;
-  }
+  for (let h = 0; h < n; h++) if (inverted(s, h, buf)) count += 1;
   return count;
+}
+
+/**
+ * Whether item `h` is omitted (by priority, or without a feasible candidate) although one
+ * of its usable candidates conflicts only with labels of strictly lower key: the removal
+ * test of strict and weighted omission (spec §9.2).
+ */
+export function inverted(s: Solve, h: number, buf: number[]): boolean {
+  if (s.state.placed[h]! >= 0) return false;
+  const rh = s.reasons[h];
+  if (rh !== Reason.OmittedByPriority && rh !== Reason.NoFeasibleCandidate) return false;
+  const softOk = s.model.ladder.some((x) => x.kind === "soft_overlap");
+  const keyH = s.pri.prio[h]!.key;
+  const ids = s.byItem[h]!.slice();
+  for (const c of ids) {
+    // cheap rejection first: a conflict with a higher- or equal-key label
+    let cand = s.cands[c]!;
+    if (cand.evaluated && !(cand.feasible || (softOk && cand.relaxed))) continue;
+    if (s.state.firstConflict(cand, s.cands, s.obs, h, keyH) >= 0) continue;
+    s.ensureEval(c);
+    cand = s.cands[c]!;
+    if (!(cand.feasible || (softOk && cand.relaxed))) continue;
+    s.state.conflicts(cand, s.cands, s.obs, h, buf);
+    // placeable once the (strictly) lower-key labels in its way are removed
+    if (buf.length > 0 && buf.every((j) => s.pri.prio[j]!.key > keyH)) return true;
+  }
+  return false;
 }
