@@ -13,7 +13,8 @@
  * as the canvas allows). A placed label in its way whose item stands in the crowd's strip
  * joins the column; a placed member that cannot move into it keeps its label; a member
  * without a label that fails leaves it (lowest priority first). The column is applied when
- * it places more labels (`always`: at least as many, in a column of two or more).
+ * it places more labels (`always`: at least as many, in a column of two or more), within
+ * the label budgets (`priority.budget`).
  *
  * Fan leaders are built like boundary leaders (straight, or per the `orthogonal`, `elbow`
  * style) and keep to `leaders.max_length`; the `angles` style, whose leaders run along the
@@ -248,10 +249,31 @@ function column(s: Solve, pass: Pass, area: Rect, crowd: readonly number[], righ
     for (const j of members) if (s.state.placed[j]! < 0) unlabeled++;
     const worth = unlabeled > 0 || (pass.always && members.length >= 2);
     if (!worth || members.length > MAX_COLUMN || pass.work === 0) return null;
+    // within the label budget (priority.budget): the lowest-priority member without a
+    // label leaves
+    const maxLabels = s.model.maxLabels;
+    if (maxLabels !== null && s.state.nPlaced + unlabeled > maxLabels) {
+      if (!dropLowestUnlabeled(s, members)) return null;
+      continue;
+    }
     pass.work = Math.max(0, pass.work - members.length);
     const r = layout(s, area, members, right);
     const fails = r.fails;
     if (fails === null) {
+      const f = s.model.maxInkFraction;
+      const canvas = s.model.canvas;
+      if (f !== null && canvas !== null) {
+        let ink = s.state.labelAreaSum;
+        for (const [j, c] of r.cands) {
+          const p = s.state.placed[j]!;
+          if (p >= 0) ink -= s.cands[p]!.rect.area();
+          ink += c.rect.area();
+        }
+        if (ink / maxf(canvas.area(), 1e-9) > f) {
+          if (!dropLowestUnlabeled(s, members)) return null;
+          continue;
+        }
+      }
       const added = members.filter((j) => s.state.placed[j]! < 0);
       let cost = 0;
       for (const [, c] of r.cands) cost += c.cost;
@@ -292,6 +314,17 @@ function column(s: Solve, pass: Pass, area: Rect, crowd: readonly number[], righ
     for (const [j] of fails) if (k < 0 || s.pri.prio[j]!.rank >= s.pri.prio[k]!.rank) k = j;
     members.splice(members.indexOf(k), 1);
   }
+}
+
+/** Remove the lowest-priority member without a label (false: there is none). */
+function dropLowestUnlabeled(s: Solve, members: number[]): boolean {
+  let k = -1;
+  for (const j of members) {
+    if (s.state.placed[j]! < 0 && (k < 0 || s.pri.prio[j]!.rank >= s.pri.prio[k]!.rank)) k = j;
+  }
+  if (k < 0) return false;
+  members.splice(members.indexOf(k), 1);
+  return true;
 }
 
 /**

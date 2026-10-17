@@ -12,7 +12,8 @@
 //! as the canvas allows). A placed label in its way whose item stands in the crowd's strip
 //! joins the column; a placed member that cannot move into it keeps its label; a member
 //! without a label that fails leaves it (lowest priority first). The column is applied when
-//! it places more labels (`always`: at least as many, in a column of two or more).
+//! it places more labels (`always`: at least as many, in a column of two or more), within
+//! the label budgets (`priority.budget`).
 //!
 //! Fan leaders are built like boundary leaders (straight, or per the `orthogonal`, `elbow`
 //! style) and keep to `leaders.max_length`; the `angles` style, whose leaders run along the
@@ -272,6 +273,17 @@ fn column(
         if !worth || members.len() > MAX_COLUMN || pass.work == 0 {
             return None;
         }
+        // within the label budget (priority.budget): the lowest-priority member without a
+        // label leaves
+        if model
+            .max_labels
+            .is_some_and(|m| s.state.n_placed + unlabeled > m)
+        {
+            if !drop_lowest_unlabeled(s, &mut members) {
+                return None;
+            }
+            continue;
+        }
         pass.work = pass.work.saturating_sub(members.len());
         match layout(s, area, &members, right) {
             Err(fails) => {
@@ -305,6 +317,21 @@ fn column(
                 members.retain(|&j| j != k);
             }
             Ok(cands) => {
+                if let (Some(f), Some(canvas)) = (model.max_ink_fraction, model.canvas) {
+                    let mut ink = s.state.label_area_sum;
+                    for (j, c) in &cands {
+                        if let Some(p) = s.state.placed[*j] {
+                            ink -= s.cands[p as usize].rect.area();
+                        }
+                        ink += c.rect.area();
+                    }
+                    if ink / canvas.area().max(1e-9) > f {
+                        if !drop_lowest_unlabeled(s, &mut members) {
+                            return None;
+                        }
+                        continue;
+                    }
+                }
                 let added: Vec<usize> = members
                     .iter()
                     .copied()
@@ -314,6 +341,22 @@ fn column(
                 return Some(Plan { cands, added, cost });
             }
         }
+    }
+}
+
+/// Remove the lowest-priority member without a label (false: there is none).
+fn drop_lowest_unlabeled(s: &Solve, members: &mut Vec<usize>) -> bool {
+    let lowest = members
+        .iter()
+        .copied()
+        .filter(|&j| s.state.placed[j].is_none())
+        .max_by_key(|&j| s.pri.prio[j].rank);
+    match lowest {
+        Some(k) => {
+            members.retain(|&j| j != k);
+            true
+        }
+        None => false,
     }
 }
 

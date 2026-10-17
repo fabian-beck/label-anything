@@ -1,0 +1,112 @@
+{
+  "kind": "place",
+  "name": "fan labels keep to the label budget",
+  "$comment": "The ends of `fan-line-ends` with at most 4 labels: the column gives labels to the two most important ends left without one (input order) and leaves the others out.",
+  "problem": {
+    "canvas": {
+      "width": 320,
+      "height": 200
+    },
+    "placement": {
+      "position_order": [
+        "right"
+      ]
+    },
+    "priority": {
+      "budget": {
+        "max_labels": 4
+      }
+    },
+    "items": [
+      {
+        "id": "alpha",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 88
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      },
+      {
+        "id": "beta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 93
+        },
+        "label": {
+          "type": "text",
+          "text": "Beta"
+        }
+      },
+      {
+        "id": "gamma",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 98
+        },
+        "label": {
+          "type": "text",
+          "text": "Gamma"
+        }
+      },
+      {
+        "id": "delta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 103
+        },
+        "label": {
+          "type": "text",
+          "text": "Delta"
+        }
+      },
+      {
+        "id": "epsilon",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 108
+        },
+        "label": {
+          "type": "text",
+          "text": "Epsilon"
+        }
+      },
+      {
+        "id": "zeta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 113
+        },
+        "label": {
+          "type": "text",
+          "text": "Zeta"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 4,
+    "unplaced_ids": [
+      "delta",
+      "zeta"
+    ],
+    "model": {
+      "alpha": "fan",
+      "beta": "fan",
+      "gamma": "fan",
+      "epsilon": "fan"
+    }
+  }
+}

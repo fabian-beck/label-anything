@@ -28,8 +28,9 @@ A post-search pass (`placement.fan`, default `auto`; spec §6.8) builds columns 
   so leaders are at most 45° steep. Placed labels in the way whose items stand in the
   crowd's strip join the column; placed members that cannot move keep their labels; the
   lowest-priority failing member leaves. A column is applied only when it places more
-  labels (`always`: at least as many); it never removes a placed label without placing it
-  again.
+  labels (`always`: at least as many), within the label budgets (`priority.budget`:
+  unlabeled members leave, lowest priority first); it never removes a placed label without
+  placing it again.
 * **Leaders** are built like boundary leaders, are at most `leaders.max_length` long and
   keep every hard rule, with two changes for leaders that leave a crowd of touching marks
   (§7): a fan leader ignores marks containing its start and only must not cross marks
@@ -84,6 +85,6 @@ Full suite, deterministic solves (no clock), default budgets, against the previo
   `elbow` 8 → 10, `orthogonal` and `curved` are unchanged; `angles` has no fans.
 
 The release-gate allow list (`bench/gates-allow.json`) names this ADR for the metric
-changes above. Conformance: `fan-line-ends` (six crowded ends, all in a column) and
-`fan-always` (two adjacent labels moved into a column, boxes checked); the parity
-fixtures include both.
+changes above. Conformance: `fan-line-ends` (six crowded ends, all in a column),
+`fan-always` (two adjacent labels moved into a column, boxes checked) and `fan-max-labels`
+(the budget holds); the parity fixtures include all three.

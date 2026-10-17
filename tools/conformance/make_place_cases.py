@@ -304,6 +304,17 @@ CASES["fan-always"] = case(
     "(x1 = 106) by the least run of 1.5 em (18 px), stacked around the anchors' heights with "
     "the boundary gap (2 px): centers 62.028 and 83.972.")
 
+CASES["fan-max-labels"] = case(
+    "fan labels keep to the label budget",
+    {"canvas": {"width": 320, "height": 200}, "placement": {"position_order": ["right"]},
+     "priority": {"budget": {"max_labels": 4}},
+     "items": [pt(n.lower(), 150, 88 + 5 * k, n)
+               for k, n in enumerate(["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"])]},
+    {"placed": 4, "unplaced_ids": ["delta", "zeta"],
+     "model": {k: "fan" for k in ("alpha", "beta", "gamma", "epsilon")}},
+    "The ends of `fan-line-ends` with at most 4 labels: the column gives labels to the two "
+    "most important ends left without one (input order) and leaves the others out.")
+
 CASES["raster-background"] = case(
     "raster background ink is avoided",
     {"problem_file": "../problems/raster-ink.json"},

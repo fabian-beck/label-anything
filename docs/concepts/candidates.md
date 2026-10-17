@@ -105,7 +105,8 @@ its own leader fanning out of the crowd (`model: "fan"` in the result):
 * With `placement.fan: "auto"` (default), only crowds with items the search left without
   a label get a column, and only when the column places more labels: labels in its way
   move into it, labels that cannot stay where they are. `"always"` gives every crowd of
-  two or more items a column; `"off"` none.
+  two or more items a column; `"off"` none. Columns keep to the label budgets
+  (`priority.budget`): the least important items stay without a label first.
 * Fan leaders follow the leader style (straight, `orthogonal` or `elbow`) and keep every
   hard rule, except that they may pass close to the marks of their own crowd (they must
   not cross them); they are at most `leaders.max_length` long. The `angles` style, whose

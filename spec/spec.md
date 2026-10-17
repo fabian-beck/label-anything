@@ -727,7 +727,11 @@ its font size.
   when no member is without a label (`always`: and fewer than two members remain), when
   more than 40 members remain, or when the budget is spent; a column without failures
   replaces its members' labels.
-* **Budget.** At most `max(20000, 20 × n_items)` label evaluations in all (one per label
+* **Label budgets.** A column keeps to `priority.budget`: while its members without a
+  label would take the number of labels past `max_labels`, or its labels (replacing the
+  members' own) the label area past `max_ink_fraction`, the lowest-priority member without
+  a label leaves (the ink is checked once the column is laid out without failures).
+* **Work.** At most `max(20000, 20 × n_items)` label evaluations in all (one per label
   of each laid-out column).
 
 ---
