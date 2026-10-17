@@ -235,6 +235,13 @@ export type WarmStart = {
     id: string;
     placed?: boolean;
     anchor?: Point2;
+    /**
+     * The leader the box was placed with, as in a result. With the angles, elbow and orthogonal styles, a leader of the style in use moves with the box and is kept while it still fits (spec §6.7).
+     */
+    leader?: {
+      points?: Point[];
+      style?: string;
+    } | null;
     box?: {
       x: number;
       y: number;
@@ -255,6 +262,13 @@ export type WarmStart1 = {
     id: string;
     placed?: boolean;
     anchor?: Point2;
+    /**
+     * The leader the box was placed with, as in a result. With the angles, elbow and orthogonal styles, a leader of the style in use moves with the box and is kept while it still fits (spec §6.7).
+     */
+    leader?: {
+      points?: Point[];
+      style?: string;
+    } | null;
     box?: {
       x: number;
       y: number;

@@ -19,12 +19,13 @@ import {
   Models,
   type Pos,
   LeaderStyle as LS,
+  Port,
   posAngularIndex,
   posFromAngularIndex,
   posName,
   remEuclid,
 } from "./model/index.js";
-import { leaderStart } from "./leaders.js";
+import { distantDirs, leaderStart } from "./leaders.js";
 
 /** Candidate model. */
 export const Kind = { Adjacent: 0, Slider: 1, Internal: 2, Distant: 3, Boundary: 4, Fan: 5 } as const;
@@ -324,8 +325,9 @@ export function pushIn(shape: Shape, o: number, c: P, hw: number, hh: number): P
  * The warm-start box of an item as a candidate of variant `vi` (whose size must match),
  * so that an unchanged position costs no stability penalty (spec §8): a slider-kind
  * candidate on the side its center points to when it touches the inflated mark (gap ≤
- * offset + 1 px), else a distant candidate with a straight leader (straight style only,
- * within the leader length limits). Null when neither applies.
+ * offset + 1 px), else a distant candidate with a straight leader (straight style,
+ * within the leader length limits) or with the leader it came with (see
+ * {@link warmLeader}). Null when neither applies.
  */
 export function warm(model: Model, item: Item, vi: number, v: Variant, rect: Rect): Cand | null {
   const it = item.index;
@@ -352,7 +354,7 @@ export function warm(model: Model, item: Item, vi: number, v: Variant, rect: Rec
     if (bestPos === null) return null;
     return new Cand(it, vi, v.level, Kind.Slider, bestPos, bestRank + 0.25, rect);
   }
-  if (model.leaders.style !== LS.Straight) return null;
+  if (model.leaders.style !== LS.Straight) return warmLeader(model, item, vi, v, rect);
   const port0 = rect.closestPoint(refp);
   const start = leaderStart(model, item, port0);
   const port = rect.closestPoint(start);
@@ -361,6 +363,177 @@ export function warm(model: Model, item: Item, vi: number, v: Variant, rect: Rec
   const c = new Cand(it, vi, v.level, Kind.Distant, SIDE_DISTANT, 8, rect);
   c.leaders.push(l);
   return c;
+}
+
+/** cos 0.5°: the tolerance of a warm-start leader's direction. */
+const COS_HALF_DEGREE = 0.9999619230641714;
+
+/**
+ * A warm-start box away from the mark as a distant candidate with the leader it came
+ * with, moved with it (`angles`, `elbow` and `orthogonal` styles): when that leader still
+ * starts where the item's leaders start and ends on the box (both within 0.5 px), keeps
+ * within the length limits and, for `angles` and `elbow`, leaves the item along one of
+ * the allowed directions (within 0.5°). Items labeling a group take none.
+ */
+function warmLeader(model: Model, item: Item, vi: number, v: Variant, rect: Rect): Cand | null {
+  const style = model.leaders.style;
+  const pts = model.warmLeaders.get(item.id);
+  if (pts === undefined || pts.length < 2 || model.groupMembers(item.index).length >= 2) return null;
+  const s0 = pts[0]!;
+  const port = pts[pts.length - 1]!;
+  if (s0.dist(leaderStart(model, item, s0)) > 0.5) return null;
+  const inside = minf(minf(minf(port.x - rect.x0, rect.x1 - port.x), port.y - rect.y0), rect.y1 - port.y);
+  if (rect.distPoint(port) > 0.5 || inside > 0.5) return null;
+  if (style === LS.Angles || style === LS.Elbow) {
+    const d = pts[1]!.sub(s0).norm();
+    if (!distantDirs(model).some(([, u]) => d.dot(u) >= COS_HALF_DEGREE)) return null;
+  }
+  const l = new Leader(pts.slice(), style);
+  if (l.len < item.len.leaderMin || l.len > item.len.leaderMax + 1e-9) return null;
+  // the `baseline` port's underline, for this variant's text (as `leaders.distant`)
+  const t = v.text;
+  if (model.leaders.port === Port.Baseline && style !== LS.Orthogonal && t !== null) {
+    const x0 = rect.x0 + t.xOffset;
+    const far = port.x <= rect.center().x ? x0 + t.widths[0]! : x0;
+    l.underline = [port, new P(far, port.y)];
+  }
+  const c = new Cand(item.index, vi, v.level, Kind.Distant, SIDE_DISTANT, 8, rect);
+  c.leaders.push(l);
+  return c;
+}
+
+/**
+ * Label centers along the slider paths of an item's allowed gaps (the C-space paths of
+ * {@link adjacent}, whose curved stretches are followed by their chords between vertices
+ * 9° apart), chained into runs of consecutive allowed gaps; a run that goes all around
+ * the mark is closed (its last point is its first).
+ */
+function sliderRuns(item: Item, hw: number, hh: number): P[][] {
+  const allowedPos = [false, false, false, false, false, false, false, false];
+  for (const p of item.positions) allowedPos[posAngularIndex(p)] = true;
+  const allowed = (k: number): boolean => allowedPos[k % 8]! && allowedPos[(k + 1) % 8]!;
+  const shape = item.shape;
+  const o = item.len.offset;
+  // start after a gap that is not allowed, so that no run is split at the start
+  let start = 0;
+  for (let k = 0; k < 8; k++) {
+    if (allowed(k) && !allowed(k + 7)) {
+      start = k;
+      break;
+    }
+  }
+  const runs: P[][] = [];
+  let cur: P[] = [];
+  for (let j = 0; j < 8; j++) {
+    const k = (start + j) % 8;
+    if (!allowed(k)) {
+      if (cur.length >= 2) runs.push(cur);
+      cur = [];
+      continue;
+    }
+    for (const v of cspacePath(shape, o, hw, hh, k)) {
+      if (cur.length > 0 && cur[cur.length - 1]!.dist(v.p) < 1e-9) continue;
+      cur.push(v.p);
+    }
+  }
+  if (cur.length >= 2) runs.push(cur);
+  return runs;
+}
+
+/**
+ * The point `s` px (signed) along `run` from the point at parameter `t` of segment `seg`;
+ * a closed run wraps around, an open one ends (null past its ends).
+ */
+function walkRun(run: readonly P[], seg: number, t: number, s: number): P | null {
+  const n = run.length;
+  const cum = new Array<number>(n).fill(0);
+  for (let i = 1; i < n; i++) cum[i] = cum[i - 1]! + run[i - 1]!.dist(run[i]!);
+  const total = cum[n - 1]!;
+  if (total <= 1e-9) return null;
+  const closed = run[0]!.dist(run[n - 1]!) < 1e-9;
+  let target = cum[seg]! + (cum[seg + 1]! - cum[seg]!) * t + s;
+  if (closed) target = remEuclid(target, total);
+  else if (!(target >= 0 && target <= total)) return null;
+  let i = 0;
+  while (i + 2 < n && cum[i + 1]! < target) i += 1;
+  const len = cum[i + 1]! - cum[i]!;
+  const u = len > 0 ? (target - cum[i]!) / len : 0;
+  return run[i]!.lerp(run[i + 1]!, u);
+}
+
+/**
+ * Candidates of variant `vi` near a warm-start box that touches the mark: its center
+ * moved `steps` px (each step forwards, then backwards) along the slider paths of the
+ * item's allowed gaps, as slider candidates (spec §6.7). For a box that a small change
+ * blocked: a nudge instead of a jump. Empty when the box is not on a slider path (it does
+ * not touch the mark, or the item has no slider model). Returns `[step index, candidate]`
+ * pairs.
+ */
+export function warmNudges(
+  item: Item,
+  vi: number,
+  v: Variant,
+  rect: Rect,
+  steps: readonly number[],
+  models: Models,
+): [number, Cand][] {
+  if (!Models.has(models, Models.SLIDER)) return [];
+  const hw = v.w * 0.5;
+  const hh = v.h * 0.5;
+  const runs = sliderRuns(item, hw, hh);
+  const c0 = rect.center();
+  // the nearest point of the paths: (distance, run, segment, parameter)
+  let nd = 0;
+  let nr = -1;
+  let nk = 0;
+  let nt = 0;
+  for (let r = 0; r < runs.length; r++) {
+    const run = runs[r]!;
+    for (let k = 0; k + 1 < run.length; k++) {
+      const a = run[k]!;
+      const b = run[k + 1]!;
+      const ab = b.sub(a);
+      const l2 = ab.len2();
+      const t = l2 > 0 ? Math.min(Math.max(((c0.x - a.x) * ab.x + (c0.y - a.y) * ab.y) / l2, 0), 1) : 0;
+      const d = c0.dist(a.lerp(b, t));
+      if (nr < 0 || d < nd) {
+        nd = d;
+        nr = r;
+        nk = k;
+        nt = t;
+      }
+    }
+  }
+  if (nr < 0 || nd > 0.75) return [];
+  const refp = item.shape.reference();
+  const out: [number, Cand][] = [];
+  for (let si = 0; si < steps.length; si++) {
+    const step = steps[si]!;
+    for (const s of [step, -step]) {
+      const w = walkRun(runs[nr]!, nk, nt, s);
+      if (w === null) continue;
+      const c = pushIn(item.shape, item.len.offset, w, hw, hh);
+      const dd = c.sub(refp);
+      if (dd.len2() === 0) continue;
+      // the nearest of the item's allowed positions by direction, as for `warm`
+      let bestDot = 0;
+      let bestPos: Pos | null = null;
+      let bestRank = 0;
+      for (let rank = 0; rank < item.positions.length; rank++) {
+        const p = item.positions[rank]!;
+        const pd = POS_DIRS[posAngularIndex(p)]!;
+        const dot = (pd.x * dd.x + pd.y * dd.y) / Math.sqrt(dd.len2());
+        if (bestPos === null || dot > bestDot) {
+          bestDot = dot;
+          bestPos = p;
+          bestRank = rank;
+        }
+      }
+      if (bestPos === null) continue;
+      out.push([si, new Cand(item.index, vi, v.level, Kind.Slider, bestPos, bestRank + 0.25, Rect.fromCenter(c, hw, hh))]);
+    }
+  }
+  return out;
 }
 
 /**

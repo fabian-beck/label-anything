@@ -17,6 +17,7 @@ import {
   isRectShape,
   labelShape,
   warm,
+  warmNudges,
 } from "../candidates.js";
 import { Evaluator } from "../cost.js";
 import { type Env, envCancelled, envNow } from "../env.js";
@@ -79,6 +80,13 @@ export class Solve {
    * `warmLadderCandidate`): `undefined` = not computed yet.
    */
   warmLadder: (number | null | undefined)[];
+  /**
+   * The warm-start box of each item with its level-0 variant, feasible or not (for
+   * nudges, see {@link warmNudges}).
+   */
+  warmBox: ([number, Rect] | null)[];
+  /** The nudged warm-start candidates of each item with their step index, once made. */
+  warmNudge: ([number, number][] | null)[];
   /** Directions of distant candidates (see `distantDirs`). */
   distantDirs: [number, P][];
   /**
@@ -125,6 +133,8 @@ export class Solve {
     this.distantPending = new Array<boolean>(n).fill(false);
     this.warmCand = new Array<number | null>(n).fill(null);
     this.warmLadder = new Array<number | null | undefined>(n).fill(undefined);
+    this.warmBox = new Array<[number, Rect] | null>(n).fill(null);
+    this.warmNudge = new Array<[number, number][] | null>(n).fill(null);
     this.staticDropped = new Array<number>(n).fill(0);
     this.distantDirs = distantDirs(model);
     this.blockedFeasible = [];
@@ -381,6 +391,8 @@ export class Solve {
     const g = this.model.groupOf[i];
     if (g !== undefined && g !== null && g !== i) return;
     const vs = this.variants[i]!;
+    const v0 = vs.findIndex((v) => v.level === 0 && Math.abs(v.w - b.w()) <= 0.5 && Math.abs(v.h - b.h()) <= 0.5);
+    if (v0 >= 0) this.warmBox[i] = [v0, b];
     const vi = vs.findIndex((v) => Math.abs(v.w - b.w()) <= 0.5 && Math.abs(v.h - b.h()) <= 0.5);
     if (vi < 0) return;
     const v = vs[vi]!;
@@ -507,6 +519,38 @@ export class Solve {
       return id;
     }
     return null;
+  }
+
+  /**
+   * The warm-start box of item `i` nudged along its slider path (steps of 0.05, 0.1, 0.2,
+   * 0.4 and 0.8 em, both ways), as statically feasible level-0 candidates with their step
+   * index; made once.
+   */
+  warmNudges(i: number): [number, number][] {
+    const known = this.warmNudge[i];
+    if (known !== null && known !== undefined) return known;
+    const ids: [number, number][] = [];
+    const wb = this.warmBox[i];
+    if (wb !== null && wb !== undefined) {
+      const [vi, rect] = wb;
+      const item = this.model.items[i]!;
+      const em = item.em();
+      const steps = [0.05 * em, 0.1 * em, 0.2 * em, 0.4 * em, 0.8 * em];
+      const v = this.variants[i]![vi]!;
+      for (const [si, c] of warmNudges(item, vi, v, rect, steps, this.models[i]!)) {
+        c.level = 0;
+        c.lshape = labelShape(c.rect, v.shape);
+        this.evaluator.eval(c, v, null);
+        if (c.feasible) {
+          const id = this.cands.length;
+          this.byItem[i]!.push(id);
+          this.cands.push(c);
+          ids.push([si, id]);
+        }
+      }
+    }
+    this.warmNudge[i] = ids;
+    return ids;
   }
 
   now(): number {

@@ -437,6 +437,9 @@ pub struct Model {
     pub default_em: f64,
     pub shaping: String,
     pub warm: BTreeMap<String, Option<Rect>>,
+    /// The leader of each warm-start box, moved with it, for the `angles`, `elbow` and
+    /// `orthogonal` leader styles (the entry's `leader` of the same style; spec §6.7).
+    pub warm_leaders: BTreeMap<String, Vec<P>>,
     pub warnings: Vec<Issue>,
     pub preset_name: String,
     /// Groups of items sharing one label: (representative, members incl. the representative).
@@ -1135,7 +1138,14 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         .iter()
         .map(|it| (it.id.as_str(), it.shape.reference()))
         .collect();
+    let leaders = LeaderOpts::from(&o);
+    let leader_style = matches!(
+        leaders.style,
+        LeaderStyle::Angles | LeaderStyle::Elbow | LeaderStyle::Orthogonal
+    )
+    .then(|| leaders.style.name());
     let mut warm = BTreeMap::new();
+    let mut warm_leaders = BTreeMap::new();
     for p in lookup(problem, "warm_start.placements")
         .and_then(|v| v.as_array())
         .into_iter()
@@ -1161,6 +1171,25 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
                 (Some(b), Some(d)) => Some(b.translate(d)),
                 (b, _) => b,
             };
+            // a single leader (not a group's fan) of the style in use
+            let leader = p
+                .get("leader")
+                .filter(|l| {
+                    p.get("leaders").is_none()
+                        && leader_style.is_some()
+                        && l.get("style").and_then(|s| s.as_str()) == leader_style
+                })
+                .and_then(|l| l.get("points"))
+                .map(points_of)
+                .filter(|pts| pts.len() >= 2);
+            if let (true, Some(_), Some(mut pts)) = (placed, b, leader) {
+                if let Some(d) = shift {
+                    for q in &mut pts {
+                        *q = *q + d;
+                    }
+                }
+                warm_leaders.insert(id.to_string(), pts);
+            }
             warm.insert(id.to_string(), if placed { b } else { None });
         }
     }
@@ -1181,7 +1210,7 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         avoid_buffer: o.map("avoid.buffer"),
         relaxable: o.strings("avoid.relaxable"),
         placement: PlacementOpts::from(&o),
-        leaders: LeaderOpts::from(&o),
+        leaders,
         weights: Weights::from(&o),
         solver,
         ladder,
@@ -1208,6 +1237,7 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         default_em,
         shaping: o.string("text.shaping"),
         warm,
+        warm_leaders,
         warnings,
         preset_name: o.preset_name.clone(),
         groups: Vec::new(),

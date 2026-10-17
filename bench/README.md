@@ -253,13 +253,13 @@ get the performance targets, the parity table and the release gates. `--overlay
 NAME=COMMAND` (`{problem}`, `{result}`, `{svg}`) renders the engine's debug overlay (cost
 grids, candidates) from one extra untimed run; `--engine` sets it up for `rust` with `place
 --debug-svg`. Sequences are solved frame by frame; frame t+1 gets `warm_start.placements` =
-frame t's placements with each box shifted by its anchor's movement. `--suite quick` =
-configs marked `quick` (one small config per scenario) + the quick sequences; `--suite full` =
-everything; `--scenario` restricts to scenario ids. Further flags: `--perf` (performance
-targets), `--previous OLD/results.json` (changes), `--gate` (release gates, implies `--perf`;
-the exit code reflects them), `--require-baselines` (a missing toolchain is an error instead
-of a skip). Without `--gate` the exit code is 1 when any solver failed on any problem ("n/a"
-is not a failure).
+frame t's placements with each box (and leader) shifted by its anchor's movement.
+`--suite quick` = configs marked `quick` (one small config per scenario) + the quick
+sequences; `--suite full` = everything; `--scenario` restricts to scenario ids. Further
+flags: `--perf` (performance targets), `--previous OLD/results.json` (changes), `--gate`
+(release gates, implies `--perf`; the exit code reflects them), `--require-baselines` (a
+missing toolchain is an error instead of a skip). Without `--gate` the exit code is 1 when
+any solver failed on any problem ("n/a" is not a failure).
 
 ## Baselines
 

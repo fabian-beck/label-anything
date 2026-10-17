@@ -1,0 +1,206 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 240,
+      "height": 180
+    },
+    "placement": {
+      "models": [
+        "adjacent",
+        "slider",
+        "distant"
+      ]
+    },
+    "leaders": {
+      "style": "angles"
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "class": "walls",
+          "rects": [
+            [
+              90,
+              70,
+              60,
+              24
+            ],
+            [
+              90,
+              106,
+              60,
+              24
+            ],
+            [
+              90,
+              94,
+              24,
+              12
+            ],
+            [
+              126,
+              94,
+              24,
+              12
+            ]
+          ]
+        }
+      ]
+    },
+    "avoid": {
+      "label": {
+        "walls": "hard"
+      },
+      "leader": {
+        "walls": "ignore"
+      }
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 120,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      }
+    ],
+    "warm_start": {
+      "placements": [
+        {
+          "id": "a",
+          "placed": true,
+          "anchor": [
+            110,
+            95
+          ],
+          "box": {
+            "x": 147.83,
+            "y": 37.226,
+            "w": 35.892,
+            "h": 19.944
+          },
+          "leader": {
+            "points": [
+              [
+                112.475,
+                92.525
+              ],
+              [
+                147.83,
+                57.17
+              ]
+            ],
+            "style": "angles",
+            "port": [
+              147.83,
+              57.17
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "a",
+        "placed": true,
+        "box": {
+          "x": 157.83,
+          "y": 42.226,
+          "w": 35.891999999999996,
+          "h": 19.944000000000003
+        },
+        "anchor": [
+          120.0,
+          100.0
+        ],
+        "anchor_side": "distant",
+        "model": "distant",
+        "text": {
+          "lines": [
+            "Alpha"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            32.292
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              122.475,
+              97.525
+            ],
+            [
+              157.83,
+              62.17
+            ]
+          ],
+          "style": "angles",
+          "port": [
+            157.83,
+            62.17
+          ]
+        },
+        "cost": 2.6416566770354333,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        },
+        "displacement": 0.0
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 1,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 41,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 2.6416566770354333,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 80,
+        "rows": 60,
+        "classes": [
+          "walls"
+        ]
+      },
+      "flicker": {
+        "moved": 0,
+        "added": 0,
+        "removed": 0,
+        "mean_displacement": 0.0
+      }
+    },
+    "debug_svg": null
+  }
+}

@@ -33,6 +33,7 @@ import {
   DegradeOpts,
   type InternalPolicy,
   LeaderOpts,
+  LeaderStyle,
   Models,
   Omission,
   OutputOpts,
@@ -43,6 +44,7 @@ import {
   type Ties,
   Weights,
   internalPolicyParse,
+  leaderStyleName,
   positionOrder,
   stepParse,
 } from "./opts.js";
@@ -417,6 +419,11 @@ export class Model {
   defaultEm = 12;
   shaping = "auto";
   warm: Map<string, Rect | null> = new Map();
+  /**
+   * The leader of each warm-start box, moved with it, for the `angles`, `elbow` and
+   * `orthogonal` leader styles (the entry's `leader` of the same style; spec §6.7).
+   */
+  warmLeaders: Map<string, P[]> = new Map();
   warnings: Issue[] = [];
   presetName = "auto";
   /** Groups of items sharing one label: (representative, members incl. the representative). */
@@ -954,7 +961,12 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   // (spec §6.7): the previous result can be passed as it is
   const refs = new Map<string, P>();
   for (const it of items) refs.set(it.id, it.shape.reference());
+  const leaders = LeaderOpts.from(o);
+  const ls = leaders.style;
+  const leaderStyle =
+    ls === LeaderStyle.Angles || ls === LeaderStyle.Elbow || ls === LeaderStyle.Orthogonal ? leaderStyleName(ls) : null;
   const warm = new Map<string, Rect | null>();
+  const warmLeaders = new Map<string, P[]>();
   for (const p of itemsOf(lookup(problem, "warm_start.placements"))) {
     const id = asStr(get(p, "id"));
     if (id === null) continue;
@@ -971,9 +983,30 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
     const av = get(p, "anchor");
     const a = av === undefined ? null : pointsOfSingle(av);
     const r = refs.get(id);
-    if (rect !== null && a !== null && r !== undefined) {
+    let shift: P | null = null;
+    if (a !== null && r !== undefined) {
       const d = r.sub(a);
-      if (Number.isFinite(d.x) && Number.isFinite(d.y)) rect = rect.translate(d);
+      if (Number.isFinite(d.x) && Number.isFinite(d.y)) shift = d;
+    }
+    if (rect !== null && shift !== null) rect = rect.translate(shift);
+    // a single leader (not a group's fan) of the style in use
+    const lv = get(p, "leader");
+    if (
+      placed &&
+      rect !== null &&
+      leaderStyle !== null &&
+      lv !== undefined &&
+      get(p, "leaders") === undefined &&
+      asStr(get(lv, "style")) === leaderStyle
+    ) {
+      let pts = pointsOf(get(lv, "points"));
+      if (pts.length >= 2) {
+        if (shift !== null) {
+          const d = shift;
+          pts = pts.map((q) => q.add(d));
+        }
+        warmLeaders.set(id, pts);
+      }
     }
     warm.set(id, placed ? rect : null);
   }
@@ -992,7 +1025,7 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.avoidBuffer = o.map("avoid.buffer");
   m.relaxable = o.strings("avoid.relaxable");
   m.placement = PlacementOpts.from(o);
-  m.leaders = LeaderOpts.from(o);
+  m.leaders = leaders;
   m.weights = Weights.from(o);
   m.solver = solver;
   m.ladder = ladder;
@@ -1015,6 +1048,7 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.defaultEm = defaultEm;
   m.shaping = o.string("text.shaping");
   m.warm = warm;
+  m.warmLeaders = warmLeaders;
   m.warnings = warnings;
   m.presetName = o.presetName;
   return m;

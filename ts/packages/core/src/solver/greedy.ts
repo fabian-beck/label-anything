@@ -220,6 +220,16 @@ export function run(s: Solve): void {
           g.done[i] = 1;
         }
       }
+      // a warm box that a small change blocked: the nearest free spot along the slider
+      // path instead
+      for (const i of band) {
+        if (g.done[i] || g.sets[i]! >= 0) continue;
+        const c = bestNudge(s, i);
+        if (c !== null && capAllows(s, s.cands[c]!)) {
+          commit(s, g, i, c, false);
+          g.done[i] = 1;
+        }
+      }
     }
     // level-0 pass, most constrained first
     g.heap.clear();
@@ -252,6 +262,33 @@ export function run(s: Solve): void {
       }
     }
   }
+}
+
+/**
+ * The free nudge of item `i`'s warm-start box with the smallest step, the cheaper of the
+ * two directions on a tie (see `Solve.warmNudges`).
+ */
+function bestNudge(s: Solve, i: number): number | null {
+  const ids = s.warmNudges(i);
+  const item = s.model.items[i]!;
+  const buffer = item.len.buffer;
+  const clearance = item.len.clearance;
+  const lw = s.model.leaders.width;
+  let bestStep = -1;
+  let bestCost = 0;
+  let best: number | null = null;
+  for (const [si, c] of ids) {
+    if (best !== null && si > bestStep) break;
+    const cand = s.cands[c]!;
+    if (!s.state.isFree(cand, s.cands, s.obs, i)) continue;
+    const t = cand.cost + s.state.dynamicCost(cand, s.cands, s.obs, buffer, clearance, lw, i);
+    if (best === null || t < bestCost) {
+      bestStep = si;
+      bestCost = t;
+      best = c;
+    }
+  }
+  return best;
 }
 
 function capMayHit(s: Solve, band: readonly number[]): boolean {

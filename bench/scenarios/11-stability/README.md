@@ -28,16 +28,16 @@ and zooming in should only add labels (nesting).
 | `drag-lesmis` (quick) | 41 | the settled layout (300 ticks) reheated to alpha 0.3 while Valjean is dragged 240 px along a half circle, every tick |
 
 **Warm start.** The runner solves frame t+1 with `warm_start` = the result of frame t in
-which every box is shifted by its anchor's movement between the frames (so the warm
-start encodes "keep the label where it was relative to its anchor"; Label Anything does
-the same with the previous result as it is, whose placements carry their `anchor`).
+which every box and leader is shifted by its anchor's movement between the frames (so the
+warm start encodes "keep the label where it was relative to its anchor"; Label Anything
+does the same with the previous result as it is, whose placements carry their `anchor`).
 
 **Metrics.** `python -m bench.eval sequence <sequence.json> --results <dir>`: mean/median
 displacement of the label relative to its anchor (px, em), flip rate, labels added and
 removed among items visible in both frames, and nesting (fraction of zoom-in steps with
 P_t ∩ V_{t+1} ⊆ P_{t+1}, plus the mean kept fraction).
 
-**Results** (Rust core, deterministic runs, ADR 0025): mean displacement / flip rate, from
-scratch → warm-started: `force-lesmis` 4.89 px / 12.2 % → 2.91 px / 7.8 %, `drag-lesmis`
-7.55 px / 17.8 % → 2.99 px / 8.5 %, `zoom-pan-1000` 9.10 px / 32.0 % → 3.01 px / 11.6 %,
-`zoom-pan-3000` 9.77 px / 36.7 % → 3.81 px / 15.5 %.
+**Results** (Rust core, deterministic runs, ADR 0025, ADR 0027): mean displacement / flip
+rate, from scratch → warm-started: `force-lesmis` 4.89 px / 12.2 % → 2.28 px / 6.9 %,
+`drag-lesmis` 7.55 px / 17.8 % → 2.32 px / 6.9 %, `zoom-pan-1000` 9.10 px / 32.0 % →
+2.79 px / 11.1 %, `zoom-pan-3000` 9.77 px / 36.7 % → 3.50 px / 14.7 %.

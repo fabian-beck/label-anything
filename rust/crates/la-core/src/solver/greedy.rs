@@ -158,6 +158,19 @@ pub fn run(s: &mut Solve) {
                     g.done[i] = true;
                 }
             }
+            // a warm box that a small change blocked: the nearest free spot along the
+            // slider path instead
+            for &i in &band {
+                if g.done[i] || g.sets[i].is_some() {
+                    continue;
+                }
+                if let Some(c) = best_nudge(s, i) {
+                    if cap_allows(s, &s.cands[c as usize]) {
+                        commit(s, &mut g, i, c, false);
+                        g.done[i] = true;
+                    }
+                }
+            }
         }
         // level-0 pass, most constrained first
         g.heap.clear();
@@ -199,6 +212,33 @@ pub fn run(s: &mut Solve) {
             }
         }
     }
+}
+
+/// The free nudge of item `i`'s warm-start box with the smallest step, the cheaper of
+/// the two directions on a tie (see [`Solve::warm_nudges`]).
+fn best_nudge(s: &mut Solve, i: usize) -> Option<u32> {
+    let ids = s.warm_nudges(i);
+    let item = &s.model.items[i];
+    let (buffer, clearance) = (item.len.buffer, item.len.clearance);
+    let lw = s.model.leaders.width;
+    let mut scratch = Vec::new();
+    let mut best: Option<(usize, f64, u32)> = None;
+    for (si, c) in ids {
+        if best.is_some_and(|b| si > b.0) {
+            break;
+        }
+        let cand = &s.cands[c as usize];
+        if !s.state.is_free(cand, &s.cands, s.obs, i, &mut scratch) {
+            continue;
+        }
+        let t = cand.cost
+            + s.state
+                .dynamic_cost(cand, &s.cands, s.obs, buffer, clearance, lw, i);
+        if best.map(|b| t < b.1).unwrap_or(true) {
+            best = Some((si, t, c));
+        }
+    }
+    best.map(|b| b.2)
 }
 
 fn cap_may_hit(s: &Solve, band: &[usize]) -> bool {

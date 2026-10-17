@@ -559,7 +559,10 @@ public final class LabelProblem {
       return put("degrade_options.soft_overlap_weight", weight);
     }
 
-    /** Stay close to a previous result (stability across frames). */
+    /**
+     * Stay close to a previous result (stability across frames): its boxes, with the anchors
+     * they were placed for (boxes move with their items) and their leaders.
+     */
     public Builder warmStart(LabelResult previous) {
       List<Object> placements = new ArrayList<>();
       for (LabelPlacement p : previous.placements()) {
@@ -569,6 +572,13 @@ public final class LabelProblem {
         if (p.box() != null) {
           m.put("box", Spec.obj("x", p.box().x(), "y", p.box().y(), "w", p.box().w(),
               "h", p.box().h()));
+        }
+        if (p.anchor() != null) {
+          m.put("anchor", List.of(p.anchor().x(), p.anchor().y()));
+        }
+        Object leader = p.raw().get("leader");
+        if (leader != null && !p.raw().containsKey("leaders")) {
+          m.put("leader", leader);
         }
         placements.add(m);
       }

@@ -1726,6 +1726,24 @@
                 "$ref": "#/$defs/point",
                 "description": "The anchor point (canvas px) the box was placed for, as in a result: the box moves with the item's anchor to its position in this problem."
               },
+              "leader": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "The leader the box was placed with, as in a result. With the angles, elbow and orthogonal styles, a leader of the style in use moves with the box and is kept while it still fits (spec §6.7).",
+                "properties": {
+                  "points": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/point"
+                    }
+                  },
+                  "style": {
+                    "type": "string"
+                  }
+                }
+              },
               "box": {
                 "type": "object",
                 "required": [

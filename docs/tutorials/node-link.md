@@ -70,7 +70,8 @@ labels must never cross them; expect more leaders and omissions then.
 ## Layouts that move
 
 While a force-directed layout runs or the user drags a node, solve every few ticks with
-the previous result as `warm_start`: each label follows its node and moves on only when
-its place is taken. Draw the labels with `LabelMotion` so that they glide into new places
-and fade in and out instead of jumping and blinking. [Moving points](interactive-maps.md#moving-points)
-has d3-force examples and the measurements.
+the previous result as `warm_start`: each label follows its node (a label with a leader
+keeps its leader) and moves on only when its place is taken, then to a place nearby. Draw
+the labels with `LabelMotion` so that they glide into new places and fade in and out
+instead of jumping and blinking. [Moving points](interactive-maps.md#moving-points) has
+d3-force examples and the measurements.

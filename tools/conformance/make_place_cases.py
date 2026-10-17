@@ -382,6 +382,43 @@ CASES["warm-start-degraded"] = case(
     "full-size label with a leader, but the previous, shrunk box is still free and is "
     "kept (ADR 0025).")
 
+CASES["warm-start-nudge"] = case(
+    "a previous box that an obstacle now clips slides along the mark instead of jumping",
+    {"canvas": {"width": 200, "height": 140},
+     "obstacles": {"vector": [{"class": "blocker", "rects": [[70, 50, 12.554, 20]]}]},
+     "avoid": {"label": {"blocker": "hard"}},
+     "items": [pt("a", 100, 80, "Alpha")],
+     "warm_start": {"placements": [
+         {"id": "a", "placed": True, "anchor": [100, 80],
+          "box": {"x": 82.054, "y": 56.056, "w": 35.892, "h": 19.944}}]}},
+    {"placed": 1, "anchor_side": {"a": "top"}, "model": {"a": "slider"},
+     "box": {"a": {"x": 82.654, "y": 56.056, "w": 35.892, "h": 19.944, "tol": 0.01}}},
+    "The previous result placed Alpha above its point; a hard obstacle now covers the "
+    "box's left 0.5 px. The box slides 0.05 em (0.6 px, the smallest nudge) to the right "
+    "along the top of the mark; the nearest slider candidate would be 4.2 px away.")
+
+CASES["warm-start-keeps-leader"] = case(
+    "a previous leadered label keeps its leader, moved with the anchor",
+    {"canvas": {"width": 240, "height": 180},
+     "placement": {"models": ["adjacent", "slider", "distant"]},
+     "leaders": {"style": "angles"},
+     "obstacles": {"vector": [{"class": "walls", "rects": [
+         [90, 70, 60, 24], [90, 106, 60, 24], [90, 94, 24, 12], [126, 94, 24, 12]]}]},
+     "avoid": {"label": {"walls": "hard"}, "leader": {"walls": "ignore"}},
+     "items": [pt("a", 120, 100, "Alpha")],
+     "warm_start": {"placements": [
+         {"id": "a", "placed": True, "anchor": [110, 95],
+          "box": {"x": 147.83, "y": 37.226, "w": 35.892, "h": 19.944},
+          "leader": {"points": [[112.475, 92.525], [147.83, 57.17]], "style": "angles",
+                     "port": [147.83, 57.17]}}]}},
+    {"placed": 1, "model": {"a": "distant"}, "has_leader": {"a": True},
+     "box": {"a": {"x": 157.83, "y": 42.226, "w": 35.892, "h": 19.944, "tol": 0.01}}},
+    "Walls that labels may not overlap (leaders may cross them) surround the point, so "
+    "its label needs a leader. The previous result had a 50 px leader at 45°, between "
+    "the distant rings (44 and 70 px from the leader start); the point moved by (10, 5) "
+    "and the label keeps that leader, moved by the same: the box is the previous one "
+    "moved, which no ring candidate reproduces.")
+
 CASES["raster-background"] = case(
     "raster background ink is avoided",
     {"problem_file": "../problems/raster-ink.json"},

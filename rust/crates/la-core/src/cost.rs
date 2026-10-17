@@ -259,7 +259,10 @@ impl<'a> Evaluator<'a> {
         if w.stability > 0.0 {
             if let Some(Some(b)) = model.warm.get(&item.id) {
                 let d = b.center().dist(r.center());
-                acc.add("stability", w.stability * minf(1.0, d / em));
+                // 1 per em up to 1 em, then 1/4 per em up to 5 em: a label that must move
+                // goes to a near spot rather than to the best one anywhere
+                let tail = minf(1.0, maxf(0.0, d / em - 1.0) * 0.25);
+                acc.add("stability", w.stability * (minf(1.0, d / em) + tail));
             }
         }
         // 11. host cost

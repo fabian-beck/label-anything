@@ -27,7 +27,7 @@ run ``--runs`` times (built-in and third-party baselines ``--baseline-runs`` tim
 runtime = median and p95 (nearest rank) of the wall time and of ``stats.runtime_ms``;
 the last result is evaluated (and compared with the first for determinism). Sequences
 are solved frame by frame with ``warm_start`` = the previous result, every previous
-box shifted by its anchor's movement. A baseline that cannot express a problem at all
+box and leader shifted by its anchor's movement. A baseline that cannot express a problem at all
 is reported "n/a" with the reason.
 
 ``--perf`` measures the performance targets (bench/perf), ``--previous`` adds the
@@ -253,7 +253,7 @@ def run_problem(solver: Solver, prob_entry: dict, out: Path, runs: int, timeout:
 
 
 def shifted_warm_start(prev_problem: dict, prev_result: dict, problem: dict) -> dict:
-    """Previous placements with every box shifted by its anchor's movement between the frames."""
+    """Previous placements with every box and leader shifted by its anchor's movement between the frames."""
     pa = {it.id: it.ref for it in load_problem(prev_problem).items}
     na = {it.id: it.ref for it in load_problem(problem).items}
     out = []
@@ -266,6 +266,10 @@ def shifted_warm_start(prev_problem: dict, prev_result: dict, problem: dict) -> 
             dx, dy = na[i][0] - pa[i][0], na[i][1] - pa[i][1]
             b = p["box"]
             q["box"] = {"x": round(b["x"] + dx, 3), "y": round(b["y"] + dy, 3), "w": b["w"], "h": b["h"]}
+            lead = p.get("leader")
+            if isinstance(lead, dict) and lead.get("points") and "leaders" not in p:
+                q["leader"] = {"style": lead.get("style"),
+                               "points": [[round(x + dx, 3), round(y + dy, 3)] for x, y in lead["points"]]}
         out.append(q)
     return {"placements": out}
 

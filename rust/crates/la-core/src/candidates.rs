@@ -340,8 +340,9 @@ fn push_in(shape: &Shape, o: f64, c: P, hw: f64, hh: f64) -> P {
 /// The warm-start box of an item as a candidate of variant `vi` (whose size must match),
 /// so that an unchanged position costs no stability penalty (spec §8): a slider-kind
 /// candidate on the side its center points to when it touches the inflated mark (gap
-/// ≤ offset + 1 px), else a distant candidate with a straight leader (straight style
-/// only, within the leader length limits). `None` when neither applies.
+/// ≤ offset + 1 px), else a distant candidate with a straight leader (straight style,
+/// within the leader length limits) or with the leader it came with (see
+/// [`warm_leader`]). `None` when neither applies.
 pub fn warm(
     model: &crate::model::Model,
     item: &Item,
@@ -380,8 +381,8 @@ pub fn warm(
             rect,
         ));
     }
-    if model.leaders.style != crate::model::opts::LeaderStyle::Straight {
-        return None;
+    if model.leaders.style != LeaderStyle::Straight {
+        return warm_leader(model, item, vi, v, rect);
     }
     let port = rect.closest_point(refp);
     let start = crate::leaders::leader_start(model, item, port);
@@ -401,6 +402,234 @@ pub fn warm(
     );
     c.leaders.push(l);
     Some(c)
+}
+
+/// cos 0.5°: the tolerance of a warm-start leader's direction.
+const COS_HALF_DEGREE: f64 = 0.999_961_923_064_171_4;
+
+/// A warm-start box away from the mark as a distant candidate with the leader it came
+/// with, moved with it (`angles`, `elbow` and `orthogonal` styles): when that leader
+/// still starts where the item's leaders start and ends on the box (both within 0.5 px),
+/// keeps within the length limits and, for `angles` and `elbow`, leaves the item along
+/// one of the allowed directions (within 0.5°). Items labeling a group take none.
+fn warm_leader(
+    model: &crate::model::Model,
+    item: &Item,
+    vi: usize,
+    v: &Variant,
+    rect: Rect,
+) -> Option<Cand> {
+    let style = model.leaders.style;
+    let pts = model.warm_leaders.get(&item.id)?;
+    if pts.len() < 2 || model.group_members(item.index).len() >= 2 {
+        return None;
+    }
+    let (s0, port) = (pts[0], pts[pts.len() - 1]);
+    if s0.dist(crate::leaders::leader_start(model, item, s0)) > 0.5 {
+        return None;
+    }
+    let inside = (port.x - rect.x0)
+        .min(rect.x1 - port.x)
+        .min(port.y - rect.y0)
+        .min(rect.y1 - port.y);
+    if rect.dist_point(port) > 0.5 || inside > 0.5 {
+        return None;
+    }
+    if matches!(style, LeaderStyle::Angles | LeaderStyle::Elbow) {
+        let d = (pts[1] - s0).norm();
+        if !crate::leaders::distant_dirs(model)
+            .iter()
+            .any(|&(_, u)| d.dot(u) >= COS_HALF_DEGREE)
+        {
+            return None;
+        }
+    }
+    let mut l = Leader::new(pts.clone(), style);
+    if l.len < item.len.leader_min || l.len > item.len.leader_max + 1e-9 {
+        return None;
+    }
+    // the `baseline` port's underline, for this variant's text (as `leaders::distant`)
+    if model.leaders.port == crate::model::opts::Port::Baseline && style != LeaderStyle::Orthogonal
+    {
+        if let Some(t) = &v.text {
+            let x0 = rect.x0 + t.x_offset;
+            let far = if port.x <= rect.center().x {
+                x0 + t.widths[0]
+            } else {
+                x0
+            };
+            l.underline = Some((port, P::new(far, port.y)));
+        }
+    }
+    let mut c = Cand::new(
+        item.index as u32,
+        vi as u16,
+        v.level,
+        Kind::Distant,
+        Side::Distant,
+        8.0,
+        rect,
+    );
+    c.leaders.push(l);
+    Some(c)
+}
+
+/// Label centers along the slider paths of an item's allowed gaps (the C-space paths of
+/// [`adjacent`], whose curved stretches are followed by their chords between vertices
+/// 9° apart), chained into runs of consecutive allowed gaps; a run that goes all around
+/// the mark is closed (its last point is its first).
+fn slider_runs(item: &Item, hw: f64, hh: f64) -> Vec<Vec<P>> {
+    let mut allowed_pos = [false; 8];
+    for p in &item.positions {
+        allowed_pos[p.angular_index()] = true;
+    }
+    let allowed = |k: usize| allowed_pos[k % 8] && allowed_pos[(k + 1) % 8];
+    let st = support_table(item);
+    let (shape, o) = (&item.shape, item.len.offset);
+    // start after a gap that is not allowed, so that no run is split at the start
+    let start = (0..8).find(|&k| allowed(k) && !allowed(k + 7)).unwrap_or(0);
+    let mut runs: Vec<Vec<P>> = Vec::new();
+    let mut cur: Vec<P> = Vec::new();
+    let mut path = [CVertex::ZERO; MAX_GAP_VERTS];
+    for j in 0..8 {
+        let k = (start + j) % 8;
+        if !allowed(k) {
+            if cur.len() >= 2 {
+                runs.push(std::mem::take(&mut cur));
+            }
+            cur.clear();
+            continue;
+        }
+        let n = cspace_path(shape, o, hw, hh, k, Some(st), &mut path);
+        for v in &path[..n] {
+            if cur.last().is_some_and(|q| q.dist(v.p) < 1e-9) {
+                continue;
+            }
+            cur.push(v.p);
+        }
+    }
+    if cur.len() >= 2 {
+        runs.push(cur);
+    }
+    runs
+}
+
+/// The point `s` px (signed) along `run` from the point at parameter `t` of segment
+/// `seg`; a closed run wraps around, an open one ends (`None` past its ends).
+fn walk_run(run: &[P], seg: usize, t: f64, s: f64) -> Option<P> {
+    let n = run.len();
+    let mut cum = vec![0.0; n];
+    for i in 1..n {
+        cum[i] = cum[i - 1] + run[i - 1].dist(run[i]);
+    }
+    let total = cum[n - 1];
+    if total <= 1e-9 {
+        return None;
+    }
+    let closed = run[0].dist(run[n - 1]) < 1e-9;
+    let mut target = cum[seg] + (cum[seg + 1] - cum[seg]) * t + s;
+    if closed {
+        target = target.rem_euclid(total);
+    } else if !(0.0..=total).contains(&target) {
+        return None;
+    }
+    let mut i = 0;
+    while i + 2 < n && cum[i + 1] < target {
+        i += 1;
+    }
+    let len = cum[i + 1] - cum[i];
+    let u = if len > 0.0 {
+        (target - cum[i]) / len
+    } else {
+        0.0
+    };
+    Some(run[i].lerp(run[i + 1], u))
+}
+
+/// Candidates of variant `vi` near a warm-start box that touches the mark: its center
+/// moved `steps` px (each step forwards, then backwards) along the slider paths of the
+/// item's allowed gaps, as slider candidates (spec §6.7). For a box that a small change
+/// blocked: a nudge instead of a jump. Empty when the box is not on a slider path (it
+/// does not touch the mark, or the item has no slider model). Returns `(step index,
+/// candidate)` pairs.
+pub fn warm_nudges(
+    item: &Item,
+    vi: usize,
+    v: &Variant,
+    rect: Rect,
+    steps: &[f64],
+    models: Models,
+) -> Vec<(usize, Cand)> {
+    if !models.has(Models::SLIDER) {
+        return Vec::new();
+    }
+    let (hw, hh) = (v.w * 0.5, v.h * 0.5);
+    let runs = slider_runs(item, hw, hh);
+    let c0 = rect.center();
+    // the nearest point of the paths: (distance, run, segment, parameter)
+    let mut near: Option<(f64, usize, usize, f64)> = None;
+    for (r, run) in runs.iter().enumerate() {
+        for k in 0..run.len() - 1 {
+            let (a, b) = (run[k], run[k + 1]);
+            let ab = b - a;
+            let l2 = ab.len2();
+            let t = if l2 > 0.0 {
+                (((c0 - a).x * ab.x + (c0 - a).y * ab.y) / l2).clamp(0.0, 1.0)
+            } else {
+                0.0
+            };
+            let d = c0.dist(a.lerp(b, t));
+            if near.map(|n| d < n.0).unwrap_or(true) {
+                near = Some((d, r, k, t));
+            }
+        }
+    }
+    let Some((d, r, k, t)) = near else {
+        return Vec::new();
+    };
+    if d > 0.75 {
+        return Vec::new();
+    }
+    let refp = item.shape.reference();
+    let it = item.index as u32;
+    let mut out = Vec::new();
+    for (si, &step) in steps.iter().enumerate() {
+        for s in [step, -step] {
+            let Some(c) = walk_run(&runs[r], k, t, s) else {
+                continue;
+            };
+            let c = push_in(&item.shape, item.len.offset, c, hw, hh);
+            let dd = c - refp;
+            if dd.len2() == 0.0 {
+                continue;
+            }
+            // the nearest of the item's allowed positions by direction, as for `warm`
+            let mut best: Option<(f64, Pos, f64)> = None;
+            for (rank, &p) in item.positions.iter().enumerate() {
+                let pd = pos_dirs()[p.angular_index()];
+                let dot = (pd.x * dd.x + pd.y * dd.y) / dd.len2().sqrt();
+                if best.map(|b| dot > b.0).unwrap_or(true) {
+                    best = Some((dot, p, rank as f64));
+                }
+            }
+            let Some((_, pos, rank)) = best else {
+                continue;
+            };
+            out.push((
+                si,
+                Cand::new(
+                    it,
+                    vi as u16,
+                    v.level,
+                    Kind::Slider,
+                    Side::Pos(pos),
+                    rank + 0.25,
+                    Rect::from_center(c, hw, hh),
+                ),
+            ));
+        }
+    }
+    out
 }
 
 /// Adjacent and slider candidates of one variant.

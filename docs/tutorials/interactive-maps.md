@@ -8,12 +8,17 @@ set should **nest**, growing as space appears.
 ## Warm starts
 
 `warm_start` passes the previous frame's result, as it is. Every placed label in a result
-reports the `anchor` of its item; the next solve moves each previous box by the distance its
-anchor moved, makes it a candidate and **keeps it first** if it is still free. Otherwise
-the `weights.stability` term (1.0 per em of displacement, capped at 1) pulls the label
-towards it. A label the previous solve had to shrink, wrap or shorten keeps its box the
-same way while it is free, unless the full label fits again ([ADR 0025](../adr/0025-warm-starts-follow-anchors.md)).
-Boxes without `anchor` (made by the host) are used where they are. The result reports
+reports the `anchor` of its item; the next solve moves each previous box (and its leader)
+by the distance its anchor moved, makes it a candidate and **keeps it first** if it is
+still free. A box that something now overlaps slightly **slides** along its mark instead,
+by the smallest of a few steps (0.05 to 0.8 em) that frees it. Otherwise the
+`weights.stability` term pulls the label towards its old place: 1.0 per em of
+displacement up to 1 em, then 0.25 per em up to 5 em, so a label that has to move goes
+to a near place rather than to the other side of its point
+([ADR 0027](../adr/0027-nudges-kept-leaders-near-moves.md)). A label the previous solve
+had to shrink, wrap or shorten keeps its box the same way while it is free, unless the
+full label fits again ([ADR 0025](../adr/0025-warm-starts-follow-anchors.md)). Boxes
+without `anchor` (made by the host) are used where they are. The result reports
 `stats.flicker` (`moved`, `added`, `removed`, `mean_displacement`) and each placement's
 `displacement` in px.
 
@@ -27,13 +32,13 @@ then zooming in:
 ```text
 zoom 1.0: <Result placed=34/40 hard_violations=0 omitted=6> None
 zoom 1.0: <Result placed=35/40 hard_violations=0 omitted=5> {'moved': 0, 'added': 1, 'removed': 0, 'mean_displacement': 0.0}
-zoom 1.3: <Result placed=40/40 hard_violations=0 omitted=0> {'moved': 12, 'added': 5, 'removed': 0, 'mean_displacement': 9.8}
-zoom 1.7: <Result placed=36/36 hard_violations=0 omitted=0> {'moved': 11, 'added': 0, 'removed': 0, 'mean_displacement': 12.6}
-zoom 2.2: <Result placed=25/25 hard_violations=0 omitted=0> {'moved': 6, 'added': 0, 'removed': 0, 'mean_displacement': 7.5}
+zoom 1.3: <Result placed=40/40 hard_violations=0 omitted=0> {'moved': 12, 'added': 5, 'removed': 0, 'mean_displacement': 8.5}
+zoom 1.7: <Result placed=36/36 hard_violations=0 omitted=0> {'moved': 10, 'added': 0, 'removed': 0, 'mean_displacement': 10.2}
+zoom 2.2: <Result placed=25/25 hard_violations=0 omitted=0> {'moved': 7, 'added': 0, 'removed': 0, 'mean_displacement': 8.8}
 ```
 
 Measured as the change of each label's offset from its point between frames, the labels
-move 7.6 px per frame with warm starts against 12.5 px without (the program computes
+move 6.8 px per frame with warm starts against 12.5 px without (the program computes
 both). The remaining moves are labels whose old place collides with a label that appeared,
 or that gain a better position as space opens up.
 
@@ -64,7 +69,7 @@ better place opens up. A d3-force layout, re-solved every 4th tick:
 ```
 
 ```text
-30 frames; labels move 1.1 px per frame warm-started, 4.9 px from scratch
+30 frames; labels move 0.7 px per frame warm-started, 4.9 px from scratch
 ```
 
 The [benchmark](../benchmark.md)'s stability sequences (scenario 11) measure this on
@@ -75,12 +80,12 @@ between frames:
 
 | sequence | | mean move | side changes | jumps |
 |---|---|---|---|---|
-| force layout running, 61 frames | from scratch | 4.9 px | 12 % | 11 % |
-| | warm-started | 2.9 px | 8 % | 6 % |
-| node dragged, 41 frames | from scratch | 7.5 px | 18 % | 17 % |
-| | warm-started | 3.0 px | 9 % | 6 % |
-| pan and zoom, 30 frames | from scratch | 9.1 px | 32 % | 28 % |
-| | warm-started | 3.0 px | 12 % | 8 % |
+| force layout running, 61 frames | from scratch | 4.9 px | 12.2 % | 11.4 % |
+| | warm-started | 2.3 px | 6.9 % | 5.5 % |
+| node dragged, 41 frames | from scratch | 7.5 px | 17.8 % | 17.0 % |
+| | warm-started | 2.3 px | 6.9 % | 4.8 % |
+| pan and zoom, 30 frames | from scratch | 9.1 px | 32.0 % | 27.7 % |
+| | warm-started | 2.8 px | 11.1 % | 7.9 % |
 
 For animation:
 
@@ -89,10 +94,12 @@ For animation:
 * **Use a short time budget.** `solver.time_budget_ms: 10` makes a frame of the 77-node
   graph take about 12 ms natively, 18 ms with `@label-anything/wasm` and 22 ms with
   `@label-anything/core` in Node (31 and 42 ms with the default budget), and the labels
-  move about as little (6.6 % jumps instead of 6.0 %).
-* **Solve once more without `warm_start` when the layout has settled** if you want the
-  best static layout: warm-started labels that had to shrink keep that size while their
-  place stays free.
+  move about as little (6.1 % jumps instead of 5.5 %).
+* **Solve once more with a lower `weights.stability` when the layout has come to rest**:
+  warm-started labels keep places that a fresh solve would improve on (labels that had
+  to shrink keep that size while their place stays free). With `weights: { stability:
+  0.3 }` and the last result as `warm_start`, a few labels move to clearly better places
+  (4 or 5 of the 77 on the graph); without `warm_start`, a third of them would move.
 
 ### Smooth transitions
 
@@ -108,6 +115,9 @@ result, and draw what it returns on every frame:
 ```js
 --8<-- "examples/tutorials/js/browser/force.mjs:force-motion"
 ```
+
+When the simulation ends, `settle` solves once more with a lower `weights.stability`, and
+the few labels that a better place awaits glide there (see the tips above).
 
 `frame()` returns the placements as they are drawn at that moment (the text scaled with a
 box that grows or shrinks, leaders attached to the gliding box) and the opacities of the

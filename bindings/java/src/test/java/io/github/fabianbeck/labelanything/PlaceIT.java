@@ -3,6 +3,7 @@ package io.github.fabianbeck.labelanything;
 import static io.github.fabianbeck.labelanything.TestSupport.assertSameResult;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -196,21 +197,23 @@ class PlaceIT {
 
   @Test
   void warmStartFollowsTheAnchors() {
+    // a wall above the point keeps the label from its first position, top
     LabelResult first = LabelAnything.place(LabelProblem.builder().canvas(300, 200)
-        .item("a", 100, 100, Label.text("Alpha"))
-        .item("b", 108, 104, Label.text("Beta")).build());
-    assertEquals(new Point(100, 100), first.placement("a").orElseThrow().anchor());
-    // the points moved by (40, 20): the previous result as warm start moves the labels along
+        .vector(VectorLayer.of("wall").rect(70, 50, 60, 36))
+        .avoid(Avoid.label().hard("wall"))
+        .item("a", 100, 100, Label.text("Alpha")).build());
+    LabelPlacement a0 = first.placement("a").orElseThrow();
+    assertEquals(new Point(100, 100), a0.anchor());
+    assertNotEquals(AnchorSide.TOP, a0.anchorSide());
+    // the wall is gone and the point moved by (40, 20): the previous result as warm start
+    // moves the box along, and it is kept
     LabelResult moved = LabelAnything.place(LabelProblem.builder().canvas(300, 200)
         .item("a", 140, 120, Label.text("Alpha"))
-        .item("b", 148, 124, Label.text("Beta"))
         .warmStart(first).build());
-    for (String id : List.of("a", "b")) {
-      Box before = first.placement(id).orElseThrow().box();
-      Box after = moved.placement(id).orElseThrow().box();
-      assertEquals(before.x() + 40, after.x(), 1e-9, id);
-      assertEquals(before.y() + 20, after.y(), 1e-9, id);
-    }
+    LabelPlacement a1 = moved.placement("a").orElseThrow();
+    assertEquals(a0.anchorSide(), a1.anchorSide());
+    assertEquals(a0.box().x() + 40, a1.box().x(), 1e-9);
+    assertEquals(a0.box().y() + 20, a1.box().y(), 1e-9);
   }
 
   @Test

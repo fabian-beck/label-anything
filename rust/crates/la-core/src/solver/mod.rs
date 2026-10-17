@@ -75,6 +75,11 @@ pub struct Solve<'a> {
     /// The warm-start candidate of each item for a ladder variant, once computed (see
     /// [`Solve::warm_ladder_candidate`]).
     pub warm_ladder: Vec<Option<Option<u32>>>,
+    /// The warm-start box of each item with its level-0 variant, feasible or not (for
+    /// nudges, see [`Solve::warm_nudges`]).
+    pub warm_box: Vec<Option<(usize, Rect)>>,
+    /// The nudged warm-start candidates of each item with their step index, once made.
+    pub warm_nudge: Vec<Option<Vec<(usize, u32)>>>,
     /// Directions of distant candidates (see `leaders::distant_dirs`).
     pub distant_dirs: Vec<(f64, crate::geom::P)>,
     /// Free-space seeds near each item (`leaders::item_seeds`), once needed.
@@ -132,6 +137,8 @@ impl<'a> Solve<'a> {
             distant_pending: vec![false; n],
             warm_cand: vec![None; n],
             warm_ladder: vec![None; n],
+            warm_box: vec![None; n],
+            warm_nudge: vec![None; n],
             static_dropped: vec![0; n],
             distant_dirs: crate::leaders::distant_dirs(model),
             seeds: vec![None; n],
@@ -343,6 +350,7 @@ impl<'a> Solve<'a> {
             crate::par::map(n, |i| per_item(&crate::env::BasicEnv, i))
         };
         for (i, (kept, dropped, warm)) in generated.into_iter().enumerate() {
+            self.warm_box[i] = warm_variant(self.model, &self.model.items[i], &self.variants[i]);
             self.distant_pending[i] = self.models[i].has(Models::DISTANT);
             self.static_dropped[i] += dropped;
             for c in kept {
@@ -523,6 +531,35 @@ impl<'a> Solve<'a> {
         None
     }
 
+    /// The warm-start box of item `i` nudged along its slider path (steps of 0.05, 0.1,
+    /// 0.2, 0.4 and 0.8 em, both ways), as statically feasible level-0 candidates with
+    /// their step index; made once.
+    pub fn warm_nudges(&mut self, i: usize) -> Vec<(usize, u32)> {
+        if let Some(ids) = &self.warm_nudge[i] {
+            return ids.clone();
+        }
+        let mut ids = Vec::new();
+        if let Some((vi, rect)) = self.warm_box[i] {
+            let item = &self.model.items[i];
+            let em = item.em();
+            let steps = [0.05 * em, 0.1 * em, 0.2 * em, 0.4 * em, 0.8 * em];
+            let v = &self.variants[i][vi];
+            for (si, mut c) in candidates::warm_nudges(item, vi, v, rect, &steps, self.models[i]) {
+                c.level = 0;
+                c.lshape = candidates::label_shape(&c.rect, &v.shape);
+                Evaluator::new(self.model, self.obs, self.env).eval(&mut c, v, None);
+                if c.feasible {
+                    let id = self.cands.len() as u32;
+                    self.by_item[i].push(id);
+                    self.cands.push(c);
+                    ids.push((si, id));
+                }
+            }
+        }
+        self.warm_nudge[i] = Some(ids.clone());
+        ids
+    }
+
     pub fn now(&self) -> f64 {
         self.env.now_ms()
     }
@@ -692,6 +729,25 @@ fn evaluate_and_prune(
         .zip(keep)
         .filter_map(|(c, k)| k.then_some(c))
         .collect()
+}
+
+/// The level-0 variant of an item's warm-start box (width and height within 0.5 px) and
+/// the box; none for the non-representative members of a group.
+fn warm_variant(
+    model: &Model,
+    item: &crate::model::Item,
+    variants: &[Variant],
+) -> Option<(usize, Rect)> {
+    if matches!(model.group_of.get(item.index), Some(Some(r)) if *r != item.index) {
+        return None;
+    }
+    let Some(Some(b)) = model.warm.get(&item.id) else {
+        return None;
+    };
+    let vi = variants
+        .iter()
+        .position(|v| v.level == 0 && (v.w - b.w()).abs() <= 0.5 && (v.h - b.h()).abs() <= 0.5)?;
+    Some((vi, *b))
 }
 
 /// The warm-start box of an item as an extra level-0 candidate (when statically

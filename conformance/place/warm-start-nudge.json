@@ -1,0 +1,85 @@
+{
+  "kind": "place",
+  "name": "a previous box that an obstacle now clips slides along the mark instead of jumping",
+  "$comment": "The previous result placed Alpha above its point; a hard obstacle now covers the box's left 0.5 px. The box slides 0.05 em (0.6 px, the smallest nudge) to the right along the top of the mark; the nearest slider candidate would be 4.2 px away.",
+  "problem": {
+    "canvas": {
+      "width": 200,
+      "height": 140
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "class": "blocker",
+          "rects": [
+            [
+              70,
+              50,
+              12.554,
+              20
+            ]
+          ]
+        }
+      ]
+    },
+    "avoid": {
+      "label": {
+        "blocker": "hard"
+      }
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 80
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      }
+    ],
+    "warm_start": {
+      "placements": [
+        {
+          "id": "a",
+          "placed": true,
+          "anchor": [
+            100,
+            80
+          ],
+          "box": {
+            "x": 82.054,
+            "y": 56.056,
+            "w": 35.892,
+            "h": 19.944
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "anchor_side": {
+      "a": "top"
+    },
+    "model": {
+      "a": "slider"
+    },
+    "box": {
+      "a": {
+        "x": 82.654,
+        "y": 56.056,
+        "w": 35.892,
+        "h": 19.944,
+        "tol": 0.01
+      }
+    }
+  }
+}

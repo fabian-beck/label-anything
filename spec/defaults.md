@@ -103,7 +103,7 @@ are stale.
 | `weights.ambiguity` | `1.0` | ≥ 0 | Label closer to another item's shape than to its own. |
 | `weights.lookahead` | `0.3` | ≥ 0 | × Σ fraction of other unplaced items' candidates invalidated. |
 | `weights.starve` | `2.0` | ≥ 0 | × number of unplaced items whose last candidates would be invalidated. |
-| `weights.stability` | `1.0` | ≥ 0 | × displacement from `warm_start` in em (capped at 1 per label). |
+| `weights.stability` | `1.0` | ≥ 0 | × displacement from `warm_start`: 1 per em up to 1 em, then 1/4 per em up to 5 em (at most 2 per label). |
 | `obstacles.vector.r` | `2` | ≥ 0 | Radius of vector points. |
 | `obstacles.vector.width` | `1` | ≥ 0 | Stroke width of vector polylines. |
 | `obstacles.vector.fill_rule` | `"nonzero"` | nonzero \| evenodd | Fill rule of vector polygons. |

@@ -123,6 +123,9 @@ force.sim.stop();
 ok("d3-force with LabelMotion", force.result(), 15);
 assert.ok(force.result().stats.flicker, "warm-started");
 assert.equal(forceSvg.querySelectorAll("text").length >= force.result().stats.placed, true, "force labels drawn");
+force.settle();                                       // what the simulation's "end" runs
+ok("d3-force settled", force.result(), 15);
+assert.ok(force.result().stats.flicker, "settled warm-started");
 
 // Web Worker (stand-in: the worker side runs serveEngine in this thread)
 const workerListeners = { message: [], error: [] };

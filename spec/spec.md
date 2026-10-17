@@ -678,12 +678,28 @@ Filtering while generating (ADR 0015), always exact:
 * The warm-start box of an item is an extra level-0 candidate of the level-0 variant of
   its size (width and height within 0.5 px; ADR 0016): slider-kind on the allowed
   position its center points to when it is at most `offset + 1` px from the mark, else a
-  distant candidate with a straight leader (straight style only, within the leader
-  length limits); none when it overlaps the own mark or is statically infeasible. A
+  distant candidate; none when it overlaps the own mark or is statically infeasible. A
   `warm_start` entry with an `anchor` (the anchor point it was placed for, as a result
   reports it) is first moved by the item's anchor movement: `box + (reference − anchor)`,
   the reference point of §11. The same box can become a candidate of a ladder variant
   (§10.1).
+* The leader of a distant warm-start candidate, within the leader length limits: with
+  the `straight` style, a straight leader to the box; with `angles`, `elbow` and
+  `orthogonal`, the entry's `leader` (its `points`, when its `style` is the one in use
+  and the entry has no `leaders`), moved like the box, when it still starts where the
+  item's leaders start (§7, `attach`) and ends on the box (both within 0.5 px) and, for
+  `angles` and `elbow`, its first segment is within 0.5° of an allowed direction; with
+  the `baseline` port (not `orthogonal`) it gets the variant's underline; not for the
+  representative of a group (ADR 0027). With `curved` there is none.
+* Nudges: for the warm-start box of the level-0 variant that lies on a slider path (its
+  center within 0.75 px of the path of §6.2 over the item's allowed gaps, chained
+  through consecutive gaps, curved stretches followed by their chords between the
+  vertices), the points 0.05, 0.1, 0.2, 0.4 and 0.8 em along the path from the nearest
+  point, each step forwards and then backwards (a path all around the mark wraps, one
+  that ends stops there), are slider candidates of that variant, placed as those of
+  §6.2 are, on the allowed position their center points to (as the warm-start box);
+  only statically feasible ones count. They are made when §10.1 asks for them (ADR
+  0027).
 
 ### 6.8 Fan labels
 
@@ -812,7 +828,7 @@ cost = Σ_class w_label[class] · covered(label_k, class) / em²
      + w_shape · shape_penalty(variant)
      + w_edge · max(0, 1 − dist_to_label_area_edge / em)
      + w_ambiguity · ambiguity_k
-     + w_stability · min(1, displacement_from_warm_start / em)
+     + w_stability · (min(1, d/em) + min(1, max(0, d/em − 1) / 4))
 ```
 
 * Coverage costs count the covered amount in units of the item's font size: covered px²
@@ -825,6 +841,9 @@ cost = Σ_class w_label[class] · covered(label_k, class) / em²
   which hides what lies under it: they have no soft class costs (hard classes still
   apply).
 * `ring_k` = the label box grown by `buffer`, minus the label box.
+* `d` = the distance between the centers of the label box and the item's warm-start box
+  (§6.7): 1 per em up to 1 em, then 1/4 per em up to 5 em, so that a label that has to
+  move prefers a near place (ADR 0027); 0 without a warm-start box.
 * `covered_len` of a leader: the segment is sampled every `c/2` px; each sample adds the
   class coverage of its cell × the sample spacing.
 * `ambiguity_k = clamp((d_own − d_other) / em + 0.5, 0, 1)` when another item's shape is
@@ -958,7 +977,9 @@ their own above everything and therefore run first.
 Warm starts (`warm_start`, with `weights.stability` > 0; ADR 0016, ADR 0025):
 
 * Before a band's level-0 pass, its items (except `keep_with` members) whose level-0
-  warm-start candidate (§6.7) is live take it, in total order.
+  warm-start candidate (§6.7) is live take it, in total order. Then the others, in total
+  order, take their free nudge (§6.7) of the smallest step, of the two directions the
+  cheaper one (static plus dynamic cost), when there is one.
 * An item whose level-0 attempt failed and whose warm box has the size of no level-0
   variant (the previous solve degraded the label) first tries that box: the ladder's
   steps run in order, as the ladder runs them (`evict_lower` and `soft_overlap` skipped;
