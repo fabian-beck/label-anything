@@ -84,15 +84,15 @@ SECTIONS = (
             "obstacle, the region legend a hard one."),
         Fig("09-line-end-labels/unemployment-14-vector", "Unemployment by industry",
             "Labels at the right ends of 14 series: only positions right of the line ends are allowed. "
-            "Where the ends crowd, a label that finds no room on the right is left out ({omitted} here) "
-            "instead of being put over the lines."),
+            "Where the ends crowd, their labels stand in a column beside them, in the order of the ends, "
+            "with fanning leaders ({fans} fan labels; {omitted} left out)."),
         Fig("01-software-metrics/wmc-loc-30-raster", "A chart that is only a picture",
             "The whole scatterplot is a PNG. The engine finds axes, points and text in the pixels "
             "(raster ink mode) and keeps the 30 labels off them."),
-        Fig("09-line-end-labels/life-62-boundary", "Life expectancy of 62 countries, labeled in the margin",
-            "Margin labels on purpose: the problem allows a label right of its line end or in a stack "
-            "in the right margin, with an elbow leader. Where neither fits, the label is left out "
-            "({placed} of {total} placed)."),
+        Fig("09-line-end-labels/life-62-boundary", "Life expectancy of 62 countries",
+            "A label right of its line end, or in a stack in the right margin. The crowded ends at the "
+            "top get a column of {fans} fan labels instead, as tall as leaders of at most 10 em allow; "
+            "the others are left out ({placed} of {total} placed)."),
     )),
     Section("maps", "Maps", "vector, SVG and raster backgrounds", "", (
         Fig("05-airports/europe-names-400-svg", "400 European airports, by city name",
@@ -225,7 +225,9 @@ def solve_figure(fig: Fig, files: dict, solve: Solve, out: Path, tmp: Path) -> d
     s = evaluate(problem, result, truth, removal_test=False)["summary"]
     images = render_pair(problem, result, files["background"], out, f"img/{name}.webp")
     leaders = sum(1 for p in result.get("placements", []) if p.get("placed") and p.get("leader"))
-    return {"key": fig.key, **images, "placed": s["placed"], "total": s["total"], "omitted": s["total"] - s["placed"], "leaders": leaders,
+    fans = sum(1 for p in result.get("placements", []) if p.get("placed") and p.get("model") == "fan")
+    return {"key": fig.key, **images, "placed": s["placed"], "total": s["total"], "omitted": s["total"] - s["placed"],
+            "leaders": leaders, "fans": fans,
             "hard_violations": s["hard_violations"], "leader_len_max_em": s.get("leader_len_max_em"),
             "leader_near_crossings": s.get("leader_near_crossings"),
             "leader_mark_touches": s.get("leader_mark_touches"),
@@ -748,10 +750,10 @@ def notes_html(figs: dict[str, dict]) -> str:
                                 ("09-line-end-labels/life-62-boundary", "life expectancy")) if n(k)]
     if ends:
         notes.append(("Crowded line ends",
-                      "Next to the ends of a line chart, labels are placed one by one around each end; the engine "
-                      "does not arrange them into a column with fanning leaders (only margin labels are stacked, at "
-                      "the edge of the canvas). Where several ends crowd, labels are left out "
-                      f"({', '.join(ref(k, t) for k, t in ends)} placed)."))
+                      "Where line ends crowd, their labels stand in a column beside them with fanning leaders. A "
+                      "column grows only as far as its leaders stay within <code>leaders.max_length</code> (10 em) "
+                      "and clear of the other marks; ends beyond that stay without a label "
+                      f"({', '.join(ref(k, t) for k, t in ends)} placed). A larger limit gives taller columns."))
     return "".join(f'<div class="note"><h3>{E(h)}</h3><p>{p}</p></div>' for h, p in notes)
 
 
