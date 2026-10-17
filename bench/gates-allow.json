@@ -560,6 +560,246 @@
       "solver": "*",
       "adr": "0022",
       "reason": "fan columns are built anew in each frame from the crowds the search left"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "01-software-metrics",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "02-volcano",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "03-gapminder",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "label_lines_em",
+      "scenario": "07-node-link",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "label_points_hidden",
+      "scenario": "01-software-metrics",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "label_points_hidden",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "01-software-metrics",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "03-gapminder",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "ndcg_at_k",
+      "scenario": "06-city-pois",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "01-software-metrics",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "02-volcano",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "03-gapminder",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "04-embedding",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "01-software-metrics",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "06-city-pois",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "07-node-link",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "01-software-metrics",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "04-embedding",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "06-city-pois",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "07-node-link",
+      "config": "*",
+      "solver": "*",
+      "adr": "0023",
+      "reason": "the scenario's labels have font classes: the most important ones are larger (and bold)"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "07-node-link",
+      "config": "*",
+      "solver": "*",
+      "adr": "0024",
+      "reason": "ForceAtlas2 layouts: twice the labels over a drawing whose edges cross the whole canvas"
+    },
+    {
+      "metric": "label_lines_em",
+      "scenario": "07-node-link",
+      "config": "*",
+      "solver": "*",
+      "adr": "0024",
+      "reason": "ForceAtlas2 layouts: twice the labels over a drawing whose edges cross the whole canvas"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "07-node-link",
+      "config": "*",
+      "solver": "*",
+      "adr": "0024",
+      "reason": "ForceAtlas2 layouts: twice the labels over a drawing whose edges cross the whole canvas"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "07-node-link",
+      "config": "*",
+      "solver": "*",
+      "adr": "0024",
+      "reason": "ForceAtlas2 layouts: twice the labels over a drawing whose edges cross the whole canvas"
     }
   ]
 }

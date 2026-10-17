@@ -102,7 +102,8 @@ def _parse_placed(prob: Problem, result: dict, checks: dict) -> tuple[list[Place
 
 def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: float = TOL,
              removal_test: bool = True, max_list: int = 25) -> dict:
-    prob = load_problem(problem)
+    engine = pr.from_result(result.get("placements", []))
+    prob = load_problem(problem, ranks={k: v.rank for k, v in engine.items()} if engine else None)
     opts = prob.opts
     a_label = opts.get("avoid", {}).get("label", {})
     a_leader = opts.get("avoid", {}).get("leader", {})

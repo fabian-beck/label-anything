@@ -16,7 +16,7 @@ attribution, documented approximation; see the header of `CkLite.java`): CBO (di
 referenced types, `java.*`/`javax.*` ignored), RFC (distinct invocations by receiver,
 name and arity), WMC (Σ 1 + branches), LOC, NOM, NOF. Needs a JDK ≥ 11 (`java` on PATH).
 
-**Configs** (canvas 1000 × 720 px, preset `scatter`, font 10 px, priority = outlierness):
+**Configs** (canvas 1000 × 720 px, preset `scatter`, font 10 px, priority = outlierness, font classes: the top 5 % bold at 1.25 ×, the rest at 0.9 ×):
 
 | config | labels | background | notes |
 |---|---|---|---|

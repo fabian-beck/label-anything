@@ -405,6 +405,36 @@ export function compute(model: Model, variants: readonly Variant[][], env: Env):
   return { prio, order, nKeys: level + 1 };
 }
 
+/**
+ * The font class of each item (`priority.font_classes`, spec §9.4): each class takes the
+ * items of the total order up to its end (cumulative) that no earlier class took; a group
+ * label goes by its best-ranked member. `null`: no class (the item keeps its size).
+ */
+export function fontClasses(model: Model, pri: Priorities): (number | null)[] {
+  const n = model.items.length;
+  const ends: number[] = [];
+  let last = 0;
+  for (const c of model.fontClasses) {
+    let end: number;
+    if (c.first === null) end = n;
+    else if (c.first.kind === "count") end = Math.min(c.first.n, n);
+    else end = Math.min(maxf(Math.ceil(c.first.f * n - 1e-9), 0), n);
+    last = Math.max(last, end);
+    ends.push(last);
+  }
+  const classOf = (r: number): number | null => {
+    const k = ends.findIndex((e) => r < e);
+    return k < 0 ? null : k;
+  };
+  const out = pri.prio.map((p) => classOf(p.rank));
+  for (const [rep, members] of model.groups) {
+    let best = Infinity;
+    for (const i of members) best = Math.min(best, pri.prio[i]!.rank);
+    out[rep] = classOf(best === Infinity ? pri.prio[rep]!.rank : best);
+  }
+  return out;
+}
+
 /** All-or-none sets (each with ≥ 2 members), members in input order. */
 export function keepWithSets(model: Model): number[][] {
   const n = model.items.length;

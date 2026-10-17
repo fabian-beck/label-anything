@@ -13,7 +13,8 @@ draws leader lines when labels must sit at a distance, and never lets leaders cr
   little; never cross a leader" is one line of configuration.
 * **You decide what is omitted.** When not everything fits, a priority function (data
   attributes, outlierness, tiers, per-category coverage, or a callback) decides which
-  labels are dropped and in which order — and the result explains every omission.
+  labels are dropped and in which order — and the result explains every omission. Font
+  classes set the most important labels larger or bold.
 * **Shape-aware.** Labeled items can be circles, ellipses, (rounded, rotated)
   rectangles, polygons, paths or pins; labels touch the true shape, large shapes get
   internal labels, small ones external labels or leaders.

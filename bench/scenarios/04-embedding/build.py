@@ -25,7 +25,7 @@ from PIL import Image, ImageDraw
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from bench.common.geom import convex_hull  # noqa: E402
-from bench.common.scenario import Writer, base_problem, data_url, png_bytes  # noqa: E402
+from bench.common.scenario import FONT_CLASSES_SPARSE, Writer, base_problem, data_url, png_bytes  # noqa: E402
 from bench.scenarios import load_module  # noqa: E402
 
 E = load_module("04", "embedding")
@@ -103,7 +103,8 @@ def topic_items(syn, pts, labels, k, areas: bool) -> list[dict]:
 def problem(items, png: bytes, mode: str) -> dict:
     p = base_problem(W, H, "scatter", font_size=11.0)
     p["items"] = items
-    p["priority"] = {"terms": [{"attr": "size", "transform": "log1p", "normalize": "minmax"}]}
+    p["priority"] = {"terms": [{"attr": "size", "transform": "log1p", "normalize": "minmax"}],
+                     "font_classes": FONT_CLASSES_SPARSE}
     p["obstacles"] = {"raster": {"source": data_url(png), "mode": mode, "class": "ink"}}
     return p
 

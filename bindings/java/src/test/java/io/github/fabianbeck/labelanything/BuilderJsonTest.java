@@ -115,6 +115,20 @@ class BuilderJsonTest {
   }
 
   @Test
+  void conformanceFontClasses() {
+    var b = LabelProblem.builder()
+        .canvas(480, 200).fontSize(10)
+        .placement(Placement.defaults().positions(Placement.Position.RIGHT).offset("0.5em"))
+        .priority(Priority.attr("pop"))
+        .fontClasses(FontClass.first(1, 1.5).bold(), FontClass.share(50, 1.2), FontClass.rest(0.9));
+    for (int i = 0; i < 4; i++) {
+      int pop = 40 - 10 * i;
+      b.item(String.valueOf((char) ('a' + i)), 40 + 100 * i, 100, Label.text("Aa"), it -> it.attr("pop", pop));
+    }
+    assertSameJson(Json.write(TestSupport.placeCaseProblem("font-classes.json")), b.build().toJson());
+  }
+
+  @Test
   void itemsLabelsAndObstacles() {
     var problem = LabelProblem.builder()
         .canvas(400, 300).yAxisUp().transform(2, 0, 0, 2, 10, 10).preset(Preset.SCATTER)

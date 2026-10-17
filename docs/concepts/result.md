@@ -83,7 +83,7 @@ The result (numbers rounded, `b` shortened):
 | `leaders`, `members` | for group labels: one fan leader per member, and the member ids |
 | `cost`, `cost_breakdown` | the label's final cost; per term with `output.cost_breakdown` |
 | `degrade_steps` | the ladder steps that were tried for it ([candidates](candidates.md#the-degradation-ladder)) |
-| `priority` | `tier`, `score`, `rank` (0 = first in the priority order), `required`, `reserved` (lifted by coverage), `terms` |
+| `priority` | `tier`, `score`, `rank` (0 = first in the priority order), `required`, `reserved` (lifted by coverage), `terms`, `font_class` (the item's [font class](../tutorials/priority.md#type-size-by-importance)) |
 | `reason`, `blocking`, `blocked_by` | for omitted items: why, which hard classes rejected the candidates, which placed labels are in the way ([priority](../tutorials/priority.md#reading-the-explanations)) |
 | `displacement` | with `warm_start`: the distance moved from the previous box |
 | `item_shape` | with `output.item_shape`: the resolved mark geometry |

@@ -60,7 +60,7 @@ Per-item keywords take one entry per anchor: `ids`, `attrs`, `marks` (mark dicts
 | `y_axis`, `transform`, `preset` | same | `font` (`la.Font`), `font_family`, `font_size`, `font_weight`, `font_style`, `line_height`, `font_file` | `defaults.font.*` |
 | `padding`, `buffer`, `mark`, `wrap`, `truncate` | `defaults.*` | `shaping` | `text.shaping` |
 | `models`, `position_order`, `offset`, `min_distance`, `max_distance`, `slider_per_quadrant`, `k_distant`, `distant_rings`, `distant_directions`, `free_space_seeds`, `internal`, `inner_padding`, `internal_circle_ratio`, `prune_factor`, `boundary`, `fan` | `placement.*` | `leaders` | `leaders` |
-| `avoid`, `avoid_leader`, `avoid_buffer`, `relaxable` | `avoid.*` | `priority`, `tiers`, `omission`, `coverage`, `ties`, `band`, `focus` | `priority.*` |
+| `avoid`, `avoid_leader`, `avoid_buffer`, `relaxable` | `avoid.*` | `priority`, `tiers`, `omission`, `coverage`, `ties`, `band`, `focus`, `font_classes` | `priority.*` |
 | `max_labels`, `max_ink_fraction` | `priority.budget.*` | `strategy`, `time_budget_ms`, `max_iterations`, `seed`, `grid_cell` | `solver.*` |
 | `degrade` | `degrade` | `min_scale`, `wrap_max_lines`, `soft_overlap_weight` | `degrade_options.*` |
 | `weights`, `warm_start` (a `Result` works) | same | `debug_svg`, `cost_breakdown`, `candidates`, `item_shape` | `output.*` |

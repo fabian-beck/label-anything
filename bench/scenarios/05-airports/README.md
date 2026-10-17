@@ -3,7 +3,8 @@
 **What.** The world's served airports (OpenFlights; 3,221 airports with at least one
 route) labeled by IATA code (or by city name in the Europe view) over a world map rendered
 here from Natural Earth country outlines. Priority = traffic (number of route records
-touching the airport, log1p, min–max normalized).
+touching the airport, log1p, min–max normalized); font classes: the top 5 % bold at
+1.25 ×, the rest at 0.9 × (spec §9.4).
 
 **Why.** Thousands of anchors with strongly clustered density (Europe, US east coast)
 over a real SVG map: tests SVG background classification (`areas` ignored, `lines` soft,

@@ -79,6 +79,7 @@ are stale.
 | `priority.budget.max_labels` | `null` | int or null | Cap on placed labels, by priority order. |
 | `priority.budget.max_ink_fraction` | `null` | 0–1 or null | Cap on the canvas fraction covered by labels. |
 | `priority.focus` | `null` | point or null | Focus point of the `centrality` term (default: canvas center). |
+| `priority.font_classes` | `[]` | list | Font sizes by priority: classes `{first, scale, weight}` over the total order (spec §9.4). |
 | `priority.term.k` | `5` | int ≥ 1 | Neighbour count of `outlierness`. |
 | `priority.term.weight` | `1` | number | Term weight. |
 | `priority.term.normalize` | `"rank"` | rank \| minmax \| none | Normalization of a term across items. |

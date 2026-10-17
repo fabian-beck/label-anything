@@ -29,7 +29,7 @@ from scipy.spatial import cKDTree
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from bench.common import fetch, text  # noqa: E402
-from bench.common.scenario import Writer, base_problem, merge_avoid  # noqa: E402
+from bench.common.scenario import FONT_CLASSES_SPARSE, Writer, base_problem, merge_avoid  # noqa: E402
 
 SCENARIO = "07-node-link"
 SOURCES = ["vega-datasets-3.2.1", "cora-cites", "cora-content"]
@@ -173,7 +173,7 @@ def main() -> None:
     p = base_problem(1000.0, 760.0, "graph", font_size=10.0)
     p["items"] = items
     p["obstacles"] = {"vector": [edge_layer(G, pos)]}
-    p["priority"] = {"terms": [{"attr": "degree"}]}
+    p["priority"] = {"terms": [{"attr": "degree"}], "font_classes": FONT_CLASSES_SPARSE}
     wr.config("lesmis-circles", p, quick=True,
               description="Les Misérables, 77 circular nodes (radius by degree), all labeled, octilinear leaders.")
     f = text.font(400)
@@ -216,7 +216,7 @@ def main() -> None:
     p = base_problem(1600.0, 1200.0, "graph", font_size=9.0)
     p["items"] = items
     p["obstacles"] = {"vector": [edge_layer(H, pos, 0.6), {"class": "nodes", "circles": others}]}
-    p["priority"] = {"terms": [{"attr": "citations", "transform": "log1p"}]}
+    p["priority"] = {"terms": [{"attr": "citations", "transform": "log1p"}], "font_classes": FONT_CLASSES_SPARSE}
     merge_avoid(p, {"nodes": "hard"}, {"nodes": 1.0})
     wr.config("cora-circles", p,
               description="Cora citation network (2,485 papers): 150 most cited labeled; other nodes are hard.")

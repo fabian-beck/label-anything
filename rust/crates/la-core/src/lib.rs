@@ -116,11 +116,22 @@ pub fn place_validated(
         env,
         shaping: &m.shaping,
     };
-    let variants: Vec<Vec<labels::Variant>> = m
+    let mut variants: Vec<Vec<labels::Variant>> = m
         .items
         .iter()
         .map(|it| labels::base_variants(&measurer, it))
         .collect();
+    let pri = priority::compute(&m, &variants, env);
+    // font classes (spec §9.4): the priorities stay those of the nominal sizes
+    m.font_class = priority::font_classes(&m, &pri);
+    for ((item, class), v) in m.items.iter_mut().zip(&m.font_class).zip(&mut variants) {
+        if let Some(c) = class.map(|k| m.font_classes[k]) {
+            if c.scale != 1.0 || c.weight.is_some() {
+                item.rescale(c.scale, c.weight);
+                *v = labels::base_variants(&measurer, item);
+            }
+        }
+    }
     let mut min_font = f64::INFINITY;
     for it in &m.items {
         min_font = min_font.min(it.font.size);
@@ -160,7 +171,6 @@ pub fn place_validated(
         });
     }
     let obs = obstacles::prepare(&m, min_font);
-    let pri = priority::compute(&m, &variants, env);
     let t1 = env.now_ms();
     let measurer = labels::Measurer {
         fonts,

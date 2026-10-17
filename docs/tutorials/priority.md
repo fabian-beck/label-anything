@@ -159,6 +159,37 @@ prefix   placed 19  inversions 0  placed_weighted 0.614
 weighted placed 25  inversions 0  placed_weighted 0.727
 ```
 
+## Type size by importance
+
+The priority can also set the type size, as on a map where the capital is set larger than
+the villages: `font_classes` (`priority.font_classes`) gives classes of labels larger or
+bolder text. The classes take consecutive stretches of the priority order: each ends at its
+`first` — a number of items or a share like `"25%"`, counted from the top — and the last
+may take the rest; items after the last class keep their size.
+
+```python
+--8<-- "examples/tutorials/python/priority.py:font-classes"
+```
+
+The scale applies to the label's text (and to host-measured text sizes and wrap widths, so
+that lines break as at the nominal size); lengths in em, such as the offset and the
+padding, follow the scaled size, while lengths in px, icons and boxes keep theirs. The
+priorities themselves are computed with the nominal sizes. Each placement reports its class
+(`priority.font_class`) and the size and weight drawn (`text.font_size`,
+`text.font_weight`). A smaller last class leaves room for more labels in a crowded chart:
+in the benchmark, the top 5 % bold at 1.25 × and the rest at 0.9 × place 1 029 instead of
+920 of 3 000 airports on a world map.
+
+```json
+{
+  "priority": {
+    "terms": [{"attr": "pop"}],
+    "font_classes": [{"first": 4, "scale": 1.4, "weight": "bold"},
+                     {"first": "25%", "scale": 1.15}, {"scale": 0.85}]
+  }
+}
+```
+
 ## The same in JSON
 
 ```json

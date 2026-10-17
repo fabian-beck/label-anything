@@ -56,6 +56,7 @@
         "reserved": { "type": "boolean", "description": "Lifted by a coverage constraint." },
         "score": { "type": "number" },
         "rank": { "type": "integer", "minimum": 0, "description": "Position in the total priority order (0 = highest)." },
+        "font_class": { "type": "integer", "minimum": 0, "description": "Index of the item's priority.font_classes entry (absent: no class)." },
         "terms": { "type": "object", "additionalProperties": { "type": "number" } }
       }
     },

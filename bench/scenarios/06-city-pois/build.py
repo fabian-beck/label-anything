@@ -18,7 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from bench.common.scenario import Writer, base_problem, data_url, png_bytes  # noqa: E402
+from bench.common.scenario import FONT_CLASSES_DENSE, Writer, base_problem, data_url, png_bytes  # noqa: E402
 from bench.scenarios import load_module  # noqa: E402
 
 O = load_module("06", "osmmap")
@@ -47,7 +47,7 @@ def items_for(pois, pins: bool) -> list[dict]:
 def problem(items, png: bytes, mode: str) -> dict:
     p = base_problem(O.VIEW.width, O.VIEW.height, "map", font_size=10.0)
     p["items"] = items
-    p["priority"] = {"terms": [{"attr": "importance", "normalize": "none"}]}
+    p["priority"] = {"terms": [{"attr": "importance", "normalize": "none"}], "font_classes": FONT_CLASSES_DENSE}
     p["obstacles"] = {"raster": {"source": data_url(png), "mode": mode, "class": "ink"}}
     return p
 

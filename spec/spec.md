@@ -19,9 +19,9 @@ result = place(problem)            // problem.v1.json -> result.v1.json
 report = validate(problem)         // { valid, errors[], warnings[] }
 ```
 
-Pipeline: `validate → normalize → prepare obstacles → measure & build label variants →
-candidates → greedy (+ ladder) → local search → (exact) → fan labels → uncross repair →
-verify → finalize`.
+Pipeline: `validate → normalize → measure label variants → priority (font classes:
+rescale and measure again) → prepare obstacles → candidates → greedy (+ ladder) → local
+search → (exact) → fan labels → uncross repair → verify → finalize`.
 
 Two implementations (Rust, TypeScript) MUST satisfy the conformance suite
 (`conformance/`). Results need not be bit-identical, but hard-constraint guarantees MUST
@@ -41,7 +41,7 @@ A length is a JSON number (pixels) or a string `<number><unit>`:
 |---|---|
 | `px` | pixels |
 | `pt` | 4/3 px |
-| `em` | the font size (px) of the label the length is resolved for |
+| `em` | the font size (px) of the label the length is resolved for (after its font class, §9.4) |
 
 Lengths that are not tied to one label (`canvas.padding`, `placement.boundary.margin`,
 `solver.grid_cell`) resolve `em` against `defaults.font.size`. Parsing happens in one
@@ -903,6 +903,31 @@ ones. `stats.omission_order` lists omitted ids from the lowest
 total-order position upward.
 
 ---
+
+
+### 9.4 Font classes
+
+`priority.font_classes` sets the type size by importance: a list of classes
+`{first, scale, weight}` that take consecutive stretches of the total order (§9.1), the
+most important labels first.
+
+* With `n` items, class `k` ends at `e_k = max(e_{k−1}, min(n, end_k))` (`e_{−1} = 0`):
+  `end_k` is `first` when it is a number of items, `ceil(p/100 · n − 10⁻⁹)` (at least 0)
+  when it is a share `"p%"`, and `n` without `first`. The class takes the items with
+  `e_{k−1} ≤ rank < e_k`; items after the last class keep their size. A group label
+  (§5.7) takes the class of the best rank among its members.
+* `scale` (default 1) multiplies the font size of the item and of every text of its label
+  (each text part of a composite label), host-measured text sizes (`width`, `height`) and
+  wrap widths (`max_width`, so that lines break as at the nominal size); `weight`, when
+  given, replaces their font weight. Lengths given in em are resolved against the scaled
+  font size (offsets, padding, distances, leader lengths and clearances, the gap of a
+  composite label); lengths in px, icons and boxes keep their size.
+* The priorities are those of the nominal sizes (the `label_size` term measures the label
+  before its class applies). The labels are then measured again, and everything after
+  (grid cell, candidates, the ladder, whose `shrink` steps start from the class size) uses
+  the scaled sizes.
+* `placements[].priority.font_class` reports the class index; `text.font_size` and
+  `text.font_weight` the size and weight drawn.
 
 ## 10. Solver
 

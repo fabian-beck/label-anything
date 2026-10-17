@@ -466,6 +466,36 @@ pub fn compute(model: &Model, variants: &[Vec<Variant>], env: &dyn Env) -> Prior
     }
 }
 
+/// The font class of each item (`priority.font_classes`, spec §9.4): each class takes the
+/// items of the total order up to its end (cumulative) that no earlier class took; a group
+/// label goes by its best-ranked member. `None`: no class (the item keeps its size).
+pub fn font_classes(model: &Model, pri: &Priorities) -> Vec<Option<usize>> {
+    use crate::model::ClassEnd;
+    let n = model.items.len();
+    let mut ends = Vec::with_capacity(model.font_classes.len());
+    let mut last = 0usize;
+    for c in &model.font_classes {
+        let end = match c.first {
+            None => n,
+            Some(ClassEnd::Count(k)) => k.min(n),
+            Some(ClassEnd::Share(f)) => (maxf((f * n as f64 - 1e-9).ceil(), 0.0) as usize).min(n),
+        };
+        last = last.max(end);
+        ends.push(last);
+    }
+    let class_of = |r: usize| ends.iter().position(|&e| r < e);
+    let mut out: Vec<Option<usize>> = pri.prio.iter().map(|p| class_of(p.rank)).collect();
+    for (rep, members) in &model.groups {
+        let best = members
+            .iter()
+            .map(|&i| pri.prio[i].rank)
+            .min()
+            .unwrap_or(pri.prio[*rep].rank);
+        out[*rep] = class_of(best);
+    }
+    out
+}
+
 /// All-or-none sets (each with ≥ 2 members), members in input order.
 pub fn keep_with_sets(model: &Model) -> Vec<Vec<usize>> {
     use crate::model::KeepWith;

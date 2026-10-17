@@ -490,6 +490,15 @@ public final class LabelProblem {
       return put("priority.budget.max_labels", maxLabels);
     }
 
+    /**
+     * Type size by importance (spec §9.4): font classes over the total priority order, most
+     * important first, e.g. {@code fontClasses(FontClass.share(5, 1.3).bold(),
+     * FontClass.rest(0.9))}.
+     */
+    public Builder fontClasses(FontClass... classes) {
+      return put("priority.font_classes", List.of(classes));
+    }
+
     /** Cap on the canvas fraction covered by labels (0–1). */
     public Builder maxInkFraction(double fraction) {
       return put("priority.budget.max_ink_fraction", fraction);

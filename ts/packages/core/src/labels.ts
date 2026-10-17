@@ -521,7 +521,7 @@ function variantsAtScale(m: Measurer, item: Item, scale: number, withAlternative
     case "fixed":
       return [fixedVariant(label.fixed, label.w, label.h, label.shape, pad, scale)];
     case "composite":
-      return [compositeVariant(m, label.row, label.gap, label.align, label.parts, pad, scale)];
+      return [compositeVariant(m, label.row, label.gap.px(item.em()), label.align, label.parts, pad, scale)];
   }
 }
 
@@ -632,7 +632,7 @@ function rescale(m: Measurer, item: Item, v: Variant, s: number): Variant | null
     case "fixed":
       return fixedVariant(label.fixed, label.w, label.h, label.shape, pad, s);
     case "composite":
-      return compositeVariant(m, label.row, label.gap, label.align, label.parts, pad, s);
+      return compositeVariant(m, label.row, label.gap.px(item.em()), label.align, label.parts, pad, s);
   }
 }
 

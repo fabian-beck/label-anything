@@ -14,7 +14,7 @@ SRP254919, MIT). Substitution note: the brief asked for "a public DE table on
 raw.githubusercontent.com with a clear license"; these two satisfy it (both repositories
 are MIT-licensed).
 
-**Configs** (canvas 900 × 680 px, preset `scatter`, font 10 px, priority = −log10 p):
+**Configs** (canvas 900 × 680 px, preset `scatter`, font 10 px, priority = −log10 p, font classes: the top 5 % bold at 1.3 ×, the next 20 % at 1.1 ×):
 
 | config | labels | background |
 |---|---|---|

@@ -585,7 +585,15 @@ fn variants_at_scale(
             gap,
             align,
             parts,
-        } => vec![composite_variant(m, *row, *gap, align, parts, pad, scale)],
+        } => vec![composite_variant(
+            m,
+            *row,
+            gap.px(item.em()),
+            align,
+            parts,
+            pad,
+            scale,
+        )],
     }
 }
 
@@ -706,7 +714,15 @@ fn rescale(m: &Measurer, item: &Item, v: &Variant, s: f64) -> Option<Variant> {
             gap,
             align,
             parts,
-        } => Some(composite_variant(m, *row, *gap, align, parts, pad, s)),
+        } => Some(composite_variant(
+            m,
+            *row,
+            gap.px(item.em()),
+            align,
+            parts,
+            pad,
+            s,
+        )),
     }
 }
 

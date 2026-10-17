@@ -138,6 +138,7 @@ class Item:
     models: list
     position_order: Any
     raw: dict
+    font_class: int | None = None  # priority.font_classes entry (spec §9.4)
 
     @property
     def own_shape(self) -> Shape:
@@ -363,7 +364,9 @@ def _layers(problem: dict, opts: dict, tx) -> dict[str, list[Primitive]]:
     return out
 
 
-def load_problem(problem: dict) -> Problem:
+def load_problem(problem: dict, ranks: dict[str, int] | None = None) -> Problem:
+    """``ranks``: the priority ranks of a result (the engine's), for ``priority.font_classes``;
+    default: the reference priority (bench.eval.priority)."""
     opts = spec.effective_options(problem)
     width, height = _canvas_size(problem)
     tx = _transform_fn(problem, height)
@@ -405,7 +408,92 @@ def load_problem(problem: dict) -> Problem:
             dot = make_mark(a.get("dot", {"shape": "circle", "r": 2}), pole, tx)
             items.append(Item(i, iid, "area", pole, None, area, dot, **common))
     vectors = _layers(problem, opts, tx)
-    return Problem(problem, opts, width, height, padding, region_box, allow_outside, items, vectors, tx, warnings)
+    prob = Problem(problem, opts, width, height, padding, region_box, allow_outside, items, vectors, tx, warnings)
+    classes = (opts.get("priority", {}) or {}).get("font_classes") or []
+    if classes:
+        apply_font_classes(prob, classes, ranks)
+    return prob
+
+
+def class_ends(classes: list[dict], n: int) -> list[int]:
+    """Where each font class ends in the total order (cumulative, spec §9.4)."""
+    ends, last = [], 0
+    for c in classes:
+        first = c.get("first")
+        if first is None:
+            end = n
+        elif isinstance(first, str):
+            end = min(max(math.ceil(float(first[:-1]) / 100 * n - 1e-9), 0), n)
+        else:
+            end = min(int(first), n)
+        last = max(last, end)
+        ends.append(last)
+    return ends
+
+
+def scaled_label(label: dict, opts: dict, scale: float, weight: Any) -> dict:
+    """The label JSON with its text scaled like a font class does: font sizes, host-measured
+    text sizes and wrap widths given in px scale; lengths in em follow the font size."""
+    d = opts.get("defaults", {})
+    lab = dict(label)
+    font = _font_of(label.get("font"), d.get("font", {}))
+    size = float(font.get("size", 12))
+    nf = dict(label.get("font") or {})
+    nf["size"] = size * scale
+    if weight is not None:
+        nf["weight"] = weight
+    lab["font"] = nf
+
+    def text_part(t: dict, em: float) -> dict:
+        t = dict(t)
+        if "width" in t and "height" in t:
+            t["width"] = float(t["width"]) * scale
+            t["height"] = float(t["height"]) * scale
+        w = t["wrap"] if "wrap" in t else d.get("wrap")
+        mw = w.get("max_width") if isinstance(w, dict) else None
+        if mw is not None and not str(mw).strip().endswith("em"):
+            t["wrap"] = {**w, "max_width": spec.length(mw, em) * scale}
+        return t
+
+    kind = lab.get("type", "text")
+    if kind == "text":
+        lab = text_part(lab, size)
+    elif kind == "composite":
+        parts = []
+        for p in lab["parts"]:
+            if p.get("type") == "text":
+                pf = dict(p.get("font") or {})
+                psize = float(pf.get("size", size))
+                if "size" in pf:
+                    pf["size"] = psize * scale
+                if weight is not None:
+                    pf["weight"] = weight
+                p = text_part({**p, "font": pf} if pf else dict(p), psize)
+            parts.append(p)
+        lab["parts"] = parts
+    return lab
+
+
+def apply_font_classes(prob: Problem, classes: list[dict], ranks: dict[str, int] | None = None) -> None:
+    """``priority.font_classes`` (spec §9.4): rescale each item's label by the class of its rank."""
+    if ranks is None:
+        from ..eval import priority as pr
+        ranks = {k: v.rank for k, v in pr.reference(prob).items()}
+    ends = class_ends(classes, len(prob.items))
+    pl = prob.opts.get("placement", {})
+    for it in prob.items:
+        r = ranks.get(it.id)
+        k = next((k for k, e in enumerate(ends) if r is not None and r < e), None)
+        it.font_class = k
+        if k is None:
+            continue
+        scale = float(classes[k].get("scale", 1.0))
+        weight = classes[k].get("weight")
+        if scale == 1.0 and weight is None:
+            continue
+        it.label = resolve_label(scaled_label(it.raw["label"], prob.opts, scale, weight), prob.opts)
+        ip = it.raw.get("placement", {}) or {}
+        it.offset = spec.length(ip.get("offset", pl.get("offset", 2)), it.label.em)
 
 
 # ---------------------------------------------------------------------------

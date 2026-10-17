@@ -135,7 +135,8 @@ export type PartSpec =
 export type LabelSpec =
   | { kind: "text"; spec: TextSpec }
   | { kind: "fixed"; fixed: FixedKind; w: number; h: number; shape: LabelShape }
-  | { kind: "composite"; row: boolean; gap: number; align: string; parts: PartSpec[] };
+  /** `gap` is resolved against the item's font size where it is used. */
+  | { kind: "composite"; row: boolean; gap: Length; align: string; parts: PartSpec[] };
 
 /** `LabelSpec::text`: the label's main text (for expressions and debug output). */
 export function labelText(l: LabelSpec): string {
@@ -175,6 +176,87 @@ export interface ItemLengths {
   boundaryMargin: number;
 }
 
+/** Per-item lengths before resolution against the item's font size. */
+export interface ItemLengthSpec {
+  padding: Length;
+  buffer: Length;
+  offset: Length;
+  innerPadding: Length;
+  maxDistance: Length;
+  minDistance: Length;
+  leaderMin: Length;
+  leaderMax: Length;
+  anchorGap: Length;
+  clearance: Length;
+  boundaryGap: Length;
+  boundaryMargin: Length;
+}
+
+/** `ItemLengthSpec::resolve`: the lengths in px for a font size of `em` px. */
+export function resolveLengths(l: ItemLengthSpec, em: number): ItemLengths {
+  return {
+    padding: l.padding.px(em),
+    buffer: l.buffer.px(em),
+    offset: l.offset.px(em),
+    innerPadding: l.innerPadding.px(em),
+    maxDistance: l.maxDistance.px(em),
+    minDistance: l.minDistance.px(em),
+    leaderMin: l.leaderMin.px(em),
+    leaderMax: l.leaderMax.px(em),
+    anchorGap: l.anchorGap.px(em),
+    clearance: l.clearance.px(em),
+    boundaryGap: l.boundaryGap.px(em),
+    boundaryMargin: l.boundaryMargin.px(em),
+  };
+}
+
+/**
+ * Where a font class ends in the priority order (`first`): a number of items or a share
+ * of all items (Rust `enum ClassEnd`).
+ */
+export type ClassEnd = { kind: "count"; n: number } | { kind: "share"; f: number };
+
+/**
+ * A font class (`priority.font_classes`, spec §9.4): the items up to rank `first`
+ * (cumulative; `null` = all the rest) that no earlier class took get their label's text
+ * scaled by `scale`, in `weight` when given.
+ */
+export interface FontClass {
+  first: ClassEnd | null;
+  scale: number;
+  weight: number | null;
+}
+
+/** `FontClass::from_value`: parse one class object; `null` for invalid input. */
+export function fontClassFrom(v: unknown): FontClass | null {
+  let first: ClassEnd | null = null;
+  const fv = get(v, "first");
+  if (fv === undefined || fv === null) first = null;
+  else if (typeof fv === "number") first = { kind: "count", n: Math.trunc(Math.max(fv, 0)) };
+  else if (typeof fv === "string") {
+    if (!fv.endsWith("%")) return null;
+    const num = fv.slice(0, -1);
+    if (!RUST_F64_PCT.test(num)) return null;
+    first = { kind: "share", f: Number(num) / 100 };
+  } else return null;
+  let scale = 1;
+  const sv = get(v, "scale");
+  if (sv !== undefined) {
+    if (typeof sv !== "number") return null;
+    scale = sv;
+  }
+  let weight: number | null = null;
+  const wv = get(v, "weight");
+  if (wv !== undefined) {
+    weight = weightOf(wv);
+    if (weight === null) return null;
+  }
+  return { first, scale, weight };
+}
+
+/** The decimal numbers the schema's share pattern admits (`25`, `2.5`, `.5`, `25.`). */
+const RUST_F64_PCT = /^([0-9]+\.?[0-9]*|\.[0-9]+)$/;
+
 /** `keep_with` membership. */
 export type KeepWith = { kind: "set"; name: string } | { kind: "ids"; ids: string[] };
 
@@ -193,6 +275,8 @@ export class Item {
     public label: LabelSpec,
     public font: FontSel,
     public len: ItemLengths,
+    /** The lengths before resolution (resolved again when a font class rescales the item). */
+    public lenSpec: ItemLengthSpec,
     public models: Models,
     public internal: InternalPolicy,
     public positions: Pos[],
@@ -212,6 +296,34 @@ export class Item {
 
   em(): number {
     return this.font.size;
+  }
+
+  /**
+   * Scale the label's text by `f` (font sizes, host-measured text sizes, wrap widths), in
+   * `weight` when given (a font class, spec §9.4). The item's font size scales with it, and
+   * so do its lengths given in em; lengths in px, icons and boxes keep their size.
+   */
+  rescale(f: number, weight: number | null): void {
+    // new font objects: the Measurer caches the resolved font of each one
+    const text = (t: TextSpec): void => {
+      t.font = t.font.clone();
+      t.font.size *= f;
+      if (weight !== null) t.font.weight = weight;
+      if (t.wrap !== null && t.wrap.maxWidth !== null) t.wrap.maxWidth *= f;
+      if (t.explicit !== null) {
+        t.explicit[0] *= f;
+        t.explicit[1] *= f;
+      }
+    };
+    this.font = this.font.clone();
+    this.font.size *= f;
+    if (weight !== null) this.font.weight = weight;
+    const l = this.label;
+    if (l.kind === "text") text(l.spec);
+    else if (l.kind === "composite") {
+      for (const p of l.parts) if (p.kind === "text") text(p.spec);
+    }
+    this.len = resolveLengths(this.lenSpec, this.font.size);
   }
 
   /**
@@ -289,6 +401,10 @@ export class Model {
   band = 0;
   maxLabels: number | null = null;
   maxInkFraction: number | null = null;
+  /** `priority.font_classes`. */
+  fontClasses: FontClass[] = [];
+  /** The font class of each item (set once the priorities are known). */
+  fontClass: (number | null)[] = [];
   focus: P | null = null;
   priorityValue: unknown = null;
   /** `auto` preset: (crowded fraction, models when crowded) unless the user set models. */
@@ -872,6 +988,11 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.band = o.f64("priority.band");
   m.maxLabels = asU64(o.get("priority.budget.max_labels"));
   m.maxInkFraction = asF64(o.get("priority.budget.max_ink_fraction"));
+  m.fontClasses = [];
+  for (const c of itemsOf(o.get("priority.font_classes"))) {
+    const fc = fontClassFrom(c);
+    if (fc !== null) m.fontClasses.push(fc);
+  }
   m.focus = focus;
   m.priorityValue = o.get("priority");
   m.autoCrowded = autoCrowded;
@@ -1135,14 +1256,13 @@ function buildItem(
   // font: defaults ← label.font
   const font = fontOver(defaultFont, get(labelV, "font"));
   const em = font.size;
-  const lenOf = (key: string, itemKey: unknown): number => {
+  const lenOf = (key: string, itemKey: unknown): Length => {
     const l = itemKey === undefined ? null : Length.fromValue(itemKey);
-    return (l ?? o.length(key)).px(em);
+    return l ?? o.length(key);
   };
   const ip = get(it, "placement");
-  const padding = lenOf("defaults.padding", get(labelV, "padding"));
-  const len: ItemLengths = {
-    padding,
+  const lenSpec: ItemLengthSpec = {
+    padding: lenOf("defaults.padding", get(labelV, "padding")),
     buffer: lenOf("defaults.buffer", undefined),
     offset: lenOf("placement.offset", get(ip, "offset")),
     innerPadding: lenOf("placement.inner_padding", undefined),
@@ -1155,6 +1275,7 @@ function buildItem(
     boundaryGap: lenOf("placement.boundary.gap", undefined),
     boundaryMargin: lenOf("placement.boundary.margin", undefined),
   };
+  const len = resolveLengths(lenSpec, em);
   // anchor + mark
   const svgId = asStr(get(it, "svg_id"));
   let anchor: P;
@@ -1241,7 +1362,7 @@ function buildItem(
     label = {
       kind: "composite",
       row: asStr(get(labelV, "direction")) !== "column",
-      gap: gl !== null ? gl.px(em) : 0,
+      gap: gl ?? Length.Px(0),
       align: asStr(get(labelV, "align")) ?? "center",
       parts,
     };
@@ -1269,6 +1390,7 @@ function buildItem(
     label,
     font,
     len,
+    lenSpec,
     models,
     internal,
     positions,

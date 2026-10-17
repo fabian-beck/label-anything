@@ -114,6 +114,8 @@ function priorityJson(s: Solve, i: number): Json {
   if (p.reserved) m.reserved = true;
   m.score = num(p.score);
   m.rank = p.rank;
+  const fc = s.model.fontClass[i];
+  if (fc !== null && fc !== undefined) m.font_class = fc;
   if (terms.size > 0) {
     const t: Json = {};
     for (const [k, v] of terms) setKey(t, k, num(v));

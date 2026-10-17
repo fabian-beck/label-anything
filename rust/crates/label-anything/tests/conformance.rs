@@ -230,6 +230,29 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
             }
         }
     }
+    if let Some(Value::Object(m)) = exp.get("font") {
+        for (id, want) in m {
+            let p = placement(&r, id).cloned().unwrap_or(Value::Null);
+            if let Some(size) = want.get("size").and_then(|v| v.as_f64()) {
+                let got = p["text"]["font_size"].as_f64().unwrap_or(f64::NAN);
+                if (got - size).abs() > 1e-6 || got.is_nan() {
+                    f.push(format!("font.{id}.size: expected {size}, got {got}"));
+                }
+            }
+            if let Some(w) = want.get("weight") {
+                let got = &p["text"]["font_weight"];
+                if got != w {
+                    f.push(format!("font.{id}.weight: expected {w}, got {got}"));
+                }
+            }
+            if let Some(c) = want.get("class") {
+                let got = &p["priority"]["font_class"];
+                if got != c {
+                    f.push(format!("font.{id}.class: expected {c}, got {got}"));
+                }
+            }
+        }
+    }
     if let Some(Value::Object(m)) = exp.get("box") {
         for (id, want) in m {
             let tol = want.get("tol").and_then(|v| v.as_f64()).unwrap_or(0.01);

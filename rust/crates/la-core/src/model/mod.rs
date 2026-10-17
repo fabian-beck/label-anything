@@ -126,7 +126,8 @@ pub enum LabelSpec {
     },
     Composite {
         row: bool,
-        gap: f64,
+        /// Resolved against the item's font size where it is used.
+        gap: Length,
         align: String,
         parts: Vec<PartSpec>,
     },
@@ -175,6 +176,89 @@ pub struct ItemLengths {
     pub boundary_margin: f64,
 }
 
+/// Per-item lengths before resolution against the item's font size.
+#[derive(Clone, Debug)]
+pub struct ItemLengthSpec {
+    pub padding: Length,
+    pub buffer: Length,
+    pub offset: Length,
+    pub inner_padding: Length,
+    pub max_distance: Length,
+    pub min_distance: Length,
+    pub leader_min: Length,
+    pub leader_max: Length,
+    pub anchor_gap: Length,
+    pub clearance: Length,
+    pub boundary_gap: Length,
+    pub boundary_margin: Length,
+}
+
+impl ItemLengthSpec {
+    /// The lengths in px for a font size of `em` px.
+    pub fn resolve(&self, em: f64) -> ItemLengths {
+        ItemLengths {
+            padding: self.padding.px(em),
+            buffer: self.buffer.px(em),
+            offset: self.offset.px(em),
+            inner_padding: self.inner_padding.px(em),
+            max_distance: self.max_distance.px(em),
+            min_distance: self.min_distance.px(em),
+            leader_min: self.leader_min.px(em),
+            leader_max: self.leader_max.px(em),
+            anchor_gap: self.anchor_gap.px(em),
+            clearance: self.clearance.px(em),
+            boundary_gap: self.boundary_gap.px(em),
+            boundary_margin: self.boundary_margin.px(em),
+        }
+    }
+}
+
+/// Where a font class ends in the priority order (`first`): a number of items or a
+/// share of all items.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ClassEnd {
+    Count(usize),
+    Share(f64),
+}
+
+/// A font class (`priority.font_classes`, spec §9.4): the items up to rank `first`
+/// (cumulative; `None` = all the rest) that no earlier class took get their label's text
+/// scaled by `scale`, in `weight` when given.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct FontClass {
+    pub first: Option<ClassEnd>,
+    pub scale: f64,
+    pub weight: Option<u16>,
+}
+
+impl FontClass {
+    /// Parse one class object; `None` for invalid input (rejected by validation).
+    pub fn from_value(v: &Value) -> Option<FontClass> {
+        let first = match v.get("first") {
+            None | Some(Value::Null) => None,
+            Some(Value::Number(n)) => Some(ClassEnd::Count(n.as_f64()?.max(0.0) as usize)),
+            Some(Value::String(s)) => {
+                let pct: f64 = s.strip_suffix('%')?.parse().ok()?;
+                Some(ClassEnd::Share(pct / 100.0))
+            }
+            _ => return None,
+        };
+        let scale = match v.get("scale") {
+            None => 1.0,
+            Some(x) => x.as_f64()?,
+        };
+        let weight = match v.get("weight") {
+            None => None,
+            Some(w) => Some(weight_of(w)?),
+        };
+        Some(FontClass {
+            first,
+            scale,
+            weight,
+        })
+    }
+}
+
 /// `keep_with` membership.
 #[derive(Clone, Debug, PartialEq)]
 pub enum KeepWith {
@@ -197,6 +281,8 @@ pub struct Item {
     pub label: LabelSpec,
     pub font: FontSel,
     pub len: ItemLengths,
+    /// The lengths before resolution (resolved again when a font class rescales the item).
+    pub len_spec: ItemLengthSpec,
     pub models: Models,
     pub internal: InternalPolicy,
     pub positions: Vec<Pos>,
@@ -218,6 +304,42 @@ pub struct Item {
 impl Item {
     pub fn em(&self) -> f64 {
         self.font.size
+    }
+
+    /// Scale the label's text by `f` (font sizes, host-measured text sizes, wrap widths),
+    /// in `weight` when given (a font class, spec §9.4). The item's font size scales with
+    /// it, and so do its lengths given in em; lengths in px, icons and boxes keep their
+    /// size.
+    pub fn rescale(&mut self, f: f64, weight: Option<u16>) {
+        fn text(t: &mut TextSpec, f: f64, weight: Option<u16>) {
+            t.font.size *= f;
+            if let Some(w) = weight {
+                t.font.weight = w;
+            }
+            if let Some(mw) = t.wrap.as_mut().and_then(|w| w.max_width.as_mut()) {
+                *mw *= f;
+            }
+            if let Some((w, h, _)) = t.explicit.as_mut() {
+                *w *= f;
+                *h *= f;
+            }
+        }
+        self.font.size *= f;
+        if let Some(w) = weight {
+            self.font.weight = w;
+        }
+        match &mut self.label {
+            LabelSpec::Text(t) => text(t, f, weight),
+            LabelSpec::Composite { parts, .. } => {
+                for p in parts {
+                    if let PartSpec::Text(t) = p {
+                        text(t, f, weight);
+                    }
+                }
+            }
+            LabelSpec::Fixed { .. } => {}
+        }
+        self.len = self.len_spec.resolve(self.font.size);
     }
 
     /// The pole of inaccessibility of the mark (polygon marks; the reference point of
@@ -300,6 +422,10 @@ pub struct Model {
     pub band: f64,
     pub max_labels: Option<usize>,
     pub max_ink_fraction: Option<f64>,
+    /// `priority.font_classes`.
+    pub font_classes: Vec<FontClass>,
+    /// The font class of each item (set once the priorities are known).
+    pub font_class: Vec<Option<usize>>,
     pub focus: Option<P>,
     pub priority_value: Value,
     /// `auto` preset: (crowded fraction, models when crowded) unless the user set models.
@@ -1050,6 +1176,12 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
             .as_u64()
             .map(|v| v as usize),
         max_ink_fraction: o.get("priority.budget.max_ink_fraction").as_f64(),
+        font_classes: o
+            .get("priority.font_classes")
+            .as_array()
+            .map(|a| a.iter().filter_map(FontClass::from_value).collect())
+            .unwrap_or_default(),
+        font_class: Vec::new(),
         focus,
         priority_value: o.get("priority"),
         auto_crowded,
@@ -1323,16 +1455,14 @@ fn build_item(
     // font: defaults ← label.font
     let font = font_over(default_font, label_v.get("font"));
     let em = font.size;
-    let len_of = |key: &str, item_key: Option<&Value>| -> f64 {
+    let len_of = |key: &str, item_key: Option<&Value>| -> Length {
         item_key
             .and_then(Length::from_value)
             .unwrap_or_else(|| o.length(key))
-            .px(em)
     };
     let ip = it.get("placement");
-    let padding = len_of("defaults.padding", label_v.get("padding"));
-    let len = ItemLengths {
-        padding,
+    let len_spec = ItemLengthSpec {
+        padding: len_of("defaults.padding", label_v.get("padding")),
         buffer: len_of("defaults.buffer", None),
         offset: len_of("placement.offset", ip.and_then(|p| p.get("offset"))),
         inner_padding: len_of("placement.inner_padding", None),
@@ -1345,6 +1475,7 @@ fn build_item(
         boundary_gap: len_of("placement.boundary.gap", None),
         boundary_margin: len_of("placement.boundary.margin", None),
     };
+    let len = len_spec.resolve(em);
     // anchor + mark
     let svg_id = it
         .get("svg_id")
@@ -1536,8 +1667,7 @@ fn build_item(
                 gap: label_v
                     .get("gap")
                     .and_then(Length::from_value)
-                    .map(|l| l.px(em))
-                    .unwrap_or(0.0),
+                    .unwrap_or(Length::Px(0.0)),
                 align: label_v
                     .get("align")
                     .and_then(|a| a.as_str())
@@ -1588,6 +1718,7 @@ fn build_item(
         label,
         font,
         len,
+        len_spec,
         models,
         internal,
         positions,

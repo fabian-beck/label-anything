@@ -233,6 +233,28 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
       if (!jsonEq(got, tl[id])) f.push(`text_lines.${id}: expected ${show(tl[id])}, got ${show(got)}`);
     }
   }
+  const fo = get(exp, "font");
+  if (isObj(fo)) {
+    for (const id of Object.keys(fo)) {
+      const want = fo[id];
+      const p = placementOf(r, id);
+      const size = f64(get(want, "size"));
+      if (size !== null) {
+        const got = f64(get(get(p, "text"), "font_size")) ?? NaN;
+        if (Math.abs(got - size) > 1e-6 || got !== got) f.push(`font.${id}.size: expected ${size}, got ${got}`);
+      }
+      const w = get(want, "weight");
+      if (w !== undefined) {
+        const got = get(get(p, "text"), "font_weight");
+        if (!jsonEq(got !== undefined ? got : null, w)) f.push(`font.${id}.weight: expected ${show(w)}, got ${show(got)}`);
+      }
+      const c = get(want, "class");
+      if (c !== undefined) {
+        const got = get(get(p, "priority"), "font_class");
+        if (!jsonEq(got !== undefined ? got : null, c)) f.push(`font.${id}.class: expected ${show(c)}, got ${show(got)}`);
+      }
+    }
+  }
   const bx = get(exp, "box");
   if (isObj(bx)) {
     for (const id of Object.keys(bx)) {

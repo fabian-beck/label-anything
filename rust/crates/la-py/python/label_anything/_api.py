@@ -281,6 +281,7 @@ def place(
     max_labels: Optional[int] = None,
     max_ink_fraction: Optional[float] = None,
     focus: Optional[Sequence[float]] = None,
+    font_classes: Optional[Sequence[Mapping[str, Any]]] = None,
     # --- solver ---
     strategy: Optional[str] = None,
     time_budget_ms: Optional[float] = None,

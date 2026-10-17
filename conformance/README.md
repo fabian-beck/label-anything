@@ -96,6 +96,8 @@ points at the offending property; for `required` at the missing property (e.g.
     "deterministic": true,             // two runs give identical placements
     "touch_gap_max": 0.5,              // adjacent labels touch their inflated mark
     "text_lines": { "a": ["org.example.", "Foo"] },
+    "font": { "a": { "size": 15, "weight": 700, "class": 0 } },  // text.font_size (± 1e-6),
+                                       // text.font_weight, priority.font_class (null: none)
     "box": { "a": { "x": 10, "y": 20, "w": 30, "h": 16, "tol": 0.01 } }
   }
 }

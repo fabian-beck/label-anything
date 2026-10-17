@@ -20,7 +20,7 @@ distinctive gloss terms (in-cluster document frequency × global IDF). Point anc
 the cluster member closest to the centroid.
 
 **Configs** (canvas 1600 × 1200 px, preset `scatter`, font 11 px, wrap 11 em / 3 lines,
-priority = log cluster size):
+priority = log cluster size, font classes: the top 5 % bold at 1.3 ×, the next 20 % at 1.1 ×):
 
 | config | clusters | anchors | raster mode |
 |---|---|---|---|

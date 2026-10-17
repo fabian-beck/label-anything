@@ -19,7 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from bench.common.scenario import (Axes, Writer, base_problem, data_url, merge_avoid, png_bytes,  # noqa: E402
+from bench.common.scenario import (FONT_CLASSES_DENSE, Axes, Writer, base_problem, data_url, merge_avoid, png_bytes,  # noqa: E402
                                    svg_source)
 from bench.common.scene import Scene  # noqa: E402
 from bench.scenarios import load_module  # noqa: E402
@@ -76,7 +76,7 @@ def make_items(ms, pts, outl, idx, wrap=None) -> list[dict]:
 def problem_with(items, extra=None) -> dict:
     p = base_problem(W, H, "scatter", font_size=10.0)
     p["items"] = items
-    p["priority"] = {"terms": [{"attr": "outlierness"}]}
+    p["priority"] = {"terms": [{"attr": "outlierness"}], "font_classes": FONT_CLASSES_DENSE}
     if extra:
         p.update(extra)
     return p

@@ -80,6 +80,7 @@ OPTION_PATHS: Dict[str, str] = {
     "max_labels": "priority.budget.max_labels",
     "max_ink_fraction": "priority.budget.max_ink_fraction",
     "focus": "priority.focus",
+    "font_classes": "priority.font_classes",
     # solver
     "strategy": "solver.strategy",
     "time_budget_ms": "solver.time_budget_ms",

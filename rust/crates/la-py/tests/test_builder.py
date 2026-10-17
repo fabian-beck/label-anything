@@ -126,6 +126,7 @@ def test_every_option_reaches_its_schema_path() -> None:
         "models": ["adjacent"], "position_order": "cartographic", "boundary": ["left"], "region": (0, 0, 10, 10),
         "focus": (1, 2), "transform": (1, 0, 0, 1, 0, 0), "coverage": "attrs.g", "degrade": ["omit"], "relaxable": ["ink"],
         "mark": {"shape": "circle", "r": 3}, "font_file": "font.ttf", "avoid_leader": {"ink": 0.1}, "avoid_buffer": {"items": 1.0},
+        "font_classes": [{"first": "5%", "scale": 1.3, "weight": "bold"}],
     }
     for key, path in OPTION_PATHS.items():
         value = samples.get(key, 7)

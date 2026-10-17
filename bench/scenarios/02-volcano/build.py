@@ -21,7 +21,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from bench.common import fetch  # noqa: E402
-from bench.common.scenario import Axes, Writer, base_problem, merge_avoid, png_bytes, svg_source  # noqa: E402
+from bench.common.scenario import (FONT_CLASSES_SPARSE, Axes, Writer, base_problem, merge_avoid, png_bytes,  # noqa: E402
+                                   svg_source)
 from bench.common.scene import Scene  # noqa: E402
 
 SCENARIO = "02-volcano"
@@ -123,7 +124,7 @@ def items_for(rows, idx, pos) -> list[dict]:
 def problem(items, obstacles=None, **extra) -> dict:
     p = base_problem(W, H, "scatter", font_size=10.0)
     p["items"] = items
-    p["priority"] = {"terms": [{"attr": "neglog10p"}]}
+    p["priority"] = {"terms": [{"attr": "neglog10p"}], "font_classes": FONT_CLASSES_SPARSE}
     if obstacles:
         p["obstacles"] = obstacles
     p.update(extra)

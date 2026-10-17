@@ -1,0 +1,301 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 480,
+      "height": 200
+    },
+    "defaults": {
+      "font": {
+        "size": 10
+      }
+    },
+    "placement": {
+      "position_order": [
+        "right"
+      ],
+      "offset": "0.5em"
+    },
+    "priority": {
+      "terms": [
+        {
+          "attr": "pop"
+        }
+      ],
+      "font_classes": [
+        {
+          "first": 1,
+          "scale": 1.5,
+          "weight": "bold"
+        },
+        {
+          "first": "50%",
+          "scale": 1.2
+        },
+        {
+          "scale": 0.9
+        }
+      ]
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 40,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Aa"
+        },
+        "attrs": {
+          "pop": 40
+        }
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 140,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Aa"
+        },
+        "attrs": {
+          "pop": 30
+        }
+      },
+      {
+        "id": "c",
+        "anchor": {
+          "type": "point",
+          "x": 240,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Aa"
+        },
+        "attrs": {
+          "pop": 20
+        }
+      },
+      {
+        "id": "d",
+        "anchor": {
+          "type": "point",
+          "x": 340,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Aa"
+        },
+        "attrs": {
+          "pop": 10
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "a",
+        "placed": true,
+        "box": {
+          "x": 49.5,
+          "y": 87.535,
+          "w": 23.864999999999995,
+          "h": 24.930000000000007
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Aa"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            18.285
+          ],
+          "line_widths": [
+            19.365
+          ],
+          "x_offset": 2.25,
+          "font_size": 15.0,
+          "font_family": "default",
+          "font_weight": 700,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.15,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 0,
+          "font_class": 0,
+          "terms": {
+            "pop": 1.0
+          }
+        }
+      },
+      {
+        "id": "b",
+        "placed": true,
+        "box": {
+          "x": 148.0,
+          "y": 90.02799999999999,
+          "w": 18.0,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Aa"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            14.4
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.15,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.6666666666666666,
+          "rank": 1,
+          "font_class": 1,
+          "terms": {
+            "pop": 0.6666666666666666
+          }
+        }
+      },
+      {
+        "id": "c",
+        "placed": true,
+        "box": {
+          "x": 246.5,
+          "y": 92.521,
+          "w": 13.5,
+          "h": 14.957999999999998
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Aa"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.971
+          ],
+          "line_widths": [
+            10.8
+          ],
+          "x_offset": 1.3499999999999999,
+          "font_size": 9.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.15,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.3333333333333333,
+          "rank": 2,
+          "font_class": 2,
+          "terms": {
+            "pop": 0.3333333333333333
+          }
+        }
+      },
+      {
+        "id": "d",
+        "placed": true,
+        "box": {
+          "x": 346.5,
+          "y": 92.521,
+          "w": 13.5,
+          "h": 14.957999999999998
+        },
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Aa"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.971
+          ],
+          "line_widths": [
+            10.8
+          ],
+          "x_offset": 1.3499999999999999,
+          "font_size": 9.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.15,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 3,
+          "font_class": 2,
+          "terms": {
+            "pop": 0.0
+          }
+        }
+      }
+    ],
+    "stats": {
+      "placed": 4,
+      "total": 4,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 1600,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 4,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.6,
+      "degraded": {},
+      "grid": {
+        "cell": 2.25,
+        "cols": 214,
+        "rows": 89,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

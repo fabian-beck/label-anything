@@ -16,7 +16,7 @@ import { maxf, minf, toIndex } from "./math.js";
 import { BuildError, type Model, Strategy, build } from "./model/index.js";
 import { MAX_GRID_CELLS, gridCell, gridCells, prepare } from "./obstacles.js";
 import { fmtF64 } from "./json.js";
-import { compute } from "./priority.js";
+import { compute, fontClasses } from "./priority.js";
 import { type DebugData, debugSvg } from "./render.js";
 import { build as buildResult } from "./result.js";
 import * as exact from "./solver/exact.js";
@@ -68,6 +68,18 @@ export function placeValidated(problem: unknown, env: Env, warnings: Issue[], pr
   }
   const measurer = new Measurer(fonts, env, m.shaping);
   const variants = m.items.map((it) => baseVariants(measurer, it));
+  const pri = compute(m, variants, env);
+  // font classes (spec §9.4): the priorities stay those of the nominal sizes
+  m.fontClass = fontClasses(m, pri);
+  for (let i = 0; i < m.items.length; i++) {
+    const k = m.fontClass[i];
+    if (k === null || k === undefined) continue;
+    const c = m.fontClasses[k]!;
+    if (c.scale !== 1 || c.weight !== null) {
+      m.items[i]!.rescale(c.scale, c.weight);
+      variants[i] = baseVariants(measurer, m.items[i]!);
+    }
+  }
   let minFont = Infinity;
   for (const it of m.items) {
     minFont = minf(minFont, it.font.size);
@@ -93,7 +105,6 @@ export function placeValidated(problem: unknown, env: Env, warnings: Issue[], pr
     ]);
   }
   const obs = prepare(m, minFont);
-  const pri = compute(m, variants, env);
   const t1 = envNow(env);
   const s = new Solve(m, obs, env, pri, measurer, variants, t0);
   s.generateLevel0();

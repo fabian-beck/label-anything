@@ -7,7 +7,7 @@ most populous countries plus 6 outliers of a linear fit labeled with country nam
 touch the true circles, small bubbles hide behind big ones, and big bubbles should get
 **internal** labels (shape fidelity / internal-label rate metrics).
 
-**Configs** (canvas 960 × 640 px, preset `scatter`, font 11 px, priority = log population):
+**Configs** (canvas 960 × 640 px, preset `scatter`, font 11 px, priority = log population, font classes: the top 5 % bold at 1.25 ×, the rest at 0.9 ×):
 
 | config | labels | background | internal policy |
 |---|---|---|---|

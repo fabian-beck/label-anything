@@ -73,6 +73,20 @@ for omission in ["strict", "prefix", "weighted"]:
     if omission != "weighted":
         assert st["priority_inversions"] == 0
 
+# --8<-- [start:font-classes]
+classes = [{"first": 4, "scale": 1.4, "weight": "bold"},   # the 4 most important cities
+           {"first": "25%", "scale": 1.15},                 # then up to a quarter of all 40
+           {"scale": 0.85}]                                 # and the rest
+res = la.place(anchors, names, priority=[a["pop"] for a in attrs], font_classes=classes, **common)
+for p in sorted(res.placed, key=lambda p: p.priority["rank"])[:6]:
+    print(p.id, p.priority["font_class"], round(p.text["font_size"], 2), p.text["font_weight"])
+# Rosbrück 0 19.6 700  ...  Kelsted 1 16.1 400
+# --8<-- [end:font-classes]
+assert [p.priority["font_class"] for p in res.placements] == [
+    0 if p.priority["rank"] < 4 else 1 if p.priority["rank"] < 10 else 2 for p in res.placements]
+assert all(p.text["font_size"] == 14 * classes[p.priority["font_class"]]["scale"] for p in res.placed
+           if not p.degrade_steps)
+
 # --8<-- [start:keep-with]
 keep = [("twins" if n in ("Hofkel", "Roskel") else None) for n in names]   # all or none
 res = la.place(anchors, names, priority=[a["pop"] for a in attrs], keep_with=keep, **common)

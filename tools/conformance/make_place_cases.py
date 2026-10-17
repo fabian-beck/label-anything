@@ -315,6 +315,26 @@ CASES["fan-max-labels"] = case(
     "The ends of `fan-line-ends` with at most 4 labels: the column gives labels to the two "
     "most important ends left without one (input order) and leaves the others out.")
 
+CASES["font-classes"] = case(
+    "font classes scale labels by priority",
+    {"canvas": {"width": 480, "height": 200}, "defaults": {"font": {"size": 10}},
+     "placement": {"position_order": ["right"], "offset": "0.5em"},
+     "priority": {"terms": [{"attr": "pop"}],
+                  "font_classes": [{"first": 1, "scale": 1.5, "weight": "bold"},
+                                   {"first": "50%", "scale": 1.2}, {"scale": 0.9}]},
+     "items": [pt(k, 40 + 100 * i, 100, "Aa", attrs={"pop": 40 - 10 * i}) for i, k in enumerate("abcd")]},
+    {"placed": 4,
+     "font": {"a": {"size": 15, "weight": 700, "class": 0}, "b": {"size": 12, "weight": 400, "class": 1},
+              "c": {"size": 9, "weight": 400, "class": 2}, "d": {"size": 9, "class": 2}},
+     "box": {"a": {"x": 49.5, "y": 87.535, "w": 23.865, "h": 24.93},
+             "b": {"x": 148.0, "y": 90.028, "w": 18.0, "h": 19.944},
+             "c": {"x": 246.5, "y": 92.521, "w": 13.5, "h": 14.958}}},
+    "Four items ranked by `pop`: the first class takes rank 0 (bold, 1.5 × 10 px), the second "
+    "ends at ceil(50 % × 4) = 2 and takes rank 1 (1.2 ×), the last the rest (0.9 ×). The offset "
+    "(0.5 em) and the padding (0.15 em) follow each label's font size: the label of a starts at "
+    "40 + 2 (mark) + 7.5, of b at 140 + 2 + 6, of c at 240 + 2 + 4.5; regular 'Aa' is 1.2 em wide "
+    "and 1.362 em high, plus twice the padding.")
+
 CASES["raster-background"] = case(
     "raster background ink is avoided",
     {"problem_file": "../problems/raster-ink.json"},

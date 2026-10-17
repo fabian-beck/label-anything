@@ -588,6 +588,24 @@ export interface Priority {
     max_ink_fraction?: number | null;
   };
   focus?: Point | null;
+  /**
+   * Font sizes by priority: classes take consecutive stretches of the total priority order and scale the labels' text (spec §9.4).
+   */
+  font_classes?: FontClass[];
+}
+export interface FontClass {
+  /**
+   * End of the class in the priority order, cumulative: a number of items or a share ("25%"); null or absent: all the rest.
+   */
+  first?: number | string | null;
+  /**
+   * Factor on the label's font sizes.
+   */
+  scale?: number;
+  /**
+   * Font weight of the label's text.
+   */
+  weight?: number | ("normal" | "bold");
 }
 export interface Solver {
   strategy?: "auto" | "greedy" | "local" | "exact";

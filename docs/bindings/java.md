@@ -82,7 +82,7 @@ with a unit (`"0.5em"`, `"3px"`, `"2pt"`).
 | `avoid(Avoid.label().hard(..).weight(..), Avoid.leader()..., Avoid.buffer()..., Avoid.relaxable(..))` | `avoid.*` (merged key by key) |
 | `leaders(Leaders.straight()/angles(..)/orthogonal()/elbow(..)/curved().port(..).clearance(..))` | `leaders` |
 | `placement(Placement.models(Model...).maxDistance("10em").boundarySides(..))` | `placement` |
-| `priority(Priority)`, `tier(where, tier)`, `omission(Omission)`, `coverage(by, n)`, `ties`, `tiesRandom(seed)`, `band`, `maxLabels`, `maxInkFraction`, `focus` | `priority.*` |
+| `priority(Priority)`, `tier(where, tier)`, `omission(Omission)`, `coverage(by, n)`, `ties`, `tiesRandom(seed)`, `band`, `maxLabels`, `maxInkFraction`, `focus`, `fontClasses(FontClass...)` (`FontClass.share(5, 1.3).bold()`, `FontClass.first(10, 1.1)`, `FontClass.rest(0.9)`) | `priority.*` |
 | `timeBudgetMs`, `seed`, `strategy(Strategy)`, `maxIterations`, `gridCell` | `solver.*` |
 | `degrade(Degrade.ALTERNATIVES, Degrade.shrink(0.85), ...)`, `minScale`, `wrapMaxLines`, `softOverlapWeight` | `degrade`, `degrade_options.*` |
 | `weights(Weights.defaults().position(1))`, `warmStart(previousResult)` | `weights`, `warm_start` |

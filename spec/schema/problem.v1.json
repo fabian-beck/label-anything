@@ -1535,6 +1535,56 @@
               "type": "null"
             }
           ]
+        },
+        "font_classes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fontClass"
+          },
+          "description": "Font sizes by priority: classes take consecutive stretches of the total priority order and scale the labels' text (spec §9.4)."
+        }
+      }
+    },
+    "fontClass": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "first": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "string",
+              "pattern": "^([0-9]+\\.?[0-9]*|\\.[0-9]+)%$"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "End of the class in the priority order, cumulative: a number of items or a share (\"25%\"); null or absent: all the rest."
+        },
+        "scale": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Factor on the label's font sizes."
+        },
+        "weight": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            {
+              "enum": [
+                "normal",
+                "bold"
+              ]
+            }
+          ],
+          "description": "Font weight of the label's text."
         }
       }
     },

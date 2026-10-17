@@ -21,7 +21,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from bench.common import fetch  # noqa: E402
-from bench.common.scenario import Axes, Writer, base_problem, merge_avoid, png_bytes, svg_source  # noqa: E402
+from bench.common.scenario import (FONT_CLASSES_DENSE, Axes, Writer, base_problem, merge_avoid, png_bytes,  # noqa: E402
+                                   svg_source)
 from bench.common.scene import Scene  # noqa: E402
 
 SCENARIO = "03-gapminder"
@@ -96,7 +97,8 @@ def items_for(rows, ax, labeled: set[str], big_prefer: bool = False) -> list[dic
 def problem(items, obstacles, internal: str | None) -> dict:
     p = base_problem(W, H, "scatter", font_size=11.0)
     p["items"] = items
-    p["priority"] = {"terms": [{"attr": "pop", "transform": "log1p", "normalize": "minmax"}]}
+    p["priority"] = {"terms": [{"attr": "pop", "transform": "log1p", "normalize": "minmax"}],
+                     "font_classes": FONT_CLASSES_DENSE}
     p["obstacles"] = obstacles
     if internal:
         p["placement"] = {"internal": internal, "models": ["internal", "adjacent", "slider", "distant"]}

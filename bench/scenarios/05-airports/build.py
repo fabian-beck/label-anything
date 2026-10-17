@@ -20,7 +20,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from bench.common.geo import Equirect, project_rings  # noqa: E402
 from bench.common.geom import Box  # noqa: E402
-from bench.common.scenario import Writer, base_problem, merge_avoid, png_bytes, svg_source  # noqa: E402
+from bench.common.scenario import (FONT_CLASSES_DENSE, Writer, base_problem, merge_avoid, png_bytes,  # noqa: E402
+                                   svg_source)
 from bench.common.scene import Scene  # noqa: E402
 from bench.scenarios import load_module  # noqa: E402
 
@@ -83,7 +84,7 @@ def main() -> None:
     def world_problem(n, extra_obstacles=None):
         p = base_problem(W, H, "map", font_size=9.0)
         p["items"] = items_for(aps[:n], A.WORLD, lambda a: a.code, ids)
-        p["priority"] = dict(PRIORITY)
+        p["priority"] = {**PRIORITY, "font_classes": FONT_CLASSES_DENSE}
         p["avoid"] = {"label": {"points": 0.3}, "leader": {"points": 0.2}}
         rest = [A.WORLD(a.lon, a.lat) for a in aps[n:]]
         layers = [{"class": "points", "points": [[round(x, 3), round(y, 3)] for x, y in rest], "r": 1.2}]
@@ -105,7 +106,7 @@ def main() -> None:
         sc.circle(x, y, 1.2, "airport", "points", fill="#8a8a8a")
     p = base_problem(W, H, "map", font_size=9.0)
     p["items"] = items_for(aps[:3000], A.WORLD, lambda a: a.code, ids)
-    p["priority"] = dict(PRIORITY)
+    p["priority"] = {**PRIORITY, "font_classes": FONT_CLASSES_DENSE}
     merge_avoid(p, {"points": 0.3}, {"points": 0.2}, ignore_background=True)
     p["obstacles"] = {"svg": svg_source(sc)}
     wr.config("world-iata-3000-svg", p, truth=sc.truth(), svg=sc.svg(), png=png_bytes(sc.png()),
@@ -126,7 +127,7 @@ def main() -> None:
         sc.circle(x, y, 1.2, "airport", "points", fill="#8a8a8a")
     p = base_problem(eu.width, eu.height, "map", font_size=10.0)
     p["items"] = items_for(eu_aps[:400], eu, city_label, ids)
-    p["priority"] = dict(PRIORITY)
+    p["priority"] = {**PRIORITY, "font_classes": FONT_CLASSES_DENSE}
     merge_avoid(p, {"points": 0.3}, {"points": 0.2}, ignore_background=True)
     p["obstacles"] = {"svg": svg_source(sc)}
     wr.config("europe-names-400-svg", p, truth=sc.truth(), svg=sc.svg(), png=png_bytes(sc.png()),

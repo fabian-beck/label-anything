@@ -104,6 +104,9 @@ fn priority_json(s: &Solve, i: usize) -> Value {
     }
     m.insert("score".into(), json!(p.score));
     m.insert("rank".into(), json!(p.rank));
+    if let Some(Some(c)) = s.model.font_class.get(i) {
+        m.insert("font_class".into(), json!(c));
+    }
     if !terms.is_empty() {
         m.insert("terms".into(), Value::Object(terms));
     }

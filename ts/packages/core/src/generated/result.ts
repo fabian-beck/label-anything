@@ -140,6 +140,10 @@ export interface PriorityInfo {
    * Position in the total priority order (0 = highest).
    */
   rank: number;
+  /**
+   * Index of the item's priority.font_classes entry (absent: no class).
+   */
+  font_class?: number;
   terms?: {
     [k: string]: number | undefined;
   };
