@@ -125,6 +125,19 @@ def test_parity_deltas_between_rust_and_ts():
     assert report.parity(rep(entry("rust")))["pairs"] == []
 
 
+def test_sequence_table_notes_a_planned_baseline():
+    metrics = {"frames": 3, "displacement_mean_px": 1.0, "displacement_median_px": 1.0, "flip_rate": 0.0,
+               "nesting_rate": None, "nesting_fraction_mean": None, "added_total": 0, "removed_total": 0}
+    seqs = [{"solver": "adjusttext", "scenario": "11-x", "sequence": "s", "metrics": metrics, "frames": [],
+             "options": {"step": 32.0, "iter_lim": 18}},
+            {"solver": "textalloc", "scenario": "11-x", "sequence": "s", "metrics": metrics, "frames": []},
+            {"solver": "ggrepel", "scenario": "11-x", "sequence": "s", "skipped": "frame 0: too large"}]
+    html = "".join(report._sequence_section(rep(sequences=seqs)))
+    assert html.count("class='em'") == 1
+    assert "18 iterations per frame (the comparison budget of the sequence), lines sampled every 32 px" in html
+    assert "n/a: frame 0: too large" in html
+
+
 def test_runtime_svg_small_multiples():
     cur = rep(entry("rust", n=10), entry("rust", "c2", n=1000, runtime=50.0), entry("textalloc", n=10, runtime=80.0),
               solvers=["rust", "textalloc"])

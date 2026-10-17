@@ -132,7 +132,7 @@ Deterministic. Cost grows with candidates × (points + lines) per label.
 | `x`, `y` | points along polylines and polygon outlines | emulation: no line obstacles |
 | `avoid_self`, `prevent_crossings`, `ensure_inside_axes` | True | axes = label area |
 | `arrowprops` | `{"arrowstyle": "-"}`, `min_arrow_len` 5 (default) | arrows on |
-| `iter_lim` | 100, `time_lim=None` | deterministic, instead of the default 1-second wall-clock limit |
+| `iter_lim` | 100 (sequences: see below), `time_lim=None` | deterministic, instead of the default 1-second wall-clock limit |
 | other forces, `expand` | defaults | |
 
 The sampling step of lines (2, 4, 8, 16, 32 px) and the raster cell size (twice that, at least
@@ -143,6 +143,15 @@ of the number of labels and obstacles: problems that exceed the limit even at th
 emulation (in the quick suite: 05 with 300 labels and 2,921 points, 06 with 375 labels, 12 with
 1,206 labels, the 1,000-label frames of 11) would need gigabytes and minutes per iteration and
 are reported **n/a** with the estimate. adjustText never omits labels.
+
+**Sequences** (scenario 11) are planned as a whole (`sequence_options`): one sampling step for
+every frame, the finest at which every frame stays within the limit (a step that changed from
+frame to frame would move the labels by itself), and as many iterations per frame, at most 100,
+as 7.5 × 10¹⁰ comparisons allow for the whole sequence (frames × iterations × comparisons of the
+first iteration; about ten minutes here). Below 5 iterations per frame the sequence is **n/a**.
+The 41 frames of `drag-lesmis` get 18 iterations each (lines every 32 px): with 100, the sequence
+took 57 minutes of the CI run. The tool's own default would stop each solve after one second,
+about one iteration on these frames. The report notes the iterations of each frame.
 
 ## vega-label
 

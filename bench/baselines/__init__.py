@@ -43,8 +43,16 @@ class Baseline:
             return f"cannot import {self.module}: {e}"
         return mod.available()
 
-    def solve(self, problem: dict, problem_path=None) -> dict:
-        return self.load().solve(problem, problem_path)
+    def solve(self, problem: dict, problem_path=None, options: dict | None = None) -> dict:
+        if options is None:
+            return self.load().solve(problem, problem_path)
+        return self.load().solve(problem, problem_path, options)
+
+    def sequence_options(self, frames) -> dict | None:
+        """Options for every frame of a sequence (``(problem, path)`` pairs), when the adapter plans them
+        (adjustText: one budget for the whole sequence); may raise ``Unsupported``."""
+        mod = self.load()
+        return mod.sequence_options(frames) if hasattr(mod, "sequence_options") else None
 
     def version(self) -> str | None:
         return self.load().version()

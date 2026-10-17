@@ -122,11 +122,11 @@ class Solver:
         self.baseline = None
         if spec in BUILTIN:
             self.name, self.kind = spec, "builtin"
-            self.fn = lambda problem, _path, f=BUILTIN[spec]: f(problem)
+            self.fn = lambda problem, _path, _options=None, f=BUILTIN[spec]: f(problem)
         elif spec in BASELINES:
             self.name, self.kind = spec, "baseline"
             self.baseline = BASELINES[spec]
-            self.fn = lambda problem, path, b=self.baseline: b.solve(problem, path)
+            self.fn = lambda problem, path, options=None, b=self.baseline: b.solve(problem, path, options)
         elif "=" in spec:
             self.name, self.cmd = spec.split("=", 1)
             self.kind = "external"
@@ -149,11 +149,13 @@ class Solver:
             if hasattr(mod, "warmup"):
                 mod.warmup()
 
-    def solve(self, problem: dict, problem_path: Path, result_path: Path, timeout: float) -> tuple[dict, float]:
+    def solve(self, problem: dict, problem_path: Path, result_path: Path, timeout: float,
+              options: dict | None = None) -> tuple[dict, float]:
+        """Solve and time one problem; ``options`` (baselines only) from ``Baseline.sequence_options``."""
         result_path.parent.mkdir(parents=True, exist_ok=True)
         if self.fn is not None:
             t0 = time.perf_counter()
-            res = self.fn(problem, problem_path)
+            res = self.fn(problem, problem_path, options)
             wall = (time.perf_counter() - t0) * 1000.0
             write_json(result_path, res, nd=3)
             return res, wall
@@ -281,6 +283,14 @@ def run_sequence(solver: Solver, seq: dict, out: Path, timeout: float, do_render
     prev = None
     tmp = out / "tmp" / solver.name / seq["scenario"] / seq["name"]
     head = {"solver": solver.name, "kind": rep.kind(solver.name), "scenario": seq["scenario"], "sequence": seq["name"]}
+    options = None
+    if solver.baseline is not None:
+        # adjustText plans the whole sequence: one emulation and one iteration budget for all frames
+        try:
+            options = solver.baseline.sequence_options([(read_json(base / fr["file"]), base / fr["file"])
+                                                        for fr in man["frames"]])
+        except Unsupported as e:
+            return {**head, "skipped": str(e)}
     for fr in man["frames"]:
         problem = read_json(base / fr["file"])
         if prev is not None and man.get("warm_start", True):
@@ -290,7 +300,7 @@ def run_sequence(solver: Solver, seq: dict, out: Path, timeout: float, do_render
         write_json(ppath, problem, nd=3)
         rpath = out / "results" / solver.name / seq["scenario"] / seq["name"] / fr["file"]
         try:
-            res, wall = solver.solve(problem, ppath, rpath, timeout)
+            res, wall = solver.solve(problem, ppath, rpath, timeout, options)
         except Unsupported as e:
             return {**head, "skipped": f"frame {fr['file']}: {e}"}
         except Exception as e:  # noqa: BLE001
@@ -305,6 +315,8 @@ def run_sequence(solver: Solver, seq: dict, out: Path, timeout: float, do_render
     m = evaluate_sequence(frames, steps)
     entry = {**head, "metrics": m, "frames": per_frame,
              "digest": hashlib.sha256("".join(digests).encode()).hexdigest()[:16]}
+    if options:
+        entry["options"] = options
     if do_render and frames:
         imgs = []
         for k in (0, len(frames) // 2, len(frames) - 1):

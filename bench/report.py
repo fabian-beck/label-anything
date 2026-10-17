@@ -657,7 +657,11 @@ def _sequence_section(report: dict) -> list[str]:
          "<th>nesting rate</th><th>nesting fraction</th><th>added</th><th>removed</th><th>engine ms (median frame)"
          "</th></tr>"]
     for s in report["sequences"]:
-        head = f"<td class='l'>{esc(s['sequence'])}</td><td class='l'>{esc(s['solver'])}</td>"
+        opt = s.get("options") or {}
+        tip = (f"{opt['iter_lim']} iterations per frame (the comparison budget of the sequence), "
+               f"lines sampled every {opt['step']:g} px" if "iter_lim" in opt and "step" in opt else "")
+        note = f" <span class='em' title='{esc(tip)}'>≈</span>" if tip else ""
+        head = f"<td class='l'>{esc(s['sequence'])}</td><td class='l'>{esc(s['solver'])}{note}</td>"
         if "skipped" in s:
             o.append(f"<tr class='na'>{head}<td colspan='8' class='l'>n/a: {esc(s['skipped'])}</td></tr>")
             continue
