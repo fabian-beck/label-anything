@@ -6,10 +6,13 @@ name: Pages
 #
 # * after the CI run of a release tag (v*) succeeded. Its `baselines` job ran the benchmark
 #   with every baseline and the performance targets, passed the release gates and uploaded
-#   the report (artifact bench-report-baselines); it is published at <site>/benchmark-report/.
-#   The site's links into the repository point to that tag (docs/_hooks/la_docs.py).
+#   the report (artifact bench-report-baselines); it is published at <site>/benchmark-report/,
+#   with the gallery at <site>/benchmark-report/gallery/. The site's links into the
+#   repository point to that tag (docs/_hooks/la_docs.py).
+# * after a weekly or dispatched CI run of main succeeded: the site of main with that run's
+#   report (its `baselines` job runs on schedule and dispatch too).
 # * on demand (workflow dispatch): the site of the dispatched ref, with the report of the
-#   CI run given as `report_run_id` (optional).
+#   CI run given as `report_run_id`, else the latest report that has not expired.
 #
 # One-time setup: repository Settings → Pages → Build and deployment → Source:
 # "GitHub Actions".
@@ -39,12 +42,12 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push' &&
-       startsWith(github.event.workflow_run.head_branch, 'v'))
+       ((github.event.workflow_run.event == 'push' &&
+         startsWith(github.event.workflow_run.head_branch, 'v')) ||
+        (contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event.workflow_run.event) &&
+         github.event.workflow_run.head_branch == 'main')))
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      REPORT_RUN: ${{ github.event.workflow_run.id || inputs.report_run_id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -59,13 +62,26 @@ jobs:
       - run: mkdocs build --strict --site-dir site
         env:
           LA_DOCS_TAG: ${{ github.event.workflow_run.head_branch }}
-      - name: The benchmark report of the CI run
-        if: env.REPORT_RUN != ''
+      - name: Which benchmark report
+        id: report
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id || inputs.report_run_id }}
+        run: |
+          # the CI run that triggered this one or the one given, else the latest report
+          if [ -z "$RUN_ID" ]; then
+            RUN_ID=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=bench-report-baselines&per_page=30" \
+              --jq '[.artifacts[] | select(.expired | not)][0].workflow_run.id // empty')
+          fi
+          echo "report of CI run: ${RUN_ID:-none}"
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+      - name: The benchmark report and gallery of that CI run
+        if: steps.report.outputs.run_id != ''
         uses: actions/download-artifact@v4
         with:
           name: bench-report-baselines
           path: site/benchmark-report
-          run-id: ${{ env.REPORT_RUN }}
+          run-id: ${{ steps.report.outputs.run_id }}
           github-token: ${{ github.token }}
       - uses: actions/upload-pages-artifact@v3
         with:

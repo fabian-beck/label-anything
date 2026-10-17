@@ -154,7 +154,7 @@ boxes, leaders in black, omitted labels as red crosses.
 
 Real data — charts, maps, photos, embeddings and networks from the benchmark, next to other
 labelers — is in [the gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/),
-published with each release's benchmark report.
+published with the latest benchmark report.
 
 ## Benchmark
 

@@ -53,7 +53,7 @@ run, and per scenario the metric tables with every solver's rendering side by si
 bench-report` adds `bench-report/gallery/`: one page of renderings of real-data problems —
 charts, maps, photos, embeddings, networks, priority — solved by the engine, with the
 evaluator's numbers under each, the same problems by the other labelers, frames of an
-interactive zoom, and what the defaults still do badly. It is published with each release's
+interactive zoom, and what the defaults still do badly. It is published with the latest
 report: [the gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/).
 
 ## In CI
