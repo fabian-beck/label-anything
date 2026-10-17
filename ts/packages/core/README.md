@@ -1,5 +1,9 @@
 # @label-anything/core
 
+> **Experimental:** Label Anything is still experimental and under active development.
+> The API, the problem format and the placements can change in any 0.x release, without
+> deprecation.
+
 The [Label Anything](https://github.com/fabian-beck/label-anything) label placement
 engine in pure TypeScript: no native code, no WebAssembly, no runtime dependencies
 besides the sibling packages `@label-anything/text` (font metrics and line breaking),

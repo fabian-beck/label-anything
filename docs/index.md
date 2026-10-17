@@ -5,6 +5,13 @@ description: A host-independent label placement engine for scatterplots, maps, n
 
 # Label Anything
 
+!!! warning "Experimental"
+
+    Label Anything is still experimental and under active development, not
+    production-ready software. The problem format, the APIs of the language bindings and
+    the placements themselves can change in any 0.x release, without deprecation. Try it
+    and report what you find; pin an exact version if you build on it.
+
 **A host-independent label placement engine.** Label Anything places labels — text,
 icons, or anything with a size — next to the features of scatterplots, maps, node-link
 diagrams and illustrations. It avoids whatever you say should not be covered, draws

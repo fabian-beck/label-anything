@@ -18,6 +18,7 @@ strict: true
 exclude_docs: |
   /requirements.txt
   /_hooks/
+  /_overrides/
 
 hooks:
   - docs/_hooks/la_docs.py
@@ -30,6 +31,7 @@ validation:
 
 theme:
   name: material
+  custom_dir: docs/_overrides # the announcement bar (experimental)
   language: en
   font: false # system fonts: no requests to third-party font servers
   icon:

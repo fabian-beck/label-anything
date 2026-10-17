@@ -1,5 +1,9 @@
 # label-anything (Python)
 
+> **Experimental:** Label Anything is still experimental and under active development.
+> The API, the problem format and the placements can change in any 0.x release, without
+> deprecation.
+
 Python binding of **Label Anything**, a host-independent label placement engine: place
 text, icons or any sized label next to points, areas and shapes, avoid what must not be
 covered (vector obstacles, SVG or raster backgrounds), draw leaders without crossings,

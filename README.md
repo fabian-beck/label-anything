@@ -1,5 +1,11 @@
 # Label Anything
 
+> [!WARNING]
+> **Experimental.** Label Anything is still experimental and under active development, not
+> production-ready software. The problem format, the APIs of the language bindings and the
+> placements themselves can change in any 0.x release, without deprecation. Try it and
+> report what you find; pin an exact version if you build on it.
+
 **A host-independent label placement engine.** Label Anything places labels — text,
 icons, or anything with a size — next to selected features in scatterplots, maps,
 node-link diagrams and illustrations. It avoids whatever you say should not be covered,
@@ -21,8 +27,7 @@ draws leader lines when labels must sit at a distance, and never lets leaders cr
 * **Fast, deterministic, everywhere.** A Rust core (native, WASM, Python, C ABI, Java)
   and a pure TypeScript implementation pass the same conformance suite.
 
-> Status: under active development (0.x). See `docs/adr/` for design decisions and
-> `bench/` for the real-world benchmark.
+Design decisions are recorded in `docs/adr/`, the real-world benchmark is in `bench/`.
 
 ## Five lines
 
