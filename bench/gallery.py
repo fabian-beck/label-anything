@@ -74,14 +74,15 @@ SECTIONS = (
     Section("charts", "Charts", "scatterplots, bubbles, line ends", "", (
         Fig("01-software-metrics/cbo-rfc-100-svg", "The 100 most unusual classes of React Native's Java code",
             "Coupling vs. response for 1,206 classes; the 100 k-NN outliers are labeled with their fully "
-            "qualified names, which wrap at package dots. The plot is an SVG whose points, axes and tick "
-            "labels the engine reads as obstacles."),
+            "qualified names, which wrap at package dots; the five most unusual in bold, the rest a size "
+            "smaller (font classes). The plot is an SVG whose points, axes and tick labels the engine reads "
+            "as obstacles."),
         Fig("02-volcano/top50-svg", "Top 50 genes of a volcano plot",
             "16,406 genes from a differential-expression table; the 50 most significant ones are labeled "
-            "over an SVG plot with colored significant genes and dashed thresholds."),
+            "over an SVG plot with colored significant genes and dashed thresholds, the top three in bold."),
         Fig("03-gapminder/y2005-svg", "Gapminder 2005",
-            "Life expectancy vs. fertility, bubble area by population. The year watermark is a soft "
-            "obstacle, the region legend a hard one."),
+            "Life expectancy vs. fertility, bubble area by population, the most populous countries named "
+            "in bold. The year watermark is a soft obstacle, the region legend a hard one."),
         Fig("09-line-end-labels/unemployment-14-vector", "Unemployment by industry",
             "Labels at the right ends of 14 series: only positions right of the line ends are allowed. "
             "Where the ends crowd, their labels stand in a column beside them, in the order of the ends, "
@@ -96,14 +97,14 @@ SECTIONS = (
     )),
     Section("maps", "Maps", "vector, SVG and raster backgrounds", "", (
         Fig("05-airports/europe-names-400-svg", "400 European airports, by city name",
-            "An SVG map at 30 px per degree. Names avoid each other and the airport dots; where they "
-            "crowd, short leaders.", wide=True),
+            "An SVG map at 30 px per degree, the busiest airports in bold. Names avoid each other and the "
+            "airport dots; where they crowd, short leaders.", wide=True),
         Fig("05-airports/world-iata-1000-vector", "The 1,000 busiest airports of the world",
             "IATA codes over country outlines and graticule (soft lines). The most connected airports "
             "come first; red crosses are the {omitted} that did not fit.", wide=True),
         Fig("06-city-pois/monaco-pins-ink", "375 points of interest in Monaco",
-            "Icon and name labels over an OpenStreetMap raster; the engine reads streets and buildings "
-            "from the pixels (ink mode) and keeps names off the busiest parts."),
+            "Icon and name labels over an OpenStreetMap raster, the main sights in bold; the engine reads "
+            "streets and buildings from the pixels (ink mode) and keeps names off the busiest parts."),
         Fig("06-city-pois/monaco-ink", "The same map with small dots instead of pins",
             "Composite labels (icon + name) over the same raster."),
     )),
@@ -127,9 +128,9 @@ SECTIONS = (
         Fig("07-node-link/lesmis-shapes", "Les Misérables, with UML-like nodes",
             "77 characters; rounded rectangles hold internal labels, ellipses get external ones."),
         Fig("07-node-link/cora-circles", "Cora citation network",
-            "150 papers of a citation graph, the best-connected first, in a ForceAtlas2 layout. Edges "
-            "are obstacles; a label that would need a leader through other nodes is left out instead "
-            "({placed} of {total} placed)."),
+            "150 papers of a citation graph in a ForceAtlas2 layout, the most cited first and in bold. "
+            "Edges are obstacles; a label that would need a leader through other nodes is left out "
+            "instead ({placed} of {total} placed)."),
     )),
     Section("priority", "Priority decides what is left out", "",
             "3,221 airports, scored by how isolated they are. With <code>strict</code> omission, a label "
