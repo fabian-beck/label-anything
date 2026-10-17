@@ -154,7 +154,7 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
         return false;
     }
     let dy = s.obs.dynamic;
-    let reach = s.state.leader_reach(s.obs);
+    let reach = s.state.leader_reach(s.obs) + s.state.margin_max();
     let mut conflicts: std::collections::BTreeMap<u32, Vec<u32>> =
         std::collections::BTreeMap::new();
     for (x, &a) in pool.iter().enumerate() {

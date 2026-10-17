@@ -15,8 +15,8 @@
         },
         "label": {
           "type": "box",
-          "width": 370,
-          "height": 270
+          "width": 368,
+          "height": 268
         },
         "priority": 2.0
       },
@@ -47,10 +47,10 @@
         "id": "high",
         "placed": true,
         "box": {
-          "x": 12.828427124746185,
-          "y": 12.828427124746185,
-          "w": 373.6,
-          "h": 273.6
+          "x": 12.121320343559631,
+          "y": 12.121320343559631,
+          "w": 371.6,
+          "h": 271.6
         },
         "anchor": [
           10.0,
@@ -62,15 +62,15 @@
           {
             "type": "box",
             "box": {
-              "x": 14.628427124746185,
-              "y": 14.628427124746185,
-              "w": 370.0,
-              "h": 270.0
+              "x": 13.921320343559632,
+              "y": 13.921320343559632,
+              "w": 368.0,
+              "h": 268.0
             }
           }
         ],
         "leader": null,
-        "cost": 1.1282869728440728,
+        "cost": 0.7106833610319236,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -117,12 +117,12 @@
       "iterations": 800,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 240,
+      "candidates": 239,
       "omission_order": [
         "low"
       ],
       "priority_inversions": 0,
-      "total_cost": 1.1282869728440728,
+      "total_cost": 0.7106833610319236,
       "degraded": {},
       "grid": {
         "cell": 3.0,

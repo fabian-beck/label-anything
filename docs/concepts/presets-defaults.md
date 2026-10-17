@@ -32,7 +32,8 @@ everything else `ink`. The complete presets are on the [presets page](../referen
 | Text | 12 px bundled Noto Sans, padding 0.15 em, buffer ring 0.3 em, line height 1.2 |
 | Marks | circle, r = 2 |
 | Canvas | padding 4 px, labels inside the canvas |
-| Candidates | adjacent + slider + distant, perceptual order (top first), offset 2 px, distant 1.5–8 em |
+| Candidates | adjacent + slider + distant, perceptual order (top first), offset 1 px, distant 1.5–8 em |
+| Spacing | labels keep a margin of 0.2 em from other labels and other items' marks |
 | Leaders | straight, never crossing, never through labels, 0.4 em clear of other marks and leaders, 6 px – 10 em long |
 | Avoidance | labels, items, text, canvas edge and own mark hard; ink 0.1, other classes 1.0 per em² covered |
 | Priority | explicit `item.priority`, else input order; `strict` omission |

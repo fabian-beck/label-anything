@@ -285,6 +285,16 @@ public final class LabelProblem {
       return put("defaults.buffer", length);
     }
 
+    /** Space labels keep from other labels and other marks, in px (default 0.2 em). */
+    public Builder margin(double px) {
+      return put("defaults.margin", px);
+    }
+
+    /** Space labels keep from other labels and other marks ({@code "0.2em"}). */
+    public Builder margin(String length) {
+      return put("defaults.margin", length);
+    }
+
     /** Mark of point anchors without their own mark (default circle r = 2). */
     public Builder defaultMark(Mark mark) {
       return put("defaults.mark", mark);

@@ -1,6 +1,7 @@
 # 0027 — Warm starts nudge blocked boxes, keep leaders, and prefer near moves
 
-* Status: accepted (spec §6.7, §8, §10.1; amends the stability term of ADR 0016)
+* Status: accepted (spec §6.7, §8, §10.1; amends the stability term of ADR 0016); warm-start
+  candidates keep half the label margin (ADR 0028)
 * Date: 2026-10-17
 
 ## Context

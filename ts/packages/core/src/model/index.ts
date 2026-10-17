@@ -166,6 +166,8 @@ export interface Area {
 export interface ItemLengths {
   padding: number;
   buffer: number;
+  /** `defaults.margin`: the space the label keeps from other labels and other marks. */
+  margin: number;
   offset: number;
   innerPadding: number;
   maxDistance: number;
@@ -182,6 +184,7 @@ export interface ItemLengths {
 export interface ItemLengthSpec {
   padding: Length;
   buffer: Length;
+  margin: Length;
   offset: Length;
   innerPadding: Length;
   maxDistance: Length;
@@ -199,6 +202,7 @@ export function resolveLengths(l: ItemLengthSpec, em: number): ItemLengths {
   return {
     padding: l.padding.px(em),
     buffer: l.buffer.px(em),
+    margin: l.margin.px(em),
     offset: l.offset.px(em),
     innerPadding: l.innerPadding.px(em),
     maxDistance: l.maxDistance.px(em),
@@ -1313,6 +1317,7 @@ function buildItem(
   const lenSpec: ItemLengthSpec = {
     padding: lenOf("defaults.padding", get(labelV, "padding")),
     buffer: lenOf("defaults.buffer", undefined),
+    margin: lenOf("defaults.margin", undefined),
     offset: lenOf("placement.offset", get(ip, "offset")),
     innerPadding: lenOf("placement.inner_padding", undefined),
     maxDistance: lenOf("placement.max_distance", undefined),

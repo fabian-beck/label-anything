@@ -508,6 +508,8 @@ export interface Spacing {
   near: number;
   /** Cosine of `leaders.min_angle_between`; 1 turns the angle rule off. */
   cosMin: number;
+  /** The space two labels keep: the larger of the two items' `defaults.margin`. */
+  gap: number;
 }
 
 /**

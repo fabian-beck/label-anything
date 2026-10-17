@@ -158,8 +158,12 @@ export function boundaryPass(s: Solve): void {
       positions = order.map((_, j) => lo + ((hi - lo) * (j + 0.5)) / k);
     } else {
       const desired = order.map((i) => key(i));
+      // at least the larger margin of the two labels apart
       const gaps: number[] = [];
-      for (let j = 1; j < order.length; j++) gaps.push((sizes[j - 1]! + sizes[j]!) * 0.5 + gap);
+      for (let j = 1; j < order.length; j++) {
+        const m = maxf(s.model.items[order[j - 1]!]!.len.margin, s.model.items[order[j]!]!.len.margin);
+        gaps.push((sizes[j - 1]! + sizes[j]!) * 0.5 + maxf(gap, m));
+      }
       positions = stack(desired, gaps, lo + sizes[0]! * 0.5, hi - sizes[sizes.length - 1]! * 0.5);
     }
     // assignment: straight leaders → min total length; otherwise keep the order

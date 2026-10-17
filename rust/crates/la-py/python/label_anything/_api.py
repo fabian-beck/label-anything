@@ -228,6 +228,7 @@ def place(
     font_file: Any = None,
     padding: Optional[Length] = None,
     buffer: Optional[Length] = None,
+    margin: Optional[Length] = None,
     mark: Any = None,
     wrap: Optional[WrapLike] = None,
     truncate: Optional[str] = None,

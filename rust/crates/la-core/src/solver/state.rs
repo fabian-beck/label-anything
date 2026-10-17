@@ -32,6 +32,9 @@ pub struct State {
     /// `leaders.min_angle_between`, and how far they reach beyond a candidate's box.
     clr: Vec<f64>,
     em: Vec<f64>,
+    /// The margin of each item's label (`defaults.margin`) and the largest.
+    margin: Vec<f64>,
+    margin_max: f64,
     cos_min: f64,
     reach: f64,
     /// Placed items already tested by a conflict query.
@@ -40,8 +43,9 @@ pub struct State {
 
 impl State {
     /// `keys`: the priority key level of every item (smaller = more important); `clr`
-    /// and `em`: the leader clearance and font size of every item; `cos_min`: the cosine
-    /// of `leaders.min_angle_between`.
+    /// and `em`: the leader clearance and font size of every item; `margin`: the label
+    /// margin of every item; `cos_min`: the cosine of `leaders.min_angle_between`.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         n_items: usize,
         extent: &Rect,
@@ -49,6 +53,7 @@ impl State {
         keys: Vec<usize>,
         clr: Vec<f64>,
         em: Vec<f64>,
+        margin: Vec<f64>,
         cos_min: f64,
     ) -> State {
         let n_keys = keys.iter().copied().max().map(|k| k + 1).unwrap_or(0);
@@ -56,7 +61,10 @@ impl State {
         if cos_min < 1.0 {
             reach = em.iter().copied().fold(reach, maxf);
         }
+        let margin_max = margin.iter().copied().fold(0.0, maxf);
         State {
+            margin,
+            margin_max,
             placed: vec![None; n_items],
             relaxed: vec![false; n_items],
             label_ix: DynIndex::new(extent, cell),
@@ -79,6 +87,11 @@ impl State {
         }
     }
 
+    /// The largest label margin: how far label-label conflicts reach beyond a box.
+    pub fn margin_max(&self) -> f64 {
+        self.margin_max
+    }
+
     /// How far leader conflicts reach beyond a candidate's bounding box when leaders may
     /// not come close (`avoid.leader.leaders` hard): the largest clearance, and the
     /// largest font size with the angle rule.
@@ -96,6 +109,7 @@ impl State {
             clr: maxf(self.clr[i], self.clr[j]),
             near: maxf(self.em[i], self.em[j]),
             cos_min: self.cos_min,
+            gap: maxf(self.margin[i], self.margin[j]),
         }
     }
 
@@ -193,7 +207,8 @@ impl State {
         let dy = &obs.dynamic;
         let bb = c.bbox();
         // labels near the candidate (label-label, candidate leaders through placed labels)
-        self.label_ix.query(&bb, &mut self.buf);
+        self.label_ix
+            .query(&bb.inflate(self.margin_max), &mut self.buf);
         for &j in &self.buf {
             if j as usize == skip {
                 continue;
@@ -202,7 +217,8 @@ impl State {
                 continue;
             };
             let p = &cands[pid as usize];
-            if dy.label_labels.is_hard() && c.label_overlaps(p) {
+            let gap = maxf(self.margin[c.item as usize], self.margin[j as usize]);
+            if dy.label_labels.is_hard() && c.label_overlaps_gap(p, gap) {
                 out.push(j);
                 continue;
             }
@@ -279,7 +295,8 @@ impl State {
     ) -> Option<usize> {
         let dy = &obs.dynamic;
         let bb = c.bbox();
-        self.label_ix.query(&bb, &mut self.buf);
+        self.label_ix
+            .query(&bb.inflate(self.margin_max), &mut self.buf);
         for &j in &self.buf {
             let ju = j as usize;
             if ju == skip || !pred(ju) {
@@ -287,7 +304,8 @@ impl State {
             }
             let Some(pid) = self.placed[ju] else { continue };
             let p = &cands[pid as usize];
-            if dy.label_labels.is_hard() && c.label_overlaps(p) {
+            let gap = maxf(self.margin[c.item as usize], self.margin[ju]);
+            if dy.label_labels.is_hard() && c.label_overlaps_gap(p, gap) {
                 return Some(ju);
             }
             if dy.leader_labels.is_hard()

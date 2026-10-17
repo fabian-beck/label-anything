@@ -147,7 +147,16 @@ pub struct Cand {
     /// Exact label shape for non-rectangular labels (icons with circle, rounded or
     /// polygon shapes); `None` = the box itself.
     pub lshape: Option<Box<Shape>>,
+    /// A warm-start candidate: the previous box (at any size) or a nudge of it; it keeps
+    /// [`WARM_MARGIN`] of the margin.
+    pub warm: bool,
 }
+
+/// The share of `defaults.margin` a label needs to keep its warm-start place (spec
+/// §4.4): from another label that keeps its own, and from other marks. A label takes a
+/// new place only with the whole margin but leaves its old one only when its neighbours
+/// come closer than half of it.
+pub const WARM_MARGIN: f64 = 0.5;
 
 /// Whether labels of this shape are their box ([`label_shape`] gives `None`).
 pub fn is_rect_shape(shape: &crate::model::LabelShape) -> bool {
@@ -202,6 +211,21 @@ impl Cand {
             (Some(a), Some(b)) => crate::geom::shape::shapes_overlap(a, b),
         }
     }
+    /// The labels overlap or, with `gap > EPS`, their boxes come closer than `gap`
+    /// ([`WARM_MARGIN`] of it when both are warm-start candidates). Boxes `gap` apart up
+    /// to rounding (stacked columns) keep it.
+    pub fn label_overlaps_gap(&self, other: &Cand, gap: f64) -> bool {
+        let gap = if self.warm && other.warm {
+            WARM_MARGIN * gap
+        } else {
+            gap
+        };
+        if gap > crate::geom::EPS {
+            self.rect.dist_rect(&other.rect) < gap - crate::geom::EPS
+        } else {
+            self.label_overlaps(other)
+        }
+    }
     /// The label's interior overlaps shape `s`.
     pub fn label_overlaps_shape(&self, s: &Shape) -> bool {
         match &self.lshape {
@@ -238,6 +262,7 @@ impl Cand {
             evaluated: false,
             bside: 255,
             lshape: None,
+            warm: false,
         }
     }
     /// Bounding box of label and leaders.

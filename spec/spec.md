@@ -182,6 +182,23 @@ are tested on their grid: a rectangle "touches" a raster class iff its covered a
 key `"*"` is the default for classes not listed. Unknown classes in `avoid` (not present
 in any source and not reserved) produce a validation **warning** `unknown_class`.
 
+**Label margin** (`defaults.margin`, 0.2 em; ADR 0028). Hard `labels` and `items` keep a
+label away from what is not its own, while it touches its own mark at `placement.offset`:
+
+* With `avoid.label.labels` hard, two labels conflict when their boxes come closer than
+  the larger margin of their items, `m`: `dist(box_a, box_b) < m − EPS` (boxes `m` apart
+  up to rounding, as in stacked columns, do not). With `m ≤ EPS`, their interiors must
+  not overlap (exact shapes).
+* With `avoid.label.items` hard, a label (not internal) overlaps no other item's mark and
+  keeps its item's margin `m` from it: it is infeasible when `dist(mark_j, box) < m − EPS`
+  and `dist(mark_j, box) < dist(mark_j, bbox(mark_i))` — never more than the other mark
+  keeps from the bounding box of its own mark, so that items on top of or right next to
+  each other can still be labeled.
+* Warm-start candidates (§6.7: an item's warm-start box at any size, and its nudges)
+  keep half the margin: two of them conflict below `m / 2`, and one is infeasible below
+  `m / 2` from another mark. A label stays where it is until its neighbours come closer
+  than half the margin, but takes a new place only with the whole margin.
+
 ### 4.5 SVG backgrounds
 
 Implemented identically by `label-anything-svg` and `@label-anything/svg` (ADR 0013) and
@@ -653,7 +670,8 @@ default ladder has no `boundary` step, since a label that fits nowhere near its 
 would get a leader across the picture (ADR 0019).
 Slots in the margins along `placement.boundary.sides`, `margin` from the edge. Labels on
 one side are stacked by 1-D isotonic packing around their anchors' coordinates (`stack`)
-or evenly spread (`spread`); the assignment of items to slots minimizes total leader
+or evenly spread (`spread`), with gaps of the larger of `placement.boundary.gap` and the
+two labels' margin (§4.4); the assignment of items to slots minimizes total leader
 length (min-cost bipartite matching), which is crossing-free for straight leaders.
 
 ### 6.7 Static cost and pruning
@@ -700,6 +718,8 @@ Filtering while generating (ADR 0015), always exact:
   §6.2 are, on the allowed position their center points to (as the warm-start box);
   only statically feasible ones count. They are made when §10.1 asks for them (ADR
   0027).
+* Warm-start candidates (the warm-start box, at any size, and its nudges) keep half the
+  label margin (§4.4, ADR 0028).
 
 ### 6.8 Fan labels
 
@@ -732,7 +752,8 @@ its font size.
   (below).
 * **Layout.** Members ordered by anchor y, x, index keep their placed variant (else the
   first). Their slots are stacked like boundary labels (`stack`, gaps
-  `(h_a + h_b) / 2 + boundary.gap`, within the label area) around the anchors' heights.
+  `(h_a + h_b) / 2 + max(boundary.gap, m)` with `m` the larger margin of the two labels,
+  within the label area) around the anchors' heights.
   The labels' near side is at `edge ± run`: `edge` the outermost side of the members'
   mark boxes, `run = max(min(rise, room), 1.5 em)` (`rise` the largest vertical distance
   between a member's anchor height and its slot, so that leaders are at most 45° steep;

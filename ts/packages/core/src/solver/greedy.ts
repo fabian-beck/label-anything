@@ -21,7 +21,7 @@ import { leadersOverlapRect } from "./state.js";
  * between their leaders.
  */
 export function pairConflict(a: Cand, b: Cand, dy: Dynamic, sp: Spacing): boolean {
-  if (dy.labelLabels.kind === AvoidKind.Hard && a.labelOverlaps(b)) return true;
+  if (dy.labelLabels.kind === AvoidKind.Hard && a.labelOverlapsGap(b, sp.gap)) return true;
   if (dy.leaderLabels.kind === AvoidKind.Hard) {
     if (leadersOverlapRect(a, b.rect)) return true;
     if (leadersOverlapRect(b, a.rect)) return true;
@@ -426,7 +426,7 @@ function commit(s: Solve, g: Greedy, i: number, c: number, relaxed: boolean): vo
   // kill conflicting level-0 candidates of other undecided items
   const cand = s.cands[c]!;
   const ids = g.ids;
-  s.candIx.query(cand.bbox().inflate(1e-6 + s.state.leaderReach(s.obs)), ids);
+  s.candIx.query(cand.bbox().inflate(1e-6 + s.state.leaderReach(s.obs) + s.state.marginMax()), ids);
   const dy = s.obs.dynamic;
   for (let q = 0; q < ids.len; q++) {
     const k = ids.get(q);
@@ -459,7 +459,7 @@ function unplaceItem(s: Solve, g: Greedy, i: number): void {
   g.live[i] = live;
   // revive level-0 candidates that only conflicted with this label
   const ids = new IdList();
-  s.candIx.query(s.cands[c]!.bbox().inflate(1e-6 + s.state.leaderReach(s.obs)), ids);
+  s.candIx.query(s.cands[c]!.bbox().inflate(1e-6 + s.state.leaderReach(s.obs) + s.state.marginMax()), ids);
   for (let q = 0; q < ids.len; q++) {
     const k = ids.get(q);
     if (g.alive[k] || !s.cands[k]!.feasible) continue;
@@ -527,7 +527,7 @@ function bestLevel0(s: Solve, g: Greedy, i: number): number | null {
 function lookahead(s: Solve, g: Greedy, i: number, c: number): number {
   const cand = s.cands[c]!;
   const ids = g.ids;
-  s.candIx.query(cand.bbox().inflate(1e-6 + s.state.leaderReach(s.obs)), ids);
+  s.candIx.query(cand.bbox().inflate(1e-6 + s.state.leaderReach(s.obs) + s.state.marginMax()), ids);
   const dy = s.obs.dynamic;
   for (let q = 0; q < ids.len; q++) {
     const k = ids.get(q);

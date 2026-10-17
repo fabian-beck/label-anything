@@ -92,7 +92,7 @@
         "id": "rot",
         "placed": true,
         "box": {
-          "x": 494.3205080756888,
+          "x": 493.3205080756888,
           "y": 251.36774596215562,
           "w": 79.81199999999995,
           "h": 19.94399999999999
@@ -122,7 +122,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.125,
+        "cost": 0.09999999999999999,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -134,7 +134,7 @@
         "id": "tiny",
         "placed": true,
         "box": {
-          "x": 206.0,
+          "x": 205.0,
           "y": 290.028,
           "w": 159.62400000000002,
           "h": 19.94399999999996
@@ -164,7 +164,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.125,
+        "cost": 0.09999999999999999,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -188,7 +188,7 @@
       "candidates": 162,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 0.1,
+      "total_cost": 0.04999999999999999,
       "degraded": {},
       "grid": {
         "cell": 3.0,

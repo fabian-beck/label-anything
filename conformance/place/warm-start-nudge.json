@@ -1,7 +1,7 @@
 {
   "kind": "place",
   "name": "a previous box that an obstacle now clips slides along the mark instead of jumping",
-  "$comment": "The previous result placed Alpha above its point; a hard obstacle now covers the box's left 0.5 px. The box slides 0.05 em (0.6 px, the smallest nudge) to the right along the top of the mark; the nearest slider candidate would be 4.2 px away.",
+  "$comment": "The previous result placed Alpha above its point; a hard obstacle now covers the box's left 0.5 px. The box slides 0.05 em (0.6 px, the smallest nudge) to the right along the top of the mark; the nearest slider candidate would be 4.1 px away.",
   "problem": {
     "canvas": {
       "width": 200,
@@ -52,7 +52,7 @@
           ],
           "box": {
             "x": 82.054,
-            "y": 56.056,
+            "y": 57.056,
             "w": 35.892,
             "h": 19.944
           }
@@ -75,7 +75,7 @@
     "box": {
       "a": {
         "x": 82.654,
-        "y": 56.056,
+        "y": 57.056,
         "w": 35.892,
         "h": 19.944,
         "tol": 0.01

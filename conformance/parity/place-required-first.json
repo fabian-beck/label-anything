@@ -72,7 +72,7 @@
         "id": "must",
         "placed": true,
         "box": {
-          "x": 64.0,
+          "x": 63.0,
           "y": 20.028,
           "w": 31.97999999999999,
           "h": 19.944000000000003
@@ -102,7 +102,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.55,
+        "cost": 0.525,
         "degrade_steps": [],
         "priority": {
           "required": true,
@@ -129,7 +129,7 @@
         "big"
       ],
       "priority_inversions": 0,
-      "total_cost": 0.55,
+      "total_cost": 0.525,
       "degraded": {},
       "grid": {
         "cell": 3.0,

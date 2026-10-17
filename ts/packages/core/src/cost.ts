@@ -5,7 +5,7 @@
  * @module
  */
 
-import { BLOCK_EDGE, BLOCK_ITEMS, BLOCK_LABELS, type Block, type Cand, Kind, type Leader } from "./candidates.js";
+import { BLOCK_EDGE, BLOCK_ITEMS, BLOCK_LABELS, type Block, type Cand, Kind, type Leader, WARM_MARGIN } from "./candidates.js";
 import type { Env } from "./env.js";
 import { EPS, P, Rect, segOverlapsRectXY } from "./geom/index.js";
 import type { Variant } from "./labels.js";
@@ -94,7 +94,8 @@ export class Evaluator {
     // 2. items (exact); one query serves the buffer ring and the ambiguity term
     const ring = r.inflate(item.len.buffer);
     const gapGuess = item.len.offset + 0.5 * em;
-    const reach = item.len.buffer > gapGuess ? item.len.buffer : gapGuess;
+    const margin = c.warm ? WARM_MARGIN * item.len.margin : item.len.margin;
+    const reach = maxf(item.len.buffer > gapGuess ? item.len.buffer : gapGuess, margin);
     const buf = this.buf;
     obs.itemIndex.query(r.inflate(reach), buf);
     const labelItemsHard = dy.labelItems.kind === AvoidKind.Hard;
@@ -117,7 +118,15 @@ export class Evaluator {
         continue;
       }
       otherFound = true;
-      if (labelItemsHard && c.labelOverlapsShape(sj)) acc.violate(BLOCK_ITEMS, false, 0);
+      if (!labelItemsHard) continue;
+      if (c.labelOverlapsShape(sj)) {
+        acc.violate(BLOCK_ITEMS, false, 0);
+      } else if (margin > EPS) {
+        // the margin (up to rounding), but never more than the mark keeps from the own
+        // mark's box
+        const d = sj.distRect(r);
+        if (d < margin - EPS && d < sj.distRect(item.shape.bbox())) acc.violate(BLOCK_ITEMS, false, 0);
+      }
     }
     if (dy.labelItems.kind === AvoidKind.Soft) acc.add("items", (dy.labelItems.w * obs.otherItemsCovered(i, r)) / em2);
     // the ring only sees other items when the item query found any besides the own

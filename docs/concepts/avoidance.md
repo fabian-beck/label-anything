@@ -53,7 +53,7 @@ The key `"*"` sets the value of every class the map does not list.
 
 | Map | Default | |
 |---|---|---|
-| `avoid.label` | `labels`, `items`, `text`, `canvas_edge`, `own_mark`: hard · `ink`: 0.1 · `*`: 1.0 | label box vs. class |
+| `avoid.label` | `labels`, `items`, `text`, `canvas_edge`, `own_mark`: hard · `ink`: 0.1 · `*`: 1.0 | label box vs. class; hard `labels` and `items` keep the label margin (`defaults.margin`, 0.2 em) from other labels and other items' marks |
 | `avoid.leader` | `leaders`, `labels`, `items`: hard · `ink`: 0.05 · `*`: 0.2 | leader vs. class; `leaders` = crossings and leaders closer than `leaders.clearance`, `labels` = passing through other labels, `items` = passing other items' marks closer than `leaders.clearance` |
 | `avoid.buffer` | `items`: 1.0 · `leaders`: 0.5 | soft weights of the ring around each label (width `defaults.buffer`, 0.3 em): keeps labels from sitting so close to another item that they look like its label |
 | `avoid.relaxable` | `["points", "ink", "lines"]` | hard classes the `soft_overlap` ladder step may turn into a weight (`degrade_options.soft_overlap_weight`, 10) |

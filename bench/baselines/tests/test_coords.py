@@ -283,7 +283,8 @@ def test_result_is_schema_valid_and_short_stubs_are_not_leaders():
     prob = problem([item("A", 50, 50), item("B", 150, 50), item("C", 100, 80)], width=W, height=H)
     sc = build_scene(prob)
     a, b_ = sc.labels[0], sc.labels[1]
-    near = Box(52.0 + 2.0, 50.0 - 2.0 - a.h - 2.0, 52.0 + 2.0 + a.w, 50.0 - 4.0)   # adjacent-ish
+    o = a.offset                                                                  # placement.offset
+    near = Box(52.0 + o, 50.0 - 2.0 - a.h - o, 52.0 + o + a.w, 50.0 - 2.0 - o)   # adjacent-ish
     far = Box(150.0 + 40.0 - b_.w, 10.0, 190.0, 10.0 + b_.h)
     assert leader_for(a, near, nearest_on_box(near, (50.0, 50.0))) is None
     lead = leader_for(b_, far, nearest_on_box(far, (150.0, 50.0)))

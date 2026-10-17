@@ -13,7 +13,7 @@ distant, smaller — before the label is given up.
 no free adjacent position).
 
 **`adjacent`** — 8 fixed positions around the mark: the label's corner or side midpoint
-touches the mark inflated by `placement.offset` (2 px), in the direction of the position.
+touches the mark inflated by `placement.offset` (1 px), in the direction of the position.
 `position_order` ranks them, which matters through the position cost:
 
 * `perceptual` (default): top, right, bottom, left, top-right, bottom-right, top-left,

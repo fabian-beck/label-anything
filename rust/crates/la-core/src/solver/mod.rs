@@ -125,6 +125,7 @@ impl<'a> Solve<'a> {
                 pri.prio.iter().map(|p| p.key).collect(),
                 model.items.iter().map(|it| it.len.clearance).collect(),
                 model.items.iter().map(|it| it.em()).collect(),
+                model.items.iter().map(|it| it.len.margin).collect(),
                 if model.leaders.min_angle_between > 0.0 {
                     la_expr::det_math::cos_deg(model.leaders.min_angle_between)
                 } else {
@@ -516,6 +517,7 @@ impl<'a> Solve<'a> {
             let item = &self.model.items[i];
             let v = &self.variants[i][vi];
             let mut c = candidates::warm(self.model, item, vi, v, b)?;
+            c.warm = true;
             c.level = level;
             c.lshape = candidates::label_shape(&c.rect, &v.shape);
             Evaluator::new(self.model, self.obs, self.env).eval(&mut c, v, None);
@@ -546,6 +548,7 @@ impl<'a> Solve<'a> {
             let v = &self.variants[i][vi];
             for (si, mut c) in candidates::warm_nudges(item, vi, v, rect, &steps, self.models[i]) {
                 c.level = 0;
+                c.warm = true;
                 c.lshape = candidates::label_shape(&c.rect, &v.shape);
                 Evaluator::new(self.model, self.obs, self.env).eval(&mut c, v, None);
                 if c.feasible {
@@ -767,6 +770,7 @@ fn warm_candidate(
         .position(|v| (v.w - b.w()).abs() <= 0.5 && (v.h - b.h()).abs() <= 0.5)?;
     let v = &variants[vi];
     let mut c = candidates::warm(model, item, vi, v, *b)?;
+    c.warm = true;
     c.level = 0;
     c.lshape = candidates::label_shape(&c.rect, &v.shape);
     Evaluator::new(model, obs, env).eval(&mut c, v, None);

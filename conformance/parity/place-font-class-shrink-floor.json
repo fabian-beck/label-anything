@@ -2,7 +2,7 @@
   "kind": "parity",
   "problem": {
     "canvas": {
-      "width": 54,
+      "width": 53,
       "height": 60,
       "padding": 0
     },
@@ -70,7 +70,7 @@
         "id": "a",
         "placed": true,
         "box": {
-          "x": 14.0,
+          "x": 13.0,
           "y": 8.996025000000001,
           "w": 38.33584999999999,
           "h": 12.007949999999996
@@ -100,7 +100,7 @@
           "scale": 0.7224999999999999
         },
         "leader": null,
-        "cost": 0.5042169999999999,
+        "cost": 0.474217,
         "degrade_steps": [
           "shrink:0.7225"
         ],
@@ -148,7 +148,7 @@
         "b"
       ],
       "priority_inversions": 0,
-      "total_cost": 0.5042169999999999,
+      "total_cost": 0.474217,
       "degraded": {
         "shrunk": 1
       },

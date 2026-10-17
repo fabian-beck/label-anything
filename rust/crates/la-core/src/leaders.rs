@@ -410,6 +410,8 @@ pub struct Spacing {
     pub near: f64,
     /// Cosine of `leaders.min_angle_between`; 1 turns the angle rule off.
     pub cos_min: f64,
+    /// The space two labels keep: the larger of the two items' `defaults.margin`.
+    pub gap: f64,
 }
 
 /// Whether two leaders of different labels conflict when `avoid.leader.leaders` is hard

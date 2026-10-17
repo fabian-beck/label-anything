@@ -3,6 +3,12 @@
     "width": 300,
     "height": 200
   },
+  "defaults": {
+    "margin": 0
+  },
+  "placement": {
+    "offset": 2
+  },
   "items": [
     {
       "id": "p0",

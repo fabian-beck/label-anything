@@ -48,6 +48,7 @@ OPTION_PATHS: Dict[str, str] = {
     "font_file": "defaults.font.file",
     "padding": "defaults.padding",
     "buffer": "defaults.buffer",
+    "margin": "defaults.margin",
     "mark": "defaults.mark",
     "truncate": "defaults.truncate",
     "shaping": "text.shaping",

@@ -41,7 +41,7 @@ def result(placements, **stats):
     return {"version": "1", "placements": placements, "stats": st}
 
 
-def top_right_box(x, y, r=2.0, offset=2.0, w=30, h=10):
+def top_right_box(x, y, r=2.0, offset=1.0, w=30, h=10):
     """Box of the top-right adjacent position around a circle (spec §6.1)."""
     sx = x + (r + offset) * S2
     sy = y - (r + offset) * S2

@@ -32,13 +32,14 @@ are stale.
 | `defaults.font.line_height` | `1.2` | > 0 | Line pitch in em for wrapped text. |
 | `defaults.padding` | `"0.15em"` | length ≥ 0 | Label box inflation (part of the reported box). |
 | `defaults.buffer` | `"0.3em"` | length ≥ 0 | Soft ambiguity buffer ring around each label (Mumtaz et al. 2019). |
+| `defaults.margin` | `"0.2em"` | length ≥ 0 | Space a label keeps from other labels (the larger of the two margins) and from other items' marks while `avoid.label` has them hard (spec §4.4): not from its own mark (`placement.offset`), never more than another mark keeps from the own mark's box, half for warm-start candidates. |
 | `defaults.mark` | `{"shape":"circle","r":2}` | mark | Mark of point anchors without `anchor.mark`. |
 | `defaults.wrap` | `null` | wrap or null | No wrap settings: single line; the `wrap` ladder step may still try 2–3 lines. |
 | `defaults.truncate` | `"none"` | none \| end \| middle | Truncation when wrapped text exceeds `max_lines`. |
 | `text.shaping` | `"auto"` | auto \| simple \| full | `simple` is identical in every implementation. |
 | `placement.models` | `["adjacent","slider","distant"]` | list | Candidate models. Preset `auto` adds `distant` only when crowded. |
 | `placement.position_order` | `"perceptual"` | enum or list | perceptual = top, right, bottom, left, top-right, bottom-right, top-left, bottom-left. A list also keeps distant labels on its sides (spec §6.4). |
-| `placement.offset` | `2` | length ≥ 0 | Gap between the (inflated) mark and an adjacent label. |
+| `placement.offset` | `1` | length ≥ 0 | Gap between the (inflated) mark and an adjacent label. |
 | `placement.max_distance` | `"8em"` | length ≥ 0 | Largest anchor–label distance of distant labels. |
 | `placement.min_distance` | `"1.5em"` | length ≥ 0 | Innermost ring of distant candidates. |
 | `placement.slider_per_quadrant` | `4` | int ≥ 0 | Slider samples between two fixed positions. |

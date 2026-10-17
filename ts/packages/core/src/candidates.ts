@@ -6,7 +6,7 @@
  * @module
  */
 
-import { P, Rect, bboxOf, distPointSegXY } from "./geom/index.js";
+import { EPS, P, Rect, bboxOf, distPointSegXY } from "./geom/index.js";
 import { Shape, shapesOverlap } from "./geom/shape.js";
 import type { Variant } from "./labels.js";
 import { cmpF64, len2d, maxf, minf, signEps, sinCosDegInto } from "./math.js";
@@ -121,6 +121,14 @@ export class Leader {
   }
 }
 
+/**
+ * The share of `defaults.margin` a label needs to keep its warm-start place (spec §4.4):
+ * from another label that keeps its own, and from other marks. A label takes a new place
+ * only with the whole margin but leaves its old one only when its neighbours come closer
+ * than half of it.
+ */
+export const WARM_MARGIN = 0.5;
+
 /** A label candidate. */
 export class Cand {
   leaders: Leader[] = [];
@@ -148,6 +156,11 @@ export class Cand {
    * shapes); null = the box itself.
    */
   lshape: Shape | null = null;
+  /**
+   * A warm-start candidate: the previous box (at any size) or a nudge of it; it keeps
+   * {@link WARM_MARGIN} of the margin.
+   */
+  warm = false;
 
   constructor(
     public item: number,
@@ -183,6 +196,16 @@ export class Cand {
     return b === null ? a.overlapsRect(other.rect) : shapesOverlap(a, b);
   }
 
+  /**
+   * The labels overlap or, with `gap > EPS`, their boxes come closer than `gap`
+   * ({@link WARM_MARGIN} of it when both are warm-start candidates). Boxes `gap` apart up to
+   * rounding (stacked columns) keep it.
+   */
+  labelOverlapsGap(other: Cand, gap: number): boolean {
+    const g = this.warm && other.warm ? WARM_MARGIN * gap : gap;
+    return g > EPS ? this.rect.distRect(other.rect) < g - EPS : this.labelOverlaps(other);
+  }
+
   /** The label's interior overlaps shape `s`. */
   labelOverlapsShape(s: Shape): boolean {
     return this.lshape === null ? s.overlapsRect(this.rect) : shapesOverlap(this.lshape, s);
@@ -200,6 +223,7 @@ export class Cand {
     c.evaluated = this.evaluated;
     c.bside = this.bside;
     c.lshape = this.lshape;
+    c.warm = this.warm;
     return c;
   }
 }

@@ -16,8 +16,8 @@
         },
         "label": {
           "type": "box",
-          "width": 370,
-          "height": 270
+          "width": 368,
+          "height": 268
         },
         "priority": 2.0
       },

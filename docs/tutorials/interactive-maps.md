@@ -30,17 +30,20 @@ then zooming in:
 ```
 
 ```text
-zoom 1.0: <Result placed=34/40 hard_violations=0 omitted=6> None
-zoom 1.0: <Result placed=35/40 hard_violations=0 omitted=5> {'moved': 0, 'added': 1, 'removed': 0, 'mean_displacement': 0.0}
-zoom 1.3: <Result placed=40/40 hard_violations=0 omitted=0> {'moved': 12, 'added': 5, 'removed': 0, 'mean_displacement': 8.5}
-zoom 1.7: <Result placed=36/36 hard_violations=0 omitted=0> {'moved': 10, 'added': 0, 'removed': 0, 'mean_displacement': 10.2}
-zoom 2.2: <Result placed=25/25 hard_violations=0 omitted=0> {'moved': 7, 'added': 0, 'removed': 0, 'mean_displacement': 8.8}
+zoom 1.0: <Result placed=35/40 hard_violations=0 omitted=5> None
+zoom 1.0: <Result placed=35/40 hard_violations=0 omitted=5> {'moved': 7, 'added': 0, 'removed': 0, 'mean_displacement': 13.5}
+zoom 1.3: <Result placed=39/40 hard_violations=0 omitted=1> {'moved': 14, 'added': 4, 'removed': 0, 'mean_displacement': 16.9}
+zoom 1.7: <Result placed=36/36 hard_violations=0 omitted=0> {'moved': 15, 'added': 1, 'removed': 0, 'mean_displacement': 12.3}
+zoom 2.2: <Result placed=25/25 hard_violations=0 omitted=0> {'moved': 7, 'added': 0, 'removed': 0, 'mean_displacement': 8.4}
 ```
 
 Measured as the change of each label's offset from its point between frames, the labels
-move 6.8 px per frame with warm starts against 12.5 px without (the program computes
+move 13.1 px per frame with warm starts against 21.1 px without (the program computes
 both). The remaining moves are labels whose old place collides with a label that appeared,
-or that gain a better position as space opens up.
+or that gain a better position as space opens up — here mostly the few that need a leader
+at the first zoom levels: 40 cities at 14 px leave little room once labels keep their
+margin (`defaults.margin`, 0.2 em). A smaller margin trades spacing for steadier labels
+(0.1 em: 6.9 px warm-started; 0: 4.5 px).
 
 ## Nesting
 
@@ -69,7 +72,7 @@ better place opens up. A d3-force layout, re-solved every 4th tick:
 ```
 
 ```text
-30 frames; labels move 0.7 px per frame warm-started, 4.9 px from scratch
+30 frames; labels move 0.7 px per frame warm-started, 5.0 px from scratch
 ```
 
 The [benchmark](../benchmark.md)'s stability sequences (scenario 11) measure this on
@@ -80,12 +83,12 @@ between frames:
 
 | sequence | | mean move | side changes | jumps |
 |---|---|---|---|---|
-| force layout running, 61 frames | from scratch | 4.9 px | 12.2 % | 11.4 % |
-| | warm-started | 2.3 px | 6.9 % | 5.5 % |
-| node dragged, 41 frames | from scratch | 7.5 px | 17.8 % | 17.0 % |
-| | warm-started | 2.3 px | 6.9 % | 4.8 % |
-| pan and zoom, 30 frames | from scratch | 9.1 px | 32.0 % | 27.7 % |
-| | warm-started | 2.8 px | 11.1 % | 7.9 % |
+| force layout running, 61 frames | from scratch | 5.7 px | 13.1 % | 13.1 % |
+| | warm-started | 2.6 px | 7.4 % | 5.1 % |
+| node dragged, 41 frames | from scratch | 8.7 px | 20.5 % | 19.8 % |
+| | warm-started | 2.3 px | 7.1 % | 4.8 % |
+| pan and zoom, 30 frames | from scratch | 9.8 px | 32.2 % | 29.4 % |
+| | warm-started | 3.4 px | 12.5 % | 9.1 % |
 
 For animation:
 

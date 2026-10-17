@@ -165,7 +165,9 @@ for _i in range(_n):
     _x, _y = _rnd.uniform(10, _w - 10), _rnd.uniform(10, _h - 10)
     _items.append({"id": f"p{_i}", "anchor": {"type": "point", "x": round(_x, 1), "y": round(_y, 1)},
                    "label": {"type": "text", "text": "x" * _rnd.randint(2, 9)}, "priority": _rnd.randint(0, 9)})
-problems["strict-repair"] = {"canvas": {"width": _w, "height": _h}, "items": _items}
+# with the settings it was found with: no label margin, 2 px offset (ADR 0028)
+problems["strict-repair"] = {"canvas": {"width": _w, "height": _h}, "defaults": {"margin": 0},
+                             "placement": {"offset": 2}, "items": _items}
 
 problems["leaders-angles"] = {
     "canvas": {"width": 500, "height": 400},

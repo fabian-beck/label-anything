@@ -28,7 +28,7 @@
         "placed": true,
         "box": {
           "x": 82.054,
-          "y": 36.056,
+          "y": 37.056,
           "w": 35.891999999999996,
           "h": 19.944000000000003
         },
@@ -57,7 +57,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.049999999999999996,
+        "cost": 0.024999999999999998,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -81,7 +81,7 @@
       "candidates": 40,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 0.049999999999999996,
+      "total_cost": 0.024999999999999998,
       "degraded": {},
       "grid": {
         "cell": 3.0,

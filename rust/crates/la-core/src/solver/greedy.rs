@@ -12,7 +12,7 @@ use std::collections::BinaryHeap;
 /// Exact hard conflict between two candidates of different items; `sp`: the spacing
 /// rules between their leaders.
 pub fn pair_conflict(a: &Cand, b: &Cand, dy: &Dynamic, sp: Spacing) -> bool {
-    if dy.label_labels.is_hard() && a.label_overlaps(b) {
+    if dy.label_labels.is_hard() && a.label_overlaps_gap(b, sp.gap) {
         return true;
     }
     if dy.leader_labels.is_hard() {
@@ -402,8 +402,10 @@ fn commit(s: &mut Solve, g: &mut Greedy, i: usize, c: u32, relaxed: bool) {
     // kill conflicting level-0 candidates of other undecided items
     let bb = s.cands[c as usize].bbox();
     let mut ids = Vec::new();
-    s.cand_ix
-        .query(&bb.inflate(1e-6 + s.state.leader_reach(s.obs)), &mut ids);
+    s.cand_ix.query(
+        &bb.inflate(1e-6 + s.state.leader_reach(s.obs) + s.state.margin_max()),
+        &mut ids,
+    );
     let dy = s.obs.dynamic;
     for k in ids {
         let k = k as usize;
@@ -450,8 +452,10 @@ fn unplace_item(s: &mut Solve, g: &mut Greedy, i: usize) {
     // revive level-0 candidates that only conflicted with this label
     let bb = s.cands[c as usize].bbox();
     let mut ids = Vec::new();
-    s.cand_ix
-        .query(&bb.inflate(1e-6 + s.state.leader_reach(s.obs)), &mut ids);
+    s.cand_ix.query(
+        &bb.inflate(1e-6 + s.state.leader_reach(s.obs) + s.state.margin_max()),
+        &mut ids,
+    );
     let mut scratch = Vec::new();
     for k in ids {
         let k = k as usize;
@@ -538,7 +542,9 @@ fn lookahead(s: &Solve, g: &mut Greedy, i: usize, c: u32) -> f64 {
     let cand = &s.cands[c as usize];
     let mut ids = Vec::new();
     s.cand_ix.query(
-        &cand.bbox().inflate(1e-6 + s.state.leader_reach(s.obs)),
+        &cand
+            .bbox()
+            .inflate(1e-6 + s.state.leader_reach(s.obs) + s.state.margin_max()),
         &mut ids,
     );
     let dy = s.obs.dynamic;

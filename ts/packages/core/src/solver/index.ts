@@ -124,6 +124,7 @@ export class Solve {
       pri.prio.map((p) => p.key),
       model.items.map((it) => it.len.clearance),
       model.items.map((it) => it.em()),
+      model.items.map((it) => it.len.margin),
       model.leaders.minAngleBetween > 0 ? cosDeg(model.leaders.minAngleBetween) : 1,
     );
     this.reasons = new Array<Reason | null>(n).fill(null);
@@ -398,6 +399,7 @@ export class Solve {
     const v = vs[vi]!;
     const c = warm(this.model, item, vi, v, b);
     if (c === null) return;
+    c.warm = true;
     c.level = 0;
     c.lshape = labelShape(c.rect, v.shape);
     this.evaluator.eval(c, v, null);
@@ -508,6 +510,7 @@ export class Solve {
       const v = vs[vi]!;
       const c = warm(this.model, item, vi, v, b);
       if (c === null) return null;
+      c.warm = true;
       c.level = level;
       c.lshape = labelShape(c.rect, v.shape);
       this.evaluator.eval(c, v, null);
@@ -539,6 +542,7 @@ export class Solve {
       const v = this.variants[i]![vi]!;
       for (const [si, c] of warmNudges(item, vi, v, rect, steps, this.models[i]!)) {
         c.level = 0;
+        c.warm = true;
         c.lshape = labelShape(c.rect, v.shape);
         this.evaluator.eval(c, v, null);
         if (c.feasible) {

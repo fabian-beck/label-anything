@@ -50,8 +50,8 @@
         "id": "u2",
         "placed": true,
         "box": {
-          "x": 425.0,
-          "y": 297.7993333333333,
+          "x": 383.00533333333334,
+          "y": 315.0,
           "w": 73.98933333333332,
           "h": 24.401333333333355
         },
@@ -59,7 +59,7 @@
           420.0,
           310.0
         ],
-        "anchor_side": "right",
+        "anchor_side": "bottom",
         "model": "adjacent",
         "text": {
           "lines": [
@@ -80,7 +80,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.1392857142857143,
+        "cost": 0.21428571428571427,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -104,7 +104,7 @@
       "candidates": 55,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 0.2292857142857143,
+      "total_cost": 0.30428571428571427,
       "degraded": {},
       "grid": {
         "cell": 2.5,

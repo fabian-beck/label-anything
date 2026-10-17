@@ -72,6 +72,9 @@ export class State {
    */
   private clr: readonly number[];
   private em: readonly number[];
+  /** The margin of each item's label (`defaults.margin`) and the largest. */
+  private margin: readonly number[];
+  private marginMaxV: number;
   private cosMin: number;
   private reach: number;
   /** Placed items already tested by a conflict query. */
@@ -79,8 +82,8 @@ export class State {
 
   /**
    * `keys`: the priority key level of every item (smaller = more important); `clr` and
-   * `em`: the leader clearance and font size of every item; `cosMin`: the cosine of
-   * `leaders.min_angle_between`.
+   * `em`: the leader clearance and font size of every item; `margin`: the label margin of
+   * every item; `cosMin`: the cosine of `leaders.min_angle_between`.
    */
   constructor(
     nItems: number,
@@ -89,6 +92,7 @@ export class State {
     keys: readonly number[],
     clr: readonly number[],
     em: readonly number[],
+    margin: readonly number[],
     cosMin: number,
   ) {
     let nKeys = 0;
@@ -96,6 +100,10 @@ export class State {
     let reach = 0;
     for (const v of clr) reach = maxf(reach, v);
     if (cosMin < 1) for (const v of em) reach = maxf(reach, v);
+    let marginMax = 0;
+    for (const v of margin) marginMax = maxf(marginMax, v);
+    this.margin = margin;
+    this.marginMaxV = marginMax;
     this.clr = clr;
     this.em = em;
     this.cosMin = cosMin;
@@ -112,6 +120,11 @@ export class State {
     this.keyCount = new Uint32Array(nKeys);
   }
 
+  /** The largest label margin: how far label-label conflicts reach beyond a box. */
+  marginMax(): number {
+    return this.marginMaxV;
+  }
+
   /**
    * How far leader conflicts reach beyond a candidate's bounding box when leaders may not
    * come close (`avoid.leader.leaders` hard): the largest clearance, and the largest font
@@ -123,7 +136,12 @@ export class State {
 
   /** Spacing rules between the leaders of items `i` and `j`. */
   spacing(i: number, j: number): Spacing {
-    return { clr: maxf(this.clr[i]!, this.clr[j]!), near: maxf(this.em[i]!, this.em[j]!), cosMin: this.cosMin };
+    return {
+      clr: maxf(this.clr[i]!, this.clr[j]!),
+      near: maxf(this.em[i]!, this.em[j]!),
+      cosMin: this.cosMin,
+      gap: maxf(this.margin[i]!, this.margin[j]!),
+    };
   }
 
   /** The largest key level among placed labels (null when nothing is placed). */
@@ -269,14 +287,14 @@ export class State {
     const bb = c.bbox();
     const buf = this.buf;
     // labels near the candidate (label-label, candidate leaders through placed labels)
-    this.labelIx.query(bb, buf);
+    this.labelIx.query(bb.inflate(this.marginMaxV), buf);
     for (let q = 0; q < buf.len; q++) {
       const j = buf.get(q);
       if (j === skip) continue;
       const pid = this.placed[j]!;
       if (pid < 0) continue;
       const p = cands[pid]!;
-      if (llHard && c.labelOverlaps(p)) {
+      if (llHard && c.labelOverlapsGap(p, maxf(this.margin[c.item]!, this.margin[j]!))) {
         out.push(j);
         continue;
       }
@@ -319,13 +337,13 @@ export class State {
     const bb = c.bbox();
     // scans in query order that stop at the first conflict
     const lix = this.labelIx;
-    lix.scanStart(bb, 0);
+    lix.scanStart(bb, this.marginMaxV);
     for (let j = lix.scanNext(); j >= 0; j = lix.scanNext()) {
       if (j === skip || !(keys[j]! <= keyLimit)) continue;
       const pid = this.placed[j]!;
       if (pid < 0) continue;
       const p = cands[pid]!;
-      if (llHard && c.labelOverlaps(p)) return j;
+      if (llHard && c.labelOverlapsGap(p, maxf(this.margin[c.item]!, this.margin[j]!))) return j;
       if (lbHard && leadersOverlapRect(c, p.rect)) return j;
     }
     if (this.hasSegs()) {

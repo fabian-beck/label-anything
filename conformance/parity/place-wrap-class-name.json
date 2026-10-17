@@ -32,7 +32,7 @@
         "placed": true,
         "box": {
           "x": 161.21,
-          "y": 47.256,
+          "y": 48.256,
           "w": 77.57999999999998,
           "h": 48.744
         },
@@ -67,7 +67,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.3,
+        "cost": 0.275,
         "degrade_steps": [
           "wrap"
         ],
@@ -93,7 +93,7 @@
       "candidates": 40,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 0.3,
+      "total_cost": 0.275,
       "degraded": {
         "wrapped": 1
       },

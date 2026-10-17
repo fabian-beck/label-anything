@@ -342,6 +342,10 @@ export interface ItemDefaults {
    * Width of the soft ambiguity buffer ring around each label.
    */
   buffer?: number | string;
+  /**
+   * Space a label keeps from other labels (the larger of the two margins) and from other items' marks while avoid.label has them hard (spec §4.4): not from its own mark (placement.offset), never more than another mark keeps from the own mark's box, half for warm-start candidates.
+   */
+  margin?: number | string;
   mark?: Mark;
   wrap?: Wrap | null;
   truncate?: Truncate;

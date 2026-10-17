@@ -118,7 +118,7 @@ CASES["explain-blocked-by-labels"] = case(
     "an item whose statically feasible candidates placed labels block is omitted_by_priority",
     {"canvas": {"width": 400, "height": 300},
      "items": [{"id": "high", "anchor": {"type": "point", "x": 10, "y": 10},
-                "label": {"type": "box", "width": 370, "height": 270}, "priority": 2.0},
+                "label": {"type": "box", "width": 368, "height": 268}, "priority": 2.0},
                pt("low", 388, 288, "Low", priority=1.0, placement={"models": ["distant"]})]},
     {"placed_ids": ["high"], "reasons": {"low": "omitted_by_priority"}})
 
@@ -297,12 +297,13 @@ CASES["fan-always"] = case(
     {"canvas": {"width": 240, "height": 140}, "placement": {"fan": "always"},
      "items": [pt("a", 100, 70, "Alpha"), pt("b", 104, 76, "Beta")]},
     {"placed": 2, "model": {"a": "fan", "b": "fan"}, "has_leader": {"a": True, "b": True},
-     "box": {"a": {"x": 124.0, "y": 52.056, "w": 35.892, "h": 19.944, "tol": 0.01},
-             "b": {"x": 124.0, "y": 74.0, "w": 29.232, "h": 19.944, "tol": 0.01}}},
+     "box": {"a": {"x": 124.0, "y": 51.856, "w": 35.892, "h": 19.944, "tol": 0.01},
+             "b": {"x": 124.0, "y": 74.2, "w": 29.232, "h": 19.944, "tol": 0.01}}},
     "Both points get adjacent labels (top and bottom; their centers count as right of the "
     "anchors). With `always` the crowd's column takes them: right of the marks' boxes "
     "(x1 = 106) by the least run of 1.5 em (18 px), stacked around the anchors' heights with "
-    "the boundary gap (2 px): centers 62.028 and 83.972.")
+    "the labels' margin (0.2 em = 2.4 px, more than the boundary gap of 2 px): centers 61.828 "
+    "and 84.172.")
 
 CASES["fan-max-labels"] = case(
     "fan labels keep to the label budget",
@@ -310,10 +311,12 @@ CASES["fan-max-labels"] = case(
      "priority": {"budget": {"max_labels": 4}},
      "items": [pt(n.lower(), 150, 88 + 5 * k, n)
                for k, n in enumerate(["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"])]},
-    {"placed": 4, "unplaced_ids": ["delta", "zeta"],
-     "model": {k: "fan" for k in ("alpha", "beta", "gamma", "epsilon")}},
-    "The ends of `fan-line-ends` with at most 4 labels: the column gives labels to the two "
-    "most important ends left without one (input order) and leaves the others out.")
+    {"placed": 4, "unplaced_ids": ["delta", "epsilon"],
+     "model": {k: "fan" for k in ("alpha", "beta", "gamma", "zeta")}},
+    "The ends of `fan-line-ends` with at most 4 labels: the search labels the outer ends "
+    "(alpha, zeta; next to the inner ends a label would come closer to other ends than their "
+    "margin), the column gives labels to the two most important ends left without one (input "
+    "order) and leaves the others out.")
 
 CASES["font-classes"] = case(
     "font classes scale labels by priority",
@@ -337,7 +340,7 @@ CASES["font-classes"] = case(
 
 CASES["font-class-shrink-floor"] = case(
     "the shrink step stops at min_scale of the size before a smaller font class",
-    {"canvas": {"width": 54, "height": 60, "padding": 0}, "defaults": {"font": {"size": 10}},
+    {"canvas": {"width": 53, "height": 60, "padding": 0}, "defaults": {"font": {"size": 10}},
      "degrade": ["shrink:0.85", "omit"], "placement": {"models": ["adjacent"], "position_order": ["right"]},
      "priority": {"font_classes": [{"first": 1, "scale": 1}, {"scale": 0.9}]},
      "items": [pt("a", 10, 15, "Abcdefghij", priority=2), pt("b", 10, 45, "Abcdefghij", priority=1)]},
@@ -390,12 +393,12 @@ CASES["warm-start-nudge"] = case(
      "items": [pt("a", 100, 80, "Alpha")],
      "warm_start": {"placements": [
          {"id": "a", "placed": True, "anchor": [100, 80],
-          "box": {"x": 82.054, "y": 56.056, "w": 35.892, "h": 19.944}}]}},
+          "box": {"x": 82.054, "y": 57.056, "w": 35.892, "h": 19.944}}]}},
     {"placed": 1, "anchor_side": {"a": "top"}, "model": {"a": "slider"},
-     "box": {"a": {"x": 82.654, "y": 56.056, "w": 35.892, "h": 19.944, "tol": 0.01}}},
+     "box": {"a": {"x": 82.654, "y": 57.056, "w": 35.892, "h": 19.944, "tol": 0.01}}},
     "The previous result placed Alpha above its point; a hard obstacle now covers the "
     "box's left 0.5 px. The box slides 0.05 em (0.6 px, the smallest nudge) to the right "
-    "along the top of the mark; the nearest slider candidate would be 4.2 px away.")
+    "along the top of the mark; the nearest slider candidate would be 4.1 px away.")
 
 CASES["warm-start-keeps-leader"] = case(
     "a previous leadered label keeps its leader, moved with the anchor",

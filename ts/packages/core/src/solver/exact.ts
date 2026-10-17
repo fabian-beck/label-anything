@@ -168,7 +168,7 @@ export function run(s: Solve, maxNodes: number): boolean {
     }
     v.push(b);
   };
-  const reach = s.state.leaderReach(s.obs);
+  const reach = s.state.leaderReach(s.obs) + s.state.marginMax();
   const bboxes = pool.map((c) => s.cands[c]!.bbox());
   for (let x = 0; x < pool.length; x++) {
     const a = pool[x]!;

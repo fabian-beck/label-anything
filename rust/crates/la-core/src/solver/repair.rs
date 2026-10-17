@@ -7,6 +7,7 @@ use crate::boundary::{slot_area, slot_candidate};
 use crate::candidates::{Cand, Kind};
 use crate::cost::Evaluator;
 use crate::geom::seg_intersects;
+use crate::math::maxf;
 use crate::model::opts::{LeaderStyle, Omission, Step};
 
 /// Bounded isotonic stacking: positions `y_i` (sorted order) minimizing Σ (y_i − d_i)²
@@ -197,8 +198,15 @@ pub fn boundary_pass(s: &mut Solve) {
                 .collect()
         } else {
             let desired: Vec<f64> = order.iter().map(|&i| key(i)).collect();
+            // at least the larger margin of the two labels apart
             let gaps: Vec<f64> = (1..order.len())
-                .map(|j| (sizes[j - 1] + sizes[j]) * 0.5 + gap)
+                .map(|j| {
+                    let m = maxf(
+                        s.model.items[order[j - 1]].len.margin,
+                        s.model.items[order[j]].len.margin,
+                    );
+                    (sizes[j - 1] + sizes[j]) * 0.5 + maxf(gap, m)
+                })
                 .collect();
             stack(
                 &desired,

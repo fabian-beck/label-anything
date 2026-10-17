@@ -28,6 +28,7 @@ use crate::boundary::{boundary_leader, slot_area};
 use crate::candidates::{label_shape, Cand, Kind, Side};
 use crate::cost::Evaluator;
 use crate::geom::{Rect, P};
+use crate::math::maxf;
 use crate::model::opts::{FanMode, LeaderStyle, Models, Omission, Pos, Step};
 
 /// Largest crowd a seed gathers, and most labels a column takes in.
@@ -392,8 +393,12 @@ fn layout(
         .collect();
     let gap = items[order[0]].len.boundary_gap;
     let desired: Vec<f64> = order.iter().map(|&j| items[j].anchor.y).collect();
+    // at least the larger margin of the two labels apart (spec §6.8)
     let gaps: Vec<f64> = (1..order.len())
-        .map(|k| (hs[k - 1] + hs[k]) * 0.5 + gap)
+        .map(|k| {
+            let m = maxf(items[order[k - 1]].len.margin, items[order[k]].len.margin);
+            (hs[k - 1] + hs[k]) * 0.5 + maxf(gap, m)
+        })
         .collect();
     let ys = stack(
         &desired,
@@ -534,7 +539,7 @@ fn layout(
 fn apply_unless_inverting(s: &mut Solve, plan: Plan) -> bool {
     let n = s.model.items.len();
     let keys: Vec<usize> = s.pri.prio.iter().map(|p| p.key).collect();
-    let reach = s.state.leader_reach(s.obs) + 2.0 * crate::geom::EPS;
+    let reach = s.state.leader_reach(s.obs) + s.state.margin_max() + 2.0 * crate::geom::EPS;
     let mut changed: Vec<Rect> = Vec::new();
     for (j, c) in &plan.cands {
         changed.push(c.bbox().inflate(reach));

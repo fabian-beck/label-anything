@@ -164,6 +164,8 @@ pub struct Area {
 pub struct ItemLengths {
     pub padding: f64,
     pub buffer: f64,
+    /// `defaults.margin`: the space the label keeps from other labels and other marks.
+    pub margin: f64,
     pub offset: f64,
     pub inner_padding: f64,
     pub max_distance: f64,
@@ -181,6 +183,7 @@ pub struct ItemLengths {
 pub struct ItemLengthSpec {
     pub padding: Length,
     pub buffer: Length,
+    pub margin: Length,
     pub offset: Length,
     pub inner_padding: Length,
     pub max_distance: Length,
@@ -199,6 +202,7 @@ impl ItemLengthSpec {
         ItemLengths {
             padding: self.padding.px(em),
             buffer: self.buffer.px(em),
+            margin: self.margin.px(em),
             offset: self.offset.px(em),
             inner_padding: self.inner_padding.px(em),
             max_distance: self.max_distance.px(em),
@@ -1513,6 +1517,7 @@ fn build_item(
     let len_spec = ItemLengthSpec {
         padding: len_of("defaults.padding", label_v.get("padding")),
         buffer: len_of("defaults.buffer", None),
+        margin: len_of("defaults.margin", None),
         offset: len_of("placement.offset", ip.and_then(|p| p.get("offset"))),
         inner_padding: len_of("placement.inner_padding", None),
         max_distance: len_of("placement.max_distance", None),

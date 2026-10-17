@@ -22,12 +22,12 @@ def test_basic_counts_overlap_and_removal_test():
     # ranks by input order: g(0)+g(1) over g(0)+g(1)+g(2)
     assert m["placement"]["placed_weighted"] == pytest.approx((G[0] + G[1]) / (G[0] + G[1] + G[2]))
     assert m["priority"]["rank_source"] == "reference"
-    # A's box overlaps B's box by 7.83 x 7.17 px > 0.5 px tolerance: one hard violation
+    # A's box overlaps B's box by 7.12 x 7.88 px > 0.5 px tolerance: one hard violation
     assert m["hard"]["label_label"] == 1
     assert m["hard"]["total"] == 1
-    # A touches its inflated mark exactly; B is 15 - 2 - 2 = 11 px away from r=2 ⊕ offset 2
+    # A touches its inflated mark exactly; B is 15 - 2 - 1 = 12 px away from r=2 ⊕ offset 1
     assert m["shape"]["adjacent_n"] == 2
-    assert m["shape"]["adjacent_gap_mean"] == pytest.approx((0.0 + 11.0) / 2, abs=1e-6)
+    assert m["shape"]["adjacent_gap_mean"] == pytest.approx((0.0 + 12.0) / 2, abs=1e-6)
     assert m["shape"]["adjacent_touch_rate"] == pytest.approx(0.5)
     # C (all keys equal) has free adjacent positions: one inversion; prefix A,B; NDCG 1
     assert m["priority"]["inversions"] == 1

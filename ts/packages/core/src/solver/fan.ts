@@ -355,8 +355,12 @@ function layout(
   const hs = order.map((j, k) => s.variants[j]![vis[k]!]!.h);
   const gap = items[order[0]!]!.len.boundaryGap;
   const desired = order.map((j) => items[j]!.anchor.y);
+  // at least the larger margin of the two labels apart (spec §6.8)
   const gaps: number[] = [];
-  for (let k = 1; k < order.length; k++) gaps.push((hs[k - 1]! + hs[k]!) * 0.5 + gap);
+  for (let k = 1; k < order.length; k++) {
+    const m = maxf(items[order[k - 1]!]!.len.margin, items[order[k]!]!.len.margin);
+    gaps.push((hs[k - 1]! + hs[k]!) * 0.5 + maxf(gap, m));
+  }
   const ys = stack(desired, gaps, area.y0 + hs[0]! * 0.5, area.y1 - hs[hs.length - 1]! * 0.5);
   // the column stands beyond the members' marks, as far as the steepest leader needs
   let edge = right ? -Infinity : Infinity;
@@ -442,7 +446,7 @@ function layout(
  */
 function applyUnlessInverting(s: Solve, plan: Plan): boolean {
   const n = s.model.items.length;
-  const reach = s.state.leaderReach(s.obs) + 2 * EPS;
+  const reach = s.state.leaderReach(s.obs) + s.state.marginMax() + 2 * EPS;
   const changed: Rect[] = [];
   for (const [j, c] of plan.cands) {
     changed.push(c.bbox().inflate(reach));

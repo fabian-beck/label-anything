@@ -2,7 +2,7 @@
 
 A label belongs next to its feature — next to the *feature's outline*, not to a bounding
 box around it. Every item has a **mark**, the true geometry of the labeled feature:
-adjacent labels touch the mark (at `placement.offset`, 2 px), other labels never cover it,
+adjacent labels touch the mark (at `placement.offset`, 1 px), other labels keep a margin from it,
 and a mark that is large enough holds its label inside.
 
 ```json

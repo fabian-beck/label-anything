@@ -4,7 +4,7 @@
   "$comment": "The text fits the canvas only at 0.7225 of 10 px (0.85², the last shrink factor above min_scale 0.7): a, in a class of scale 1, gets it; b's class (0.9) keeps it at or above 0.7 × 10 px, i.e. factors down to 0.7 / 0.9 = 0.778: 0.85 × 9 px is too wide.",
   "problem": {
     "canvas": {
-      "width": 54,
+      "width": 53,
       "height": 60,
       "padding": 0
     },

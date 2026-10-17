@@ -16,7 +16,7 @@ import label_anything as la
 CASES = sorted((CONFORMANCE / "place").glob("*.json"))
 
 #: spec/defaults.md: placement.offset and defaults.mark
-DEFAULT_OFFSET = 2.0
+DEFAULT_OFFSET = 1.0  # placement.offset (spec/defaults.md)
 DEFAULT_MARK = {"shape": "circle", "r": 2.0}
 
 Seg = Tuple[Tuple[float, float], Tuple[float, float]]

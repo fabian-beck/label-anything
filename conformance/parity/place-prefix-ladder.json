@@ -148,17 +148,17 @@
         "id": "t0",
         "placed": true,
         "box": {
-          "x": 19.70941831038077,
-          "y": 63.99999999999613,
-          "w": 110.86800000000001,
-          "h": 19.943999999999996
+          "x": 48.22769379584943,
+          "y": 79.86340994899265,
+          "w": 110.868,
+          "h": 19.944000000000017
         },
         "anchor": [
           40.0,
           60.0
         ],
-        "anchor_side": "bottom-right",
-        "model": "slider",
+        "anchor_side": "distant",
+        "model": "distant",
         "text": {
           "lines": [
             "Top item number 0"
@@ -177,8 +177,24 @@
           "font_weight": 400,
           "scale": 1.0
         },
-        "leader": null,
-        "cost": 0.8655089471711337,
+        "leader": {
+          "points": [
+            [
+              41.339392013277816,
+              63.233578363789505
+            ],
+            [
+              48.22769379584943,
+              79.86340994899265
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            48.22769379584943,
+            79.86340994899265
+          ]
+        },
+        "cost": 1.981226453994503,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -190,8 +206,8 @@
         "id": "t1",
         "placed": true,
         "box": {
-          "x": 20.566000000000003,
-          "y": 36.056,
+          "x": 84.22769379584943,
+          "y": 20.19259005100733,
           "w": 110.868,
           "h": 19.944000000000003
         },
@@ -199,8 +215,8 @@
           76.0,
           60.0
         ],
-        "anchor_side": "top",
-        "model": "adjacent",
+        "anchor_side": "distant",
+        "model": "distant",
         "text": {
           "lines": [
             "Top item number 1"
@@ -219,8 +235,24 @@
           "font_weight": 400,
           "scale": 1.0
         },
-        "leader": null,
-        "cost": 0.5717425260624269,
+        "leader": {
+          "points": [
+            [
+              77.33939201327782,
+              56.766421636210495
+            ],
+            [
+              84.22769379584943,
+              40.13659005100733
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            84.22769379584943,
+            40.13659005100733
+          ]
+        },
+        "cost": 1.975,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -232,10 +264,10 @@
         "id": "t2",
         "placed": true,
         "box": {
-          "x": 137.196,
-          "y": 7.128,
-          "w": 52.608000000000004,
-          "h": 48.744
+          "x": 179.9051456395796,
+          "y": 88.1272322788341,
+          "w": 110.868,
+          "h": 19.944000000000017
         },
         "anchor": [
           112.0,
@@ -245,74 +277,7 @@
         "model": "distant",
         "text": {
           "lines": [
-            "Top item",
-            "number",
-            "2"
-          ],
-          "used": "original",
-          "truncated": false,
-          "baseline_offsets": [
-            14.628,
-            29.028,
-            43.428
-          ],
-          "line_widths": [
-            49.008,
-            45.156,
-            6.864
-          ],
-          "x_offset": 1.7999999999999998,
-          "font_size": 12.0,
-          "font_family": "default",
-          "font_weight": 400,
-          "scale": 1.0
-        },
-        "leader": {
-          "points": [
-            [
-              115.45395134381818,
-              59.43412005289405
-            ],
-            [
-              137.196,
-              55.872
-            ]
-          ],
-          "style": "straight",
-          "port": [
-            137.196,
-            55.872
-          ]
-        },
-        "cost": 2.9260651539660048,
-        "degrade_steps": [
-          "wrap",
-          "distant"
-        ],
-        "priority": {
-          "tier": 0,
-          "score": 98.0,
-          "rank": 2
-        }
-      },
-      {
-        "id": "t3",
-        "placed": true,
-        "box": {
-          "x": 139.42389108050773,
-          "y": 63.99999999999485,
-          "w": 110.868,
-          "h": 19.943999999999996
-        },
-        "anchor": [
-          148.0,
-          60.0
-        ],
-        "anchor_side": "bottom-right",
-        "model": "slider",
-        "text": {
-          "lines": [
-            "Top item number 3"
+            "Top item number 2"
           ],
           "used": "original",
           "truncated": false,
@@ -328,9 +293,85 @@
           "font_weight": 400,
           "scale": 1.0
         },
-        "leader": null,
-        "cost": 0.9111301450006203,
+        "leader": {
+          "points": [
+            [
+              115.2335783637895,
+              61.339392013277816
+            ],
+            [
+              179.9051456395796,
+              88.1272322788341
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            179.9051456395796,
+            88.1272322788341
+          ]
+        },
+        "cost": 3.2011872046472356,
         "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 98.0,
+          "rank": 2
+        }
+      },
+      {
+        "id": "t3",
+        "placed": true,
+        "box": {
+          "x": 167.86340994899265,
+          "y": 68.22769379584945,
+          "w": 80.10212999999999,
+          "h": 14.409539999999993
+        },
+        "anchor": [
+          148.0,
+          60.0
+        ],
+        "anchor_side": "distant",
+        "model": "distant",
+        "text": {
+          "lines": [
+            "Top item number 3"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.568729999999997
+          ],
+          "line_widths": [
+            77.50112999999999
+          ],
+          "x_offset": 1.3004999999999998,
+          "font_size": 8.669999999999998,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 0.7224999999999999
+        },
+        "leader": {
+          "points": [
+            [
+              151.23357836378952,
+              61.339392013277816
+            ],
+            [
+              167.86340994899265,
+              68.22769379584945
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            167.86340994899265,
+            68.22769379584945
+          ]
+        },
+        "cost": 2.424997783685739,
+        "degrade_steps": [
+          "shrink:0.7225"
+        ],
         "priority": {
           "tier": 0,
           "score": 97.0,
@@ -341,9 +382,9 @@
         "id": "t4",
         "placed": true,
         "box": {
-          "x": 203.86340994899265,
-          "y": 31.82830620415055,
-          "w": 110.86800000000002,
+          "x": 227.88427779428613,
+          "y": 21.878536962658217,
+          "w": 110.86799999999997,
           "h": 19.944000000000003
         },
         "anchor": [
@@ -377,20 +418,18 @@
               58.660607986722184
             ],
             [
-              203.86340994899265,
-              51.77230620415055
+              227.88427779428613,
+              41.82253696265822
             ]
           ],
           "style": "straight",
           "port": [
-            203.86340994899265,
-            51.77230620415055
+            227.88427779428613,
+            41.82253696265822
           ]
         },
-        "cost": 2.13931036372241,
-        "degrade_steps": [
-          "distant"
-        ],
+        "cost": 2.6830482893459453,
+        "degrade_steps": [],
         "priority": {
           "tier": 0,
           "score": 96.0,
@@ -406,8 +445,6 @@
           "labels"
         ],
         "blocked_by": [
-          "t2",
-          "t3",
           "t4"
         ],
         "priority": {
@@ -430,14 +467,9 @@
         "placed": false,
         "reason": "omitted_by_priority",
         "blocking": [
-          "items",
-          "labels"
+          "items"
         ],
-        "blocked_by": [
-          "t2",
-          "t3",
-          "t4"
-        ],
+        "blocked_by": [],
         "priority": {
           "tier": 0,
           "score": 94.0,
@@ -449,13 +481,9 @@
         "placed": false,
         "reason": "omitted_by_priority",
         "blocking": [
-          "items",
-          "labels"
+          "items"
         ],
-        "blocked_by": [
-          "t3",
-          "t4"
-        ],
+        "blocked_by": [],
         "priority": {
           "tier": 0,
           "score": 93.0,
@@ -467,12 +495,9 @@
         "placed": false,
         "reason": "omitted_by_priority",
         "blocking": [
-          "items",
-          "labels"
+          "items"
         ],
-        "blocked_by": [
-          "t4"
-        ],
+        "blocked_by": [],
         "priority": {
           "tier": 0,
           "score": 92.0,
@@ -484,10 +509,13 @@
         "placed": false,
         "reason": "omitted_by_priority",
         "blocking": [
+          "items",
           "canvas_edge",
-          "items"
+          "labels"
         ],
-        "blocked_by": [],
+        "blocked_by": [
+          "t4"
+        ],
         "priority": {
           "tier": 0,
           "score": 91.0,
@@ -507,7 +535,7 @@
       "iterations": 4000,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 257,
+      "candidates": 292,
       "omission_order": [
         "t9",
         "t8",
@@ -516,10 +544,9 @@
         "t5"
       ],
       "priority_inversions": 0,
-      "total_cost": 7.413757135922596,
+      "total_cost": 12.265459731673422,
       "degraded": {
-        "distant": 2,
-        "wrapped": 1
+        "shrunk": 1
       },
       "grid": {
         "cell": 3.0,

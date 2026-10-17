@@ -1,7 +1,7 @@
 {
   "kind": "place",
   "name": "fan labels with placement.fan = always: a crowd's labels move into a column",
-  "$comment": "Both points get adjacent labels (top and bottom; their centers count as right of the anchors). With `always` the crowd's column takes them: right of the marks' boxes (x1 = 106) by the least run of 1.5 em (18 px), stacked around the anchors' heights with the boundary gap (2 px): centers 62.028 and 83.972.",
+  "$comment": "Both points get adjacent labels (top and bottom; their centers count as right of the anchors). With `always` the crowd's column takes them: right of the marks' boxes (x1 = 106) by the least run of 1.5 em (18 px), stacked around the anchors' heights with the labels' margin (0.2 em = 2.4 px, more than the boundary gap of 2 px): centers 61.828 and 84.172.",
   "problem": {
     "canvas": {
       "width": 240,
@@ -54,14 +54,14 @@
     "box": {
       "a": {
         "x": 124.0,
-        "y": 52.056,
+        "y": 51.856,
         "w": 35.892,
         "h": 19.944,
         "tol": 0.01
       },
       "b": {
         "x": 124.0,
-        "y": 74.0,
+        "y": 74.2,
         "w": 29.232,
         "h": 19.944,
         "tol": 0.01

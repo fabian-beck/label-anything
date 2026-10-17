@@ -118,11 +118,19 @@ impl<'a> Evaluator<'a> {
         // 2. items (exact); one query serves the buffer ring and the ambiguity term
         let ring = r.inflate(item.len.buffer);
         let gap_guess = item.len.offset + 0.5 * em;
-        let reach = if item.len.buffer > gap_guess {
-            item.len.buffer
+        let margin = if c.warm {
+            crate::candidates::WARM_MARGIN * item.len.margin
         } else {
-            gap_guess
+            item.len.margin
         };
+        let reach = maxf(
+            if item.len.buffer > gap_guess {
+                item.len.buffer
+            } else {
+                gap_guess
+            },
+            margin,
+        );
         self.buf.clear();
         obs.item_index.query(&r.inflate(reach), &mut self.buf);
         for &j in &self.buf {
@@ -151,8 +159,18 @@ impl<'a> Evaluator<'a> {
                 }
                 continue;
             }
-            if c.label_overlaps_shape(sj) && matches!(dy.label_items, AvoidW::Hard) {
+            if !matches!(dy.label_items, AvoidW::Hard) {
+                continue;
+            }
+            if c.label_overlaps_shape(sj) {
                 acc.violate(Block::Items, false, 0.0);
+            } else if margin > crate::geom::EPS {
+                // the margin (up to rounding), but never more than the mark keeps from the
+                // own mark's box
+                let d = sj.dist_rect(&r);
+                if d < margin - crate::geom::EPS && d < sj.dist_rect(&item.shape.bbox()) {
+                    acc.violate(Block::Items, false, 0.0);
+                }
             }
         }
         if let AvoidW::Soft(wt) = dy.label_items {
