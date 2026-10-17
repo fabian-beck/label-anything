@@ -110,11 +110,14 @@ SECTIONS = (
     )),
     Section("images", "Photos and illustrations", "area anchors, leaders, margin labels", "", (
         Fig("08-illustration/astronaut-boundary", "Annotated portrait",
-            "Twelve regions of a NASA portrait are area anchors (one is a ring with a hole). Labels sit "
-            "in the margins on purpose, elbow leaders end inside each region."),
+            "Twelve regions of a NASA portrait are area anchors (one is a ring with a hole). The preset "
+            "<code>illustration</code> charges a label over the photo per em² like a leader, so most labels "
+            "stand in the margins or beside the photo; those of regions in its middle stay close to them. "
+            "Elbow leaders end inside each region."),
         Fig("08-illustration/retina-boundary", "Fundus photograph",
-            "Ten anatomical structures of a retina image (raster at scale 2), labeled at the sides with "
-            "elbow leaders."),
+            "Ten anatomical structures of a retina image (raster at scale 2), with elbow leaders: labels "
+            "in the margins where a leader to them costs less than covering the image, the others close "
+            "to their structures."),
         Fig("08-illustration/rocket-distant", "Falcon 9 on the launch pad",
             "Twelve parts labeled with straight leaders to positions off the rocket; duplicate label "
             "texts are allowed."),

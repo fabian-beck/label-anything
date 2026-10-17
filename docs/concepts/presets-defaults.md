@@ -17,7 +17,7 @@ by key. So `{"preset": "map", "avoid": {"label": {"roads": "hard"}}}` keeps ever
 | `scatter` | scatter plots: point marks over dense unlabeled points, trend lines, axes | distant labels with straight leaders; points 0.3, lines 1.0, ink 0.1 per em², `axes` hard |
 | `map` | point features over map backgrounds | cartographic position order (top-right first), adjacent and slider only, map text hard, lines (roads, rivers) soft, filled areas ignored |
 | `graph` | node-link diagrams | internal labels first (for large nodes), leaders at multiples of 45°, edges (`lines`) soft |
-| `illustration` | technical and anatomical illustrations | labels in the left and right margins (boundary) or distant, elbow leaders into the label's side, ink costly (2.0) |
+| `illustration` | technical and anatomical illustrations | labels in the left and right margins (boundary) or distant, elbow leaders into the label's side, ink costly (1.0 per em², as much as a leader) |
 | `none` | full control | nothing beyond the defaults |
 
 Each preset also has **SVG class rules** used when an SVG source has no `classes` of its

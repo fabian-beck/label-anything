@@ -304,7 +304,7 @@ export const PRESETS: Readonly<Record<string, PresetData>> = {
       },
       "avoid": {
         "label": {
-          "ink": 0.15
+          "ink": 1
         },
         "leader": {
           "ink": 0.025

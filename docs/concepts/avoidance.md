@@ -77,7 +77,7 @@ example:
 | `scatter` | points 0.3, lines 1.0, ink 0.1, axes hard | points 0.2, lines 0.5, axes 1.0 |
 | `map` | lines 0.8, ink 0.1, areas ignore, text hard | lines 0.3, areas ignore |
 | `graph` | lines 1.0, ink 0.1 | lines 0.5 |
-| `illustration` | ink 0.15 | ink 0.025 |
+| `illustration` | ink 1.0 ([ADR 0029](../adr/0029-illustration-callouts-in-margins.md)) | ink 0.025 |
 
 ## Choosing values
 
@@ -87,7 +87,8 @@ example:
 * Use **weights** for things that may be covered when it helps: dense unlabeled points,
   grid lines, background shading. Weights between 0.1 and 2 per em² are typical; the
   other cost terms (position, distance, leaders) are of order 1. Ink is everywhere in
-  images and maps, so its weights are small.
+  images and maps, so its weights are small — except where labels belong beside the
+  picture: the `illustration` preset charges an em² of covered picture like a leader.
 * **Ignore** what does not matter for legibility: plot backgrounds, area fills under
   labels, faint grid lines.
 * Leaders are thin: they can cross many things that labels must not. By default they may

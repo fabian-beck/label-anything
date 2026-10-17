@@ -1,6 +1,7 @@
 # 0019 — Leaders keep clear of marks and of each other; no margin labels by default; coverage costs count what is hidden
 
-* Status: accepted (behaviour change; spec §4.4, §7, §8, defaults.md)
+* Status: accepted (behaviour change; spec §4.4, §7, §8, defaults.md); the `illustration`
+  preset's label ink weight is 1.0 since ADR 0029
 * Date: 2026-10-17
 
 ## Context
