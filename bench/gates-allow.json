@@ -464,6 +464,102 @@
       "solver": "*",
       "adr": "0021",
       "reason": "distant end labels keep to the right of the line ends; the labels kept use lower-ranked positions"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0022",
+      "reason": "fan leaders leave crowds of touching marks: they only must not cross the marks near their start"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "09-line-end-labels",
+      "config": "*",
+      "solver": "*",
+      "adr": "0022",
+      "reason": "fan leaders leave crowds of touching marks: they only must not cross the marks near their start"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "10-stress",
+      "config": "*",
+      "solver": "*",
+      "adr": "0022",
+      "reason": "fan leaders leave crowds of touching marks: they only must not cross the marks near their start"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "12-priority",
+      "config": "*",
+      "solver": "*",
+      "adr": "0022",
+      "reason": "fan leaders leave crowds of touching marks: they only must not cross the marks near their start"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "05-airports",
+      "config": "*",
+      "solver": "*",
+      "adr": "0022",
+      "reason": "labels of crowds placed in fan columns, with longer leaders"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "10-stress",
+      "config": "*",
+      "solver": "*",
+      "adr": "0022",
+      "reason": "labels of crowds placed in fan columns, with longer leaders"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "10-stress",
+      "config": "*",
+      "solver": "*",
+      "adr": "0022",
+      "reason": "leaders of one fan column starting 5.4 px apart come within the metric's 4 px (not within the engine's clearance)"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "09-line-end-labels",
+      "config": "*",
+      "solver": "*",
+      "adr": "0022",
+      "reason": "fan labels: ambiguity is measured at the leader's start, inside the crowd"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "03-gapminder",
+      "config": "*",
+      "solver": "*",
+      "adr": "0022",
+      "reason": "the leader spacing exempts a start when the other leader starts within the clearance; the search finds slightly different solutions"
+    },
+    {
+      "metric": "displacement_mean_px",
+      "scenario": "11-stability",
+      "config": "*",
+      "solver": "*",
+      "adr": "0022",
+      "reason": "fan columns are built anew in each frame from the crowds the search left"
+    },
+    {
+      "metric": "flip_rate",
+      "scenario": "11-stability",
+      "config": "*",
+      "solver": "*",
+      "adr": "0022",
+      "reason": "fan columns are built anew in each frame from the crowds the search left"
+    },
+    {
+      "metric": "nesting_rate",
+      "scenario": "11-stability",
+      "config": "*",
+      "solver": "*",
+      "adr": "0022",
+      "reason": "fan columns are built anew in each frame from the crowds the search left"
     }
   ]
 }

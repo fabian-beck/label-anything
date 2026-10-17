@@ -59,7 +59,7 @@ Per-item keywords take one entry per anchor: `ids`, `attrs`, `marks` (mark dicts
 | `canvas=(w, h)` or dict | `canvas` | `canvas_padding`, `allow_outside`, `region`, `device_pixel_ratio` | `canvas.*` |
 | `y_axis`, `transform`, `preset` | same | `font` (`la.Font`), `font_family`, `font_size`, `font_weight`, `font_style`, `line_height`, `font_file` | `defaults.font.*` |
 | `padding`, `buffer`, `mark`, `wrap`, `truncate` | `defaults.*` | `shaping` | `text.shaping` |
-| `models`, `position_order`, `offset`, `min_distance`, `max_distance`, `slider_per_quadrant`, `k_distant`, `distant_rings`, `distant_directions`, `free_space_seeds`, `internal`, `inner_padding`, `internal_circle_ratio`, `prune_factor`, `boundary` | `placement.*` | `leaders` | `leaders` |
+| `models`, `position_order`, `offset`, `min_distance`, `max_distance`, `slider_per_quadrant`, `k_distant`, `distant_rings`, `distant_directions`, `free_space_seeds`, `internal`, `inner_padding`, `internal_circle_ratio`, `prune_factor`, `boundary`, `fan` | `placement.*` | `leaders` | `leaders` |
 | `avoid`, `avoid_leader`, `avoid_buffer`, `relaxable` | `avoid.*` | `priority`, `tiers`, `omission`, `coverage`, `ties`, `band`, `focus` | `priority.*` |
 | `max_labels`, `max_ink_fraction` | `priority.budget.*` | `strategy`, `time_budget_ms`, `max_iterations`, `seed`, `grid_cell` | `solver.*` |
 | `degrade` | `degrade` | `min_scale`, `wrap_max_lines`, `soft_overlap_weight` | `degrade_options.*` |

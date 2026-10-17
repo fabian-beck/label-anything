@@ -57,11 +57,11 @@ def leader_segments(L) -> list[tuple[Point, Point]]:
     return list(zip(pts, pts[1:])) + list(extra)
 
 
-def leader_approach(A, B) -> float | None:
+def leader_approach(A, B, starts: float) -> float | None:
     """Closest approach of two leaders that counts as a near crossing (spec §7, the engine's
     clearance test): None when they intersect (a crossing). Leaders ``(points, extra segments)``
     start at ``points[0]``; non-intersecting leaders are closest at a vertex of one of them, and
-    the start of one leader does not count when the other leader's start is its nearest point
+    the start of one leader does not count when the other leader starts within ``starts`` of it
     (leaders of neighbouring marks start close together)."""
     SA, SB = leader_segments(A), leader_segments(B)
     for a, b in SA:
@@ -73,7 +73,7 @@ def leader_approach(A, B) -> float | None:
         pts, extra = L
         for k, p in enumerate(list(pts) + [q for seg in extra for q in seg]):
             d = min(geom.point_seg_dist(p, c, e) for c, e in S)
-            if k == 0 and math.dist(p, other_start) <= d + 1e-9:
+            if k == 0 and math.dist(p, other_start) <= starts:
                 continue
             best = min(best, d)
     return best
@@ -165,7 +165,7 @@ def evaluate_visual(prob, placed, classes: dict, a_label: dict, a_leader: dict, 
             k2, L2, em2, model2 = leaders[lj]
             if k2 == k:
                 continue
-            d = leader_approach(L, L2)
+            d = leader_approach(L, L2, NEAR_PX)
             if d is not None and d < NEAR_PX:
                 key = (min(k, k2), max(k, k2))
                 near_pairs[key] = min(d, near_pairs.get(key, math.inf))

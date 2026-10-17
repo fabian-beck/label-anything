@@ -542,6 +542,10 @@ export interface Placement {
      */
     margin?: number | string;
   };
+  /**
+   * Fan labels: a crowd's labels stacked in a column beside it with fanning leaders. auto: crowds of items left without a label, when that places more labels; always: every crowd of two or more items.
+   */
+  fan?: "auto" | "always" | "off";
 }
 export interface Leaders {
   style?: "straight" | "angles" | "orthogonal" | "elbow" | "curved";

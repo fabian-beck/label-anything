@@ -117,6 +117,17 @@ class PlaceIT {
   }
 
   @Test
+  void fanLabelsAreTyped() {
+    LabelResult r = LabelAnything.place(Json.write(TestSupport.placeCaseProblem("fan-always.json")));
+    assertEquals(2, r.stats().placed());
+    for (LabelPlacement p : r.placements()) {
+      assertEquals(Model.FAN, p.model());
+      assertEquals(AnchorSide.FAN, p.anchorSide());
+      assertTrue(p.hasLeader());
+    }
+  }
+
+  @Test
   void leadersAndOmissionsAreTyped() {
     LabelResult r = LabelAnything.place(TestSupport.problem("leaders-angles.json"));
     assertEquals(0, r.stats().hardViolations());

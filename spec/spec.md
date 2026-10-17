@@ -20,8 +20,8 @@ report = validate(problem)         // { valid, errors[], warnings[] }
 ```
 
 Pipeline: `validate → normalize → prepare obstacles → measure & build label variants →
-candidates → greedy (+ ladder) → local search → (exact) → uncross repair → verify →
-finalize`.
+candidates → greedy (+ ladder) → local search → (exact) → fan labels → uncross repair →
+verify → finalize`.
 
 Two implementations (Rust, TypeScript) MUST satisfy the conformance suite
 (`conformance/`). Results need not be bit-identical, but hard-constraint guarantees MUST
@@ -675,6 +675,61 @@ Filtering while generating (ADR 0015), always exact:
   kind of occupancy grid of placed rectangular labels.
 * The warm-start box of an item is an extra level-0 candidate (ADR 0016).
 
+### 6.8 Fan labels
+
+After the search (§10.3), crowds of items get their labels stacked in a column beside the
+crowd, each with its own leader (model and anchor side `fan`; ADR 0022). `placement.fan`:
+`auto` (default) for crowds with items left without a label, when the column places more
+labels; `always` for every crowd, when the column places at least as many; `off`. There are
+no fans with `prefix` omission, with the `angles` leader style (its leaders keep to the
+allowed rays, which a column of labels cannot), after a cancellation or after the time
+guard. Items that may not get leaders (neither their models, as extended by the `auto`
+preset, nor the ladder have `distant` or `boundary`), `keep_with` members, area anchors
+and grouped items take no part. `h` below is the height of an item's first variant, `em`
+its font size.
+
+* **Crowds.** In total order, every item not yet in a crowd seeds one (`auto`: only items
+  without a label whose reason is `omitted_by_priority`, `no_feasible_candidate` or
+  none). Breadth first from the seed, the items whose anchor lies within
+  `(h_a + h_j) / 2` vertically of a member `a`'s and whose mark box is at most the larger
+  `em` of the two away horizontally (the gap between the boxes, 0 when they overlap)
+  join, nearest first (anchor distance, then index), up to 24 items. A crowd of one is
+  left alone.
+* **Sides.** A column stands right of the crowd when the seed's `position_order` has
+  `right`, `top-right` or `bottom-right`, left of it when it has a left position. Each
+  allowed side is laid out; the better plan is applied (labels for more important items:
+  the sorted key lists compared lexicographically, then more labels, then the lower total
+  static cost) and the other side is laid out again for the members left.
+* **Members.** The crowd's items without a label (`always`: also those labeled on that
+  side, by a non-internal label whose center x is ≥ the anchor's for the right side, < for
+  the left), except one that fails in a column of its own for a reason of its own
+  (below).
+* **Layout.** Members ordered by anchor y, x, index keep their placed variant (else the
+  first). Their slots are stacked like boundary labels (`stack`, gaps
+  `(h_a + h_b) / 2 + boundary.gap`, within the label area) around the anchors' heights.
+  The labels' near side is at `edge ± run`: `edge` the outermost side of the members'
+  mark boxes, `run = max(min(rise, room), 1.5 em)` (`rise` the largest vertical distance
+  between a member's anchor height and its slot, so that leaders are at most 45° steep;
+  `room` what the label area leaves beyond `edge` and the widest label). Members take
+  the slots in their order, unless (equal heights, `straight` leaders) the min-cost
+  matching of anchors to the ports' points by distance is shorter by more than
+  `10⁻⁶ · (1 + total)`. The leader is built like a boundary leader (§7) to the middle of
+  the label's near side; a leader longer than `leaders.max_length` makes the label
+  infeasible. The labels (rank 8) are evaluated (§8) and tested in column order against
+  everything placed, the members' own labels lifted and the members tested before
+  counting as placed: a member fails for a reason of its own (statically infeasible) or
+  because of the first placed label in conflict (in query order), the one in its way.
+* **Repair.** While the column fails: the first label in the way of a failing member
+  whose item is placed, takes part, is not fixed, is labeled on that side and has a
+  mark box within the crowd's horizontal extent ± `em` joins the column; else the first
+  failing member that has a label keeps it and leaves the column (fixed); else the
+  failing member of the highest rank (lowest priority) leaves. The column is given up
+  when no member is without a label (`always`: and fewer than two members remain), when
+  more than 40 members remain, or when the budget is spent; a column without failures
+  replaces its members' labels.
+* **Budget.** At most `max(20000, 20 × n_items)` label evaluations in all (one per label
+  of each laid-out column).
+
 ---
 
 ## 7. Leaders
@@ -704,21 +759,25 @@ Filtering while generating (ADR 0015), always exact:
   leader stays at least `clearance` (the item's `leaders.clearance`) away from the marks of
   other items — a leader passing a mark seems to point at it. Exempt are the marks of
   the item's own group and marks that contain the leader's anchor (the item's reference
-  point; for a fan leader its member's): no leader of the item avoids those. With a soft
-  weight `w`, every mark closer than `clearance` costs `w · (1 − d / clearance)`.
+  point; for a group label's leader to a member, the member's): no leader of the item
+  avoids those. A fan label's leader (§6.8) is also exempt from marks that contain its
+  start, and a mark closer than `clearance` to its start it must only not cross (it
+  leaves a crowd of touching marks in the order of its column). With a soft weight `w`,
+  every mark closer than `clearance` costs `w · (1 − d / clearance)`.
 * **Spacing between leaders** (with `avoid.leader.leaders` hard): two leaders of
   different labels conflict when a segment of one intersects a segment of the other, or
   when a vertex of one (start, bends, port, underline ends) is closer than `clr` to a
   segment of the other, `clr` being the larger `leaders.clearance` of the two items;
   leaders that do not intersect are closest at such a vertex. The start of one leader is
-  exempt when the start of the other is the point of that leader nearest to it: leaders
-  of neighbouring marks start close together and diverge. Two leaders closer than the
-  clearance read as a crossing.
+  exempt when the other leader starts within `clr` of it: leaders of neighbouring marks
+  start close together (if they stay close, their other vertices come close too). Two
+  leaders closer than the clearance read as a crossing.
 * **Diverging leaders** (with `avoid.leader.leaders` hard): two leaders of distant
   labels whose starts are closer than the larger font size of the two items conflict
   when the directions of their first segments differ by less than
   `leaders.min_angle_between` (`u·v > cos(α)·|u|·|v|`, `cos` from the deterministic math;
-  0 turns the rule off). Boundary leaders run in parallel by design and are exempt.
+  0 turns the rule off). Boundary and fan leaders run in parallel by design and are
+  exempt.
 
 ---
 
@@ -864,8 +923,9 @@ probe moves) to `T₀/1000` over the iteration budget. The iteration budget is
 
 ### 10.3 Uncross repair and verification
 
-After search: any two crossing leaders (only possible when `avoid.leader.leaders` is
-soft) are uncrossed by exchanging label positions when that shortens the total leader
+After search: fan labels (§6.8); the boundary labels of each side are re-stacked jointly
+(§6.6) when that keeps them feasible and lowers their cost; any two crossing leaders (only
+possible when `avoid.leader.leaders` is soft) are uncrossed by exchanging label positions when that shortens the total leader
 length. With `strict` omission, the **priority repair** then visits the omitted items in
 total order (except `keep_with` members and items cut by the time guard): an item with a
 usable candidate (statically feasible, or relaxed with `soft_overlap` in the ladder) that

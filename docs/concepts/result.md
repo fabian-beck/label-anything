@@ -75,8 +75,8 @@ The result (numbers rounded, `b` shortened):
 |---|---|
 | `id`, `placed` | the item and whether its label is placed |
 | `box` | the label box `{x, y, w, h}`: the collision box, including the label's padding |
-| `anchor_side` | `top`, `right`, `bottom`, `left`, `top-right`, `bottom-right`, `top-left`, `bottom-left`; `internal`, `distant` or `boundary` |
-| `model` | the candidate model: `adjacent`, `slider`, `internal`, `distant`, `boundary` |
+| `anchor_side` | `top`, `right`, `bottom`, `left`, `top-right`, `bottom-right`, `top-left`, `bottom-left`; `internal`, `distant`, `boundary` or `fan` |
+| `model` | the candidate model: `adjacent`, `slider`, `internal`, `distant`, `boundary`, or `fan` for a label in a crowd's column ([fan labels](candidates.md#fan-labels)) |
 | `text` | the text as placed: `lines` (wrapped, truncated or an alternative), `used` (`original`, `alternative:i`, `truncated`, `group`), `baseline_offsets` (y of each baseline relative to `box.y`), `x_offset` (the text starts at `box.x + x_offset`), `line_widths`, `font_size`, `font_family`, `font_weight`, `scale` (< 1 when shrunk) |
 | `parts` | for composite labels: each part's `type`, `box` and `text` |
 | `leader` | `null`, or `points` (from the item to the label), `style`, `port` (where it meets the label), `underline` (for `port: baseline`), `curve` (Bézier control points for `curved`) |

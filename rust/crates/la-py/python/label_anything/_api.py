@@ -267,6 +267,7 @@ def place(
     internal_circle_ratio: Optional[float] = None,
     prune_factor: Optional[float] = None,
     boundary: Any = None,
+    fan: Optional[str] = None,
     placement: Optional[Mapping[str, Any]] = None,
     # --- leaders ---
     leaders: Optional[LeadersLike] = None,

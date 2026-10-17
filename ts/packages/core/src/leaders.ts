@@ -528,8 +528,10 @@ export function leadersConflict(a: Leader, b: Leader, clr: number): boolean {
 }
 
 /**
- * A vertex of `a` closer than `clr` to `b`, except `a`'s start when `b`'s start is the point
- * of `b` nearest to it. Leaders that do not intersect are closest at a vertex of one of them.
+ * A vertex of `a` closer than `clr` to `b`, except `a`'s start when `b` starts within `clr`
+ * of it (leaders of neighbouring marks start close together; if they stay close, their
+ * other vertices come close too). Leaders that do not intersect are closest at a vertex of
+ * one of them.
  */
 function vertexNear(a: Leader, b: Leader, clr: number): boolean {
   if (b.pts.length === 0) return false;
@@ -540,7 +542,7 @@ function vertexNear(a: Leader, b: Leader, clr: number): boolean {
     const p = k < a.pts.length ? a.pts[k]! : a.underline![k - a.pts.length]!;
     let d = Infinity;
     for (let s = 0; s < nb; s++) d = minf(d, distPointSeg(p, b.segA(s), b.segB(s)));
-    if (d < clr - EPS && !(k === 0 && p.dist(b0) <= d)) return true;
+    if (d < clr - EPS && !(k === 0 && p.dist(b0) <= clr)) return true;
   }
   return false;
 }

@@ -20,6 +20,7 @@ import { compute } from "./priority.js";
 import { type DebugData, debugSvg } from "./render.js";
 import { build as buildResult } from "./result.js";
 import * as exact from "./solver/exact.js";
+import { fanPass } from "./solver/fan.js";
 import * as greedy from "./solver/greedy.js";
 import { Solve } from "./solver/index.js";
 import * as local from "./solver/local.js";
@@ -120,6 +121,7 @@ export function placeValidated(problem: unknown, env: Env, warnings: Issue[], pr
       strategy = "exact";
     }
   }
+  fanPass(s);
   repair.boundaryPass(s);
   repair.uncross(s);
   repair.priorityRepair(s);

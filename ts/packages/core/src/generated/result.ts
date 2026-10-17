@@ -35,8 +35,9 @@ export interface Placement {
     | "bottom-left"
     | "internal"
     | "distant"
-    | "boundary";
-  model?: "adjacent" | "slider" | "internal" | "distant" | "boundary";
+    | "boundary"
+    | "fan";
+  model?: "adjacent" | "slider" | "internal" | "distant" | "boundary" | "fan";
   text?: TextInfo;
   parts?: Part[];
   leader?: Leader | null;
@@ -203,7 +204,7 @@ export interface Issue {
 export interface Candidate {
   id: string;
   box: Box;
-  model: "adjacent" | "slider" | "internal" | "distant" | "boundary";
+  model: "adjacent" | "slider" | "internal" | "distant" | "boundary" | "fan";
   anchor_side?: string;
   variant?: number;
   /**

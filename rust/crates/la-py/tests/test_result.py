@@ -26,7 +26,7 @@ def test_placements() -> None:
     for p in placed:
         assert isinstance(p, la.Placement)
         assert p.box is not None and p.box.w > 0 and p.box.h > 0
-        assert p.model in ("adjacent", "slider", "distant", "internal", "boundary")
+        assert p.model in ("adjacent", "slider", "distant", "internal", "boundary", "fan")
         # the degradation ladder may wrap a label onto two lines
         assert " ".join(p.lines) == f"label {p.id}"
         assert len(p.baselines) == len(p.lines)

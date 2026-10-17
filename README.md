@@ -87,7 +87,7 @@ CI runs):
 |---|---|
 | Priority | explicit `item.priority`, else input order; omission `strict`; `evict_lower` on |
 | Text | 12 px bundled sans (Noto Sans) · padding 0.15 em · buffer 0.3 em |
-| Candidates | models adjacent + slider + distant (preset `auto`: distant only when crowded) · perceptual position order (top first) |
+| Candidates | models adjacent + slider + distant (preset `auto`: distant only when crowded) · perceptual position order (top first) · fan labels for crowds left without labels |
 | Leaders | straight, crossings hard, 0.4 em clear of other marks and leaders |
 | Label vs. | labels, items, text, canvas edge: **hard** · ink 0.1 per em² |
 | Leader vs. | labels, items, leaders **hard** |

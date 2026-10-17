@@ -16,6 +16,7 @@ pub enum Kind {
     Internal,
     Distant,
     Boundary,
+    Fan,
 }
 
 impl Kind {
@@ -26,6 +27,7 @@ impl Kind {
             Kind::Internal => "internal",
             Kind::Distant => "distant",
             Kind::Boundary => "boundary",
+            Kind::Fan => "fan",
         }
     }
 }
@@ -37,6 +39,7 @@ pub enum Side {
     Internal,
     Distant,
     Boundary,
+    Fan,
 }
 
 impl Side {
@@ -46,6 +49,7 @@ impl Side {
             Side::Internal => "internal",
             Side::Distant => "distant",
             Side::Boundary => "boundary",
+            Side::Fan => "fan",
         }
     }
 }

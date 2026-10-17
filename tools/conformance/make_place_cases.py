@@ -278,6 +278,32 @@ CASES["distant-keeps-sides"] = case(
     "directions within 22.5° of the listed positions: a, walled in on the right for labels and "
     "leaders, is omitted; b goes up-right, its leader over the soft-for-leaders box.")
 
+CASES["fan-line-ends"] = case(
+    "fan labels: crowded line ends get a column of labels with fanning leaders",
+    {"canvas": {"width": 320, "height": 200}, "placement": {"position_order": ["right"]},
+     "items": [pt(n.lower(), 150, 88 + 5 * k, n)
+               for k, n in enumerate(["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"])]},
+    {"placed": 6, "inside_canvas": True,
+     "model": {k: "fan" for k in ("alpha", "beta", "gamma", "delta", "epsilon", "zeta")},
+     "anchor_side": {k: "fan" for k in ("alpha", "beta", "gamma", "delta", "epsilon", "zeta")},
+     "has_leader": {k: True for k in ("alpha", "beta", "gamma", "delta", "epsilon", "zeta")}},
+    "Six ends 5 px apart that allow only `right`: beside them there is room for two labels, the "
+    "others are left without one by the search. The crowd's column (placement.fan = auto, the "
+    "default) takes all six, the two placed labels in its way included, stacked in the order of "
+    "the ends (spec §6.8).")
+
+CASES["fan-always"] = case(
+    "fan labels with placement.fan = always: a crowd's labels move into a column",
+    {"canvas": {"width": 240, "height": 140}, "placement": {"fan": "always"},
+     "items": [pt("a", 100, 70, "Alpha"), pt("b", 104, 76, "Beta")]},
+    {"placed": 2, "model": {"a": "fan", "b": "fan"}, "has_leader": {"a": True, "b": True},
+     "box": {"a": {"x": 124.0, "y": 52.056, "w": 35.892, "h": 19.944, "tol": 0.01},
+             "b": {"x": 124.0, "y": 74.0, "w": 29.232, "h": 19.944, "tol": 0.01}}},
+    "Both points get adjacent labels (top and bottom; their centers count as right of the "
+    "anchors). With `always` the crowd's column takes them: right of the marks' boxes "
+    "(x1 = 106) by the least run of 1.5 em (18 px), stacked around the anchors' heights with "
+    "the boundary gap (2 px): centers 62.028 and 83.972.")
+
 CASES["raster-background"] = case(
     "raster background ink is avoided",
     {"problem_file": "../problems/raster-ink.json"},

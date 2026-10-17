@@ -207,6 +207,7 @@ pub fn place_validated(
             strategy = "exact";
         }
     }
+    solver::fan::fan_pass(&mut s);
     solver::repair::boundary_pass(&mut s);
     solver::repair::uncross(&mut s);
     solver::repair::priority_repair(&mut s);

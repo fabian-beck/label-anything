@@ -218,7 +218,7 @@ impl<'a> Evaluator<'a> {
         }
         // 4. leaders
         for l in &c.leaders {
-            self.leader_terms(i, l, &r, &mut acc);
+            self.leader_terms(i, l, &r, c.kind == Kind::Fan, &mut acc);
         }
         if !acc.relaxed {
             return finish(c, acc);
@@ -328,7 +328,7 @@ impl<'a> Evaluator<'a> {
         }
     }
 
-    fn leader_terms(&mut self, i: usize, l: &Leader, own_rect: &Rect, acc: &mut Acc) {
+    fn leader_terms(&mut self, i: usize, l: &Leader, own_rect: &Rect, fan: bool, acc: &mut Acc) {
         let model = self.model;
         let obs = self.obs;
         let item = &model.items[i];
@@ -364,7 +364,9 @@ impl<'a> Evaluator<'a> {
             }
         }
         // other items: clearance (not from the group's members, and not from a mark that
-        // covers the leader's anchor: no leader avoids it)
+        // covers the leader's anchor, or a fan leader's start: no leader avoids it); a fan
+        // leader must only not cross a mark closer than the clearance to its start (it
+        // leaves a crowd of touching marks, in the order of its column)
         let bb = l.bbox().inflate(item.len.clearance);
         self.buf.clear();
         obs.item_index.query(&bb, &mut self.buf);
@@ -373,13 +375,14 @@ impl<'a> Evaluator<'a> {
             Some(m) => model.items[m as usize].anchor,
             None => item.anchor,
         };
+        let start = l.pts[0];
         for &j in &self.buf {
             let j = j as usize;
             if j == i || model.group_of.get(j).copied().flatten() == Some(i) {
                 continue;
             }
             let sj = &model.items[j].shape;
-            if sj.contains(anchor) {
+            if sj.contains(anchor) || (fan && sj.contains(start)) {
                 continue;
             }
             let mut dmin = f64::INFINITY;
@@ -388,7 +391,12 @@ impl<'a> Evaluator<'a> {
             }
             match dy.leader_items {
                 AvoidW::Hard => {
-                    if dmin < clearance - EPS {
+                    let lim = if fan && sj.signed_distance(start) < clearance {
+                        EPS
+                    } else {
+                        clearance - EPS
+                    };
+                    if dmin < lim {
                         acc.violate(Block::Items, false, 0.0);
                     }
                 }

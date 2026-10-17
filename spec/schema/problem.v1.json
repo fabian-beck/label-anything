@@ -1300,6 +1300,14 @@
               "description": "Distance of boundary labels from the canvas (region) edge."
             }
           }
+        },
+        "fan": {
+          "enum": [
+            "auto",
+            "always",
+            "off"
+          ],
+          "description": "Fan labels: a crowd's labels stacked in a column beside it with fanning leaders. auto: crowds of items left without a label, when that places more labels; always: every crowd of two or more items."
         }
       }
     },

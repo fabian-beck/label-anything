@@ -76,10 +76,14 @@ All examples label the same dense cluster of twelve asteroids among 60 unlabeled
     ![Curved leaders](../assets/gallery/leaders-curved.png)
 
 A red cross marks a label that was omitted. In a cluster this dense, a leader leaving
-an inner asteroid passes close to its neighbours; such leaders are not generated, so
-two to four asteroids find no candidate free of the other labels, marks and leaders —
-fewer with curved leaders, which bend around them, more with elbows, whose first
-segments run in four directions only. Each omitted placement says why —
+an inner asteroid passes close to its neighbours; such leaders are not generated, so up
+to three asteroids find no candidate free of the other labels, marks and leaders — none
+with curved leaders, which bend around them, the most with orthogonal ones, whose first
+segments run in four directions only. With straight and elbow leaders, the labels on the
+cluster's right stand in a column: after the search, a crowd with labels left over gets
+a column of [fan labels](../concepts/candidates.md#fan-labels) beside it, in the crowd's
+order, when that places more labels (`placement.fan`; not with `angles`, whose leaders
+keep to their rays). Each omitted placement says why —
 `reason: "omitted_by_priority"` (all items have the same priority here, so it lost to
 items processed before it) or `"no_feasible_candidate"`, `blocking` lists the classes
 that rejected its candidates and `blocked_by` the labels in its way. See
@@ -94,7 +98,7 @@ that rejected its candidates and `blocked_by` the labels in its way. See
 | `port` | `"nearest"` | where the leader meets the label: `nearest` point, `side-center`, or `baseline` (the end of an underline below the first text line, reported as `leader.underline`) |
 | `attach` | `"auto"` | where it leaves the feature: the mark's `boundary`, its `center`, or an icon's `tip` (`auto`: tip for icons, else boundary) |
 | `anchor_gap` | 1.5 px | gap between the mark and the leader's start |
-| `min_length` / `max_length` | 6 px / 10 em | shorter leaders are dropped (the label counts as adjacent); longer ones are not generated |
+| `min_length` / `max_length` | 6 px / 10 em | shorter leaders are dropped (the label counts as adjacent); longer ones are not generated (fan labels included; boundary labels excepted) |
 | `clearance` | 0.4 em | distance from other items' marks and from other leaders (except where two leaders of neighbouring marks start) |
 | `min_angle_between` | 10° | distant leaders starting within 1 em of each other diverge at least this much |
 | `width` | 1 px | stroke width for the collision tests |

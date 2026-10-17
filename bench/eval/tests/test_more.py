@@ -89,6 +89,42 @@ def test_leaders_near_and_parallel():
     assert m["visual"]["near_crossings"]["parallel"] == 1
 
 
+def test_leaders_starting_together():
+    # B starts 3.6 px from A's start, nearest to A's segment 2 px further along: the start of
+    # one leader does not count when the other starts within the clearance (spec §7)
+    from bench.eval import visual as vis
+    A = ([(22.0, 50.0), (120.0, 50.0)], [])
+    B = ([(24.0, 53.0), (100.0, 90.0)], [])
+    assert vis.leader_approach(A, B, 0.0) == pytest.approx(3.0)
+    assert vis.leader_approach(A, B, 4.8) == pytest.approx(40.0)    # B's end, far below A
+    prob = problem([item("A", 20, 50), item("B", 21, 55)])
+    m = evaluate(prob, result([placed("A", 120, 45, side="distant", model="distant",
+                                      leader={"points": A[0], "style": "straight", "port": [120, 50]}),
+                               placed("B", 100, 90, side="distant", model="distant",
+                                      leader={"points": B[0], "style": "straight", "port": [100, 90]})]))
+    assert m["hard"]["leader_near"] == 0
+
+
+def test_fan_leaders_leave_crowded_marks():
+    # A's leader leaves the crowd up and to the right; B's mark is 2.2 px from its start and
+    # 1.7 px from the leader: a distant leader keeps the clearance, a fan leader must only
+    # not cross a mark that close to its start (spec §7)
+    L = {"points": [[22, 50], [90, 30]], "style": "straight", "port": [90, 30]}
+    prob = problem([item("A", 20, 50), item("B", 25, 53)])
+    for model, hard in (("distant", 1), ("fan", 0)):
+        m = evaluate(prob, result([placed("A", 90, 25, side=model, model=model, leader=L), omitted("B")]))
+        assert m["hard"]["leader_item"] == hard, model
+    # ... but crossing it counts
+    prob = problem([item("A", 20, 50), item("B", 25.5, 49)])
+    m = evaluate(prob, result([placed("A", 90, 25, side="fan", model="fan", leader=L), omitted("B")]))
+    assert m["hard"]["leader_item"] == 1
+    # a mark covering a fan leader's start (not its anchor) is no obstacle of that leader
+    prob = problem([item("A", 20, 50), item("B", 23.5, 50, r=1.6)])
+    for model, hard in (("distant", 1), ("fan", 0)):
+        m = evaluate(prob, result([placed("A", 90, 25, side=model, model=model, leader=L), omitted("B")]))
+        assert m["hard"]["leader_item"] == hard, model
+
+
 def test_area_anchor_internal_label():
     sq = [[20, 20], [120, 20], [120, 80], [20, 80]]
     it = {"id": "R", "anchor": {"type": "area", "polygon": sq},

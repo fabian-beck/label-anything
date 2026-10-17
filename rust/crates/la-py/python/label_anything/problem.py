@@ -67,6 +67,7 @@ OPTION_PATHS: Dict[str, str] = {
     "internal_circle_ratio": "placement.internal_circle_ratio",
     "prune_factor": "placement.prune_factor",
     "boundary": "placement.boundary",
+    "fan": "placement.fan",
     # avoid
     "avoid_leader": "avoid.leader",
     "avoid_buffer": "avoid.buffer",

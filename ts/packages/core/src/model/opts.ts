@@ -425,6 +425,20 @@ export interface BoundaryOpts {
   spread: boolean;
 }
 
+/**
+ * When crowds get fan labels (spec §6.8): `Auto` crowds of items left without a label, when
+ * the column places more labels; `Always` every crowd of two or more items, when the
+ * column places at least as many.
+ */
+export const FanMode = { Auto: 0, Always: 1, Off: 2 } as const;
+export type FanMode = (typeof FanMode)[keyof typeof FanMode];
+
+function fanMode(s: string): FanMode {
+  if (s === "always") return FanMode.Always;
+  if (s === "off") return FanMode.Off;
+  return FanMode.Auto;
+}
+
 /** Placement options that do not depend on the label's font size. */
 export class PlacementOpts {
   constructor(
@@ -436,6 +450,7 @@ export class PlacementOpts {
     public internalCircleRatio: number,
     public pruneFactor: number,
     public boundary: BoundaryOpts,
+    public fan: FanMode,
   ) {}
 
   static from(o: Opts): PlacementOpts {
@@ -451,6 +466,7 @@ export class PlacementOpts {
       o.f64("placement.internal_circle_ratio"),
       maxf(prune, 1),
       { sides: o.strings("placement.boundary.sides"), spread: o.string("placement.boundary.align") === "spread" },
+      fanMode(o.string("placement.fan")),
     );
   }
 }

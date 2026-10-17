@@ -198,13 +198,13 @@
         "id": "m5",
         "placed": true,
         "box": {
-          "x": 511.82400000000007,
-          "y": 137.456,
+          "x": 545.044,
+          "y": 172.272,
           "w": 16.751999999999953,
           "h": 19.944000000000017
         },
-        "anchor_side": "top",
-        "model": "adjacent",
+        "anchor_side": "fan",
+        "model": "fan",
         "text": {
           "lines": [
             "L5"
@@ -223,8 +223,24 @@
           "font_weight": 400,
           "scale": 1.0
         },
-        "leader": null,
-        "cost": 0.7449968979142383,
+        "leader": {
+          "points": [
+            [
+              522.8812932514263,
+              163.64959251862547
+            ],
+            [
+              545.044,
+              182.244
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            545.044,
+            182.244
+          ]
+        },
+        "cost": 2.4145497870989376,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -3124,13 +3140,13 @@
         "id": "m82",
         "placed": true,
         "box": {
-          "x": 524.7999999999951,
-          "y": 157.89421831038075,
+          "x": 545.044,
+          "y": 150.328,
           "w": 23.615999999999985,
           "h": 19.944000000000017
         },
-        "anchor_side": "bottom-right",
-        "model": "slider",
+        "anchor_side": "fan",
+        "model": "fan",
         "text": {
           "lines": [
             "L82"
@@ -3149,8 +3165,24 @@
           "font_weight": 400,
           "scale": 1.0
         },
-        "leader": null,
-        "cost": 0.9854790663811834,
+        "leader": {
+          "points": [
+            [
+              524.2997320695112,
+              160.04330636944619
+            ],
+            [
+              545.044,
+              160.3
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            545.044,
+            160.3
+          ]
+        },
+        "cost": 2.3955123362849378,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -7188,31 +7220,57 @@
       },
       {
         "id": "m189",
-        "placed": false,
-        "reason": "omitted_by_priority",
-        "blocking": [
-          "items",
-          "labels"
-        ],
-        "blocked_by": [
-          "m5",
-          "m24",
-          "m82"
-        ],
+        "placed": true,
+        "box": {
+          "x": 545.044,
+          "y": 128.384,
+          "w": 30.480000000000018,
+          "h": 19.944000000000017
+        },
+        "anchor_side": "fan",
+        "model": "fan",
+        "text": {
+          "lines": [
+            "L189"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            26.88
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              524.4840029794243,
+              157.13929489297666
+            ],
+            [
+              545.044,
+              138.356
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            545.044,
+            138.356
+          ]
+        },
+        "cost": 2.41240412631746,
+        "degrade_steps": [],
         "priority": {
           "tier": 0,
           "score": 0.0,
           "rank": 189
-        },
-        "degrade_steps": [
-          "alternatives",
-          "wrap",
-          "distant",
-          "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
-          "omit"
-        ]
+        }
       },
       {
         "id": "m190",
@@ -7596,9 +7654,9 @@
       }
     ],
     "stats": {
-      "placed": 199,
+      "placed": 200,
       "total": 200,
-      "placed_weighted": 0.9962097006887914,
+      "placed_weighted": 1.0,
       "required_placed": true,
       "hard_violations": 0,
       "leader_crossings": 0,
@@ -7607,12 +7665,10 @@
       "iterations": 0,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 5800,
-      "omission_order": [
-        "m189"
-      ],
+      "candidates": 5803,
+      "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 57.39783821686498,
+      "total_cost": 62.88982850227088,
       "degraded": {},
       "grid": {
         "cell": 3.0,

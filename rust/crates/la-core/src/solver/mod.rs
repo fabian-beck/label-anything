@@ -2,6 +2,7 @@
 //! verification.
 
 pub mod exact;
+pub mod fan;
 pub mod greedy;
 pub mod local;
 pub mod repair;

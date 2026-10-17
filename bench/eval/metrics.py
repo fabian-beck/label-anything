@@ -261,7 +261,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                 near = max(pk.item.label.em, pk2.item.label.em)
                 for A in vis.label_leaders(pk):
                     for B in vis.label_leaders(pk2):
-                        d = vis.leader_approach(A, B)
+                        d = vis.leader_approach(A, B, clr)
                         if d is not None and d < clr - tol:
                             near_pairs.add((k, k2))
                         if (min_angle > 0 and pk.model == "distant" and pk2.model == "distant"
@@ -310,12 +310,21 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                     hard["leader_own_label"] += 1
                     note("leader_own_label", p.id)
                 if leader_items_hard:
-                    # leaders keep the clearance from other marks (spec §7)
+                    # leaders keep the clearance from other marks (spec §7); a fan leader must only
+                    # not cross a mark closer than the clearance to its start (crowded marks)
                     r = clearance(p.item) - tol
+                    start = pl[0]
                     for j in (item_index.query(q.grow(r)) if r > 0 else ()):
                         other = prob.items[j]
-                        if (j, k) not in leader_item_pairs and not vis.exempt_mark(p.item, other) \
-                                and other.shape.intersects_segment(a, b, r):
+                        if (j, k) in leader_item_pairs or vis.exempt_mark(p.item, other):
+                            continue
+                        rr = r
+                        if p.model == "fan":
+                            if other.own_shape.contains(start):
+                                continue
+                            if other.own_shape.sdist(start) < clearance(p.item):
+                                rr = 0.0
+                        if other.shape.intersects_segment(a, b, rr):
                             leader_item_pairs.add((j, k))
                             note("leader_item", [p.id, other.id])
                 for c in leader_hard_classes:

@@ -455,9 +455,10 @@ pub fn cand_leaders_conflict(a: &Cand, b: &Cand, sp: Spacing) -> bool {
     })
 }
 
-/// A vertex of `a` closer than `clr` to `b`, except `a`'s start when `b`'s start is the
-/// point of `b` nearest to it. Leaders that do not intersect are closest at a vertex of
-/// one of them.
+/// A vertex of `a` closer than `clr` to `b`, except `a`'s start when `b` starts within
+/// `clr` of it (leaders of neighbouring marks start close together; if they stay close,
+/// their other vertices come close too). Leaders that do not intersect are closest at a
+/// vertex of one of them.
 fn vertex_near(a: &Leader, b: &Leader, clr: f64) -> bool {
     let Some(&b0) = b.pts.first() else {
         return false;
@@ -468,7 +469,7 @@ fn vertex_near(a: &Leader, b: &Leader, clr: f64) -> bool {
         for (r, t) in b.segments() {
             d = minf(d, crate::geom::dist_point_seg(p, r, t));
         }
-        if d < clr - crate::geom::EPS && !(k == 0 && p.dist(b0) <= d) {
+        if d < clr - crate::geom::EPS && !(k == 0 && p.dist(b0) <= clr) {
             return true;
         }
     }

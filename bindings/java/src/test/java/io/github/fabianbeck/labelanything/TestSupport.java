@@ -57,6 +57,16 @@ final class TestSupport {
     }
   }
 
+  /** The inline problem of a {@code conformance/place} case. */
+  static Object placeCaseProblem(String name) {
+    try {
+      Path f = problemsDir().resolveSibling("place").resolve(name);
+      return Json.parseObject(Files.readString(f, UTF_8)).get("problem");
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
   /** The problem with {@code solver.strategy = "greedy"} (other options kept). */
   @SuppressWarnings("unchecked")
   static String greedy(String problemJson) {

@@ -11,7 +11,12 @@ public enum Model implements JsonName {
   /** Farther away, with a leader. */
   DISTANT,
   /** In the canvas margins, with a leader. */
-  BOUNDARY;
+  BOUNDARY,
+  /**
+   * In a column beside a crowd of items, with a leader ({@link Placement#fan}); reported
+   * only, not a model to list in {@link Placement#models}.
+   */
+  FAN;
 
   @Override
   public String jsonName() {

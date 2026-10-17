@@ -104,6 +104,17 @@ class BuilderJsonTest {
   }
 
   @Test
+  void conformanceFanAlways() {
+    var problem = LabelProblem.builder()
+        .canvas(240, 140)
+        .placement(Placement.defaults().fan(Placement.Fan.ALWAYS))
+        .item("a", 100, 70, Label.text("Alpha"))
+        .item("b", 104, 76, Label.text("Beta"))
+        .build();
+    assertSameJson(Json.write(TestSupport.placeCaseProblem("fan-always.json")), problem.toJson());
+  }
+
+  @Test
   void itemsLabelsAndObstacles() {
     var problem = LabelProblem.builder()
         .canvas(400, 300).yAxisUp().transform(2, 0, 0, 2, 10, 10).preset(Preset.SCATTER)

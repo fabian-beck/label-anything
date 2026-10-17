@@ -125,9 +125,9 @@
         "placed": { "type": "boolean" },
         "box": { "$ref": "#/$defs/box" },
         "anchor_side": {
-          "enum": ["top", "right", "bottom", "left", "top-right", "bottom-right", "top-left", "bottom-left", "internal", "distant", "boundary"]
+          "enum": ["top", "right", "bottom", "left", "top-right", "bottom-right", "top-left", "bottom-left", "internal", "distant", "boundary", "fan"]
         },
-        "model": { "enum": ["adjacent", "slider", "internal", "distant", "boundary"] },
+        "model": { "enum": ["adjacent", "slider", "internal", "distant", "boundary", "fan"] },
         "text": { "$ref": "#/$defs/textInfo" },
         "parts": { "type": "array", "items": { "$ref": "#/$defs/part" } },
         "leader": { "oneOf": [{ "$ref": "#/$defs/leader" }, { "type": "null" }] },
@@ -155,7 +155,7 @@
       "properties": {
         "id": { "type": "string" },
         "box": { "$ref": "#/$defs/box" },
-        "model": { "enum": ["adjacent", "slider", "internal", "distant", "boundary"] },
+        "model": { "enum": ["adjacent", "slider", "internal", "distant", "boundary", "fan"] },
         "anchor_side": { "type": "string" },
         "variant": { "type": "integer" },
         "level": { "type": "integer", "description": "Degradation level (0 = normal)." },

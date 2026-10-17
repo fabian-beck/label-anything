@@ -89,6 +89,20 @@ public final class Placement extends Spec {
     }
   }
 
+  /** When crowds of items get fan labels (spec §6.8). */
+  public enum Fan implements JsonName {
+    /** Crowds with items left without a label, when the column places more labels (default). */
+    AUTO,
+    /** Every crowd of two or more items. */
+    ALWAYS,
+    OFF;
+
+    @Override
+    public String jsonName() {
+      return JsonName.lower(this);
+    }
+  }
+
   /** No settings (defaults: adjacent, slider, distant). */
   public static Placement defaults() {
     return new Placement(Map.of());
@@ -218,5 +232,13 @@ public final class Placement extends Spec {
   /** Distance of boundary labels from the canvas (region) edge in px (default 4). */
   public Placement boundaryMargin(double px) {
     return boundary("margin", len(px));
+  }
+
+  /**
+   * Fan labels: a crowd's labels stacked in a column beside it with fanning leaders
+   * (default {@link Fan#AUTO}).
+   */
+  public Placement fan(Fan mode) {
+    return with("fan", mode);
   }
 }

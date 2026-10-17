@@ -27,10 +27,10 @@ import {
 import { leaderStart } from "./leaders.js";
 
 /** Candidate model. */
-export const Kind = { Adjacent: 0, Slider: 1, Internal: 2, Distant: 3, Boundary: 4 } as const;
+export const Kind = { Adjacent: 0, Slider: 1, Internal: 2, Distant: 3, Boundary: 4, Fan: 5 } as const;
 export type Kind = (typeof Kind)[keyof typeof Kind];
 
-const KIND_NAMES = ["adjacent", "slider", "internal", "distant", "boundary"] as const;
+const KIND_NAMES = ["adjacent", "slider", "internal", "distant", "boundary", "fan"] as const;
 
 /** `Kind::name`. */
 export function kindName(k: Kind): string {
@@ -39,18 +39,20 @@ export function kindName(k: Kind): string {
 
 /**
  * Reported anchor side (Rust `enum Side`): a {@link Pos} (0–7), or one of
- * {@link SIDE_INTERNAL}, {@link SIDE_DISTANT}, {@link SIDE_BOUNDARY}.
+ * {@link SIDE_INTERNAL}, {@link SIDE_DISTANT}, {@link SIDE_BOUNDARY}, {@link SIDE_FAN}.
  */
 export type Side = number;
 export const SIDE_INTERNAL: Side = 8;
 export const SIDE_DISTANT: Side = 9;
 export const SIDE_BOUNDARY: Side = 10;
+export const SIDE_FAN: Side = 11;
 
 /** `Side::name`. */
 export function sideName(s: Side): string {
   if (s === SIDE_INTERNAL) return "internal";
   if (s === SIDE_DISTANT) return "distant";
   if (s === SIDE_BOUNDARY) return "boundary";
+  if (s === SIDE_FAN) return "fan";
   return posName(s as Pos);
 }
 

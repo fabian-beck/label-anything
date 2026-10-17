@@ -68,9 +68,11 @@ class Placement:
     id: str
     placed: bool
     box: Optional[BBox] = None
-    #: ``top``, ``right``, ..., ``bottom-left``, ``internal``, ``distant`` or ``boundary``.
+    #: ``top``, ``right``, ..., ``bottom-left``, ``internal``, ``distant``, ``boundary`` or
+    #: ``fan``.
     anchor_side: Optional[str] = None
-    #: ``adjacent``, ``slider``, ``internal``, ``distant`` or ``boundary``.
+    #: ``adjacent``, ``slider``, ``internal``, ``distant``, ``boundary`` or ``fan`` (a label
+    #: in a crowd's column).
     model: Optional[str] = None
     leader: Optional[Leader] = None
     #: Text lines as placed (wrapped, truncated or an alternative); empty for icons/boxes.

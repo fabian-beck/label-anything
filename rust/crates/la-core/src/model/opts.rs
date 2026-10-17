@@ -431,6 +431,16 @@ impl DegradeOpts {
     }
 }
 
+/// When crowds get fan labels (spec §6.8).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FanMode {
+    /// Crowds of items left without a label, when the column places more labels.
+    Auto,
+    /// Every crowd of two or more items, when the column places at least as many.
+    Always,
+    Off,
+}
+
 /// Boundary model options.
 #[derive(Clone, Debug)]
 pub struct BoundaryOpts {
@@ -449,6 +459,7 @@ pub struct PlacementOpts {
     pub internal_circle_ratio: f64,
     pub prune_factor: f64,
     pub boundary: BoundaryOpts,
+    pub fan: FanMode,
 }
 
 impl PlacementOpts {
@@ -472,6 +483,11 @@ impl PlacementOpts {
             boundary: BoundaryOpts {
                 sides: o.strings("placement.boundary.sides"),
                 spread: o.string("placement.boundary.align") == "spread",
+            },
+            fan: match o.string("placement.fan").as_str() {
+                "always" => FanMode::Always,
+                "off" => FanMode::Off,
+                _ => FanMode::Auto,
             },
         }
     }

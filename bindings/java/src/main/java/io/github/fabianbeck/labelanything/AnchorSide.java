@@ -12,7 +12,8 @@ public enum AnchorSide implements JsonName {
   BOTTOM_LEFT,
   INTERNAL,
   DISTANT,
-  BOUNDARY;
+  BOUNDARY,
+  FAN;
 
   @Override
   public String jsonName() {
