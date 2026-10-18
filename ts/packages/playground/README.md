@@ -25,8 +25,8 @@ node ts/packages/playground/test/server.mjs 8000  # http://127.0.0.1:8000/ (expl
 8000. Without the WebAssembly build the playground solves with the TypeScript engine only.
 
 The build also makes `dist/hero.js`, the live header of the documentation's home page
-(`docs/_overrides/home.html`): the logo, with the name on its label, among a small map,
-network and chart, solved with `engine-ts.js`. The home page loads it from the playground's directory
+(`docs/_overrides/home.html`): the logo, with the name on its label, among random things
+(a rubber duck, coffee, the moon, …), solved with `engine-ts.js`. The home page loads it from the playground's directory
 ([ADR 0049](../../../docs/adr/0049-home-page-header-labeled-live.md)).
 
 ## Tests
@@ -42,7 +42,8 @@ network and chart, solved with `engine-ts.js`. The home page loads it from the p
   on the drawing and that clicking the picture adds a label; that every scene of the
   explainer solves, matches the WebAssembly engine, and can be stepped, dragged and
   solved again; and that the home page's header keeps the name where the static logo has
-  it, places every label off its text and follows drags and clicks (`test/hero.pw.mjs`).
+  it, places every label off its text, stays still until someone interacts, and follows
+  drags, clicks and shuffles (`test/hero.pw.mjs`).
   CI runs both (job `wasm`) and uploads dist/ as the artifact the Pages workflow
   publishes.
 

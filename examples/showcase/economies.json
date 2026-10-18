@@ -1,0 +1,4022 @@
+{
+ "version": "1",
+ "canvas": {
+  "width": 960,
+  "height": 600,
+  "padding": 2
+ },
+ "defaults": {
+  "font": {
+   "size": 11.5
+  }
+ },
+ "obstacles": {
+  "svg": {
+   "path": "economies-chart.svg",
+   "classes": [
+    {
+     "selector": "#background",
+     "class": "ignore"
+    },
+    {
+     "selector": ".grid line",
+     "class": "grid"
+    },
+    {
+     "selector": ".legend *",
+     "class": "legend"
+    },
+    {
+     "selector": ".axis *",
+     "class": "axes"
+    },
+    {
+     "selector": "circle.bubble",
+     "class": "ignore"
+    }
+   ]
+  }
+ },
+ "items": [
+  {
+   "id": "USA",
+   "anchor": {
+    "type": "point",
+    "x": 827.89,
+    "y": 127.76,
+    "mark": {
+     "shape": "circle",
+     "r": 50.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "United States of America",
+    "alternatives": [
+     "United States",
+     "USA"
+    ]
+   },
+   "priority": 21433226,
+   "placement": {
+    "internal": "prefer"
+   }
+  },
+  {
+   "id": "CHN",
+   "anchor": {
+    "type": "point",
+    "x": 588.15,
+    "y": 54.58,
+    "mark": {
+     "shape": "circle",
+     "r": 40.9
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "China",
+    "alternatives": [
+     "CHN"
+    ]
+   },
+   "priority": 14342903,
+   "placement": {
+    "internal": "prefer"
+   }
+  },
+  {
+   "id": "JPN",
+   "anchor": {
+    "type": "point",
+    "x": 765.2,
+    "y": 176.02,
+    "mark": {
+     "shape": "circle",
+     "r": 24.35
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Japan",
+    "alternatives": [
+     "JPN"
+    ]
+   },
+   "priority": 5081769,
+   "placement": {
+    "internal": "prefer"
+   }
+  },
+  {
+   "id": "DEU",
+   "anchor": {
+    "type": "point",
+    "x": 783.76,
+    "y": 197.13,
+    "mark": {
+     "shape": "circle",
+     "r": 21.22
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Germany",
+    "alternatives": [
+     "DEU"
+    ]
+   },
+   "priority": 3861123,
+   "placement": {
+    "internal": "prefer"
+   }
+  },
+  {
+   "id": "IND",
+   "anchor": {
+    "type": "point",
+    "x": 382.6,
+    "y": 55.72,
+    "mark": {
+     "shape": "circle",
+     "r": 18.29
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "India",
+    "alternatives": [
+     "IND"
+    ]
+   },
+   "priority": 2868929,
+   "placement": {
+    "internal": "prefer"
+   }
+  },
+  {
+   "id": "GBR",
+   "anchor": {
+    "type": "point",
+    "x": 771.74,
+    "y": 208.16,
+    "mark": {
+     "shape": "circle",
+     "r": 18.17
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "United Kingdom",
+    "alternatives": [
+     "UK",
+     "GBR"
+    ]
+   },
+   "priority": 2829108,
+   "placement": {
+    "internal": "prefer"
+   }
+  },
+  {
+   "id": "FRA",
+   "anchor": {
+    "type": "point",
+    "x": 765.99,
+    "y": 207.99,
+    "mark": {
+     "shape": "circle",
+     "r": 17.8
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "France",
+    "alternatives": [
+     "FRA"
+    ]
+   },
+   "priority": 2715518,
+   "placement": {
+    "internal": "prefer"
+   }
+  },
+  {
+   "id": "ITA",
+   "anchor": {
+    "type": "point",
+    "x": 740.37,
+    "y": 213.36,
+    "mark": {
+     "shape": "circle",
+     "r": 15.29
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Italy",
+    "alternatives": [
+     "ITA"
+    ]
+   },
+   "priority": 2003576,
+   "placement": {
+    "internal": "prefer"
+   }
+  },
+  {
+   "id": "BRA",
+   "anchor": {
+    "type": "point",
+    "x": 567.02,
+    "y": 150.07,
+    "mark": {
+     "shape": "circle",
+     "r": 14.65
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Brazil",
+    "alternatives": [
+     "BRA"
+    ]
+   },
+   "priority": 1839758
+  },
+  {
+   "id": "CAN",
+   "anchor": {
+    "type": "point",
+    "x": 783.06,
+    "y": 237.23,
+    "mark": {
+     "shape": "circle",
+     "r": 14.23
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Canada",
+    "alternatives": [
+     "CAN"
+    ]
+   },
+   "priority": 1736425
+  },
+  {
+   "id": "RUS",
+   "anchor": {
+    "type": "point",
+    "x": 605.97,
+    "y": 169.25,
+    "mark": {
+     "shape": "circle",
+     "r": 14.08
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Russia",
+    "alternatives": [
+     "RUS"
+    ]
+   },
+   "priority": 1699876
+  },
+  {
+   "id": "KOR",
+   "anchor": {
+    "type": "point",
+    "x": 734.87,
+    "y": 221.12,
+    "mark": {
+     "shape": "circle",
+     "r": 13.86
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "South Korea",
+    "alternatives": [
+     "KOR"
+    ]
+   },
+   "priority": 1646739
+  },
+  {
+   "id": "AUS",
+   "anchor": {
+    "type": "point",
+    "x": 805.8,
+    "y": 257.1,
+    "mark": {
+     "shape": "circle",
+     "r": 12.76
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Australia",
+    "alternatives": [
+     "AUS"
+    ]
+   },
+   "priority": 1396567
+  },
+  {
+   "id": "ESP",
+   "anchor": {
+    "type": "point",
+    "x": 725.4,
+    "y": 225.86,
+    "mark": {
+     "shape": "circle",
+     "r": 12.75
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Spain",
+    "alternatives": [
+     "ESP"
+    ]
+   },
+   "priority": 1393490
+  },
+  {
+   "id": "MEX",
+   "anchor": {
+    "type": "point",
+    "x": 584.11,
+    "y": 175.5,
+    "mark": {
+     "shape": "circle",
+     "r": 12.17
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Mexico",
+    "alternatives": [
+     "MEX"
+    ]
+   },
+   "priority": 1268870
+  },
+  {
+   "id": "TWN",
+   "anchor": {
+    "type": "point",
+    "x": 787.53,
+    "y": 260.81,
+    "mark": {
+     "shape": "circle",
+     "r": 11.47
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Taiwan",
+    "alternatives": [
+     "TWN"
+    ]
+   },
+   "priority": 1127000
+  },
+  {
+   "id": "IDN",
+   "anchor": {
+    "type": "point",
+    "x": 470.42,
+    "y": 137.51,
+    "mark": {
+     "shape": "circle",
+     "r": 11.43
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Indonesia",
+    "alternatives": [
+     "IDN"
+    ]
+   },
+   "priority": 1119190
+  },
+  {
+   "id": "NLD",
+   "anchor": {
+    "type": "point",
+    "x": 799.22,
+    "y": 276.33,
+    "mark": {
+     "shape": "circle",
+     "r": 10.29
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Netherlands",
+    "alternatives": [
+     "NLD"
+    ]
+   },
+   "priority": 907050
+  },
+  {
+   "id": "SAU",
+   "anchor": {
+    "type": "point",
+    "x": 693.5,
+    "y": 241.9,
+    "mark": {
+     "shape": "circle",
+     "r": 9.62
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Saudi Arabia",
+    "alternatives": [
+     "SAU"
+    ]
+   },
+   "priority": 792966
+  },
+  {
+   "id": "TUR",
+   "anchor": {
+    "type": "point",
+    "x": 572.97,
+    "y": 196.95,
+    "mark": {
+     "shape": "circle",
+     "r": 9.42
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Turkey",
+    "alternatives": [
+     "TUR"
+    ]
+   },
+   "priority": 761425
+  },
+  {
+   "id": "CHE",
+   "anchor": {
+    "type": "point",
+    "x": 857.39,
+    "y": 311.88,
+    "mark": {
+     "shape": "circle",
+     "r": 9.06
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Switzerland",
+    "alternatives": [
+     "CHE"
+    ]
+   },
+   "priority": 703082
+  },
+  {
+   "id": "POL",
+   "anchor": {
+    "type": "point",
+    "x": 643.18,
+    "y": 236.72,
+    "mark": {
+     "shape": "circle",
+     "r": 8.34
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Poland",
+    "alternatives": [
+     "POL"
+    ]
+   },
+   "priority": 595858
+  },
+  {
+   "id": "THA",
+   "anchor": {
+    "type": "point",
+    "x": 552.73,
+    "y": 206.09,
+    "mark": {
+     "shape": "circle",
+     "r": 7.96
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Thailand",
+    "alternatives": [
+     "THA"
+    ]
+   },
+   "priority": 543548
+  },
+  {
+   "id": "BEL",
+   "anchor": {
+    "type": "point",
+    "x": 783.69,
+    "y": 297.12,
+    "mark": {
+     "shape": "circle",
+     "r": 7.89
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Belgium",
+    "alternatives": [
+     "BEL"
+    ]
+   },
+   "priority": 533097
+  },
+  {
+   "id": "SWE",
+   "anchor": {
+    "type": "point",
+    "x": 797.43,
+    "y": 302.69,
+    "mark": {
+     "shape": "circle",
+     "r": 7.87
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Sweden",
+    "alternatives": [
+     "SWE"
+    ]
+   },
+   "priority": 530883
+  },
+  {
+   "id": "VEN",
+   "anchor": {
+    "type": "point",
+    "x": 652.91,
+    "y": 251.18,
+    "mark": {
+     "shape": "circle",
+     "r": 7.5
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Venezuela",
+    "alternatives": [
+     "VEN"
+    ]
+   },
+   "priority": 482359
+  },
+  {
+   "id": "IRN",
+   "anchor": {
+    "type": "point",
+    "x": 506.78,
+    "y": 197.27,
+    "mark": {
+     "shape": "circle",
+     "r": 7.28
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Iran",
+    "alternatives": [
+     "IRN"
+    ]
+   },
+   "priority": 453996
+  },
+  {
+   "id": "NGA",
+   "anchor": {
+    "type": "point",
+    "x": 390.4,
+    "y": 152.55,
+    "mark": {
+     "shape": "circle",
+     "r": 7.23
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Nigeria",
+    "alternatives": [
+     "NGA"
+    ]
+   },
+   "priority": 448120
+  },
+  {
+   "id": "ARG",
+   "anchor": {
+    "type": "point",
+    "x": 583.67,
+    "y": 228.21,
+    "mark": {
+     "shape": "circle",
+     "r": 7.21
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Argentina",
+    "alternatives": [
+     "ARG"
+    ]
+   },
+   "priority": 445445
+  },
+  {
+   "id": "AUT",
+   "anchor": {
+    "type": "point",
+    "x": 793.67,
+    "y": 310.13,
+    "mark": {
+     "shape": "circle",
+     "r": 7.21
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Austria",
+    "alternatives": [
+     "AUT"
+    ]
+   },
+   "priority": 445075
+  },
+  {
+   "id": "ARE",
+   "anchor": {
+    "type": "point",
+    "x": 774.08,
+    "y": 305.28,
+    "mark": {
+     "shape": "circle",
+     "r": 7.01
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "United Arab Emirates",
+    "alternatives": [
+     "UAE",
+     "ARE"
+    ]
+   },
+   "priority": 421142
+  },
+  {
+   "id": "NOR",
+   "anchor": {
+    "type": "point",
+    "x": 846.56,
+    "y": 335.73,
+    "mark": {
+     "shape": "circle",
+     "r": 6.86
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Norway",
+    "alternatives": [
+     "NOR"
+    ]
+   },
+   "priority": 403336
+  },
+  {
+   "id": "ISR",
+   "anchor": {
+    "type": "point",
+    "x": 775.54,
+    "y": 309.13,
+    "mark": {
+     "shape": "circle",
+     "r": 6.78
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Israel",
+    "alternatives": [
+     "ISR"
+    ]
+   },
+   "priority": 394652
+  },
+  {
+   "id": "IRL",
+   "anchor": {
+    "type": "point",
+    "x": 852.01,
+    "y": 339.72,
+    "mark": {
+     "shape": "circle",
+     "r": 6.73
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Ireland",
+    "alternatives": [
+     "IRL"
+    ]
+   },
+   "priority": 388698
+  },
+  {
+   "id": "PHL",
+   "anchor": {
+    "type": "point",
+    "x": 448.25,
+    "y": 183.86,
+    "mark": {
+     "shape": "circle",
+     "r": 6.63
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Philippines",
+    "alternatives": [
+     "PHL"
+    ]
+   },
+   "priority": 376795
+  },
+  {
+   "id": "SGP",
+   "anchor": {
+    "type": "point",
+    "x": 827.77,
+    "y": 332.47,
+    "mark": {
+     "shape": "circle",
+     "r": 6.59
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Singapore",
+    "alternatives": [
+     "SGP"
+    ]
+   },
+   "priority": 372062
+  },
+  {
+   "id": "HKG",
+   "anchor": {
+    "type": "point",
+    "x": 789.94,
+    "y": 318.59,
+    "mark": {
+     "shape": "circle",
+     "r": 6.53
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Hong Kong",
+    "alternatives": [
+     "HKG"
+    ]
+   },
+   "priority": 365711
+  },
+  {
+   "id": "MYS",
+   "anchor": {
+    "type": "point",
+    "x": 601.94,
+    "y": 245.44,
+    "mark": {
+     "shape": "circle",
+     "r": 6.52
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Malaysia",
+    "alternatives": [
+     "MYS"
+    ]
+   },
+   "priority": 364681
+  },
+  {
+   "id": "ZAF",
+   "anchor": {
+    "type": "point",
+    "x": 518.66,
+    "y": 214.83,
+    "mark": {
+     "shape": "circle",
+     "r": 6.4
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "South Africa",
+    "alternatives": [
+     "ZAF"
+    ]
+   },
+   "priority": 351431
+  },
+  {
+   "id": "DNK",
+   "anchor": {
+    "type": "point",
+    "x": 817.3,
+    "y": 331.47,
+    "mark": {
+     "shape": "circle",
+     "r": 6.39
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Denmark",
+    "alternatives": [
+     "DNK"
+    ]
+   },
+   "priority": 350104
+  },
+  {
+   "id": "COL",
+   "anchor": {
+    "type": "point",
+    "x": 527.57,
+    "y": 222.47,
+    "mark": {
+     "shape": "circle",
+     "r": 6.14
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Colombia",
+    "alternatives": [
+     "COL"
+    ]
+   },
+   "priority": 323615
+  },
+  {
+   "id": "EGY",
+   "anchor": {
+    "type": "point",
+    "x": 429.66,
+    "y": 187.61,
+    "mark": {
+     "shape": "circle",
+     "r": 5.95
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Egypt",
+    "alternatives": [
+     "EGY"
+    ]
+   },
+   "priority": 303092
+  },
+  {
+   "id": "BGD",
+   "anchor": {
+    "type": "point",
+    "x": 366.6,
+    "y": 163.11,
+    "mark": {
+     "shape": "circle",
+     "r": 5.94
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Bangladesh",
+    "alternatives": [
+     "BGD"
+    ]
+   },
+   "priority": 302571
+  },
+  {
+   "id": "CHL",
+   "anchor": {
+    "type": "point",
+    "x": 636.44,
+    "y": 271.82,
+    "mark": {
+     "shape": "circle",
+     "r": 5.74
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Chile",
+    "alternatives": [
+     "CHL"
+    ]
+   },
+   "priority": 282318
+  },
+  {
+   "id": "PAK",
+   "anchor": {
+    "type": "point",
+    "x": 318.96,
+    "y": 148.77,
+    "mark": {
+     "shape": "circle",
+     "r": 5.7
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Pakistan",
+    "alternatives": [
+     "PAK"
+    ]
+   },
+   "priority": 278221
+  },
+  {
+   "id": "FIN",
+   "anchor": {
+    "type": "point",
+    "x": 790.12,
+    "y": 334.12,
+    "mark": {
+     "shape": "circle",
+     "r": 5.6
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Finland",
+    "alternatives": [
+     "FIN"
+    ]
+   },
+   "priority": 269296
+  },
+  {
+   "id": "VNM",
+   "anchor": {
+    "type": "point",
+    "x": 415.91,
+    "y": 189.62,
+    "mark": {
+     "shape": "circle",
+     "r": 5.53
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Vietnam",
+    "alternatives": [
+     "VNM"
+    ]
+   },
+   "priority": 261921
+  },
+  {
+   "id": "CZE",
+   "anchor": {
+    "type": "point",
+    "x": 695.47,
+    "y": 300.84,
+    "mark": {
+     "shape": "circle",
+     "r": 5.41
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Czechia",
+    "alternatives": [
+     "CZE"
+    ]
+   },
+   "priority": 250680
+  },
+  {
+   "id": "ROU",
+   "anchor": {
+    "type": "point",
+    "x": 617.99,
+    "y": 270.75,
+    "mark": {
+     "shape": "circle",
+     "r": 5.4
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Romania",
+    "alternatives": [
+     "ROU"
+    ]
+   },
+   "priority": 250077
+  },
+  {
+   "id": "PRT",
+   "anchor": {
+    "type": "point",
+    "x": 694.12,
+    "y": 302.77,
+    "mark": {
+     "shape": "circle",
+     "r": 5.28
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Portugal",
+    "alternatives": [
+     "PRT"
+    ]
+   },
+   "priority": 238785
+  },
+  {
+   "id": "IRQ",
+   "anchor": {
+    "type": "point",
+    "x": 517.66,
+    "y": 234.97,
+    "mark": {
+     "shape": "circle",
+     "r": 5.23
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Iraq",
+    "alternatives": [
+     "IRQ"
+    ]
+   },
+   "priority": 234094
+  },
+  {
+   "id": "PER",
+   "anchor": {
+    "type": "point",
+    "x": 538.19,
+    "y": 244.56,
+    "mark": {
+     "shape": "circle",
+     "r": 5.14
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Peru",
+    "alternatives": [
+     "PER"
+    ]
+   },
+   "priority": 226848
+  },
+  {
+   "id": "GRC",
+   "anchor": {
+    "type": "point",
+    "x": 671.87,
+    "y": 300.62,
+    "mark": {
+     "shape": "circle",
+     "r": 4.95
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Greece",
+    "alternatives": [
+     "GRC"
+    ]
+   },
+   "priority": 209852
+  },
+  {
+   "id": "NZL",
+   "anchor": {
+    "type": "point",
+    "x": 770.98,
+    "y": 339.97,
+    "mark": {
+     "shape": "circle",
+     "r": 4.91
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "New Zealand",
+    "alternatives": [
+     "NZL"
+    ]
+   },
+   "priority": 206928
+  },
+  {
+   "id": "KAZ",
+   "anchor": {
+    "type": "point",
+    "x": 582.35,
+    "y": 273.0,
+    "mark": {
+     "shape": "circle",
+     "r": 4.6
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Kazakhstan",
+    "alternatives": [
+     "KAZ"
+    ]
+   },
+   "priority": 181665
+  },
+  {
+   "id": "QAT",
+   "anchor": {
+    "type": "point",
+    "x": 821.36,
+    "y": 367.84,
+    "mark": {
+     "shape": "circle",
+     "r": 4.53
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Qatar",
+    "alternatives": [
+     "QAT"
+    ]
+   },
+   "priority": 175837
+  },
+  {
+   "id": "DZA",
+   "anchor": {
+    "type": "point",
+    "x": 465.25,
+    "y": 230.37,
+    "mark": {
+     "shape": "circle",
+     "r": 4.47
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Algeria",
+    "alternatives": [
+     "DZA"
+    ]
+   },
+   "priority": 171091
+  },
+  {
+   "id": "HUN",
+   "anchor": {
+    "type": "point",
+    "x": 651.49,
+    "y": 305.29,
+    "mark": {
+     "shape": "circle",
+     "r": 4.37
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Hungary",
+    "alternatives": [
+     "HUN"
+    ]
+   },
+   "priority": 163469
+  },
+  {
+   "id": "UKR",
+   "anchor": {
+    "type": "point",
+    "x": 447.49,
+    "y": 228.83,
+    "mark": {
+     "shape": "circle",
+     "r": 4.24
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Ukraine",
+    "alternatives": [
+     "UKR"
+    ]
+   },
+   "priority": 153781
+  },
+  {
+   "id": "KWT",
+   "anchor": {
+    "type": "point",
+    "x": 735.5,
+    "y": 347.85,
+    "mark": {
+     "shape": "circle",
+     "r": 3.96
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Kuwait",
+    "alternatives": [
+     "KWT"
+    ]
+   },
+   "priority": 134628
+  },
+  {
+   "id": "MAR",
+   "anchor": {
+    "type": "point",
+    "x": 440.47,
+    "y": 238.75,
+    "mark": {
+     "shape": "circle",
+     "r": 3.74
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Morocco",
+    "alternatives": [
+     "MAR"
+    ]
+   },
+   "priority": 119700
+  },
+  {
+   "id": "ECU",
+   "anchor": {
+    "type": "point",
+    "x": 522.54,
+    "y": 276.21,
+    "mark": {
+     "shape": "circle",
+     "r": 3.54
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Ecuador",
+    "alternatives": [
+     "ECU"
+    ]
+   },
+   "priority": 107435
+  },
+  {
+   "id": "SVK",
+   "anchor": {
+    "type": "point",
+    "x": 669.76,
+    "y": 334.73,
+    "mark": {
+     "shape": "circle",
+     "r": 3.5
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Slovakia",
+    "alternatives": [
+     "SVK"
+    ]
+   },
+   "priority": 105079
+  },
+  {
+   "id": "PRI",
+   "anchor": {
+    "type": "point",
+    "x": 738.98,
+    "y": 361.77,
+    "mark": {
+     "shape": "circle",
+     "r": 3.5
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Puerto Rico",
+    "alternatives": [
+     "PRI"
+    ]
+   },
+   "priority": 104988
+  },
+  {
+   "id": "CUB",
+   "anchor": {
+    "type": "point",
+    "x": 568.62,
+    "y": 297.79,
+    "mark": {
+     "shape": "circle",
+     "r": 3.42
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Cuba",
+    "alternatives": [
+     "CUB"
+    ]
+   },
+   "priority": 100023
+  },
+  {
+   "id": "SYR",
+   "anchor": {
+    "type": "point",
+    "x": 514.01,
+    "y": 277.1,
+    "mark": {
+     "shape": "circle",
+     "r": 3.4
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Syria",
+    "alternatives": [
+     "SYR"
+    ]
+   },
+   "priority": 98830
+  },
+  {
+   "id": "ETH",
+   "anchor": {
+    "type": "point",
+    "x": 266.32,
+    "y": 182.04,
+    "mark": {
+     "shape": "circle",
+     "r": 3.34
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Ethiopia",
+    "alternatives": [
+     "ETH"
+    ]
+   },
+   "priority": 95912
+  },
+  {
+   "id": "KEN",
+   "anchor": {
+    "type": "point",
+    "x": 363.84,
+    "y": 220.28,
+    "mark": {
+     "shape": "circle",
+     "r": 3.34
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Kenya",
+    "alternatives": [
+     "KEN"
+    ]
+   },
+   "priority": 95503
+  },
+  {
+   "id": "DOM",
+   "anchor": {
+    "type": "point",
+    "x": 560.39,
+    "y": 300.51,
+    "mark": {
+     "shape": "circle",
+     "r": 3.22
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Dominican Rep.",
+    "alternatives": [
+     "DOM"
+    ]
+   },
+   "priority": 88941
+  },
+  {
+   "id": "AGO",
+   "anchor": {
+    "type": "point",
+    "x": 419.46,
+    "y": 245.63,
+    "mark": {
+     "shape": "circle",
+     "r": 3.22
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Angola",
+    "alternatives": [
+     "AGO"
+    ]
+   },
+   "priority": 88815
+  },
+  {
+   "id": "LKA",
+   "anchor": {
+    "type": "point",
+    "x": 461.25,
+    "y": 264.74,
+    "mark": {
+     "shape": "circle",
+     "r": 3.13
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Sri Lanka",
+    "alternatives": [
+     "LKA"
+    ]
+   },
+   "priority": 84008
+  },
+  {
+   "id": "GTM",
+   "anchor": {
+    "type": "point",
+    "x": 484.77,
+    "y": 278.5,
+    "mark": {
+     "shape": "circle",
+     "r": 2.99
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Guatemala",
+    "alternatives": [
+     "GTM"
+    ]
+   },
+   "priority": 76710
+  },
+  {
+   "id": "OMN",
+   "anchor": {
+    "type": "point",
+    "x": 640.26,
+    "y": 339.38,
+    "mark": {
+     "shape": "circle",
+     "r": 2.98
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Oman",
+    "alternatives": [
+     "OMN"
+    ]
+   },
+   "priority": 76331
+  },
+  {
+   "id": "MMR",
+   "anchor": {
+    "type": "point",
+    "x": 330.81,
+    "y": 218.88,
+    "mark": {
+     "shape": "circle",
+     "r": 2.98
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Myanmar",
+    "alternatives": [
+     "MMR"
+    ]
+   },
+   "priority": 76085
+  },
+  {
+   "id": "LUX",
+   "anchor": {
+    "type": "point",
+    "x": 900.88,
+    "y": 444.57,
+    "mark": {
+     "shape": "circle",
+     "r": 2.88
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Luxembourg",
+    "alternatives": [
+     "LUX"
+    ]
+   },
+   "priority": 71104
+  },
+  {
+   "id": "BGR",
+   "anchor": {
+    "type": "point",
+    "x": 582.56,
+    "y": 322.3,
+    "mark": {
+     "shape": "circle",
+     "r": 2.83
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Bulgaria",
+    "alternatives": [
+     "BGR"
+    ]
+   },
+   "priority": 68558
+  },
+  {
+   "id": "GHA",
+   "anchor": {
+    "type": "point",
+    "x": 388.77,
+    "y": 247.92,
+    "mark": {
+     "shape": "circle",
+     "r": 2.8
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Ghana",
+    "alternatives": [
+     "GHA"
+    ]
+   },
+   "priority": 66983
+  },
+  {
+   "id": "PAN",
+   "anchor": {
+    "type": "point",
+    "x": 643.5,
+    "y": 347.37,
+    "mark": {
+     "shape": "circle",
+     "r": 2.79
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Panama",
+    "alternatives": [
+     "PAN"
+    ]
+   },
+   "priority": 66800
+  },
+  {
+   "id": "TZA",
+   "anchor": {
+    "type": "point",
+    "x": 297.57,
+    "y": 215.31,
+    "mark": {
+     "shape": "circle",
+     "r": 2.71
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Tanzania",
+    "alternatives": [
+     "TZA"
+    ]
+   },
+   "priority": 63177
+  },
+  {
+   "id": "BLR",
+   "anchor": {
+    "type": "point",
+    "x": 532.21,
+    "y": 306.88,
+    "mark": {
+     "shape": "circle",
+     "r": 2.71
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Belarus",
+    "alternatives": [
+     "BLR"
+    ]
+   },
+   "priority": 63080
+  },
+  {
+   "id": "CRI",
+   "anchor": {
+    "type": "point",
+    "x": 611.03,
+    "y": 338.65,
+    "mark": {
+     "shape": "circle",
+     "r": 2.68
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Costa Rica",
+    "alternatives": [
+     "CRI"
+    ]
+   },
+   "priority": 61801
+  },
+  {
+   "id": "HRV",
+   "anchor": {
+    "type": "point",
+    "x": 636.78,
+    "y": 349.55,
+    "mark": {
+     "shape": "circle",
+     "r": 2.66
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Croatia",
+    "alternatives": [
+     "HRV"
+    ]
+   },
+   "priority": 60752
+  },
+  {
+   "id": "CIV",
+   "anchor": {
+    "type": "point",
+    "x": 393.07,
+    "y": 256.4,
+    "mark": {
+     "shape": "circle",
+     "r": 2.61
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Côte d'Ivoire",
+    "alternatives": [
+     "CIV"
+    ]
+   },
+   "priority": 58539
+  },
+  {
+   "id": "UZB",
+   "anchor": {
+    "type": "point",
+    "x": 357.13,
+    "y": 242.92,
+    "mark": {
+     "shape": "circle",
+     "r": 2.6
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Uzbekistan",
+    "alternatives": [
+     "UZB"
+    ]
+   },
+   "priority": 57921
+  },
+  {
+   "id": "URY",
+   "anchor": {
+    "type": "point",
+    "x": 647.23,
+    "y": 357.7,
+    "mark": {
+     "shape": "circle",
+     "r": 2.56
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Uruguay",
+    "alternatives": [
+     "URY"
+    ]
+   },
+   "priority": 56045
+  },
+  {
+   "id": "LTU",
+   "anchor": {
+    "type": "point",
+    "x": 672.0,
+    "y": 368.65,
+    "mark": {
+     "shape": "circle",
+     "r": 2.52
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Lithuania",
+    "alternatives": [
+     "LTU"
+    ]
+   },
+   "priority": 54627
+  },
+  {
+   "id": "SVN",
+   "anchor": {
+    "type": "point",
+    "x": 708.33,
+    "y": 383.23,
+    "mark": {
+     "shape": "circle",
+     "r": 2.51
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Slovenia",
+    "alternatives": [
+     "SVN"
+    ]
+   },
+   "priority": 54174
+  },
+  {
+   "id": "MAC",
+   "anchor": {
+    "type": "point",
+    "x": 860.67,
+    "y": 442.93,
+    "mark": {
+     "shape": "circle",
+     "r": 2.51
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Macao",
+    "alternatives": [
+     "MAC"
+    ]
+   },
+   "priority": 53859
+  },
+  {
+   "id": "LBY",
+   "anchor": {
+    "type": "point",
+    "x": 550.71,
+    "y": 323.76,
+    "mark": {
+     "shape": "circle",
+     "r": 2.46
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Libya",
+    "alternatives": [
+     "LBY"
+    ]
+   },
+   "priority": 52091
+  },
+  {
+   "id": "LBN",
+   "anchor": {
+    "type": "point",
+    "x": 548.97,
+    "y": 323.18,
+    "mark": {
+     "shape": "circle",
+     "r": 2.46
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Lebanon",
+    "alternatives": [
+     "LBN"
+    ]
+   },
+   "priority": 51991
+  },
+  {
+   "id": "SRB",
+   "anchor": {
+    "type": "point",
+    "x": 546.01,
+    "y": 322.53,
+    "mark": {
+     "shape": "circle",
+     "r": 2.45
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Serbia",
+    "alternatives": [
+     "SRB"
+    ]
+   },
+   "priority": 51475
+  },
+  {
+   "id": "COD",
+   "anchor": {
+    "type": "point",
+    "x": 216.09,
+    "y": 194.96,
+    "mark": {
+     "shape": "circle",
+     "r": 2.42
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Dem. Rep. Congo",
+    "alternatives": [
+     "DR Congo",
+     "COD"
+    ]
+   },
+   "priority": 50400
+  },
+  {
+   "id": "AZE",
+   "anchor": {
+    "type": "point",
+    "x": 489.55,
+    "y": 303.99,
+    "mark": {
+     "shape": "circle",
+     "r": 2.37
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Azerbaijan",
+    "alternatives": [
+     "AZE"
+    ]
+   },
+   "priority": 48047
+  },
+  {
+   "id": "JOR",
+   "anchor": {
+    "type": "point",
+    "x": 478.61,
+    "y": 303.6,
+    "mark": {
+     "shape": "circle",
+     "r": 2.28
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Jordan",
+    "alternatives": [
+     "JOR"
+    ]
+   },
+   "priority": 44502
+  },
+  {
+   "id": "BOL",
+   "anchor": {
+    "type": "point",
+    "x": 450.71,
+    "y": 296.99,
+    "mark": {
+     "shape": "circle",
+     "r": 2.18
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Bolivia",
+    "alternatives": [
+     "BOL"
+    ]
+   },
+   "priority": 40895
+  },
+  {
+   "id": "TKM",
+   "anchor": {
+    "type": "point",
+    "x": 535.98,
+    "y": 330.4,
+    "mark": {
+     "shape": "circle",
+     "r": 2.18
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Turkmenistan",
+    "alternatives": [
+     "TKM"
+    ]
+   },
+   "priority": 40761
+  },
+  {
+   "id": "PRK",
+   "anchor": {
+    "type": "point",
+    "x": 343.99,
+    "y": 256.5,
+    "mark": {
+     "shape": "circle",
+     "r": 2.16
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "North Korea",
+    "alternatives": [
+     "PRK"
+    ]
+   },
+   "priority": 40000
+  },
+  {
+   "id": "CMR",
+   "anchor": {
+    "type": "point",
+    "x": 339.67,
+    "y": 256.09,
+    "mark": {
+     "shape": "circle",
+     "r": 2.13
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Cameroon",
+    "alternatives": [
+     "CMR"
+    ]
+   },
+   "priority": 39007
+  },
+  {
+   "id": "TUN",
+   "anchor": {
+    "type": "point",
+    "x": 441.86,
+    "y": 296.2,
+    "mark": {
+     "shape": "circle",
+     "r": 2.13
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Tunisia",
+    "alternatives": [
+     "TUN"
+    ]
+   },
+   "priority": 38796
+  },
+  {
+   "id": "BHR",
+   "anchor": {
+    "type": "point",
+    "x": 695.52,
+    "y": 395.4,
+    "mark": {
+     "shape": "circle",
+     "r": 2.12
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Bahrain",
+    "alternatives": [
+     "BHR"
+    ]
+   },
+   "priority": 38574
+  },
+  {
+   "id": "PRY",
+   "anchor": {
+    "type": "point",
+    "x": 505.33,
+    "y": 321.81,
+    "mark": {
+     "shape": "circle",
+     "r": 2.11
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Paraguay",
+    "alternatives": [
+     "PRY"
+    ]
+   },
+   "priority": 38145
+  },
+  {
+   "id": "UGA",
+   "anchor": {
+    "type": "point",
+    "x": 256.68,
+    "y": 228.96,
+    "mark": {
+     "shape": "circle",
+     "r": 2.03
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Uganda",
+    "alternatives": [
+     "UGA"
+    ]
+   },
+   "priority": 35165
+  },
+  {
+   "id": "LVA",
+   "anchor": {
+    "type": "point",
+    "x": 659.72,
+    "y": 387.66,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Latvia",
+    "alternatives": [
+     "LVA"
+    ]
+   },
+   "priority": 34102
+  },
+  {
+   "id": "EST",
+   "anchor": {
+    "type": "point",
+    "x": 696.72,
+    "y": 406.14,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Estonia",
+    "alternatives": [
+     "EST"
+    ]
+   },
+   "priority": 31471
+  },
+  {
+   "id": "NPL",
+   "anchor": {
+    "type": "point",
+    "x": 295.4,
+    "y": 251.02,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Nepal",
+    "alternatives": [
+     "NPL"
+    ]
+   },
+   "priority": 30641
+  },
+  {
+   "id": "SDN",
+   "anchor": {
+    "type": "point",
+    "x": 242.63,
+    "y": 230.65,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Sudan",
+    "alternatives": [
+     "SDN"
+    ]
+   },
+   "priority": 30513
+  },
+  {
+   "id": "KHM",
+   "anchor": {
+    "type": "point",
+    "x": 350.84,
+    "y": 278.86,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Cambodia",
+    "alternatives": [
+     "KHM"
+    ]
+   },
+   "priority": 27089
+  },
+  {
+   "id": "SLV",
+   "anchor": {
+    "type": "point",
+    "x": 472.02,
+    "y": 326.23,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "El Salvador",
+    "alternatives": [
+     "SLV"
+    ]
+   },
+   "priority": 27022
+  },
+  {
+   "id": "HND",
+   "anchor": {
+    "type": "point",
+    "x": 409.03,
+    "y": 305.41,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Honduras",
+    "alternatives": [
+     "HND"
+    ]
+   },
+   "priority": 25095
+  },
+  {
+   "id": "CYP",
+   "anchor": {
+    "type": "point",
+    "x": 679.78,
+    "y": 411.27,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Cyprus",
+    "alternatives": [
+     "CYP"
+    ]
+   },
+   "priority": 24948
+  },
+  {
+   "id": "PNG",
+   "anchor": {
+    "type": "point",
+    "x": 421.24,
+    "y": 310.71,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Papua New Guinea",
+    "alternatives": [
+     "PNG"
+    ]
+   },
+   "priority": 24829
+  },
+  {
+   "id": "TTO",
+   "anchor": {
+    "type": "point",
+    "x": 656.55,
+    "y": 403.61,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Trinidad and Tobago",
+    "alternatives": [
+     "TTO"
+    ]
+   },
+   "priority": 24269
+  },
+  {
+   "id": "ISL",
+   "anchor": {
+    "type": "point",
+    "x": 831.12,
+    "y": 471.84,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Iceland",
+    "alternatives": [
+     "ISL"
+    ]
+   },
+   "priority": 24188
+  },
+  {
+   "id": "SEN",
+   "anchor": {
+    "type": "point",
+    "x": 334.36,
+    "y": 279.44,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Senegal",
+    "alternatives": [
+     "SEN"
+    ]
+   },
+   "priority": 23578
+  },
+  {
+   "id": "ZMB",
+   "anchor": {
+    "type": "point",
+    "x": 320.99,
+    "y": 274.81,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Zambia",
+    "alternatives": [
+     "ZMB"
+    ]
+   },
+   "priority": 23309
+  },
+  {
+   "id": "YEM",
+   "anchor": {
+    "type": "point",
+    "x": 253.37,
+    "y": 250.05,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Yemen",
+    "alternatives": [
+     "YEM"
+    ]
+   },
+   "priority": 22581
+  },
+  {
+   "id": "ZWE",
+   "anchor": {
+    "type": "point",
+    "x": 335.88,
+    "y": 284.84,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Zimbabwe",
+    "alternatives": [
+     "ZWE"
+    ]
+   },
+   "priority": 21440
+  },
+  {
+   "id": "BIH",
+   "anchor": {
+    "type": "point",
+    "x": 520.95,
+    "y": 360.1,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Bosnia and Herz.",
+    "alternatives": [
+     "Bosnia",
+     "BIH"
+    ]
+   },
+   "priority": 20164
+  },
+  {
+   "id": "AFG",
+   "anchor": {
+    "type": "point",
+    "x": 198.53,
+    "y": 236.62,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Afghanistan",
+    "alternatives": [
+     "AFG"
+    ]
+   },
+   "priority": 19291
+  },
+  {
+   "id": "BWA",
+   "anchor": {
+    "type": "point",
+    "x": 555.27,
+    "y": 378.27,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Botswana",
+    "alternatives": [
+     "BWA"
+    ]
+   },
+   "priority": 18340
+  },
+  {
+   "id": "LAO",
+   "anchor": {
+    "type": "point",
+    "x": 407.0,
+    "y": 320.92,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Laos",
+    "alternatives": [
+     "LAO"
+    ]
+   },
+   "priority": 18173
+  },
+  {
+   "id": "SOL",
+   "anchor": {
+    "type": "point",
+    "x": 448.8,
+    "y": 338.16,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Somaliland",
+    "alternatives": [
+     "SOL"
+    ]
+   },
+   "priority": 17836
+  },
+  {
+   "id": "GEO",
+   "anchor": {
+    "type": "point",
+    "x": 486.93,
+    "y": 354.06,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Georgia",
+    "alternatives": [
+     "GEO"
+    ]
+   },
+   "priority": 17477
+  },
+  {
+   "id": "MLI",
+   "anchor": {
+    "type": "point",
+    "x": 269.79,
+    "y": 269.97,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Mali",
+    "alternatives": [
+     "MLI"
+    ]
+   },
+   "priority": 17279
+  },
+  {
+   "id": "GAB",
+   "anchor": {
+    "type": "point",
+    "x": 552.07,
+    "y": 381.23,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Gabon",
+    "alternatives": [
+     "GAB"
+    ]
+   },
+   "priority": 16874
+  },
+  {
+   "id": "JAM",
+   "anchor": {
+    "type": "point",
+    "x": 509.28,
+    "y": 365.8,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Jamaica",
+    "alternatives": [
+     "JAM"
+    ]
+   },
+   "priority": 16458
+  },
+  {
+   "id": "PSX",
+   "anchor": {
+    "type": "point",
+    "x": 447.83,
+    "y": 342.41,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Palestine",
+    "alternatives": [
+     "PSX"
+    ]
+   },
+   "priority": 16276
+  },
+  {
+   "id": "BFA",
+   "anchor": {
+    "type": "point",
+    "x": 255.45,
+    "y": 268.29,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Burkina Faso",
+    "alternatives": [
+     "BFA"
+    ]
+   },
+   "priority": 15990
+  },
+  {
+   "id": "MOZ",
+   "anchor": {
+    "type": "point",
+    "x": 197.62,
+    "y": 248.0,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Mozambique",
+    "alternatives": [
+     "MOZ"
+    ]
+   },
+   "priority": 15291
+  },
+  {
+   "id": "ALB",
+   "anchor": {
+    "type": "point",
+    "x": 503.85,
+    "y": 367.44,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Albania",
+    "alternatives": [
+     "ALB"
+    ]
+   },
+   "priority": 15279
+  },
+  {
+   "id": "MLT",
+   "anchor": {
+    "type": "point",
+    "x": 726.35,
+    "y": 455.16,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Malta",
+    "alternatives": [
+     "MLT"
+    ]
+   },
+   "priority": 14989
+  },
+  {
+   "id": "BEN",
+   "anchor": {
+    "type": "point",
+    "x": 312.2,
+    "y": 295.75,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Benin",
+    "alternatives": [
+     "BEN"
+    ]
+   },
+   "priority": 14390
+  },
+  {
+   "id": "HTI",
+   "anchor": {
+    "type": "point",
+    "x": 317.72,
+    "y": 298.1,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Haiti",
+    "alternatives": [
+     "HTI"
+    ]
+   },
+   "priority": 14332
+  },
+  {
+   "id": "MDG",
+   "anchor": {
+    "type": "point",
+    "x": 202.62,
+    "y": 254.0,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Madagascar",
+    "alternatives": [
+     "MDG"
+    ]
+   },
+   "priority": 14114
+  },
+  {
+   "id": "MNG",
+   "anchor": {
+    "type": "point",
+    "x": 476.66,
+    "y": 361.27,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Mongolia",
+    "alternatives": [
+     "MNG"
+    ]
+   },
+   "priority": 13996
+  },
+  {
+   "id": "ARM",
+   "anchor": {
+    "type": "point",
+    "x": 484.84,
+    "y": 365.64,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Armenia",
+    "alternatives": [
+     "ARM"
+    ]
+   },
+   "priority": 13672
+  },
+  {
+   "id": "BHS",
+   "anchor": {
+    "type": "point",
+    "x": 746.59,
+    "y": 468.05,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Bahamas",
+    "alternatives": [
+     "BHS"
+    ]
+   },
+   "priority": 13578
+  },
+  {
+   "id": "BRN",
+   "anchor": {
+    "type": "point",
+    "x": 731.74,
+    "y": 462.67,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Brunei",
+    "alternatives": [
+     "BRN"
+    ]
+   },
+   "priority": 13469
+  },
+  {
+   "id": "NER",
+   "anchor": {
+    "type": "point",
+    "x": 209.96,
+    "y": 261.36,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Niger",
+    "alternatives": [
+     "NER"
+    ]
+   },
+   "priority": 12911
+  },
+  {
+   "id": "MKD",
+   "anchor": {
+    "type": "point",
+    "x": 519.11,
+    "y": 383.34,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "North Macedonia",
+    "alternatives": [
+     "MKD"
+    ]
+   },
+   "priority": 12547
+  },
+  {
+   "id": "NIC",
+   "anchor": {
+    "type": "point",
+    "x": 370.53,
+    "y": 325.52,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Nicaragua",
+    "alternatives": [
+     "NIC"
+    ]
+   },
+   "priority": 12520
+  },
+  {
+   "id": "NAM",
+   "anchor": {
+    "type": "point",
+    "x": 493.9,
+    "y": 374.25,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Namibia",
+    "alternatives": [
+     "NAM"
+    ]
+   },
+   "priority": 12366
+  },
+  {
+   "id": "GIN",
+   "anchor": {
+    "type": "point",
+    "x": 281.59,
+    "y": 291.76,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Guinea",
+    "alternatives": [
+     "GIN"
+    ]
+   },
+   "priority": 12296
+  },
+  {
+   "id": "COG",
+   "anchor": {
+    "type": "point",
+    "x": 393.27,
+    "y": 335.42,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Congo",
+    "alternatives": [
+     "COG"
+    ]
+   },
+   "priority": 12267
+  },
+  {
+   "id": "SDS",
+   "anchor": {
+    "type": "point",
+    "x": 297.03,
+    "y": 299.01,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "S. Sudan",
+    "alternatives": [
+     "SDS"
+    ]
+   },
+   "priority": 11998
+  },
+  {
+   "id": "MDA",
+   "anchor": {
+    "type": "point",
+    "x": 481.45,
+    "y": 371.05,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Moldova",
+    "alternatives": [
+     "MDA"
+    ]
+   },
+   "priority": 11968
+  },
+  {
+   "id": "TCD",
+   "anchor": {
+    "type": "point",
+    "x": 242.04,
+    "y": 280.54,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Chad",
+    "alternatives": [
+     "TCD"
+    ]
+   },
+   "priority": 11314
+  },
+  {
+   "id": "GNQ",
+   "anchor": {
+    "type": "point",
+    "x": 558.01,
+    "y": 405.04,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Eq. Guinea",
+    "alternatives": [
+     "GNQ"
+    ]
+   },
+   "priority": 11026
+  },
+  {
+   "id": "NCL",
+   "anchor": {
+    "type": "point",
+    "x": 755.77,
+    "y": 483.33,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "New Caledonia",
+    "alternatives": [
+     "NCL"
+    ]
+   },
+   "priority": 10770
+  },
+  {
+   "id": "RWA",
+   "anchor": {
+    "type": "point",
+    "x": 260.79,
+    "y": 292.33,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Rwanda",
+    "alternatives": [
+     "RWA"
+    ]
+   },
+   "priority": 10354
+  },
+  {
+   "id": "KGZ",
+   "anchor": {
+    "type": "point",
+    "x": 321.42,
+    "y": 326.21,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Kyrgyzstan",
+    "alternatives": [
+     "KGZ"
+    ]
+   },
+   "priority": 8454
+  },
+  {
+   "id": "TJK",
+   "anchor": {
+    "type": "point",
+    "x": 268.57,
+    "y": 307.66,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Tajikistan",
+    "alternatives": [
+     "TJK"
+    ]
+   },
+   "priority": 8116
+  },
+  {
+   "id": "KOS",
+   "anchor": {
+    "type": "point",
+    "x": 478.96,
+    "y": 390.89,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Kosovo",
+    "alternatives": [
+     "KOS"
+    ]
+   },
+   "priority": 7926
+  },
+  {
+   "id": "MWI",
+   "anchor": {
+    "type": "point",
+    "x": 171.47,
+    "y": 272.69,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Malawi",
+    "alternatives": [
+     "MWI"
+    ]
+   },
+   "priority": 7666
+  },
+  {
+   "id": "MRT",
+   "anchor": {
+    "type": "point",
+    "x": 353.66,
+    "y": 344.16,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Mauritania",
+    "alternatives": [
+     "MRT"
+    ]
+   },
+   "priority": 7600
+  },
+  {
+   "id": "GUM",
+   "anchor": {
+    "type": "point",
+    "x": 748.53,
+    "y": 510.74,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Guam",
+    "alternatives": [
+     "GUM"
+    ]
+   },
+   "priority": 5920
+  },
+  {
+   "id": "MNE",
+   "anchor": {
+    "type": "point",
+    "x": 569.83,
+    "y": 444.39,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Montenegro",
+    "alternatives": [
+     "MNE"
+    ]
+   },
+   "priority": 5542
+  },
+  {
+   "id": "FJI",
+   "anchor": {
+    "type": "point",
+    "x": 522.37,
+    "y": 426.31,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Fiji",
+    "alternatives": [
+     "FJI"
+    ]
+   },
+   "priority": 5496
+  },
+  {
+   "id": "PYF",
+   "anchor": {
+    "type": "point",
+    "x": 672.37,
+    "y": 484.85,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Fr. Polynesia",
+    "alternatives": [
+     "PYF"
+    ]
+   },
+   "priority": 5490
+  },
+  {
+   "id": "TGO",
+   "anchor": {
+    "type": "point",
+    "x": 236.4,
+    "y": 314.87,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Togo",
+    "alternatives": [
+     "TGO"
+    ]
+   },
+   "priority": 5490
+  },
+  {
+   "id": "BRB",
+   "anchor": {
+    "type": "point",
+    "x": 662.02,
+    "y": 483.47,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Barbados",
+    "alternatives": [
+     "BRB"
+    ]
+   },
+   "priority": 5209
+  },
+  {
+   "id": "GUY",
+   "anchor": {
+    "type": "point",
+    "x": 531.15,
+    "y": 432.79,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Guyana",
+    "alternatives": [
+     "GUY"
+    ]
+   },
+   "priority": 5173
+  },
+  {
+   "id": "JEY",
+   "anchor": {
+    "type": "point",
+    "x": 785.64,
+    "y": 532.93,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Jersey",
+    "alternatives": [
+     "JEY"
+    ]
+   },
+   "priority": 5080
+  },
+  {
+   "id": "SOM",
+   "anchor": {
+    "type": "point",
+    "x": 186.75,
+    "y": 303.15,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Somalia",
+    "alternatives": [
+     "SOM"
+    ]
+   },
+   "priority": 4719
+  },
+  {
+   "id": "SWZ",
+   "anchor": {
+    "type": "point",
+    "x": 462.63,
+    "y": 413.44,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "eSwatini",
+    "alternatives": [
+     "SWZ"
+    ]
+   },
+   "priority": 4471
+  },
+  {
+   "id": "SLE",
+   "anchor": {
+    "type": "point",
+    "x": 203.63,
+    "y": 316.58,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Sierra Leone",
+    "alternatives": [
+     "SLE"
+    ]
+   },
+   "priority": 4121
+  },
+  {
+   "id": "VIR",
+   "anchor": {
+    "type": "point",
+    "x": 751.3,
+    "y": 533.49,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "U.S. Virgin Is.",
+    "alternatives": [
+     "VIR"
+    ]
+   },
+   "priority": 3855
+  },
+  {
+   "id": "SUR",
+   "anchor": {
+    "type": "point",
+    "x": 526.16,
+    "y": 447.82,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Suriname",
+    "alternatives": [
+     "SUR"
+    ]
+   },
+   "priority": 3697
+  },
+  {
+   "id": "CYN",
+   "anchor": {
+    "type": "point",
+    "x": 597.66,
+    "y": 477.04,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "N. Cyprus",
+    "alternatives": [
+     "CYN"
+    ]
+   },
+   "priority": 3600
+  },
+  {
+   "id": "DJI",
+   "anchor": {
+    "type": "point",
+    "x": 445.59,
+    "y": 421.77,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Djibouti",
+    "alternatives": [
+     "DJI"
+    ]
+   },
+   "priority": 3324
+  },
+  {
+   "id": "CUW",
+   "anchor": {
+    "type": "point",
+    "x": 672.54,
+    "y": 513.77,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Curaçao",
+    "alternatives": [
+     "CUW"
+    ]
+   },
+   "priority": 3101
+  },
+  {
+   "id": "LBR",
+   "anchor": {
+    "type": "point",
+    "x": 224.95,
+    "y": 339.76,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Liberia",
+    "alternatives": [
+     "LBR"
+    ]
+   },
+   "priority": 3070
+  },
+  {
+   "id": "ABW",
+   "anchor": {
+    "type": "point",
+    "x": 721.6,
+    "y": 533.64,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Aruba",
+    "alternatives": [
+     "ABW"
+    ]
+   },
+   "priority": 3056
+  },
+  {
+   "id": "BDI",
+   "anchor": {
+    "type": "point",
+    "x": 112.6,
+    "y": 296.92,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Burundi",
+    "alternatives": [
+     "BDI"
+    ]
+   },
+   "priority": 3012
+  },
+  {
+   "id": "BTN",
+   "anchor": {
+    "type": "point",
+    "x": 441.78,
+    "y": 434.08,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Bhutan",
+    "alternatives": [
+     "BTN"
+    ]
+   },
+   "priority": 2530
+  },
+  {
+   "id": "LSO",
+   "anchor": {
+    "type": "point",
+    "x": 300.95,
+    "y": 382.34,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Lesotho",
+    "alternatives": [
+     "LSO"
+    ]
+   },
+   "priority": 2376
+  },
+  {
+   "id": "CAF",
+   "anchor": {
+    "type": "point",
+    "x": 188.09,
+    "y": 341.77,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Central African Rep.",
+    "alternatives": [
+     "CAF"
+    ]
+   },
+   "priority": 2220
+  },
+  {
+   "id": "LCA",
+   "anchor": {
+    "type": "point",
+    "x": 604.14,
+    "y": 506.26,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Saint Lucia",
+    "alternatives": [
+     "LCA"
+    ]
+   },
+   "priority": 2122
+  },
+  {
+   "id": "ERI",
+   "anchor": {
+    "type": "point",
+    "x": 146.58,
+    "y": 329.23,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Eritrea",
+    "alternatives": [
+     "ERI"
+    ]
+   },
+   "priority": 2065
+  },
+  {
+   "id": "TLS",
+   "anchor": {
+    "type": "point",
+    "x": 344.1,
+    "y": 407.44,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Timor-Leste",
+    "alternatives": [
+     "TLS"
+    ]
+   },
+   "priority": 2017
+  },
+  {
+   "id": "CPV",
+   "anchor": {
+    "type": "point",
+    "x": 452.53,
+    "y": 450.62,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Cabo Verde",
+    "alternatives": [
+     "CPV"
+    ]
+   },
+   "priority": 1981
+  },
+  {
+   "id": "BLZ",
+   "anchor": {
+    "type": "point",
+    "x": 490.09,
+    "y": 467.94,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Belize",
+    "alternatives": [
+     "BLZ"
+    ]
+   },
+   "priority": 1879
+  },
+  {
+   "id": "GMB",
+   "anchor": {
+    "type": "point",
+    "x": 253.95,
+    "y": 377.31,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Gambia",
+    "alternatives": [
+     "GMB"
+    ]
+   },
+   "priority": 1826
+  },
+  {
+   "id": "SLB",
+   "anchor": {
+    "type": "point",
+    "x": 398.42,
+    "y": 440.66,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Solomon Is.",
+    "alternatives": [
+     "SLB"
+    ]
+   },
+   "priority": 1589
+  },
+  {
+   "id": "GNB",
+   "anchor": {
+    "type": "point",
+    "x": 239.75,
+    "y": 387.45,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Guinea-Bissau",
+    "alternatives": [
+     "GNB"
+    ]
+   },
+   "priority": 1339
+  },
+  {
+   "id": "GRD",
+   "anchor": {
+    "type": "point",
+    "x": 594.82,
+    "y": 531.0,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Grenada",
+    "alternatives": [
+     "GRD"
+    ]
+   },
+   "priority": 1210
+  },
+  {
+   "id": "COM",
+   "anchor": {
+    "type": "point",
+    "x": 327.21,
+    "y": 428.58,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Comoros",
+    "alternatives": [
+     "COM"
+    ]
+   },
+   "priority": 1165
+  },
+  {
+   "id": "VUT",
+   "anchor": {
+    "type": "point",
+    "x": 433.69,
+    "y": 481.25,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Vanuatu",
+    "alternatives": [
+     "VUT"
+    ]
+   },
+   "priority": 934
+  },
+  {
+   "id": "SAH",
+   "anchor": {
+    "type": "point",
+    "x": 339.34,
+    "y": 445.95,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "W. Sahara",
+    "alternatives": [
+     "SAH"
+    ]
+   },
+   "priority": 907
+  },
+  {
+   "id": "WSM",
+   "anchor": {
+    "type": "point",
+    "x": 476.15,
+    "y": 502.45,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Samoa",
+    "alternatives": [
+     "WSM"
+    ]
+   },
+   "priority": 852
+  },
+  {
+   "id": "VCT",
+   "anchor": {
+    "type": "point",
+    "x": 546.69,
+    "y": 531.64,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "St. Vin. and Gren.",
+    "alternatives": [
+     "VCT"
+    ]
+   },
+   "priority": 824
+  },
+  {
+   "id": "TON",
+   "anchor": {
+    "type": "point",
+    "x": 492.39,
+    "y": 534.51,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Tonga",
+    "alternatives": [
+     "TON"
+    ]
+   },
+   "priority": 512
+  },
+  {
+   "id": "STP",
+   "anchor": {
+    "type": "point",
+    "x": 372.6,
+    "y": 498.05,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "São Tomé and Principe",
+    "alternatives": [
+     "STP"
+    ]
+   },
+   "priority": 418
+  },
+  {
+   "id": "FSM",
+   "anchor": {
+    "type": "point",
+    "x": 449.66,
+    "y": 530.19,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Micronesia",
+    "alternatives": [
+     "FSM"
+    ]
+   },
+   "priority": 401
+  },
+  {
+   "id": "KIR",
+   "anchor": {
+    "type": "point",
+    "x": 351.35,
+    "y": 528.54,
+    "mark": {
+     "shape": "circle",
+     "r": 2.0
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Kiribati",
+    "alternatives": [
+     "KIR"
+    ]
+   },
+   "priority": 194
+  }
+ ],
+ "avoid": {
+  "label": {
+   "grid": "ignore",
+   "axes": "hard",
+   "legend": "hard",
+   "lower_items": 1.5
+  },
+  "leader": {
+   "grid": "ignore",
+   "axes": "hard",
+   "legend": "hard",
+   "lower_items": 0.5
+  }
+ },
+ "placement": {
+  "models": [
+   "adjacent",
+   "slider",
+   "internal",
+   "distant"
+  ],
+  "max_distance": "6em"
+ },
+ "leaders": {
+  "style": "straight",
+  "max_length": "9em"
+ },
+ "priority": {
+  "font_classes": [
+   {
+    "first": 8,
+    "scale": 1.25,
+    "weight": "bold"
+   },
+   {
+    "first": 30,
+    "scale": 1.0
+   },
+   {
+    "scale": 0.85
+   }
+  ]
+ },
+ "degrade": [
+  "alternatives",
+  "distant",
+  "omit"
+ ],
+ "solver": {
+  "seed": 1
+ }
+}

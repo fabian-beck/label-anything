@@ -1,13 +1,5 @@
 /* Label Anything docs: small additions to Material for MkDocs. */
 
-/* gallery cards: images fill the card */
-.la-gallery img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 0.2rem;
-}
-
 /* figures inside text keep their aspect and never overflow */
 .md-typeset img {
   max-width: 100%;
@@ -34,15 +26,8 @@
 .la-hero {
   --la-hero-tint: #eef0fa;
   --la-hero-grid: rgba(64, 81, 181, 0.07);
-  --la-hero-dot: #7986cb;
-  --la-hero-pin: #c2185b;
-  --la-hero-node: #3949ab;
-  --la-hero-pill: #e8eaf6;
-  --la-hero-water: #64b5f6;
-  --la-hero-water-fill: #d6eafc;
-  --la-hero-water-text: #1565c0;
   --la-hero-halo: rgba(255, 255, 255, 0.9);
-  /* where the live header puts its scenes (read by hero.js): beside the text, or below it */
+  /* where the live header puts its things (read by hero.js): beside the text, or below it */
   --la-hero-layout: wide;
   position: relative;
   isolation: isolate;
@@ -55,13 +40,6 @@
 [data-md-color-scheme="slate"] .la-hero {
   --la-hero-tint: hsla(232, 22%, 19%, 1);
   --la-hero-grid: rgba(140, 158, 255, 0.07);
-  --la-hero-dot: #8c9eff;
-  --la-hero-pin: #f06292;
-  --la-hero-node: #9fa8da;
-  --la-hero-pill: #2c3256;
-  --la-hero-water: #64b5f6;
-  --la-hero-water-fill: #1d3550;
-  --la-hero-water-text: #90caf9;
   --la-hero-halo: hsla(232, 15%, 16%, 0.9);
 }
 
@@ -70,7 +48,7 @@
     --la-hero-layout: strip;
   }
 
-  /* the room for the scenes below the text, once the live header is there */
+  /* the room for the things below the text, once the live header is there */
   .la-hero.has-toy .la-hero__content {
     padding-bottom: calc(4.4rem + 300px);
   }
@@ -117,84 +95,15 @@
   user-select: none;
 }
 
-/* the marks: map, network and chart, each drawn as such a picture would draw it */
-.la-hero__mark {
-  fill: var(--la-hero-dot);
-  animation: la-hero-in 0.5s ease-out both;
+/* the things: in their own colours, like stickers on the graph paper */
+.la-hero__thing {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.18));
+  animation: la-hero-in 0.4s ease-out both;
 }
 
-.la-hero__mark--accent {
-  fill: var(--md-accent-fg-color);
-}
-
-.la-hero__mark--name {
+/* the logo's dot */
+.la-hero__name-dot {
   fill: var(--md-primary-fg-color);
-  animation: none;
-}
-
-.la-hero__mark--pin {
-  fill: var(--la-hero-pin);
-}
-
-.la-hero__mark--pin.la-hero__mark--accent {
-  fill: var(--md-accent-fg-color);
-}
-
-.la-hero__pin-eye {
-  fill: var(--md-default-bg-color);
-}
-
-.la-hero__mark--area {
-  fill: var(--la-hero-water-fill);
-  stroke: var(--la-hero-water);
-  stroke-width: 1;
-}
-
-.la-hero__river {
-  fill: none;
-  stroke: var(--la-hero-water);
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: 0.7;
-}
-
-.la-hero__mark--pill,
-.la-hero__mark--inside {
-  fill: var(--md-default-bg-color);
-  stroke: var(--la-hero-node);
-  stroke-width: 2;
-}
-
-.la-hero__mark--inside {
-  fill: var(--md-primary-fg-color);
-  stroke: var(--md-primary-fg-color);
-}
-
-.la-hero__edges {
-  fill: none;
-  stroke: var(--la-hero-node);
-  stroke-width: 1.5;
-  opacity: 0.45;
-}
-
-.la-hero__cloud {
-  fill: var(--md-default-fg-color--lighter);
-  animation: la-hero-in 0.5s ease-out both;
-}
-
-.la-hero__trend {
-  fill: none;
-  stroke: var(--md-accent-fg-color);
-  stroke-width: 1.5;
-  stroke-dasharray: 5 4;
-  opacity: 0.8;
-}
-
-.la-hero__ring {
-  fill: none;
-  stroke: var(--la-hero-dot);
-  stroke-width: 2;
 }
 
 /* leaders: thin; the name's is the logo's */
@@ -210,12 +119,8 @@
   stroke-linecap: round;
 }
 
-/* the labels' looks: a map's halo, a POI chip with its icon, a node's pill, a callout */
+/* the labels: text with a halo, so that they read over the graph paper and the leaders */
 .la-hero__label text {
-  fill: var(--md-default-fg-color--light);
-}
-
-.la-hero__label--map text {
   fill: var(--md-default-fg-color);
   stroke: var(--la-hero-halo);
   stroke-width: 3px;
@@ -223,56 +128,10 @@
   paint-order: stroke;
 }
 
-.la-hero__label--accent text {
-  fill: var(--md-default-fg-color);
-}
-
-.la-hero__label--chip .la-hero__bg {
-  fill: var(--md-default-bg-color);
-  stroke: var(--md-default-fg-color--lightest);
-  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.12));
-}
-
-.la-hero__label--chip text {
-  fill: var(--md-default-fg-color);
-}
-
-.la-hero__icon {
-  fill: none;
-  stroke: var(--la-hero-pin);
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.la-hero__label--pill .la-hero__bg {
-  fill: var(--la-hero-pill);
-}
-
-.la-hero__label--pill text {
-  fill: var(--la-hero-node);
-}
-
+/* inside a thing (the moon): its own colours, in either scheme */
 .la-hero__label--inside text {
-  fill: #ffffff;
-}
-
-.la-hero__label--inside.la-hero__label--out text {
-  fill: var(--la-hero-node);
-}
-
-.la-hero__label--water text {
-  fill: var(--la-hero-water-text);
-}
-
-.la-hero__label--callout .la-hero__bg {
-  fill: var(--md-default-bg-color);
-  stroke: var(--md-accent-fg-color);
-  stroke-width: 1.5;
-}
-
-.la-hero__label--callout text {
-  fill: var(--md-default-fg-color);
+  fill: #37474f;
+  stroke: none;
 }
 
 .la-hero__label--name .la-hero__bg {
@@ -281,6 +140,7 @@
 
 .la-hero__label--name text {
   fill: var(--md-primary-bg-color);
+  stroke: none;
 }
 
 /* how a label was placed, on hover */
@@ -506,8 +366,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .la-hero__mark,
-  .la-hero__cloud {
+  .la-hero__thing {
     animation: none;
   }
 }
