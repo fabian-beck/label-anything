@@ -30,6 +30,13 @@ describe("validate", () => {
     expect(msgs).toContain("unknown property 'widht' (did you mean 'width'?)");
     expect(msgs).toContain("unknown property 'lineHeight' (did you mean 'line_height'?)");
     expect(msgs).toContain("unknown property 'fontsize'");
+    // enum values and the alternatives' types; degradation steps
+    const r2 = validate({ items: [], avoid: { label: { lines: "Hard" } }, leaders: { style: "strait" }, degrade: ["omitt", "shrink:2"] });
+    const m2 = r2.errors.map((e) => e.message);
+    expect(m2).toContain('must be one of "hard", "ignore", or a number (did you mean "hard"?)');
+    expect(m2.some((m) => m.endsWith('(did you mean "straight"?)'))).toBe(true);
+    expect(m2.some((m) => m.startsWith('unknown step "omitt" (did you mean "omit"?)'))).toBe(true);
+    expect(m2).toContain('"shrink:2": shrink needs a factor f with 0 < f ≤ 1, e.g. "shrink:0.85"');
   });
 
   it("structural_errors_have_pointers", () => {
@@ -100,13 +107,25 @@ describe("validate (TypeScript specifics)", () => {
   });
 
   it("counts string lengths in code points and cuts long values like Rust", () => {
-    const r = validate({ items: [{ id: "", anchor: point(0, 0), label: text("A") }], degrade: ["😀".repeat(70), "😀".repeat(40)] });
-    const tail = " does not match ^(alternatives|wrap|truncate|distant|boundary|evict_lower|soft_overlap|omit|shrink:(0(\\.[0-9]+)?|1(\\.0+)?|\\.[0-9]+))$";
+    const r = validate({
+      items: [{ id: "", anchor: point(0, 0), label: text("A") }],
+      priority: { ties: "😀".repeat(70), tiers: [{ where: "1", tier: 1 }] },
+      canvas: { width: 1, height: 1, background: "😀".repeat(40) },
+    });
+    const at = (p: string) => r.errors.find((e) => e.pointer === p);
     // more than 60 bytes: the first 57 code points of the JSON text, then "…"
-    expect(r.errors[0]).toEqual({ pointer: "/degrade/0", code: "pattern", message: `"${"😀".repeat(56)}…${tail}` });
+    expect(at("/priority/ties")).toEqual({
+      pointer: "/priority/ties",
+      code: "pattern",
+      message: `"${"😀".repeat(56)}… does not match ^(input_order|id|anchor_x|random|random\\([0-9]+\\))$`,
+    });
     // more than 60 bytes but fewer than 58 code points: all of it, then "…" (as in Rust)
-    expect(r.errors[1]).toEqual({ pointer: "/degrade/1", code: "pattern", message: `"${"😀".repeat(40)}"…${tail}` });
-    expect(r.errors[2]).toEqual({ pointer: "/items/0/id", code: "length", message: "must have at least 1 characters" });
+    expect(at("/canvas/background")).toEqual({
+      pointer: "/canvas/background",
+      code: "pattern",
+      message: `"${"😀".repeat(40)}"… does not match ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$`,
+    });
+    expect(at("/items/0/id")).toEqual({ pointer: "/items/0/id", code: "length", message: "must have at least 1 characters" });
     // one astral character is one code point: long enough
     expect(validate({ items: [{ id: "😀", anchor: point(0, 0), label: text("A") }] }).valid).toBe(true);
   });

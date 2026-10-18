@@ -143,7 +143,7 @@
         {
           "pointer": "/degrade/1",
           "code": "pattern",
-          "message": "\"shrink:2\" does not match ^(alternatives|wrap|truncate|distant|boundary|evict_lower|soft_overlap|omit|shrink:(0(\\.[0-9]+)?|1(\\.0+)?|\\.[0-9]+))$"
+          "message": "\"shrink:2\": shrink needs a factor f with 0 < f ≤ 1, e.g. \"shrink:0.85\""
         }
       ],
       "warnings": []

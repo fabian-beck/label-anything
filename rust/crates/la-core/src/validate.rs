@@ -149,7 +149,7 @@ impl Path<'_> {
 /// The known property `k` was most likely meant as: equal up to ASCII case, `_` and `-`,
 /// else within an edit distance of a third of its length (at least 1); ties go to the
 /// alphabetically first.
-fn suggest<'a>(k: &str, known: impl Iterator<Item = &'a String>) -> Option<&'a str> {
+fn suggest<'a>(k: &str, known: impl Iterator<Item = &'a str>) -> Option<&'a str> {
     let norm = |s: &str| -> Vec<char> {
         s.chars()
             .filter(|&c| c != '_' && c != '-')
@@ -161,8 +161,8 @@ fn suggest<'a>(k: &str, known: impl Iterator<Item = &'a String>) -> Option<&'a s
     let mut best: Option<(usize, &str)> = None;
     for cand in known {
         let d = edit_distance(&a, &norm(cand));
-        if d <= limit && best.is_none_or(|(bd, bs)| d < bd || (d == bd && cand.as_str() < bs)) {
-            best = Some((d, cand.as_str()));
+        if d <= limit && best.is_none_or(|(bd, bs)| d < bd || (d == bd && cand < bs)) {
+            best = Some((d, cand));
         }
     }
     best.map(|(_, s)| s)
@@ -380,7 +380,15 @@ impl<'s> Interp<'s> {
             if !e.iter().any(|x| json_eq(x, v)) {
                 sink.err(ptr, "enum", || {
                     let list: Vec<String> = e.iter().map(short).collect();
-                    format!("must be one of {}", list.join(", "))
+                    let near = v
+                        .as_str()
+                        .and_then(|s| suggest(s, e.iter().filter_map(|x| x.as_str())));
+                    match near {
+                        Some(n) => {
+                            format!("must be one of {} (did you mean \"{n}\"?)", list.join(", "))
+                        }
+                        None => format!("must be one of {}", list.join(", ")),
+                    }
                 });
                 if sink.failed() {
                     return evaluated;
@@ -521,7 +529,8 @@ impl<'s> Interp<'s> {
                         }
                         if ap == &Value::Bool(false) {
                             sink.err(&Path::Key(ptr, k), "unknown_property", || {
-                                let known = props.into_iter().flat_map(|p| p.keys());
+                                let known =
+                                    props.into_iter().flat_map(|p| p.keys().map(String::as_str));
                                 match suggest(k, known) {
                                     Some(s) => {
                                         format!("unknown property '{k}' (did you mean '{s}'?)")
@@ -754,6 +763,18 @@ fn best_alternative(results: Vec<Vec<Issue>>, ptr: &str) -> Vec<Issue> {
     let disc_type = ptr_join(ptr, "type");
     let disc_shape = ptr_join(ptr, "shape");
     let mut best: Option<((u8, u8, usize), Vec<Issue>)> = None;
+    // the types of the alternatives that failed on the value's type alone
+    let other_types: Vec<String> = results
+        .iter()
+        .filter_map(|errs| match errs.as_slice() {
+            [e] if e.pointer == ptr && e.code == "type" => e
+                .message
+                .strip_prefix("expected ")
+                .and_then(|m| m.split_once(", got "))
+                .map(|(want, _)| want.to_string()),
+            _ => None,
+        })
+        .collect();
     for errs in results {
         let root_type = errs.iter().any(|e| e.pointer == ptr && e.code == "type") as u8;
         let disc = errs.iter().any(|e| {
@@ -765,7 +786,33 @@ fn best_alternative(results: Vec<Vec<Issue>>, ptr: &str) -> Vec<Issue> {
             best = Some((score, errs));
         }
     }
-    best.map(|b| b.1).unwrap_or_default()
+    let Some((_, mut out)) = best else {
+        return vec![];
+    };
+    // a value outside an enum, where other alternatives take other types: name them too
+    // (`must be one of "hard", "ignore", or a number`)
+    if let [e] = out.as_mut_slice() {
+        if e.pointer == ptr && e.code == "enum" {
+            for t in &other_types {
+                e.message = match e.message.split_once(" (did you mean") {
+                    Some((head, tail)) => {
+                        format!("{head}, or {} (did you mean{tail}", with_article(t))
+                    }
+                    None => format!("{}, or {}", e.message, with_article(t)),
+                };
+            }
+        }
+    }
+    out
+}
+
+/// `a number`, `an integer`, `null`.
+fn with_article(t: &str) -> String {
+    match t {
+        "null" => t.to_string(),
+        _ if t.starts_with(['a', 'e', 'i', 'o', 'u']) => format!("an {t}"),
+        _ => format!("a {t}"),
+    }
 }
 
 // ---------------------------------------------------------------------------------------
@@ -942,6 +989,44 @@ fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
             }
         }
     }
+    // degradation steps: name the steps instead of quoting the pattern
+    const STEPS: [&str; 8] = [
+        "alternatives",
+        "wrap",
+        "truncate",
+        "distant",
+        "boundary",
+        "evict_lower",
+        "soft_overlap",
+        "omit",
+    ];
+    for e in errors.iter_mut() {
+        let Some(i) = e.pointer.strip_prefix("/degrade/") else {
+            continue;
+        };
+        if e.code != "pattern" || i.contains('/') {
+            continue;
+        }
+        let Some(v) = p.pointer(&e.pointer) else {
+            continue;
+        };
+        let step = v.as_str().unwrap_or("");
+        e.message = if step.starts_with("shrink") {
+            format!(
+                "{}: shrink needs a factor f with 0 < f ≤ 1, e.g. \"shrink:0.85\"",
+                short(v)
+            )
+        } else {
+            let hint = suggest(step, STEPS.into_iter())
+                .map(|s| format!(" (did you mean \"{s}\"?)"))
+                .unwrap_or_default();
+            format!(
+                "unknown step {}{hint}: the steps are {}, and shrink:f with 0 < f ≤ 1",
+                short(v),
+                STEPS.join(", ")
+            )
+        };
+    }
     // priority terms on attributes that no item has → warnings (the term is 0 everywhere)
     if let Some(Value::Array(terms)) = p.pointer("/priority/terms") {
         let has = |name: &str| {
@@ -1060,9 +1145,27 @@ mod tests {
         assert!(msgs.contains(&"unknown property 'widht' (did you mean 'width'?)"));
         assert!(msgs.contains(&"unknown property 'lineHeight' (did you mean 'line_height'?)"));
         assert!(msgs.contains(&"unknown property 'fontsize'"));
-        let known = ["mark".to_string(), "margin".to_string()];
-        assert_eq!(suggest("marx", known.iter()), Some("mark"));
+        assert_eq!(
+            suggest("marx", ["mark", "margin"].into_iter()),
+            Some("mark")
+        );
         assert_eq!(edit_distance(&['a', 'b', 'c'], &['b', 'a', 'c']), 1);
+        // enum values and the alternatives' types; degradation steps
+        let r = validate(&json!({"items": [], "avoid": {"label": {"lines": "Hard"}},
+            "leaders": {"style": "strait"}, "degrade": ["omitt", "shrink:2"]}));
+        let msgs: Vec<_> = r.errors.iter().map(|e| e.message.as_str()).collect();
+        assert!(msgs.contains(
+            &"must be one of \"hard\", \"ignore\", or a number (did you mean \"hard\"?)"
+        ));
+        assert!(msgs
+            .iter()
+            .any(|m| m.ends_with("(did you mean \"straight\"?)")));
+        assert!(msgs
+            .iter()
+            .any(|m| m.starts_with("unknown step \"omitt\" (did you mean \"omit\"?)")));
+        assert!(msgs.contains(
+            &"\"shrink:2\": shrink needs a factor f with 0 < f ≤ 1, e.g. \"shrink:0.85\""
+        ));
     }
 
     #[test]
