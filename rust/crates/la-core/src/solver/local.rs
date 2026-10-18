@@ -289,19 +289,38 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
         }
         place(s, i, cur_c);
     }
-    // restore the best state if the walk ended above it
-    if snapshot != s.state.placed && total(s) > best + 1e-9 {
-        for i in 0..n {
-            s.state.unplace(i, &s.cands);
-        }
-        for (i, c) in snapshot.iter().enumerate().take(n) {
-            if let Some(c) = *c {
-                place(s, i, c);
+    // Restore the best state if the walk ended above it. `best` adds up the moves' cost
+    // changes, which count the moved labels' own costs (static, and dynamic against the
+    // other labels) but not what a move changes in the dynamic costs of the other labels
+    // (a leader through another label's buffer ring): the snapshot stays only when its
+    // total is lower than the walk's.
+    if snapshot != s.state.placed {
+        let end = total(s);
+        if end > best + 1e-9 {
+            let walked = s.state.placed.clone();
+            let walked_reasons = std::mem::replace(&mut s.reasons, snap_reasons);
+            set_placement(s, &snapshot);
+            if total(s) >= end {
+                set_placement(s, &walked);
+                s.reasons = walked_reasons;
             }
         }
-        s.reasons = snap_reasons;
     }
     st
+}
+
+/// Replace the placement by `placed` (the reasons stay as they are).
+fn set_placement(s: &mut Solve, placed: &[Option<u32>]) {
+    let reasons = s.reasons.clone();
+    for i in 0..placed.len() {
+        s.state.unplace(i, &s.cands);
+    }
+    for (i, c) in placed.iter().enumerate() {
+        if let Some(c) = *c {
+            place(s, i, c);
+        }
+    }
+    s.reasons = reasons;
 }
 
 /// Total cost of the current placement (static + relaxation + dynamic).

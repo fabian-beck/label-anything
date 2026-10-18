@@ -276,17 +276,37 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
     place(s, i, curC);
     if (tr !== null) tr.move(it, "relocate", i, curC, k, -1, -1, scratch.length, null, temp, "blocked", null, cur, best);
   }
-  // restore the best state if the walk ended above it
-  if (!sameArray(snapshot, s.state.placed) && total(s) > best + 1e-9) {
-    for (let i = 0; i < n; i++) s.state.unplace(i, s.cands);
-    for (let i = 0; i < n; i++) {
-      const c = snapshot[i]!;
-      if (c >= 0) place(s, i, c);
+  // Restore the best state if the walk ended above it. `best` adds up the moves' cost
+  // changes, which count the moved labels' own costs (static, and dynamic against the other
+  // labels) but not what a move changes in the dynamic costs of the other labels (a leader
+  // through another label's buffer ring): the snapshot stays only when its total is lower
+  // than the walk's.
+  if (!sameArray(snapshot, s.state.placed)) {
+    const end = total(s);
+    if (end > best + 1e-9) {
+      const walked = s.state.placed.slice();
+      const walkedReasons = s.reasons;
+      s.reasons = snapReasons;
+      setPlacement(s, snapshot);
+      if (total(s) >= end) {
+        setPlacement(s, walked);
+        s.reasons = walkedReasons;
+      }
+      if (tr !== null) tr.pass("local", "restore", []);
     }
-    s.reasons = snapReasons;
-    if (tr !== null) tr.pass("local", "restore", []);
   }
   return st;
+}
+
+/** Replace the placement by `placed` (the reasons stay as they are). */
+function setPlacement(s: Solve, placed: Int32Array): void {
+  const reasons = s.reasons.slice();
+  for (let i = 0; i < placed.length; i++) s.state.unplace(i, s.cands);
+  for (let i = 0; i < placed.length; i++) {
+    const c = placed[i]!;
+    if (c >= 0) place(s, i, c);
+  }
+  s.reasons = reasons;
 }
 
 /** Total cost of the current placement (static + relaxation + dynamic). */

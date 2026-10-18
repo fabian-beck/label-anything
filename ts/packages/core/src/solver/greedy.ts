@@ -564,6 +564,9 @@ function bestLevel0(s: Solve, g: Greedy, i: number): number | null {
   const laVals: number[] | null = tr !== null ? [] : null;
   for (let t = 0; t < m && t < LOOKAHEAD_TOP; t++) {
     const base = scoredCost[idx[t]!]!;
+    // the lookahead is never negative: a candidate (and every later one) whose cost alone
+    // exceeds the best total cannot win
+    if (base > bestTotal) break;
     const c = scoredId[idx[t]!]!;
     const la = lookahead(s, g, i, c);
     if (laIds !== null) {
@@ -694,7 +697,9 @@ export const EXPLAIN_CANDIDATES = 5;
  */
 export function explain(s: Solve, i: number): Reason {
   const soft = s.model.ladder.some((st) => stepEq(st, { kind: "soft_overlap" }));
+  // ladder candidates are evaluated lazily: one never evaluated is not known to be feasible
   const anyStatic = s.byItem[i]!.some((c) => {
+    s.ensureEval(c);
     const cd = s.cands[c]!;
     return cd.feasible || (cd.relaxed && soft);
   });

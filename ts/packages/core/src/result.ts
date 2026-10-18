@@ -252,6 +252,8 @@ export function build(s: Solve, ver: Verification, phases: readonly [string, num
       const blockers: number[] = [];
       const feasCost: number[] = [];
       const feasId: number[] = [];
+      // ladder candidates are evaluated lazily: evaluate the item's never evaluated ones
+      for (const cid2 of s.byItem[i]!) s.ensureEval(cid2);
       for (const cid2 of s.byItem[i]!) {
         const c = s.cands[cid2]!;
         if (c.blocked !== null) add(blockName(s, c.blocked), 1);
