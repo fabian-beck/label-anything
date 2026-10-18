@@ -64,6 +64,15 @@ Every unplaced item reports:
 * `blocked_by` — the placed items whose label or leader conflicts with its best candidates.
 * `priority` — its `tier`, `score` and `rank` in the total priority order (0 = first).
 
+What to do when a label you need is missing, by what blocks it:
+
+| `blocking` | try |
+|---|---|
+| `items` (an important item in a crowd of minor ones) | let it cover their marks: `avoid.label.lower_items` ([below](#important-labels-over-minor-marks)); or a smaller `defaults.margin` |
+| `labels`, `leaders` | raise its priority, or `required: true`; allow leaders (`placement.models` with `distant`, or the `boundary` model for margin labels) |
+| `canvas_edge` | `canvas.padding: 0`, a larger canvas, or `canvas.allow_outside: true` |
+| an obstacle class (`ink`, `lines`, `text`, …) | make it soft: a weight instead of `"hard"` in `avoid.label` |
+
 `stats.omission_order` lists the omitted ids from the lowest priority upward — the order
 in which they gave way. `stats.priority_inversions` counts omitted items that would have
 fit next to the labels of higher priority; the engine verifies it after every solve, and
