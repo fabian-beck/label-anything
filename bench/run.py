@@ -46,6 +46,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import shlex
 import shutil
 import statistics
@@ -185,6 +186,23 @@ class Solver:
             if hasattr(mod, "warmup"):
                 mod.warmup()
 
+    @property
+    def cold_cmd(self) -> str | None:
+        """For a Label Anything CLI that solves ``--warmup N`` times before the timed solve: the same command
+        solving once (its process wall time is what a host waits for one call from a fresh process)."""
+        if not self.is_la or not self.cmd or not re.search(r"--warmup\s+[1-9]", self.cmd):
+            return None
+        return re.sub(r"--warmup\s+\d+", "--warmup 0", self.cmd)
+
+    def solve_cold(self, problem_path: Path, result_path: Path, timeout: float) -> float:
+        """Wall time (ms) of one solve in a fresh process, without warm-up solves."""
+        result_path.parent.mkdir(parents=True, exist_ok=True)
+        cmd = self.cold_cmd.format(problem=shlex.quote(str(problem_path)), result=shlex.quote(str(result_path)))
+        code, err, wall, _rss = run_command(shlex.split(cmd), timeout)
+        if code != 0:
+            raise RuntimeError(f"{self.name} failed ({code}): {err.strip()[:500]}")
+        return wall
+
     def solve(self, problem: dict, problem_path: Path, result_path: Path, timeout: float,
               options: dict | None = None) -> tuple[dict, float]:
         """Solve and time one problem; ``options`` (baselines only) from ``Baseline.sequence_options``."""
@@ -317,8 +335,19 @@ def run_problem(solver: Solver, prob_entry: dict, out: Path, runs: int, timeout:
     if error is not None or res is None:
         entry["error"] = error
         return entry
+    if solver.cold_cmd is not None:
+        # the timed processes also ran the warm-up solves: the wall time of a call is that of a fresh process
+        # solving once, as for the tools run as subprocesses
+        warm_walls = walls
+        try:
+            walls = [solver.solve_cold(prob_entry["path"], out / "tmp" / "cold.json", timeout) for _ in range(runs)]
+        except Exception as e:  # noqa: BLE001 - report and continue
+            entry["error"] = f"{type(e).__name__}: {e}"
+            return entry
     metrics = evaluate(problem, res, truth)
     metrics["runtime"]["wall_ms"] = {"median": statistics.median(walls), "p95": pct(walls, 0.95), "runs": walls}
+    if solver.cold_cmd is not None:
+        metrics["runtime"]["warm_process_ms"] = {"median": statistics.median(warm_walls), "runs": warm_walls}
     if reported:
         metrics["runtime"]["reported_ms"] = {"median": statistics.median(reported), "p95": pct(reported, 0.95)}
     if rss:

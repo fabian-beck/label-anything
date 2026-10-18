@@ -59,7 +59,9 @@ engine and the WebAssembly build (`npm run build:wasm -w @label-anything/wasm`) 
 TypeScript CLI. All three are timed in steady state, as a host application that solves
 repeatedly sees them: `--warmup` solves (default 3) in the same process precede every timed
 solve (a fresh process would also time loading fonts, first-touch memory and, for
-JavaScript, compiling the engine); `--baselines` adds every baseline (see *Baselines*):
+JavaScript, compiling the engine); their wall time is that of a fresh process solving once
+(`--warmup 0`, as many runs), what a host waits for one call, like the tools that run as
+subprocesses; `--baselines` adds every baseline (see *Baselines*):
 
 ```sh
 bench/.venv/bin/python bench/run.py --suite quick --engine rust/target/release/label-anything \
