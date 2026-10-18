@@ -1,0 +1,733 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600">
+<title>The world's economies: population against GDP per person, every country a bubble sized by its GDP, labeled by Label Anything</title>
+<style>@font-face{font-family:'LA Noto Sans';src:url(data:font/woff;base64,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) format('woff');font-weight:400;font-style:normal}@font-face{font-family:'LA Noto Sans';src:url(data:font/woff;base64,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) format('woff');font-weight:700;font-style:normal}text{font-family:'LA Noto Sans',sans-serif;white-space:pre}.labels text{stroke:#ffffff;stroke-width:2.6px;stroke-linejoin:round;paint-order:stroke}.labels .inside text{stroke:none}</style>
+
+<rect id="background" width="960" height="600" fill="#ffffff"/>
+<g class="grid" stroke="#e6e8eb" stroke-width="1">
+<line x1="78" y1="16" x2="78" y2="548"/>
+<line x1="196.71" y1="16" x2="196.71" y2="548"/>
+<line x1="286.5" y1="16" x2="286.5" y2="548"/>
+<line x1="376.3" y1="16" x2="376.3" y2="548"/>
+<line x1="495.01" y1="16" x2="495.01" y2="548"/>
+<line x1="584.81" y1="16" x2="584.81" y2="548"/>
+<line x1="674.61" y1="16" x2="674.61" y2="548"/>
+<line x1="793.31" y1="16" x2="793.31" y2="548"/>
+<line x1="883.11" y1="16" x2="883.11" y2="548"/>
+<line x1="78" y1="536.73" x2="944" y2="536.73"/>
+<line x1="78" y1="420.42" x2="944" y2="420.42"/>
+<line x1="78" y1="304.11" x2="944" y2="304.11"/>
+<line x1="78" y1="187.8" x2="944" y2="187.8"/>
+<line x1="78" y1="71.49" x2="944" y2="71.49"/>
+</g>
+<g class="axis" fill="#5f6670" font-size="11" stroke="none">
+<line x1="78" y1="548" x2="944" y2="548" stroke="#9aa1a9"/>
+<line x1="78" y1="16" x2="78" y2="548" stroke="#9aa1a9"/>
+<text x="78" y="564" text-anchor="middle">$200</text>
+<text x="196.71" y="564" text-anchor="middle">$500</text>
+<text x="286.5" y="564" text-anchor="middle">$1k</text>
+<text x="376.3" y="564" text-anchor="middle">$2k</text>
+<text x="495.01" y="564" text-anchor="middle">$5k</text>
+<text x="584.81" y="564" text-anchor="middle">$10k</text>
+<text x="674.61" y="564" text-anchor="middle">$20k</text>
+<text x="793.31" y="564" text-anchor="middle">$50k</text>
+<text x="883.11" y="564" text-anchor="middle">$100k</text>
+<text x="72" y="540.73" text-anchor="end">100k</text>
+<text x="72" y="424.42" text-anchor="end">1M</text>
+<text x="72" y="308.11" text-anchor="end">10M</text>
+<text x="72" y="191.8" text-anchor="end">100M</text>
+<text x="72" y="75.49" text-anchor="end">1B</text>
+<text x="511" y="586" text-anchor="middle" fill="#1f2328" font-size="12">GDP per person (US$, log scale)</text>
+<text transform="translate(34 282) rotate(-90)" text-anchor="middle" fill="#1f2328" font-size="12">Population (log scale)</text>
+</g>
+<g class="bubbles" stroke="#ffffff" stroke-width="0.8">
+<circle class="bubble" id="USA" cx="827.89" cy="127.76" r="50" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="CHN" cx="588.15" cy="54.58" r="40.9" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="JPN" cx="765.2" cy="176.02" r="24.35" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="DEU" cx="783.76" cy="197.13" r="21.22" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="IND" cx="382.6" cy="55.72" r="18.29" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="GBR" cx="771.74" cy="208.16" r="18.17" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="FRA" cx="765.99" cy="207.99" r="17.8" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="ITA" cx="740.37" cy="213.36" r="15.29" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="BRA" cx="567.02" cy="150.07" r="14.65" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="CAN" cx="783.06" cy="237.23" r="14.23" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="RUS" cx="605.97" cy="169.25" r="14.08" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="KOR" cx="734.87" cy="221.12" r="13.86" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="AUS" cx="805.8" cy="257.1" r="12.76" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="ESP" cx="725.4" cy="225.86" r="12.75" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="MEX" cx="584.11" cy="175.5" r="12.17" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="TWN" cx="787.53" cy="260.81" r="11.47" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="IDN" cx="470.42" cy="137.51" r="11.43" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="NLD" cx="799.22" cy="276.33" r="10.29" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="SAU" cx="693.5" cy="241.9" r="9.62" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="TUR" cx="572.97" cy="196.95" r="9.42" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="CHE" cx="857.39" cy="311.88" r="9.06" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="POL" cx="643.18" cy="236.72" r="8.34" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="THA" cx="552.73" cy="206.09" r="7.96" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="BEL" cx="783.69" cy="297.12" r="7.89" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="SWE" cx="797.43" cy="302.69" r="7.87" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="VEN" cx="652.91" cy="251.18" r="7.5" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="IRN" cx="506.78" cy="197.27" r="7.28" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="NGA" cx="390.4" cy="152.55" r="7.23" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="ARG" cx="583.67" cy="228.21" r="7.21" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="AUT" cx="793.67" cy="310.13" r="7.21" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="ARE" cx="774.08" cy="305.28" r="7.01" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="NOR" cx="846.56" cy="335.73" r="6.86" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="ISR" cx="775.54" cy="309.13" r="6.78" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="IRL" cx="852.01" cy="339.72" r="6.73" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="PHL" cx="448.25" cy="183.86" r="6.63" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="SGP" cx="827.77" cy="332.47" r="6.59" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="HKG" cx="789.94" cy="318.59" r="6.53" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="MYS" cx="601.94" cy="245.44" r="6.52" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="ZAF" cx="518.66" cy="214.83" r="6.4" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="DNK" cx="817.3" cy="331.47" r="6.39" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="COL" cx="527.57" cy="222.47" r="6.14" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="EGY" cx="429.66" cy="187.61" r="5.95" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="BGD" cx="366.6" cy="163.11" r="5.94" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="CHL" cx="636.44" cy="271.82" r="5.74" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="PAK" cx="318.96" cy="148.77" r="5.7" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="FIN" cx="790.12" cy="334.12" r="5.6" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="VNM" cx="415.91" cy="189.62" r="5.53" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="CZE" cx="695.47" cy="300.84" r="5.41" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="ROU" cx="617.99" cy="270.75" r="5.4" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="PRT" cx="694.12" cy="302.77" r="5.28" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="IRQ" cx="517.66" cy="234.97" r="5.23" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="PER" cx="538.19" cy="244.56" r="5.14" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="GRC" cx="671.87" cy="300.62" r="4.95" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="NZL" cx="770.98" cy="339.97" r="4.91" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="KAZ" cx="582.35" cy="273" r="4.6" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="QAT" cx="821.36" cy="367.84" r="4.53" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="DZA" cx="465.25" cy="230.37" r="4.47" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="HUN" cx="651.49" cy="305.29" r="4.37" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="UKR" cx="447.49" cy="228.83" r="4.24" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="KWT" cx="735.5" cy="347.85" r="3.96" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="MAR" cx="440.47" cy="238.75" r="3.74" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="ECU" cx="522.54" cy="276.21" r="3.54" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="SVK" cx="669.76" cy="334.73" r="3.5" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="PRI" cx="738.98" cy="361.77" r="3.5" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="CUB" cx="568.62" cy="297.79" r="3.42" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="SYR" cx="514.01" cy="277.1" r="3.4" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="ETH" cx="266.32" cy="182.04" r="3.34" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="KEN" cx="363.84" cy="220.28" r="3.34" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="DOM" cx="560.39" cy="300.51" r="3.22" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="AGO" cx="419.46" cy="245.63" r="3.22" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="LKA" cx="461.25" cy="264.74" r="3.13" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="GTM" cx="484.77" cy="278.5" r="2.99" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="OMN" cx="640.26" cy="339.38" r="2.98" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="MMR" cx="330.81" cy="218.88" r="2.98" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="LUX" cx="900.88" cy="444.57" r="2.88" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="BGR" cx="582.56" cy="322.3" r="2.83" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="GHA" cx="388.77" cy="247.92" r="2.8" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="PAN" cx="643.5" cy="347.37" r="2.79" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="TZA" cx="297.57" cy="215.31" r="2.71" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="BLR" cx="532.21" cy="306.88" r="2.71" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="CRI" cx="611.03" cy="338.65" r="2.68" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="HRV" cx="636.78" cy="349.55" r="2.66" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="CIV" cx="393.07" cy="256.4" r="2.61" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="UZB" cx="357.13" cy="242.92" r="2.6" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="URY" cx="647.23" cy="357.7" r="2.56" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="LTU" cx="672" cy="368.65" r="2.52" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="SVN" cx="708.33" cy="383.23" r="2.51" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="MAC" cx="860.67" cy="442.93" r="2.51" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="LBY" cx="550.71" cy="323.76" r="2.46" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="LBN" cx="548.97" cy="323.18" r="2.46" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="SRB" cx="546.01" cy="322.53" r="2.45" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="COD" cx="216.09" cy="194.96" r="2.42" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="AZE" cx="489.55" cy="303.99" r="2.37" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="JOR" cx="478.61" cy="303.6" r="2.28" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="BOL" cx="450.71" cy="296.99" r="2.18" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="TKM" cx="535.98" cy="330.4" r="2.18" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="PRK" cx="343.99" cy="256.5" r="2.16" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="CMR" cx="339.67" cy="256.09" r="2.13" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="TUN" cx="441.86" cy="296.2" r="2.13" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="BHR" cx="695.52" cy="395.4" r="2.12" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="PRY" cx="505.33" cy="321.81" r="2.11" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="UGA" cx="256.68" cy="228.96" r="2.03" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="LVA" cx="659.72" cy="387.66" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="EST" cx="696.72" cy="406.14" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="NPL" cx="295.4" cy="251.02" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="SDN" cx="242.63" cy="230.65" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="KHM" cx="350.84" cy="278.86" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="SLV" cx="472.02" cy="326.23" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="HND" cx="409.03" cy="305.41" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="CYP" cx="679.78" cy="411.27" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="PNG" cx="421.24" cy="310.71" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="TTO" cx="656.55" cy="403.61" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="ISL" cx="831.12" cy="471.84" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="SEN" cx="334.36" cy="279.44" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="ZMB" cx="320.99" cy="274.81" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="YEM" cx="253.37" cy="250.05" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="ZWE" cx="335.88" cy="284.84" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="BIH" cx="520.95" cy="360.1" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="AFG" cx="198.53" cy="236.62" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="BWA" cx="555.27" cy="378.27" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="LAO" cx="407" cy="320.92" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="SOL" cx="448.8" cy="338.16" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="GEO" cx="486.93" cy="354.06" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="MLI" cx="269.79" cy="269.97" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="GAB" cx="552.07" cy="381.23" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="JAM" cx="509.28" cy="365.8" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="PSX" cx="447.83" cy="342.41" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="BFA" cx="255.45" cy="268.29" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="MOZ" cx="197.62" cy="248" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="ALB" cx="503.85" cy="367.44" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="MLT" cx="726.35" cy="455.16" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="BEN" cx="312.2" cy="295.75" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="HTI" cx="317.72" cy="298.1" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="MDG" cx="202.62" cy="254" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="MNG" cx="476.66" cy="361.27" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="ARM" cx="484.84" cy="365.64" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="BHS" cx="746.59" cy="468.05" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="BRN" cx="731.74" cy="462.67" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="NER" cx="209.96" cy="261.36" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="MKD" cx="519.11" cy="383.34" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="NIC" cx="370.53" cy="325.52" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="NAM" cx="493.9" cy="374.25" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="GIN" cx="281.59" cy="291.76" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="COG" cx="393.27" cy="335.42" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="SDS" cx="297.03" cy="299.01" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="MDA" cx="481.45" cy="371.05" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="TCD" cx="242.04" cy="280.54" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="GNQ" cx="558.01" cy="405.04" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="NCL" cx="755.77" cy="483.33" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="RWA" cx="260.79" cy="292.33" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="KGZ" cx="321.42" cy="326.21" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="TJK" cx="268.57" cy="307.66" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="KOS" cx="478.96" cy="390.89" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="MWI" cx="171.47" cy="272.69" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="MRT" cx="353.66" cy="344.16" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="GUM" cx="748.53" cy="510.74" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="MNE" cx="569.83" cy="444.39" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="FJI" cx="522.37" cy="426.31" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="PYF" cx="672.37" cy="484.85" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="TGO" cx="236.4" cy="314.87" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="BRB" cx="662.02" cy="483.47" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="GUY" cx="531.15" cy="432.79" r="2" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="JEY" cx="785.64" cy="532.93" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="SOM" cx="186.75" cy="303.15" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="SWZ" cx="462.63" cy="413.44" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="SLE" cx="203.63" cy="316.58" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="VIR" cx="751.3" cy="533.49" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="SUR" cx="526.16" cy="447.82" r="2" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="CYN" cx="597.66" cy="477.04" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="DJI" cx="445.59" cy="421.77" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="CUW" cx="672.54" cy="513.77" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="LBR" cx="224.95" cy="339.76" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="ABW" cx="721.6" cy="533.64" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="BDI" cx="112.6" cy="296.92" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="BTN" cx="441.78" cy="434.08" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="LSO" cx="300.95" cy="382.34" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="CAF" cx="188.09" cy="341.77" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="LCA" cx="604.14" cy="506.26" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="ERI" cx="146.58" cy="329.23" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="TLS" cx="344.1" cy="407.44" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="CPV" cx="452.53" cy="450.62" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="BLZ" cx="490.09" cy="467.94" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="GMB" cx="253.95" cy="377.31" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="SLB" cx="398.42" cy="440.66" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="GNB" cx="239.75" cy="387.45" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="GRD" cx="594.82" cy="531" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="COM" cx="327.21" cy="428.58" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="VUT" cx="433.69" cy="481.25" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="SAH" cx="339.34" cy="445.95" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="WSM" cx="476.15" cy="502.45" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="VCT" cx="546.69" cy="531.64" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="TON" cx="492.39" cy="534.51" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="STP" cx="372.6" cy="498.05" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="FSM" cx="449.66" cy="530.19" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="KIR" cx="351.35" cy="528.54" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+</g>
+<g class="legend" font-size="11" fill="#1f2328">
+<rect x="84" y="20" width="118" height="126" rx="4" fill="#ffffff" stroke="#e6e8eb"/>
+<circle cx="97" cy="34" r="5" fill="#59a14f" fill-opacity="0.78"/>
+<text x="107" y="38">Africa</text>
+<circle cx="97" cy="50" r="5" fill="#e15759" fill-opacity="0.78"/>
+<text x="107" y="54">Asia</text>
+<circle cx="97" cy="66" r="5" fill="#4e79a7" fill-opacity="0.78"/>
+<text x="107" y="70">Europe</text>
+<circle cx="97" cy="82" r="5" fill="#f28e2b" fill-opacity="0.78"/>
+<text x="107" y="86">North America</text>
+<circle cx="97" cy="98" r="5" fill="#d4a72c" fill-opacity="0.78"/>
+<text x="107" y="102">South America</text>
+<circle cx="97" cy="114" r="5" fill="#b07aa1" fill-opacity="0.78"/>
+<text x="107" y="118">Oceania</text>
+<text x="92" y="134" fill="#5f6670" font-size="10">Area: GDP</text>
+</g>
+
+<g class="leaders" fill="none" stroke="#5f6670" stroke-width="0.8">
+<polyline points="789.91,215.69 829.76,232.19"/>
+<polyline points="746.69,207.99 703.57,207.99"/>
+<polyline points="728.5,201.49 713.25,186.24"/>
+<polyline points="728.99,235.31 722.39,251.25"/>
+<polyline points="711.15,225.86 642.15,225.86"/>
+<polyline points="806.09,306.28 869.83,332.68"/>
+<polyline points="824.67,339.94 813.45,367.04"/>
+<polyline points="482.67,282.47 467.72,310.79"/>
+<polyline points="607.43,340.78 592.09,349.89"/>
+<polyline points="392.86,260.5 391.65,283.91"/>
+<polyline points="644.36,360.57 633.99,370.94"/>
+<polyline points="669.16,371.49 648.42,392.23"/>
+<polyline points="545.01,323.18 515.68,323.18"/>
+<polyline points="349.5,282.09 327.06,336.28"/>
+<polyline points="654.08,406.08 643.71,416.45"/>
+<polyline points="334.54,288.07 323.32,315.17"/>
+<polyline points="446.33,340.63 425.59,361.37"/>
+<polyline points="201.28,257.23 190.06,284.33"/>
+<polyline points="484.98,369.14 486.2,398.76"/>
+<polyline points="278.09,291.88 260.98,292.44"/>
+<polyline points="480.11,374.28 474.5,387.83"/>
+<polyline points="554.78,406.38 500.59,428.82"/>
+<polyline points="203.63,320.08 203.63,364.07"/>
+</g>
+<g class="labels">
+<g>
+<text x="738.75 749.62 758.96 763.26 769.5 778.08 787.17 790.9 798.82 805.06 813.67 819.91 828.49 835.71 839.45 848.43 854 857.73 867.68 881.7 890.28 896.7 901 908.42" y="70.39" font-size="14.38" font-weight="700" fill="#1f2328">United States of America</text>
+</g>
+<g class="inside">
+<text x="567.74 576.97 586.31 590.61 599.95" y="60.16" font-size="14.38" font-weight="700" fill="#ffffff">China</text>
+</g>
+<g>
+<text x="728.1 732.85 741.46 750.55 759.16" y="144.3" font-size="14.38" font-weight="700" fill="#1f2328">Japan</text>
+</g>
+<g>
+<text x="808.14 818.54 827.13 833.55 847.57 856.18 865.52" y="202.71" font-size="14.38" font-weight="700" fill="#1f2328">Germany</text>
+</g>
+<g>
+<text x="364.14 369.73 379.07 388.16 392.45" y="30.06" font-size="14.38" font-weight="700" fill="#1f2328">India</text>
+</g>
+<g>
+<text x="831.91 842.78 852.12 856.42 862.66 871.24 880.33 884.06 893.61 897.91 907.25 916.34 925.42 934.41" y="249.71" font-size="14.38" font-weight="700" fill="#1f2328">United Kingdom</text>
+</g>
+<g>
+<text x="653.42 661.32 667.45 676.07 685.41 692.83" y="213.57" font-size="14.38" font-weight="700" fill="#1f2328">France</text>
+</g>
+<g>
+<text x="678.16 683.75 689.99 698.6 702.89" y="179.87" font-size="14.38" font-weight="700" fill="#1f2328">Italy</text>
+</g>
+<g>
+<text x="552.13 559.6 564.12 570.57 575.98 578.95" y="129.33" font-size="11.5" fill="#1f2328">Brazil</text>
+</g>
+<g>
+<text x="727.19 734.46 740.91 748.01 754.47 761.54" y="258.59" font-size="11.5" fill="#1f2328">Canada</text>
+</g>
+<g>
+<text x="622.78 629.93 637.04 642.54 648.05 651.02" y="173.71" font-size="11.5" fill="#1f2328">Russia</text>
+</g>
+<g>
+<text x="654.51 660.82 667.78 674.88 679.04 686.14 689.13 696.25 703.21 707.73 714.21" y="265.27" font-size="11.5" fill="#1f2328">South Korea</text>
+</g>
+<g>
+<text x="821.03 828.38 835.48 840.99 845.14 849.66 856.12 859.08 862.05" y="273.76" font-size="11.5" fill="#1f2328">Australia</text>
+</g>
+<g>
+<text x="610.51 616.83 623.9 630.35 633.32" y="230.32" font-size="11.5" fill="#1f2328">Spain</text>
+</g>
+<g>
+<text x="589.87 600.3 606.56 612.64 615.61 621.13" y="202.05" font-size="11.5" fill="#1f2328">Mexico</text>
+</g>
+<g>
+<text x="737.22 742.7 749.15 752.12 761.16 767.61" y="280.53" font-size="11.5" fill="#1f2328">Taiwan</text>
+</g>
+<g>
+<text x="443.64 447.54 454.65 461.72 468.68 475.78 482.27 487.78 490.75" y="119.99" font-size="11.5" fill="#1f2328">Indonesia</text>
+</g>
+<g>
+<text x="811.07 819.81 826.29 830.44 837.55 844.04 848.79 851.75 858.21 865.31 872.39" y="295.35" font-size="11.5" fill="#1f2328">Netherlands</text>
+</g>
+<g>
+<text x="525.9 531.72 538.83 543.58 549.72 555.97" y="187.37" font-size="11.5" fill="#1f2328">Turkey</text>
+</g>
+<g>
+<text x="869.17 875.49 884.53 887.49 891.65 897.05 903.54 908.29 911.25 917.7 924.81" y="319.83" font-size="11.5" fill="#1f2328">Switzerland</text>
+</g>
+<g>
+<text x="535.87 542.27 549.37 555.83 558.79 561.76 568.21 575.32" y="229.07" font-size="11.5" fill="#1f2328">Thailand</text>
+</g>
+<g>
+<text x="728.25 735.72 742.21 745.18 752.25 755.22 762.32" y="304.89" font-size="11.5" fill="#1f2328">Belgium</text>
+</g>
+<g>
+<text x="871.56 877.87 886.91 893.4 900.47 906.96" y="346.7" font-size="11.5" fill="#1f2328">Sweden</text>
+</g>
+<g>
+<text x="495.79 499.69 504.21 510.66" y="183.9" font-size="11.5" fill="#1f2328">Iran</text>
+</g>
+<g>
+<text x="376.26 385 387.97 395.04 401.53 406.28 409.25" y="139.23" font-size="11.5" fill="#1f2328">Nigeria</text>
+</g>
+<g>
+<text x="746.08 753.43 760.54 766.05 770.2 774.95 777.92" y="327.31" font-size="11.5" fill="#1f2328">Austria</text>
+</g>
+<g>
+<text x="828.79 836.22 842.14 846.17 853.86 859.34" y="355.51" font-size="9.78" fill="#1f2328">Norway</text>
+</g>
+<g>
+<text x="436.14 442.05 448.1 450.62 453.14 455.66 461.67 467.68 470.21 476.25 481.76" y="171.9" font-size="9.78" fill="#1f2328">Philippines</text>
+</g>
+<g>
+<text x="765.28 770.65 773.17 779.21 785.22 790.71 796.72 802.63 806.47" y="378.95" font-size="9.78" fill="#1f2328">Singapore</text>
+</g>
+<g>
+<text x="552.93 561.79 567.27 569.8 575.28 580.27 584.95 587.47" y="254.84" font-size="9.78" fill="#1f2328">Malaysia</text>
+</g>
+<g>
+<text x="454.02 459.38 465.3 471.34 474.87 480.91 483.45 489.7 493.06 497.1 499.62 504.31" y="218.62" font-size="9.78" fill="#1f2328">South Africa</text>
+</g>
+<g>
+<text x="773.18 780.31 785.82 791.87 801 806.49 810.53" y="350.78" font-size="9.78" fill="#1f2328">Denmark</text>
+</g>
+<g>
+<text x="482.6 488.78 494.69 497.21 503.13 512.27 518.28 520.8" y="241.53" font-size="9.78" fill="#1f2328">Colombia</text>
+</g>
+<g>
+<text x="404.73 410.17 416.18 421.16 427.17" y="176.33" font-size="9.78" fill="#1f2328">Egypt</text>
+</g>
+<g>
+<text x="304.05 310.4 315.89 321.93 327.94 330.46 335.95 341.96 347.47 352.15" y="172.33" font-size="9.78" fill="#1f2328">Bangladesh</text>
+</g>
+<g>
+<text x="617.8 623.97 630.01 632.54 635.06" y="260.75" font-size="9.78" fill="#1f2328">Chile</text>
+</g>
+<g>
+<text x="299.52 305.44 310.92 316.14 318.66 323.34 326.87 332.36" y="137.74" font-size="9.78" fill="#1f2328">Pakistan</text>
+</g>
+<g>
+<text x="369.82 375.69 378.21 383.72 387.25 393.29 398.77" y="196.06" font-size="9.78" fill="#1f2328">Vietnam</text>
+</g>
+<g>
+<text x="682.76 688.94 693.53 699.04 703.74 709.78 712.3" y="290.1" font-size="9.78" fill="#1f2328">Czechia</text>
+</g>
+<g>
+<text x="581.57 587.65 593.56 602.7 608.18 614.22 616.75" y="289.07" font-size="9.78" fill="#1f2328">Romania</text>
+</g>
+<g>
+<text x="674.39 680.31 686.22 690.26 693.79 699.83 705.84 711.32" y="320.97" font-size="9.78" fill="#1f2328">Portugal</text>
+</g>
+<g>
+<text x="524.03 529.94 535.46 539.49" y="262.62" font-size="9.78" fill="#1f2328">Peru</text>
+</g>
+<g>
+<text x="642.44 649.55 653.4 658.91 664.42 669.11" y="290.34" font-size="9.78" fill="#1f2328">Greece</text>
+</g>
+<g>
+<text x="828.36 835.99 841.47 845 850.49" y="374.13" font-size="9.78" fill="#1f2328">Qatar</text>
+</g>
+<g>
+<text x="444.7 450.94 453.47 459.48 464.99 469.03 471.55" y="247.76" font-size="9.78" fill="#1f2328">Algeria</text>
+</g>
+<g>
+<text x="604.81 612.05 618.1 624.14 630.15 635.63 639.67" y="311.55" font-size="9.78" fill="#1f2328">Hungary</text>
+</g>
+<g>
+<text x="405.28 412.43 417.65 421.49 426.97 429.49 435.53" y="222.86" font-size="9.78" fill="#1f2328">Ukraine</text>
+</g>
+<g>
+<text x="697.76 703.82 709.86 717.54 723.02 725.54" y="351.64" font-size="9.78" fill="#1f2328">Kuwait</text>
+</g>
+<g>
+<text x="528.55 533.98 538.67 544.71 550.2 556.21 562.12" y="282.34" font-size="9.78" fill="#1f2328">Ecuador</text>
+</g>
+<g>
+<text x="651.12 656.49 659.01 664.73 669.69 675.18 680.4 682.92" y="351.15" font-size="9.78" fill="#1f2328">Slovakia</text>
+</g>
+<g>
+<text x="680.32 686.23 692.27 697.78 701.82 705.35 711.26 713.81 719.89 722.41 727.1" y="370.22" font-size="9.78" fill="#1f2328">Puerto Rico</text>
+</g>
+<g>
+<text x="566.84 573.02 579.06 585.07" y="314.13" font-size="9.78" fill="#1f2328">Cuba</text>
+</g>
+<g>
+<text x="493.14 498.51 503.5 507.53 510.05" y="268.37" font-size="9.78" fill="#1f2328">Syria</text>
+</g>
+<g>
+<text x="247.59 253.03 256.55 262.6 265.12 271.03 277.04 279.57" y="173.37" font-size="9.78" fill="#1f2328">Ethiopia</text>
+</g>
+<g>
+<text x="369.65 375.7 381.21 387.25 392.24" y="219.46" font-size="9.78" fill="#1f2328">Kenya</text>
+</g>
+<g>
+<text x="482.45 489.58 495.5 504.64 507.16 513.2 515.72 520.41 525.9 531.94 534.48 540.56 546.07 552.08" y="302.02" font-size="9.78" fill="#1f2328">Dominican Rep.</text>
+</g>
+<g>
+<text x="407.53 413.77 419.82 425.83 431.74 434.26" y="261.77" font-size="9.78" fill="#1f2328">Angola</text>
+</g>
+<g>
+<text x="430.1 435.46 439.5 442.02 444.56 449.68 455.17 461.21 466.43" y="280.79" font-size="9.78" fill="#1f2328">Sri Lanka</text>
+</g>
+<g>
+<text x="415.94 423.06 429.1 434.58 438.11 443.62 452.76 458.25 460.77" y="322.7" font-size="9.78" fill="#1f2328">Guatemala</text>
+</g>
+<g>
+<text x="626.11 633.74 642.88 648.37" y="331.07" font-size="9.78" fill="#1f2328">Oman</text>
+</g>
+<g>
+<text x="308.79 317.66 322.64 328.13 334.17 343.31 348.79" y="210.57" font-size="9.78" fill="#1f2328">Myanmar</text>
+</g>
+<g>
+<text x="885.07 890.19 896.23 901.21 906.72 915.86 921.87 927.79 933.83 937.77" y="436.36" font-size="9.78" fill="#1f2328">Luxembourg</text>
+</g>
+<g>
+<text x="563.33 569.69 575.73 578.25 584.26 589.74 593.78 596.3" y="338.05" font-size="9.78" fill="#1f2328">Bulgaria</text>
+</g>
+<g>
+<text x="369.78 376.9 382.94 388.42 394.46" y="239.79" font-size="9.78" fill="#1f2328">Ghana</text>
+</g>
+<g>
+<text x="600.7 606.61 612.1 618.14 623.62 632.76" y="357.82" font-size="9.78" fill="#1f2328">Panama</text>
+</g>
+<g>
+<text x="262.7 267.35 272.84 278.88 283.47 288.96 295 297.52" y="207.27" font-size="9.78" fill="#1f2328">Tanzania</text>
+</g>
+<g>
+<text x="575.05 581.23 587.31" y="361.8" font-size="9.78" fill="#1f2328">CRI</text>
+</g>
+<g>
+<text x="351.03 357.2 363.12 366.65 372.16 374.7 380.71 382.91 386.22 391.19 397.1 399.63 403.47" y="295.82" font-size="9.78" fill="#1f2328">Côte d'Ivoire</text>
+</g>
+<g>
+<text x="301.32 308.47 313.06 319.07 324.59 329.81 332.33 337.01 340.54 346.02" y="240.14" font-size="9.78" fill="#1f2328">Uzbekistan</text>
+</g>
+<g>
+<text x="592.78 599.93 603.96 610 616.01 622.06 627.54" y="382.85" font-size="9.78" fill="#1f2328">Uruguay</text>
+</g>
+<g>
+<text x="604.17 609.29 611.81 615.34 621.38 627.42 632.91 638.95 641.47" y="404.14" font-size="9.78" fill="#1f2328">Lithuania</text>
+</g>
+<g>
+<text x="713.31 718.67 721.19 726.91 731.88 737.39 743.43 745.95" y="389.2" font-size="9.78" fill="#1f2328">Slovenia</text>
+</g>
+<g>
+<text x="849.34 858.2 863.69 868.38 873.86" y="435.09" font-size="9.78" fill="#1f2328">Macao</text>
+</g>
+<g>
+<text x="532.29 537.41 539.93 545.75 550.73" y="339.14" font-size="9.78" fill="#1f2328">Libya</text>
+</g>
+<g>
+<text x="474.09 479.21 484.73 490.74 496.22 502.26 508.18" y="326.97" font-size="9.78" fill="#1f2328">Lebanon</text>
+</g>
+<g>
+<text x="158.59 165.72 171.24 180.38 183 185.54 191.62 197.13 203.14 205.76 208.3 214.48 220.4 226.44 232.45" y="187.21" font-size="9.78" fill="#1f2328">Dem. Rep. Congo</text>
+</g>
+<g>
+<text x="415.78 422.13 428.05 430.57 433.09 438.06 440.58" y="300.78" font-size="9.78" fill="#1f2328">Bolivia</text>
+</g>
+<g>
+<text x="283.07 290.5 296.41 300.45 303.98 310.02 312.56 318.61 324.53 328.37 333.88" y="266.65" font-size="9.78" fill="#1f2328">North Korea</text>
+</g>
+<g>
+<text x="700.09 706.44 711.93 717.97 721.81 727.29 729.81" y="407.65" font-size="9.78" fill="#1f2328">Bahrain</text>
+</g>
+<g>
+<text x="221.05 228.19 234.2 239.69 245.73 251.74" y="221.6" font-size="9.78" fill="#1f2328">Uganda</text>
+</g>
+<g>
+<text x="660.07 665.19 670.67 674.2 679.17 681.69" y="402.58" font-size="9.78" fill="#1f2328">Latvia</text>
+</g>
+<g>
+<text x="268.08 275.51 281.02 287.03 292.52" y="243.69" font-size="9.78" fill="#1f2328">Nepal</text>
+</g>
+<g>
+<text x="209.22 214.59 220.63 226.64 232.12" y="240.73" font-size="9.78" fill="#1f2328">Sudan</text>
+</g>
+<g>
+<text x="278.85 285.02 290.51 299.65 305.66 311.57 317.58 320.11" y="348.19" font-size="9.78" fill="#1f2328">Cambodia</text>
+</g>
+<g>
+<text x="359.31 366.55 372.46 378.5 384.52 390.56 394.4 399.88" y="315.49" font-size="9.78" fill="#1f2328">Honduras</text>
+</g>
+<g>
+<text x="663.81 669.99 674.98 680.99 685.02 691.07" y="426.19" font-size="9.78" fill="#1f2328">Cyprus</text>
+</g>
+<g>
+<text x="547.96 552.91 556.94 559.47 565.51 568.03 574.04 579.52 585.54 588.08 593.56 599.6 605.61 608.16 612.91 618.82 624.83 630.32 636.33" y="428.37" font-size="9.78" fill="#1f2328">Trinidad and Tobago</text>
+</g>
+<g>
+<text x="835.59 838.9 843.59 849.11 851.63 857.11 863.15" y="475.63" font-size="9.78" fill="#1f2328">Iceland</text>
+</g>
+<g>
+<text x="293.44 298.81 304.32 310.36 315.88 321.89 327.37" y="287.42" font-size="9.78" fill="#1f2328">Senegal</text>
+</g>
+<g>
+<text x="217.65 222.7 228.21 237.35 242.86" y="260.13" font-size="9.78" fill="#1f2328">Yemen</text>
+</g>
+<g>
+<text x="274.09 279.68 282.2 291.34 297.36 302.84 308.66 316.34" y="327.08" font-size="9.78" fill="#1f2328">Zimbabwe</text>
+</g>
+<g>
+<text x="448.03 454.39 460.3 464.98 471.02 473.55 479.03 481.57 487.05 493.1 499.11 501.65 508.89 514.41 518.44 523.04" y="352.77" font-size="9.78" fill="#1f2328">Bosnia and Herz.</text>
+</g>
+<g>
+<text x="145.57 151.82 155.18 161.2 167.24 172.72 178.76 181.28 185.96 189.49 194.98" y="229.29" font-size="9.78" fill="#1f2328">Afghanistan</text>
+</g>
+<g>
+<text x="532.68 539.04 544.95 548.48 553.16 560.85 566.33 572.37" y="393.19" font-size="9.78" fill="#1f2328">Botswana</text>
+</g>
+<g>
+<text x="373.12 378.48 384.4 393.54 399.02 401.54 404.06 406.59 412.07 418.11" y="373.29" font-size="9.78" fill="#1f2328">Somaliland</text>
+</g>
+<g>
+<text x="265.5 274.37 279.85 282.37" y="284.89" font-size="9.78" fill="#1f2328">Mali</text>
+</g>
+<g>
+<text x="491.54 494.21 499.7 508.84 514.32 516.84 521.53" y="380.72" font-size="9.78" fill="#1f2328">Jamaica</text>
+</g>
+<g>
+<text x="198.94 205.29 211.34 215.37 220.59 223.11 229.15 234.64 237.18 242.25 247.74 252.42" y="283.21" font-size="9.78" fill="#1f2328">Burkina Faso</text>
+</g>
+<g>
+<text x="133.15 142.02 147.84 152.43 157.91 167.05 173.07 175.59 181.6 187.64" y="255.98" font-size="9.78" fill="#1f2328">Mozambique</text>
+</g>
+<g>
+<text x="713.41 722.27 727.76 730.28 733.81" y="447.83" font-size="9.78" fill="#1f2328">Malta</text>
+</g>
+<g>
+<text x="281.26 287.62 293.13 299.17 301.69" y="305.83" font-size="9.78" fill="#1f2328">Benin</text>
+</g>
+<g>
+<text x="132.36 141.22 146.71 152.72 158.2 164.21 169.7 174.38 179.07 184.56" y="296.24" font-size="9.78" fill="#1f2328">Madagascar</text>
+</g>
+<g>
+<text x="429.8 438.66 444.58 450.62 456.63 462.54 465.07 467.59" y="375.31" font-size="9.78" fill="#1f2328">Mongolia</text>
+</g>
+<g>
+<text x="482.7 488.95 492.98 502.12 507.64 513.68 516.2" y="410.68" font-size="9.78" fill="#1f2328">Armenia</text>
+</g>
+<g>
+<text x="751.06 757.41 762.89 768.93 774.42 783.56 789.04" y="469.75" font-size="9.78" fill="#1f2328">Bahamas</text>
+</g>
+<g>
+<text x="705.04 711.4 715.43 721.47 727.51 733.03" y="477.59" font-size="9.78" fill="#1f2328">Brunei</text>
+</g>
+<g>
+<text x="341.57 349 351.52 356.22 361.7 365.54 371.03 377.04 383.08" y="340.44" font-size="9.78" fill="#1f2328">Nicaragua</text>
+</g>
+<g>
+<text x="226.79 233.91 239.95 242.47 248.51 254.03" y="303.15" font-size="9.78" fill="#1f2328">Guinea</text>
+</g>
+<g>
+<text x="397.74 403.91 409.83 415.87 421.88" y="341.31" font-size="9.78" fill="#1f2328">Congo</text>
+</g>
+<g>
+<text x="433.55 442.42 448.33 450.85 456.87 462.58 467.55" y="399.75" font-size="9.78" fill="#1f2328">Moldova</text>
+</g>
+<g>
+<text x="449.8 455.23 461.25 463.87 466.41 473.52 479.56 482.09 488.13 493.64" y="440.74" font-size="9.78" fill="#1f2328">Eq. Guinea</text>
+</g>
+<g>
+<text x="760.24 767.67 772.98 780.67 783.21 789.39 794.87 797.39 802.9 808.92 814.83 820.87 823.39" y="491.31" font-size="9.78" fill="#1f2328">New Caledonia</text>
+</g>
+<g>
+<text x="222.32 226.98 232.46 234.98 237.5 242.72 245.25 249.93 253.46 258.94" y="321.7" font-size="9.78" fill="#1f2328">Tajikistan</text>
+</g>
+<g>
+<text x="134.44 143.31 148.79 151.31 156.8 164.48" y="276.48" font-size="9.78" fill="#1f2328">Malawi</text>
+</g>
+<g>
+<text x="753 760.11 766.15 771.64" y="514.53" font-size="9.78" fill="#1f2328">Guam</text>
+</g>
+<g>
+<text x="574.3 583.16 589.08 595.12 598.65 604.16 610.2 615.71 621.72 625.57" y="448.18" font-size="9.78" fill="#1f2328">Montenegro</text>
+</g>
+<g>
+<text x="506.14 511.22 513.74 516.26" y="440.35" font-size="9.78" fill="#1f2328">Fiji</text>
+</g>
+<g>
+<text x="676.83 681.9 684.37 686.99 689.53 695.45 701.36 703.88 708.87 714.91 720.42 725.1 727.63" y="497.02" font-size="9.78" fill="#1f2328">Fr. Polynesia</text>
+</g>
+<g>
+<text x="640.03 646.38 651.87 655.91 661.92 667.4 673.41 679.33" y="476.14" font-size="9.78" fill="#1f2328">Barbados</text>
+</g>
+<g>
+<text x="526.41 533.53 539.57 544.55 550.04 556.08" y="447.71" font-size="9.78" fill="#1f2328">Guyana</text>
+</g>
+<g>
+<text x="790.11 792.77 798.29 802.32 807.01 812.32" y="536.72" font-size="9.78" fill="#1f2328">Jersey</text>
+</g>
+<g>
+<text x="159.72 165.09 171 180.14 185.62 188.15 190.67" y="318.07" font-size="9.78" fill="#1f2328">Somalia</text>
+</g>
+<g>
+<text x="419.5 425.02 430.38 438.07 443.55 447.08 449.6 455.64" y="419.33" font-size="9.78" fill="#1f2328">eSwatini</text>
+</g>
+<g>
+<text x="174.93 180.29 182.81 188.33 192.36 196.21 201.69 204.23 209.35 214.87 220.78 226.82" y="375.98" font-size="9.78" fill="#1f2328">Sierra Leone</text>
+</g>
+<g>
+<text x="686.68 693.63 696.25 701.61 704.23 706.78 712.64 715.16 719.1 725.11 727.64 733.68 736.22 739.53 744.21" y="537.28" font-size="9.78" fill="#1f2328">U.S. Virgin Is.</text>
+</g>
+<g>
+<text x="575.4 582.83 585.45 587.99 594.17 599.15 605.16 609.2 615.24" y="469.71" font-size="9.78" fill="#1f2328">N. Cyprus</text>
+</g>
+<g>
+<text x="677.01 683.18 689.22 693.07 698.55 703.24 708.73" y="517.56" font-size="9.78" fill="#1f2328">Curaçao</text>
+</g>
+<g>
+<text x="229.42 234.54 237.06 243.07 248.59 252.62 255.14" y="343.55" font-size="9.78" fill="#1f2328">Liberia</text>
+</g>
+<g>
+<text x="89.61 95.96 102 106.04 112.08 118.12 124.13" y="289.59" font-size="9.78" fill="#1f2328">Burundi</text>
+</g>
+<g>
+<text x="403.82 410.18 416.22 422.26 425.79 431.27" y="437.87" font-size="9.78" fill="#1f2328">Bhutan</text>
+</g>
+<g>
+<text x="305.42 310.54 316.05 320.73 326.65 330.18 336.22" y="386.13" font-size="9.78" fill="#1f2328">Lesotho</text>
+</g>
+<g>
+<text x="92.82 99 104.51 110.56 114.08 117.93 123.41 125.93 128.47 134.72 138.08 142.12 144.64 149.33 154.82 160.86 163.4 169.48 174.99 181" y="347.66" font-size="9.78" fill="#1f2328">Central African Rep.</text>
+</g>
+<g>
+<text x="579.47 584.83 590.32 592.84 598.88 602.41 604.95 610.07 616.11 620.81 623.33" y="498.93" font-size="9.78" fill="#1f2328">Saint Lucia</text>
+</g>
+<g>
+<text x="123.8 129.23 133.27 135.79 139.32 143.16 148.68" y="321.9" font-size="9.78" fill="#1f2328">Eritrea</text>
+</g>
+<g>
+<text x="348.57 354 356.52 365.66 371.58 375.61 378.76 383.88 389.4 394.08 397.61" y="411.23" font-size="9.78" fill="#1f2328">Timor-Leste</text>
+</g>
+<g>
+<text x="426.19 432.37 437.85 443.86 449.78 452.32 457.99 463.5 467.34 473.36" y="465.54" font-size="9.78" fill="#1f2328">Cabo Verde</text>
+</g>
+<g>
+<text x="494.56 500.91 506.42 508.95 511.47 516.06" y="471.73" font-size="9.78" fill="#1f2328">Belize</text>
+</g>
+<g>
+<text x="249.09 256.21 261.69 270.83 276.84 279.36" y="369.98" font-size="9.78" fill="#1f2328">Gambia</text>
+</g>
+<g>
+<text x="340.86 346.23 352.15 354.67 360.58 369.72 375.63 381.68 384.22 387.53 392.21" y="434.21" font-size="9.78" fill="#1f2328">Solomon Is.</text>
+</g>
+<g>
+<text x="206.94 214.05 220.09 222.61 228.66 234.17 239.65 242.8 249.15 251.68 256.36 261.04 266.52" y="402.37" font-size="9.78" fill="#1f2328">Guinea-Bissau</text>
+</g>
+<g>
+<text x="599.29 606.4 610.24 615.76 621.8 627.28 633.29" y="532.7" font-size="9.78" fill="#1f2328">Grenada</text>
+</g>
+<g>
+<text x="281.16 287.34 293.25 302.39 308.31 312.15 318.06" y="432.37" font-size="9.78" fill="#1f2328">Comoros</text>
+</g>
+<g>
+<text x="438.16 443.83 449.31 455.35 461.39 466.88 470.4" y="485.04" font-size="9.78" fill="#1f2328">Vanuatu</text>
+</g>
+<g>
+<text x="316.61 325.21 327.83 330.37 335.74 341.22 347.26 352.75 356.59" y="460.87" font-size="9.78" fill="#1f2328">W. Sahara</text>
+</g>
+<g>
+<text x="480.62 485.98 491.47 500.61 506.52" y="504.15" font-size="9.78" fill="#1f2328">Samoa</text>
+</g>
+<g>
+<text x="507.26 512.63 516.16 518.78 521.32 527.18 529.71 535.75 538.37 540.91 546.39 552.43 558.44 560.99 568.1 571.94 577.46 583.5" y="524.31" font-size="9.78" fill="#1f2328">St. Vin. and Gren.</text>
+</g>
+<g>
+<text x="459.72 464.47 470.39 476.43 482.44" y="542.49" font-size="9.78" fill="#1f2328">Tonga</text>
+</g>
+<g>
+<text x="320.35 325.72 331.2 337.12 339.66 344.41 350.32 359.46 364.98 367.52 373 379.04 385.05 387.59 393.51 397.55 400.07 406.11 410.8 413.32 419.33" y="490.72" font-size="9.78" fill="#1f2328">São Tomé and Principe</text>
+</g>
+<g>
+<text x="430.39 439.26 441.78 446.47 450.31 456.23 462.27 467.78 472.46 474.99" y="522.86" font-size="9.78" fill="#1f2328">Micronesia</text>
+</g>
+<g>
+<text x="335.01 341.06 343.58 347.62 350.14 356.15 361.64 365.17" y="521.21" font-size="9.78" fill="#1f2328">Kiribati</text>
+</g>
+</g>
+</svg>

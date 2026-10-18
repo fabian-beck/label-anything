@@ -1,0 +1,252 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600">
+<rect id="background" width="960" height="600" fill="#ffffff"/>
+<g class="grid" stroke="#e6e8eb" stroke-width="1">
+<line x1="78" y1="16" x2="78" y2="548"/>
+<line x1="196.71" y1="16" x2="196.71" y2="548"/>
+<line x1="286.5" y1="16" x2="286.5" y2="548"/>
+<line x1="376.3" y1="16" x2="376.3" y2="548"/>
+<line x1="495.01" y1="16" x2="495.01" y2="548"/>
+<line x1="584.81" y1="16" x2="584.81" y2="548"/>
+<line x1="674.61" y1="16" x2="674.61" y2="548"/>
+<line x1="793.31" y1="16" x2="793.31" y2="548"/>
+<line x1="883.11" y1="16" x2="883.11" y2="548"/>
+<line x1="78" y1="536.73" x2="944" y2="536.73"/>
+<line x1="78" y1="420.42" x2="944" y2="420.42"/>
+<line x1="78" y1="304.11" x2="944" y2="304.11"/>
+<line x1="78" y1="187.8" x2="944" y2="187.8"/>
+<line x1="78" y1="71.49" x2="944" y2="71.49"/>
+</g>
+<g class="axis" fill="#5f6670" font-size="11" stroke="none">
+<line x1="78" y1="548" x2="944" y2="548" stroke="#9aa1a9"/>
+<line x1="78" y1="16" x2="78" y2="548" stroke="#9aa1a9"/>
+<text x="78" y="564" text-anchor="middle">$200</text>
+<text x="196.71" y="564" text-anchor="middle">$500</text>
+<text x="286.5" y="564" text-anchor="middle">$1k</text>
+<text x="376.3" y="564" text-anchor="middle">$2k</text>
+<text x="495.01" y="564" text-anchor="middle">$5k</text>
+<text x="584.81" y="564" text-anchor="middle">$10k</text>
+<text x="674.61" y="564" text-anchor="middle">$20k</text>
+<text x="793.31" y="564" text-anchor="middle">$50k</text>
+<text x="883.11" y="564" text-anchor="middle">$100k</text>
+<text x="72" y="540.73" text-anchor="end">100k</text>
+<text x="72" y="424.42" text-anchor="end">1M</text>
+<text x="72" y="308.11" text-anchor="end">10M</text>
+<text x="72" y="191.8" text-anchor="end">100M</text>
+<text x="72" y="75.49" text-anchor="end">1B</text>
+<text x="511" y="586" text-anchor="middle" fill="#1f2328" font-size="12">GDP per person (US$, log scale)</text>
+<text transform="translate(34 282) rotate(-90)" text-anchor="middle" fill="#1f2328" font-size="12">Population (log scale)</text>
+</g>
+<g class="bubbles" stroke="#ffffff" stroke-width="0.8">
+<circle class="bubble" id="USA" cx="827.89" cy="127.76" r="50" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="CHN" cx="588.15" cy="54.58" r="40.9" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="JPN" cx="765.2" cy="176.02" r="24.35" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="DEU" cx="783.76" cy="197.13" r="21.22" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="IND" cx="382.6" cy="55.72" r="18.29" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="GBR" cx="771.74" cy="208.16" r="18.17" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="FRA" cx="765.99" cy="207.99" r="17.8" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="ITA" cx="740.37" cy="213.36" r="15.29" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="BRA" cx="567.02" cy="150.07" r="14.65" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="CAN" cx="783.06" cy="237.23" r="14.23" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="RUS" cx="605.97" cy="169.25" r="14.08" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="KOR" cx="734.87" cy="221.12" r="13.86" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="AUS" cx="805.8" cy="257.1" r="12.76" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="ESP" cx="725.4" cy="225.86" r="12.75" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="MEX" cx="584.11" cy="175.5" r="12.17" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="TWN" cx="787.53" cy="260.81" r="11.47" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="IDN" cx="470.42" cy="137.51" r="11.43" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="NLD" cx="799.22" cy="276.33" r="10.29" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="SAU" cx="693.5" cy="241.9" r="9.62" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="TUR" cx="572.97" cy="196.95" r="9.42" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="CHE" cx="857.39" cy="311.88" r="9.06" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="POL" cx="643.18" cy="236.72" r="8.34" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="THA" cx="552.73" cy="206.09" r="7.96" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="BEL" cx="783.69" cy="297.12" r="7.89" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="SWE" cx="797.43" cy="302.69" r="7.87" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="VEN" cx="652.91" cy="251.18" r="7.5" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="IRN" cx="506.78" cy="197.27" r="7.28" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="NGA" cx="390.4" cy="152.55" r="7.23" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="ARG" cx="583.67" cy="228.21" r="7.21" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="AUT" cx="793.67" cy="310.13" r="7.21" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="ARE" cx="774.08" cy="305.28" r="7.01" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="NOR" cx="846.56" cy="335.73" r="6.86" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="ISR" cx="775.54" cy="309.13" r="6.78" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="IRL" cx="852.01" cy="339.72" r="6.73" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="PHL" cx="448.25" cy="183.86" r="6.63" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="SGP" cx="827.77" cy="332.47" r="6.59" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="HKG" cx="789.94" cy="318.59" r="6.53" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="MYS" cx="601.94" cy="245.44" r="6.52" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="ZAF" cx="518.66" cy="214.83" r="6.4" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="DNK" cx="817.3" cy="331.47" r="6.39" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="COL" cx="527.57" cy="222.47" r="6.14" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="EGY" cx="429.66" cy="187.61" r="5.95" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="BGD" cx="366.6" cy="163.11" r="5.94" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="CHL" cx="636.44" cy="271.82" r="5.74" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="PAK" cx="318.96" cy="148.77" r="5.7" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="FIN" cx="790.12" cy="334.12" r="5.6" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="VNM" cx="415.91" cy="189.62" r="5.53" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="CZE" cx="695.47" cy="300.84" r="5.41" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="ROU" cx="617.99" cy="270.75" r="5.4" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="PRT" cx="694.12" cy="302.77" r="5.28" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="IRQ" cx="517.66" cy="234.97" r="5.23" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="PER" cx="538.19" cy="244.56" r="5.14" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="GRC" cx="671.87" cy="300.62" r="4.95" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="NZL" cx="770.98" cy="339.97" r="4.91" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="KAZ" cx="582.35" cy="273" r="4.6" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="QAT" cx="821.36" cy="367.84" r="4.53" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="DZA" cx="465.25" cy="230.37" r="4.47" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="HUN" cx="651.49" cy="305.29" r="4.37" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="UKR" cx="447.49" cy="228.83" r="4.24" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="KWT" cx="735.5" cy="347.85" r="3.96" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="MAR" cx="440.47" cy="238.75" r="3.74" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="ECU" cx="522.54" cy="276.21" r="3.54" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="SVK" cx="669.76" cy="334.73" r="3.5" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="PRI" cx="738.98" cy="361.77" r="3.5" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="CUB" cx="568.62" cy="297.79" r="3.42" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="SYR" cx="514.01" cy="277.1" r="3.4" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="ETH" cx="266.32" cy="182.04" r="3.34" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="KEN" cx="363.84" cy="220.28" r="3.34" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="DOM" cx="560.39" cy="300.51" r="3.22" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="AGO" cx="419.46" cy="245.63" r="3.22" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="LKA" cx="461.25" cy="264.74" r="3.13" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="GTM" cx="484.77" cy="278.5" r="2.99" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="OMN" cx="640.26" cy="339.38" r="2.98" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="MMR" cx="330.81" cy="218.88" r="2.98" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="LUX" cx="900.88" cy="444.57" r="2.88" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="BGR" cx="582.56" cy="322.3" r="2.83" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="GHA" cx="388.77" cy="247.92" r="2.8" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="PAN" cx="643.5" cy="347.37" r="2.79" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="TZA" cx="297.57" cy="215.31" r="2.71" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="BLR" cx="532.21" cy="306.88" r="2.71" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="CRI" cx="611.03" cy="338.65" r="2.68" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="HRV" cx="636.78" cy="349.55" r="2.66" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="CIV" cx="393.07" cy="256.4" r="2.61" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="UZB" cx="357.13" cy="242.92" r="2.6" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="URY" cx="647.23" cy="357.7" r="2.56" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="LTU" cx="672" cy="368.65" r="2.52" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="SVN" cx="708.33" cy="383.23" r="2.51" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="MAC" cx="860.67" cy="442.93" r="2.51" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="LBY" cx="550.71" cy="323.76" r="2.46" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="LBN" cx="548.97" cy="323.18" r="2.46" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="SRB" cx="546.01" cy="322.53" r="2.45" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="COD" cx="216.09" cy="194.96" r="2.42" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="AZE" cx="489.55" cy="303.99" r="2.37" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="JOR" cx="478.61" cy="303.6" r="2.28" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="BOL" cx="450.71" cy="296.99" r="2.18" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="TKM" cx="535.98" cy="330.4" r="2.18" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="PRK" cx="343.99" cy="256.5" r="2.16" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="CMR" cx="339.67" cy="256.09" r="2.13" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="TUN" cx="441.86" cy="296.2" r="2.13" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="BHR" cx="695.52" cy="395.4" r="2.12" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="PRY" cx="505.33" cy="321.81" r="2.11" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="UGA" cx="256.68" cy="228.96" r="2.03" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="LVA" cx="659.72" cy="387.66" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="EST" cx="696.72" cy="406.14" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="NPL" cx="295.4" cy="251.02" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="SDN" cx="242.63" cy="230.65" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="KHM" cx="350.84" cy="278.86" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="SLV" cx="472.02" cy="326.23" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="HND" cx="409.03" cy="305.41" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="CYP" cx="679.78" cy="411.27" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="PNG" cx="421.24" cy="310.71" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="TTO" cx="656.55" cy="403.61" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="ISL" cx="831.12" cy="471.84" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="SEN" cx="334.36" cy="279.44" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="ZMB" cx="320.99" cy="274.81" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="YEM" cx="253.37" cy="250.05" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="ZWE" cx="335.88" cy="284.84" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="BIH" cx="520.95" cy="360.1" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="AFG" cx="198.53" cy="236.62" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="BWA" cx="555.27" cy="378.27" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="LAO" cx="407" cy="320.92" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="SOL" cx="448.8" cy="338.16" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="GEO" cx="486.93" cy="354.06" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="MLI" cx="269.79" cy="269.97" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="GAB" cx="552.07" cy="381.23" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="JAM" cx="509.28" cy="365.8" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="PSX" cx="447.83" cy="342.41" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="BFA" cx="255.45" cy="268.29" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="MOZ" cx="197.62" cy="248" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="ALB" cx="503.85" cy="367.44" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="MLT" cx="726.35" cy="455.16" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="BEN" cx="312.2" cy="295.75" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="HTI" cx="317.72" cy="298.1" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="MDG" cx="202.62" cy="254" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="MNG" cx="476.66" cy="361.27" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="ARM" cx="484.84" cy="365.64" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="BHS" cx="746.59" cy="468.05" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="BRN" cx="731.74" cy="462.67" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="NER" cx="209.96" cy="261.36" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="MKD" cx="519.11" cy="383.34" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="NIC" cx="370.53" cy="325.52" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="NAM" cx="493.9" cy="374.25" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="GIN" cx="281.59" cy="291.76" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="COG" cx="393.27" cy="335.42" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="SDS" cx="297.03" cy="299.01" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="MDA" cx="481.45" cy="371.05" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="TCD" cx="242.04" cy="280.54" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="GNQ" cx="558.01" cy="405.04" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="NCL" cx="755.77" cy="483.33" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="RWA" cx="260.79" cy="292.33" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="KGZ" cx="321.42" cy="326.21" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="TJK" cx="268.57" cy="307.66" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="KOS" cx="478.96" cy="390.89" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="MWI" cx="171.47" cy="272.69" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="MRT" cx="353.66" cy="344.16" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="GUM" cx="748.53" cy="510.74" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="MNE" cx="569.83" cy="444.39" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="FJI" cx="522.37" cy="426.31" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="PYF" cx="672.37" cy="484.85" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="TGO" cx="236.4" cy="314.87" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="BRB" cx="662.02" cy="483.47" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="GUY" cx="531.15" cy="432.79" r="2" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="JEY" cx="785.64" cy="532.93" r="2" fill="#4e79a7" fill-opacity="0.78"/>
+<circle class="bubble" id="SOM" cx="186.75" cy="303.15" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="SWZ" cx="462.63" cy="413.44" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="SLE" cx="203.63" cy="316.58" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="VIR" cx="751.3" cy="533.49" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="SUR" cx="526.16" cy="447.82" r="2" fill="#d4a72c" fill-opacity="0.78"/>
+<circle class="bubble" id="CYN" cx="597.66" cy="477.04" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="DJI" cx="445.59" cy="421.77" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="CUW" cx="672.54" cy="513.77" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="LBR" cx="224.95" cy="339.76" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="ABW" cx="721.6" cy="533.64" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="BDI" cx="112.6" cy="296.92" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="BTN" cx="441.78" cy="434.08" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="LSO" cx="300.95" cy="382.34" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="CAF" cx="188.09" cy="341.77" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="LCA" cx="604.14" cy="506.26" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="ERI" cx="146.58" cy="329.23" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="TLS" cx="344.1" cy="407.44" r="2" fill="#e15759" fill-opacity="0.78"/>
+<circle class="bubble" id="CPV" cx="452.53" cy="450.62" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="BLZ" cx="490.09" cy="467.94" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="GMB" cx="253.95" cy="377.31" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="SLB" cx="398.42" cy="440.66" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="GNB" cx="239.75" cy="387.45" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="GRD" cx="594.82" cy="531" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="COM" cx="327.21" cy="428.58" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="VUT" cx="433.69" cy="481.25" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="SAH" cx="339.34" cy="445.95" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="WSM" cx="476.15" cy="502.45" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="VCT" cx="546.69" cy="531.64" r="2" fill="#f28e2b" fill-opacity="0.78"/>
+<circle class="bubble" id="TON" cx="492.39" cy="534.51" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="STP" cx="372.6" cy="498.05" r="2" fill="#59a14f" fill-opacity="0.78"/>
+<circle class="bubble" id="FSM" cx="449.66" cy="530.19" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+<circle class="bubble" id="KIR" cx="351.35" cy="528.54" r="2" fill="#b07aa1" fill-opacity="0.78"/>
+</g>
+<g class="legend" font-size="11" fill="#1f2328">
+<rect x="84" y="20" width="118" height="126" rx="4" fill="#ffffff" stroke="#e6e8eb"/>
+<circle cx="97" cy="34" r="5" fill="#59a14f" fill-opacity="0.78"/>
+<text x="107" y="38">Africa</text>
+<circle cx="97" cy="50" r="5" fill="#e15759" fill-opacity="0.78"/>
+<text x="107" y="54">Asia</text>
+<circle cx="97" cy="66" r="5" fill="#4e79a7" fill-opacity="0.78"/>
+<text x="107" y="70">Europe</text>
+<circle cx="97" cy="82" r="5" fill="#f28e2b" fill-opacity="0.78"/>
+<text x="107" y="86">North America</text>
+<circle cx="97" cy="98" r="5" fill="#d4a72c" fill-opacity="0.78"/>
+<text x="107" y="102">South America</text>
+<circle cx="97" cy="114" r="5" fill="#b07aa1" fill-opacity="0.78"/>
+<text x="107" y="118">Oceania</text>
+<text x="92" y="134" fill="#5f6670" font-size="10">Area: GDP</text>
+</g>
+</svg>

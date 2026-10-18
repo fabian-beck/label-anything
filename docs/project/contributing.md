@@ -13,6 +13,7 @@ python3 -m venv .venv-docs && .venv-docs/bin/pip install -r docs/requirements.tx
 .venv-docs/bin/mkdocs build --strict         # as in CI
 python3 examples/tutorials/run.py cli --cli rust/target/release/label-anything   # the tutorial programs
 python3 examples/tutorials/make_figures.py --cli rust/target/release/label-anything   # the figures
+python3 examples/showcase/make_showcase.py --cli rust/target/release/label-anything   # the home page's figures
 ```
 
 * Change a tutorial's code in `examples/tutorials/<language>/`; the page includes it by

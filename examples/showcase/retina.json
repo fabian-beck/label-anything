@@ -1,0 +1,190 @@
+{
+ "version": "1",
+ "canvas": {
+  "width": 960,
+  "height": 600,
+  "padding": 10
+ },
+ "defaults": {
+  "font": {
+   "size": 13
+  }
+ },
+ "obstacles": {
+  "raster": {
+   "source": "../../ts/packages/playground/data/pictures/retina.jpg",
+   "mode": "saliency",
+   "scale": 1,
+   "offset": [
+    200.0,
+    20.0
+   ]
+  }
+ },
+ "items": [
+  {
+   "id": "disc",
+   "anchor": {
+    "type": "point",
+    "x": 279.0,
+    "y": 284.4,
+    "mark": {
+     "shape": "circle",
+     "r": 3
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Optic disc"
+   }
+  },
+  {
+   "id": "cup",
+   "anchor": {
+    "type": "point",
+    "x": 302.5,
+    "y": 274.0,
+    "mark": {
+     "shape": "circle",
+     "r": 3
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Optic cup"
+   }
+  },
+  {
+   "id": "atrophy",
+   "anchor": {
+    "type": "point",
+    "x": 321.7,
+    "y": 264.6,
+    "mark": {
+     "shape": "circle",
+     "r": 3
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Peripapillary atrophy"
+   }
+  },
+  {
+   "id": "macula",
+   "anchor": {
+    "type": "point",
+    "x": 432.2,
+    "y": 286.0,
+    "mark": {
+     "shape": "circle",
+     "r": 3
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Macula lutea"
+   }
+  },
+  {
+   "id": "fovea",
+   "anchor": {
+    "type": "point",
+    "x": 480.6,
+    "y": 296.5,
+    "mark": {
+     "shape": "circle",
+     "r": 3
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Fovea centralis"
+   }
+  },
+  {
+   "id": "sta",
+   "anchor": {
+    "type": "point",
+    "x": 342.0,
+    "y": 171.4,
+    "mark": {
+     "shape": "circle",
+     "r": 3
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Superior temporal arcade"
+   }
+  },
+  {
+   "id": "ita",
+   "anchor": {
+    "type": "point",
+    "x": 342.8,
+    "y": 361.2,
+    "mark": {
+     "shape": "circle",
+     "r": 3
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Inferior temporal arcade"
+   }
+  },
+  {
+   "id": "snv",
+   "anchor": {
+    "type": "point",
+    "x": 272.3,
+    "y": 184.0,
+    "mark": {
+     "shape": "circle",
+     "r": 3
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Superior nasal vessels"
+   }
+  },
+  {
+   "id": "inv",
+   "anchor": {
+    "type": "point",
+    "x": 274.7,
+    "y": 349.9,
+    "mark": {
+     "shape": "circle",
+     "r": 3
+    }
+   },
+   "label": {
+    "type": "text",
+    "text": "Inferior nasal vessels"
+   }
+  }
+ ],
+ "placement": {
+  "models": [
+   "boundary"
+  ],
+  "boundary": {
+   "sides": [
+    "left",
+    "right"
+   ],
+   "align": "stack",
+   "margin": 16,
+   "gap": 10
+  }
+ },
+ "leaders": {
+  "style": "straight"
+ },
+ "solver": {
+  "seed": 1
+ }
+}

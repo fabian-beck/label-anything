@@ -41,10 +41,26 @@ for any chart, map or diagram, in three steps:
 </div>
 
 <figure markdown>
-![The outliers of a scatter plot, labeled over the chart image](assets/figures/outliers.svg){ width="640" }
-<figcaption>The outliers of a scatter plot, labeled over the chart's image: the labels
-keep off the dots, the axes, the trend line and each other.</figcaption>
+[![The world's economies as a bubble chart, 150 of its 195 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
+<figcaption>The world's economies: every country a bubble, sized by its GDP (Natural Earth,
+2019). Label Anything labels 150 of the 195 in about a quarter of a second.</figcaption>
 </figure>
+
+One chart, the main features:
+
+* **On the true shape.** Each label touches its bubble's outline, slid along it to where
+  there is room; China's fits inside its bubble.
+* **Leaders where it is crowded.** France, Italy and the United Kingdom overlap Germany's
+  bubble: their labels go out on leaders, and no two leaders cross.
+* **Importance decides.** The larger the economy, the earlier its label is placed; the
+  eight largest are set larger and bold. 45 countries are left out: each would not fit even
+  beside the larger economies' labels alone, and says which of them is in the way.
+* **Shortened before left out.** A name that does not fit falls back to its ISO code
+  (CRI: Costa Rica).
+* **Graded avoidance over any background.** The chart is an SVG, handed over as it is and
+  classified with CSS selectors: labels may cross the grid lines, never the axes, their
+  text or the legend; large economies' labels may cover small economies' bubbles, at a
+  cost.
 
 The *anything* is the host and the label: adjustText (matplotlib), ggrepel (ggplot2) and
 vega-label (Vega) each serve one plotting library; Label Anything is one engine and one
@@ -110,11 +126,42 @@ labels stay put ([interactive maps](tutorials/interactive-maps.md)). The
 [playground](try.md) runs the engine live on a world map, a network, charts, moving
 objects and photographs, with every option in reach.
 
+## Gallery
+
+Pictures from open data as a host would draw them, labeled by the engine (click one to see
+it in full; the scripts and the problems are in
+[`examples/showcase/`](gh:examples/showcase/make_showcase.py)).
+
+<figure markdown>
+[![The countries and capitals of Europe, labeled](assets/figures/europe.svg)](assets/figures/europe.svg)
+<figcaption markdown>**A map.** The countries and capitals of Europe (Natural Earth): each
+name inside its country where it fits, abbreviated where the country is narrow (U.K.,
+AUST.), out on a leader where it is too small (Luxembourg, Malta, the Balkans); the capitals
+beside their dots, in the cartographer's order of positions; no label covers the name of a
+sea. All 91 labels placed.</figcaption>
+</figure>
+
+<figure markdown>
+[![A fundus photograph with its parts labeled in the margins](assets/figures/retina.svg)](assets/figures/retina.svg)
+<figcaption markdown>**A photograph.** The back of an eye (fundus photograph: M. Häggström,
+CC0), labeled as an anatomy atlas would: the names stacked in columns in the margins
+(boundary labels), a leader from each to a dot on its part, over the photograph as a raster
+background.</figcaption>
+</figure>
+
+<figure markdown>
+[![The module graph of the library's TypeScript packages, labeled](assets/figures/modules.svg)](assets/figures/modules.svg)
+<figcaption markdown>**A diagram.** This library's own TypeScript modules: 112 nodes, 412
+imports. The most imported modules come first and are set in bold; a label may cross an
+edge at a cost, never a node; in the crowded core a few labels go out on leaders. 111 of
+112 placed.</figcaption>
+</figure>
+
 ## Five lines
 
-The outliers above, labeled from every language. The chart is an image (`scatter.png`),
-`outliers.csv` lists the points to label; labels avoid the drawn dots, the axes and the
-trend line, and each other ([the tutorial](tutorials/outliers.md)).
+The outliers of a scatter plot, labeled from every language. The chart is an image
+(`scatter.png`), `outliers.csv` lists the points to label; labels avoid the drawn dots, the
+axes and the trend line, and each other ([the tutorial](tutorials/outliers.md)).
 
 === "Python"
 
@@ -155,44 +202,6 @@ trend line, and each other ([the tutorial](tutorials/outliers.md)).
 All six build the same problem and get the same result: the engines are deterministic,
 and the TypeScript port reproduces the Rust core bit for bit.
 
-## Gallery
-
-The results of the tutorial problems, drawn as vector graphics (zoom in: the labels stay
-sharp): item marks in blue, obstacles in grey, labels in black on white boxes, leaders in
-black, omitted labels as red crosses.
-
-<div class="grid cards la-gallery" markdown>
-
--   ![Leader styles: elbow leaders into the labels' sides](assets/gallery/leaders-elbow.svg)
-
-    Elbow leaders out of a dense cluster. [Leaders](tutorials/leaders.md)
-
--   ![Boundary labels stacked in the margins](assets/gallery/leaders-boundary.svg)
-
-    Boundary labels in the margins, orthogonal leaders. [Leaders](tutorials/leaders.md)
-
--   ![Shapes with internal and external labels](assets/gallery/shapes.svg)
-
-    True shapes: internal labels where they fit. [Shapes](tutorials/shapes.md)
-
--   ![A node-link diagram](assets/gallery/node-link.svg)
-
-    Node-link diagram: edges are obstacles, hubs come first. [Graphs](tutorials/node-link.md)
-
--   ![A scatter plot drawn as SVG](assets/gallery/svg-background.svg)
-
-    An SVG chart classified by CSS selectors. [SVG](tutorials/svg-background.md)
-
--   ![Crowded cities with omitted labels](assets/gallery/priority-cities.svg)
-
-    Strict omission: the least important labels go first. [Priority](tutorials/priority.md)
-
-</div>
-
-Real data — charts, maps, photos, embeddings and networks from the benchmark, next to other
-labelers — is in [the gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/),
-published with the latest benchmark report.
-
 ## Benchmark
 
 The [real-world benchmark](project/benchmark.md) scores Label Anything and nine baselines
@@ -229,7 +238,10 @@ the largest problems' speed.
 
 * [Getting started](getting-started/index.md) in Python, JavaScript/TypeScript, Java, C,
   Go or on the command line.
-* [Tutorials](tutorials/index.md): one task each, with code that runs in CI.
+* [Tutorials](tutorials/index.md): one task each, with code that runs in CI and a figure of
+  its result.
+* [The benchmark's gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/):
+  charts, maps, photos, embeddings and networks from the benchmark, next to other labelers.
 * [Concepts](concepts/index.md): the problem and result formats, avoidance, candidates,
   presets, the solver.
 * [Reference](reference/index.md): the specification, defaults, presets, schemas and APIs.

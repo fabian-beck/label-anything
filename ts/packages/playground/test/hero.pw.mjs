@@ -1,8 +1,8 @@
 // Browser tests of the live header of the documentation's home page (dist/hero.js, on a
 // page with the markup of docs/_overrides/home.html): the logo keeps its place, the labels
-// keep off each other and the header's text, the scenes show what the engine does
-// (internal labels, a group, icons, wrapping, leader styles), and dragging, clicking and
-// resetting work.
+// keep off each other and the header's text, the things show what the engine does (an
+// internal label, a group, wrapping, leader styles), nothing moves by itself, and dragging,
+// clicking, shuffling and resetting work.
 import { expect, test } from "@playwright/test";
 import { startServer } from "./server.mjs";
 
@@ -57,7 +57,8 @@ const PAGE = `<!doctype html>
       <button type="button" data-style="straight" aria-pressed="true">straight</button>
       <button type="button" data-style="elbow" aria-pressed="false">elbow</button>
       <button type="button" data-style="curved" aria-pressed="false">curved</button></span>
-      <span data-la-hero-stats></span> <button type="button" data-la-hero-reset>Reset</button></p>
+      <span data-la-hero-stats></span> <button type="button" data-la-hero-shuffle>Shuffle</button>
+      <button type="button" data-la-hero-reset>Reset</button></p>
   </div>
 </section>
 <script type="module" src="../hero.js"></script>
@@ -114,7 +115,7 @@ test("the logo keeps its place, and the labels keep off each other and the text"
   expect(s.stats.implementation).toMatch(/^ts\//);
   expect(s.stats.hard_violations).toBe(0);
   expect(s.stats.leader_crossings).toBe(0);
-  expect(s.stats.placed).toBeGreaterThan(18);
+  expect(s.stats.placed).toBeGreaterThan(14);
   // the name stays where the static logo has it, on its leader
   const name = byId(s, "name");
   expect(name.placed).toBe(true);
@@ -129,28 +130,69 @@ test("the logo keeps its place, and the labels keep off each other and the text"
   expect(errors).toEqual([]);
 });
 
-test("the scenes show internal labels, a group, icons, wrapping and the leader styles", async ({ page }) => {
+test("the things show an internal label, a group, wrapping and the leader styles", async ({ page }) => {
   await open(page);
   let s = await state(page);
-  expect(byId(s, "lake").model).toBe("internal");
-  expect(byId(s, "hub").model).toBe("internal");
-  expect(byId(s, "sensor-a").members).toEqual(["sensor-a", "sensor-b", "sensor-c"]);
-  expect(byId(s, "sensor-b").reason).toBe("grouped");
-  expect(byId(s, "malpensa").parts.map((p) => p.type)).toEqual(["icon", "text"]);
-  expect(byId(s, "dip").text.lines.length).toBe(2);
-  expect(byId(s, "dip").leader).toBeTruthy();
-  expect(await page.evaluate(() => globalThis.labelAnythingHero.describe("lake")[1])).toBe("inside its area");
+  expect(byId(s, "moon").model).toBe("internal");
+  expect(byId(s, "sock-a").members).toEqual(["sock-a", "sock-b"]);
+  expect(byId(s, "sock-b").reason).toBe("grouped");
+  expect(byId(s, "donut").text.lines.length).toBe(2);
+  expect(await page.evaluate(() => globalThis.labelAnythingHero.describe("moon")[1])).toBe("inside it, where it fits");
+  expect(await page.evaluate(() => globalThis.labelAnythingHero.describe("sock-b")[1])).toBe("shares one label with the other one");
   for (const style of ["elbow", "curved"]) {
     const n = s.solves;
     await page.locator(`[data-style=${style}]`).click();
     await nextSolve(page, n);
     s = await state(page);
     const leaders = s.placements.filter((p) => p.leader).map((p) => p.leader.style);
-    expect(leaders.length).toBeGreaterThan(1);
+    expect(leaders.length).toBeGreaterThan(0);
     expect(new Set(leaders)).toEqual(new Set([style]));
+    expect(byId(s, "name").placed).toBe(true);
     expect(s.stats.hard_violations).toBe(0);
     expect(s.stats.leader_crossings).toBe(0);
   }
+});
+
+test("nothing moves by itself", async ({ page }) => {
+  await open(page);
+  const drawn = () =>
+    page.evaluate(() =>
+      [...globalThis.labelAnythingHero.root.querySelectorAll(".la-hero__svg g, .la-hero__svg text tspan, .la-hero__svg path")].map(
+        (e) => `${e.getAttribute("transform")} ${e.getAttribute("x")} ${e.getAttribute("y")} ${e.getAttribute("d")} ${e.style.opacity}`,
+      ),
+    );
+  const before = await drawn();
+  const solves = await page.evaluate(() => globalThis.labelAnythingHero.solves);
+  await page.waitForTimeout(1500);
+  expect(await drawn()).toEqual(before);
+  expect(await page.evaluate(() => globalThis.labelAnythingHero.solves)).toBe(solves);
+});
+
+test("shuffle moves every thing to a free place, a pair stays a pair", async ({ page }) => {
+  await open(page);
+  const where = () =>
+    page.evaluate(() => {
+      const h = globalThis.labelAnythingHero;
+      const r = h.root.getBoundingClientRect();
+      const span = Math.min(r.width - 32, 1320);
+      return Object.fromEntries(h.things.map((t) => [t.id, [r.width / 2 + (t.u * span) / 2, t.v * r.height]]));
+    });
+  const before = await where();
+  const n = await page.evaluate(() => globalThis.labelAnythingHero.solves);
+  await page.locator("[data-la-hero-shuffle]").click();
+  await nextSolve(page, n);
+  const after = await where();
+  const moved = Object.keys(before).filter((id) => Math.hypot(after[id][0] - before[id][0], after[id][1] - before[id][1]) > 1);
+  expect(moved.length).toBeGreaterThan(Object.keys(before).length / 2);
+  // the socks keep their offset
+  const off = (w) => [w["sock-b"][0] - w["sock-a"][0], w["sock-b"][1] - w["sock-a"][1]];
+  off(after).forEach((v, i) => expect(Math.abs(v - off(before)[i])).toBeLessThan(1));
+  const s = await state(page);
+  expect(byId(s, "sock-a").members).toEqual(["sock-a", "sock-b"]);
+  expect(s.stats.hard_violations).toBe(0);
+  expect(s.stats.leader_crossings).toBe(0);
+  const boxes = s.placements.filter((p) => p.placed).map(boxOf);
+  for (const b of boxes) for (const t of s.text) expect(overlaps(b, t)).toBe(false);
 });
 
 test("dragging the logo's dot moves the name, a click adds a thing, reset restores", async ({ page }) => {

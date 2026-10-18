@@ -2,10 +2,10 @@
   The home page (docs/index.md, `template: home.html`): a header whose logo is a live
   labeling demo, above the page's content. The logo is a label (the name), its leader and
   a dot. playground/hero.js (ts/packages/playground/src/hero.ts, published with the
-  playground) takes over from this static logo: it places the name and the labels of a
-  small map, network and chart with the engine, keeping off the elements marked
-  `data-la-avoid`, while things are dragged or added. Without it (e.g. under
-  `mkdocs serve`) the static logo stays.
+  playground) takes over from this static logo: it places the name and the labels of
+  random things (a rubber duck, coffee, the moon, …) with the engine, keeping off the
+  elements marked `data-la-avoid`. Nothing moves unless the user drags, adds, shuffles or
+  resets. Without it (e.g. under `mkdocs serve`) the static logo stays.
 -#}
 {% extends "main.html" %}
 
@@ -37,7 +37,7 @@
       <p class="la-hero__hint" data-la-hero-hint data-la-avoid>
         <span class="la-hero__hint-line">
           <span class="la-hero__live">Live</span>
-          Drag anything, click to add more, hover a label to see why it sits there.
+          Drag anything, click for more things, hover a label to see why it sits there.
         </span>
         <span class="la-hero__hint-line">
           <span class="la-hero__styles" data-la-hero-styles role="group" aria-label="Leader style">
@@ -47,6 +47,7 @@
             <button type="button" data-style="curved" aria-pressed="false">curved</button>
           </span>
           <span class="la-hero__stats" data-la-hero-stats></span>
+          <button type="button" class="la-hero__reset" data-la-hero-shuffle>Shuffle</button>
           <button type="button" class="la-hero__reset" data-la-hero-reset>Reset</button>
         </span>
       </p>
