@@ -213,6 +213,21 @@ CASES["wrap-no-short-lines"] = case(
      "items": [pt("sa", 25, 50, "Saudi Arabia"), pt("fr", 25, 150, "France 3")]},
     {"placed": 1, "text_lines": {"sa": ["Saudi", "Arabia"]}, "reasons": {"fr": "no_feasible_candidate"}})
 
+# --- shapes ------------------------------------------------------------------------------
+_RING = [[30, 130], [180, 130], [180, 300], [30, 300]]
+_HOLE = [[50, 150], [160, 150], [160, 280], [50, 280]]
+CASES["area-hole-either-winding"] = case(
+    "a hole wound like its outer ring is still a hole: both areas label the same band",
+    {"canvas": {"width": 500, "height": 400},
+     "items": [{"id": "same", "anchor": {"type": "area", "polygon": [[x + 300, y] for x, y in _RING],
+                                         "holes": [[[x + 300, y] for x, y in _HOLE]]},
+                "label": {"type": "text", "text": "Holey"}},
+               {"id": "opp", "anchor": {"type": "area", "polygon": _RING, "holes": [_HOLE[::-1]]},
+                "label": {"type": "text", "text": "Holey"}}]},
+    {"placed": 2, "model": {"same": "adjacent", "opp": "adjacent"},
+     "box": {"same": {"x": 323.97075, "y": 118.77475, "w": 35.496, "h": 19.944, "tol": 0.01},
+             "opp": {"x": 23.97075, "y": 118.77475, "w": 35.496, "h": 19.944, "tol": 0.01}}})
+
 # --- leaders and models ----------------------------------------------------------------
 CASES["distant-when-crowded"] = case(
     "a point whose neighbourhood is hard-blocked gets a distant label with a leader",

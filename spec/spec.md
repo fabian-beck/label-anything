@@ -109,7 +109,10 @@ labeled feature. The anchor point `(x, y)` is the shape's **reference point**:
 | icon | `w × h` box placed so that its `tip` (default `[w/2, h]`) is on the anchor; optional `silhouette` | the tip |
 | from_svg | geometry of the SVG element(s) with `svg_id` / matching `selector` | the anchor as given |
 
-Every mark is an obstacle of the reserved class `items` (§4.4).
+Every mark is an obstacle of the reserved class `items` (§4.4). The `holes` of a polygon
+mark and of an area anchor are cut out whichever way they wind: a hole wound like the
+outer ring (signed area of the same sign) is reversed before use, so that the non-zero
+rule leaves it empty.
 
 ### 3.3 Shape kernel
 
