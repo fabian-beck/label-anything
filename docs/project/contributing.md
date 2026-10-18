@@ -23,6 +23,11 @@ python3 examples/tutorials/make_figures.py --cli rust/target/release/label-anyth
   included from their source files: change them there.
 * New ADRs in `docs/adr/` appear in the navigation and the [index](decisions.md)
   automatically.
+* The home page's header (`docs/_overrides/home.html`) is live only with the playground
+  next to the site, as on GitHub Pages: `mkdocs serve` shows its static logo. To see it
+  live, build the playground (`npm run build -w @label-anything/playground`), copy
+  `ts/packages/playground/dist/` to `site/playground/` after `mkdocs build` and serve
+  `site/` ([ADR 0046](../adr/0046-home-page-header-labeled-live.md)).
 
 The site is deployed to GitHub Pages from release tags (`v*`) and on demand
 (`.github/workflows/pages.yml`).

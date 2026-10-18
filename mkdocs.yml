@@ -32,10 +32,12 @@ validation:
 
 theme:
   name: material
-  custom_dir: docs/_overrides # the announcement bar (experimental)
+  custom_dir: docs/_overrides # the announcement bar (experimental), the home page, the logo
   language: en
   font: false # system fonts: no requests to third-party font servers
+  favicon: assets/logo.svg
   icon:
+    logo: la/logo # docs/_overrides/.icons/la/logo.svg: a label, its leader and a dot
     repo: fontawesome/brands/github
   palette:
     - media: "(prefers-color-scheme: light)"
@@ -81,6 +83,9 @@ markdown_extensions:
   - toc:
       permalink: true
   - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
