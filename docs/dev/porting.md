@@ -67,6 +67,10 @@ there the host measurement alone decides; both measures give identical results.
   per item, not once per variant. Frozen occupancy grids scan their bitset for small
   windows (cheaper than the summed-area table's cache misses in V8).
 * `Cand.bbox()` is cached; the measurer caches fonts; `FontBook.resolve` is memoized.
+* **Solve traces** (`trace.ts`, ADR 0046) exist only here: `Solve.trace` is null unless
+  `placeTraced` attaches a `Tracer`, and the calls to it (in `solver/`, `place.ts`) are
+  guarded by that null check. They only read the state; a port of a solver change keeps
+  them at the decisions they report.
 
 ### Parity
 

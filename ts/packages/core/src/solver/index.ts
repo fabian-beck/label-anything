@@ -32,6 +32,7 @@ import type { Priorities } from "../priority.js";
 import { StaticIndex } from "../spatial.js";
 import { newWindow } from "../grid/occupancy.js";
 import { LowerMarks, State } from "./state.js";
+import type { Tracer } from "../trace.js";
 
 /** Why an item ended up unplaced. */
 export const Reason = {
@@ -98,6 +99,8 @@ export class Solve {
   timeGuardHit = false;
   /** The host cancelled the solve (sticky once seen; see {@link pollCancel}). */
   cancelled = false;
+  /** Observer of the solver's decisions (TypeScript only, ADR 0046); null: not traced. */
+  trace: Tracer | null = null;
   /** Static cost evaluation (scratch buffers). */
   readonly evaluator: Evaluator;
   /** Scratch query window of the candidate filter. */
@@ -245,6 +248,7 @@ export class Solve {
     const shared = itemOcc === null || itemOcc.sameCells(occ);
     const win = this.window;
     let dropped = 0;
+    let early = 0;
     // `keep` serves non-internal candidates only (internal labels sit on their mark)
     const box = KEEP_BOX;
     const keep: KeepFn = (vi) => {
@@ -257,7 +261,9 @@ export class Solve {
           return false;
         }
       }
-      return !(quick && state.nPlaced > 0 && w && occ.blockedIn(win));
+      const blocked = quick && state.nPlaced > 0 && w && occ.blockedIn(win);
+      if (blocked) early += 1;
+      return !blocked;
     };
     // Rust creates the adjacent and slider candidates and then drops those `keep` rejects;
     // `adjacent` applies the same test to the same boxes in the same order before creating
@@ -298,6 +304,7 @@ export class Solve {
         this.cands.push(c);
       }
       for (const id of ids) this.byItem[i]!.push(id);
+      if (this.trace !== null) this.trace.generated(i, level, fresh, kept, null, Infinity, early + dropped);
       return ids;
     }
     const ev = this.evaluator;
@@ -321,8 +328,9 @@ export class Solve {
     // prune expensive feasible candidates
     let best = Infinity;
     for (let k = 0; k < kept.length; k++) if (keepFlags[k] && kept[k]!.feasible) best = minf(best, kept[k]!.cost);
+    let lim = Infinity;
     if (Number.isFinite(best)) {
-      const lim = model.placement.pruneFactor * Math.abs(best) + 1 + minf(best, 0);
+      lim = model.placement.pruneFactor * Math.abs(best) + 1 + minf(best, 0);
       for (let k = 0; k < kept.length; k++) {
         const c = kept[k]!;
         if (c.feasible && c.cost > lim) keepFlags[k] = 0;
@@ -337,6 +345,7 @@ export class Solve {
         this.cands.push(kept[k]!);
       }
     }
+    if (this.trace !== null) this.trace.generated(i, level, fresh, kept, keepFlags, lim, early + dropped);
     return ids;
   }
 
@@ -370,6 +379,7 @@ export class Solve {
         if (!ok) lacking += 1;
       }
       if (n > 0 && lacking > frac * n) {
+        if (this.trace !== null) this.trace.crowded(lacking, n);
         for (let i = 0; i < n; i++) {
           const add = crowdedModels & ~this.models[i]!;
           if (add !== 0) {

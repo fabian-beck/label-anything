@@ -42,7 +42,7 @@ function pt(p: P): (number | null)[] {
   return [num(p.x), num(p.y)];
 }
 
-function leaderJson(l: Leader, s: Solve): Json {
+export function leaderJson(l: Leader, s: Solve): Json {
   const m: Json = {};
   m.points = l.pts.map(pt);
   m.style = leaderStyleName(l.style);
@@ -53,7 +53,7 @@ function leaderJson(l: Leader, s: Solve): Json {
   return m;
 }
 
-function textJson(t: TextLayout, family: string, weight: number): Json {
+export function textJson(t: TextLayout, family: string, weight: number): Json {
   return {
     lines: t.lines.slice(),
     used: t.used,
@@ -89,7 +89,7 @@ function partsJson(v: Variant, c: Cand, family: string, weight: number): Json[] 
   });
 }
 
-function blockName(s: Solve, b: Block): string {
+export function blockName(s: Solve, b: Block): string {
   switch (b) {
     case BLOCK_EDGE:
       return "canvas_edge";
@@ -252,6 +252,8 @@ export function build(s: Solve, ver: Verification, phases: readonly [string, num
       const blockers: number[] = [];
       const feasCost: number[] = [];
       const feasId: number[] = [];
+      // ladder candidates are evaluated lazily: evaluate the item's never evaluated ones
+      for (const cid2 of s.byItem[i]!) s.ensureEval(cid2);
       for (const cid2 of s.byItem[i]!) {
         const c = s.cands[cid2]!;
         if (c.blocked !== null) add(blockName(s, c.blocked), 1);

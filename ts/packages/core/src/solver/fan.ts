@@ -135,7 +135,8 @@ export function fanPass(s: Solve): void {
         if (p !== null && (best === null || betterPlan(s, p, best[1]))) best = [right, p];
       }
       if (best === null) break;
-      applyUnlessInverting(s, best[1]);
+      const kept = applyUnlessInverting(s, best[1]);
+      if (s.trace !== null) s.trace.pass("fan", "fan", best[1].cands.map(([j]) => j), kept, true);
       const done = best[0];
       for (let k = sides.length - 1; k >= 0; k--) if (sides[k] === done) sides.splice(k, 1);
     }
