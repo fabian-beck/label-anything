@@ -1,19 +1,23 @@
 """Figures of the documentation site, made from the tutorial problems with the CLI.
 
-    python3 examples/tutorials/make_figures.py --cli rust/target/release/label-anything
+    bench/.venv/bin/python examples/tutorials/make_figures.py --cli rust/target/release/label-anything
 
-* ``docs/assets/gallery/*.png``: debug renderings (``label-anything render problem.json
-  result.json -o x.png``): item shapes, vector and SVG obstacles in grey, label boxes,
-  leaders, omitted items as red crosses.
+The figures are vector graphics: standalone SVGs (``bench/render.py``) with the labels set in
+an embedded subset of Noto Sans, so that zooming in stays sharp; raster backgrounds are
+embedded as they are.
+
+* ``docs/assets/gallery/*.svg``: item marks, vector and SVG obstacles in grey (SVG
+  backgrounds as they are), labels, leaders, omitted items as red crosses.
 * ``docs/assets/figures/debug-overlay.svg``: a debug overlay written during the solve
   (``place --debug-svg``), with the cost heatmap of every obstacle class.
-* ``docs/assets/figures/*.png``: what a host would draw over a raster background: the
-  image, the marks, and the labels and leaders of the result (Pillow, bundled Noto Sans;
-  labels in black on white boxes at 75 % opacity, as in all renderings).
+* ``docs/assets/figures/*.svg``: what a host would draw over a raster background: the
+  image, the marks, and the labels and leaders of the result (labels in black on white
+  boxes at 75 % opacity, as in all renderings).
+* ``docs/assets/figures/matplotlib.png``: the image the Matplotlib helper writes.
 
 The figures are committed; re-run this script after changing a tutorial problem or the
-engine (it needs Pillow). Solves are deterministic, so unchanged inputs give unchanged
-figures.
+engine (it needs the benchmark's Python environment: fontTools and Pillow). Solves are
+deterministic, so unchanged inputs give unchanged figures.
 """
 
 from __future__ import annotations
@@ -32,7 +36,6 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 GALLERY = ROOT / "docs" / "assets" / "gallery"
 FIGURES = ROOT / "docs" / "assets" / "figures"
-FONT = ROOT / "rust" / "crates" / "la-cli" / "assets" / "NotoSans-Regular.ttf"
 
 # (output name, problem relative to examples/tutorials)
 RENDERINGS = [
@@ -68,48 +71,28 @@ def solve(cli: str, problem: Path, tmp: Path) -> Path:
     return out
 
 
-def composite(problem_path: Path, result: dict[str, Any], out: Path, ss: int = 2) -> None:
-    """Background raster + marks + labels + leaders, rendered at ``ss``x and downsampled."""
-    from PIL import Image, ImageDraw, ImageFont
+def figure(problem_path: Path, result: dict[str, Any], out: Path) -> None:
+    """A standalone SVG of the result (``bench/render.py``): background files resolved against
+    the problem, the canvas of a problem without one taken from its raster background."""
+    sys.path.insert(0, str(ROOT))
+    from bench.common.model import raster_size
+    from bench.render import standalone_svg
 
     problem = json.loads(problem_path.read_text(encoding="utf-8"))
-    raster = problem["obstacles"]["raster"]
-    raster = raster[0] if isinstance(raster, list) else raster
-    bg = Image.open(problem_path.parent / raster["source"]).convert("RGBA")
-    scale = float(raster.get("scale", 1))
-    ox, oy = raster.get("offset", [0, 0])
-    canvas = problem.get("canvas") or {"width": bg.width / scale, "height": bg.height / scale}
-    w, h = round(canvas["width"]), round(canvas["height"])
-    img = Image.new("RGBA", (w * ss, h * ss), "white")
-    bg = bg.resize((round(bg.width / scale * ss), round(bg.height / scale * ss)), Image.LANCZOS)
-    img.alpha_composite(bg, (round(ox * ss), round(oy * ss)))
-    d = ImageDraw.Draw(img, "RGBA")
-    for item in problem["items"]:
-        a = item["anchor"]
-        if a["type"] != "point":
-            continue
-        r = (a.get("mark") or {}).get("r", 2) * ss
-        x, y = a["x"] * ss, a["y"] * ss
-        d.ellipse([x - r, y - r, x + r, y + r], fill=(29, 53, 87, 255))
-    fonts: dict[float, Any] = {}
-    for p in result["placements"]:
-        if not p["placed"]:
-            continue
-        for leader in [p["leader"]] if p.get("leader") else p.get("leaders", []):
-            pts = [(x * ss, y * ss) for x, y in leader["points"]]
-            d.line(pts, fill=(40, 40, 40, 255), width=ss, joint="curve")
-        b = p["box"]
-        d.rectangle([b["x"] * ss, b["y"] * ss, (b["x"] + b["w"]) * ss, (b["y"] + b["h"]) * ss], fill=(255, 255, 255, 191))
-        t = p.get("text")
-        if not t:
-            continue
-        size = t["font_size"] * ss
-        font = fonts.setdefault(size, ImageFont.truetype(str(FONT), size))
-        for line, base in zip(t["lines"], t["baseline_offsets"]):
-            pos = ((b["x"] + t.get("x_offset", 0)) * ss, (b["y"] + base) * ss)
-            d.text(pos, line, font=font, fill=(0, 0, 0, 255), anchor="ls")
-    img = img.resize((w, h), Image.LANCZOS).convert("RGB")
-    img.save(out, optimize=True)
+    obstacles = problem.get("obstacles") or {}
+    for kind, key in (("raster", "source"), ("svg", "path")):
+        layers = obstacles.get(kind)
+        for layer in [layers] if isinstance(layers, dict) else layers or []:
+            ref = layer.get(key)
+            if isinstance(ref, str) and len(ref) < 1024 and (problem_path.parent / ref).is_file():
+                layer[key] = str((problem_path.parent / ref).resolve())
+    if "canvas" not in problem and obstacles.get("raster"):
+        raster = obstacles["raster"]
+        raster = raster[0] if isinstance(raster, list) else raster
+        w, h = raster_size(raster)
+        scale = float(raster.get("scale", 1))
+        problem["canvas"] = {"width": round(w / scale), "height": round(h / scale)}
+    out.write_text(standalone_svg(problem, result, show_obstacles="auto"), encoding="utf-8")
 
 
 def python_figure(python: str, program: str, output: str, name: str, tmp: Path) -> None:
@@ -140,16 +123,16 @@ def main() -> int:
             if args.only and name not in args.only:
                 continue
             problem = HERE / rel
-            result = solve(cli, problem, tmp)
-            subprocess.run([cli, "render", str(problem), str(result), "-o", str(GALLERY / f"{name}.png")], check=True)
-            print(f"docs/assets/gallery/{name}.png")
+            result = json.loads(solve(cli, problem, tmp).read_text(encoding="utf-8"))
+            figure(problem, result, GALLERY / f"{name}.svg")
+            print(f"docs/assets/gallery/{name}.svg")
         for name, rel in COMPOSITES:
             if args.only and name not in args.only:
                 continue
             problem = HERE / rel
             result = json.loads(solve(cli, problem, tmp).read_text(encoding="utf-8"))
-            composite(problem, result, FIGURES / f"{name}.png")
-            print(f"docs/assets/figures/{name}.png")
+            figure(problem, result, FIGURES / f"{name}.svg")
+            print(f"docs/assets/figures/{name}.svg")
         for name, rel, options in VARIANTS:
             if args.only and name not in args.only:
                 continue
@@ -162,10 +145,10 @@ def main() -> int:
             variant.write_text(json.dumps(problem), encoding="utf-8")
             try:
                 result = json.loads(solve(cli, variant, tmp).read_text(encoding="utf-8"))
-                composite(variant, result, FIGURES / f"{name}.png")
+                figure(variant, result, FIGURES / f"{name}.svg")
             finally:
                 variant.unlink()
-            print(f"docs/assets/figures/{name}.png")
+            print(f"docs/assets/figures/{name}.svg")
         for name, rel in DEBUG_SVGS:
             if args.only and name not in args.only:
                 continue

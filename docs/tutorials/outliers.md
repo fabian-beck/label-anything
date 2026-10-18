@@ -73,7 +73,7 @@ C, Go and the CLI read the problem as JSON. It is what the other languages build
 
 ## What happened
 
-![The 20 outliers labeled over the chart](../assets/figures/outliers.png)
+![The 20 outliers labeled over the chart](../assets/figures/outliers.svg)
 
 Every label sits next to its point, touching the point's mark (a circle of radius 2 by
 default) at a 1 px offset, and keeps 0.2 em from the other labels and the other points

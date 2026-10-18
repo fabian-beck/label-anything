@@ -9,7 +9,7 @@ and a mark that is large enough holds its label inside.
 --8<-- "examples/tutorials/problems/shapes.json"
 ```
 
-![Every mark shape, with internal and external labels](../assets/gallery/shapes.png)
+![Every mark shape, with internal and external labels](../assets/gallery/shapes.svg)
 
 ## Mark shapes
 

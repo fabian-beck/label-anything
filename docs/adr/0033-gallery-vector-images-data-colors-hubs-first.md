@@ -30,7 +30,8 @@ review of it found problems that had little to do with label placement:
    problem's SVG background (or the scene's `<config>.bg.svg`) inlined, raster backgrounds
    embedded, the label text set in a subset of the bundled Noto Sans embedded as WOFF, every
    glyph at the pen position of the measurement (`x` per character), so text matches the
-   reported boxes. The gallery uses it for its figures, comparisons and frames. The viewer
+   reported boxes. The gallery uses it for its figures, comparisons and frames, and so do
+   the figures of the documentation site (`examples/tutorials/make_figures.py`). The viewer
    scales with a transform while a zoom runs and then makes the scale the image's layout
    size, so the browser draws the SVG again at that size (up to 40 million pixels).
 2. **Data colors.** An item whose `attrs.color` is `#rrggbb` is drawn in that color by every

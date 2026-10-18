@@ -207,7 +207,7 @@ of 22 %).
 }
 ```
 
-![Crowded cities: the omitted ones are crossed](../assets/gallery/priority-cities.png)
+![Crowded cities: the omitted ones are crossed](../assets/gallery/priority-cities.svg)
 
 The red crosses are the eleven omitted cities. The Python equivalent:
 

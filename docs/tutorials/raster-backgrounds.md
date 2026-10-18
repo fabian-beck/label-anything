@@ -35,7 +35,7 @@ away with a leader (soft ink cost 0.5 for leaders).
 --8<-- "examples/tutorials/problems/raster-ink.json:1:10"
 ```
 
-![ink mode: labels avoid every dot, line and axis](../assets/figures/raster-ink.png)
+![ink mode: labels avoid every dot, line and axis](../assets/figures/raster-ink.svg)
 
 * `ink.background`: `"auto"` takes the most frequent colour of the image's border pixels;
   or give `"#rrggbb"`.
@@ -57,7 +57,7 @@ whose opacity exceeds `alpha.threshold` (0.1) count, whatever their colour.
 --8<-- "examples/tutorials/problems/raster-alpha.json:1:5"
 ```
 
-![alpha mode: labels next to the route, off the callout](../assets/figures/raster-alpha.png)
+![alpha mode: labels next to the route, off the callout](../assets/figures/raster-alpha.svg)
 
 The class is named `route` and costs 5: labels stay off the route and the callout box
 unless nothing else is possible.
@@ -71,7 +71,7 @@ scatter plot, scaled to 480 × 320: labels drift towards the sparse areas.
 --8<-- "examples/tutorials/problems/raster-cost.json:1:7"
 ```
 
-![cost mode: labels avoid the dense centre](../assets/figures/raster-cost.png)
+![cost mode: labels avoid the dense centre](../assets/figures/raster-cost.svg)
 
 A pixel's value is 1 − luma (Rec. 709) of the pixel composited over white, or its luma
 with `"cost": {"invert": true}`. Cost maps are soft by nature: give the class a weight,
@@ -86,7 +86,7 @@ with its own weights: labels never sit on water, rarely on roads, and do not min
 --8<-- "examples/tutorials/problems/raster-classmap.json:1:14"
 ```
 
-![classmap mode: labels on land, off the roads where possible](../assets/figures/raster-classmap.png)
+![classmap mode: labels on land, off the roads where possible](../assets/figures/raster-classmap.svg)
 
 A pixel goes to the nearest palette colour within `classmap_tolerance` (OKLab, 0.08).
 Background pixels (as in `ink`) are skipped; other unmatched pixels go to `ink`, or
@@ -104,7 +104,7 @@ maximum over the image. Smooth sky is cheap, windows and edges are expensive.
 --8<-- "examples/tutorials/problems/raster-saliency.json:1:6"
 ```
 
-![saliency mode: labels in the sky rather than on the facades](../assets/figures/raster-saliency.png)
+![saliency mode: labels in the sky rather than on the facades](../assets/figures/raster-saliency.svg)
 
 ## Contrast borders
 
@@ -119,12 +119,12 @@ picture's edge.
 --8<-- "examples/tutorials/problems/raster-contrast.json:1:7"
 ```
 
-![contrast borders: the labels at the picture's edge lie wholly on the night sky](../assets/figures/raster-contrast.png)
+![contrast borders: the labels at the picture's edge lie wholly on the night sky](../assets/figures/raster-contrast.svg)
 
 With `"weights": {"contrast": 0}` they take the first free position instead, across the
 edge:
 
-![without the contrast term: three labels half on the page, half on the sky](../assets/figures/raster-contrast-off.png)
+![without the contrast term: three labels half on the page, half on the sky](../assets/figures/raster-contrast-off.svg)
 
 * The engine samples the luma of what lies behind the labels (Rec. 709, as in `cost`): the
   raster sources in order, transparent pixels letting what lies below show through, over

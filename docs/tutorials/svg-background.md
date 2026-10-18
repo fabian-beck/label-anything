@@ -60,7 +60,7 @@ its element explicitly: `{"shape": "from_svg", "svg_id": "o3"}` or
 
 ## The result
 
-![The SVG chart with the outliers labeled](../assets/gallery/svg-background.png)
+![The SVG chart with the outliers labeled](../assets/gallery/svg-background.svg)
 
 The debug rendering draws the SVG's geometry in grey: dots, lines, and the boxes of the
 texts. All 20 labels avoid the title, the tick labels and the legend (hard), stay off the

@@ -11,7 +11,7 @@ are soft obstacles that labels avoid where they can.
 }
 ```
 
-![A service graph: hubs and servers labeled inside, small nodes outside](../assets/gallery/node-link.png)
+![A service graph: hubs and servers labeled inside, small nodes outside](../assets/gallery/node-link.svg)
 
 * **Nodes are items.** Circle nodes have a radius that grows with their degree, the two
   servers are rounded rectangles. Labels never overlap a node (`items` is hard).

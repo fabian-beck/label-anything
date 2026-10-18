@@ -29,7 +29,7 @@ All examples label the same dense cluster of twelve asteroids among 60 unlabeled
 
     One segment from the mark to the nearest point of the label box (`port: "nearest"`).
 
-    ![Straight leaders](../assets/gallery/leaders-straight.png)
+    ![Straight leaders](../assets/gallery/leaders-straight.svg)
 
 === "angles"
 
@@ -40,7 +40,7 @@ All examples label the same dense cluster of twelve asteroids among 60 unlabeled
     Straight, but only in the listed directions (degrees, 0 = right, 90 = up): distant
     candidates are generated along these rays.
 
-    ![Leaders at multiples of 45°](../assets/gallery/leaders-angles.png)
+    ![Leaders at multiples of 45°](../assets/gallery/leaders-angles.svg)
 
 === "orthogonal"
 
@@ -51,7 +51,7 @@ All examples label the same dense cluster of twelve asteroids among 60 unlabeled
     Horizontal and vertical segments with at most one bend, also to labels in the
     margins (along the side, then into the label); fewer bends first.
 
-    ![Orthogonal leaders](../assets/gallery/leaders-orthogonal.png)
+    ![Orthogonal leaders](../assets/gallery/leaders-orthogonal.svg)
 
 === "elbow"
 
@@ -62,7 +62,7 @@ All examples label the same dense cluster of twelve asteroids among 60 unlabeled
     A first segment at one of the `angles`, then horizontal into the middle of the
     label's side (`port: "side-center"`) — the classic callout of illustrations.
 
-    ![Elbow leaders](../assets/gallery/leaders-elbow.png)
+    ![Elbow leaders](../assets/gallery/leaders-elbow.svg)
 
 === "curved"
 
@@ -73,7 +73,7 @@ All examples label the same dense cluster of twelve asteroids among 60 unlabeled
     A quadratic Bézier curve; the result reports its control points in `leader.curve`
     and a flattened polyline in `leader.points` (used for the collision tests).
 
-    ![Curved leaders](../assets/gallery/leaders-curved.png)
+    ![Curved leaders](../assets/gallery/leaders-curved.svg)
 
 A red cross marks a label that was omitted. In a cluster this dense, a leader leaving
 an inner asteroid passes close to its neighbours; such leaders are not generated, so up
@@ -129,7 +129,7 @@ too), so that crowded line ends get a whole column
 --8<-- "examples/tutorials/problems/leaders-boundary.json:1:5"
 ```
 
-![Boundary labels on both sides](../assets/gallery/leaders-boundary.png)
+![Boundary labels on both sides](../assets/gallery/leaders-boundary.svg)
 
 `placement.boundary` also has `gap` (between stacked labels, 2 px) and `margin` (distance
 from the canvas edge, 4 px). The `illustration` preset combines boundary and distant labels

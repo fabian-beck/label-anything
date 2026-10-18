@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="0 0 480 320">
+<style>@font-face{font-family:'LA Noto Sans';src:url(data:font/woff;base64,d09GRgABAAAAAA14AA0AAAAAEkAAAgPXAAAAAAAAAAAAAAAAAAAAAAAAAABHREVGAAAMFAAAABoAAAAcADMAQ0dQT1MAAAwwAAABBgAAAogKde8UR1NVQgAADTgAAAA+AAAAQm4wXQNPUy8yAAABpAAAAFQAAABgaVFe8WNtYXAAAAJwAAAAbAAAAIwD5AI9Z2x5ZgAAAyQAAAfsAAAKYAgGRtdoZWFkAAABMAAAADYAAAA2JulXM2hoZWEAAAFoAAAAIAAAACQHhgZhaG10eAAAAfgAAAB1AAAAiEu/CRVsb2NhAAAC3AAAAEYAAABGKzYojG1heHAAAAGIAAAAGwAAACAAKwBmbmFtZQAACxAAAADwAAABwiZBPiRwb3N0AAAMAAAAABMAAAAg/58AMgABAAAAAgPXXKPRWF8PPPUAAwPoAAAAAN2A0+cAAAAA5vo8hQAA/xADVgL9AAAABgACAAAAAAAAeJxjYGRgYNH9d5uBgXk5A8P/q8xhzC8YUIESAIsrBfB4nGNgZGBgUGIwYWBmMABiEA8BmBgYAQ1vAJIAeJxjYGGyYpzAwMrAwNTFFMHAwOANoRnjGIwYnYCi3KxMLKwsTEwsQDlmBiTg7u/vznCAQYHhD4vuv9sMDCwpjN1AYUaQHJME0ykgpcDABgDqJAsBeJxjimCIY2RhYGCqB+IuhkSmW0DMDsRPgTgbiHkYEpm7gXQeEKsyGDPpMHAxGTLoMaUzhDI+YDAH0uZMJgzmjBEM/GB2FlCcicGPSQxMhzIvZwgFiTHFAtXMBYrdZzBmzGQQAIr5MwsxcDO5MEwFsQHogRYUAAAAeJxjYGBgYmBgYAZiESDJCKZZGCqAtBSDAFCEi0GBwYnBhcGNwYPBlyGEIZMhn6GUoZzhz///QDUKDI5QOW+GIIZEhmyGIojc/4f/D/4/8H///33/9/zf8X/N/9X/V/5f8V8VbAMOAABsciIMAAAAAAAAACUAXgCCAJYArQDKANkBAQEtAXMBhAHCAfkCKAJeApECuAMCAywDSQNrA3cDsgPWBAkELgRtBJQEuwT/BSUFMAAAeJxlVXtoG/cdv9/vJJ1tWbZOp9PJlqzHnaxXJPlxOkmWbT2st+NnPFuWHD+SOHETZ8vakKxpShika1nKmqVZ6B9Zxx6wMTZv0FEK26AdbIx6BEoXRlraNMsIhBXGYJCFDV32PemcZNsJ6b7ofvf5fr6f74vABFz4Ar5BUISJIA753JSARIQi2NeFKUrE7iX53uIK4uaRRb5Ldhk0Wr1eM3/300/xjYaItW3BcKc5wHfeIkjiECB9Ae8Cjo3oJ4jssIU163QU68DKXRBoZjgmRb2CwLK02DS9Agq//HXneChcCY6dmv737YP5hZWz31yfdE9P4N3Zw8HsvjYt5S0msisDeFf+YDQ5Kv5lv9yYHPMmnARuenwTPHYQZvDXciIOWyyUAq2YMfxm7Ydnf//Jye8srafPLZ05dOUKOvn89w/g3bnrZ9dfGG18cJkgkIKD/g447QRxWqDdbPPzqzq6LP8B8fJtoNKYVc/hi3BOD0rBORpcwK+IL9bl1+t19KU6mpZ/AUQ/RBH19Dac7lJOk1TzdCwWj4sIb59oVOp1R8r5m+PyPbSYkT+Ht77L5/lb8vsqn3/Am1rgo7hgD9VRAu82Xp5TWZBBeMoBLimAugoyAx+4R8GBQKJvf67BJF742ieaOy/VsAZp/oafM6cqXnkWUN7BlUYMvSMUxtnGZVXFdcDrJnqaWWuljRFIAQA5YS9XyFs7nQhmPb89vvNa/b1j29W5/im8G67nR6bCBvk95JM/wrsz8j8LuYFEr8JTfPQAPcA3iQGCOKrkhvd6fZLFAnBNPF+ElIAu5IujIF28TseaLRbOgdGD1OkZf2WM82yPSGWPo5KNFCJccis3ethv768OhMccjnwyXQ2/m6kNtnXrl4y99qggDAY42jecCY7MhyymaaOld8DpGfRaOGkSuHRAjG6IkWpmTpDcrIBy9c8wdxufn4XcYiICbO9gN9FH+Fu1Sws+oQsrrIFmPK5ULq+jfLEY02SqqCIh1+G1DK3hhtLhwenQhYsrSSk45bYJGzOb0/F9+Tq0z5p8darPZ+JLsbmqhnTloj3GCcYm39UkxHBw/8yg4nvx0QM8iB8SFsJDEAtmHSU2dWFbqvkESkmwIpDqN+rdIbGWm0tvnotvTqTnOMqUXn5jZMKeXS6XSjjNj9J85NVLB19MRVx5/FC+s69W0Bw5fmLz6DHQIg6Rvot5iJQotKL73ySAjzir06FQ6VR64tlyYMpqs2bssSLP58VQzm7LdiRfWD/yYpLurLQbI/Vcph4xGWa6upVYAB2bIBZOiQXwAV5pSU4ET5LYEtWnaNfUE7whZvP5c5vBVMSoQ9rlkkFjjKTti4WJWqlU6nj10qVvsB6LQez+U6OtzPVbKqtrxs3tZ9c3Tqi+EETCEU61cln3Y/Zq5mIcZM2t1K+ncESSr+DanDgbDMzFp85kR7eL6QqFaPsI5se+WJFW1hnTtIlOna8tX8iX58uRvA/0grDQRdwgrOBDaQlBiv+3ZiwroqlXltfWAjNxl8RwxqAltO8VdFMOoZsBh7Ow5NdTBW3HaFpocjaCPjzBE2KTMyfGRVpNdKs7JKXehOY/YHG8Wm4pLDXbkJEWHdrOYvTEgeQhr/dYsjCLkca+EH/mzJnT4bS7UgwkvSZ3EfP+QKnx2dRWlKbnzZb5ItsZbg/4X7/41TcmBw9OHDnOhouDbKUehAgXIXE9kLNetfpSWEmZMleirZpQJgyUnI6OZvhsNVRNpsbyfcvLuIfxG+0eJrBUkH+AqtlMuJqGUfZQqYMZWCxv4z/DXgD9FgAg3izoVlA7y2Gz02m2OBzY2riPre/b+uxw9dkIlY0BQJjHbGBmwjzyUSzQ+CmJNDprT/tPtj66f+KX49Uq2jZGmTaHs+Pte/KNf0m/gzebGMQOWGRzoos7wPWhik0ugfq+vR5vRdgynsTKtSTgoA/x91bqVSkxk6taB72xlA0qVEsPjblSC4zWtor51Wcg9Fo6U1+Sb6FacMQeXkrLf8XWir3fFIpEQsRjfXmC/X+vTVeounEYNK3lFXCTlFFRQdDNtT2svd7yAQ5NuJR9p0ynCFZr0aI1P5mtAI59QnZ1RKpP9I99ebpyKi1vu4uxWNHNF+IHJpEht1Xu7y9v5Wrns9nztfTq8PAqxDB0ssUWvfaYbavGu/ATsrPdgkFvcHY5E6Ge5XKHhh5MYZ4k50lN78BEQL6LrYcdQ317G+AtQAo+3gB7Jd6c/7g1G/a6SJ3+b0U3JhLzTtfKQG7MMiJFJ/2n6kOL/Q5+0hcb6R0XxbL3W9Gix2ScM9r2ecwul9nsT4Tykwxd7DILDouzz8z4R8C7Ebwv4KtK3x59aiQo/RsXWRGKCYZPmzlo6Ipag6XQ1LQQvX59IEVpclR7XzmLEkHhufN5eXdoQIllFrRnsVXZutmnVgOsZ3NLdhqzZYOGjmWETDVUS46PFfqU4i7ZPXRgKY/W5R9loD9SiFPQ9AQiKdyjKJONkIBGUqRAiowDg8RknFEtDBYpoJ/rOtvbsAZT7XpqY/PqymRblx5ryLZ2vXZ94yDV3QnP9N1t++vXttAAG+h36fUub4CV/4it8t2+UYnp9Pj9RhSRP+SiQwwtjjuQo3Ffqahr+CvoZ/hj4AO0FqLq1oHI4k/Z1+wMY1e+v7a1DBv+cS/H9fbApd6JR49UhT7WeQkHdJ+OcJmJ/wAJTSemeJyFjzFOw1AQRJ9JACEhCkoqiwqKGIgEBVSIIlSAAFHQQRQcQ7CR7RRcjDNwAs7Ds/MjRaFAq9WfWc3M7gfWeaRD1N0AvuwZjtiWzfAKW3wH3OGEn4C77EabAa+yEyUBrxFHl1xQ8MEnJRkpY2pi+hzafdG9k5HvlarajrlRWfDqdNhqz5n6jp2VVPK9NqM2s+KUAys1uVFMeSbRVfDuNA+JL3YuqpxNeBJl8p6u0h0j3sTDcN/EymT7C/fc6cl136pN3dFklN6e+IcjjjljwLU1EM1dc09vyfU3NV5SPMiaf2bt1fHCnn+yfwFQkEWFeJxjYGYAg/9zGIwYsAAAKoMB0QB4nGNgZGBg4GGAACYwlGdgZFAEQkYAA8AAdwAAeJytUbFOw1AMPCchISWUgipUQqGoU0e+oFPFxMgPIKgYWnWIWPgr5sxMHfgIZmZWc3ZKFHWgalVL79nPzz5bdxAALdxijGhyd/+A/OmtmCN/KaYz5PPH1wVyRKyBKqxWZtNigUOL/ERI+QqRoYs+3wGzvZUfVV6W9JmjCM54BAf2o98ICMK8DOWZW2SojX87mJZr7xWKfm2JU0/XUj/1nXeV6TL62NTZ3F1//h0kOCFDERJymOEYbZySxx4uyPolrjBwBq+dzdA7UnJXWewKNLH+vEWmUAJj1xBuKg3XzHSLvV5YmzI21Jj1gXe1cMTb5lmm4z3n3MzUFNcy8Hl7wP8FRlgtYgAAeJxjYGRgYOBisGNwYGBzcfMJYVBLrizKYTBISS0zApOJDAbpRanZDAY5iSV5DAYMLED1DP//M8ABALFhDPUAAA==) format('woff');font-weight:400;font-style:normal}text{font-family:'LA Noto Sans',sans-serif;white-space:pre}</style>
+<rect width="480" height="320" fill="#ffffff"/>
+<g class="obstacles" fill="#b8b8b8" stroke="#b8b8b8" fill-opacity="0.6">
+</g>
+<g class="marks">
+<circle cx="328.6" cy="239.6" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="360.3" cy="90.4" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="262.2" cy="72.4" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="318.6" cy="82.9" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="381.7" cy="71" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="251.8" cy="192" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="139.8" cy="96.2" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="109.8" cy="134" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="231.8" cy="101.7" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="254.7" cy="145.4" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="302.3" cy="182.3" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="243.7" cy="230.7" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="101" cy="240.2" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="192" cy="236.4" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="143.2" cy="84.1" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="306" cy="84.6" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="312.2" cy="131.9" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="383.7" cy="184.9" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="384.4" cy="171.5" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="178.4" cy="151.6" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="233.7" cy="122.4" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="377.9" cy="182.9" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="171.7" cy="210.8" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="317.9" cy="135.4" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="320.9" cy="194.4" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="254.1" cy="115.1" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="194.4" cy="185.9" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="351" cy="193.9" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="341" cy="238.7" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="275" cy="238.5" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="322.4" cy="184.6" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="317.7" cy="102.5" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="214.6" cy="133.2" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="305.4" cy="137.3" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="274.1" cy="87.1" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="335.6" cy="145.4" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="132.6" cy="177.3" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="195.3" cy="230.8" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="278.8" cy="230.4" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="177.4" cy="245" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+</g>
+<g class="leaders" fill="none" stroke="#333333" stroke-width="1" stroke-linejoin="round">
+</g>
+<g class="labels">
+<rect x="363.3" y="75.97" width="49.32" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="365.4 373.09 378.14 386.04 394.65 398.26 401.87" y="93.03" font-size="14" fill="#000000">Stedlin</text>
+<rect x="196.7" y="46.13" width="70.69" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="198.8 209.17 217.07 220.68 233.77 242.38 251.03 256.68" y="63.2" font-size="14" fill="#000000">Heimburg</text>
+<rect x="316.35" y="56.63" width="41.31" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="318.45 325.12 332.97 336.58 344.06 351.95" y="73.7" font-size="14" fill="#000000">Talkel</text>
+<rect x="365.69" y="44.73" width="56.49" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="367.79 380.49 389.14 397.8 406.41 414.3" y="61.8" font-size="14" fill="#000000">Munber</text>
+<rect x="228.88" y="195" width="45.84" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="230.98 238.25 246.14 249.76 258.37 266.84" y="212.07" font-size="14" fill="#000000">Feldor</text>
+<rect x="142.8" y="95.76" width="50.02" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="144.9 153.61 162.08 168.78 177.44 185.91" y="112.82" font-size="14" fill="#000000">Roshof</text>
+<rect x="88.15" y="107.73" width="43.3" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="90.25 99.35 107.24 113.03 117.84 125.74" y="124.8" font-size="14" fill="#000000">Berfel</text>
+<rect x="211.36" y="75.43" width="40.88" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="213.46 222.13 230.02 233.63 241.49" y="92.5" font-size="14" fill="#000000">Kelau</text>
+<rect x="222.53" y="148.4" width="44.62" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="224.63 231.29 239.14 242.76 251.37 259.26" y="165.47" font-size="14" fill="#000000">Talber</text>
+<rect x="205.66" y="233.7" width="62.61" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="207.76 216.86 222.65 231.3 238.02 245.49 251 259.47" y="250.77" font-size="14" fill="#000000">Brückros</text>
+<rect x="75.34" y="243.2" width="51.31" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="77.44 86.15 94.62 101.33 109.18 115.9" y="260.27" font-size="14" fill="#000000">Rosach</text>
+<rect x="130.52" y="216.37" width="58.48" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="132.62 141.33 149.8 156.51 169.6 178.25" y="233.44" font-size="14" fill="#000000">Rosmun</text>
+<rect x="120.1" y="57.83" width="46.2" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="122.2 129.47 137.36 140.97 148.83 155.55" y="74.9" font-size="14" fill="#000000">Felach</text>
+<rect x="271.96" y="58.33" width="40.78" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="274.06 283.01 291.66 299.14 307.03" y="75.4" font-size="14" fill="#000000">Aukel</text>
+<rect x="386.7" y="181.66" width="50.08" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="388.8 401.5 410.15 418.8 422.41 426.03" y="198.72" font-size="14" fill="#000000">Munlin</text>
+<rect x="387.4" y="154.27" width="59.07" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="389.5 399.72 408.19 413.97 427.06 435.71" y="171.34" font-size="14" fill="#000000">Dormun</text>
+<rect x="155.53" y="125.33" width="45.74" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="157.63 164.97 168.58 177.23 185.88 194.35" y="142.4" font-size="14" fill="#000000">Linhof</text>
+<rect x="116.68" y="187.98" width="52.02" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="118.78 129.15 137 150.09 157.95" y="205.04" font-size="14" fill="#000000">Hamau</text>
+<rect x="284.07" y="197.4" width="44.27" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="286.17 295.12 303.77 314.78 322.63" y="214.47" font-size="14" fill="#000000">Auwal</text>
+<rect x="257.1" y="103.47" width="43.2" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="259.2 268.3 276.2 281.7 289.55" y="120.53" font-size="14" fill="#000000">Berau</text>
+<rect x="159.26" y="159.63" width="57.78" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="161.36 169.05 174.1 182 185.61 194.26 199.76 208.23" y="176.7" font-size="14" fill="#000000">Steinros</text>
+<rect x="332.64" y="196.9" width="47.07" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="334.74 343.45 351.92 358.63 366.1 374" y="213.97" font-size="14" fill="#000000">Roskel</text>
+<rect x="344" y="227.07" width="47.24" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="346.1 354.77 362.66 366.27 374.88 383.35" y="244.13" font-size="14" fill="#000000">Keldor</text>
+<rect x="272.2" y="241.5" width="46.84" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="274.3 284.67 293.14 297.96 305.43 313.33" y="258.57" font-size="14" fill="#000000">Hofkel</text>
+<rect x="320.7" y="102.06" width="52.64" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="322.8 331.47 339.36 342.97 349.68 354.73 362.63" y="119.12" font-size="14" fill="#000000">Kelsted</text>
+<rect x="270.77" y="140.3" width="56.94" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="272.87 283.09 291.56 297.34 304.04 309.1 316.99" y="157.37" font-size="14" fill="#000000">Dorsted</text>
+<rect x="338.6" y="128.17" width="49.2" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="340.7 349.65 356.37 365.02 370.52 378.99" y="145.24" font-size="14" fill="#000000">Achros</text>
+<rect x="85.93" y="151.03" width="65.32" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="88.03 96.74 105.21 111.92 120.53 126.31 134.96 141.68" y="168.1" font-size="14" fill="#000000">Rosbrück</text>
+<rect x="152.42" y="248" width="49.95" height="23.27" fill="#ffffff" fill-opacity="0.75"/>
+<text x="154.52 162.21 167.26 175.16 183.77 191.62" y="265.07" font-size="14" fill="#000000">Stedau</text>
+</g>
+<g class="unplaced" stroke="#d62728" stroke-width="1.2" stroke-linecap="round">
+<path d="M325.6 236.6 L331.6 242.6 M325.6 242.6 L331.6 236.6"/>
+<path d="M299.3 179.3 L305.3 185.3 M299.3 185.3 L305.3 179.3"/>
+<path d="M309.2 128.9 L315.2 134.9 M309.2 134.9 L315.2 128.9"/>
+<path d="M230.7 119.4 L236.7 125.4 M230.7 125.4 L236.7 119.4"/>
+<path d="M374.9 179.9 L380.9 185.9 M374.9 185.9 L380.9 179.9"/>
+<path d="M314.9 132.4 L320.9 138.4 M314.9 138.4 L320.9 132.4"/>
+<path d="M319.4 181.6 L325.4 187.6 M319.4 187.6 L325.4 181.6"/>
+<path d="M211.6 130.2 L217.6 136.2 M211.6 136.2 L217.6 130.2"/>
+<path d="M271.1 84.1 L277.1 90.1 M271.1 90.1 L277.1 84.1"/>
+<path d="M192.3 227.8 L198.3 233.8 M192.3 233.8 L198.3 227.8"/>
+<path d="M275.8 227.4 L281.8 233.4 M275.8 233.4 L281.8 227.4"/>
+</g></svg>

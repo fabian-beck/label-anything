@@ -30,7 +30,7 @@ few-shot segmentation model of the same name (ECAI 2025).
 **Try it in your browser:** the [playground](try.md) runs the engine live on a world map,
 a network, charts, moving objects and photographs, with every option in reach.
 
-![The outliers of a scatter plot, labeled over the chart image](assets/figures/outliers.png){ width="640" }
+![The outliers of a scatter plot, labeled over the chart image](assets/figures/outliers.svg){ width="640" }
 
 <div class="grid cards" markdown>
 
@@ -131,33 +131,33 @@ and the TypeScript port reproduces the Rust core bit for bit.
 
 ## Gallery
 
-Debug renderings of the tutorial problems (`label-anything render problem.json
-result.json -o x.png`): item shapes in blue, obstacles in grey, labels in black on white
-boxes, leaders in black, omitted labels as red crosses.
+The results of the tutorial problems, drawn as vector graphics (zoom in: the labels stay
+sharp): item marks in blue, obstacles in grey, labels in black on white boxes, leaders in
+black, omitted labels as red crosses.
 
 <div class="grid cards la-gallery" markdown>
 
--   ![Leader styles: elbow leaders into the labels' sides](assets/gallery/leaders-elbow.png)
+-   ![Leader styles: elbow leaders into the labels' sides](assets/gallery/leaders-elbow.svg)
 
     Elbow leaders out of a dense cluster. [Leaders](tutorials/leaders.md)
 
--   ![Boundary labels stacked in the margins](assets/gallery/leaders-boundary.png)
+-   ![Boundary labels stacked in the margins](assets/gallery/leaders-boundary.svg)
 
     Boundary labels in the margins, orthogonal leaders. [Leaders](tutorials/leaders.md)
 
--   ![Shapes with internal and external labels](assets/gallery/shapes.png)
+-   ![Shapes with internal and external labels](assets/gallery/shapes.svg)
 
     True shapes: internal labels where they fit. [Shapes](tutorials/shapes.md)
 
--   ![A node-link diagram](assets/gallery/node-link.png)
+-   ![A node-link diagram](assets/gallery/node-link.svg)
 
     Node-link diagram: edges are obstacles, hubs come first. [Graphs](tutorials/node-link.md)
 
--   ![A scatter plot drawn as SVG](assets/gallery/svg-background.png)
+-   ![A scatter plot drawn as SVG](assets/gallery/svg-background.svg)
 
     An SVG chart classified by CSS selectors. [SVG](tutorials/svg-background.md)
 
--   ![Crowded cities with omitted labels](assets/gallery/priority-cities.png)
+-   ![Crowded cities with omitted labels](assets/gallery/priority-cities.svg)
 
     Strict omission: the least important labels go first. [Priority](tutorials/priority.md)
 
