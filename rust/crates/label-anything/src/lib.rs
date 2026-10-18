@@ -1,8 +1,8 @@
 //! # Label Anything
 //!
-//! A host-independent label placement engine: place text, icons or any sized label next
-//! to features in scatterplots, maps, node-link diagrams and illustrations, avoid what
-//! must not be covered (vector shapes, SVG or raster backgrounds), draw leaders without
+//! A label placement engine: place text, icons or any sized label next to features in
+//! scatterplots, maps, node-link diagrams and illustrations, avoid what must not be
+//! covered (vector shapes, SVG or raster backgrounds), draw leaders without
 //! crossings, and omit labels in a user-defined priority order when space runs out.
 //!
 //! ```

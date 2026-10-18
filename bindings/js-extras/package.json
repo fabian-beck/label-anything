@@ -1,7 +1,7 @@
 {
   "name": "@label-anything/extras",
   "version": "0.1.0",
-  "description": "Label Anything helpers for d3, Vega, Observable Plot, Leaflet, MapLibre, Cytoscape.js and sigma.js, plus a Web Worker engine.",
+  "description": "Label Anything label placement helpers for d3, Vega, Observable Plot, Leaflet, MapLibre, Cytoscape.js and sigma.js, plus a Web Worker engine.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

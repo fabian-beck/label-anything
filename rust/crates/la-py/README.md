@@ -4,11 +4,11 @@
 > The API, the problem format and the placements can change in any 0.x release, without
 > deprecation.
 
-Python binding of **Label Anything**, a host-independent label placement engine: place
-text, icons or any sized label next to points, areas and shapes, avoid what must not be
-covered (vector obstacles, SVG or raster backgrounds), draw leaders without crossings,
-and omit labels in a user-defined priority order when space runs out. The engine is
-written in Rust; this package is a PyO3 extension (abi3, CPython >= 3.9).
+Python binding of **Label Anything**, a label placement engine for charts, maps and
+diagrams: place text, icons or any sized label next to points, areas and shapes, avoid
+what must not be covered (vector obstacles, SVG or raster backgrounds), draw leaders
+without crossings, and omit labels in a user-defined priority order when space runs out.
+The engine is written in Rust; this package is a PyO3 extension (abi3, CPython >= 3.9).
 
 ```python
 import label_anything as la
