@@ -193,6 +193,9 @@ enum Cmd {
         /// Let problems read files (backgrounds, fonts) also on a non-loopback --host.
         #[arg(long)]
         allow_files: bool,
+        /// Requests solved at the same time [default: the number of CPUs].
+        #[arg(long, value_parser = clap::value_parser!(u16).range(1..))]
+        workers: Option<u16>,
     },
 }
 
@@ -641,7 +644,8 @@ fn run(cli: Cli) -> Result<ExitCode, Failure> {
             port,
             host,
             allow_files,
-        } => serve(&host, port, allow_files),
+            workers,
+        } => serve(&host, port, allow_files, workers),
     }
 }
 
@@ -675,7 +679,12 @@ fn check_result(problem: &Value, result: &Value) -> Result<(), String> {
     Ok(())
 }
 
-fn serve(host: &str, port: u16, allow_files: bool) -> Result<ExitCode, Failure> {
+fn serve(
+    host: &str,
+    port: u16,
+    allow_files: bool,
+    workers: Option<u16>,
+) -> Result<ExitCode, Failure> {
     let server =
         tiny_http::Server::http((host, port)).map_err(|e| format!("{host}:{port}: {e}"))?;
     let loopback = host == "localhost"
@@ -683,61 +692,83 @@ fn serve(host: &str, port: u16, allow_files: bool) -> Result<ExitCode, Failure> 
             .parse::<std::net::IpAddr>()
             .is_ok_and(|ip| ip.is_loopback());
     let files = loopback || allow_files;
+    let workers = workers.map(usize::from).unwrap_or_else(|| {
+        std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4)
+    });
     eprintln!(
-        "label-anything serving on http://{host}:{port} (POST /place, POST /validate; file access {})",
+        "label-anything serving on http://{host}:{port} (POST /place, POST /validate; {workers} workers; file access {})",
         if files { "on" } else { "off; --allow-files turns it on" }
     );
-    let header = |k: &str, v: &str| {
-        tiny_http::Header::from_bytes(k.as_bytes(), v.as_bytes()).expect("valid header")
-    };
-    for mut req in server.incoming_requests() {
-        let mut body = String::new();
-        let _ = req.as_reader().read_to_string(&mut body);
-        let body = body.strip_prefix('\u{feff}').unwrap_or(&body);
-        let path = req.url().split('?').next().unwrap_or("");
-        let cors = header("Access-Control-Allow-Origin", "*");
-        if req.method() == &tiny_http::Method::Options {
-            // CORS preflight: browsers send it before a POST with Content-Type: application/json
-            let resp = tiny_http::Response::empty(204)
-                .with_header(cors)
-                .with_header(header("Access-Control-Allow-Methods", "POST, GET, OPTIONS"))
-                .with_header(header("Access-Control-Allow-Headers", "Content-Type"))
-                .with_header(header("Access-Control-Max-Age", "86400"));
-            let _ = req.respond(resp);
-            continue;
-        }
-        let (status, text) = match (req.method(), path) {
-            (tiny_http::Method::Post, "/place") => {
-                let mut env = NativeEnv::new();
-                env.allow_files = files;
-                match label_anything::place_json_with(body, &env) {
-                    Ok(r) => (200, r),
-                    Err(e) => (422, format!("{{\"errors\":{e}}}")),
+    // every worker takes the next request: a long solve does not hold up the others
+    let server = std::sync::Arc::new(server);
+    let threads: Vec<_> = (0..workers)
+        .map(|_| {
+            let server = std::sync::Arc::clone(&server);
+            std::thread::spawn(move || {
+                for req in server.incoming_requests() {
+                    respond(req, files);
                 }
-            }
-            (tiny_http::Method::Post, "/validate") => match parse_json(body) {
-                Ok(v) => (
-                    200,
-                    serde_json::to_string(&label_anything::validate(&v)).unwrap_or_default(),
-                ),
-                Err(e) => (
-                    400,
-                    json!({"valid": false, "errors": [e], "warnings": []}).to_string(),
-                ),
-            },
-            (tiny_http::Method::Get, "/") | (tiny_http::Method::Get, "/health") => (
-                200,
-                json!({"name": "label-anything", "version": label_anything::VERSION}).to_string(),
-            ),
-            _ => (404, json!({"error": "not found"}).to_string()),
-        };
-        let resp = tiny_http::Response::from_string(text)
-            .with_status_code(status)
-            .with_header(header("Content-Type", "application/json"))
-            .with_header(cors);
-        let _ = req.respond(resp);
+            })
+        })
+        .collect();
+    for t in threads {
+        let _ = t.join();
     }
     Ok(ExitCode::SUCCESS)
+}
+
+fn header(k: &str, v: &str) -> tiny_http::Header {
+    tiny_http::Header::from_bytes(k.as_bytes(), v.as_bytes()).expect("valid header")
+}
+
+/// Answers one request of `serve`.
+fn respond(mut req: tiny_http::Request, files: bool) {
+    let mut body = String::new();
+    let _ = req.as_reader().read_to_string(&mut body);
+    let body = body.strip_prefix('\u{feff}').unwrap_or(&body);
+    let path = req.url().split('?').next().unwrap_or("");
+    let cors = header("Access-Control-Allow-Origin", "*");
+    if req.method() == &tiny_http::Method::Options {
+        // CORS preflight: browsers send it before a POST with Content-Type: application/json
+        let resp = tiny_http::Response::empty(204)
+            .with_header(cors)
+            .with_header(header("Access-Control-Allow-Methods", "POST, GET, OPTIONS"))
+            .with_header(header("Access-Control-Allow-Headers", "Content-Type"))
+            .with_header(header("Access-Control-Max-Age", "86400"));
+        let _ = req.respond(resp);
+        return;
+    }
+    let (status, text) = match (req.method(), path) {
+        // malformed JSON is an invalid problem, as on the command line: 422 here, a
+        // `parse` error in the report of /validate
+        (tiny_http::Method::Post, "/place") => {
+            let mut env = NativeEnv::new();
+            env.allow_files = files;
+            match label_anything::place_json_with(body, &env) {
+                Ok(r) => (200, r),
+                Err(e) => (422, format!("{{\"errors\":{e}}}")),
+            }
+        }
+        (tiny_http::Method::Post, "/validate") => (
+            200,
+            match parse_json(body) {
+                Ok(v) => serde_json::to_string(&label_anything::validate(&v)).unwrap_or_default(),
+                Err(e) => json!({"valid": false, "errors": [e], "warnings": []}).to_string(),
+            },
+        ),
+        (tiny_http::Method::Get, "/") | (tiny_http::Method::Get, "/health") => (
+            200,
+            json!({"name": "label-anything", "version": label_anything::VERSION}).to_string(),
+        ),
+        _ => (404, json!({"error": "not found"}).to_string()),
+    };
+    let resp = tiny_http::Response::from_string(text)
+        .with_status_code(status)
+        .with_header(header("Content-Type", "application/json"))
+        .with_header(cors);
+    let _ = req.respond(resp);
 }
 
 /// Rasterize an SVG (the debug overlay) to PNG with the bundled Noto Sans.

@@ -323,3 +323,89 @@ fn serve_answers_cors_preflight() {
         "{answer}"
     );
 }
+
+/// Sends `text` to the server on `port` and returns its answer.
+fn http(port: u16, text: &str) -> Option<String> {
+    let mut s = std::net::TcpStream::connect(("127.0.0.1", port)).ok()?;
+    s.set_read_timeout(Some(std::time::Duration::from_secs(60)))
+        .ok()?;
+    s.write_all(text.as_bytes()).ok()?;
+    let mut out = String::new();
+    s.read_to_string(&mut out).ok()?;
+    Some(out)
+}
+
+fn post(path: &str, body: &str) -> String {
+    format!(
+        "POST {path} HTTP/1.1\r\nHost: localhost\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+        body.len()
+    )
+}
+
+#[test]
+fn serve_answers_while_a_request_is_in_progress() {
+    let port = std::net::TcpListener::bind("127.0.0.1:0")
+        .unwrap()
+        .local_addr()
+        .unwrap()
+        .port();
+    let mut server = Command::new(BIN)
+        .args(["serve", "--port", &port.to_string(), "--workers", "2"])
+        .stderr(Stdio::null())
+        .spawn()
+        .unwrap();
+    let health = "GET /health HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+    let ready = (0..100).any(|_| {
+        let up = http(port, health).is_some();
+        if !up {
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
+        up
+    });
+    // a crowded problem whose local search takes a while (100,000 moves)
+    let items: Vec<Value> = (0..400)
+        .map(|i| {
+            point(
+                &format!("i{i}"),
+                10.0 + (i % 20) as f64 * 14.0,
+                10.0 + (i / 20) as f64 * 14.0,
+                &format!("Label {i}"),
+            )
+        })
+        .collect();
+    let slow = json!({"canvas": {"width": 300, "height": 300}, "items": items,
+                      "solver": {"strategy": "local", "time_budget_ms": 1000}})
+    .to_string();
+    let (tx, rx) = std::sync::mpsc::channel();
+    let place_tx = tx.clone();
+    let slow_request = post("/place", &slow);
+    let place = std::thread::spawn(move || {
+        let answer = http(port, &slow_request);
+        let _ = place_tx.send("place");
+        answer
+    });
+    std::thread::sleep(std::time::Duration::from_millis(100));
+    let during = http(port, health);
+    let _ = tx.send("health");
+    let first = rx.recv().unwrap();
+    let placed = place.join().unwrap();
+    let (bad_place, bad_validate) = (
+        http(port, &post("/place", "{bad")),
+        http(port, &post("/validate", "{bad")),
+    );
+    let _ = server.kill();
+    let _ = server.wait();
+    assert!(ready, "the server answers");
+    assert!(placed.expect("a result").starts_with("HTTP/1.1 200"));
+    assert!(during.expect("an answer").starts_with("HTTP/1.1 200"));
+    assert_eq!(first, "health", "/health waited for the solve");
+    // malformed JSON is an invalid problem: 422 from /place, a parse error from /validate
+    let bad_place = bad_place.expect("an answer");
+    assert!(bad_place.starts_with("HTTP/1.1 422"), "{bad_place}");
+    let bad_validate = bad_validate.expect("an answer");
+    assert!(bad_validate.starts_with("HTTP/1.1 200"), "{bad_validate}");
+    assert!(
+        bad_validate.contains("\"code\":\"parse\""),
+        "{bad_validate}"
+    );
+}
