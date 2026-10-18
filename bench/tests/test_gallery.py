@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from PIL import Image
@@ -17,6 +18,9 @@ SECTIONS = (
         gallery.Fig("03-gapminder/y2005-vector", "Bubbles & labels: {placed} of {total}",
                     "Captions are HTML; {leaders} leaders.", wide=True),
         gallery.Fig("03-gapminder/not-built", "Never shown", "This problem was not built."),
+    )),
+    gallery.Section("weak", "Where it falls short", "", "", (
+        gallery.Fig("03-gapminder/y2005-vector", "Again, as a limit", "{omitted} omitted.", limit=True),
     )),
 )
 
@@ -52,25 +56,31 @@ def test_gallery_from_a_run(tmp_path, monkeypatch):
     data = read_json(out / "gallery.json")
     fig = data["figures"]["03-gapminder/y2005-vector"]
     assert (fig["placed"], fig["total"], fig["hard_violations"]) == (3, 3, 0)
-    with Image.open(out / fig["img"]) as im:
-        assert im.format == "WEBP" and list(im.size) == fig["size"]
-    # one rendering at twice the page scale for the viewer, the page image scaled down from it
-    assert fig["full"] == "img/full/03-gapminder__y2005-vector.webp" and fig["full_size"] == [2 * fig["size"][0],
-                                                                                                2 * fig["size"][1]]
-    with Image.open(out / fig["full"]) as im:
-        assert list(im.size) == fig["full_size"]
+    assert fig["settings"]["items"] == 3 and fig["reasons"] == {}
+    # one vector image: the page shows it at the canvas size, the viewer zooms into the same file
+    assert fig["img"] == fig["full"] == "img/03-gapminder__y2005-vector.svg" and fig["size"] == [200, 100]
+    assert fig["full_size"] == [round(200 * gallery.ZOOM), round(100 * gallery.ZOOM)]
+    root = ET.parse(out / fig["img"]).getroot()
+    assert root.get("viewBox") == "0 0 200 100" and "@font-face" in (out / fig["img"]).read_text(encoding="utf-8")
     assert (f'href="{fig["full"]}" target="_blank" rel="noopener" data-w="{fig["full_size"][0]}" '
-            f'data-h="{fig["full_size"][1]}"') in page
+            f'data-h="{fig["full_size"][1]}" data-bw="200" data-vector="1"') in page
     assert '<dialog class="viewer" id="viewer"' in page and "dlg.showModal()" in page
+    # the settings of the problem, a download link; the limits section last, with its figure
+    assert "Settings of this problem" in page and f'<a href="{fig["img"]}" download>SVG</a>' in page
+    assert page.index('<section id="tests">') < page.index('<section id="weak">')
+    assert 'class="fig limit"' in page and "0 omitted." in page
+    # one font weight on the page
+    assert "font-weight: 700" not in page and "NotoSans-Bold" not in page
     # the run's renderings of the same problem: Label Anything and the greedy baseline (naive is not shown)
     (cmp,) = data["comparisons"]
     assert [c["solver"] for c in cmp["cells"]] == ["rust", "greedy"]
-    assert all((out / c["img"]).exists() and (out / c["full"]).exists() for c in cmp["cells"])
-    assert [c["full"] for c in cmp["cells"]] == [f"img/full/cmp/{s}/03-gapminder__y2005-vector.webp"
-                                                 for s in ("rust", "greedy")]
+    assert all((out / c["img"]).exists() and c["full"] == c["img"] for c in cmp["cells"])
+    assert [c["img"] for c in cmp["cells"]] == [f"img/cmp/{s}/03-gapminder__y2005-vector.svg"
+                                                for s in ("rust", "greedy")]
     assert 'class="cell mine"' in page
     # self-contained (fonts and their licence), linked from and to the report
     assert (out / "fonts" / "NotoSans-Regular.ttf").exists() and (out / "fonts" / "OFL.txt").exists()
+    assert not (out / "fonts" / "NotoSans-Bold.ttf").exists()
     assert "fonts.googleapis" not in page and 'href="../index.html"' in page
     assert "href='gallery/'" in (rep / "index.html").read_text(encoding="utf-8")
 
@@ -102,3 +112,13 @@ def test_missing_run_parts_are_left_out(tmp_path):
     assert gallery.comparisons(tmp_path, {"results": []}, tmp_path / "out") == []
     assert gallery.stability(tmp_path, {"sequences": []}, tmp_path / "out") is None
     assert gallery.problem_files(tmp_path, "03-gapminder/y2005-vector") is None
+
+
+def test_split_word_follows_the_break_rules():
+    t = "uimanager.UIImplementationProvider"
+    # "UI·Implementation" is an acronym break, "Implementat|ion" breaks inside a word
+    assert gallery.split_word({"lines": ["uimanager.UI", "Implementat", "ionProvider"]}, t)
+    assert not gallery.split_word({"lines": ["uimanager.UI", "ImplementationProvider"]}, t)
+    assert not gallery.split_word({"lines": ["uimanager.UIView", "OperationQueue"]}, "uimanager.UIViewOperationQueue")
+    assert not gallery.split_word({"lines": ["Hong Kong,", "China"]}, "Hong Kong, China")
+    assert gallery.split_word({"lines": ["Mytili", "ni"]}, "Mytilini")

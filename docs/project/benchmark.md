@@ -94,11 +94,12 @@ run, and per scenario the metric tables with every solver's rendering side by si
 ## Gallery
 
 `bench/.venv/bin/python -m bench.gallery --engine rust/target/release/label-anything --run
-bench-report` adds `bench-report/gallery/`: one page of renderings of real-data problems —
-charts, maps, photos, embeddings, networks, priority — solved by the engine, with the
-evaluator's numbers under each, the same problems by the other labelers, frames of an
-interactive zoom, and what the defaults still do badly. It is published with the latest
-report: [the gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/).
+bench-report` adds `bench-report/gallery/`: one page of vector images of real-data problems —
+hub-first airport maps, charts, photos, embeddings, networks, priority — solved by the engine,
+with the evaluator's numbers, the omitted labels by reason and the problem's settings under
+each, the same problems by the other labelers, frames of an interactive zoom, and, with
+figures, what the engine still does badly. It is published with the latest report: [the
+gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/).
 
 ## In CI
 
