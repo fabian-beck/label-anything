@@ -169,8 +169,15 @@ export function run(s: Solve): void {
   if (s.model.omission === Omission.Prefix) {
     const order = s.pri.order.slice();
     let cut = false;
-    for (const i of order) {
+    for (let k = 0; k < order.length; k++) {
+      const i = order[k]!;
       if (g.done[i]) continue;
+      if (!cut && k % 64 === 63 && guardPassed(s, started, budgetGuard)) s.timeGuardHit = true;
+      if (s.timeGuardHit) {
+        g.done[i] = 1;
+        s.reasons[i] = Reason.BudgetExhausted;
+        continue;
+      }
       if (cut || g.capReached) {
         g.done[i] = 1;
         s.reasons[i] = Reason.OmittedByPriority;
@@ -194,7 +201,7 @@ export function run(s: Solve): void {
     }
     envProgress(s.env, "greedy", (r - band.length) / order.length);
     const cancelled = s.pollCancel();
-    if (cancelled || s.timeGuardHit || (s.now() - started > budgetGuard && s.now() > 0)) {
+    if (cancelled || s.timeGuardHit || guardPassed(s, started, budgetGuard)) {
       s.timeGuardHit = s.timeGuardHit || !cancelled;
       for (const i of band) {
         if (!g.done[i]) {
@@ -208,7 +215,23 @@ export function run(s: Solve): void {
     const capped = capMayHit(s, band);
     const deferred: number[] = [];
     if (capped) {
-      for (const i of band) if (!g.done[i]) processUnit(s, g, i, true);
+      for (let k = 0; k < band.length; k++) {
+        const i = band[k]!;
+        if (g.done[i]) continue;
+        if (k % 64 === 63 && guardPassed(s, started, budgetGuard)) {
+          s.timeGuardHit = true;
+          break;
+        }
+        if (labelCapReached(s)) {
+          // nothing later in the total order can be placed: evictLower only evicts lower
+          // keys, and none is placed yet
+          g.done[i] = 1;
+          s.reasons[i] = Reason.OmittedByPriority;
+          continue;
+        }
+        processUnit(s, g, i, true);
+      }
+      exhaust(s, g, band);
       continue;
     }
     // warm start: labels placed in the previous solve keep their position when it is
@@ -244,7 +267,13 @@ export function run(s: Solve): void {
       const i = POPPED[2]!;
       if (g.done[i] || g.tried0[i] || cnt !== g.live[i]) continue;
       popped += 1;
-      if (popped % 64 === 0 && s.pollCancel()) break;
+      if (popped % 64 === 0) {
+        if (s.pollCancel()) break;
+        if (guardPassed(s, started, budgetGuard)) {
+          s.timeGuardHit = true;
+          break;
+        }
+      }
       if (!processUnit(s, g, i, false) && !g.done[i]) {
         g.tried0[i] = 1;
         deferred.push(i);
@@ -253,16 +282,37 @@ export function run(s: Solve): void {
     g.bandKey = -1;
     // ladder pass in total order
     deferred.sort((a, b) => s.pri.prio[a]!.rank - s.pri.prio[b]!.rank);
-    for (const i of deferred) {
-      if (!g.done[i] && !s.pollCancel()) processUnit(s, g, i, true);
-    }
-    if (s.cancelled) {
-      for (const i of band) {
-        if (!g.done[i] && s.state.placed[i]! < 0) {
-          g.done[i] = 1;
-          s.reasons[i] = Reason.BudgetExhausted;
-        }
+    for (let k = 0; k < deferred.length; k++) {
+      const i = deferred[k]!;
+      if (s.timeGuardHit || g.done[i] || s.pollCancel()) continue;
+      if (k % 64 === 63 && guardPassed(s, started, budgetGuard)) {
+        s.timeGuardHit = true;
+        continue;
       }
+      processUnit(s, g, i, true);
+    }
+    exhaust(s, g, band);
+  }
+}
+
+/** Whether the greedy guard has passed: `guard` ms after `started` (ADR 0042; never without a clock). */
+function guardPassed(s: Solve, started: number, guard: number): boolean {
+  return s.now() > 0 && s.now() - started > guard;
+}
+
+/** Whether `priority.budget.max_labels` labels are placed. */
+function labelCapReached(s: Solve): boolean {
+  const m = s.model.maxLabels;
+  return m !== null && s.state.nPlaced >= m;
+}
+
+/** After a cancellation or the time guard, the band's undecided items are `budget_exhausted`. */
+function exhaust(s: Solve, g: Greedy, band: readonly number[]): void {
+  if (!(s.cancelled || s.timeGuardHit)) return;
+  for (const i of band) {
+    if (!g.done[i] && s.state.placed[i]! < 0) {
+      g.done[i] = 1;
+      s.reasons[i] = Reason.BudgetExhausted;
     }
   }
 }
