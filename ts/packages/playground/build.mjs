@@ -3,8 +3,9 @@
  * Builds the playground into dist/ (published with the documentation site as /playground/):
  *
  *   node build.mjs            # dist/: app.js, engine-ts.js, engine-wasm.js, the WebAssembly
- *                             #        module, fonts, data, index.html, style.css, and
- *                             #        hero.js (the live header of the documentation's
+ *                             #        module, fonts, data, index.html, style.css, the
+ *                             #        explainer (explain.html, explain.js, explain-worker.js)
+ *                             #        and hero.js (the live header of the documentation's
  *                             #        home page, which solves with engine-ts.js)
  *   node build.mjs --serve    # rebuild on change and serve on http://127.0.0.1:8000/
  *
@@ -46,8 +47,7 @@ mkdirSync(join(OUT, "fonts"), { recursive: true });
 mkdirSync(join(OUT, "data"), { recursive: true });
 
 // --- static files ----------------------------------------------------------------------
-copyFileSync(join(HERE, "index.html"), join(OUT, "index.html"));
-copyFileSync(join(HERE, "style.css"), join(OUT, "style.css"));
+for (const f of ["index.html", "style.css", "explain.html", "explain.css"]) copyFileSync(join(HERE, f), join(OUT, f));
 for (const f of ["NotoSans-Regular.ttf", "NotoSans-Bold.ttf", "OFL.txt"]) copyFileSync(join(REPO, "fonts", f), join(OUT, "fonts", f));
 copyDir(join(HERE, "data"), join(OUT, "data"));
 if (hasWasm) copyFileSync(WASM, join(OUT, "label_anything_bg.wasm"));
@@ -69,6 +69,8 @@ const common = {
 const entries = [
   { in: "src/main.ts", out: "app" },
   { in: "src/worker-ts.ts", out: "engine-ts" },
+  { in: "src/explain/main.ts", out: "explain" },
+  { in: "src/explain/worker.ts", out: "explain-worker" },
   { in: "src/hero.ts", out: "hero" },
 ];
 if (hasWasm) entries.push({ in: "src/worker-wasm.ts", out: "engine-wasm" });

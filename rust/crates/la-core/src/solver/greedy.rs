@@ -608,6 +608,11 @@ fn best_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<u32> {
     }
     let mut best = (f64::INFINITY, u32::MAX);
     for &(base, c) in scored.iter().take(LOOKAHEAD_TOP) {
+        // the lookahead is never negative: a candidate (and every later one) whose cost
+        // alone exceeds the best total cannot win
+        if base > best.0 {
+            break;
+        }
         let la = lookahead(s, g, i, c);
         let total = base + la;
         if total < best.0 || (total == best.0 && c < best.1) {
@@ -773,10 +778,18 @@ pub const EXPLAIN_CANDIDATES: usize = 5;
 /// decide (they were dropped then, spec §6.7): `omitted_by_priority` when one of them is
 /// statically feasible (kept in `s.blocked_feasible[i]` for `blocked_by`).
 pub fn explain(s: &mut Solve, i: usize) -> Reason {
-    let any_static = s.by_item[i].iter().any(|&c| {
-        let c = &s.cands[c as usize];
-        c.feasible || c.relaxed && s.model.ladder.contains(&Step::SoftOverlap)
-    });
+    let soft = s.model.ladder.contains(&Step::SoftOverlap);
+    // ladder candidates are evaluated lazily: one never evaluated is not known to be feasible
+    let mut any_static = false;
+    for k in 0..s.by_item[i].len() {
+        let cid = s.by_item[i][k];
+        s.ensure_eval(cid);
+        let c = &s.cands[cid as usize];
+        if c.feasible || c.relaxed && soft {
+            any_static = true;
+            break;
+        }
+    }
     if any_static {
         return Reason::OmittedByPriority;
     }

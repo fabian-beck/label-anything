@@ -1,0 +1,121 @@
+/* The explainer page (explain.html), on top of the playground's style.css (fonts, tokens,
+   the top bar, option controls). The drawing stays white paper in both themes. */
+
+.xp { display: flex; height: calc(100% - var(--top-h)); }
+.xp-stage { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--bg); }
+.xp-canvas-wrap { position: relative; flex: 1; min-height: 0; background: var(--paper); overflow: hidden; }
+#stage { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+#stage.grab { cursor: grab; }
+#stage.grabbing { cursor: grabbing; }
+#stage.pointer { cursor: pointer; }
+.xp-panel { width: 400px; overflow-y: auto; overscroll-behavior: contain; display: block; }
+
+/* --- transport and timeline ------------------------------------------------------------ */
+.xp-bar { flex: none; background: var(--panel); border-top: 1px solid var(--rule); padding: 8px 14px 10px; display: flex; flex-direction: column; gap: 6px; }
+.xp-transport { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.tbtn {
+  display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 30px; border: 1px solid var(--rule-strong);
+  background: var(--panel); border-radius: 6px; cursor: pointer; color: var(--fg); padding: 0;
+}
+.tbtn svg { width: 14px; height: 14px; }
+.tbtn:hover { border-color: var(--accent); color: var(--accent); }
+.tbtn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+#play { width: 44px; }
+.xp-transport .speed select { border: 1px solid var(--rule-strong); background: var(--panel); border-radius: 6px; padding: 4px 4px; font-size: 12.5px; margin-left: 6px; }
+.xp-transport .counter { margin-left: auto; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.xp-timeline { width: 100%; height: 50px; display: block; cursor: pointer; touch-action: none; }
+
+/* --- legend and tooltip on the drawing ---------------------------------------------------- */
+.xp-legend { left: 10px; bottom: 10px; }
+.xp-zoom { right: 10px; top: 10px; display: flex; gap: 4px; }
+.xp-zoom button {
+  min-width: 30px; height: 28px; border: 1px solid var(--hud-rule); background: var(--hud); color: var(--hud-fg); border-radius: 6px;
+  cursor: pointer; font-weight: 650; font-size: 14px; box-shadow: var(--shadow); padding: 0 8px;
+}
+.xp-zoom button:hover { border-color: var(--hud-accent); }
+.xp-zoom button.fit { font-size: 12px; }
+.xp-legend .legend-box {
+  display: flex; flex-wrap: wrap; gap: 3px 12px; max-width: min(560px, calc(100vw - 48px)); background: var(--hud);
+  border: 1px solid var(--hud-rule); border-radius: 7px; padding: 5px 10px; font-size: 11.5px; color: var(--hud-muted); box-shadow: var(--shadow);
+}
+.xp-legend .legend-box span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.sw { width: 14px; height: 9px; display: inline-block; border-radius: 1px; }
+.sw.free { background: rgba(57, 73, 171, 0.22); border: 1px solid rgba(57, 73, 171, 0.9); }
+.sw.chosen { background: rgba(57, 73, 171, 0.2); border: 2px solid #3949ab; }
+.sw.dead { border: 1px dashed rgba(211, 47, 47, 0.8); background: linear-gradient(to top right, transparent 45%, rgba(211, 47, 47, 0.6) 50%, transparent 55%); }
+.sw.infeasible { border: 1px dashed rgba(110, 118, 132, 0.8); }
+.sw.changed { border: 2px solid #f59e0b; }
+.xp-tip {
+  position: absolute; z-index: 3; pointer-events: none; max-width: 300px; background: var(--hud); color: var(--hud-fg);
+  border: 1px solid var(--hud-rule); border-radius: 8px; padding: 8px 10px; box-shadow: var(--shadow); font-size: 12.5px; line-height: 1.4;
+}
+.xp-tip .tip-h { font-size: 13px; margin-bottom: 2px; }
+.xp-tip .tip-s { color: var(--hud-muted); }
+.xp-tip .tip-s b { color: var(--hud-fg); }
+.xp-tip .muted, .xp-tip td.muted { color: var(--hud-muted); }
+.terms { border-collapse: collapse; margin-top: 6px; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
+.terms th { text-align: left; font-weight: 650; border-bottom: 1px solid var(--hud-rule); padding: 1px 4px 2px 0; }
+.terms td { padding: 1px 4px 1px 0; }
+.terms .num { text-align: right; }
+.terms .bar { width: 64px; }
+.terms .bar i { display: block; height: 7px; border-radius: 2px; background: #3949ab; opacity: 0.6; }
+
+/* --- the explanation ------------------------------------------------------------------------ */
+.xp-now { padding: 12px 16px 14px; border-bottom: 1px solid var(--rule); }
+.xp-phase { display: flex; flex-wrap: wrap; gap: 2px 4px; align-items: center; font-size: 11.5px; color: var(--faint); font-weight: 600; }
+.xp-phase span.done { color: var(--muted); }
+.xp-phase span.on { color: var(--accent); background: var(--accent-soft); border-radius: 9px; padding: 0 7px; }
+.xp-phase i { font-style: normal; color: var(--faint); }
+.xp-now h2 { font-size: 17px; line-height: 1.3; margin: 8px 0 6px; font-weight: 700; overflow-wrap: anywhere; }
+.xp-story { font-size: 13.5px; line-height: 1.5; }
+.xp-story p { margin: 0 0 7px; }
+.xp-story .sub { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.xp-details { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.xp-details .hint, .xp-item .hint, .ctl-row .hint { color: var(--muted); font-size: 12px; margin: 0; display: block; }
+.cands { border-collapse: collapse; width: 100%; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.cands th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11.5px; border-bottom: 1px solid var(--rule); padding: 2px 6px 3px 0; }
+.cands th.num, .cands td.num { text-align: right; }
+.cands td { padding: 2px 6px 2px 0; border-bottom: 1px solid var(--rule); }
+.cands tr.chosen td { color: var(--accent); font-weight: 650; }
+.cands tr:hover td { background: var(--accent-soft); }
+.cands tr.out td { color: var(--faint); }
+.bands { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--muted); }
+.bands span { display: inline-flex; align-items: center; gap: 6px; }
+.bands i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.search .chart { width: 100%; height: 110px; display: block; cursor: pointer; background: var(--panel-2); border-radius: 6px; }
+.search .counts { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 12px; color: var(--muted); margin: 6px 0; font-variant-numeric: tabular-nums; }
+.search .counts b { color: var(--fg); }
+.search .counts .improved b, .search .counts .inserted b { color: var(--ok); }
+.search .counts .accepted b { color: var(--warn); }
+.row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* --- the item followed --------------------------------------------------------------------- */
+.xp-item { padding: 12px 16px; border-bottom: 1px solid var(--rule); }
+.xp-item h3 { margin: 10px 0 4px; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.item-h { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 6px; }
+.item-h .linkish { margin-left: auto; font-size: 12px; }
+.item-h .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.story-list { margin: 0; padding-left: 20px; font-size: 12.5px; max-height: 220px; overflow-y: auto; }
+.story-list li { margin: 1px 0; }
+.story-list li.past .linkish { color: var(--muted); }
+.story-list li.now .linkish { font-weight: 700; }
+
+/* --- options ------------------------------------------------------------------------------ */
+.section > summary .busy { width: 8px; height: 8px; border-radius: 50%; background: var(--rule-strong); margin-left: auto; transition: background 0.15s; }
+.section > summary .busy.on { background: var(--accent); }
+.xp-opts { display: flex; flex-direction: column; gap: 11px; }
+.ctl-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.ctl-row input { margin-top: 3px; }
+.xp-json { margin: 0; padding: 8px; background: var(--panel-2); border: 1px solid var(--rule); border-radius: 6px; overflow: auto; max-height: 40vh; font-size: 11px; line-height: 1.35; }
+.credits p { margin: 0 0 4px; }
+#verdict .ok { color: var(--ok); font-weight: 700; }
+#verdict .err { color: var(--error); font-weight: 700; }
+
+@media (max-width: 860px) {
+  .xp-body { overflow: auto; }
+  .xp { flex-direction: column; height: auto; }
+  .xp-stage { height: auto; }
+  .xp-canvas-wrap { height: min(62vh, 520px); flex: none; }
+  .xp-panel { width: auto; border-left: 0; border-top: 1px solid var(--rule); overflow: visible; }
+  .xp-legend { display: none; }
+}

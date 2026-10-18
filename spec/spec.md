@@ -1088,7 +1088,10 @@ most important labels first.
 Items are processed band by band in key order. Within a band, the next item is the one
 with the fewest live (feasible, unconflicted) level-0 candidates, ties by total order
 (most-constrained first). It takes its live candidate of minimal
-`static + dynamic + lookahead` cost (lookahead evaluated for the 8 cheapest). After a
+`static + dynamic + lookahead` cost, the lookahead evaluated for the 8 cheapest by
+`static + dynamic` cost, in that order, until one of them costs more by itself than the
+best total so far (the lookahead is never negative, so it cannot win; ties by candidate
+id). After a
 band's level-0 pass, every unplaced item of the band runs the degradation ladder in
 total order: for each step, candidates of that level are generated and the cheapest live
 one is taken. `evict_lower` removes placed labels of strictly lower key that conflict
@@ -1118,8 +1121,14 @@ other item which is relocated in turn); insert an unplaced item by an ejection c
 depth ≤ 3; switch a label variant. Acceptance: hard feasibility is invariant; the
 priority objective (strict: placed key multiset, lexicographic; prefix: prefix length;
 weighted: tier-wise weight sums) must not get worse; cost changes are accepted by the
-Metropolis rule `u < exp(−Δ/T)` with a geometric schedule from `T₀` (median |Δ| of 50
-probe moves) to `T₀/1000` over the iteration budget. The iteration budget is
+Metropolis rule `u < exp(−Δ/T)` with a geometric schedule from `T₀` to `T₀/1000` over the
+iteration budget. `T₀` is the median increase of the static cost over 50 random
+relocation probes, of those that increase it (0.1 when none does). `Δ` is the change of
+the moved labels' own costs (static plus dynamic against the other labels); what a move
+changes in the dynamic costs of the other labels is not part of it. The search keeps the
+best state since the last insertion by the running sum of the `Δ`s and returns to it at
+the end when the walk ended above it and its total cost, computed afresh, is lower than
+the walk's. The iteration budget is
 `min(max_iterations, time_budget_ms × rate, 400 × n_items)`, `rate` = 100 (Rust) or 40 (TS).
 
 ### 10.3 Uncross repair and verification

@@ -30,11 +30,25 @@ export { PlaceError } from "./api.js";
 export { VERSION } from "./version.js";
 export { place, validate, renderDebugSvg, type BudgetProfile } from "./place.js";
 export { BasicEnv, BUILTIN_SVG, type Env, type Geom, type SvgBackend, type SvgDoc } from "./env.js";
+export type {
+  SolveTrace,
+  TraceCandidate,
+  TraceChange,
+  TraceEvent,
+  TraceFate,
+  TraceIdle,
+  TraceItem,
+  TraceMoveKind,
+  TraceOutcome,
+  TracePhase,
+  TraceVariant,
+} from "./trace.js";
 
 import type { LabelResult, ValidationReport } from "./api.js";
 import type { Env } from "./env.js";
 import { PlaceError } from "./api.js";
-import { placeReported, placeWith as placeWithImpl, type BudgetProfile } from "./place.js";
+import { placeReported, placeTracedWith, placeWith as placeWithImpl, type BudgetProfile } from "./place.js";
+import type { SolveTrace } from "./trace.js";
 import { Issue } from "./validate.js";
 
 /**
@@ -44,6 +58,18 @@ import { Issue } from "./validate.js";
  */
 export function placeWith(env: Env, problem: unknown, profile: BudgetProfile = "ts"): LabelResult {
   return placeWithImpl(problem, env, profile) as unknown as LabelResult;
+}
+
+/**
+ * Solve a problem and record what the solver decided, step by step (ADR 0046; TypeScript
+ * only): candidate generation, the greedy pass, every local-search move and the passes
+ * after the search, each event with the placement changes it made. The result is the one
+ * {@link placeWith} gives: tracing never changes a decision. Throws `PlaceError` if the
+ * problem is invalid.
+ */
+export function placeTraced(env: Env, problem: unknown, profile: BudgetProfile = "ts"): { result: LabelResult; trace: SolveTrace } {
+  const { result, trace } = placeTracedWith(problem, env, profile);
+  return { result: result as unknown as LabelResult, trace };
 }
 
 /**

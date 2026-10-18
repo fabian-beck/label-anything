@@ -122,6 +122,8 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
   // draws the random offset it would draw (prefix mode retries the first omitted item at
   // every insertion move).
   const failedAt = new Array<number>(n).fill(-1);
+  const tr = s.trace;
+  if (tr !== null) tr.anneal(iterations, t0, cur);
   for (let it = 0; it < iterations; it++) {
     if (it % 256 === 0) {
       if (envNow(s.env) > deadlineMs && deadlineMs > 0) {
@@ -152,14 +154,24 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
         const pick = s.pri.prio[a]!.rank < s.pri.prio[b]!.rank ? a : b;
         if (s.state.placed[pick]! < 0) u = pick;
       }
-      if (u < 0) continue;
+      if (u < 0) {
+        if (tr !== null) tr.move(it, "insert", u, -1, -1, -1, -1, 0, null, temp, "idle", "labeled", cur, best);
+        continue;
+      }
       const ru = s.reasons[u];
-      if (sets[u] || ru === Reason.KeepWith || ru === Reason.Grouped || ru === Reason.BudgetExhausted) continue;
+      if (sets[u] || ru === Reason.KeepWith || ru === Reason.Grouped || ru === Reason.BudgetExhausted) {
+        if (tr !== null) tr.move(it, "insert", u, -1, -1, -1, -1, 0, null, temp, "idle", "excluded", cur, best);
+        continue;
+      }
       const m = s.model.maxLabels;
-      if (m !== null && s.state.nPlaced >= m && mode !== Omission.Strict) continue;
+      if (m !== null && s.state.nPlaced >= m && mode !== Omission.Strict) {
+        if (tr !== null) tr.move(it, "insert", u, -1, -1, -1, -1, 0, null, temp, "idle", "cap", cur, best);
+        continue;
+      }
       if (failedAt[u] === st.accepted) {
         const tries = insertTries(s, u, softOk);
         if (tries > 0) rng.nextBelow(tries);
+        if (tr !== null) tr.move(it, "insert", u, -1, -1, -1, -1, 0, null, temp, "idle", "known", cur, best);
         continue;
       }
       if (tryInsert(s, u, softOk, sets, rng, scratch)) {
@@ -170,17 +182,30 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
         best = cur;
         snapshot = s.state.placed.slice();
         snapReasons = s.reasons.slice();
-      } else if (!capFull(s)) failedAt[u] = st.accepted;
+        if (tr !== null) tr.move(it, "insert", u, -1, s.state.placed[u]!, -1, -1, 0, null, temp, "inserted", null, cur, best);
+      } else {
+        if (!capFull(s)) failedAt[u] = st.accepted;
+        if (tr !== null) tr.move(it, "insert", u, -1, -1, -1, -1, 0, null, temp, "not_inserted", null, cur, best);
+      }
       continue;
     }
     // relocate or swap
     const i = rng.nextBelow(n);
     const curC = s.state.placed[i]!;
-    if (curC < 0) continue;
+    if (curC < 0) {
+      if (tr !== null) tr.move(it, "relocate", i, -1, -1, -1, -1, 0, null, temp, "idle", "unlabeled", cur, best);
+      continue;
+    }
     const listLen = s.byItem[i]!.length;
-    if (listLen < 2) continue;
+    if (listLen < 2) {
+      if (tr !== null) tr.move(it, "relocate", i, curC, -1, -1, -1, 0, null, temp, "idle", "single", cur, best);
+      continue;
+    }
     const k = s.byItem[i]![rng.nextBelow(listLen)]!;
-    if (k === curC || !usable(s, k, softOk)) continue;
+    if (k === curC || !usable(s, k, softOk)) {
+      if (tr !== null) tr.move(it, "relocate", i, curC, k, -1, -1, 0, null, temp, "idle", "same", cur, best);
+      continue;
+    }
     const old = itemCost(s, i, curC);
     s.state.unplace(i, s.cands);
     s.state.conflicts(s.cands[k]!, s.cands, s.obs, i, scratch);
@@ -196,7 +221,11 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
           snapshot = s.state.placed.slice();
           snapReasons = s.reasons.slice();
         }
-      } else place(s, i, curC);
+        if (tr !== null) tr.move(it, "relocate", i, curC, k, -1, -1, 0, delta, temp, delta <= 0 ? "improved" : "accepted", null, cur, best);
+      } else {
+        place(s, i, curC);
+        if (tr !== null) tr.move(it, "relocate", i, curC, k, -1, -1, 0, delta, temp, "rejected", null, cur, best);
+      }
       continue;
     }
     if (scratch.length === 1 && r < 0.5) {
@@ -229,30 +258,55 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
             snapshot = s.state.placed.slice();
             snapReasons = s.reasons.slice();
           }
+          if (tr !== null) tr.move(it, "swap", i, curC, k, j, bestJ, 1, delta, temp, delta <= 0 ? "improved" : "accepted", null, cur, best);
           continue;
         }
         s.state.unplace(i, s.cands);
         place(s, i, curC);
         place(s, j, jc);
+        if (tr !== null) tr.move(it, "swap", i, curC, k, j, bestJ, 1, delta, temp, "rejected", null, cur, best);
       } else {
         s.state.unplace(i, s.cands);
         place(s, i, curC);
         place(s, j, jc);
+        if (tr !== null) tr.move(it, "swap", i, curC, k, j, -1, 1, null, temp, "no_room", null, cur, best);
       }
       continue;
     }
     place(s, i, curC);
+    if (tr !== null) tr.move(it, "relocate", i, curC, k, -1, -1, scratch.length, null, temp, "blocked", null, cur, best);
   }
-  // restore the best state if the walk ended above it
-  if (!sameArray(snapshot, s.state.placed) && total(s) > best + 1e-9) {
-    for (let i = 0; i < n; i++) s.state.unplace(i, s.cands);
-    for (let i = 0; i < n; i++) {
-      const c = snapshot[i]!;
-      if (c >= 0) place(s, i, c);
+  // Restore the best state if the walk ended above it. `best` adds up the moves' cost
+  // changes, which count the moved labels' own costs (static, and dynamic against the other
+  // labels) but not what a move changes in the dynamic costs of the other labels (a leader
+  // through another label's buffer ring): the snapshot stays only when its total is lower
+  // than the walk's.
+  if (!sameArray(snapshot, s.state.placed)) {
+    const end = total(s);
+    if (end > best + 1e-9) {
+      const walked = s.state.placed.slice();
+      const walkedReasons = s.reasons;
+      s.reasons = snapReasons;
+      setPlacement(s, snapshot);
+      if (total(s) >= end) {
+        setPlacement(s, walked);
+        s.reasons = walkedReasons;
+      }
+      if (tr !== null) tr.pass("local", "restore", []);
     }
-    s.reasons = snapReasons;
   }
   return st;
+}
+
+/** Replace the placement by `placed` (the reasons stay as they are). */
+function setPlacement(s: Solve, placed: Int32Array): void {
+  const reasons = s.reasons.slice();
+  for (let i = 0; i < placed.length; i++) s.state.unplace(i, s.cands);
+  for (let i = 0; i < placed.length; i++) {
+    const c = placed[i]!;
+    if (c >= 0) place(s, i, c);
+  }
+  s.reasons = reasons;
 }
 
 /** Total cost of the current placement (static + relaxation + dynamic). */

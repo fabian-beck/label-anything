@@ -275,6 +275,11 @@ pub fn build(
                     std::collections::BTreeMap::new();
                 let mut blockers: Vec<u32> = Vec::new();
                 let mut feas: Vec<(f64, u32)> = Vec::new();
+                // ladder candidates are evaluated lazily: evaluate the item's never evaluated ones
+                for k in 0..s.by_item[i].len() {
+                    let cid = s.by_item[i][k];
+                    s.ensure_eval(cid);
+                }
                 for &cid in &s.by_item[i] {
                     let c = &s.cands[cid as usize];
                     if let Some(b) = c.blocked {

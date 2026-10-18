@@ -6,6 +6,7 @@ description: The Label Anything engine running in your browser — maps, network
 # Playground
 
 [Open the playground](https://fabian-beck.github.io/label-anything/playground/){ .md-button .md-button--primary }
+[How it works, step by step](explainer.md){ .md-button }
 
 The playground runs the engine in your browser — the Rust core compiled to WebAssembly,
 or its TypeScript port — on six scenes. Change any option and the labels are placed

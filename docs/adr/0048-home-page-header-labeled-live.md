@@ -1,4 +1,4 @@
-# 0046 — The home page's header: the logo, labeled live
+# 0048 — The home page's header: the logo, labeled live
 
 * Status: accepted (docs/_overrides/home.html, ts/packages/playground/src/hero.ts; not an engine change)
 * Date: 2026-10-18
