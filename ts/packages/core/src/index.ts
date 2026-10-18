@@ -7,15 +7,22 @@
  * {@link Env} (clock, files, callbacks, SVG backend).
  */
 export type {
+  Anchor,
+  Box,
   CandidateInfo,
   FontSpec,
+  Label,
   LabelAnythingApi,
+  LabelItem,
+  LabelPlacement,
   LabelProblem,
   LabelResult,
+  Leader,
   Issue,
   PlaceOptions,
   PriorityValue,
   RgbaPixels,
+  Stats,
   TextMetrics,
   ValidationReport,
 } from "./api.js";

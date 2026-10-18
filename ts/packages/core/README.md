@@ -48,7 +48,8 @@ interface PlaceOptions {
 ```
 
 The problem and result formats are the JSON Schemas in `spec/schema` (TypeScript types
-`LabelProblem`, `LabelResult`). `place` accepts JSON text as well; invalid problems
+`LabelProblem`, `LabelResult`, and for their parts `LabelItem`, `Anchor`, `Label`,
+`LabelPlacement`, `Box`, `Leader`, `Stats`). `place` accepts JSON text as well; invalid problems
 throw a `PlaceError` with the same pointers and codes as `validate`.
 
 **Time budget and determinism.** `solver.time_budget_ms` (default 250 ms here, 100 ms in
