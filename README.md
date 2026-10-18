@@ -123,8 +123,9 @@ The complete table is `spec/defaults.md`; presets (`scatter`, `map`, `graph`,
 `bench/` is a real-world benchmark: twelve scenarios built from open data (scatterplots,
 volcano plots, embeddings, airports on a world map, city POIs on map tiles, node-link
 diagrams, illustrations, line charts, stress sizes, interactive zooming, priority), an
-implementation-independent evaluator, and six baselines — naive, greedy, textalloc,
-adjustText, vega-label and ggrepel — scored the same way.
+implementation-independent evaluator, and nine baselines — naive, greedy, textalloc,
+adjustText, vega-label, ggrepel, the label layouts of ECharts and d3fc, and D3-Labeler —
+scored the same way.
 `label-anything bench --baselines --perf` writes `bench-report/index.html`: metric tables,
 renderings side by side, runtime-vs-size plots, Rust/TypeScript parity and the performance
 targets; `--gate` enforces the release gates (`docs/benchmark.md`, `bench/README.md`, which
@@ -133,7 +134,8 @@ also lists where the performance targets stand). `python -m bench.gallery` turns
 renderings, published with each release's report.
 
 How good the results are, in short: no overlaps and no crossing leaders anywhere in the
-benchmark, and more labels than the other tools that avoid every overlap; but in dense
+benchmark, and more usable labels than any other tool on every problem of the quick suite —
+often by a few percent only, once their overlapping labels are discounted; but in dense
 data many labels are left out or need leaders, labels in animations move a few pixels per
 frame, and the largest performance problems miss their targets. The numbers are on the
 [benchmark page](https://fabian-beck.github.io/label-anything/project/benchmark/#what-the-results-show).
