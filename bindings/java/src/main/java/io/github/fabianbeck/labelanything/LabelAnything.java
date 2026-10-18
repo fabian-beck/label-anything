@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Label Anything: a host-independent label placement engine. One problem in, one result
- * out.
+ * Label Anything: a label placement engine for charts, maps and diagrams. One problem in,
+ * one result out.
  *
  * <pre>{@code
  * LabelResult r = LabelAnything.place(problem);

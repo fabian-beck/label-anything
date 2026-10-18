@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use Label Anything in research, please cite the software and the methods it builds on."
-title: "Label Anything: a host-independent label placement engine"
+title: "Label Anything: a label placement engine for charts, maps and diagrams"
 type: software
 license: MIT
 version: 0.1.0
@@ -10,6 +10,7 @@ authors:
   - name: "Label Anything contributors"
 keywords:
   - label placement
+  - map labeling
   - point-feature labeling
   - external labeling
   - leader lines

@@ -4,7 +4,7 @@
 > The API, the problem format and the placements can change in any 0.x release, without
 > deprecation.
 
-Label Anything helpers for JavaScript visualization libraries. Each helper turns what the
+Label placement helpers for JavaScript visualization libraries. Each helper turns what the
 library already knows (marks, scales, map projections, graph layouts) into a Label Anything
 problem, solves it, and draws or applies the result:
 

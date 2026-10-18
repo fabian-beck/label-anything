@@ -6,10 +6,19 @@
 > placements themselves can change in any 0.x release, without deprecation. Try it and
 > report what you find; pin an exact version if you build on it.
 
-**A host-independent label placement engine.** Label Anything places labels — text,
-icons, or anything with a size — next to selected features in scatterplots, maps,
-node-link diagrams and illustrations. It avoids whatever you say should not be covered,
-draws leader lines when labels must sit at a distance, and never lets leaders cross.
+**Label placement for charts, maps and diagrams, from any language.** Label Anything
+decides where labels go: it places text, icons, or anything with a size next to selected
+points and areas of scatterplots, maps, node-link diagrams and illustrations. It avoids
+whatever you say should not be covered, draws leader lines when labels must sit at a
+distance, and never lets leaders cross.
+
+The *anything* is the host and the label: one engine and one problem format for any
+chart, map or diagram, any label with a size and every language, where adjustText
+(matplotlib), ggrepel (ggplot2) or vega-label (Vega) each serve one plotting library.
+Labels go to points and areas of any shape; lines such as roads or rivers are obstacles,
+not labeled features. Label Anything places labels in graphics: it is not a tool for
+labeling data, and it is unrelated to the few-shot segmentation model of the same name
+(De Marinis et al., ECAI 2025).
 
 * **One problem in, one result out.** Anchors, labels, fonts, an optional background
   (nothing, vector shapes, SVG, or a raster image) and an avoidance policy go in; a list

@@ -4,8 +4,8 @@
 > The API, the problem format and the placements can change in any 0.x release, without
 > deprecation.
 
-Rust facade of **Label Anything**, a host-independent label placement engine. One JSON
-problem in (`spec/schema/problem.v1.json`), one JSON result out.
+Rust facade of **Label Anything**, a label placement engine for charts, maps and
+diagrams. One JSON problem in (`spec/schema/problem.v1.json`), one JSON result out.
 
 ```rust
 let problem = serde_json::json!({
