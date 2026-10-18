@@ -26,7 +26,7 @@ func main() {
 	cs := C.CString(string(problem))
 	var result *C.char
 	rc := C.la_place_json(cs, nil, 0, 0, &result) // LA_OK, LA_INVALID or LA_ERROR
-	fmt.Println(C.GoString(result))                // result.v1 JSON, or the errors
+	fmt.Println(C.GoString(result))               // result.v1 JSON, or the errors
 	C.la_free(result)
 	// --8<-- [end:five]
 	C.free(unsafe.Pointer(cs))

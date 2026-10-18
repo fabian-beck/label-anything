@@ -67,7 +67,7 @@ public class GettingStarted {
     }
     rgba.flip();
     LabelResult onPixels = LabelAnything.place(LabelProblem.builder()
-        .backgroundPixels(w, h, rgba, RasterMode.INK)               // read in place, no copy through JSON
+        .backgroundPixels(w, h, rgba, RasterMode.INK)               // by address: no PNG, no base64
         .avoid(Avoid.label().hard("ink"))
         .item("p", 200, 150, Label.text("Over the band?"))
         .build());

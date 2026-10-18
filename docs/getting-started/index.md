@@ -60,8 +60,9 @@ The WebAssembly package needs a Rust toolchain for WebAssembly as well: see
 `PATH`.
 
 **Java, C and Go.** Build the native library with
-`cargo build --release --manifest-path rust/Cargo.toml -p label-anything-capi`; the
-[Java](java.md) and [C and Go](c-go.md) pages continue from there.
+`cargo build --release --manifest-path rust/Cargo.toml -p label-anything-capi` (add
+`--features jni` for Java); the [Java](java.md) and [C and Go](c-go.md) pages continue
+from there.
 
 ## The smallest problem
 

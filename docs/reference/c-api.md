@@ -2,7 +2,10 @@
 
 `liblabelanything` (`.so`, `.dylib`, `.dll`, and a static `.a`) exports five functions. JSON
 in, JSON out; every string returned through an out parameter must be released with
-`la_free`. Usage: [C and Go](../getting-started/c-go.md).
+`la_free`. All functions may be called from several threads at once
+([threads](../getting-started/c-go.md#threads)). The static library needs the system
+libraries `-lm -lpthread -ldl` on Linux. Building, linking and usage:
+[C and Go](../getting-started/c-go.md).
 
 [`rust/crates/la-capi/include/label_anything.h`](gh:rust/crates/la-capi/include/label_anything.h):
 
