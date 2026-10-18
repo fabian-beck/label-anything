@@ -6,15 +6,21 @@
 write `-` as stdout.
 
 ```sh
-cargo install --path rust/crates/la-cli      # or: cargo build --release -p label-anything-cli
+cargo install --path rust/crates/la-cli      # or: cargo build --release --manifest-path rust/Cargo.toml -p label-anything-cli
 npm install -g @label-anything/cli           # label-anything-ts
 ```
+
+`cargo build` leaves the binary in `rust/target/release/label-anything`; `cargo install`
+puts it on your `PATH`, as the examples below assume.
 
 The npm package is not published yet: pack it with its siblings as described in
 [install from this repository](index.md#install-from-this-repository) (add
 `-w @label-anything/cli`) and `npm install -g` the tarballs.
 
 ## Place, render, validate
+
+The examples run in [`examples/tutorials/data`](gh:examples/tutorials/data), where their
+input files are (`outliers.csv`, `scatter.png`; the problems in `../problems/`).
 
 ```sh
 --8<-- "examples/tutorials/cli/basics.sh:place"
@@ -25,13 +31,24 @@ The npm package is not published yet: pack it with its siblings as described in
   `solver.time_budget_ms`, `--seed` `solver.seed`, `--strategy` `solver.strategy`
   (`greedy` skips the local search), `--degrade` the degradation ladder (comma-separated
   steps, e.g. `wrap,distant,omit`; `omit` alone turns it off), `--pretty` indents the
-  JSON. Relative file paths in the problem resolve against the problem file's directory.
+  JSON. Validation errors and warnings go to stderr. Relative file paths in the problem
+  resolve against the problem file's directory; paths given on the command line
+  (`--background`) against the current directory.
 * `render problem.json result.json -o overlay.svg` draws the overlay of an existing
-  result; `-o overlay.png` rasterizes it (with the bundled Noto Sans).
+  result; an output ending in `.png` rasterizes it (with the bundled Noto Sans). The
+  problem must be valid and the result one of this problem (a placement per item, in
+  order).
 * `validate problem.json` prints errors and warnings and exits with 1 when the problem is
-  invalid; `--json` prints the report.
+  invalid; `--json` prints the report. Files the problem references (backgrounds, fonts)
+  are read only by `place`.
 
-Exit codes: 0 success, 1 invalid problem, 2 any other error.
+The options of `place` (`--time`, `--preset`, `--canvas`, …) set their fields in a JSON
+problem as well as in one built from a CSV; `--canvas WxH` sets the width and height and
+keeps the other canvas options. JSON and CSV files may start with a UTF-8 byte order mark.
+
+Exit codes: 0 success, 1 invalid problem or input (a problem that fails validation or is
+not JSON, an invalid CSV, a result of another problem), 2 any other error (unreadable
+files, backgrounds or fonts that cannot be loaded).
 
 ```sh
 --8<-- "examples/tutorials/cli/basics.sh:pipes"
@@ -39,11 +56,14 @@ Exit codes: 0 success, 1 invalid problem, 2 any other error.
 
 ## Anchors from a CSV file
 
-`place --anchors file.csv` builds the problem from a CSV with `x`, `y` and label columns
-(`--x-col`, `--y-col`, `--labels-col`, `--id-col`, `--priority-col`); other numeric
-columns become `attrs`. `--background` adds an SVG or raster file, `--preset`,
-`--canvas WxH`, `--font-size`, `--omission` and `--max-labels` set the corresponding
-options.
+`place --anchors file.csv` (`-` for stdin) builds the problem from a CSV with `x`, `y`
+and label columns (`--x-col`, `--y-col`, `--labels-col`, `--id-col`, `--priority-col`);
+the other columns become `attrs`, as numbers where they parse as numbers. Rows with an
+empty label get no label: their points become obstacles of class `points`. Coordinates
+and priorities must be finite numbers (an empty priority cell leaves the item without
+one); errors name the CSV row and column. `--background` adds an SVG or raster file,
+`--preset`, `--canvas WxH`, `--font-size`, `--omission` and `--max-labels` set the
+corresponding options.
 
 ```sh
 --8<-- "examples/tutorials/cli/basics.sh:csv"
@@ -65,9 +85,12 @@ exit code 1
 
 `label-anything serve` answers `POST /place` (the result, or HTTP 422 with
 `{"errors": [...]}`) and `POST /validate` with a problem as the request body, and
-`GET /health`. Responses allow any origin (CORS). It listens on 127.0.0.1:7077 by default
-(`--host`, `--port`); relative file paths in problems resolve against its working
-directory.
+`GET /health`. Responses allow any origin (CORS), and `OPTIONS` answers the preflight of
+browser requests. It listens on 127.0.0.1:7077 by default (`--host`, `--port`); relative
+file paths in problems resolve against its working directory. Problems may read files
+(backgrounds, fonts) only when it listens on a loopback address, or with `--allow-files`:
+on another `--host`, anyone who can reach the server could otherwise read files of the
+machine. One request is solved at a time.
 
 ```sh
 --8<-- "examples/tutorials/cli/serve.sh:serve"
