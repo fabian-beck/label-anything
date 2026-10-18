@@ -99,6 +99,10 @@ of CPUs), so a long solve does not hold up the others.
 
 ## The TypeScript CLI
 
+`label-anything-ts` runs the TypeScript engine with the same `place`, `validate` and
+`render` options, input handling and exit codes as `label-anything` (no CSV input, PNG
+output or server).
+
 ```sh
 --8<-- "examples/tutorials/cli/ts-cli.sh:ts"
 ```

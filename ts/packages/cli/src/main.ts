@@ -10,7 +10,8 @@
  * label-anything-ts render problem.json result.json -o overlay.svg
  * label-anything-ts validate problem.json [--json]
  * ```
- * `-` reads stdin / writes stdout. Exit codes: 0 success, 1 invalid problem, 2 error.
+ * `-` reads stdin / writes stdout. Exit codes: 0 success, 1 invalid problem or input, 2 any
+ * other error.
  *
  * @module
  */
@@ -40,12 +41,27 @@ Usage:
   label-anything-ts render <problem.json> <result.json> [-o <out.svg|->]
   label-anything-ts --help | --version
 
-'-' reads stdin / writes stdout. --engine wasm solves with @label-anything/wasm (the
-Rust core compiled to WebAssembly) instead of the TypeScript core; --warmup <n> solves
-n times before the reported solve (steady-state timing of a JIT-compiled engine).`;
+'-' reads stdin / writes stdout. The options of place set fields of the problem (--canvas
+sets its width and height, --background a file relative to the current directory);
+validation errors and warnings go to stderr. --engine wasm solves with
+@label-anything/wasm (the Rust core compiled to WebAssembly) instead of the TypeScript
+core; --warmup <n> solves n times before the reported solve (steady-state timing of a
+JIT-compiled engine).
+
+Exit codes: 0 success, 1 invalid problem or input (errors on stderr), 2 any other error.`;
 
 /** A usage or I/O error (exit code 2). */
 class CliError extends Error {}
+
+/** An invalid problem (exit code 1): its errors. */
+class InvalidProblem extends Error {
+  constructor(readonly issues: Issue[]) {
+    super("invalid problem");
+  }
+}
+
+/** Another invalid input, e.g. a result of another problem (exit code 1). */
+class InvalidInput extends Error {}
 
 /** The output streams and exit code of a run (testable without a process). */
 export interface Io {
@@ -108,13 +124,18 @@ function parseArgs(args: readonly string[]): Parsed {
   return { positional, flags };
 }
 
+/** The text of a file (or stdin), without a UTF-8 byte order mark. */
 function readInput(path: string, io: Io): string {
-  if (path === "-") return io.stdin();
-  try {
-    return readFileSync(path, "utf8");
-  } catch (e) {
-    throw new CliError(`${path}: ${e instanceof Error ? e.message : String(e)}`);
+  let text: string;
+  if (path === "-") text = io.stdin();
+  else {
+    try {
+      text = readFileSync(path, "utf8");
+    } catch (e) {
+      throw new CliError(`${path}: ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
+  return text.startsWith("\uFEFF") ? text.slice(1) : text;
 }
 
 function writeOutput(path: string, data: string, io: Io): void {
@@ -129,11 +150,12 @@ function writeOutput(path: string, data: string, io: Io): void {
   }
 }
 
-function parseJson(text: string, what: string): unknown {
+/** A problem's JSON text; malformed JSON is an invalid problem (a `parse` error). */
+function parseProblem(text: string): unknown {
   try {
     return JSON.parse(text);
   } catch (e) {
-    throw new CliError(`${what}: invalid JSON: ${e instanceof Error ? e.message : String(e)}`);
+    throw new InvalidProblem([{ pointer: "", code: "parse", message: `invalid JSON: ${e instanceof Error ? e.message : String(e)}` }]);
   }
 }
 
@@ -164,16 +186,51 @@ function printReport(r: ValidationReport, io: Io): void {
 
 type Obj = Record<string, unknown>;
 
-/** `obj.entry(key).or_insert({})` as an object (an error if it is something else). */
-function section(obj: Obj, key: string): Obj {
-  const v = obj[key];
-  if (v === undefined || v === null) {
-    const o: Obj = {};
-    obj[key] = o;
-    return o;
+function typeName(v: unknown): string {
+  if (v === null) return "null";
+  if (Array.isArray(v)) return "array";
+  return typeof v === "object" ? "object" : typeof v;
+}
+
+/**
+ * Sets the field at `path` of the problem, creating missing sections; a section of another
+ * type is an invalid problem (as in the Rust CLI).
+ */
+function setOption(problem: unknown, path: readonly string[], value: unknown): void {
+  let cur = problem;
+  let pointer = "";
+  for (let k = 0; k < path.length; k++) {
+    if (typeof cur !== "object" || cur === null || Array.isArray(cur)) {
+      throw new InvalidProblem([
+        { pointer: pointer || "/", code: "type", message: `expected object, got ${typeName(cur)} (a command-line option sets a field in it)` },
+      ]);
+    }
+    const o = cur as Obj;
+    const key = path[k]!;
+    pointer += `/${key}`;
+    if (k + 1 === path.length) {
+      o[key] = value;
+      return;
+    }
+    if (!Object.prototype.hasOwnProperty.call(o, key) || o[key] === undefined) o[key] = {};
+    cur = o[key];
   }
-  if (typeof v !== "object" || Array.isArray(v)) throw new CliError(`${key} must be an object`);
-  return v as Obj;
+}
+
+/** Whether `result` is a result of `problem`: one placement per item, with its id, in order. */
+function checkResult(problem: unknown, result: unknown): string | null {
+  const placements = (result as { placements?: unknown } | null)?.placements;
+  if (!Array.isArray(placements)) return 'it has no "placements" array';
+  const items = (problem as { items?: unknown }).items;
+  const list = Array.isArray(items) ? items : [];
+  if (placements.length !== list.length) return `${placements.length} placements for ${list.length} items`;
+  for (let k = 0; k < list.length; k++) {
+    const own = (list[k] as { id?: unknown }).id;
+    const itemId = typeof own === "string" ? own : String(k);
+    const id = (placements[k] as { id?: unknown } | null)?.id;
+    if (id !== itemId) return `placement ${k} is '${typeof id === "string" ? id : ""}', item ${k} is '${itemId}'`;
+  }
+  return null;
 }
 
 function numberFlag(flags: Map<string, string | true>, name: string): number | undefined {
@@ -209,46 +266,45 @@ function cmdPlace(p: Parsed, io: Io): number {
   const path = p.positional[0];
   if (path === undefined) throw new CliError("missing problem file");
   const flags = p.flags;
-  const problem = parseJson(readInput(path, io), path);
-  if (typeof problem !== "object" || problem === null || Array.isArray(problem)) throw new CliError("the problem must be a JSON object");
-  const obj = problem as Obj;
+  const problem = parseProblem(readInput(path, io));
   const time = numberFlag(flags, "--time");
-  if (time !== undefined) section(obj, "solver").time_budget_ms = time;
+  if (time !== undefined) setOption(problem, ["solver", "time_budget_ms"], time);
   const seed = numberFlag(flags, "--seed");
-  if (seed !== undefined) section(obj, "solver").seed = seed;
+  if (seed !== undefined) setOption(problem, ["solver", "seed"], seed);
   const strategy = flags.get("--strategy");
-  if (typeof strategy === "string") section(obj, "solver").strategy = strategy;
+  if (typeof strategy === "string") setOption(problem, ["solver", "strategy"], strategy);
   const degrade = flags.get("--degrade");
-  if (typeof degrade === "string") obj.degrade = degrade.split(",");
+  if (typeof degrade === "string") setOption(problem, ["degrade"], degrade.split(","));
   const omission = flags.get("--omission");
-  if (typeof omission === "string") section(obj, "priority").omission = omission;
+  if (typeof omission === "string") setOption(problem, ["priority", "omission"], omission);
   const maxLabels = numberFlag(flags, "--max-labels");
-  if (maxLabels !== undefined) section(section(obj, "priority"), "budget").max_labels = maxLabels;
+  if (maxLabels !== undefined) setOption(problem, ["priority", "budget", "max_labels"], maxLabels);
   const preset = flags.get("--preset");
-  if (typeof preset === "string") obj.preset = preset;
+  if (typeof preset === "string") setOption(problem, ["preset"], preset);
   const fontSize = numberFlag(flags, "--font-size");
-  if (fontSize !== undefined) section(section(obj, "defaults"), "font").size = fontSize;
+  if (fontSize !== undefined) setOption(problem, ["defaults", "font", "size"], fontSize);
   const canvas = flags.get("--canvas");
   if (typeof canvas === "string") {
     const m = /^([^xX]+)[xX](.+)$/.exec(canvas);
     const w = m ? Number(m[1]) : NaN;
     const h = m ? Number(m[2]) : NaN;
-    if (!Number.isFinite(w) || !Number.isFinite(h)) throw new CliError("--canvas must be WxH");
-    obj.canvas = { width: w, height: h };
+    if (!Number.isFinite(w) || !Number.isFinite(h)) throw new CliError("--canvas: expected WxH, e.g. 800x600");
+    // the other canvas options (padding, region, background) stay
+    setOption(problem, ["canvas", "width"], w);
+    setOption(problem, ["canvas", "height"], h);
   }
   const bg = flags.get("--background");
   if (typeof bg === "string") {
-    const o = section(obj, "obstacles");
-    if (extname(bg).toLowerCase() === ".svg") o.svg = { path: bg };
-    else o.raster = { source: bg };
+    // relative to the current directory, not the problem file's
+    const file = resolve(bg);
+    if (extname(bg).toLowerCase() === ".svg") setOption(problem, ["obstacles", "svg"], { path: file });
+    else setOption(problem, ["obstacles", "raster"], { source: file });
   }
   const debugSvg = flags.get("--debug-svg");
-  if (typeof debugSvg === "string") section(obj, "output").debug_svg = true;
+  if (typeof debugSvg === "string") setOption(problem, ["output", "debug_svg"], true);
   const report = validate(problem);
-  if (!report.valid) {
-    printReport(report, io);
-    return 1;
-  }
+  if (!report.valid) throw new InvalidProblem(report.errors);
+  printReport({ ...report, errors: [] }, io);
   const engine = flags.get("--engine") ?? "core";
   if (engine !== "core" && engine !== "wasm") throw new CliError(`--engine: core or wasm, not ${String(engine)}`);
   const warmup = numberFlag(flags, "--warmup") ?? 0;
@@ -265,6 +321,10 @@ function cmdPlace(p: Parsed, io: Io): number {
   }
   for (let k = 0; k < warmup; k++) solve();
   const result = solve();
+  // warnings found while preparing (validation warnings are printed above)
+  const seen = new Set(report.warnings.map((w) => `${w.pointer}\u0000${w.code}\u0000${w.message}`));
+  const later = ((result.warnings as Issue[] | undefined) ?? []).filter((w) => !seen.has(`${w.pointer}\u0000${w.code}\u0000${w.message}`));
+  printReport({ valid: true, errors: [], warnings: later }, io);
   if (typeof debugSvg === "string") {
     const svg = result.debug_svg;
     if (typeof svg === "string") {
@@ -303,11 +363,21 @@ function cmdValidate(p: Parsed, io: Io): number {
 function cmdRender(p: Parsed, io: Io): number {
   const [problemPath, resultPath] = p.positional;
   if (problemPath === undefined || resultPath === undefined) throw new CliError("render needs a problem and a result file");
-  const problem = parseJson(readInput(problemPath, io), problemPath);
-  const result = parseJson(readInput(resultPath, io), resultPath);
+  const problem = parseProblem(readInput(problemPath, io));
+  const report = validate(problem);
+  if (!report.valid) throw new InvalidProblem(report.errors);
+  printReport({ ...report, errors: [] }, io);
+  let result: unknown;
+  try {
+    result = JSON.parse(readInput(resultPath, io));
+  } catch (e) {
+    throw new InvalidInput(`${resultPath}: invalid JSON: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  const mismatch = checkResult(problem, result);
+  if (mismatch !== null) throw new InvalidInput(`${resultPath} is not a result of ${problemPath}: ${mismatch}`);
   const out = p.flags.get("-o");
   const output = typeof out === "string" ? out : "-";
-  if (output.endsWith(".png")) throw new CliError("PNG output is not available in this build; write .svg instead");
+  if (output.toLowerCase().endsWith(".png")) throw new CliError("PNG output is not available in this build; write .svg instead");
   const svg = renderDebugSvg(problem as never, result as never, envFor(problemPath, false));
   writeOutput(output, svg, io);
   return 0;
@@ -341,6 +411,14 @@ export function run(args: readonly string[], io: Io = processIo): number {
         throw new CliError(`unknown command ${cmd}\n\n${USAGE}`);
     }
   } catch (e) {
+    if (e instanceof InvalidProblem) {
+      printReport({ valid: false, errors: e.issues, warnings: [] }, io);
+      return 1;
+    }
+    if (e instanceof InvalidInput) {
+      io.stderr(`label-anything-ts: ${e.message}\n`);
+      return 1;
+    }
     if (e instanceof CliError) io.stderr(`label-anything-ts: ${e.message}\n`);
     else if (e instanceof PlaceError) io.stderr(`label-anything-ts: ${e.message}\n`);
     else io.stderr(`label-anything-ts: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}\n`);
