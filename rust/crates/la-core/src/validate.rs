@@ -942,6 +942,26 @@ fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
             }
         }
     }
+    // priority terms on attributes that no item has → warnings (the term is 0 everywhere)
+    if let Some(Value::Array(terms)) = p.pointer("/priority/terms") {
+        let has = |name: &str| {
+            items.is_some_and(|its| {
+                its.iter()
+                    .any(|it| it.get("attrs").and_then(|a| a.get(name)).is_some())
+            })
+        };
+        for (i, t) in terms.iter().enumerate() {
+            if let Some(name) = t.get("attr").and_then(|a| a.as_str()) {
+                if !has(name) {
+                    warnings.push(Issue::new(
+                        format!("/priority/terms/{i}/attr"),
+                        "unknown_attr",
+                        format!("no item has the attribute '{name}' (in attrs): the term is 0 for every item"),
+                    ));
+                }
+            }
+        }
+    }
 }
 
 /// Classes produced by the problem's obstacle sources, plus reserved classes.

@@ -244,7 +244,13 @@
           "message": "unknown identifier 'nope' (at 0)"
         }
       ],
-      "warnings": []
+      "warnings": [
+        {
+          "pointer": "/priority/terms/1/attr",
+          "code": "unknown_attr",
+          "message": "no item has the attribute 'x' (in attrs): the term is 0 for every item"
+        }
+      ]
     },
     "validate/icon-missing-height.json": {
       "valid": false,
@@ -387,6 +393,17 @@
         }
       ],
       "warnings": []
+    },
+    "validate/unknown-attr-warning.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": [
+        {
+          "pointer": "/priority/terms/1/attr",
+          "code": "unknown_attr",
+          "message": "no item has the attribute 'poop' (in attrs): the term is 0 for every item"
+        }
+      ]
     },
     "validate/unknown-class-warning.json": {
       "valid": true,

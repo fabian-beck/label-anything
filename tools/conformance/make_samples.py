@@ -315,6 +315,9 @@ invalid = {
     "type-error": ({"items": [{"anchor": {"type": "point", "x": "1", "y": 2}, "label": {"type": "text", "text": "A"}}]}, [("/items/0/anchor/x", "type")], []),
     "canvas-range": ({"canvas": {"width": 0, "height": 10}, "items": []}, [("/canvas/width", "range")], []),
     "unknown-class-warning": ({"items": [], "avoid": {"label": {"outlierz": "hard"}}}, [], [("/avoid/label/outlierz", "unknown_class")]),
+    "unknown-attr-warning": ({"items": [pt("a", 1, 1, "A", attrs={"pop": 3})],
+                              "priority": {"terms": [{"attr": "pop"}, {"attr": "poop"}]}},
+                             [], [("/priority/terms/1/attr", "unknown_attr")]),
     # lower_items is a key of the label and leader maps (spec §4.4), a class name elsewhere
     "lower-items-key": ({"items": [], "avoid": {"label": {"lower_items": 2.0}, "leader": {"lower_items": "hard"},
                                                "buffer": {"lower_items": 1.0}}},

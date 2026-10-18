@@ -1010,7 +1010,8 @@ then index; `random`/`random(n)`: a PCG32 permutation with seed `n` or `solver.s
 * Terms: raw value → `transform` (`log1p`, `sqrt`, `neg`, `abs`) → normalization over all
   items: `rank` (average rank of equal values, scaled to [0,1]; 1 = largest),
   `minmax` ((v − min)/(max − min), 0 when max = min), `none`. Missing values → 0 after
-  normalization (and are excluded from min/max/rank).
+  normalization (and are excluded from min/max/rank). An `attr` term whose attribute no
+  item has in its `attrs` produces a validation **warning** `unknown_attr`.
 * `band(score)`: with `priority.band = b > 0`, sorted scores are cut into bands whenever
   a score is more than `b` below the first score of the current band; with `b = 0`
   bands are exact score ties.

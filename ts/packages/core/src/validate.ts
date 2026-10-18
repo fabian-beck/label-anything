@@ -907,6 +907,19 @@ function semantic(p: unknown, errors: Issue[], warnings: Issue[]): void {
       }
     }
   }
+  // priority terms on attributes that no item has → warnings (the term is 0 everywhere)
+  const terms = getKey(getKey(root, "priority"), "terms");
+  if (Array.isArray(terms)) {
+    const has = (name: string): boolean => items !== null && items.some((it) => getKey(getKey(it, "attrs"), name) !== undefined);
+    for (let i = 0; i < terms.length; i++) {
+      const name = getKey(terms[i], "attr");
+      if (typeof name === "string" && !has(name)) {
+        warnings.push(
+          new Issue(`/priority/terms/${i}/attr`, "unknown_attr", `no item has the attribute '${name}' (in attrs): the term is 0 for every item`),
+        );
+      }
+    }
+  }
 }
 
 function checkPoly(lab: unknown, base: string, errors: Issue[]): void {
