@@ -8,8 +8,8 @@ import java.util.Map;
 
 /**
  * A raster background (spec §4.6): an image file, encoded image bytes (PNG, JPEG, WebP), or
- * raw RGBA pixels. Pixels go to the native library through the zero-copy pointer entry point
- * when they are the problem's first raster.
+ * raw RGBA pixels. Pixels go to the native library through the pointer entry point (no PNG or
+ * base64 encoding) when they are the problem's first raster.
  *
  * <pre>{@code
  * Raster.file(Path.of("map.png")).mode(RasterMode.INK).inkThreshold(0.15)
