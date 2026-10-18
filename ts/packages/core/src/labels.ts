@@ -65,13 +65,16 @@ export function userFonts(model: Model, env: Env): FontBook | null {
   const loaded: [file: string, family: string][] = [];
   for (let i = 0; i < model.items.length; i++) {
     const item = model.items[i]!;
-    const fonts: FontSel[] = [item.font];
+    // [composite part index, font]
+    const fonts: [part: number | null, font: FontSel][] = [[null, item.font]];
     const label = item.label;
-    if (label.kind === "text") fonts.push(label.spec.font);
+    if (label.kind === "text") fonts.push([null, label.spec.font]);
     else if (label.kind === "composite") {
-      for (const p of label.parts) if (p.kind === "text") fonts.push(p.spec.font);
+      label.parts.forEach((p, k) => {
+        if (p.kind === "text") fonts.push([k, p.spec.font]);
+      });
     }
-    for (const f of fonts) {
+    for (const [part, f] of fonts) {
       const file = f.file;
       if (file === null) continue;
       const known = loaded.find(([fl]) => fl === file);
@@ -79,7 +82,7 @@ export function userFonts(model: Model, env: Env): FontBook | null {
         f.family = known[1];
         continue;
       }
-      const ptr = `/items/${i}/label/font/file`;
+      const ptr = fontFilePtr(item.raw, i, part, file);
       let bytes: Uint8Array;
       if (file.startsWith("data:")) {
         const b = dataUrlBytes(file);
@@ -104,6 +107,23 @@ export function userFonts(model: Model, env: Env): FontBook | null {
     }
   }
   return book;
+}
+
+/**
+ * Where the font file of item `i` (of its composite part `part`) is set: the part's or the
+ * label's `font.file` when it names `file`, else `defaults.font.file`.
+ */
+function fontFilePtr(raw: unknown, i: number, part: number | null, file: string): string {
+  const field = (v: unknown, k: string): unknown =>
+    typeof v === "object" && v !== null && !Array.isArray(v) ? (v as Record<string, unknown>)[k] : undefined;
+  const names = (v: unknown): boolean => field(field(v, "font"), "file") === file;
+  const label = field(raw, "label");
+  if (part !== null) {
+    const parts = field(label, "parts");
+    if (Array.isArray(parts) && names(parts[part])) return `/items/${i}/label/parts/${part}/font/file`;
+  }
+  if (names(label)) return `/items/${i}/label/font/file`;
+  return "/defaults/font/file";
 }
 
 function asciiEqIgnoreCase(a: string, b: string): boolean {
