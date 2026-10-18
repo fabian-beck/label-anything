@@ -10,6 +10,10 @@ cargo install --path rust/crates/la-cli      # or: cargo build --release -p labe
 npm install -g @label-anything/cli           # label-anything-ts
 ```
 
+The npm package is not published yet: pack it with its siblings as described in
+[install from this repository](index.md#install-from-this-repository) (add
+`-w @label-anything/cli`) and `npm install -g` the tarballs.
+
 ## Place, render, validate
 
 ```sh

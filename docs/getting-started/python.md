@@ -10,9 +10,13 @@ pip install label-anything                 # the engine
 pip install "label-anything[matplotlib]"   # + label_anything.matplotlib (also: plotly, seaborn, all)
 ```
 
-From source (Rust ≥ 1.88 and [maturin](https://www.maturin.rs/)):
-`cd rust/crates/la-py && maturin build --release`, then
-`pip install rust/target/wheels/label_anything-*.whl bindings/python-extras`.
+Neither is on PyPI yet: until it is, build both from the repository (Rust ≥ 1.88 and
+[maturin](https://www.maturin.rs/); [details](index.md#install-from-this-repository)):
+
+```sh
+maturin build --release -m rust/crates/la-py/Cargo.toml
+pip install rust/target/wheels/label_anything-*.whl bindings/python-extras
+```
 
 ## One call
 

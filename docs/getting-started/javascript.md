@@ -19,6 +19,10 @@ npm install @label-anything/core       # or @label-anything/wasm
 npm install @label-anything/extras     # visualization helpers (optional)
 ```
 
+The packages are not on npm yet: until they are,
+[pack them from the repository](index.md#install-from-this-repository) and install the
+tarballs.
+
 ## Place labels
 
 ```js
