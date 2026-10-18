@@ -198,7 +198,16 @@ def _add_primitive(obs: Obstacles, cls: str, p) -> None:
         obs.polygons.append((_shape_rings(shp), cls))
 
 
-def build_scene(problem: dict, problem_path: str | Path | None = None, truth: dict | None = None) -> Scene:
+SOFT_MODES = ("hard", "ignore")
+
+
+def build_scene(problem: dict, problem_path: str | Path | None = None, truth: dict | None = None,
+                soft: str = "hard") -> Scene:
+    """``soft``: how classes the problem gives a cost (neither hard nor ignored) reach the tools, which have
+    no soft costs: ``hard`` avoids them like hard classes, ``ignore`` leaves them out (labels may cover
+    them, as the engine may at a cost)."""
+    if soft not in SOFT_MODES:
+        raise ValueError(f"soft must be one of {SOFT_MODES}, not {soft!r}")
     prob = load_problem(problem)
     opts = prob.opts
     a_label = opts.get("avoid", {}).get("label", {})
@@ -282,8 +291,16 @@ def build_scene(problem: dict, problem_path: str | Path | None = None, truth: di
     # ------------------------------------------------------------ obstacle classes
     obs = Obstacles()
 
+    left_out: set[str] = set()
+
     def wanted(cls: str) -> bool:
-        return cls not in RESERVED and spec.avoid_value(a_label, cls) != "ignore"
+        v = spec.avoid_value(a_label, cls)
+        if cls in RESERVED or v == "ignore":
+            return False
+        if soft == "ignore" and v != "hard":
+            left_out.add(cls)
+            return False
+        return True
 
     raw_obs = problem.get("obstacles") or {}
     svgs = _as_list(raw_obs.get("svg"))
@@ -325,10 +342,15 @@ def build_scene(problem: dict, problem_path: str | Path | None = None, truth: di
             msg += ", value ≥ 0.5)" if mode in ("cost", "saliency") else ")"
             notes.append(Note("emulation", f"raster:{cls}", msg + " is handed over as occupied cells / pixel runs",
                               f"/obstacles/raster/{k}"))
-    soft = [c for c in obs.classes() if spec.avoid_value(a_label, c) not in ("hard", "ignore")]
-    if soft:
-        notes.append(Note("emulation", "soft-classes", "soft obstacle classes (" + ", ".join(soft) + ") are "
-                                                       "avoided like hard ones: the tools have no soft costs"))
+    soft_classes = sorted({c for c in obs.classes() if spec.avoid_value(a_label, c) not in ("hard", "ignore")}
+                          | left_out)
+    if soft_classes and soft == "hard":
+        notes.append(Note("emulation", "soft-classes", "soft obstacle classes (" + ", ".join(soft_classes) + ") "
+                                                       "are avoided like hard ones: the tools have no soft costs"))
+    elif soft_classes:
+        notes.append(Note("emulation", "soft-classes", "soft obstacle classes (" + ", ".join(soft_classes) + ") "
+                                                       "are left out: labels may cover them (the tools have no "
+                                                       "soft costs)"))
 
     positions = [p for p in position_order(opts.get("placement", {}).get("position_order", "perceptual"))]
     if any(it.raw.get("placement", {}).get("position_order") for it in prob.items):
@@ -336,6 +358,13 @@ def build_scene(problem: dict, problem_path: str | Path | None = None, truth: di
                                                                 "the problem-level order is used"))
     sc = Scene(prob, W, H, area, labels, omitted, marks, obs, positions, infos, notes)
     return sc
+
+
+def without_obstacles(scene: Scene) -> Scene:
+    """The scene for a tool that is told no obstacle classes: the notes on how they would reach it go."""
+    scene.notes = [n for n in scene.notes if n.feature not in ("soft-classes", "svg") and
+                   not n.feature.startswith("raster:")]
+    return scene
 
 
 # ---------------------------------------------------------------------------

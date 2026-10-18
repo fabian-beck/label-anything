@@ -8,7 +8,12 @@
     "node": ">=20.9"
   },
   "dependencies": {
+    "@d3fc/d3fc-label-layout": "7.0.4",
     "canvas": "3.2.3",
+    "d3-array": "3.2.4",
+    "d3-scale": "4.0.2",
+    "d3-selection": "3.0.0",
+    "echarts": "6.1.0",
     "vega": "6.4.0"
   }
 }

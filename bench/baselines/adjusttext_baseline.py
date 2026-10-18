@@ -145,19 +145,19 @@ def plan(scenes, names=None) -> tuple[float, list[float]]:
     return step, costs
 
 
-def sequence_options(frames) -> dict:
+def sequence_options(frames, soft: str = "hard") -> dict:
     """Options for the frames of a sequence (``(problem, path)`` pairs, in order): the line sampling step of
     ``plan`` for all frames (not one per frame: a step that changed between frames would move the labels), and
     the iterations per frame, at most ``ITER_LIM``, whose comparisons over the whole sequence stay within
     ``SEQ_BUDGET`` (adjustText's default instead stops each solve after one second, wherever it is)."""
-    scenes = [build_scene(p, path) for p, path in frames]
+    scenes = [build_scene(p, path, soft=soft) for p, path in frames]
     step, costs = plan(scenes, [f"frame {k}" for k in range(len(scenes))])
     total = sum(costs)
     iters = ITER_LIM if total <= 0 else min(ITER_LIM, int(SEQ_BUDGET // total))
     if iters < SEQ_MIN_ITER:
         raise Unsupported(f"the {len(scenes)} frames need {total / 1e9:,.1f} G comparisons per iteration: "
                           f"{SEQ_MIN_ITER} iterations each exceed the sequence budget of {SEQ_BUDGET / 1e9:g} G")
-    return {"step": step, "iter_lim": iters}
+    return {"step": step, "iter_lim": iters, "soft": soft}
 
 
 def warmup() -> None:
@@ -168,12 +168,13 @@ def warmup() -> None:
 
 
 def solve(problem: dict, problem_path=None, options: dict | None = None) -> dict:
-    """Solve ``problem``; ``options`` (from ``sequence_options``) fix the sampling step and the iterations."""
+    """Solve ``problem``; ``options`` (from ``sequence_options``) fix the sampling step and the iterations;
+    ``soft`` (``hard`` or ``ignore``) is how soft classes reach the tool (``build_scene``)."""
     from adjustText import adjust_text
     from matplotlib.transforms import Bbox
 
-    scene = build_scene(problem, problem_path)
-    if options is None:
+    scene = build_scene(problem, problem_path, soft=(options or {}).get("soft", "hard"))
+    if options is None or "step" not in options:
         step, _costs = plan([scene])
         iter_lim = ITER_LIM
     else:

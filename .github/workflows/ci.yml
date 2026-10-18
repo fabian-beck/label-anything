@@ -393,7 +393,8 @@ jobs:
 
   baselines:
     # The quick suite with the Rust engine and every baseline (textalloc, adjustText, vega-label,
-    # ggrepel, naive, greedy) plus the performance targets; on tags also the release gates.
+    # ggrepel, d3fc, ECharts, D3-Labeler, naive, greedy) plus the performance targets; on tags also
+    # the release gates.
     # The same setup as one image: bench/Dockerfile.
     name: Benchmark with baselines (quick)
     if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'

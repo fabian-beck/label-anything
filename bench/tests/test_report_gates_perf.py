@@ -269,3 +269,16 @@ def test_milestones_m3_and_m4():
     # prefix mode: the inversions are the placed items after the first omitted one
     assert milestones.inversions({"placed": 10, "total": 100, "prefix_rate": 0.08}, "prefix") == 2
     assert milestones.inversions({"placed": 10, "priority_inversions": 3}, "strict") == 3
+
+
+def test_scaling_exponent_is_the_log_log_slope():
+    from bench.report import scaling_exponent
+
+    rows = [{"solver": "rust", "scenario": "10-stress", "n_items": n, "summary": {},
+             "runtime_reported": {"median": 0.5 * n ** 1.5}} for n in (200, 2000, 20000)]
+    assert abs(scaling_exponent(rows, "rust") - 1.5) < 1e-9
+    assert scaling_exponent(rows[:2], "rust") is None
+    # without an engine-reported runtime, the wall time
+    walls = [{"solver": "b", "scenario": "10-stress", "n_items": n, "summary": {}, "runtime": {"median": float(n)}}
+             for n in (100, 1000, 10000)]
+    assert abs(scaling_exponent(walls, "b") - 1.0) < 1e-9

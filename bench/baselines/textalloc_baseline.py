@@ -61,10 +61,11 @@ def warmup() -> None:
     ensure_matplotlib()
 
 
-def solve(problem: dict, problem_path=None) -> dict:
+def solve(problem: dict, problem_path=None, options: dict | None = None) -> dict:
+    """``options``: ``soft`` (``hard`` or ``ignore``), how soft classes reach the tool (``build_scene``)."""
     import textalloc
 
-    scene = build_scene(problem, problem_path)
+    scene = build_scene(problem, problem_path, soft=(options or {}).get("soft", "hard"))
     cv = Canvas(scene.width, scene.height, scene.area)
     tool_notes: list[Note] = []
     if scene.obstacles.polylines or scene.obstacles.rects or scene.obstacles.polygons:
