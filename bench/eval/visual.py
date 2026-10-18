@@ -16,6 +16,12 @@
 * **Labels over data:** the vector primitives of soft classes under placed labels: points
   (circles) and areas (rects, polygons) counted once per primitive, polyline length in
   em.
+* **Labels across a contrast border:** with raster sources, the luma (Rec. 709) of what
+  lies behind a label — the rasters in order over ``canvas.background``, at every canvas
+  pixel centre inside the box — spreads by at least ``CONTRAST_SPREAD`` between its 10th
+  and 90th percentile: a tenth of the label lies on a markedly darker backdrop than
+  another tenth (half on black and half on white, say). Internal labels of point items,
+  which cover their own mark, do not count.
 
 The metrics count, they do not judge: whether a class is data (points, lines, nodes) or
 context (grid, areas) is up to the reader of the numbers.
@@ -23,6 +29,8 @@ context (grid, areas) is up to the reader of the numbers.
 from __future__ import annotations
 
 import math
+
+import numpy as np
 
 from ..common import geom, spec
 from ..common.geom import Box, GridIndex, Point
@@ -35,6 +43,7 @@ PARALLEL_DEG = 10.0   # the default leaders.min_angle_between
 START_SKIP_PX = 3.0   # the start of a leader may touch lines that end at its own mark
 RESERVED = ("items", "labels", "leaders", "canvas_edge")
 TOL = 0.5             # contacts within the evaluator's tolerance do not count
+CONTRAST_SPREAD = 0.5  # luma spread (10th to 90th percentile) under a label that reads as a border
 
 
 def _bbox(a: Point, b: Point, grow: float = 0.0) -> Box:
@@ -249,9 +258,64 @@ def evaluate_visual(prob, placed, classes: dict, a_label: dict, a_leader: dict, 
                     **{f"{kd}_total": total_by_kind[kd] for kd in total_by_kind if total_by_kind[kd]},
                     "lines_em": lines_len if total_by_kind["lines"] else None}
 
+    # ------------------------------------------------------------ labels across contrast borders
+    contrast = None
+    luma = backdrop_luma(prob)
+    if luma is not None:
+        border, n = [], 0
+        for p in placed:
+            if p.internal and p.item.kind == "point":
+                continue
+            b = p.box
+            x0, x1 = max(math.ceil(b.x0 - 0.5), 0), min(math.ceil(b.x1 - 0.5), luma.shape[1])
+            y0, y1 = max(math.ceil(b.y0 - 0.5), 0), min(math.ceil(b.y1 - 0.5), luma.shape[0])
+            if x1 <= x0 or y1 <= y0:
+                continue
+            n += 1
+            lo, hi = np.percentile(luma[y0:y1, x0:x1], [10, 90])
+            if hi - lo >= CONTRAST_SPREAD:
+                border.append(p.id)
+        contrast = {"labels": n, "border": len(border), "rate": len(border) / n if n else None,
+                    "examples": border[:max_list]}
+
     return {"leader_length": length, "near_crossings": near, "leader_marks": marks, "labels_over": under,
+            "contrast": contrast,
             "thresholds": {"near_px": NEAR_PX, "touch_px": TOUCH_PX, "long_em": LONG_EM, "far": FAR,
-                           "parallel_deg": PARALLEL_DEG}}
+                           "parallel_deg": PARALLEL_DEG, "contrast_spread": CONTRAST_SPREAD}}
+
+
+def backdrop_luma(prob) -> np.ndarray | None:
+    """Rec. 709 luma in [0, 1] behind the labels at every canvas pixel centre: the raster
+    sources in order (the nearest raster pixel, composited by its alpha) over
+    ``canvas.background``; None without raster sources or canvas."""
+    from ..common.raster import decode_rgba, parse_color
+
+    srcs = (prob.raw.get("obstacles") or {}).get("raster")
+    if not srcs or not prob.bounded:
+        return None
+    w, h = int(math.ceil(prob.width)), int(math.ceil(prob.height))
+    weights = np.array([0.2126, 0.7152, 0.0722])
+    bg = parse_color(prob.opts.get("canvas", {}).get("background", "#ffffff")) / 255.0
+    out = np.full((h, w), float(bg @ weights))
+    xs, ys = np.arange(w) + 0.5, np.arange(h) + 0.5
+    for src in srcs if isinstance(srcs, list) else [srcs]:
+        try:
+            rgba = decode_rgba(src)
+        except Exception:  # noqa: BLE001 - an undecodable source draws nothing
+            continue
+        scale = float(src.get("scale", 1.0))
+        ox, oy = (float(v) for v in src.get("offset", [0.0, 0.0]))
+        px = np.floor((xs - ox) * scale).astype(np.int64)
+        py = np.floor((ys - oy) * scale).astype(np.int64)
+        cx = (px >= 0) & (px < rgba.shape[1])
+        cy = (py >= 0) & (py < rgba.shape[0])
+        if not cx.any() or not cy.any():
+            continue
+        sub = rgba[np.ix_(py[cy], px[cx])].astype(np.float64) / 255.0
+        y, a = sub[..., :3] @ weights, sub[..., 3]
+        region = out[np.ix_(cy, cx)]
+        out[np.ix_(cy, cx)] = a * y + (1 - a) * region
+    return out
 
 
 def _kind(prim) -> str:
@@ -281,4 +345,5 @@ def summary_fields(v: dict) -> dict:
         "leader_line_touches": sum(c["lines"] for c in v["leader_marks"]["classes"].values()),
         "label_points_hidden": sum(c.get("points_hidden", 0) for c in under.values()),
         "label_lines_em": sum(c["lines_em"] or 0.0 for c in under.values()),
+        "labels_on_contrast_border": (v.get("contrast") or {}).get("border"),
     }

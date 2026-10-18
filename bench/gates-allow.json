@@ -800,6 +800,30 @@
       "solver": "*",
       "adr": "0024",
       "reason": "ForceAtlas2 layouts: twice the labels over a drawing whose edges cross the whole canvas"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "08-illustration",
+      "config": "*",
+      "solver": "*",
+      "adr": "0031",
+      "reason": "labels that lay across the edge of the photo move into the margins, with longer leaders"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "08-illustration",
+      "config": "*",
+      "solver": "*",
+      "adr": "0031",
+      "reason": "labels that lay across the edge of the photo move wholly onto it or into the margins"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "01-software-metrics",
+      "config": "wmc-loc-30-raster",
+      "solver": "*",
+      "adr": "0031",
+      "reason": "labels that lay half on the dark marks of the raster chart take later positions off them"
     }
   ]
 }
