@@ -78,9 +78,19 @@ D3-Labeler's annealing hours).
   lose 40–65 % of theirs to conflicts in dense scenes, and the label layouts of ECharts and
   d3fc, which compare labels only, a fifth to half to the marks and obstacles they do not
   see.
+* **No free spot left behind.** Where another tool labels an item that Label Anything omits,
+  its label would not fit into Label Anything's result: adding each such conflict-free label
+  of the eight tools to it, on six problems from scatterplot to POI map, gave a hard
+  violation every time but once (a 13 px leader on the Monaco tiles, between the adjacent
+  positions and the distant rings). The others label other items, not more of the free space.
 * **The price of more labels.** Soft costs are costs: to place more labels, Label Anything
   covers more of what it may cover — on the airport map 2.1 background points per label
-  where textalloc, leaving them out, covers 1.7.
+  where textalloc, leaving them out, covers 1.7. Covering a point costs by its area, 0.3 per
+  em² in the `scatter` and `map` presets, a third of one step down the position order for a
+  3 px dot under 9 px text; raising the weight to 3 hides 21 % fewer points on the 15
+  problems with point obstacles, with the same number of labels, but labels then stand
+  closer to other marks (ambiguity 0.18 → 0.20 on the airport map). Set `avoid.label.points` higher where hidden
+  data points matter more than that.
 * **Dense data loses labels.** A label that would overlap is left out, with the reason
   and the labels in its way in the result: of 1,000 airports on the world map about 520
   get a label, of 2,000 random points (the performance problem) 872. The label margin of
@@ -93,12 +103,16 @@ D3-Labeler's annealing hours).
   32 Gapminder labels, 58 of 149 in the Cora network), up to 8 and 11 em long, some
   across large marks; crowded line ends get a column in the margin
   ([ADR 0030](../adr/0030-boundary-columns.md)), 35 of the 62 life-expectancy lines.
-* **Moving labels move.** Solving each frame of an animation warm-started with the
-  previous result, labels move 2.3 px per frame on average while one node of the Les
-  Misérables graph is dragged, 2.6 px in a running force layout and 3.4 px while panning
-  and zooming over 1,000 airports. vega-label, whose labels keep to fixed positions,
-  moves them less in the graph (0.8 and 1.2 px) but labels only half of its nodes, and
-  more over the airports (4.1 px); textalloc and ggrepel 3–22 px.
+* **Moving labels move, mostly by switching sides.** Solving each frame of an animation
+  warm-started with the previous result, labels move 2.5 px per frame on average while one
+  node of the Les Misérables graph is dragged, 2.6 px in a running force layout and 3.5 px
+  while panning and zooming over 1,000 airports. Nearly all of it (about 90 %) comes from the
+  5 % of labels per frame that jump to another side when a moving neighbour takes their
+  place; the rest are small shifts, most below a pixel. The other tools move as much or more — vega-label 2.8–4.1 px,
+  textalloc, adjustText, ggrepel and D3-Labeler 6–22 px — or keep fewer labels: d3fc moves
+  2.1 px in the force layout but labels 42 of the 77 nodes and switches labels on and off
+  four times as often (537 times in 60 frames, Label Anything 138 with 73 nodes labeled), and
+  ECharts, whose labels keep one fixed position, labels 47.
 * **Not as fast as the brief asks.** Hundreds of labels take milliseconds; 2,000 labels
   over 100,000 points take about 300 ms natively on one core (2.3 to 2.6 times the
   target) and 0.8 s in TypeScript (1.4 times its target)
