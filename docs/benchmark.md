@@ -96,6 +96,16 @@ change places fewer labels. The label margin of [ADR 0028](adr/0028-label-margin
 without it (`defaults.margin: 0`, `placement.offset: 2`) the problem places 972 labels instead
 of 872, and solves about 10 % faster, as fewer labels go through the ladder.
 
+The same profile at commit fad9db0 (after the lookahead bound of ADR 0047, which made the greedy
+pass about 10 % faster): 1.38 G instructions in the solve; the CLI spends another 0.5 G outside the
+timed solve, parsing the 1.8 MB problem, validating it against the schema and writing the
+result, which a fresh process's wall time includes. The TypeScript engine has one cost of its own:
+garbage collection, 11 % of its time. A solve allocates about 355 MB of short-lived objects — a
+candidate object, its leader, rectangle and points for each of the hundred thousand candidates,
+a fifth of it in the distant candidates — and the ladder's candidates stay alive for the
+explanations, so they reach the old generation and cost full collections (46 ms each). Storing
+the candidates as arrays of numbers instead of objects would remove most of it.
+
 ## Milestone acceptance
 
 `python -m bench.milestones` checks two acceptance criteria of the design brief on a run of
