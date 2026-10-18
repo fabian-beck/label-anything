@@ -1,4 +1,4 @@
-# 0031 — Gallery: vector images, data colors, one weight, hubs first
+# 0033 — Gallery: vector images, data colors, one weight, hubs first
 
 * Status: accepted (benchmark scenarios, renderer and gallery; not an engine change)
 * Date: 2026-10-18
