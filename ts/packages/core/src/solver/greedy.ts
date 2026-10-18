@@ -169,13 +169,28 @@ export function run(s: Solve): void {
   if (s.model.omission === Omission.Prefix) {
     const order = s.pri.order.slice();
     let cut = false;
+    // after the guard, level 0 only (ADR 0046): the first item without a free level-0
+    // position ends the prefix, and the guard of that pass ends it as well
+    let finish: number | null = null;
     for (let k = 0; k < order.length; k++) {
       const i = order[k]!;
       if (g.done[i]) continue;
-      if (!cut && k % 64 === 63 && guardPassed(s, started, budgetGuard)) s.timeGuardHit = true;
-      if (s.timeGuardHit) {
-        g.done[i] = 1;
-        s.reasons[i] = Reason.BudgetExhausted;
+      if (!cut && k % 64 === 63) {
+        if (finish === null) {
+          if (guardPassed(s, started, budgetGuard)) {
+            s.timeGuardHit = true;
+            finish = s.now();
+          }
+        } else if (guardPassed(s, finish, budgetGuard)) {
+          cut = true;
+        }
+      }
+      if (s.timeGuardHit && !g.capReached) {
+        if (!cut && !placeLevel0(s, g, i) && !g.done[i]) cut = true;
+        if (!g.done[i]) {
+          g.done[i] = 1;
+          s.reasons[i] = Reason.BudgetExhausted;
+        }
         continue;
       }
       if (cut || g.capReached) {
@@ -203,12 +218,8 @@ export function run(s: Solve): void {
     const cancelled = s.pollCancel();
     if (cancelled || s.timeGuardHit || guardPassed(s, started, budgetGuard)) {
       s.timeGuardHit = s.timeGuardHit || !cancelled;
-      for (const i of band) {
-        if (!g.done[i]) {
-          g.done[i] = 1;
-          s.reasons[i] = Reason.BudgetExhausted;
-        }
-      }
+      // after the guard the undecided items wait for the level-0 pass below
+      exhaust(s, g, band, false);
       continue;
     }
     // a band that may hit a cap is processed in total order (caps follow priority)
@@ -231,7 +242,7 @@ export function run(s: Solve): void {
         }
         processUnit(s, g, i, true);
       }
-      exhaust(s, g, band);
+      exhaust(s, g, band, false);
       continue;
     }
     // warm start: labels placed in the previous solve keep their position when it is
@@ -291,8 +302,49 @@ export function run(s: Solve): void {
       }
       processUnit(s, g, i, true);
     }
-    exhaust(s, g, band);
+    exhaust(s, g, band, false);
   }
+  if (s.timeGuardHit && !s.cancelled) finishLevel0(s, g, budgetGuard);
+  const all: number[] = [];
+  for (let i = 0; i < n; i++) all.push(i);
+  exhaust(s, g, all, true);
+}
+
+/**
+ * After the greedy guard (ADR 0046): the undecided items, in total order, get their best
+ * free level-0 candidate — no ladder, no explanation of a failure — until the guard passes
+ * once more from the start of this pass; whatever is left is `budget_exhausted`.
+ */
+function finishLevel0(s: Solve, g: Greedy, guard: number): void {
+  const started = s.now();
+  const order = s.pri.order.slice();
+  let tried = 0;
+  for (const i of order) {
+    if (g.done[i] || s.state.placed[i]! >= 0) continue;
+    tried += 1;
+    if (tried % 64 === 0 && (s.pollCancel() || guardPassed(s, started, guard))) break;
+    placeLevel0(s, g, i);
+  }
+}
+
+/**
+ * The best free level-0 candidate of undecided item `i`, after the greedy guard (ADR 0046).
+ * Not for members of a `keep_with` set (placed together or not at all) or items whose
+ * level-0 attempt already failed (their candidates have not become freer since). A cap
+ * that the candidate would exceed omits the item; any other failure leaves it undecided.
+ */
+function placeLevel0(s: Solve, g: Greedy, i: number): boolean {
+  if (g.sets[i]! >= 0 || g.tried0[i]) return false;
+  const c = bestLevel0(s, g, i);
+  if (c === null) return false;
+  g.done[i] = 1;
+  if (!capAllows(s, s.cands[c]!)) {
+    g.capReached = true;
+    s.reasons[i] = Reason.OmittedByPriority;
+    return false;
+  }
+  commit(s, g, i, c, false);
+  return true;
 }
 
 /** Whether the greedy guard has passed: `guard` ms after `started` (ADR 0042; never without a clock). */
@@ -306,9 +358,12 @@ function labelCapReached(s: Solve): boolean {
   return m !== null && s.state.nPlaced >= m;
 }
 
-/** After a cancellation or the time guard, the band's undecided items are `budget_exhausted`. */
-function exhaust(s: Solve, g: Greedy, band: readonly number[]): void {
-  if (!(s.cancelled || s.timeGuardHit)) return;
+/**
+ * After a cancellation, or at the end of the pass after the time guard (`last`: its level-0
+ * pass is over), the undecided items of `band` are `budget_exhausted`.
+ */
+function exhaust(s: Solve, g: Greedy, band: readonly number[], last: boolean): void {
+  if (!(s.cancelled || (last && s.timeGuardHit))) return;
   for (const i of band) {
     if (!g.done[i] && s.state.placed[i]! < 0) {
       g.done[i] = 1;

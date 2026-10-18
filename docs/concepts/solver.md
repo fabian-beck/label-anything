@@ -32,12 +32,16 @@ with rate 100 moves per ms in Rust and 40 in TypeScript — 10,000 moves for bot
 The result therefore depends on the input and the seed, never on the machine's speed or
 load ([ADR 0007](../adr/0007-determinism-and-time-budget.md)).
 
-A wall-clock **guard** protects against pathologically slow machines: local search stops
-at 3 × the budget after the start of the solve, and the greedy pass stops placing
-10 × the budget after it started (checked between priority bands and every 64 items;
-the remaining items are `budget_exhausted`), so a slow preparation — a host `measure`
-callback for many labels — still leaves the most important labels their turn. Either sets
-`stats.time_guard_hit` — the only case in which results may depend on timing.
+A wall-clock **guard** protects against pathologically slow machines and very large
+problems: local search stops at 3 × the budget after the start of the solve, and the
+greedy pass stops running the degradation ladder 10 × the budget after it started (checked
+between priority bands and every 64 items), so a slow preparation — a host `measure`
+callback for many labels — still leaves the most important labels their turn. The items
+not reached by then still get their best free normal position, in priority order and
+without the ladder, for up to another 10 × the budget
+([ADR 0046](../adr/0046-level-0-pass-after-the-greedy-guard.md)); the ones left are
+`budget_exhausted`. Either guard sets `stats.time_guard_hit` — the only case in which
+results may depend on timing.
 
 For interactive use, lower the budget; for publication graphics, raise it (and allow the
 exact search with ≥ 500 ms).

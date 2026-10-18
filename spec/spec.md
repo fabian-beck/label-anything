@@ -1039,7 +1039,8 @@ then index; `random`/`random(n)`: a PCG32 permutation with seed `n` or `solver.s
 Unplaced items report `reason`: `no_feasible_candidate` (every candidate violates a
 static hard constraint), `omitted_by_priority` (blocked only by placed labels/leaders of
 higher or equal key, or cut by `prefix`/`max_labels`), `budget_exhausted` (not reached
-before the time guard), `keep_with` (a member of its set failed), `grouped` (merged into a
+before a cancellation, or past the time guard without a free level-0 candidate: its ladder
+did not run, §10.1), `keep_with` (a member of its set failed), `grouped` (merged into a
 group label). `blocking` lists the hard classes that rejected candidates (most frequent
 first); `blocked_by` lists the placed items whose label or leader conflicts with the
 item's best feasible candidates (the 5 cheapest statically feasible ones). Candidates
@@ -1096,6 +1097,15 @@ with the item's best candidate (fewest evictions, then cost) and re-queues them.
 `soft_overlap` turns hard settings of `avoid.relaxable` classes into
 `degrade_options.soft_overlap_weight`. `omit` gives up. Required items are a band of
 their own above everything and therefore run first.
+
+Time guard (ADR 0007, 0042, 0046): with a clock, the pass stops running bands and ladders
+10 × `time_budget_ms` after it began (checked before every band and every 64 items).
+The items still undecided then — except `keep_with` members and items whose level-0
+attempt already failed — are visited once more in total order and take their best free
+level-0 candidate as in a band's level-0 pass, without the ladder, until another
+10 × `time_budget_ms` have passed (checked every 64 items); with `prefix` omission the
+first of them without a free level-0 candidate ends the prefix. Every item left
+undecided is `budget_exhausted`. Without a clock the guard never passes.
 
 Warm starts (`warm_start`, with `weights.stability` > 0; ADR 0016, ADR 0025):
 

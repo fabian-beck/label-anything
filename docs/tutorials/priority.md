@@ -55,7 +55,7 @@ Every unplaced item reports:
     |---|---|
     | `omitted_by_priority` | its candidates are blocked by placed labels or leaders (of higher or equal priority in `strict` mode), or it was cut by `prefix` or `max_labels` |
     | `no_feasible_candidate` | every candidate violates a hard constraint by itself: the canvas edge, a hard obstacle class, its own mark, another item's mark or the margin around it |
-    | `budget_exhausted` | the solve was cancelled or hit its time guard before the item was reached |
+    | `budget_exhausted` | the solve was cancelled before the item was reached, or hit its time guard and the item had no free normal position (its degraded variants were not tried) |
     | `keep_with` | another member of its all-or-none set could not be placed |
     | `grouped` | it shares a group label with other items (`item.group`) |
 
