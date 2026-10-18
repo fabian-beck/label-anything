@@ -102,7 +102,10 @@ D3-Labeler's annealing hours).
 * **Leaders where it is crowded.** In crowded scenes many labels need leaders (14 of the
   32 Gapminder labels, 58 of 149 in the Cora network), up to 8 and 11 em long, some
   across large marks; crowded line ends get a column in the margin
-  ([ADR 0030](../adr/0030-boundary-columns.md)), 35 of the 62 life-expectancy lines.
+  ([ADR 0030](../adr/0030-boundary-columns.md)), 35 of the 62 life-expectancy lines. What
+  stops the column there is the clearance between leaders (0.4 em): without it 53 lines get
+  a label, but their leaders merge into one wedge at the line ends, where no reader can
+  tell them apart.
 * **Moving labels move, mostly by switching sides.** Solving each frame of an animation
   warm-started with the previous result, labels move 2.5 px per frame on average while one
   node of the Les Misérables graph is dragged, 2.6 px in a running force layout and 3.5 px
