@@ -176,7 +176,8 @@ airports on a world map, city POIs on map tiles, node-link diagrams, illustratio
 charts, stress sizes, interactive zooming and priority — with one
 implementation-independent evaluator.
 [What the results show](project/benchmark.md#what-the-results-show): no overlaps and no
-crossing leaders anywhere, the most usable labels on every problem of the quick suite,
+crossing leaders anywhere, the most usable labels on every problem of the quick suite and
+on 60 of the 62 of the full suite,
 though often by a few percent — and where it still falls short: dense data, moving labels,
 the largest problems' speed.
 

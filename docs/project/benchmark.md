@@ -44,7 +44,9 @@ The full list is in [`bench/README.md`](gh:bench/README.md).
 
 ## What the results show
 
-From the quick suite with every baseline (commit 25b543f, 2026-10-18, on a 4-core cloud VM):
+From the quick suite with every baseline (commit 25b543f, 2026-10-18, on a 4-core cloud VM;
+Label Anything's numbers at commit 4e6684e, with the priority repair of
+[ADR 0049](../adr/0049-move-one-label-aside.md)):
 the **usable labels** of each tool — those left when every label in a conflict (an
 overlap with another label, a mark or a hard obstacle, a crossing leader, …) is dropped in
 priority order — and in parentheses the labels it placed, where that is more. "n/a": the
@@ -54,7 +56,7 @@ D3-Labeler's annealing hours).
 | Problem | Label Anything | greedy | textalloc | adjustText | vega-label | ggrepel | ECharts | d3fc | D3-Labeler |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | Gapminder 2005, 46 bubbles | **32** | 18 | 21 (30) | 21 (46) | 20 | 21 (28) | 11 (22) | 9 (18) | 22 (46) |
-| 300 airports, world map | **213** | 175 | 197 (208) | 176 (300) | 163 | 165 (213) | 109 (151) | 105 (129) | 179 (300) |
+| 300 airports, world map | **215** | 175 | 197 (208) | 176 (300) | 163 | 165 (213) | 109 (151) | 105 (129) | 179 (300) |
 | 375 POIs on Monaco tiles | **203** | 170 | 172 (187) | n/a | 154 | 185 (217) | 84 (113) | 84 (121) | 129 (375) |
 | Les Misérables, 77 nodes | **77** | 77 | 77 | 73 (77) | 77 | 74 (77) | 58 (65) | 67 (69) | 76 (77) |
 | 200 points, stress | **197** | 183 | 191 (193) | 182 (200) | 174 | 179 (200) | 125 (135) | 154 (163) | 173 (200) |
@@ -62,7 +64,7 @@ D3-Labeler's annealing hours).
 
 * **Most usable labels, by less than it looked.** Label Anything keeps the most usable
   labels on every problem, ahead of the best other tool by 3 % on the 200 random points
-  (textalloc 191), 8 % on the airport map (textalloc 197), 10 % on the Monaco tiles
+  (textalloc 191), 9 % on the airport map (textalloc 197), 10 % on the Monaco tiles
   (ggrepel 185) and 45 % among the Gapminder bubbles (D3-Labeler 22). Until 2026-10 the
   benchmark handed every soft obstacle — grid lines, background points, graph edges,
   raster ink — to the other tools as a hard one, which no user of them would do, and
@@ -70,6 +72,16 @@ D3-Labeler's annealing hours).
   POIs that way and 39 of the 77 nodes, ggrepel 30 nodes. Now each tool runs with soft
   obstacles both avoided and left out, and keeps whichever serves it better
   ([`bench/baselines/README.md`](gh:bench/baselines/README.md)).
+* **On the full suite too.** On all 62 problems of the full suite with greedy, textalloc,
+  vega-label, ggrepel, d3fc and ECharts (adjustText and D3-Labeler would take hours; textalloc
+  and ggrepel ran on all but the seven stress problems, d3fc up to 2,500 labels), Label
+  Anything has the most usable labels on each of the 55 with `strict` or `weighted`
+  omission: from 10 software-metric outliers to 20,000 stress anchors (914 usable labels,
+  greedy 597, vega-label 505, ECharts 162 of the 739 it placed).
+  With `prefix` omission what counts is how far down the priority order every label is
+  usable: there it leads on five of seven problems, ties textalloc on one, and on one
+  textalloc reaches two airports further (22 against 20), with leaders up to 13 em long
+  where Label Anything stops at its 10 em (`leaders.max_length`).
 * **Guarantees hold.** Every Label Anything result of the benchmark, every frame of the
   sequences included, has 0 hard violations and 0 leader crossings, and the Rust,
   WebAssembly and TypeScript implementations give identical placements: its usable labels
@@ -78,6 +90,18 @@ D3-Labeler's annealing hours).
   lose 40–65 % of theirs to conflicts in dense scenes, and the label layouts of ECharts and
   d3fc, which compare labels only, a fifth to half to the marks and obstacles they do not
   see.
+* **A hub can lose its label to a bigger neighbour.** On the airport maps, a hub's label may
+  cover the dots of smaller airports (`lower_items` in the `map` preset), which then get no
+  label; where hubs crowd, the bigger one takes the next one's dot this way, for a small gain
+  in position: Heathrow's label sits over a corner of Amsterdam's dot, and Amsterdam (rank 9 of
+  1,000) stays unlabeled. The pruning had left Heathrow positions on that side only, so
+  nothing after the greedy pass could make room. The priority repair now moves one label
+  aside where at most one less important label gives way
+  ([ADR 0049](../adr/0049-move-one-label-aside.md)): 71 more labels on the full suite
+  (+0.5 %), on 20 problems, each with a higher priority-weighted placement and none with
+  fewer labels — Xiamen, Detroit and Faro on the 300-airport map, Munich and Toronto on the
+  3,221-airport one. Amsterdam is not among them: making room for it would cost Gatwick and
+  Bergen their labels.
 * **No free spot left behind.** Where another tool labels an item that Label Anything omits,
   its label would not fit into Label Anything's result: adding each such conflict-free label
   of the eight tools to it, on six problems from scatterplot to POI map, gave a hard

@@ -192,11 +192,12 @@ SECTIONS = (
         Fig("05-airports/world-iata-1000-vector", "Every airport an item: a hub can lose",
             "The 1,000 busiest airports, all of them items. A label may cover the marks of less important "
             "airports (the <code>map</code> preset), never those of more important ones, and the busiest 5 % "
-            "have larger type. Where hubs crowd, the labels and marks of the busiest leave the next ones no "
-            "free position: {top_omitted} — {n_top_omitted} of the ten busiest airports — stay unlabeled while "
-            "small airports elsewhere are labeled ({placed:,} of {total:,}). Strict priority keeps the more "
-            "important labels; the same type for all (<code>priority.font_classes</code>) or fewer items would "
-            "make room.", wide=True, limit=True),
+            "have larger type. Where hubs crowd, the label of a busier one may cover the dot of the next, "
+            "which then keeps no label: {top_omitted} — {n_top_omitted} of the ten busiest airports — stay "
+            "unlabeled while small airports elsewhere are labeled ({placed:,} of {total:,}). Moving the busier "
+            "label aside would cost two other labels here; the priority repair does that only when at most one "
+            "gives way (ADR 0049). The same type for all (<code>priority.font_classes</code>) or fewer items "
+            "would make room.", wide=True, limit=True),
     )),
 )
 

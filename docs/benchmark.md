@@ -88,7 +88,11 @@ variant and a million in all, and each box is tested against the marks of the ot
 and against the placed labels: 57 % of the greedy pass. The on-demand distant candidates at
 level 0 take 18 %, explaining why a label was omitted (the `reason` and `blocked_by` of the
 result) 13 %. Preparing the 100k obstacle points takes 13 % of the solve, building the
-model from the problem and the result about 10 %. No function takes more than 5 %: removing
+model from the problem and the result about 10 %. On a map the explanations weigh more: 17 %
+of the 1,000-airport solve, where most of the 474 omitted airports have no candidate their
+neighbours' marks leave free, so that the search for one evaluates every candidate of
+every variant again; stopping each evaluation at the first hard conflict, the result the
+same, would save 5.5 % there and 0.6 % on the stress problem. No function takes more than 5 %: removing
 allocations, filtering boxes before their candidates are built, other inlining and link-time
 optimization changed the time by less than the noise. What would help is less work per
 omitted label — fewer ladder variants, no distant candidates for shrunk ones — and each such
