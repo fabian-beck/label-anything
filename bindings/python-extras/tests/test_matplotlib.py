@@ -108,6 +108,17 @@ def test_existing_texts_and_legends_are_avoided() -> None:
             assert not overlaps(bb, other, tol=1.0)
 
 
+def test_a_priority_lets_important_labels_cover_minor_dots() -> None:
+    fig, ax, x, y = scatter(40)
+    names = [f"n{i}" for i in range(40)]
+    avoid = label_points(ax, x, y, names, priority=list(range(40)), draw=False).result.problem["avoid"]
+    assert avoid["label"]["lower_items"] == 10 and avoid["leader"]["lower_items"] == 2.5
+    plain = label_points(ax, x, y, names, draw=False).result.problem
+    assert "lower_items" not in plain.get("avoid", {}).get("label", {})
+    own = label_points(ax, x, y, names, priority=list(range(40)), avoid={"lower_items": "hard"}, draw=False)
+    assert own.result.problem["avoid"]["label"]["lower_items"] == "hard"
+
+
 def test_leader_lines() -> None:
     fig, ax, x, y = scatter(60)
     out = label_points(ax, x, y, [f"name{i}" for i in range(60)], models=["distant"], leaders="straight", max_labels=8)

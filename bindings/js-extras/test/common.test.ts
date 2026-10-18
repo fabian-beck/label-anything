@@ -35,6 +35,17 @@ describe("buildProblem", () => {
     expect(p.canvas).toEqual({ width: 5, height: 5 });
   });
 
+  it("lets important labels cover the dots of less important items when there is a priority", () => {
+    expect(buildProblem(base, {}, font).avoid).toBeUndefined();
+    const item = { anchor: { type: "point" as const, x: 1, y: 1 }, label: { type: "text" as const, text: "A" }, priority: 3 };
+    expect(buildProblem({ ...base, items: [item] }, {}, font).avoid).toEqual({
+      label: { lower_items: 10 },
+      leader: { lower_items: 2.5 },
+    });
+    const own = buildProblem(base, { priority: { omission: "strict" }, avoid: { label: { lower_items: "hard", ink: 1 } } }, font);
+    expect(own.avoid).toEqual({ label: { lower_items: "hard", ink: 1 }, leader: { lower_items: 2.5 } });
+  });
+
   it("keeps host-drawn text as it is: no wrap, truncate or shrink steps", () => {
     expect(keepHostText({ ...base }).degrade).toEqual(["alternatives", "distant", "evict_lower", "soft_overlap", "omit"]);
     expect(keepHostText({ ...base, degrade: ["wrap", "truncate", "shrink:0.9", "distant", "omit"] }).degrade).toEqual(["distant", "omit"]);

@@ -42,6 +42,8 @@ from matplotlib.text import Text
 import label_anything as la
 from label_anything.problem import avoid_dict, merge
 
+from ._defaults import default_avoid
+
 __all__ = [
     "FigureBackground",
     "Frame",
@@ -536,10 +538,10 @@ def label_points(
     vector = list(opts.pop("vector", None) or [])
     if avoid_texts and snap.text_rects:
         vector.append({"class": "text", "rects": snap.text_rects})
-    avoid: Dict[str, Any] = {}
+    avoid = default_avoid(opts)
     if snap.legend_rects:
         vector.append({"class": "legend", "rects": snap.legend_rects})
-        avoid = {"label": {"legend": "hard"}}
+        merge(avoid, {"label": {"legend": "hard"}})
     user_avoid = opts.pop("avoid", None)
     if user_avoid is not None:
         merge(avoid, avoid_dict(user_avoid))

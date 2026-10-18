@@ -107,6 +107,16 @@ def test_marker_sizes_per_point() -> None:
         label_points(go.Figure(), x, y, list("abcde"), marker_size=[6, 8])
 
 
+def test_a_priority_lets_important_labels_cover_minor_dots() -> None:
+    x, y = data(5)
+    fig = go.Figure(go.Scatter(x=x, y=y, mode="markers"))
+    avoid = label_points(fig, x, y, list("abcde"), priority=[5, 4, 3, 2, 1]).result.problem["avoid"]
+    assert avoid == {"label": {"lower_items": 10}, "leader": {"lower_items": 2.5}}
+    own = label_points(go.Figure(), x, y, list("abcde"), priority=[5, 4, 3, 2, 1], avoid={"points": 0.5})
+    assert own.result.problem["avoid"]["label"] == {"lower_items": 10, "points": 0.5}
+    assert "avoid" not in label_points(go.Figure(), x, y, list("abcde")).result.problem
+
+
 def test_annotation_font_is_merged() -> None:
     x, y = data(10)
     out = label_points(go.Figure(), x, y, list("abcdefghij"), font_size=14, annotation_kw={"font": {"color": "red"}})

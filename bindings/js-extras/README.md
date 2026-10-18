@@ -73,7 +73,7 @@ labelLayer(L, cities, { latLng: (d) => [d.lat, d.lon], text: "name", id: (d) => 
 | `engine` | solver (default `@label-anything/core`) |
 | `text` | accessor `(d, i) => string \| label object`, or a field name |
 | `id` | stable ids, needed to keep labels in place across updates (default: index) |
-| `priority` | `(d, i) => number` (higher is kept first) or the problem's `priority` section |
+| `priority` | `(d, i) => number` (higher is kept first) or the problem's `priority` section; with a priority, important labels may cover the dots of less important items, which then go unlabeled (`avoid` `lower_items` 10 / 2.5 unless you set it) |
 | `attrs` | per-item data for priority terms and expressions |
 | `preset`, `avoid`, `placement`, `solver` | the problem sections of the same name |
 | `leaders` | `false`, a style (`"straight"`, `"elbow"`, ...) or the `leaders` section |

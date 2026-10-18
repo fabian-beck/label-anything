@@ -21,6 +21,9 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 import label_anything as la
+from label_anything.problem import avoid_dict, merge
+
+from ._defaults import default_avoid
 
 __all__ = ["PlotlyLabels", "label_points"]
 
@@ -255,6 +258,12 @@ def label_points(
                 lw = _get(t, "line", "width")
                 vector.append({"class": "lines", "polylines": [[list(p) for p in pts]], "width": float(lw) if lw else 2.0})
 
+    avoid = default_avoid(opts)
+    if avoid:
+        user_avoid = opts.pop("avoid", None)
+        if user_avoid is not None:
+            merge(avoid, avoid_dict(user_avoid))
+        opts["avoid"] = avoid
     if font_size is None:
         fs = _layout(fig, "font", "size")
         font_size = float(fs) if fs else 12.0

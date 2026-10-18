@@ -339,7 +339,7 @@ export const PRESETS: Readonly<Record<string, PresetData>> = {
     ]
   },
   "map": {
-    "description": "Maps: cartographic (Imhof) position order, labels stay adjacent, roads and ink are soft, existing map text is hard.",
+    "description": "Maps: cartographic (Imhof) position order, labels stay adjacent, roads and ink are soft, existing map text is hard, important labels may cover the dots of less important places.",
     "options": {
       "placement": {
         "models": [
@@ -353,11 +353,13 @@ export const PRESETS: Readonly<Record<string, PresetData>> = {
           "lines": 0.8,
           "ink": 0.1,
           "areas": "ignore",
-          "text": "hard"
+          "text": "hard",
+          "lower_items": 10
         },
         "leader": {
           "lines": 0.3,
-          "areas": "ignore"
+          "areas": "ignore",
+          "lower_items": 2.5
         }
       },
       "leaders": {

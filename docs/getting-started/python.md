@@ -108,10 +108,10 @@ chosen size and the labels that do not fit are omitted.
 Call `label_points` when the figure is final — size, layout (`tight_layout`), axis scales
 and limits, colorbars, legends: the labels are in data coordinates, so any savefig dpi
 works, but a later change of the axes' size or scale moves the points under labels that
-keep their size. For the top N of a dense plot, `avoid={"lower_items": 10}` lets an
-important label cover the dots of less important points
-([important labels over minor marks](../tutorials/priority.md#important-labels-over-minor-marks)),
-which keeps the most important labels in a crowd.
+keep their size. With a `priority`, an important label may cover the dots of less
+important points, which then go unlabeled, so the most important labels survive a crowd
+([important labels over minor marks](../tutorials/priority.md#important-labels-over-minor-marks));
+`avoid={"lower_items": "hard"}` keeps every dot clear.
 
 ### Plotly
 

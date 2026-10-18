@@ -220,12 +220,12 @@ in data coordinates, so any savefig dpi works, but a later change of the axes' s
 scale moves the points under labels that keep their size, and labels then overlap
 points and each other.
 
-For the top N of a dense plot (`priority=...`, `max_labels=N`), pass
-`avoid={"lower_items": 10}`. By default every point's marker keeps every other label away,
-so an important point in a crowd of minor ones can be left without a label while minor
-points at the edge of the crowd keep theirs; with `lower_items` an important label may
-cover the markers of less important points, which then go unlabeled
+With a `priority` (or `tiers`), the helpers set `avoid` `lower_items` (10 for labels, 2.5
+for leaders): an important label may cover the markers of less important points, which
+then go unlabeled. Otherwise an important point in a crowd of minor ones could be left
+without a label while minor points at the edge of the crowd keep theirs
 ([important labels over minor marks](../tutorials/priority.md#important-labels-over-minor-marks)).
+Your own `avoid` wins; `avoid={"lower_items": "hard"}` keeps every marker clear.
 
 `background="svg"` saves the figure as SVG (texts hidden) and classifies it with
 `svg_classes()`: the figure and axes background patches are tagged with gids and
