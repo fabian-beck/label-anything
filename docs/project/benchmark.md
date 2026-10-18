@@ -135,8 +135,8 @@ gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/)
 
 ## In CI
 
-CI runs the quick suite on every pull request and the full suite on release tags
-(job `bench`); the job `baselines` runs the quick suite with every baseline and the
+CI runs the quick suite on every pull request and push to main and the full suite on
+release tags (job `bench`); the job `baselines` runs the quick suite with every baseline and the
 performance targets on tags, weekly and on demand, builds the gallery and checks the
 release gates on tags. Both upload the report as a workflow artifact.
 

@@ -326,8 +326,11 @@ jobs:
           python3 examples/tutorials/run.py java --jar bindings/java/target/label-anything-0.1.0.jar --java "$JAVA_HOME_17_X64/bin/java"
 
   bench:
+    # Quick on pull requests and pushes to main, full on tags. The runs on main save the caches
+    # (scenario data, Rust build) that pull requests restore: a pull request's own caches are
+    # visible only to that pull request.
     name: Benchmark (${{ startsWith(github.ref, 'refs/tags/') && 'full' || 'quick' }})
-    if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -343,13 +346,16 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-      - name: Cache fetched data and built problems
-        uses: actions/cache@v4
+      - name: Restore fetched data, the t-SNE embedding and the Cora layout
+        # bench/data: downloads (checked against their SHA-256) and the slow derived data the build
+        # caches there (scenario 04's embedding, ≈ 8 min; scenario 07's Cora layout, ≈ 2 min). The
+        # key names what that data depends on, so editing a scenario keeps it. The built problems
+        # are not cached: the build rewrites them (< 1 min with this data).
+        id: bench-data
+        uses: actions/cache/restore@v4
         with:
-          path: |
-            bench/data
-            bench/out
-          key: bench-${{ hashFiles('bench/common/sources.py', 'bench/scenarios/**/*.py', 'bench/common/*.py') }}
+          path: bench/data
+          key: bench-data-${{ hashFiles('bench/requirements.txt', 'bench/common/sources.py', 'bench/scenarios/04-embedding/embedding.py', 'bench/scenarios/07-node-link/cora.py') }}
       - run: cargo build --release --manifest-path rust/Cargo.toml -p label-anything-cli
       - name: Fetch and build scenarios
         run: |
@@ -357,6 +363,13 @@ jobs:
           bench/.venv/bin/pip install -r bench/requirements.txt
           bench/.venv/bin/python -m bench.scenarios fetch
           bench/.venv/bin/python -m bench.scenarios build
+      - name: Save fetched data, the t-SNE embedding and the Cora layout
+        # right after the build, so that a failing benchmark run below does not lose them
+        if: steps.bench-data.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: bench/data
+          key: ${{ steps.bench-data.outputs.cache-primary-key }}
       - name: Run
         run: >
           bench/.venv/bin/python bench/run.py
@@ -420,13 +433,13 @@ jobs:
           cache-dependency-path: bench/baselines/package-lock.json
       - name: R, ggplot2 and ggrepel (Ubuntu 24.04 packages at the pinned versions)
         run: sudo bash bench/baselines/install-r.sh
-      - name: Cache fetched data and built problems
-        uses: actions/cache@v4
+      - name: Restore fetched data, the t-SNE embedding and the Cora layout
+        # the cache of the job bench (see there)
+        id: bench-data
+        uses: actions/cache/restore@v4
         with:
-          path: |
-            bench/data
-            bench/out
-          key: bench-${{ hashFiles('bench/common/sources.py', 'bench/scenarios/**/*.py', 'bench/common/*.py') }}
+          path: bench/data
+          key: bench-data-${{ hashFiles('bench/requirements.txt', 'bench/common/sources.py', 'bench/scenarios/04-embedding/embedding.py', 'bench/scenarios/07-node-link/cora.py') }}
       - run: cargo build --release --manifest-path rust/Cargo.toml -p label-anything-cli
       - name: Python and Node dependencies
         run: |
@@ -438,6 +451,13 @@ jobs:
         run: |
           bench/.venv/bin/python -m bench.scenarios fetch
           bench/.venv/bin/python -m bench.scenarios build
+      - name: Save fetched data, the t-SNE embedding and the Cora layout
+        # right after the build, as in the job bench
+        if: steps.bench-data.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: bench/data
+          key: ${{ steps.bench-data.outputs.cache-primary-key }}
       - name: Adapter, report and gate tests
         run: bench/.venv/bin/python -m pytest -q bench/eval/tests bench/baselines/tests bench/tests
       - name: Run (quick suite, Rust engine, all baselines, performance targets)
