@@ -88,7 +88,7 @@ final class FfmBackend implements NativeBackend {
         w = px.width;
         h = px.height;
         if (px.direct != null) {
-          rgba = MemorySegment.ofBuffer(px.direct); // zero-copy: the buffer's own memory
+          rgba = MemorySegment.ofBuffer(px.direct); // the buffer's own memory, not copied here
         } else {
           rgba = arena.allocate(px.length());
           MemorySegment.copy(px.array, px.offset, rgba, JAVA_BYTE, 0, px.length());

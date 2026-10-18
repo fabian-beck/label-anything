@@ -443,7 +443,7 @@
       "iterations": 4000,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 225,
+      "candidates": 207,
       "omission_order": [
         "d9",
         "d6",

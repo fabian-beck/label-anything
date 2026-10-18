@@ -24,7 +24,10 @@ Build and test (from the repository root; JDK 22+, Maven 3.9, Rust ≥ 1.88):
 cargo build --release --manifest-path rust/Cargo.toml -p label-anything-capi -p label-anything-cli \
       --features label-anything-capi/jni
 mvn -f bindings/java/pom.xml verify      # -Dlabelanything.jni.jvm=<jdk17>/bin/java: JNI tests on Java 17
+mvn -f bindings/java/pom.xml install     # also into ~/.m2 for your Maven projects (-DskipITs, -DskipTests)
 ```
+
+The JAR runs on Java 17+; JNI (Java 17–21) needs the library built with `--features jni`.
 
 | Path | Content |
 |---|---|

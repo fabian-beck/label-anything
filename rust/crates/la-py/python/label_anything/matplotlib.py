@@ -11,10 +11,21 @@ from ._extras import require
 require("matplotlib")
 
 from label_anything_extras.matplotlib import (  # noqa: E402
+    FigureBackground,
+    Frame,
     MatplotlibLabels,
     figure_background,
     label_points,
+    svg_classes,
     text_measure,
 )
 
-__all__ = ["MatplotlibLabels", "figure_background", "label_points", "text_measure"]
+__all__ = [
+    "FigureBackground",
+    "Frame",
+    "MatplotlibLabels",
+    "figure_background",
+    "label_points",
+    "svg_classes",
+    "text_measure",
+]

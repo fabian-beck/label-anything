@@ -20,7 +20,7 @@ public class GettingStarted {
         .vector(VectorLayer.of("rivers").polyline(0, 120, 480, 60).width(3))
         .avoid(Avoid.label().hard("rivers").weight("ink", 0.5))
         .leaders(Leaders.straight().maxLength("6em"))
-        .priority(Priority.attr("pop").log1p())
+        .priority(Priority.attr("pop"))
         .omission(Omission.STRICT)
         .build();
     LabelResult result = LabelAnything.place(problem);
@@ -67,7 +67,7 @@ public class GettingStarted {
     }
     rgba.flip();
     LabelResult onPixels = LabelAnything.place(LabelProblem.builder()
-        .backgroundPixels(w, h, rgba, RasterMode.INK)               // read in place, no copy through JSON
+        .backgroundPixels(w, h, rgba, RasterMode.INK)               // by address: no PNG, no base64
         .avoid(Avoid.label().hard("ink"))
         .item("p", 200, 150, Label.text("Over the band?"))
         .build());

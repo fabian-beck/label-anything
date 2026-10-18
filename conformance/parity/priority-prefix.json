@@ -52,7 +52,6 @@
         "reason": "omitted_by_priority",
         "blocking": [
           "items",
-          "canvas_edge",
           "labels"
         ],
         "blocked_by": [
@@ -341,7 +340,7 @@
       "iterations": 8000,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 660,
+      "candidates": 493,
       "omission_order": [
         "t19",
         "t18",

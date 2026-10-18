@@ -13,15 +13,22 @@ import type { PlaceError } from "./place-error.js";
 import type { InitInput } from "./raw.js";
 
 export type {
+  Anchor,
+  Box,
   CandidateInfo,
   FontSpec,
   Issue,
+  Label,
   LabelAnythingApi,
+  LabelItem,
+  LabelPlacement,
   LabelProblem,
   LabelResult,
+  Leader,
   PlaceOptions,
   PriorityValue,
   RgbaPixels,
+  Stats,
   TextMetrics,
   ValidationReport,
 } from "@label-anything/core";

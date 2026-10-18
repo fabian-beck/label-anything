@@ -8,7 +8,15 @@ import java.nio.file.Path;
 final class JniBackend implements NativeBackend {
   JniBackend(Path library) {
     System.load(library.toString());
-    if (JniNative.version() == null) {
+    byte[] version;
+    try {
+      version = JniNative.version();
+    } catch (UnsatisfiedLinkError e) {
+      throw new LabelAnythingException("cannot load the JNI backend: " + library
+          + " was built without JNI support (missing " + e.getMessage() + "); build it"
+          + " with `cargo build --release -p label-anything-capi --features jni`", e);
+    }
+    if (version == null) {
       throw new IllegalStateException("JNI entry points of " + library + " do not answer");
     }
   }

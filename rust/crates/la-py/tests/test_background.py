@@ -113,6 +113,15 @@ def test_float_and_bool_arrays_are_converted() -> None:
     assert res.stats["placed"] > 0
 
 
+def test_float_arrays_outside_0_1_are_rejected() -> None:
+    # 0–255 values in a float array would turn (almost) white when clipped
+    for bad in [image().astype(np.float64), image().astype(np.float32) / 255.0 - 0.5]:
+        with pytest.raises(ValueError, match=r"float background arrays must hold values in \[0, 1\]"):
+            la.place(PTS, NAMES, canvas=(W, H), background=bad)
+    nearly = np.clip(image().astype(np.float32) / 255.0, 0.0, 1.0) * 1.0000001  # rounding: clipped
+    assert la.place(PTS, NAMES, canvas=(W, H), background=nearly).stats["placed"] > 0
+
+
 def test_native_buffer_inputs(reference: List[Dict[str, Any]]) -> None:
     img = np.ascontiguousarray(image())
     problem = json.dumps(raw_problem())

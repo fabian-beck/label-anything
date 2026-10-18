@@ -16,7 +16,7 @@
 //! `LA_INVALID`, `LA_ERROR`), the rest is the JSON (or SVG) text the C ABI would return.
 //!
 //! The raster comes either as a direct `ByteBuffer`, read in place through
-//! `GetDirectBufferAddress` (the zero-copy path, as `la_place_json`), or as a region of a
+//! `GetDirectBufferAddress` (by pointer, as `la_place_json`), or as a region of a
 //! `byte[]`; either way the pixels are copied once into the image, exactly like the C ABI.
 //!
 //! The JNI function table is called directly (indices from `jni.h`; the table is

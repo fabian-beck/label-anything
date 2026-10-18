@@ -48,14 +48,15 @@ interface PlaceOptions {
 ```
 
 The problem and result formats are the JSON Schemas in `spec/schema` (TypeScript types
-`LabelProblem`, `LabelResult`). `place` accepts JSON text as well; invalid problems
+`LabelProblem`, `LabelResult`, and for their parts `LabelItem`, `Anchor`, `Label`,
+`LabelPlacement`, `Box`, `Leader`, `Stats`). `place` accepts JSON text as well; invalid problems
 throw a `PlaceError` with the same pointers and codes as `validate`.
 
 **Time budget and determinism.** `solver.time_budget_ms` (default 250 ms here, 100 ms in
 the Rust core) is turned into a fixed iteration budget (40 local-search moves per ms;
 ADR 0007), so results do not depend on the machine's speed. The clock only acts as a
 safety net: local search stops 3 × the budget after the start, and the greedy pass stops
-opening new priority bands after 10 × the budget. `signal` is polled every 64 greedy
+placing 10 × the budget after the greedy pass started. `signal` is polled every 64 greedy
 steps, 256 local-search moves and 4,096 exact-search nodes; a cancelled solve returns
 the best valid placement found so far (`stats.cancelled`).
 

@@ -1,0 +1,42 @@
+{
+  "kind": "validate",
+  "name": "mark-missing-shape",
+  "problem": {
+    "items": [
+      {
+        "anchor": {
+          "type": "point",
+          "x": 1,
+          "y": 1,
+          "mark": {
+            "w": 4,
+            "h": 4
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "A"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/items/0/anchor/mark/shape",
+        "code": "required"
+      },
+      {
+        "pointer": "/items/0/anchor/mark/w",
+        "code": "unknown_property"
+      },
+      {
+        "pointer": "/items/0/anchor/mark/h",
+        "code": "unknown_property"
+      }
+    ],
+    "warnings": [],
+    "exact": true
+  }
+}

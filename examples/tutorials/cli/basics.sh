@@ -15,7 +15,7 @@ label-anything place - < ../problems/graph.json > graph.result.json   # `-` = st
 # --8<-- [end:pipes]
 
 # --8<-- [start:csv]
-# anchors from a CSV (columns x, y and a label column; other numeric columns become attrs)
+# anchors from a CSV (columns x, y and a label column; the other columns become attrs)
 label-anything place --anchors outliers.csv --labels-col name --id-col id \
     --background scatter.png --preset scatter --max-labels 12 -o csv.result.json
 # --8<-- [end:csv]

@@ -22,6 +22,11 @@ problem, solves it, and draws or applies the result:
 None of the libraries is a dependency: the helpers use only the methods listed in their
 `…Like` interfaces (Observable Plot is an optional peer dependency of `/plot`).
 
+The helpers that draw the labels themselves render what the engine returns, including
+wrapped lines and shrunk fonts. Vega and Cytoscape draw their own text and the helpers
+only move it, so there labels are never wrapped or shrunk: the degradation ladder leaves
+out `wrap`, `truncate` and `shrink`, and a label that does not fit is left out instead.
+
 ## Engine
 
 By default the helpers solve with `@label-anything/core` (pure TypeScript). To use the
@@ -68,7 +73,7 @@ labelLayer(L, cities, { latLng: (d) => [d.lat, d.lon], text: "name", id: (d) => 
 | `engine` | solver (default `@label-anything/core`) |
 | `text` | accessor `(d, i) => string \| label object`, or a field name |
 | `id` | stable ids, needed to keep labels in place across updates (default: index) |
-| `priority` | `(d, i) => number` (higher is kept first) or the problem's `priority` section |
+| `priority` | `(d, i) => number` (higher is kept first) or the problem's `priority` section; with a priority, important labels may cover the dots of less important items, which then go unlabeled (`avoid` `lower_items` 10 / 2.5 unless you set it) |
 | `attrs` | per-item data for priority terms and expressions |
 | `preset`, `avoid`, `placement`, `solver` | the problem sections of the same name |
 | `leaders` | `false`, a style (`"straight"`, `"elbow"`, ...) or the `leaders` section |

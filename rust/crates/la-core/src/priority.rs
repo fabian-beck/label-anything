@@ -3,7 +3,7 @@
 use crate::env::Env;
 use crate::geom::P;
 use crate::labels::Variant;
-use crate::math::{cmp_f64, ln_1p, maxf};
+use crate::math::{cmp_f64, ln_1p, maxf, minf};
 use crate::model::opts::Ties;
 use crate::model::{Item, Model, Prim};
 use la_expr::det_math::Pcg32;
@@ -114,7 +114,7 @@ fn eq_radius(it: &Item) -> f64 {
 }
 
 /// k-th nearest-neighbour gap distance of every item among all item marks and the
-/// `points`-class discs (spec §4.4 `outlierness`).
+/// `points`-class discs (spec §4.4 `outlierness`), found exactly in a k-d tree (ADR 0044).
 fn knn_gaps(model: &Model, k: usize) -> Vec<f64> {
     let mut pts: Vec<(P, f64, Option<usize>)> = model
         .items
@@ -130,54 +130,159 @@ fn knn_gaps(model: &Model, k: usize) -> Vec<f64> {
         }
     }
     let bbox = crate::geom::bbox_of(&pts.iter().map(|p| p.0).collect::<Vec<_>>());
-    let cell = maxf(
-        (bbox.area() / maxf(pts.len() as f64, 1.0)).sqrt() * 2.0,
-        1.0,
-    );
-    let ix = crate::index::StaticIndex::new(
-        pts.iter()
-            .map(|(c, r, _)| crate::geom::Rect::from_center(*c, *r, *r))
-            .collect(),
-        &bbox.inflate(1.0),
-        cell,
-    );
+    let tree = KdTree::new(&pts);
+    let mut best = Vec::with_capacity(k + 1);
+    let mut stack = Vec::new();
     let mut out = Vec::with_capacity(model.items.len());
-    let mut buf = Vec::new();
-    let mut gaps: Vec<f64> = Vec::new();
     for (i, it) in model.items.iter().enumerate() {
-        let ri = eq_radius(it);
-        let mut radius = cell;
-        loop {
-            ix.query(
-                &crate::geom::Rect::from_center(it.anchor, radius, radius),
-                &mut buf,
-            );
-            gaps.clear();
-            for &j in &buf {
-                let (c, r, idx) = pts[j as usize];
-                if idx == Some(i) {
-                    continue;
-                }
-                gaps.push(maxf(c.dist(it.anchor) - r - ri, 0.0));
-            }
-            crate::sort::sort_by(&mut gaps, |a, b| cmp_f64(*a, *b));
-            // enough neighbours within the searched square guarantee correctness
-            if gaps.len() >= k && gaps[k - 1] + ri <= radius {
-                out.push(gaps[k - 1]);
-                break;
-            }
-            if radius > maxf(bbox.w(), bbox.h()) * 2.0 + 1.0 {
-                out.push(if gaps.len() >= k {
-                    gaps[k - 1]
-                } else {
-                    gaps.last().copied().unwrap_or(maxf(bbox.w(), bbox.h()))
-                });
-                break;
-            }
-            radius *= 2.0;
-        }
+        tree.smallest_gaps(&pts, it.anchor, eq_radius(it), i, k, &mut best, &mut stack);
+        out.push(if best.len() >= k {
+            best[k - 1]
+        } else {
+            // fewer neighbours than k: the largest gap, or the extent without any
+            best.last().copied().unwrap_or(maxf(bbox.w(), bbox.h()))
+        });
     }
     out
+}
+
+/// A k-d tree over disc centres for [`knn_gaps`]: nodes split at the median of their wider
+/// side, leaves of at most 8 discs.
+struct KdTree {
+    /// Disc indices; the discs of every node are contiguous.
+    idx: Vec<u32>,
+    nodes: Vec<KdNode>,
+}
+
+struct KdNode {
+    lo: usize,
+    hi: usize,
+    /// Bounding box of the centres, and the largest radius.
+    x0: f64,
+    y0: f64,
+    x1: f64,
+    y1: f64,
+    rmax: f64,
+    /// Children; 0 for a leaf (the root is no child).
+    left: usize,
+    right: usize,
+}
+
+impl KdTree {
+    fn new(pts: &[(P, f64, Option<usize>)]) -> Self {
+        let mut t = KdTree {
+            idx: (0..pts.len() as u32).collect(),
+            nodes: Vec::new(),
+        };
+        if !pts.is_empty() {
+            t.build(pts, 0, pts.len());
+        }
+        t
+    }
+
+    fn build(&mut self, pts: &[(P, f64, Option<usize>)], lo: usize, hi: usize) -> usize {
+        let (mut x0, mut y0) = (f64::INFINITY, f64::INFINITY);
+        let (mut x1, mut y1, mut rmax) = (f64::NEG_INFINITY, f64::NEG_INFINITY, 0.0);
+        for &j in &self.idx[lo..hi] {
+            let (c, r, _) = pts[j as usize];
+            x0 = minf(x0, c.x);
+            y0 = minf(y0, c.y);
+            x1 = maxf(x1, c.x);
+            y1 = maxf(y1, c.y);
+            rmax = maxf(rmax, r);
+        }
+        let id = self.nodes.len();
+        self.nodes.push(KdNode {
+            lo,
+            hi,
+            x0,
+            y0,
+            x1,
+            y1,
+            rmax,
+            left: 0,
+            right: 0,
+        });
+        if hi - lo > 8 {
+            let by_x = x1 - x0 >= y1 - y0;
+            crate::sort::sort_by(&mut self.idx[lo..hi], |&a, &b| {
+                let (pa, pb) = (pts[a as usize].0, pts[b as usize].0);
+                let (ka, kb, sa, sb) = if by_x {
+                    (pa.x, pb.x, pa.y, pb.y)
+                } else {
+                    (pa.y, pb.y, pa.x, pb.x)
+                };
+                cmp_f64(ka, kb).then(cmp_f64(sa, sb)).then(a.cmp(&b))
+            });
+            let mid = lo + (hi - lo) / 2;
+            let left = self.build(pts, lo, mid);
+            let right = self.build(pts, mid, hi);
+            self.nodes[id].left = left;
+            self.nodes[id].right = right;
+        }
+        id
+    }
+
+    /// A lower bound of the gap from (`a`, `ri`) to every disc of node `n`: rounding is
+    /// monotone, so it never exceeds a gap computed as in [`KdTree::smallest_gaps`].
+    fn bound(&self, n: usize, a: P, ri: f64) -> f64 {
+        let nd = &self.nodes[n];
+        let dx = maxf(maxf(nd.x0 - a.x, a.x - nd.x1), 0.0);
+        let dy = maxf(maxf(nd.y0 - a.y, a.y - nd.y1), 0.0);
+        (dx * dx + dy * dy).sqrt() - nd.rmax - ri
+    }
+
+    /// The `k` smallest gaps `max(|c − a| − r − ri, 0)` from (`a`, `ri`) to the discs other
+    /// than item `i`, ascending, in `best` (all of them when there are fewer). A node is
+    /// skipped only when its bound exceeds the k-th smallest gap found, so the values are
+    /// exactly those of a search over every disc.
+    #[allow(clippy::too_many_arguments)]
+    fn smallest_gaps(
+        &self,
+        pts: &[(P, f64, Option<usize>)],
+        a: P,
+        ri: f64,
+        i: usize,
+        k: usize,
+        best: &mut Vec<f64>,
+        stack: &mut Vec<usize>,
+    ) {
+        best.clear();
+        stack.clear();
+        if !self.nodes.is_empty() {
+            stack.push(0);
+        }
+        while let Some(n) = stack.pop() {
+            if best.len() >= k && self.bound(n, a, ri) > best[k - 1] {
+                continue;
+            }
+            let nd = &self.nodes[n];
+            if nd.left == 0 {
+                for &j in &self.idx[nd.lo..nd.hi] {
+                    let (c, r, idx) = pts[j as usize];
+                    if idx == Some(i) {
+                        continue;
+                    }
+                    let g = maxf(c.dist(a) - r - ri, 0.0);
+                    if best.len() < k || g < best[k - 1] {
+                        let at = best.partition_point(|&x| x <= g);
+                        best.insert(at, g);
+                        best.truncate(k);
+                    }
+                }
+            } else {
+                // the nearer child is visited first (pushed last)
+                let (l, r) = (nd.left, nd.right);
+                if self.bound(l, a, ri) <= self.bound(r, a, ri) {
+                    stack.push(r);
+                    stack.push(l);
+                } else {
+                    stack.push(l);
+                    stack.push(r);
+                }
+            }
+        }
+    }
 }
 
 fn attr_number(v: &Value) -> Option<f64> {
@@ -558,6 +663,41 @@ pub fn keep_with_sets(model: &Model) -> Vec<Vec<usize>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn kd_tree_finds_the_exact_kth_gap() {
+        // heavy-tailed centres (a dense core, far outliers) with mixed radii
+        let mut rng = Pcg32::new(7);
+        let mut u = || rng.next_f64() + 1e-9;
+        let pts: Vec<(P, f64, Option<usize>)> = (0..600)
+            .map(|i| {
+                let (a, b) = (u(), u());
+                let spread = 1.0 / (a * a) - 1.0;
+                let c = P::new(400.0 + spread * (b - 0.5), 300.0 + spread * (u() - 0.5));
+                (
+                    c,
+                    [0.0, 1.5, 6.0][i % 3],
+                    if i % 4 == 0 { None } else { Some(i) },
+                )
+            })
+            .collect();
+        let tree = KdTree::new(&pts);
+        let (mut best, mut stack) = (Vec::new(), Vec::new());
+        for k in [1, 5] {
+            for (q, &(a, ri, idx)) in pts.iter().enumerate() {
+                let Some(i) = idx else { continue };
+                let mut all: Vec<f64> = pts
+                    .iter()
+                    .enumerate()
+                    .filter(|&(j, _)| j != q)
+                    .map(|(_, &(c, r, _))| maxf(c.dist(a) - r - ri, 0.0))
+                    .collect();
+                crate::sort::sort_by(&mut all, |x, y| cmp_f64(*x, *y));
+                tree.smallest_gaps(&pts, a, ri, i, k, &mut best, &mut stack);
+                assert_eq!(best.as_slice(), &all[..k]);
+            }
+        }
+    }
 
     #[test]
     fn rank_normalization_with_ties_and_missing() {

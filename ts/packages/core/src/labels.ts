@@ -65,13 +65,16 @@ export function userFonts(model: Model, env: Env): FontBook | null {
   const loaded: [file: string, family: string][] = [];
   for (let i = 0; i < model.items.length; i++) {
     const item = model.items[i]!;
-    const fonts: FontSel[] = [item.font];
+    // [composite part index, font]
+    const fonts: [part: number | null, font: FontSel][] = [[null, item.font]];
     const label = item.label;
-    if (label.kind === "text") fonts.push(label.spec.font);
+    if (label.kind === "text") fonts.push([null, label.spec.font]);
     else if (label.kind === "composite") {
-      for (const p of label.parts) if (p.kind === "text") fonts.push(p.spec.font);
+      label.parts.forEach((p, k) => {
+        if (p.kind === "text") fonts.push([k, p.spec.font]);
+      });
     }
-    for (const f of fonts) {
+    for (const [part, f] of fonts) {
       const file = f.file;
       if (file === null) continue;
       const known = loaded.find(([fl]) => fl === file);
@@ -79,7 +82,7 @@ export function userFonts(model: Model, env: Env): FontBook | null {
         f.family = known[1];
         continue;
       }
-      const ptr = `/items/${i}/label/font/file`;
+      const ptr = fontFilePtr(item.raw, i, part, file);
       let bytes: Uint8Array;
       if (file.startsWith("data:")) {
         const b = dataUrlBytes(file);
@@ -104,6 +107,23 @@ export function userFonts(model: Model, env: Env): FontBook | null {
     }
   }
   return book;
+}
+
+/**
+ * Where the font file of item `i` (of its composite part `part`) is set: the part's or the
+ * label's `font.file` when it names `file`, else `defaults.font.file`.
+ */
+function fontFilePtr(raw: unknown, i: number, part: number | null, file: string): string {
+  const field = (v: unknown, k: string): unknown =>
+    typeof v === "object" && v !== null && !Array.isArray(v) ? (v as Record<string, unknown>)[k] : undefined;
+  const names = (v: unknown): boolean => field(field(v, "font"), "file") === file;
+  const label = field(raw, "label");
+  if (part !== null) {
+    const parts = field(label, "parts");
+    if (Array.isArray(parts) && names(parts[part])) return `/items/${i}/label/parts/${part}/font/file`;
+  }
+  if (names(label)) return `/items/${i}/label/font/file`;
+  return "/defaults/font/file";
 }
 
 function asciiEqIgnoreCase(a: string, b: string): boolean {
@@ -287,6 +307,15 @@ function toWrapOpts(spec: TextSpec, scale: number): WrapOptions | null {
   };
 }
 
+/**
+ * The lines of a text broken by line feeds (hard breaks, spec §5.3; a `\r` before a line
+ * feed is dropped), or `null` when it has none.
+ */
+function hardLines(text: string): string[] | null {
+  if (!text.includes("\n")) return null;
+  return text.split("\n").map((l) => (l.endsWith("\r") ? l.slice(0, -1) : l));
+}
+
 /** Normal-level variants of one text (original or alternative). */
 function textVariants(m: Measurer, spec: TextSpec, text: string, pad: number, scale: number, used: string): Variant[] {
   if (spec.explicit !== null) {
@@ -319,6 +348,9 @@ function textVariants(m: Measurer, spec: TextSpec, text: string, pad: number, sc
       ),
     ];
   }
+  const hard = hardLines(text);
+  // the author's lines: never wrapped or truncated
+  if (hard !== null) return [textVariant(m, spec, pad, scale, hard, used, false)];
   const measure = (s: string): number => m.width(spec.font, scale, s);
   const opts = toWrapOpts(spec, scale);
   if (opts === null) return [textVariant(m, spec, pad, scale, [text], used, false)];
@@ -336,6 +368,9 @@ function sameLines(v: Variant, lines: readonly string[]): boolean {
   return v.text !== null && arrEq(v.text.lines, lines);
 }
 
+/** Narrowest line of a `wrap` step variant, in em of the label's font (spec §5.3). */
+const MIN_WRAP_LINE_EM = 1.5;
+
 /** Variants for the `wrap` ladder step. */
 function extraWrap(
   m: Measurer,
@@ -346,7 +381,7 @@ function extraWrap(
   used: string,
   wrapMaxLines: number,
 ): Variant[] {
-  if (spec.explicit !== null) return [];
+  if (spec.explicit !== null || text.includes("\n")) return [];
   const width = (s: string): number => m.width(spec.font, scale, s);
   const measure = m.wrapMeasure(spec.font, scale, width);
   let normalMax: number;
@@ -372,17 +407,21 @@ function extraWrap(
     }
     return out;
   } else normalMax = wrapMaxLines;
-  return extraWrapVariants(text, normalMax, measure).map((tv) => {
-    const v = textVariant(m, spec, pad, scale, tv.lines, used, tv.truncated);
-    v.penalty += 0.25 * (v.lines() - 1);
-    v.steps.push("wrap");
-    return v;
-  });
+  // no line narrower than MIN_WRAP_LINE_EM: `France / 3` strands the 3 (spec §5.3)
+  const minLine = MIN_WRAP_LINE_EM * spec.font.size * scale;
+  return extraWrapVariants(text, normalMax, measure)
+    .filter((tv) => tv.widths.every((w) => w >= minLine))
+    .map((tv) => {
+      const v = textVariant(m, spec, pad, scale, tv.lines, used, tv.truncated);
+      v.penalty += 0.25 * (v.lines() - 1);
+      v.steps.push("wrap");
+      return v;
+    });
 }
 
 /** Truncated single-line variants for the `truncate` ladder step. */
 function truncated(m: Measurer, spec: TextSpec, text: string, pad: number, scale: number): Variant[] {
-  if (spec.explicit !== null) return [];
+  if (spec.explicit !== null || text.includes("\n")) return [];
   const measure = (s: string): number => m.width(spec.font, scale, s);
   const full = measure(text);
   const mw = spec.wrap !== null ? spec.wrap.maxWidth : null;

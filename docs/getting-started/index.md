@@ -14,6 +14,56 @@ returns the same result format (`result.v1`). Pick the package for your environm
 | Shell, any language with JSON and processes or HTTP | `label-anything` (Rust) or `label-anything-ts` (Node) | Rust core / TypeScript | [CLI and HTTP server](cli.md) |
 | Rust | the `label-anything` crate (`place(&serde_json::Value)`) | Rust core | [`rust/crates/label-anything`](gh:rust/crates/label-anything/src/lib.rs) |
 
+!!! note "Not in the package registries yet"
+
+    The packages are not published to PyPI, npm, Maven Central or crates.io yet, so the
+    `pip install`, `npm install` and Maven lines on these pages do not work yet. Until
+    they do, [install from this repository](#install-from-this-repository).
+
+## Install from this repository
+
+Clone the repository; every command below runs from its root. You need Rust ≥ 1.88
+([rustup](https://rustup.rs)) for everything but the pure TypeScript packages, which
+need only Node ≥ 18.
+
+```sh
+git clone https://github.com/fabian-beck/label-anything
+cd label-anything
+```
+
+**Python.** Build the wheel with [maturin](https://www.maturin.rs/), then install it
+together with the plotting helpers (`label-anything-extras`) into your environment:
+
+```sh
+pip install maturin
+maturin build --release -m rust/crates/la-py/Cargo.toml
+pip install rust/target/wheels/label_anything-*.whl bindings/python-extras
+pip install matplotlib plotly seaborn      # the plotting libraries you use
+```
+
+**JavaScript and TypeScript.** Build the workspace and pack the packages as tarballs, then
+install them into your project *together*: `@label-anything/core` depends on its sibling
+packages `text`, `svg` and `raster`, which npm cannot fetch from the registry yet.
+
+```sh
+npm ci && npm run build
+mkdir -p ../la-packages
+npm pack -w @label-anything/text -w @label-anything/svg -w @label-anything/raster \
+         -w @label-anything/core -w @label-anything/extras --pack-destination ../la-packages
+cd ../my-project && npm install ../la-packages/*.tgz
+```
+
+The WebAssembly package needs a Rust toolchain for WebAssembly as well: see
+[building `@label-anything/wasm`](../bindings/wasm.md#building-from-source).
+
+**Command line.** `cargo install --path rust/crates/la-cli` puts `label-anything` on your
+`PATH`.
+
+**Java, C and Go.** Build the native library with
+`cargo build --release --manifest-path rust/Cargo.toml -p label-anything-capi` (add
+`--features jni` for Java); the [Java](java.md) and [C and Go](c-go.md) pages continue
+from there.
+
 ## The smallest problem
 
 A problem needs only `items`: each has an `anchor` (where the labeled feature is) and a

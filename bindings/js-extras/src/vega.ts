@@ -16,11 +16,13 @@
  * Like `label`, it works on a text mark with reactive geometry (`from.data` = the labeled
  * mark) and writes `x`, `y`, `opacity`, `align` and `baseline` (`as`). With `leaders`, it
  * also writes `leaderPath` (SVG path data, for a `path` mark on the text mark's data).
- * Avoided marks become vector obstacles with their mark name as class.
+ * Avoided marks become vector obstacles with their mark name as class. Vega draws the
+ * text items as encoded, so labels are moved but never wrapped or shrunk (the ladder
+ * leaves out `wrap`, `truncate` and `shrink`).
  */
 import type { FontSpec, LabelProblem, LabelResult } from "@label-anything/core";
 import { isPromiseLike, resolveEngine, type AnyEngine, type Engine } from "./engine.js";
-import { buildProblem, placeOptionsOf, resolveFont, type LabelOptions, type PointAnchor } from "./options.js";
+import { buildProblem, keepHostText, placeOptionsOf, resolveFont, type LabelOptions, type PointAnchor } from "./options.js";
 import { leaderPath } from "./render.js";
 
 /** The parts of the `vega` module used here. */
@@ -193,10 +195,9 @@ function layout(
   if (!opts.avoid) opts.avoid = { label: hard };
   else opts.avoid = { ...opts.avoid, label: { ...hard, ...opts.avoid.label } };
 
-  const problem = buildProblem(
-    { canvas: { width: size[0], height: size[1] }, items, ...(vectors.length ? { obstacles: { vector: vectors } } : {}) },
-    opts,
-    font,
+  // Vega draws the text items as encoded: labels are moved, never wrapped or shrunk.
+  const problem = keepHostText(
+    buildProblem({ canvas: { width: size[0], height: size[1] }, items, ...(vectors.length ? { obstacles: { vector: vectors } } : {}) }, opts, font),
   );
   const measure = vega.textMetrics
     ? (text: string, f: FontSpec) => ({

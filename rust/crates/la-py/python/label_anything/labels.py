@@ -353,7 +353,7 @@ def anchor_dict(anchor: Any, pointer: str = "/anchor") -> JSONDict:
         return anchor.to_dict()
     if isinstance(anchor, Mapping):
         d = dict(anchor)
-        d.setdefault("type", "point" if "x" in d else "area")
+        d.setdefault("type", "area" if "polygon" in d else "point")
         return d
     if isinstance(anchor, (str, bytes)):
         raise TypeError(f"an anchor must be (x, y), Area or a dict (got {anchor!r})")

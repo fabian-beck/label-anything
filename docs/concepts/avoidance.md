@@ -65,8 +65,9 @@ The key `"*"` sets the value of every class the map does not list.
 it). Internal labels are inside their mark by design and exempt.
 
 **Marks of less important items.** `avoid.label.lower_items` is the policy between a label
-and the marks of items of *lower* priority key (default: that of `items`); a weight lets
-the labels of important items claim the space of the minor marks around them. A covered
+and the marks of items of *lower* priority key (default: that of `items`; 10 in the `map`
+preset and in the helpers given a priority); a weight lets the labels of important items
+claim the space of the minor marks around them. A covered
 mark is never mislabeled: its item then goes without a label (`omitted_by_priority`).
 `avoid.leader.lower_items` does the same for leaders. See
 [Priority](../tutorials/priority.md#important-labels-over-minor-marks).

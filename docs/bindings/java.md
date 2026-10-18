@@ -20,21 +20,25 @@ native library `liblabelanything` solves it, and the result is parsed into recor
 </dependency>
 ```
 
-Start the JVM with `--enable-native-access=ALL-UNNAMED` (Java 22+ warns about restricted
-methods without it; executable JARs can set `Enable-Native-Access: ALL-UNNAMED` in their
-manifest instead).
+The JAR is not in Maven Central yet; build it from source (below). Start the JVM with
+`--enable-native-access=ALL-UNNAMED` (Java 22+ warns about restricted methods without it;
+executable JARs can set `Enable-Native-Access: ALL-UNNAMED` in their manifest instead).
 
-From source (Rust ≥ 1.88, JDK 22+ to build, Maven 3.9):
+From source, in the repository root (Rust ≥ 1.88, JDK 22+ to build, Maven 3.9; the JAR
+runs on Java 17+):
 
 ```sh
 cargo build --release --manifest-path rust/Cargo.toml -p label-anything-capi --features jni
-mvn -f bindings/java/pom.xml verify      # JAR in bindings/java/target/, bundles the library
+mvn -f bindings/java/pom.xml install     # JAR in bindings/java/target/ and ~/.m2, bundles the library
 ```
 
-`verify` runs the unit tests, then the integration tests twice against the packaged JAR:
-once with FFM, once with JNI (`-Dlabelanything.jni.jvm=/path/to/jdk17/bin/java` runs the
-JNI pass on an older JVM). The integration tests compare FFM, JNI and the CLI
-(`cargo build --release -p label-anything-cli`) on every conformance problem.
+`install` (like `verify`) runs the unit tests, then the integration tests twice against the
+packaged JAR: once with FFM, once with JNI (`-Dlabelanything.jni.jvm=/path/to/jdk17/bin/java`
+runs the JNI pass on an older JVM). `-DskipITs` skips the integration tests, `-DskipTests`
+all tests. The integration tests compare FFM, JNI and the CLI
+(`cargo build --release --manifest-path rust/Cargo.toml -p label-anything-cli`; without it
+that comparison is skipped) on every conformance problem. Without a JDK 22+:
+[compile the JNI path](../getting-started/java.md#install) with `javac --release 17`.
 
 ## Quick start
 
@@ -47,7 +51,7 @@ var problem = LabelProblem.builder()
     .backgroundRaster(Path.of("map.png"), RasterMode.INK)
     .avoid(Avoid.label().hard("labels").weight("ink", 0.5))
     .leaders(Leaders.angles(0, 45, 90, 135, 180, 225, 270, 315))
-    .priority(Priority.attr("traffic").log1p().plus(Priority.outlierness(5)))
+    .priority(Priority.attr("traffic").log1p().normalize(Priority.Normalize.MINMAX).plus(Priority.outlierness(5)))
     .omission(Omission.STRICT)
     .build();
 LabelResult r = LabelAnything.place(problem);
@@ -109,22 +113,28 @@ same, self-contained (raw pixels embedded), e.g. for `label-anything place`.
 combine with `plus`, `minus` and `times`:
 
 ```java
-Priority.attr("cbo").log1p().times(0.5).plus(Priority.outlierness(5)).minus(Priority.labelSize().times(0.2))
+Priority.attr("cbo").log1p().normalize(Priority.Normalize.MINMAX).times(0.5)
+    .plus(Priority.outlierness(5)).minus(Priority.labelSize().times(0.2))
 ```
+
+A transform changes the scores only with `MINMAX` or `NONE` normalization: the default,
+`RANK`, keeps only the order of the values, which a monotone transform such as `log1p`
+does not change.
 
 `Priority.callback(item -> ...)` computes the score in Java: it runs once per item when
 the problem is built and writes an explicit `priority` into every item that has none
 (callbacks combine with callbacks, not with engine terms).
 
-### Raster pixels without copies
+### Raster pixels by pointer
 
 `backgroundPixels(width, height, buffer, mode)` (or `Raster.pixels(..)`, `Raster.argb(..)`)
 passes row-major RGBA8 pixels (straight alpha) to the pointer entry point of
 `la_place_json`: no base64, no image decoding. A direct `ByteBuffer` (for example
-`ByteBuffer.allocateDirect` or `MemorySegment.asByteBuffer()`) is read in place by both
-paths; a heap array is passed as an array region (JNI) or copied once into native memory
-(FFM). Only the problem's first raster travels by pointer; further pixel rasters are
-embedded as base64. Do not modify the buffer while a solve runs.
+`ByteBuffer.allocateDirect` or `MemorySegment.asByteBuffer()`) is passed by its address on
+both paths; a heap array is passed as an array region (JNI) or copied once into native
+memory (FFM). The native library then copies the pixels into its own image. Only the
+problem's first raster travels by pointer; further pixel rasters are embedded as base64.
+Do not modify the buffer while a solve runs.
 
 ## Results
 
@@ -171,7 +181,7 @@ falling back to JNI if FFM cannot be initialized).
 ## Limitations
 
 * The JAR built here bundles only the library of the build platform (linux-x86_64 in CI).
-* Raw pixels are copied once by the native library (as for every host); file and
+* Raw pixels are copied by the native library (as for every host); file and
   encoded-image backgrounds are decoded by the native library.
 * Relative file paths in raw JSON (`obstacles.raster.source`, `obstacles.svg.path`,
   `font.file`) resolve against the process working directory; the builder sends absolute

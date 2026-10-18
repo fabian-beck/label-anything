@@ -12,6 +12,21 @@ import type { Issue, LabelResult } from "./generated/result.js";
 
 export type { LabelProblem, LabelResult, Issue };
 
+/** One item of a problem: where the labeled feature is (`anchor`) and what to place (`label`). */
+export type LabelItem = LabelProblem["items"][number];
+/** Where a labeled feature is: a point (with an optional mark shape) or an area polygon. */
+export type Anchor = LabelItem["anchor"];
+/** What to place: a text, an icon or box of a given size, or a composite of these. */
+export type Label = LabelItem["label"];
+/** One entry of `LabelResult.placements`: the label box, leader and text layout of an item. */
+export type LabelPlacement = LabelResult["placements"][number];
+/** A label box in canvas px: top-left corner `x`, `y` and size `w`, `h`. */
+export type Box = NonNullable<LabelPlacement["box"]>;
+/** A leader line from the anchor to the label (`points`, `style`, `port`, ...). */
+export type Leader = NonNullable<LabelPlacement["leader"]>;
+/** Summary of a solve (`LabelResult.stats`). */
+export type Stats = LabelResult["stats"];
+
 /** Font of a label as passed to a host {@link PlaceOptions.measure} callback. */
 export interface FontSpec {
   family: string;
@@ -54,7 +69,7 @@ export interface PlaceOptions {
    * Host priority function, evaluated once per item before solving (never in inner
    * loops). It replaces `priority.terms`; tiers, `required` and ties still apply.
    */
-  priority?: (item: LabelProblem["items"][number], index: number) => PriorityValue;
+  priority?: (item: LabelItem, index: number) => PriorityValue;
   /** Extra user cost added to the static cost of every candidate. */
   cost?: (candidate: CandidateInfo) => number;
   /**

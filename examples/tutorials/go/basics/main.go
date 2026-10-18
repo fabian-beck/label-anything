@@ -1,9 +1,11 @@
 // Getting started with Go (docs/getting-started/c-go.md): a small typed wrapper around the
 // C ABI with cgo.
 //
-//	cd examples/tutorials/go && go build -o /tmp/basics ./basics
-//	LD_LIBRARY_PATH=.../rust/target/release /tmp/basics
+//	cd examples/tutorials/go && go build -o la-basics ./basics
+//	LD_LIBRARY_PATH=../../../rust/target/release ./la-basics
 package main
+
+// --8<-- [start:cgo]
 
 /*
 #cgo CFLAGS: -I${SRCDIR}/../../../../rust/crates/la-capi/include
@@ -12,6 +14,8 @@ package main
 #include "label_anything.h"
 */
 import "C"
+
+// --8<-- [end:cgo]
 
 import (
 	"encoding/json"
@@ -64,11 +68,11 @@ func Place(problem any, out any) error {
 // Result holds the parts of result.v1 this program reads.
 type Result struct {
 	Placements []struct {
-		ID         string `json:"id"`
-		Placed     bool   `json:"placed"`
-		Box        *struct{ X, Y, W, H float64 } `json:"box"`
-		AnchorSide string `json:"anchor_side"`
-		Reason     string `json:"reason"`
+		ID         string                        `json:"id"`
+		Placed     bool                          `json:"placed"`
+		Box        *struct{ X, Y, W, H float64 } `json:"box"` // nil when omitted
+		AnchorSide string                        `json:"anchor_side"`
+		Reason     string                        `json:"reason"`
 	} `json:"placements"`
 	Stats struct {
 		Placed         int `json:"placed"`
@@ -92,11 +96,28 @@ func main() {
 		os.Exit(1)
 	}
 	for _, p := range res.Placements {
-		fmt.Println(p.ID, p.Placed, p.AnchorSide, *p.Box)
+		if p.Placed {
+			fmt.Println(p.ID, p.AnchorSide, *p.Box)
+		} else {
+			fmt.Println(p.ID, "omitted:", p.Reason) // no box
+		}
 	}
 	// --8<-- [end:use]
 	if res.Stats.Placed != 3 || res.Stats.HardViolations != 0 {
 		panic(fmt.Sprintf("unexpected stats %+v", res.Stats))
+	}
+	// Omitted labels have no box: on this canvas at most one label fits.
+	var crowded Result
+	if err := Place(map[string]any{
+		"canvas": map[string]any{"width": 40, "height": 24},
+		"items":  []any{item("a", 20, 12, "Alpha"), item("b", 21, 12, "Beta"), item("c", 19, 13, "Gamma"), item("d", 20, 11, "Delta")},
+	}, &crowded); err != nil || crowded.Stats.Placed == crowded.Stats.Total {
+		panic(fmt.Sprintf("expected omissions, got %v %+v", err, crowded.Stats))
+	}
+	for _, p := range crowded.Placements {
+		if p.Placed != (p.Box != nil) || !p.Placed && p.Reason == "" {
+			panic(fmt.Sprintf("placement %+v", p))
+		}
 	}
 
 	// --8<-- [start:invalid]

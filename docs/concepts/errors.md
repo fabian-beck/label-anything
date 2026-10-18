@@ -38,9 +38,9 @@ Warnings never stop a solve; they are returned in `result.warnings` too.
 | Code | Meaning |
 |---|---|
 | `parse` | not valid JSON (or, for an SVG background, not well-formed XML) |
-| `type` | wrong JSON type |
+| `type` | wrong JSON type (also `NaN` and `Infinity` in a JavaScript object, which JSON cannot represent) |
 | `required` | a required property is missing (also `canvas` when `y_axis` is `"up"`) |
-| `unknown_property` | a property that is not allowed here (often a typo) |
+| `unknown_property` | a property that is not allowed here (often a typo: the message names the closest property, e.g. `(did you mean 'width'?)`) |
 | `enum`, `const` | a value outside the allowed set; `version` other than `"1"` |
 | `range` | a number out of range (e.g. a width ≤ 0, a weight < 0, a non-integer count) |
 | `length` | an array or string too short or too long (e.g. a polygon with 2 points) |
@@ -56,8 +56,9 @@ Warnings never stop a solve; they are returned in `result.warnings` too.
 | `limit` | a size limit: grids over 16 million cells, SVGs nested too deeply or with too many elements |
 
 **Warnings:** `unknown_class` — an `avoid` key that no obstacle source produces and that
-is not a reserved class; `ignored` — an option without effect in its context; `limit` —
-SVG content too deep to render, skipped.
+is not a reserved class; `unknown_attr` — a priority term on an attribute that no item has
+in its `attrs` (the term is 0 for every item, so it ranks nothing); `ignored` — an option
+without effect in its context; `limit` — SVG content too deep to render, skipped.
 
 ## Errors while preparing
 

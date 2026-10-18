@@ -43,6 +43,18 @@ export function signedArea(ring: Ring): number {
   return s * 0.5;
 }
 
+/**
+ * Turns every hole (ring after the first) against the outer ring, so that the non-zero
+ * rule cuts it out whichever way it was given (spec §3.2).
+ */
+export function orientHoles(rings: P[][]): void {
+  if (rings.length === 0) return;
+  const outer = signedArea(rings[0]!);
+  for (let i = 1; i < rings.length; i++) {
+    if (signedArea(rings[i]!) * outer > 0) rings[i]!.reverse();
+  }
+}
+
 /** Winding number of `p` with respect to one ring. */
 export function winding(ring: Ring, p: P): number {
   return windingXY(ring, p.x, p.y);

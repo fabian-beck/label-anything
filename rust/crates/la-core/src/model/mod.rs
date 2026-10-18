@@ -1416,6 +1416,7 @@ pub fn mark_shape(
             {
                 rings.push(points_of(h).into_iter().map(map).collect());
             }
+            polygon::orient_holes(&mut rings);
             (Shape::polygon(rings, false, at), false)
         }
         "path" => {
@@ -1588,6 +1589,7 @@ fn build_item(
             {
                 rings.push(points_of(h).into_iter().map(|p| to_px.apply(p)).collect());
             }
+            polygon::orient_holes(&mut rings);
             let (pole, pole_dist) = polygon::polylabel(&rings, false, 0.5);
             let area_shape = Shape::polygon(rings, false, pole);
             let dot = match anchor_v.get("dot") {

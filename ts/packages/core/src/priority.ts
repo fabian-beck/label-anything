@@ -7,13 +7,12 @@
 
 import type { Env } from "./env.js";
 import { type Expr, type ExprContext, type Value, evalExpr, parseExpr, termNumber, truthy, valuesEqual } from "./expr/index.js";
-import { P, Rect, bboxOf } from "./geom/index.js";
+import { P, bboxOf } from "./geom/index.js";
 import { asArray, asF64, asI64, asStr, asU64, get, isObject, items as itemsOf } from "./json.js";
 import { type Variant, labelSizeEm2 } from "./labels.js";
 import { cmpF64, cmpStr, ln, ln1p, maxf, minf } from "./math.js";
 import { type Item, type Model, labelText } from "./model/index.js";
 import { Pcg32 } from "./pcg.js";
-import { IdList, StaticIndex } from "./spatial.js";
 
 /** Resolved priority of one item. */
 export interface Prio {
@@ -122,48 +121,131 @@ function eqRadius(it: Item): number {
 
 /**
  * k-th nearest-neighbour gap distance of every item among all item marks and the
- * `points`-class discs (spec §4.4 `outlierness`).
+ * `points`-class discs (spec §4.4 `outlierness`), found exactly in a k-d tree (ADR 0044).
  */
 function knnGaps(model: Model, k: number): number[] {
-  const pts: [P, number, number | null][] = model.items.map((it, i) => [it.anchor, eqRadius(it), i]);
+  const pts: Disc[] = model.items.map((it, i) => [it.anchor, eqRadius(it), i]);
   for (const [c, p] of model.vector) {
     if (c === "points" && p.kind === "disc") pts.push([p.c, p.r, null]);
   }
   const bbox = bboxOf(pts.map((p) => p[0]));
-  const cell = maxf(Math.sqrt(bbox.area() / maxf(pts.length, 1)) * 2, 1);
-  const ix = new StaticIndex(
-    pts.map(([c, r]) => Rect.fromCenter(c, r, r)),
-    bbox.inflate(1),
-    cell,
-  );
+  const tree = new KdTree(pts);
+  const best: number[] = [];
+  const stack: number[] = [];
   const out: number[] = [];
-  const buf = new IdList();
-  const gaps: number[] = [];
   model.items.forEach((it, i) => {
-    const ri = eqRadius(it);
-    let radius = cell;
-    for (;;) {
-      ix.query(Rect.fromCenter(it.anchor, radius, radius), buf);
-      gaps.length = 0;
-      for (let q = 0; q < buf.len; q++) {
-        const [c, r, idx] = pts[buf.get(q)]!;
-        if (idx === i) continue;
-        gaps.push(maxf(c.dist(it.anchor) - r - ri, 0));
-      }
-      gaps.sort(cmpF64);
-      // enough neighbours within the searched square guarantee correctness
-      if (gaps.length >= k && gaps[k - 1]! + ri <= radius) {
-        out.push(gaps[k - 1]!);
-        break;
-      }
-      if (radius > maxf(bbox.w(), bbox.h()) * 2 + 1) {
-        out.push(gaps.length >= k ? gaps[k - 1]! : gaps.length > 0 ? gaps[gaps.length - 1]! : maxf(bbox.w(), bbox.h()));
-        break;
-      }
-      radius *= 2;
-    }
+    tree.smallestGaps(pts, it.anchor, eqRadius(it), i, k, best, stack);
+    // fewer neighbours than k: the largest gap, or the extent without any
+    out.push(best.length >= k ? best[k - 1]! : best.length > 0 ? best[best.length - 1]! : maxf(bbox.w(), bbox.h()));
   });
   return out;
+}
+
+/** A disc: centre, radius, item index (`null` for a `points` obstacle). */
+export type Disc = [P, number, number | null];
+
+/** A k-d tree node: its discs `idx[lo..hi]`, their centres' bounding box and largest radius. */
+interface KdNode {
+  lo: number;
+  hi: number;
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+  rmax: number;
+  /** Children; 0 for a leaf (the root is no child). */
+  left: number;
+  right: number;
+}
+
+/**
+ * A k-d tree over disc centres for {@link knnGaps}: nodes split at the median of their
+ * wider side, leaves of at most 8 discs.
+ */
+export class KdTree {
+  /** Disc indices; the discs of every node are contiguous. */
+  readonly idx: number[];
+  readonly nodes: KdNode[] = [];
+
+  constructor(pts: readonly Disc[]) {
+    this.idx = pts.map((_, j) => j);
+    if (pts.length > 0) this.build(pts, 0, pts.length);
+  }
+
+  private build(pts: readonly Disc[], lo: number, hi: number): number {
+    let [x0, y0, x1, y1, rmax] = [Infinity, Infinity, -Infinity, -Infinity, 0];
+    for (let q = lo; q < hi; q++) {
+      const [c, r] = pts[this.idx[q]!]!;
+      x0 = minf(x0, c.x);
+      y0 = minf(y0, c.y);
+      x1 = maxf(x1, c.x);
+      y1 = maxf(y1, c.y);
+      rmax = maxf(rmax, r);
+    }
+    const id = this.nodes.length;
+    this.nodes.push({ lo, hi, x0, y0, x1, y1, rmax, left: 0, right: 0 });
+    if (hi - lo > 8) {
+      const byX = x1 - x0 >= y1 - y0;
+      const part = this.idx.slice(lo, hi).sort((a, b) => {
+        const [pa, pb] = [pts[a]![0], pts[b]![0]];
+        const [ka, kb, sa, sb] = byX ? [pa.x, pb.x, pa.y, pb.y] : [pa.y, pb.y, pa.x, pb.x];
+        return cmpF64(ka, kb) || cmpF64(sa, sb) || a - b;
+      });
+      for (let q = lo; q < hi; q++) this.idx[q] = part[q - lo]!;
+      const mid = lo + Math.trunc((hi - lo) / 2);
+      const left = this.build(pts, lo, mid);
+      const right = this.build(pts, mid, hi);
+      this.nodes[id]!.left = left;
+      this.nodes[id]!.right = right;
+    }
+    return id;
+  }
+
+  /**
+   * A lower bound of the gap from (`a`, `ri`) to every disc of node `n`: rounding is
+   * monotone, so it never exceeds a gap computed as in {@link KdTree.smallestGaps}.
+   */
+  private bound(n: number, a: P, ri: number): number {
+    const nd = this.nodes[n]!;
+    const dx = maxf(maxf(nd.x0 - a.x, a.x - nd.x1), 0);
+    const dy = maxf(maxf(nd.y0 - a.y, a.y - nd.y1), 0);
+    return Math.sqrt(dx * dx + dy * dy) - nd.rmax - ri;
+  }
+
+  /**
+   * The `k` smallest gaps `max(|c − a| − r − ri, 0)` from (`a`, `ri`) to the discs other than
+   * item `i`, ascending, in `best` (all of them when there are fewer). A node is skipped only
+   * when its bound exceeds the k-th smallest gap found, so the values are exactly those of a
+   * search over every disc.
+   */
+  smallestGaps(pts: readonly Disc[], a: P, ri: number, i: number, k: number, best: number[], stack: number[]): void {
+    best.length = 0;
+    stack.length = 0;
+    if (this.nodes.length > 0) stack.push(0);
+    while (stack.length > 0) {
+      const n = stack.pop()!;
+      if (best.length >= k && this.bound(n, a, ri) > best[k - 1]!) continue;
+      const nd = this.nodes[n]!;
+      if (nd.left === 0) {
+        for (let q = nd.lo; q < nd.hi; q++) {
+          const [c, r, idx] = pts[this.idx[q]!]!;
+          if (idx === i) continue;
+          const g = maxf(c.dist(a) - r - ri, 0);
+          if (best.length < k || g < best[k - 1]!) {
+            let at = best.length;
+            while (at > 0 && best[at - 1]! > g) at--;
+            best.splice(at, 0, g);
+            if (best.length > k) best.length = k;
+          }
+        }
+      } else if (this.bound(nd.left, a, ri) <= this.bound(nd.right, a, ri)) {
+        // the nearer child is visited first (pushed last)
+        stack.push(nd.right, nd.left);
+      } else {
+        stack.push(nd.left, nd.right);
+      }
+    }
+  }
 }
 
 function attrNumber(v: unknown): number | null {

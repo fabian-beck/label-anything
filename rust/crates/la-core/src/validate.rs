@@ -146,6 +146,52 @@ impl Path<'_> {
     }
 }
 
+/// The known property `k` was most likely meant as: equal up to ASCII case, `_` and `-`,
+/// else within an edit distance of a third of its length (at least 1); ties go to the
+/// alphabetically first.
+fn suggest<'a>(k: &str, known: impl Iterator<Item = &'a str>) -> Option<&'a str> {
+    let norm = |s: &str| -> Vec<char> {
+        s.chars()
+            .filter(|&c| c != '_' && c != '-')
+            .map(|c| c.to_ascii_lowercase())
+            .collect()
+    };
+    let a = norm(k);
+    let limit = (a.len() / 3).max(1);
+    let mut best: Option<(usize, &str)> = None;
+    for cand in known {
+        let d = edit_distance(&a, &norm(cand));
+        if d <= limit && best.is_none_or(|(bd, bs)| d < bd || (d == bd && cand < bs)) {
+            best = Some((d, cand));
+        }
+    }
+    best.map(|(_, s)| s)
+}
+
+/// Edit distance of two code point sequences: insertions, deletions, substitutions and
+/// swaps of two neighbours (`widht`) cost 1 (optimal string alignment).
+fn edit_distance(a: &[char], b: &[char]) -> usize {
+    let w = b.len() + 1;
+    let mut d: Vec<usize> = vec![0; (a.len() + 1) * w];
+    for (j, x) in d.iter_mut().enumerate().take(w) {
+        *x = j;
+    }
+    for i in 1..=a.len() {
+        d[i * w] = i;
+        for j in 1..=b.len() {
+            let cost = usize::from(a[i - 1] != b[j - 1]);
+            let mut v = (d[(i - 1) * w + j - 1] + cost)
+                .min(d[(i - 1) * w + j] + 1)
+                .min(d[i * w + j - 1] + 1);
+            if i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1] {
+                v = v.min(d[(i - 2) * w + j - 2] + 1);
+            }
+            d[i * w + j] = v;
+        }
+    }
+    d[a.len() * w + b.len()]
+}
+
 fn type_name(v: &Value) -> &'static str {
     match v {
         Value::Null => "null",
@@ -334,7 +380,15 @@ impl<'s> Interp<'s> {
             if !e.iter().any(|x| json_eq(x, v)) {
                 sink.err(ptr, "enum", || {
                     let list: Vec<String> = e.iter().map(short).collect();
-                    format!("must be one of {}", list.join(", "))
+                    let near = v
+                        .as_str()
+                        .and_then(|s| suggest(s, e.iter().filter_map(|x| x.as_str())));
+                    match near {
+                        Some(n) => {
+                            format!("must be one of {} (did you mean \"{n}\"?)", list.join(", "))
+                        }
+                        None => format!("must be one of {}", list.join(", ")),
+                    }
                 });
                 if sink.failed() {
                     return evaluated;
@@ -475,7 +529,14 @@ impl<'s> Interp<'s> {
                         }
                         if ap == &Value::Bool(false) {
                             sink.err(&Path::Key(ptr, k), "unknown_property", || {
-                                format!("unknown property '{k}'")
+                                let known =
+                                    props.into_iter().flat_map(|p| p.keys().map(String::as_str));
+                                match suggest(k, known) {
+                                    Some(s) => {
+                                        format!("unknown property '{k}' (did you mean '{s}'?)")
+                                    }
+                                    None => format!("unknown property '{k}'"),
+                                }
                             });
                         } else {
                             self.check(ap, val, &Path::Key(ptr, k), false, false, sink);
@@ -702,6 +763,18 @@ fn best_alternative(results: Vec<Vec<Issue>>, ptr: &str) -> Vec<Issue> {
     let disc_type = ptr_join(ptr, "type");
     let disc_shape = ptr_join(ptr, "shape");
     let mut best: Option<((u8, u8, usize), Vec<Issue>)> = None;
+    // the types of the alternatives that failed on the value's type alone
+    let other_types: Vec<String> = results
+        .iter()
+        .filter_map(|errs| match errs.as_slice() {
+            [e] if e.pointer == ptr && e.code == "type" => e
+                .message
+                .strip_prefix("expected ")
+                .and_then(|m| m.split_once(", got "))
+                .map(|(want, _)| want.to_string()),
+            _ => None,
+        })
+        .collect();
     for errs in results {
         let root_type = errs.iter().any(|e| e.pointer == ptr && e.code == "type") as u8;
         let disc = errs.iter().any(|e| {
@@ -713,7 +786,33 @@ fn best_alternative(results: Vec<Vec<Issue>>, ptr: &str) -> Vec<Issue> {
             best = Some((score, errs));
         }
     }
-    best.map(|b| b.1).unwrap_or_default()
+    let Some((_, mut out)) = best else {
+        return vec![];
+    };
+    // a value outside an enum, where other alternatives take other types: name them too
+    // (`must be one of "hard", "ignore", or a number`)
+    if let [e] = out.as_mut_slice() {
+        if e.pointer == ptr && e.code == "enum" {
+            for t in &other_types {
+                e.message = match e.message.split_once(" (did you mean") {
+                    Some((head, tail)) => {
+                        format!("{head}, or {} (did you mean{tail}", with_article(t))
+                    }
+                    None => format!("{}, or {}", e.message, with_article(t)),
+                };
+            }
+        }
+    }
+    out
+}
+
+/// `a number`, `an integer`, `null`.
+fn with_article(t: &str) -> String {
+    match t {
+        "null" => t.to_string(),
+        _ if t.starts_with(['a', 'e', 'i', 'o', 'u']) => format!("an {t}"),
+        _ => format!("a {t}"),
+    }
 }
 
 // ---------------------------------------------------------------------------------------
@@ -890,6 +989,64 @@ fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
             }
         }
     }
+    // degradation steps: name the steps instead of quoting the pattern
+    const STEPS: [&str; 8] = [
+        "alternatives",
+        "wrap",
+        "truncate",
+        "distant",
+        "boundary",
+        "evict_lower",
+        "soft_overlap",
+        "omit",
+    ];
+    for e in errors.iter_mut() {
+        let Some(i) = e.pointer.strip_prefix("/degrade/") else {
+            continue;
+        };
+        if e.code != "pattern" || i.contains('/') {
+            continue;
+        }
+        let Some(v) = p.pointer(&e.pointer) else {
+            continue;
+        };
+        let step = v.as_str().unwrap_or("");
+        e.message = if step.starts_with("shrink") {
+            format!(
+                "{}: shrink needs a factor f with 0 < f ≤ 1, e.g. \"shrink:0.85\"",
+                short(v)
+            )
+        } else {
+            let hint = suggest(step, STEPS.into_iter())
+                .map(|s| format!(" (did you mean \"{s}\"?)"))
+                .unwrap_or_default();
+            format!(
+                "unknown step {}{hint}: the steps are {}, and shrink:f with 0 < f ≤ 1",
+                short(v),
+                STEPS.join(", ")
+            )
+        };
+    }
+    // priority terms on attributes that no item has → warnings (the term is 0 everywhere)
+    if let Some(Value::Array(terms)) = p.pointer("/priority/terms") {
+        let has = |name: &str| {
+            items.is_some_and(|its| {
+                its.iter()
+                    .any(|it| it.get("attrs").and_then(|a| a.get(name)).is_some())
+            })
+        };
+        for (i, t) in terms.iter().enumerate() {
+            if let Some(name) = t.get("attr").and_then(|a| a.as_str()) {
+                if !has(name) {
+                    warnings.push(Issue::new(
+                        format!("/priority/terms/{i}/attr"),
+                        "unknown_attr",
+                        format!("no item has the attribute '{name}' (in attrs): the term is 0 for every item"),
+                    ));
+                }
+            }
+        }
+    }
 }
 
 /// Classes produced by the problem's obstacle sources, plus reserved classes.
@@ -977,6 +1134,38 @@ mod tests {
             &json!({"items": [{"anchor": {"type": "point", "x": 1, "y": 2}, "label": {"type": "text", "text": "A"}}]}),
         );
         assert!(r.valid, "{:?}", r.errors);
+    }
+
+    #[test]
+    fn unknown_properties_suggest_close_names() {
+        let r = validate(&json!({"items": [], "priorty": {}, "fontsize": 10,
+            "canvas": {"widht": 8, "height": 6}, "defaults": {"font": {"lineHeight": 1.4}}}));
+        let msgs: Vec<_> = r.errors.iter().map(|e| e.message.as_str()).collect();
+        assert!(msgs.contains(&"unknown property 'priorty' (did you mean 'priority'?)"));
+        assert!(msgs.contains(&"unknown property 'widht' (did you mean 'width'?)"));
+        assert!(msgs.contains(&"unknown property 'lineHeight' (did you mean 'line_height'?)"));
+        assert!(msgs.contains(&"unknown property 'fontsize'"));
+        assert_eq!(
+            suggest("marx", ["mark", "margin"].into_iter()),
+            Some("mark")
+        );
+        assert_eq!(edit_distance(&['a', 'b', 'c'], &['b', 'a', 'c']), 1);
+        // enum values and the alternatives' types; degradation steps
+        let r = validate(&json!({"items": [], "avoid": {"label": {"lines": "Hard"}},
+            "leaders": {"style": "strait"}, "degrade": ["omitt", "shrink:2"]}));
+        let msgs: Vec<_> = r.errors.iter().map(|e| e.message.as_str()).collect();
+        assert!(msgs.contains(
+            &"must be one of \"hard\", \"ignore\", or a number (did you mean \"hard\"?)"
+        ));
+        assert!(msgs
+            .iter()
+            .any(|m| m.ends_with("(did you mean \"straight\"?)")));
+        assert!(msgs
+            .iter()
+            .any(|m| m.starts_with("unknown step \"omitt\" (did you mean \"omit\"?)")));
+        assert!(msgs.contains(
+            &"\"shrink:2\": shrink needs a factor f with 0 < f ≤ 1, e.g. \"shrink:0.85\""
+        ));
     }
 
     #[test]

@@ -1,0 +1,221 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 500,
+      "height": 400
+    },
+    "items": [
+      {
+        "id": "same",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              330,
+              130
+            ],
+            [
+              480,
+              130
+            ],
+            [
+              480,
+              300
+            ],
+            [
+              330,
+              300
+            ]
+          ],
+          "holes": [
+            [
+              [
+                350,
+                150
+              ],
+              [
+                460,
+                150
+              ],
+              [
+                460,
+                280
+              ],
+              [
+                350,
+                280
+              ]
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Holey"
+        }
+      },
+      {
+        "id": "opp",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              30,
+              130
+            ],
+            [
+              180,
+              130
+            ],
+            [
+              180,
+              300
+            ],
+            [
+              30,
+              300
+            ]
+          ],
+          "holes": [
+            [
+              [
+                50,
+                280
+              ],
+              [
+                160,
+                280
+              ],
+              [
+                160,
+                150
+              ],
+              [
+                50,
+                150
+              ]
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Holey"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "same",
+        "placed": true,
+        "box": {
+          "x": 323.97075,
+          "y": 118.77474999999998,
+          "w": 35.49599999999998,
+          "h": 19.944000000000017
+        },
+        "anchor": [
+          341.71875,
+          141.71875
+        ],
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Holey"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            31.896
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.024999999999999998,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "opp",
+        "placed": true,
+        "box": {
+          "x": 23.97075,
+          "y": 118.77474999999998,
+          "w": 35.49600000000001,
+          "h": 19.944000000000017
+        },
+        "anchor": [
+          41.71875,
+          141.71875
+        ],
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Holey"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            31.896
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.024999999999999998,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 1
+        }
+      }
+    ],
+    "stats": {
+      "placed": 2,
+      "total": 2,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 800,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 80,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.049999999999999996,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 167,
+        "rows": 134,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

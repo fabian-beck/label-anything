@@ -136,6 +136,8 @@ supply; the label box is the text block grown by `padding` (0.15 em) on every si
 }
 ```
 
+* `text`: a line feed (`"Paris\n2.1M"`) breaks the line; such a label keeps exactly its
+  lines and is never rewrapped or truncated.
 * `alternatives`: shorter fallbacks, tried in order by the `alternatives` ladder step.
 * `wrap`: `max_width` (a length) and `max_lines`; line breaks at spaces, after
   punctuation (`/ \ . _ - , ; : |`), at camelCase and acronym boundaries and between CJK
