@@ -66,6 +66,15 @@ clock, so no deadline at all and results that depend on the iteration budgets al
 `placeWith(env, problem, "rust")` uses the Rust core's per-implementation constants
 (100 ms, 100 moves per ms), which is how the parity tests reproduce Rust results.
 
+**Traces.** `placeTraced(env, problem, profile?)` returns `{ result, trace }`: the result
+of `placeWith` and the solver's decisions in order (`SolveTrace`, `src/trace.ts`) — the
+candidates generated per item and what became of them, the greedy pass (bands, the item
+taken next, the scores of its free candidates, each placement and the candidates it rules
+out, ladder steps, evictions, omissions), every local-search move with its cost change
+and temperature, and the passes after the search. Each event carries the placement
+changes it made. Tracing never changes a decision (`test/trace.test.ts`); the explainer
+of the playground is built on it (ADR 0041). TypeScript only.
+
 ## Command line
 
 `@label-anything/cli` provides `label-anything-ts` with the Rust CLI's `place`,
