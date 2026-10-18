@@ -51,7 +51,7 @@ var problem = LabelProblem.builder()
     .backgroundRaster(Path.of("map.png"), RasterMode.INK)
     .avoid(Avoid.label().hard("labels").weight("ink", 0.5))
     .leaders(Leaders.angles(0, 45, 90, 135, 180, 225, 270, 315))
-    .priority(Priority.attr("traffic").log1p().plus(Priority.outlierness(5)))
+    .priority(Priority.attr("traffic").log1p().normalize(Priority.Normalize.MINMAX).plus(Priority.outlierness(5)))
     .omission(Omission.STRICT)
     .build();
 LabelResult r = LabelAnything.place(problem);
@@ -113,8 +113,13 @@ same, self-contained (raw pixels embedded), e.g. for `label-anything place`.
 combine with `plus`, `minus` and `times`:
 
 ```java
-Priority.attr("cbo").log1p().times(0.5).plus(Priority.outlierness(5)).minus(Priority.labelSize().times(0.2))
+Priority.attr("cbo").log1p().normalize(Priority.Normalize.MINMAX).times(0.5)
+    .plus(Priority.outlierness(5)).minus(Priority.labelSize().times(0.2))
 ```
+
+A transform changes the scores only with `MINMAX` or `NONE` normalization: the default,
+`RANK`, keeps only the order of the values, which a monotone transform such as `log1p`
+does not change.
 
 `Priority.callback(item -> ...)` computes the score in Java: it runs once per item when
 the problem is built and writes an explicit `priority` into every item that has none
