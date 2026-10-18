@@ -3,8 +3,9 @@
   labeling demo, above the page's content. The logo is a label (the name), its leader and
   a dot. playground/hero.js (ts/packages/playground/src/hero.ts, published with the
   playground) takes over from this static logo: it places the name and the labels of a
-  few dots with the engine, keeping off the elements marked `data-la-avoid`, while they are
-  dragged or added. Without it (e.g. under `mkdocs serve`) the static logo stays.
+  small map, network and chart with the engine, keeping off the elements marked
+  `data-la-avoid`, while things are dragged or added. Without it (e.g. under
+  `mkdocs serve`) the static logo stays.
 -#}
 {% extends "main.html" %}
 
@@ -34,10 +35,20 @@
         <a class="md-button" href="{{ 'getting-started/' | url }}">Get started</a>
       </div>
       <p class="la-hero__hint" data-la-hero-hint data-la-avoid>
-        <span class="la-hero__live">Live</span>
-        Drag a dot or a label, or click to add one.
-        <span class="la-hero__stats" data-la-hero-stats></span>
-        <button type="button" class="la-hero__reset" data-la-hero-reset>Reset</button>
+        <span class="la-hero__hint-line">
+          <span class="la-hero__live">Live</span>
+          Drag anything, click to add more, hover a label to see why it sits there.
+        </span>
+        <span class="la-hero__hint-line">
+          <span class="la-hero__styles" data-la-hero-styles role="group" aria-label="Leader style">
+            Leaders
+            <button type="button" data-style="straight" aria-pressed="true">straight</button>
+            <button type="button" data-style="elbow" aria-pressed="false">elbow</button>
+            <button type="button" data-style="curved" aria-pressed="false">curved</button>
+          </span>
+          <span class="la-hero__stats" data-la-hero-stats></span>
+          <button type="button" class="la-hero__reset" data-la-hero-reset>Reset</button>
+        </span>
       </p>
     </div>
   </section>

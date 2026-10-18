@@ -1,6 +1,8 @@
 // Browser tests of the live header of the documentation's home page (dist/hero.js, on a
-// page with the markup of docs/_overrides/home.html): the logo keeps its place, every label
-// is placed without overlaps and off the header's text, and dragging and clicking work.
+// page with the markup of docs/_overrides/home.html): the logo keeps its place, the labels
+// keep off each other and the header's text, the scenes show what the engine does
+// (internal labels, a group, icons, wrapping, leader styles), and dragging, clicking and
+// resetting work.
 import { expect, test } from "@playwright/test";
 import { startServer } from "./server.mjs";
 
@@ -18,20 +20,21 @@ const PAGE = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>hero</title>
 <style>
   body { margin: 0; font: 16px/1.5 system-ui, sans-serif; }
-  .la-hero { position: relative; overflow: hidden; }
+  .la-hero { --la-hero-layout: wide; position: relative; overflow: hidden; }
   .la-hero__stage { position: absolute; inset: 0; }
   .la-hero__svg { display: block; width: 100%; height: 100%; }
-  .la-hero__label text { font-size: 14px; }
   .la-hero__content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center;
-    max-width: 640px; margin: 0 auto; padding: 48px 16px 64px; text-align: center; pointer-events: none; }
+    max-width: 640px; margin: 0 auto; padding: 48px 16px 96px; text-align: center; pointer-events: none; }
   .la-hero__content > * { pointer-events: auto; }
   .la-lockup { position: relative; display: flex; margin: 0 0.95em 0.95em 0; font-size: 40px; line-height: 1.2; }
   .la-lockup__label { position: relative; z-index: 1; padding: 0.18em 0.5em; border-radius: 0.24em; background: #4051b5; color: #fff; }
   .la-lockup__tail { position: absolute; top: 100%; left: 100%; width: 1em; height: 1em; overflow: visible; }
   .la-lockup__tail path { fill: none; stroke: #4051b5; }
   .la-hero.is-live .la-lockup { opacity: 0; pointer-events: none; }
+  .la-hero__tip { position: absolute; }
   p, ul, div { width: fit-content; }
   ul { display: flex; gap: 6px; list-style: none; padding: 0; }
+  [data-la-hero-hint] { position: absolute; bottom: 8px; left: 0; right: 0; margin: auto; font-size: 12px; }
 </style></head>
 <body>
 <section class="la-hero" data-la-hero>
@@ -46,11 +49,15 @@ const PAGE = `<!doctype html>
     </h1>
     <p data-la-avoid="text">Put a label on anything.</p>
     <p data-la-avoid="text">A label placement engine for charts, maps and diagrams. Hand it your points and shapes,
-      their labels and what must stay visible: it finds a place for every label.</p>
+      their labels and what must stay visible: it finds a place for every label, with no overlaps and leader
+      lines where needed, and says why a label had to go.</p>
     <ul data-la-avoid="children"><li>Python</li><li>JavaScript</li><li>Java</li><li>Rust</li></ul>
     <div data-la-avoid="children"><a href="#">Try the playground</a> <a href="#">Get started</a></div>
-    <p data-la-hero-hint data-la-avoid style="position: absolute; bottom: 8px; left: 0; right: 0; margin: auto">Live <span data-la-hero-stats></span>
-      <button type="button" data-la-hero-reset>Reset</button></p>
+    <p data-la-hero-hint data-la-avoid>Live <span data-la-hero-styles>Leaders
+      <button type="button" data-style="straight" aria-pressed="true">straight</button>
+      <button type="button" data-style="elbow" aria-pressed="false">elbow</button>
+      <button type="button" data-style="curved" aria-pressed="false">curved</button></span>
+      <span data-la-hero-stats></span> <button type="button" data-la-hero-reset>Reset</button></p>
   </div>
 </section>
 <script type="module" src="../hero.js"></script>
@@ -63,13 +70,14 @@ async function open(page) {
   await page.goto(`${base}hero-test/`);
   // the first solve, and the one after it (with a warm engine)
   await page.waitForFunction(() => (globalThis.labelAnythingHero?.solves ?? 0) >= 2, null, { timeout: 30_000 });
+  await page.waitForTimeout(500);
   return errors;
 }
 
 /** Waits for a solve after the current one, with the motion settled. */
 async function nextSolve(page, n) {
   await page.waitForFunction((n) => globalThis.labelAnythingHero.solves > n, n, { timeout: 20_000 });
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(900);
 }
 
 const state = (page) =>
@@ -97,18 +105,18 @@ const state = (page) =>
 
 const overlaps = (a, b) => a[0] < b[0] + b[2] - 0.5 && b[0] < a[0] + a[2] - 0.5 && a[1] < b[1] + b[3] - 0.5 && b[1] < a[1] + a[3] - 0.5;
 const boxOf = (p) => [p.box.x, p.box.y, p.box.w, p.box.h];
+const byId = (s, id) => s.placements.find((p) => p.id === id);
 
-test("the logo keeps its place, and every label is placed without overlaps and off the text", async ({ page }) => {
+test("the logo keeps its place, and the labels keep off each other and the text", async ({ page }) => {
   const errors = await open(page);
   const s = await state(page);
   expect(s.live).toBe(true);
   expect(s.stats.implementation).toMatch(/^ts\//);
   expect(s.stats.hard_violations).toBe(0);
   expect(s.stats.leader_crossings).toBe(0);
-  expect(s.stats.placed).toBe(s.stats.total);
-  expect(s.stats.total).toBeGreaterThan(8);
+  expect(s.stats.placed).toBeGreaterThan(18);
   // the name stays where the static logo has it, on its leader
-  const name = s.placements.find((p) => p.id === "name");
+  const name = byId(s, "name");
   expect(name.placed).toBe(true);
   expect(name.leader).toBeTruthy();
   boxOf(name).forEach((v, i) => expect(Math.abs(v - s.label[i])).toBeLessThan(1));
@@ -116,41 +124,66 @@ test("the logo keeps its place, and every label is placed without overlaps and o
   for (const b of boxes) for (const t of s.text) expect(overlaps(b, t)).toBe(false);
   for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) expect(overlaps(boxes[i], boxes[j])).toBe(false);
   expect(s.drawn).toBe(boxes.length);
+  // every label left out says why
+  for (const p of s.placements.filter((q) => !q.placed)) expect(p.reason).toBeTruthy();
   expect(errors).toEqual([]);
 });
 
-test("dragging the logo's dot moves the name, and a click adds a labeled dot", async ({ page }) => {
+test("the scenes show internal labels, a group, icons, wrapping and the leader styles", async ({ page }) => {
+  await open(page);
+  let s = await state(page);
+  expect(byId(s, "lake").model).toBe("internal");
+  expect(byId(s, "hub").model).toBe("internal");
+  expect(byId(s, "sensor-a").members).toEqual(["sensor-a", "sensor-b", "sensor-c"]);
+  expect(byId(s, "sensor-b").reason).toBe("grouped");
+  expect(byId(s, "malpensa").parts.map((p) => p.type)).toEqual(["icon", "text"]);
+  expect(byId(s, "dip").text.lines.length).toBe(2);
+  expect(byId(s, "dip").leader).toBeTruthy();
+  expect(await page.evaluate(() => globalThis.labelAnythingHero.describe("lake")[1])).toBe("inside its area");
+  for (const style of ["elbow", "curved"]) {
+    const n = s.solves;
+    await page.locator(`[data-style=${style}]`).click();
+    await nextSolve(page, n);
+    s = await state(page);
+    const leaders = s.placements.filter((p) => p.leader).map((p) => p.leader.style);
+    expect(leaders.length).toBeGreaterThan(1);
+    expect(new Set(leaders)).toEqual(new Set([style]));
+    expect(s.stats.hard_violations).toBe(0);
+    expect(s.stats.leader_crossings).toBe(0);
+  }
+});
+
+test("dragging the logo's dot moves the name, a click adds a thing, reset restores", async ({ page }) => {
   await open(page);
   const before = await state(page);
   const dot = await page.locator("[data-la-hero-dot]").boundingBox();
   const [x, y] = [dot.x + dot.width / 2, dot.y + dot.height / 2];
   await page.mouse.move(x, y);
   await page.mouse.down();
-  for (let i = 1; i <= 10; i++) await page.mouse.move(x + i * 18, y + i * 4);
+  for (let i = 1; i <= 10; i++) await page.mouse.move(x - i * 16, y + i * 2);
   await page.mouse.up();
   await nextSolve(page, before.solves);
   let s = await state(page);
-  const name = s.placements.find((p) => p.id === "name");
+  const name = byId(s, "name");
   expect(name.placed).toBe(true);
-  expect(name.anchor[0]).toBeGreaterThan(before.placements.find((p) => p.id === "name").anchor[0] + 150);
+  expect(name.anchor[0]).toBeLessThan(byId(before, "name").anchor[0] - 100);
   expect(s.stats.hard_violations).toBe(0);
-  // a click on an empty spot: the bottom-left corner of the header
+  // a click on an empty spot: the top-left corner of the header
   const hero = await page.locator("[data-la-hero]").boundingBox();
   const n = s.solves;
-  await page.mouse.click(hero.x + 40, hero.y + hero.height - 30);
+  await page.mouse.click(hero.x + 30, hero.y + 40);
   await nextSolve(page, n);
   s = await state(page);
   expect(s.stats.total).toBe(before.stats.total + 1);
-  const added = s.placements.find((p) => p.id === "add0");
-  expect(added?.placed).toBe(true);
+  expect(byId(s, "add0")?.placed).toBe(true);
   expect(s.stats.hard_violations).toBe(0);
-  // reset: the dot is gone, the name is back
+  // reset: the thing is gone, the name is back
   const m = s.solves;
   await page.locator("[data-la-hero-reset]").click();
   await nextSolve(page, m);
   s = await state(page);
   expect(s.stats.total).toBe(before.stats.total);
-  boxOf(s.placements.find((p) => p.id === "name")).forEach((v, i) => expect(Math.abs(v - s.label[i])).toBeLessThan(1));
+  boxOf(byId(s, "name")).forEach((v, i) => expect(Math.abs(v - s.label[i])).toBeLessThan(1));
 });
 
 test("the name always shows: dropped where it has no room, its dot glides back", async ({ page }) => {
@@ -174,7 +207,6 @@ test("the name always shows: dropped where it has no room, its dot glides back",
   );
   await page.waitForTimeout(800);
   const s = await state(page);
-  const name = s.placements.find((p) => p.id === "name");
-  expect(name.placed).toBe(true);
+  expect(byId(s, "name").placed).toBe(true);
   expect(s.stats.hard_violations).toBe(0);
 });
