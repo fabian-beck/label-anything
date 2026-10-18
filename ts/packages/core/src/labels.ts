@@ -336,6 +336,9 @@ function sameLines(v: Variant, lines: readonly string[]): boolean {
   return v.text !== null && arrEq(v.text.lines, lines);
 }
 
+/** Narrowest line of a `wrap` step variant, in em of the label's font (spec §5.3). */
+const MIN_WRAP_LINE_EM = 1.5;
+
 /** Variants for the `wrap` ladder step. */
 function extraWrap(
   m: Measurer,
@@ -372,12 +375,16 @@ function extraWrap(
     }
     return out;
   } else normalMax = wrapMaxLines;
-  return extraWrapVariants(text, normalMax, measure).map((tv) => {
-    const v = textVariant(m, spec, pad, scale, tv.lines, used, tv.truncated);
-    v.penalty += 0.25 * (v.lines() - 1);
-    v.steps.push("wrap");
-    return v;
-  });
+  // no line narrower than MIN_WRAP_LINE_EM: `France / 3` strands the 3 (spec §5.3)
+  const minLine = MIN_WRAP_LINE_EM * spec.font.size * scale;
+  return extraWrapVariants(text, normalMax, measure)
+    .filter((tv) => tv.widths.every((w) => w >= minLine))
+    .map((tv) => {
+      const v = textVariant(m, spec, pad, scale, tv.lines, used, tv.truncated);
+      v.penalty += 0.25 * (v.lines() - 1);
+      v.steps.push("wrap");
+      return v;
+    });
 }
 
 /** Truncated single-line variants for the `truncate` ladder step. */

@@ -207,6 +207,12 @@ CASES["truncate-none-keeps-lines"] = case(
                                                 "truncate": "none"})]},
     {"placed": 1, "text_lines": {"n": ["aaa bbb", "ccc ddd"]}})
 
+CASES["wrap-no-short-lines"] = case(
+    "the wrap step never strands a line narrower than 1.5 em (France / 3)",
+    {"canvas": {"width": 50, "height": 200}, "degrade": ["wrap", "omit"],
+     "items": [pt("sa", 25, 50, "Saudi Arabia"), pt("fr", 25, 150, "France 3")]},
+    {"placed": 1, "text_lines": {"sa": ["Saudi", "Arabia"]}, "reasons": {"fr": "no_feasible_candidate"}})
+
 # --- leaders and models ----------------------------------------------------------------
 CASES["distant-when-crowded"] = case(
     "a point whose neighbourhood is hard-blocked gets a distant label with a leader",

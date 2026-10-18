@@ -1,0 +1,139 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 50,
+      "height": 200
+    },
+    "degrade": [
+      "wrap",
+      "omit"
+    ],
+    "items": [
+      {
+        "id": "sa",
+        "anchor": {
+          "type": "point",
+          "x": 25,
+          "y": 50
+        },
+        "label": {
+          "type": "text",
+          "text": "Saudi Arabia"
+        }
+      },
+      {
+        "id": "fr",
+        "anchor": {
+          "type": "point",
+          "x": 25,
+          "y": 150
+        },
+        "label": {
+          "type": "text",
+          "text": "France 3"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "sa",
+        "placed": true,
+        "box": {
+          "x": 5.038,
+          "y": 12.655999999999999,
+          "w": 39.92400000000001,
+          "h": 34.344
+        },
+        "anchor": [
+          25.0,
+          50.0
+        ],
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Saudi",
+            "Arabia"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628,
+            29.028
+          ],
+          "line_widths": [
+            31.212,
+            36.324
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.3327000000000001,
+        "degrade_steps": [
+          "wrap"
+        ],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "fr",
+        "placed": false,
+        "reason": "no_feasible_candidate",
+        "blocking": [
+          "canvas_edge",
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 1
+        },
+        "degrade_steps": [
+          "wrap",
+          "omit"
+        ]
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 2,
+      "placed_weighted": 0.6131471927654585,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 800,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 231,
+      "omission_order": [
+        "fr"
+      ],
+      "priority_inversions": 0,
+      "total_cost": 0.3327000000000001,
+      "degraded": {
+        "wrapped": 1
+      },
+      "grid": {
+        "cell": 3.0,
+        "cols": 17,
+        "rows": 67,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

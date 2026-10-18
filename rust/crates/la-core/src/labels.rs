@@ -338,6 +338,9 @@ fn text_variants(
     }
 }
 
+/// Narrowest line of a `wrap` step variant, in em of the label's font (spec §5.3).
+const MIN_WRAP_LINE_EM: f64 = 1.5;
+
 /// Variants for the `wrap` ladder step.
 fn extra_wrap(
     m: &Measurer,
@@ -377,8 +380,11 @@ fn extra_wrap(
         }
         None => wrap_max_lines,
     };
+    // no line narrower than MIN_WRAP_LINE_EM: `France / 3` strands the 3 (spec §5.3)
+    let min_line = MIN_WRAP_LINE_EM * spec.font.size * scale;
     la_text::extra_wrap_variants(text, normal_max, measure)
         .into_iter()
+        .filter(|tv| tv.widths.iter().all(|&w| w >= min_line))
         .map(|tv| {
             let mut v = text_variant(m, spec, pad, scale, tv.lines, used, tv.truncated);
             v.penalty += 0.25 * (v.lines() as f64 - 1.0);

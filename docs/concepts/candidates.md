@@ -73,7 +73,7 @@ result reports each placed label's cost per term.
 | Step | |
 |---|---|
 | `alternatives` | the label's `alternatives` (shorter texts), in order |
-| `wrap` | the text in 2 … `degrade_options.wrap_max_lines` (3) balanced lines |
+| `wrap` | the text in 2 … `degrade_options.wrap_max_lines` (3) balanced lines, broken between words, no line narrower than 1.5 em |
 | `truncate` | truncation per the label's `truncate` setting |
 | `distant` | distant candidates with leaders, also when `distant` is not in `models` |
 | `boundary` | boundary labels in the margins |
