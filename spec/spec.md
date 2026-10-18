@@ -830,7 +830,9 @@ its font size.
 * `angles`: as straight, but distant candidates are generated along the allowed rays,
   so the segment direction is one of `leaders.angles`.
 * `orthogonal`: `po` (one bend: vertical then horizontal, or horizontal then vertical)
-  or straight when aligned; `opo` (two bends) for boundary labels. Minimal bends first.
+  or straight when aligned. Boundary and fan labels get `po` leaders too: parallel to
+  the side up to the label's row (left, right) or column (top, bottom), then straight
+  into the label, so that no leader bends twice. Minimal bends first.
 * `elbow`: a first segment at an allowed angle, then horizontal into the label's side
   center.
 * `curved`: quadratic Bézier, flattened for collision tests (reported in `curve`).
