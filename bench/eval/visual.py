@@ -264,7 +264,7 @@ def evaluate_visual(prob, placed, classes: dict, a_label: dict, a_leader: dict, 
     if luma is not None:
         border, n = [], 0
         for p in placed:
-            if p.internal and p.item.kind == "point":
+            if p.internal and p.item.anchor_type == "point":
                 continue
             b = p.box
             x0, x1 = max(math.ceil(b.x0 - 0.5), 0), min(math.ceil(b.x1 - 0.5), luma.shape[1])
