@@ -268,6 +268,17 @@
       ],
       "warnings": []
     },
+    "validate/lower-items-key.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": [
+        {
+          "pointer": "/avoid/buffer/lower_items",
+          "code": "unknown_class",
+          "message": "class 'lower_items' is not produced by any obstacle source"
+        }
+      ]
+    },
     "validate/mark-extra-prop.json": {
       "valid": false,
       "errors": [

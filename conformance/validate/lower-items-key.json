@@ -1,0 +1,28 @@
+{
+  "kind": "validate",
+  "name": "lower-items-key",
+  "problem": {
+    "items": [],
+    "avoid": {
+      "label": {
+        "lower_items": 2.0
+      },
+      "leader": {
+        "lower_items": "hard"
+      },
+      "buffer": {
+        "lower_items": 1.0
+      }
+    }
+  },
+  "expect": {
+    "valid": true,
+    "errors": [],
+    "warnings": [
+      {
+        "pointer": "/avoid/buffer/lower_items",
+        "code": "unknown_class"
+      }
+    ]
+  }
+}

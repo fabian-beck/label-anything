@@ -315,6 +315,10 @@ invalid = {
     "type-error": ({"items": [{"anchor": {"type": "point", "x": "1", "y": 2}, "label": {"type": "text", "text": "A"}}]}, [("/items/0/anchor/x", "type")], []),
     "canvas-range": ({"canvas": {"width": 0, "height": 10}, "items": []}, [("/canvas/width", "range")], []),
     "unknown-class-warning": ({"items": [], "avoid": {"label": {"outlierz": "hard"}}}, [], [("/avoid/label/outlierz", "unknown_class")]),
+    # lower_items is a key of the label and leader maps (spec §4.4), a class name elsewhere
+    "lower-items-key": ({"items": [], "avoid": {"label": {"lower_items": 2.0}, "leader": {"lower_items": "hard"},
+                                               "buffer": {"lower_items": 1.0}}},
+                        [], [("/avoid/buffer/lower_items", "unknown_class")]),
     "y-up-no-canvas": ({"items": [], "y_axis": "up"}, [("/canvas", "required")], []),
     "mark-extra-prop": ({"items": [{"anchor": {"type": "point", "x": 1, "y": 1, "mark": {"shape": "circle", "r": 2, "rx": 3}}, "label": {"type": "text", "text": "A"}}]},
                         [("/items/0/anchor/mark/rx", "unknown_property")], []),
