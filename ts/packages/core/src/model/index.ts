@@ -798,9 +798,10 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   const items: Item[] = [];
   const usedSvgIds: string[] = [];
   const autoMarks = svgList.some((s) => asBool(sourceOpt(s, "obstacles.svg", "auto_mark_items")) ?? false);
+  const defs = itemDefaults(o);
   for (let i = 0; i < itemsJson.length; i++) {
     items.push(
-      buildItem(i, itemsJson[i], `/items/${i}`, o, defaultFont, toPx, svgs, autoMarks, usedSvgIds, globalModels, warnings),
+      buildItem(i, itemsJson[i], `/items/${i}`, defs, defaultFont, toPx, svgs, autoMarks, usedSvgIds, globalModels, warnings),
     );
   }
 
@@ -1290,11 +1291,49 @@ function wrapSpecOf(w: Record<string, unknown>, f: FontSel): WrapSpec {
   };
 }
 
+/**
+ * The problem-wide item options (spec §2.4), resolved once: every item falls back to them
+ * unless it sets its own (looking them up per item cost 3 % of a 2,000-item solve).
+ */
+interface ItemDefaults {
+  len: ItemLengthSpec;
+  mark: unknown;
+  wrap: unknown;
+  truncate: string;
+  internal: string;
+  positionOrder: unknown;
+}
+
+function itemDefaults(o: Opts): ItemDefaults {
+  return {
+    len: {
+      padding: o.length("defaults.padding"),
+      buffer: o.length("defaults.buffer"),
+      margin: o.length("defaults.margin"),
+      offset: o.length("placement.offset"),
+      innerPadding: o.length("placement.inner_padding"),
+      maxDistance: o.length("placement.max_distance"),
+      minDistance: o.length("placement.min_distance"),
+      leaderMin: o.length("leaders.min_length"),
+      leaderMax: o.length("leaders.max_length"),
+      anchorGap: o.length("leaders.anchor_gap"),
+      clearance: o.length("leaders.clearance"),
+      boundaryGap: o.length("placement.boundary.gap"),
+      boundaryMargin: o.length("placement.boundary.margin"),
+    },
+    mark: o.get("defaults.mark"),
+    wrap: o.get("defaults.wrap"),
+    truncate: o.string("defaults.truncate"),
+    internal: o.string("placement.internal"),
+    positionOrder: o.get("placement.position_order"),
+  };
+}
+
 function buildItem(
   i: number,
   it: unknown,
   ptr: string,
-  o: Opts,
+  defs: ItemDefaults,
   defaultFont: FontSel,
   toPx: Affine,
   svgs: readonly SvgEntry[],
@@ -1309,25 +1348,12 @@ function buildItem(
   // font: defaults ← label.font
   const font = fontOver(defaultFont, get(labelV, "font"));
   const em = font.size;
-  const lenOf = (key: string, itemKey: unknown): Length => {
-    const l = itemKey === undefined ? null : Length.fromValue(itemKey);
-    return l ?? o.length(key);
-  };
+  const own = (v: unknown, dflt: Length): Length => (v === undefined ? null : Length.fromValue(v)) ?? dflt;
   const ip = get(it, "placement");
   const lenSpec: ItemLengthSpec = {
-    padding: lenOf("defaults.padding", get(labelV, "padding")),
-    buffer: lenOf("defaults.buffer", undefined),
-    margin: lenOf("defaults.margin", undefined),
-    offset: lenOf("placement.offset", get(ip, "offset")),
-    innerPadding: lenOf("placement.inner_padding", undefined),
-    maxDistance: lenOf("placement.max_distance", undefined),
-    minDistance: lenOf("placement.min_distance", undefined),
-    leaderMin: lenOf("leaders.min_length", undefined),
-    leaderMax: lenOf("leaders.max_length", undefined),
-    anchorGap: lenOf("leaders.anchor_gap", undefined),
-    clearance: lenOf("leaders.clearance", undefined),
-    boundaryGap: lenOf("placement.boundary.gap", undefined),
-    boundaryMargin: lenOf("placement.boundary.margin", undefined),
+    ...defs.len,
+    padding: own(get(labelV, "padding"), defs.len.padding),
+    offset: own(get(ip, "offset"), defs.len.offset),
   };
   const len = resolveLengths(lenSpec, em);
   // anchor + mark
@@ -1350,7 +1376,7 @@ function buildItem(
   } else {
     const atp = toPx.apply(new P(asF64(get(anchorV, "x")) ?? 0, asF64(get(anchorV, "y")) ?? 0));
     const markV = get(anchorV, "mark");
-    let mark: unknown = markV !== undefined ? markV : o.get("defaults.mark");
+    let mark: unknown = markV !== undefined ? markV : defs.mark;
     if (autoMarks && svgId !== null && markV === undefined) mark = { shape: "from_svg", svg_id: svgId };
     if (asStr(get(mark, "shape")) === "from_svg") {
       const sid = asStr(get(mark, "svg_id"));
@@ -1368,7 +1394,7 @@ function buildItem(
     if (isObject(wv)) wrap = wrapSpecOf(wv, f);
     else if (wv === null) wrap = null;
     else {
-      const dw = o.get("defaults.wrap");
+      const dw = defs.wrap;
       wrap = isObject(dw) ? wrapSpecOf(dw, f) : null;
     }
     let explicit: [number, number, string[]] | null = null;
@@ -1384,7 +1410,7 @@ function buildItem(
       text: asStr(get(v, "text")) ?? "",
       alternatives: alts !== null ? alts.filter((s): s is string => typeof s === "string") : [],
       wrap,
-      truncate: truncateParse(asStr(get(v, "truncate")) ?? o.string("defaults.truncate")),
+      truncate: truncateParse(asStr(get(v, "truncate")) ?? defs.truncate),
       explicit,
       align: asStr(get(v, "align")) ?? "start",
       font: f.clone(),
@@ -1426,9 +1452,9 @@ function buildItem(
   // per-item placement
   const mv = asArray(get(ip, "models"));
   const models = mv !== null ? Models.fromNames(mv.filter((s): s is string => typeof s === "string")) : globalModels;
-  const internal = internalPolicyParse(asStr(get(ip, "internal")) ?? o.string("placement.internal"));
+  const internal = internalPolicyParse(asStr(get(ip, "internal")) ?? defs.internal);
   const pov = get(ip, "position_order");
-  const positions = positionOrder(pov !== undefined ? pov : o.get("placement.position_order"));
+  const positions = positionOrder(pov !== undefined ? pov : defs.positionOrder);
   const kw = get(it, "keep_with");
   let keepWith: KeepWith | null = null;
   if (typeof kw === "string") keepWith = { kind: "set", name: kw };
