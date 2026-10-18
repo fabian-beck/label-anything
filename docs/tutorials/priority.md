@@ -165,6 +165,21 @@ prefix   placed 14  inversions 0  placed_weighted 0.506
 weighted placed 25  inversions 0  placed_weighted 0.711
 ```
 
+## Important labels over minor marks
+
+By default every item's mark keeps every other label away, whatever the priorities: in a
+crowd, the dots of minor items can leave an important item no position. With
+`avoid.label.lower_items` set to a weight, a label may cover the marks of items of lower
+priority — and the item whose mark it covers then goes without a label, so that no label
+sits on a mark it does not belong to (`avoid.leader.lower_items` lets leaders pass such
+marks). On a world map of the 1,000 busiest airports this brings back the labels of ATL,
+ORD, LHR, CDG and FRA, which the dots of smaller airports nearby had blocked
+([ADR 0040](../adr/0040-labels-may-cover-marks-of-less-important-items.md)).
+
+```json
+{"avoid": {"label": {"lower_items": 10}, "leader": {"lower_items": 2.5}}}
+```
+
 ## Type size by importance
 
 The priority can also set the type size, as on a map where the capital is set larger than
