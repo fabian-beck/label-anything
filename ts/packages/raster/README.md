@@ -1,8 +1,8 @@
 # @label-anything/raster
 
-> **Experimental:** Label Anything is still experimental and under active development.
-> The API, the problem format and the placements can change in any 0.x release, without
-> deprecation.
+> **Experimental:** Label Anything is still experimental and under active development,
+> mostly by an AI coding assistant (Claude Code) with limited human oversight. The API,
+> the problem format and the placements can change without deprecation.
 
 Raster backgrounds for the [Label Anything](https://github.com/fabian-beck/label-anything)
 label placement engine, in pure TypeScript with zero dependencies: decode an image, turn

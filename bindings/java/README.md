@@ -1,8 +1,8 @@
 # Label Anything for Java
 
-> **Experimental:** Label Anything is still experimental and under active development.
-> The API, the problem format and the placements can change in any 0.x release, without
-> deprecation.
+> **Experimental:** Label Anything is still experimental and under active development,
+> mostly by an AI coding assistant (Claude Code) with limited human oversight. The API,
+> the problem format and the placements can change without deprecation.
 
 `io.github.fabian-beck:label-anything`: the Java binding of the Label Anything label
 placement engine. FFM on Java 22+, JNI on Java 17–21 (one multi-release JAR), no runtime
