@@ -1,6 +1,6 @@
 [package]
 name = "label-anything"
-description = "Label Anything: a host-independent label placement engine (labels, icons, leaders; avoids SVG/raster backgrounds; priority-driven omission)."
+description = "Label Anything: a label placement engine for charts, maps and diagrams (labels, icons, leaders; avoids SVG/raster backgrounds; priority-driven omission)."
 readme = "README.md"
 version.workspace = true
 edition.workspace = true

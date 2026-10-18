@@ -1,4 +1,4 @@
-//! Label Anything core: a host-independent label placement engine.
+//! Label Anything core: the label placement engine.
 //!
 //! One problem description goes in (`spec/schema/problem.v1.json`), one list of placed
 //! labels and leaders comes out (`spec/schema/result.v1.json`). See `spec/spec.md` for

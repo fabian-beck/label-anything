@@ -5,8 +5,8 @@
 # the programs CI runs (examples/tutorials/run.py) are the ones you read.
 site_name: Label Anything
 site_description: >-
-  A host-independent label placement engine: labels, icons and leaders that avoid what must
-  not be covered, with priority-driven omission, for every language.
+  Label placement for charts, maps and diagrams: labels, icons and leaders that avoid what
+  must not be covered, with priority-driven omission, from any language.
 site_url: https://fabian-beck.github.io/label-anything/
 repo_url: https://github.com/fabian-beck/label-anything
 repo_name: fabian-beck/label-anything
@@ -92,6 +92,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Playground: try.md
   - Getting started:
       - getting-started/index.md
       - Python: getting-started/python.md

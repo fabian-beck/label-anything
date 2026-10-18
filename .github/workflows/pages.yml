@@ -14,6 +14,9 @@ name: Pages
 # * on demand (workflow dispatch): the site of the dispatched ref, with the report of the
 #   CI run given as `report_run_id`, else the latest report that has not expired.
 #
+# The playground (ts/packages/playground) is published at <site>/playground/: the build its
+# CI run made and tested (artifact `playground` of the `wasm` job), else the latest one.
+#
 # One-time setup: repository Settings → Pages → Build and deployment → Source:
 # "GitHub Actions".
 
@@ -82,6 +85,32 @@ jobs:
           name: bench-report-baselines
           path: site/benchmark-report
           run-id: ${{ steps.report.outputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Which playground build
+        id: playground
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id || inputs.report_run_id }}
+        run: |
+          # the playground of the CI run that triggered this one or the one given, else the latest
+          ID=""
+          if [ -n "$RUN_ID" ]; then
+            ID=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts?name=playground" \
+              --jq '[.artifacts[] | select(.expired | not)][0].workflow_run.id // empty')
+          fi
+          if [ -z "$ID" ]; then
+            ID=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=playground&per_page=30" \
+              --jq '[.artifacts[] | select(.expired | not)][0].workflow_run.id // empty')
+          fi
+          echo "playground of CI run: ${ID:-none}"
+          echo "run_id=$ID" >> "$GITHUB_OUTPUT"
+      - name: The playground of that CI run
+        if: steps.playground.outputs.run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: playground
+          path: site/playground
+          run-id: ${{ steps.playground.outputs.run_id }}
           github-token: ${{ github.token }}
       - uses: actions/upload-pages-artifact@v3
         with:
