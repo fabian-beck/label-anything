@@ -16,7 +16,7 @@ overlaps: overlapping node boxes (Les Mis: the larger node of the two configs) m
 apart along the axis of the smaller overlap until 2 px separate them. The earlier
 `spring_layout` drew Cora as one dense disc (74 of 150 labels placed, 1,874 overlapping
 node pairs); this layout separates its communities (148 of 150, about 2.5 min of layout
-time). Edges are straight center-to-center segments: `obstacles.vector` polylines of
+time, cached in `bench/data/cora/` by `cora.py`). Edges are straight center-to-center segments: `obstacles.vector` polylines of
 class `lines` (0.8 px; Cora 0.6 px).
 
 **Configs** (preset `graph`):
