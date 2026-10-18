@@ -17,6 +17,21 @@ describe("validate", () => {
     expect(r.valid, JSON.stringify(r.errors)).toBe(true);
   });
 
+  it("unknown_properties_suggest_close_names", () => {
+    const r = validate({
+      items: [],
+      priorty: {},
+      fontsize: 10,
+      canvas: { widht: 8, height: 6 },
+      defaults: { font: { lineHeight: 1.4 } },
+    });
+    const msgs = r.errors.map((e) => e.message);
+    expect(msgs).toContain("unknown property 'priorty' (did you mean 'priority'?)");
+    expect(msgs).toContain("unknown property 'widht' (did you mean 'width'?)");
+    expect(msgs).toContain("unknown property 'lineHeight' (did you mean 'line_height'?)");
+    expect(msgs).toContain("unknown property 'fontsize'");
+  });
+
   it("structural_errors_have_pointers", () => {
     const r = validate({
       canvas: { width: -1, height: 10 },

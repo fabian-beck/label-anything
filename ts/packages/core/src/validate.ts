@@ -164,6 +164,43 @@ function render(path: Path): string {
   return out;
 }
 
+/**
+ * The known property `k` was most likely meant as: equal up to ASCII case, `_` and `-`,
+ * else within an edit distance of a third of its length (at least 1); ties go to the
+ * alphabetically first.
+ */
+function suggest(k: string, known: readonly string[]): string | null {
+  const norm = (s: string): string[] => Array.from(s.replace(/[_-]/g, "").replace(/[A-Z]/g, (c) => c.toLowerCase()));
+  const a = norm(k);
+  const limit = Math.max(Math.trunc(a.length / 3), 1);
+  let best: [number, string] | null = null;
+  for (const cand of known) {
+    const d = editDistance(a, norm(cand));
+    if (d <= limit && (best === null || d < best[0] || (d === best[0] && cand < best[1]))) best = [d, cand];
+  }
+  return best === null ? null : best[1];
+}
+
+/**
+ * Edit distance of two code point sequences: insertions, deletions, substitutions and
+ * swaps of two neighbours (`widht`) cost 1 (optimal string alignment).
+ */
+function editDistance(a: readonly string[], b: readonly string[]): number {
+  const w = b.length + 1;
+  const d: number[] = new Array<number>((a.length + 1) * w).fill(0);
+  for (let j = 0; j < w; j++) d[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    d[i * w] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] !== b[j - 1] ? 1 : 0;
+      let v = Math.min(d[(i - 1) * w + j - 1]! + cost, d[(i - 1) * w + j]! + 1, d[i * w + j - 1]! + 1);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) v = Math.min(v, d[(i - 2) * w + j - 2]! + 1);
+      d[i * w + j] = v;
+    }
+  }
+  return d[a.length * w + b.length]!;
+}
+
 function typeName(v: unknown): string {
   switch (typeof v) {
     case "boolean":
@@ -559,7 +596,10 @@ class Interp {
           if (val === undefined) continue;
           if (props !== null && hasOwnProperty.call(props, k)) continue;
           if (ap === false) {
-            sink.err(keyPath(ptr, k), "unknown_property", () => `unknown property '${k}'`);
+            sink.err(keyPath(ptr, k), "unknown_property", () => {
+              const s = suggest(k, props !== null ? Object.keys(props) : []);
+              return s !== null ? `unknown property '${k}' (did you mean '${s}'?)` : `unknown property '${k}'`;
+            });
           } else {
             this.check(ap, val, keyPath(ptr, k), false, false, sink);
           }

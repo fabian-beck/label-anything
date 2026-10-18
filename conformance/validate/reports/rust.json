@@ -405,7 +405,7 @@
         {
           "pointer": "/solverr",
           "code": "unknown_property",
-          "message": "unknown property 'solverr'"
+          "message": "unknown property 'solverr' (did you mean 'solver'?)"
         }
       ],
       "warnings": []

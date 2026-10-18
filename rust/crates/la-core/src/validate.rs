@@ -146,6 +146,52 @@ impl Path<'_> {
     }
 }
 
+/// The known property `k` was most likely meant as: equal up to ASCII case, `_` and `-`,
+/// else within an edit distance of a third of its length (at least 1); ties go to the
+/// alphabetically first.
+fn suggest<'a>(k: &str, known: impl Iterator<Item = &'a String>) -> Option<&'a str> {
+    let norm = |s: &str| -> Vec<char> {
+        s.chars()
+            .filter(|&c| c != '_' && c != '-')
+            .map(|c| c.to_ascii_lowercase())
+            .collect()
+    };
+    let a = norm(k);
+    let limit = (a.len() / 3).max(1);
+    let mut best: Option<(usize, &str)> = None;
+    for cand in known {
+        let d = edit_distance(&a, &norm(cand));
+        if d <= limit && best.is_none_or(|(bd, bs)| d < bd || (d == bd && cand.as_str() < bs)) {
+            best = Some((d, cand.as_str()));
+        }
+    }
+    best.map(|(_, s)| s)
+}
+
+/// Edit distance of two code point sequences: insertions, deletions, substitutions and
+/// swaps of two neighbours (`widht`) cost 1 (optimal string alignment).
+fn edit_distance(a: &[char], b: &[char]) -> usize {
+    let w = b.len() + 1;
+    let mut d: Vec<usize> = vec![0; (a.len() + 1) * w];
+    for (j, x) in d.iter_mut().enumerate().take(w) {
+        *x = j;
+    }
+    for i in 1..=a.len() {
+        d[i * w] = i;
+        for j in 1..=b.len() {
+            let cost = usize::from(a[i - 1] != b[j - 1]);
+            let mut v = (d[(i - 1) * w + j - 1] + cost)
+                .min(d[(i - 1) * w + j] + 1)
+                .min(d[i * w + j - 1] + 1);
+            if i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1] {
+                v = v.min(d[(i - 2) * w + j - 2] + 1);
+            }
+            d[i * w + j] = v;
+        }
+    }
+    d[a.len() * w + b.len()]
+}
+
 fn type_name(v: &Value) -> &'static str {
     match v {
         Value::Null => "null",
@@ -475,7 +521,13 @@ impl<'s> Interp<'s> {
                         }
                         if ap == &Value::Bool(false) {
                             sink.err(&Path::Key(ptr, k), "unknown_property", || {
-                                format!("unknown property '{k}'")
+                                let known = props.into_iter().flat_map(|p| p.keys());
+                                match suggest(k, known) {
+                                    Some(s) => {
+                                        format!("unknown property '{k}' (did you mean '{s}'?)")
+                                    }
+                                    None => format!("unknown property '{k}'"),
+                                }
                             });
                         } else {
                             self.check(ap, val, &Path::Key(ptr, k), false, false, sink);
@@ -977,6 +1029,20 @@ mod tests {
             &json!({"items": [{"anchor": {"type": "point", "x": 1, "y": 2}, "label": {"type": "text", "text": "A"}}]}),
         );
         assert!(r.valid, "{:?}", r.errors);
+    }
+
+    #[test]
+    fn unknown_properties_suggest_close_names() {
+        let r = validate(&json!({"items": [], "priorty": {}, "fontsize": 10,
+            "canvas": {"widht": 8, "height": 6}, "defaults": {"font": {"lineHeight": 1.4}}}));
+        let msgs: Vec<_> = r.errors.iter().map(|e| e.message.as_str()).collect();
+        assert!(msgs.contains(&"unknown property 'priorty' (did you mean 'priority'?)"));
+        assert!(msgs.contains(&"unknown property 'widht' (did you mean 'width'?)"));
+        assert!(msgs.contains(&"unknown property 'lineHeight' (did you mean 'line_height'?)"));
+        assert!(msgs.contains(&"unknown property 'fontsize'"));
+        let known = ["mark".to_string(), "margin".to_string()];
+        assert_eq!(suggest("marx", known.iter()), Some("mark"));
+        assert_eq!(edit_distance(&['a', 'b', 'c'], &['b', 'a', 'c']), 1);
     }
 
     #[test]
