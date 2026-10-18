@@ -26,6 +26,7 @@ import { Solve } from "./solver/index.js";
 import * as local from "./solver/local.js";
 import * as repair from "./solver/repair.js";
 import { verify } from "./solver/verify.js";
+import { type SolveTrace, Tracer } from "./trace.js";
 import { Issue, validate as validateProblem } from "./validate.js";
 
 /**
@@ -47,9 +48,16 @@ export interface Placed {
 
 /**
  * Solve a problem that already passed `validate` (its warnings are passed through).
- * Throws {@link PlaceError} when the problem cannot be prepared.
+ * Throws {@link PlaceError} when the problem cannot be prepared. `trace` records the
+ * solver's decisions (ADR 0041).
  */
-export function placeValidated(problem: unknown, env: Env, warnings: Issue[], profile: BudgetProfile = "ts"): Placed {
+export function placeValidated(
+  problem: unknown,
+  env: Env,
+  warnings: Issue[],
+  profile: BudgetProfile = "ts",
+  trace: Tracer | null = null,
+): Placed {
   const t0 = envNow(env);
   let m: Model;
   try {
@@ -108,9 +116,15 @@ export function placeValidated(problem: unknown, env: Env, warnings: Issue[], pr
   const obs = prepare(m, minFont);
   const t1 = envNow(env);
   const s = new Solve(m, obs, env, pri, measurer, variants, t0);
+  if (trace !== null) {
+    s.trace = trace;
+    trace.begin(s);
+    trace.phase("candidates");
+  }
   s.generateLevel0();
   const t2 = envNow(env);
   envProgress(env, "greedy", 0);
+  if (trace !== null) trace.phase("greedy");
   greedy.run(s);
   const t3 = envNow(env);
   let strategy = "greedy";
@@ -121,6 +135,10 @@ export function placeValidated(problem: unknown, env: Env, warnings: Issue[], pr
     const iters = toIndex(maxf(minf(minf(m.solver.maxIterations, budget * rate), 400 * m.items.length), 0));
     envProgress(env, "local", 0);
     const deadline = t0 > 0 || envNow(env) > 0 ? t0 + 3 * budget : 0;
+    if (trace !== null) {
+      trace.iterations = iters;
+      trace.phase("local");
+    }
     const ls = local.run(s, iters, deadline);
     s.iterations = ls.iterations;
     if (ls.iterations > 0) strategy = "local";
@@ -129,17 +147,28 @@ export function placeValidated(problem: unknown, env: Env, warnings: Issue[], pr
     if (st === Strategy.Exact || (st === Strategy.Auto && small && budget >= 500)) {
       envProgress(env, "exact", 0);
       const maxNodes = toIndex(maxf(budget * 2000, 10000));
+      if (trace !== null) trace.phase("exact");
       exact.run(s, maxNodes);
+      if (trace !== null) trace.pass("exact", "exact", []);
       strategy = "exact";
     }
   }
+  if (trace !== null) trace.phase("fan");
   fanPass(s);
+  if (trace !== null) trace.phase("boundary");
   repair.boundaryPass(s);
   repair.boundaryFill(s);
+  if (trace !== null) trace.phase("uncross");
   repair.uncross(s);
+  if (trace !== null) trace.phase("repair");
   repair.priorityRepair(s);
   const t4 = envNow(env);
+  if (trace !== null) trace.phase("verify");
   const ver = verify(s);
+  if (trace !== null) {
+    trace.verified(ver);
+    trace.setStrategy(strategy);
+  }
   const t5 = envNow(env);
   const phases: [string, number][] = [
     ["prepare", t1 - t0],
@@ -168,6 +197,19 @@ export function placeValidated(problem: unknown, env: Env, warnings: Issue[], pr
   }
   (res.stats as Record<string, unknown>).runtime_ms = envNow(env) - t0;
   return { result: res, debug, model: m };
+}
+
+/**
+ * Solve a problem and record the solver's decisions (ADR 0041): the result, identical to
+ * {@link placeWith}'s, and the trace (`trace.ts`).
+ */
+export function placeTracedWith(problem: unknown, env: Env, profile: BudgetProfile = "ts"): { result: Record<string, unknown>; trace: SolveTrace } {
+  const report = validateProblem(problem);
+  if (!report.valid) throw new PlaceError(report.errors);
+  const tracer = new Tracer();
+  const { result, debug, model } = placeValidated(problem, env, report.warnings, profile, tracer);
+  if (debug !== null) result.debug_svg = debugSvg(model, result, debug);
+  return { result, trace: tracer.finish() };
 }
 
 /** Solve a problem with an environment; fills `debug_svg` when `output.debug_svg` is set. */

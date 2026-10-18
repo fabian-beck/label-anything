@@ -175,6 +175,7 @@ export function run(s: Solve): void {
       }
       // level 0 and then the ladder (spec §10.1), in total order; the first item that
       // fails every step cuts the prefix
+      if (s.trace !== null) s.trace.pick(i, g.live[i]!, "ordered");
       if (!processUnit(s, g, i, true)) cut = true;
     }
     return;
@@ -190,6 +191,7 @@ export function run(s: Solve): void {
       r += 1;
     }
     envProgress(s.env, "greedy", (r - band.length) / order.length);
+    if (s.trace !== null) s.trace.band(key, band);
     const cancelled = s.pollCancel();
     if (cancelled || s.timeGuardHit || (s.now() - s.startMs > budgetGuard && s.now() > 0)) {
       s.timeGuardHit = s.timeGuardHit || !cancelled;
@@ -205,7 +207,11 @@ export function run(s: Solve): void {
     const capped = capMayHit(s, band);
     const deferred: number[] = [];
     if (capped) {
-      for (const i of band) if (!g.done[i]) processUnit(s, g, i, true);
+      for (const i of band) {
+        if (g.done[i]) continue;
+        if (s.trace !== null) s.trace.pick(i, g.live[i]!, "ordered");
+        processUnit(s, g, i, true);
+      }
       continue;
     }
     // warm start: labels placed in the previous solve keep their position when it is
@@ -242,16 +248,21 @@ export function run(s: Solve): void {
       if (g.done[i] || g.tried0[i] || cnt !== g.live[i]) continue;
       popped += 1;
       if (popped % 64 === 0 && s.pollCancel()) break;
+      if (s.trace !== null) s.trace.pick(i, cnt, "level0");
       if (!processUnit(s, g, i, false) && !g.done[i]) {
         g.tried0[i] = 1;
         deferred.push(i);
+        if (s.trace !== null) s.trace.deferred(i);
       }
     }
     g.bandKey = -1;
     // ladder pass in total order
     deferred.sort((a, b) => s.pri.prio[a]!.rank - s.pri.prio[b]!.rank);
     for (const i of deferred) {
-      if (!g.done[i] && !s.pollCancel()) processUnit(s, g, i, true);
+      if (!g.done[i] && !s.pollCancel()) {
+        if (s.trace !== null) s.trace.pick(i, g.live[i]!, "ladder");
+        processUnit(s, g, i, true);
+      }
     }
     if (s.cancelled) {
       for (const i of band) {
@@ -352,6 +363,7 @@ function processUnit(s: Solve, g: Greedy, i: number, ladder: boolean): boolean {
       g.done[i] = 1;
       g.capReached = true;
       s.reasons[i] = Reason.OmittedByPriority;
+      if (s.trace !== null) s.trace.omitted(i);
       return false;
     }
     return false;
@@ -367,6 +379,7 @@ function placeItem(s: Solve, g: Greedy, i: number, ladder: boolean): boolean {
     if (!capAllows(s, s.cands[c0]!)) {
       g.capReached = true;
       s.reasons[i] = Reason.OmittedByPriority;
+      if (s.trace !== null) s.trace.omitted(i);
       return false;
     }
     commit(s, g, i, c0, false);
@@ -374,6 +387,7 @@ function placeItem(s: Solve, g: Greedy, i: number, ladder: boolean): boolean {
   }
   if (!ladder) {
     s.reasons[i] = explain(s, i);
+    if (s.trace !== null) s.trace.omitted(i);
     return false;
   }
   // a label the previous solve degraded keeps its box while that is free (ADR 0025)
@@ -383,6 +397,7 @@ function placeItem(s: Solve, g: Greedy, i: number, ladder: boolean): boolean {
       if (!capAllows(s, s.cands[c]!)) {
         g.capReached = true;
         s.reasons[i] = Reason.OmittedByPriority;
+        if (s.trace !== null) s.trace.omitted(i);
         return false;
       }
       commit(s, g, i, c, false);
@@ -394,20 +409,23 @@ function placeItem(s: Solve, g: Greedy, i: number, ladder: boolean): boolean {
     const step = steps[si]!;
     s.stepsTried[i]!.push(stepName(step));
     let choice: [number, boolean] | null;
+    let ids: readonly number[] = [];
     if (step.kind === "omit") break;
     else if (step.kind === "evict_lower") {
       choice = g.maxKeyPlaced > s.pri.prio[i]!.key ? evictLower(s, g, i) : null;
     } else if (step.kind === "soft_overlap") {
       choice = s.obs.anyRelaxableHard() ? bestFree(s, s.byItem[i]!.slice(), true) : null;
     } else {
-      const ids = s.ladderCandidates(i, si);
+      ids = s.ladderCandidates(i, si);
       choice = bestFree(s, ids, false);
     }
+    if (s.trace !== null) s.trace.ladder(i, stepName(step), ids, choice === null ? null : choice[0]);
     if (choice !== null) {
       const [c, relaxed] = choice;
       if (!capAllows(s, s.cands[c]!)) {
         g.capReached = true;
         s.reasons[i] = Reason.OmittedByPriority;
+        if (s.trace !== null) s.trace.omitted(i);
         return false;
       }
       commit(s, g, i, c, relaxed);
@@ -415,6 +433,7 @@ function placeItem(s: Solve, g: Greedy, i: number, ladder: boolean): boolean {
     }
   }
   s.reasons[i] = explain(s, i);
+  if (s.trace !== null) s.trace.omitted(i);
   return false;
 }
 
@@ -431,6 +450,7 @@ function commit(s: Solve, g: Greedy, i: number, c: number, relaxed: boolean): vo
   for (let q = 0; q < ids.len; q++) all.push(ids.get(q));
   lowerAffected(s, i, c, all);
   const dy = s.obs.dynamic;
+  const killed: number[] | null = s.trace !== null ? [] : null;
   for (const k of all) {
     if (!g.alive[k]) continue;
     const j = s.cands[k]!.item;
@@ -438,11 +458,13 @@ function commit(s: Solve, g: Greedy, i: number, c: number, relaxed: boolean): vo
     if (pairConflict(s.cands[k]!, cand, dy, s.state.spacing(i, j)) || s.state.pairLower(s.cands[k]!, cand)) {
       g.alive[k] = 0;
       g.live[j] -= 1;
+      if (killed !== null) killed.push(k);
       // re-queue with its new live count, but only within the running band (items of
       // later bands must not be placed before this band's ladder pass)
       if (!g.done[j] && g.bandKey === s.pri.prio[j]!.key) g.heap.push(g.live[j]!, s.pri.prio[j]!.rank, j);
     }
   }
+  if (killed !== null) s.trace!.placed(i, c, killed);
 }
 
 /**
@@ -523,24 +545,38 @@ function bestLevel0(s: Solve, g: Greedy, i: number): number | null {
     scoredId.push(c);
   }
   const m = scoredId.length;
-  if (m === 0) return null;
+  const tr = s.trace;
+  if (m === 0) {
+    if (tr !== null) tr.scored(i, scoredId, scoredCost, null, null, null);
+    return null;
+  }
   const idx: number[] = [];
   for (let k = 0; k < m; k++) idx.push(k);
   idx.sort((a, b) => cmpF64(scoredCost[a]!, scoredCost[b]!) || scoredId[a]! - scoredId[b]!);
   const w = s.model.weights;
-  if (w.lookahead === 0 && w.starve === 0) return scoredId[idx[0]!]!;
+  if (w.lookahead === 0 && w.starve === 0) {
+    if (tr !== null) tr.scored(i, scoredId, scoredCost, null, null, scoredId[idx[0]!]!);
+    return scoredId[idx[0]!]!;
+  }
   let bestTotal = Infinity;
   let bestC = 4294967295;
+  const laIds: number[] | null = tr !== null ? [] : null;
+  const laVals: number[] | null = tr !== null ? [] : null;
   for (let t = 0; t < m && t < LOOKAHEAD_TOP; t++) {
     const base = scoredCost[idx[t]!]!;
     const c = scoredId[idx[t]!]!;
     const la = lookahead(s, g, i, c);
+    if (laIds !== null) {
+      laIds.push(c);
+      laVals!.push(la);
+    }
     const total = base + la;
     if (total < bestTotal || (total === bestTotal && c < bestC)) {
       bestTotal = total;
       bestC = c;
     }
   }
+  if (tr !== null) tr.scored(i, scoredId, scoredCost, laIds, laVals, bestC);
   return bestC;
 }
 
@@ -640,6 +676,7 @@ function evictLower(s: Solve, g: Greedy, i: number): [number, boolean] | null {
     g.tried0[j] = 0;
     s.reasons[j] = null;
   }
+  if (s.trace !== null) s.trace.evicted(i, best[4]);
   return [c, false];
 }
 

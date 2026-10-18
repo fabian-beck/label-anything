@@ -239,7 +239,10 @@ export function boundaryPass(s: Solve): void {
     }
     if (ok) {
       const after = totalCost(s, order);
-      if (after < before - 1e-9) continue;
+      if (after < before - 1e-9) {
+        if (s.trace !== null) s.trace.pass("boundary", "boundary", order);
+        continue;
+      }
     }
     for (const i of placedNow) s.state.unplace(i, s.cands);
     for (const [i, c] of old) s.state.place(i, c, s.cands, !s.cands[c]!.feasible);
@@ -328,7 +331,10 @@ export function boundaryFill(s: Solve): void {
           if (!withinInk(s, res.cands)) break;
           let cost = 0;
           for (const [, c] of res.cands) cost += c.cost;
-          if (applyUnlessInverting(s, { cands: res.cands, added: [u], cost })) members = trial;
+          if (applyUnlessInverting(s, { cands: res.cands, added: [u], cost })) {
+            members = trial;
+            if (s.trace !== null) s.trace.pass("boundary", "fill", trial);
+          }
           break;
         }
         // a placed label in the way joins the column
@@ -472,6 +478,7 @@ export function uncross(s: Solve): void {
           if (s.state.isFree(s.cands[idJ]!, s.cands, s.obs, j)) {
             s.state.place(j, idJ, s.cands, false);
             improved = true;
+            if (s.trace !== null) s.trace.pass("uncross", "uncross", [i, j]);
             break pairs;
           }
           s.state.unplace(i, s.cands);
@@ -572,6 +579,7 @@ export function priorityRepair(s: Solve): void {
       }
       s.state.place(h, bestC, s.cands, bestRelaxed);
       s.reasons[h] = null;
+      if (s.trace !== null) s.trace.pass("repair", "repair", [h, ...bestRemoved]);
     } else if (s.reasons[h] === null) {
       s.reasons[h] = explain(s, h);
     }
