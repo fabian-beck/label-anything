@@ -29,3 +29,490 @@
 [data-md-color-scheme="slate"] .md-typeset img {
   background: #ffffff;
 }
+
+/* --- the home page's header (docs/_overrides/home.html): the logo as a live demo -------- */
+.la-hero {
+  --la-hero-tint: #eef0fa;
+  --la-hero-grid: rgba(64, 81, 181, 0.07);
+  --la-hero-dot: #7986cb;
+  --la-hero-pin: #c2185b;
+  --la-hero-node: #3949ab;
+  --la-hero-pill: #e8eaf6;
+  --la-hero-water: #64b5f6;
+  --la-hero-water-fill: #d6eafc;
+  --la-hero-water-text: #1565c0;
+  --la-hero-halo: rgba(255, 255, 255, 0.9);
+  /* where the live header puts its scenes (read by hero.js): beside the text, or below it */
+  --la-hero-layout: wide;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: var(--md-default-fg-color);
+  background: linear-gradient(180deg, var(--la-hero-tint), var(--md-default-bg-color) 85%);
+  border-bottom: 0.05rem solid var(--md-default-fg-color--lightest);
+}
+
+[data-md-color-scheme="slate"] .la-hero {
+  --la-hero-tint: hsla(232, 22%, 19%, 1);
+  --la-hero-grid: rgba(140, 158, 255, 0.07);
+  --la-hero-dot: #8c9eff;
+  --la-hero-pin: #f06292;
+  --la-hero-node: #9fa8da;
+  --la-hero-pill: #2c3256;
+  --la-hero-water: #64b5f6;
+  --la-hero-water-fill: #1d3550;
+  --la-hero-water-text: #90caf9;
+  --la-hero-halo: hsla(232, 15%, 16%, 0.9);
+}
+
+@media (max-width: 1099.98px) {
+  .la-hero {
+    --la-hero-layout: strip;
+  }
+
+  /* the room for the scenes below the text, once the live header is there */
+  .la-hero.has-toy .la-hero__content {
+    padding-bottom: calc(4.4rem + 300px);
+  }
+}
+
+/* graph paper, fading out towards the edges */
+.la-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(to right, var(--la-hero-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--la-hero-grid) 1px, transparent 1px);
+  background-size: 2rem 2rem;
+  background-position: center top;
+  mask-image: radial-gradient(ellipse 70% 80% at 50% 40%, #000 30%, transparent 100%);
+}
+
+.la-hero__stage {
+  position: absolute;
+  inset: 0;
+}
+
+.la-hero__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* over a mark or a label, also where it sits next to a line of text */
+.la-hero.is-over,
+.la-hero.is-over * {
+  cursor: grab;
+}
+
+.la-hero.is-dragging,
+.la-hero.is-dragging * {
+  cursor: grabbing;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* the marks: map, network and chart, each drawn as such a picture would draw it */
+.la-hero__mark {
+  fill: var(--la-hero-dot);
+  animation: la-hero-in 0.5s ease-out both;
+}
+
+.la-hero__mark--accent {
+  fill: var(--md-accent-fg-color);
+}
+
+.la-hero__mark--name {
+  fill: var(--md-primary-fg-color);
+  animation: none;
+}
+
+.la-hero__mark--pin {
+  fill: var(--la-hero-pin);
+}
+
+.la-hero__mark--pin.la-hero__mark--accent {
+  fill: var(--md-accent-fg-color);
+}
+
+.la-hero__pin-eye {
+  fill: var(--md-default-bg-color);
+}
+
+.la-hero__mark--area {
+  fill: var(--la-hero-water-fill);
+  stroke: var(--la-hero-water);
+  stroke-width: 1;
+}
+
+.la-hero__river {
+  fill: none;
+  stroke: var(--la-hero-water);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.7;
+}
+
+.la-hero__mark--pill,
+.la-hero__mark--inside {
+  fill: var(--md-default-bg-color);
+  stroke: var(--la-hero-node);
+  stroke-width: 2;
+}
+
+.la-hero__mark--inside {
+  fill: var(--md-primary-fg-color);
+  stroke: var(--md-primary-fg-color);
+}
+
+.la-hero__edges {
+  fill: none;
+  stroke: var(--la-hero-node);
+  stroke-width: 1.5;
+  opacity: 0.45;
+}
+
+.la-hero__cloud {
+  fill: var(--md-default-fg-color--lighter);
+  animation: la-hero-in 0.5s ease-out both;
+}
+
+.la-hero__trend {
+  fill: none;
+  stroke: var(--md-accent-fg-color);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+  opacity: 0.8;
+}
+
+.la-hero__ring {
+  fill: none;
+  stroke: var(--la-hero-dot);
+  stroke-width: 2;
+}
+
+/* leaders: thin; the name's is the logo's */
+.la-hero__leader {
+  fill: none;
+  stroke: var(--md-default-fg-color--light);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.la-hero__leader--name {
+  stroke: var(--md-primary-fg-color);
+  stroke-linecap: round;
+}
+
+/* the labels' looks: a map's halo, a POI chip with its icon, a node's pill, a callout */
+.la-hero__label text {
+  fill: var(--md-default-fg-color--light);
+}
+
+.la-hero__label--map text {
+  fill: var(--md-default-fg-color);
+  stroke: var(--la-hero-halo);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+.la-hero__label--accent text {
+  fill: var(--md-default-fg-color);
+}
+
+.la-hero__label--chip .la-hero__bg {
+  fill: var(--md-default-bg-color);
+  stroke: var(--md-default-fg-color--lightest);
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.12));
+}
+
+.la-hero__label--chip text {
+  fill: var(--md-default-fg-color);
+}
+
+.la-hero__icon {
+  fill: none;
+  stroke: var(--la-hero-pin);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.la-hero__label--pill .la-hero__bg {
+  fill: var(--la-hero-pill);
+}
+
+.la-hero__label--pill text {
+  fill: var(--la-hero-node);
+}
+
+.la-hero__label--inside text {
+  fill: #ffffff;
+}
+
+.la-hero__label--inside.la-hero__label--out text {
+  fill: var(--la-hero-node);
+}
+
+.la-hero__label--water text {
+  fill: var(--la-hero-water-text);
+}
+
+.la-hero__label--callout .la-hero__bg {
+  fill: var(--md-default-bg-color);
+  stroke: var(--md-accent-fg-color);
+  stroke-width: 1.5;
+}
+
+.la-hero__label--callout text {
+  fill: var(--md-default-fg-color);
+}
+
+.la-hero__label--name .la-hero__bg {
+  fill: var(--md-primary-fg-color);
+}
+
+.la-hero__label--name text {
+  fill: var(--md-primary-bg-color);
+}
+
+/* how a label was placed, on hover */
+.la-hero__tip {
+  position: absolute;
+  z-index: 2;
+  max-width: 16rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.2rem;
+  background: var(--md-default-fg-color);
+  color: var(--md-default-bg-color);
+  font-size: 0.6rem;
+  line-height: 1.4;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+@keyframes la-hero-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* the text: only its elements take the pointer, the stage gets the rest */
+.la-hero__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 38rem;
+  margin: 0 auto;
+  padding: 2.6rem 0.8rem 4.4rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.la-hero__content > * {
+  pointer-events: auto;
+}
+
+/* the static logo: the name on a label, its leader and dot (the live one replaces it) */
+.la-lockup {
+  position: relative;
+  display: flex;
+  margin: 0 0.95em 0.95em 0;
+  font-size: clamp(1.45rem, 0.9rem + 2.4vw, 2.3rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--md-primary-bg-color);
+}
+
+.la-lockup__label {
+  position: relative;
+  z-index: 1;
+  padding: 0.18em 0.5em;
+  border-radius: 0.24em;
+  background: var(--md-primary-fg-color);
+}
+
+.la-lockup__tail {
+  position: absolute;
+  top: 100%;
+  left: 100%;
+  width: 1em;
+  height: 1em;
+  overflow: visible;
+}
+
+.la-lockup__tail path {
+  fill: none;
+  stroke: var(--md-primary-fg-color);
+}
+
+.la-lockup__tail circle {
+  fill: var(--md-primary-fg-color);
+}
+
+.la-hero.is-live .la-lockup {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.la-hero__tagline {
+  width: fit-content;
+  margin: 0.4rem 0 0.5rem;
+  font-size: clamp(1.15rem, 0.8rem + 1.5vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+.la-hero__lead {
+  width: fit-content;
+  max-width: 32rem;
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--md-default-fg-color--light);
+}
+
+.la-hero__langs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem;
+  width: fit-content;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.la-hero__langs li {
+  padding: 0.05rem 0.5rem;
+  border: 0.05rem solid var(--md-default-fg-color--lightest);
+  border-radius: 1rem;
+  background: var(--md-default-bg-color);
+  font-size: 0.6rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.la-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  width: fit-content;
+  margin-top: 1.1rem;
+}
+
+.la-hero__actions .md-button {
+  margin: 0;
+  border-radius: 0.2rem;
+}
+
+/* shown once the header is live; out of the flow, so that its changing numbers never
+   change the header's size (which would place the labels again) */
+.la-hero__hint {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  left: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.6rem;
+  background: var(--la-hero-halo);
+  font-size: 0.6rem;
+  color: var(--md-default-fg-color--light);
+  visibility: hidden;
+}
+
+.la-hero.is-live .la-hero__hint {
+  visibility: visible;
+}
+
+.la-hero__hint-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  column-gap: 0.6rem;
+}
+
+.la-hero__live {
+  margin-right: 0.2rem;
+  padding: 0 0.35rem;
+  border-radius: 1rem;
+  background: var(--md-accent-fg-color--transparent);
+  color: var(--md-default-fg-color);
+  font-weight: 700;
+}
+
+.la-hero__live::before {
+  content: "";
+  display: inline-block;
+  width: 0.35rem;
+  height: 0.35rem;
+  margin-right: 0.25rem;
+  border-radius: 50%;
+  background: var(--md-accent-fg-color);
+  vertical-align: 0.05rem;
+}
+
+.la-hero__styles button {
+  margin-left: 0.15rem;
+  padding: 0 0.35rem;
+  border: 0.05rem solid var(--md-default-fg-color--lightest);
+  border-radius: 1rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.la-hero__styles button[aria-pressed="true"] {
+  border-color: var(--md-primary-fg-color);
+  background: var(--md-primary-fg-color);
+  color: var(--md-primary-bg-color);
+}
+
+.la-hero__stats {
+  font-variant-numeric: tabular-nums;
+}
+
+.la-hero__reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--md-typeset-a-color);
+  font: inherit;
+  cursor: pointer;
+}
+
+.la-hero__reset:hover,
+.la-hero__reset:focus-visible {
+  text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .la-hero__mark,
+  .la-hero__cloud {
+    animation: none;
+  }
+}
+
+/* the home page's cards: icons in the link colour */
+.md-typeset .grid.cards .twemoji.lg {
+  color: var(--md-typeset-a-color);
+}

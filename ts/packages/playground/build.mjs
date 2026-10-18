@@ -3,8 +3,10 @@
  * Builds the playground into dist/ (published with the documentation site as /playground/):
  *
  *   node build.mjs            # dist/: app.js, engine-ts.js, engine-wasm.js, the WebAssembly
- *                             #        module, fonts, data, index.html, style.css, and the
+ *                             #        module, fonts, data, index.html, style.css, the
  *                             #        explainer (explain.html, explain.js, explain-worker.js)
+ *                             #        and hero.js (the live header of the documentation's
+ *                             #        home page, which solves with engine-ts.js)
  *   node build.mjs --serve    # rebuild on change and serve on http://127.0.0.1:8000/
  *
  * Needs the built packages (`npm run build` at the repository root) and, for the
@@ -69,6 +71,7 @@ const entries = [
   { in: "src/worker-ts.ts", out: "engine-ts" },
   { in: "src/explain/main.ts", out: "explain" },
   { in: "src/explain/worker.ts", out: "explain-worker" },
+  { in: "src/hero.ts", out: "hero" },
 ];
 if (hasWasm) entries.push({ in: "src/worker-wasm.ts", out: "engine-wasm" });
 const options = { ...common, entryPoints: entries, outdir: OUT };
@@ -82,7 +85,7 @@ if (serve) {
   const result = await esbuild.build({ ...options, metafile: true });
   writeFileSync(join(OUT, "THIRD-PARTY-NOTICES.txt"), notices(result.metafile));
   const size = (f) => (existsSync(join(OUT, f)) ? `${(statSync(join(OUT, f)).size / 1024).toFixed(0)} KB` : "–");
-  console.log(`dist/: app.js ${size("app.js")}, engine-ts.js ${size("engine-ts.js")}, engine-wasm.js ${size("engine-wasm.js")}, label_anything_bg.wasm ${size("label_anything_bg.wasm")}`);
+  console.log(`dist/: app.js ${size("app.js")}, engine-ts.js ${size("engine-ts.js")}, engine-wasm.js ${size("engine-wasm.js")}, label_anything_bg.wasm ${size("label_anything_bg.wasm")}, hero.js ${size("hero.js")}`);
 }
 
 /** The licenses of the npm packages bundled into the scripts (from esbuild's metafile). */
