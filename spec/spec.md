@@ -581,8 +581,12 @@ break*): at the last fitting `e ∈ [s, t)` that is not followed by a combining 
 `balanced(N, M)` (`M` optional): the candidate widths are `width([s..k])` for every line
 start `s` (the first one and the one after each break) and every `k ≥ s` among the
 breaks and `n−1`; with `M`, `k` runs in ascending order and stops at the first width
-`> M`, and `M` is a candidate itself. Sorted ascending without duplicates, the smallest
-candidate `c` such that `greedy(c)` has at most `N` lines is found by binary search
+`> M`, and `M` is a candidate itself. Candidates narrower than the *floor* are dropped:
+the widest first segment of a line, `max_s width([s..t])` over the same line starts (`t` =
+the first break `≥ s`, or `n−1`), and with `M` at most `M` — below it `greedy` would end a
+line inside a word, which only a segment wider than `M` may force. Sorted ascending without
+duplicates, the smallest candidate `c` such that `greedy(c)` has at most `N` lines is found
+by binary search
 (`lo = 0`, `hi = last`; `mid = ⌊(lo + hi)/2⌋`; `hi = mid` if `greedy(c[mid])` has at most
 `N` lines, else `lo = mid + 1`). The result is `greedy(c[lo])`, or `greedy(M)` if that still
 has more than `N` lines.

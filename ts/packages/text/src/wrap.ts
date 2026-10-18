@@ -197,7 +197,11 @@ class Wrapper {
     return end >= 0 ? end : segmentEnd;
   }
 
-  /** Balanced wrap into at most `n` lines (spec §5.3). */
+  /**
+   * Balanced wrap into at most `n` lines (spec §5.3): no candidate narrower than the widest
+   * first segment of a line (at most `maxWidth`), so that lines end at break opportunities
+   * unless a segment is wider than `maxWidth`.
+   */
   balanced(n: number, maxWidth: number | null): Span[] {
     const len = this.cps.length;
     n = Math.max(1, Math.floor(n));
@@ -209,8 +213,13 @@ class Wrapper {
       if (s < len && starts[starts.length - 1] !== s) starts.push(s);
     }
     let candidates: number[] = [];
+    // the widest first segment of a line: narrower widths need an emergency break
+    let floor = 0;
     for (const s of starts) {
-      for (let i = this.firstBreak(s); i <= this.breaks.length; i++) {
+      const first = this.firstBreak(s);
+      const segment = this.width(s, first < this.breaks.length ? this.breaks[first] : len - 1);
+      if (segment > floor) floor = segment;
+      for (let i = first; i <= this.breaks.length; i++) {
         const k = i < this.breaks.length ? this.breaks[i] : len - 1;
         const w = this.width(s, k);
         if (maxWidth !== null && w > maxWidth) break;
@@ -220,7 +229,9 @@ class Wrapper {
     if (maxWidth !== null) {
       candidates.push(maxWidth);
       candidates = candidates.filter((w) => w <= maxWidth);
+      if (floor > maxWidth) floor = maxWidth;
     }
+    candidates = candidates.filter((w) => w >= floor);
     candidates = candidates.filter((w) => !Number.isNaN(w)).sort((a, b) => a - b);
     candidates = candidates.filter((w, i) => i === 0 || w !== candidates[i - 1]);
     if (candidates.length === 0) return this.greedy(maxWidth ?? Infinity, Infinity);

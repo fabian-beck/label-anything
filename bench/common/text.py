@@ -301,7 +301,14 @@ def candidate_widths(text: str, measure) -> list[float]:
 
 
 def balanced(text: str, n: int, measure) -> list[str]:
+    # no width narrower than the widest first segment of a line (it would need an emergency break)
+    opps = break_opportunities(text)
+    ends = opps + [len(text)]
+    floor = max((measure(_trim(text[a:min(e for e in ends if e > a)])) for a in [0] + opps if a < len(text)),
+                default=0.0)
     for w in candidate_widths(text, measure):
+        if w < floor:
+            continue
         lines = greedy(text, w, measure)
         if len(lines) <= n:
             return lines

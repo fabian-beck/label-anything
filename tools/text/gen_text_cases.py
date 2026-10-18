@@ -318,7 +318,9 @@ def balanced_spans(text, n_lines, max_width, measure):
     starts = [first] + [skip_spaces(text, k + 1) for k in bks]
     starts = [s for s in starts if s < n]
     cands = set()
+    floor = 0.0  # the widest first segment of a line: narrower widths need an emergency break
     for s in starts:
+        floor = max(floor, measure(line(text, s, min([k for k in bks if k >= s] + [n - 1]))))
         for k in [k for k in bks if k >= s] + [n - 1]:
             c = measure(line(text, s, k))
             if max_width is not None and c > max_width:
@@ -326,7 +328,8 @@ def balanced_spans(text, n_lines, max_width, measure):
             cands.add(c)
     if max_width is not None:
         cands = {c for c in cands | {max_width} if c <= max_width}
-    cands = sorted(cands)
+        floor = min(floor, max_width)
+    cands = sorted(c for c in cands if c >= floor)
     lo, hi = 0, len(cands) - 1
     while lo < hi:
         mid = (lo + hi) // 2

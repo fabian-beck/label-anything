@@ -272,7 +272,9 @@ impl<'a> Wrapper<'a> {
         self.greedy(w, n).len() <= n
     }
 
-    /// Balanced wrap into at most `n` lines (spec §5.3).
+    /// Balanced wrap into at most `n` lines (spec §5.3): no candidate narrower than the
+    /// widest first segment of a line (at most `max_width`), so that lines end at break
+    /// opportunities unless a segment is wider than `max_width`.
     fn balanced(&mut self, n: usize, max_width: Option<f64>) -> Vec<Span> {
         let len = self.len();
         let n = n.max(1);
@@ -288,8 +290,14 @@ impl<'a> Wrapper<'a> {
             }
         }
         let mut candidates = Vec::new();
+        // the widest first segment of a line: narrower widths need an emergency break
+        let mut floor: f64 = 0.0;
         for s in starts {
             let first_break = self.breaks.partition_point(|&k| k < s);
+            let segment = self.width((s, self.segment_end(s)));
+            if segment > floor {
+                floor = segment;
+            }
             for i in first_break..=self.breaks.len() {
                 let k = self.breaks.get(i).copied().unwrap_or(len - 1);
                 let w = self.width((s, k));
@@ -302,7 +310,11 @@ impl<'a> Wrapper<'a> {
         if let Some(m) = max_width {
             candidates.push(m);
             candidates.retain(|&w| w <= m);
+            if floor > m {
+                floor = m;
+            }
         }
+        candidates.retain(|&w| w >= floor);
         candidates.retain(|w| !w.is_nan());
         candidates.sort_by(f64::total_cmp);
         candidates.dedup();
@@ -386,8 +398,10 @@ pub fn greedy_wrap<'a>(text: &str, max_width: f64, measure: impl Into<Measure<'a
 
 /// Balanced wrap into at most `n_lines` lines: `greedy_wrap` at the smallest candidate
 /// width (the widths of the lines between break opportunities, and `max_width`; only
-/// those `<= max_width`) that needs at most `n_lines` lines, found by binary search. If
-/// even `max_width` needs more lines, the result is `greedy_wrap(text, max_width)`.
+/// those `<= max_width` and none narrower than the widest segment between two break
+/// opportunities that starts a line, or than `max_width` if that is narrower) that needs
+/// at most `n_lines` lines, found by binary search. If even `max_width` needs more lines,
+/// the result is `greedy_wrap(text, max_width)`.
 pub fn balanced_wrap<'a>(
     text: &str,
     n_lines: usize,
