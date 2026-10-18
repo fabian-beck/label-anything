@@ -326,8 +326,13 @@ fn serve_answers_cors_preflight() {
 
 /// Sends `text` to the server on `port` and returns its answer.
 fn http(port: u16, text: &str) -> Option<String> {
+    http_within(port, text, 60)
+}
+
+/// [`http`], waiting at most `secs` seconds for the answer.
+fn http_within(port: u16, text: &str, secs: u64) -> Option<String> {
     let mut s = std::net::TcpStream::connect(("127.0.0.1", port)).ok()?;
-    s.set_read_timeout(Some(std::time::Duration::from_secs(60)))
+    s.set_read_timeout(Some(std::time::Duration::from_secs(secs)))
         .ok()?;
     s.write_all(text.as_bytes()).ok()?;
     let mut out = String::new();
@@ -362,33 +367,32 @@ fn serve_answers_while_a_request_is_in_progress() {
         }
         up
     });
-    // a crowded problem whose local search takes a while (100,000 moves)
-    let items: Vec<Value> = (0..400)
+    // a request whose body is still arriving keeps its worker busy: bodies over 1 KiB are
+    // read by the worker, not before the request is handed to it
+    let items: Vec<Value> = (0..40)
         .map(|i| {
             point(
                 &format!("i{i}"),
-                10.0 + (i % 20) as f64 * 14.0,
-                10.0 + (i / 20) as f64 * 14.0,
+                10.0 + i as f64 * 7.0,
+                150.0,
                 &format!("Label {i}"),
             )
         })
         .collect();
-    let slow = json!({"canvas": {"width": 300, "height": 300}, "items": items,
-                      "solver": {"strategy": "local", "time_budget_ms": 1000}})
-    .to_string();
-    let (tx, rx) = std::sync::mpsc::channel();
-    let place_tx = tx.clone();
-    let slow_request = post("/place", &slow);
-    let place = std::thread::spawn(move || {
-        let answer = http(port, &slow_request);
-        let _ = place_tx.send("place");
-        answer
-    });
-    std::thread::sleep(std::time::Duration::from_millis(100));
-    let during = http(port, health);
-    let _ = tx.send("health");
-    let first = rx.recv().unwrap();
-    let placed = place.join().unwrap();
+    let problem = json!({"canvas": {"width": 300, "height": 300}, "items": items}).to_string();
+    assert!(problem.len() > 1024);
+    let request = post("/place", &problem);
+    let (head, tail) = request.split_at(request.len() - 10);
+    let mut slow = std::net::TcpStream::connect(("127.0.0.1", port)).unwrap();
+    slow.set_read_timeout(Some(std::time::Duration::from_secs(60)))
+        .unwrap();
+    slow.write_all(head.as_bytes()).unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(200));
+    // with a single worker, /health would wait for the rest of that body
+    let during = http_within(port, health, 5);
+    slow.write_all(tail.as_bytes()).unwrap();
+    let mut placed = String::new();
+    let _ = slow.read_to_string(&mut placed);
     let (bad_place, bad_validate) = (
         http(port, &post("/place", "{bad")),
         http(port, &post("/validate", "{bad")),
@@ -396,9 +400,9 @@ fn serve_answers_while_a_request_is_in_progress() {
     let _ = server.kill();
     let _ = server.wait();
     assert!(ready, "the server answers");
-    assert!(placed.expect("a result").starts_with("HTTP/1.1 200"));
-    assert!(during.expect("an answer").starts_with("HTTP/1.1 200"));
-    assert_eq!(first, "health", "/health waited for the solve");
+    let during = during.expect("/health answers while another request is in progress");
+    assert!(during.starts_with("HTTP/1.1 200"), "{during}");
+    assert!(placed.starts_with("HTTP/1.1 200"), "{placed}");
     // malformed JSON is an invalid problem: 422 from /place, a parse error from /validate
     let bad_place = bad_place.expect("an answer");
     assert!(bad_place.starts_with("HTTP/1.1 422"), "{bad_place}");
