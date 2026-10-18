@@ -169,7 +169,8 @@ function typeName(v: unknown): string {
     case "boolean":
       return "boolean";
     case "number":
-      return "number";
+      // NaN and ±Infinity are no JSON numbers (JSON.stringify writes null)
+      return Number.isFinite(v) ? "number" : String(v);
     case "string":
       return "string";
     case "object":
@@ -185,7 +186,7 @@ function typeIs(t: string, v: unknown): boolean {
       // `v.as_f64().map(|f| f.fract() == 0.0)`: also true for serde_json floats like 1.0
       return typeof v === "number" && Number.isInteger(v);
     case "number":
-      return typeof v === "number";
+      return typeof v === "number" && Number.isFinite(v);
     default:
       return typeName(v) === t;
   }

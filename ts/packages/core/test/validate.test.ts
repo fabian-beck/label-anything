@@ -155,6 +155,15 @@ describe("validate (TypeScript specifics)", () => {
       "expected object, got null",
     ]);
   });
+
+  it("rejects NaN and infinite numbers, which JSON cannot carry", () => {
+    const r = validate({ canvas: { width: Infinity, height: 10 }, items: [{ anchor: point(NaN, 2), label: text("A") }] });
+    expect(r.errors.map((e) => [e.pointer, e.code, e.message])).toEqual([
+      ["/canvas/width", "type", "expected number, got Infinity"],
+      ["/items/0/anchor/x", "type", "expected number, got NaN"],
+    ]);
+    expect(validate({ items: [], solver: { seed: -Infinity } }).errors[0]!.message).toBe("expected integer, got -Infinity");
+  });
 });
 
 describe("parseJson", () => {

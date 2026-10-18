@@ -38,7 +38,7 @@ Warnings never stop a solve; they are returned in `result.warnings` too.
 | Code | Meaning |
 |---|---|
 | `parse` | not valid JSON (or, for an SVG background, not well-formed XML) |
-| `type` | wrong JSON type |
+| `type` | wrong JSON type (also `NaN` and `Infinity` in a JavaScript object, which JSON cannot represent) |
 | `required` | a required property is missing (also `canvas` when `y_axis` is `"up"`) |
 | `unknown_property` | a property that is not allowed here (often a typo) |
 | `enum`, `const` | a value outside the allowed set; `version` other than `"1"` |
