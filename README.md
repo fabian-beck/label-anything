@@ -11,6 +11,10 @@ icons, or anything with a size — next to selected features in scatterplots, ma
 node-link diagrams and illustrations. It avoids whatever you say should not be covered,
 draws leader lines when labels must sit at a distance, and never lets leaders cross.
 
+**Try it in your browser:** the [playground](https://fabian-beck.github.io/label-anything/playground/)
+runs the engine live — a world map, a network, charts, moving objects and photographs, with
+every option in reach.
+
 * **One problem in, one result out.** Anchors, labels, fonts, an optional background
   (nothing, vector shapes, SVG, or a raster image) and an avoidance policy go in; a list
   of placed labels and leaders comes out. The format is a versioned JSON schema

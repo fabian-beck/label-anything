@@ -5,6 +5,7 @@
 node_modules/
 /ts/packages/*/dist/
 /ts/packages/*/tsconfig.tsbuildinfo
+/ts/packages/*/test-results/
 /bindings/js-extras/dist/
 *.tsbuildinfo
 # Python

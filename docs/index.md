@@ -19,6 +19,9 @@ leader lines when a label has to sit at a distance, and never lets leaders cross
 problem goes in (JSON, or your language's API), one result comes out: a box per label,
 its leader, and an explanation for every label that did not fit.
 
+**Try it in your browser:** the [playground](try.md) runs the engine live on a world map,
+a network, charts, moving objects and photographs, with every option in reach.
+
 ![The outliers of a scatter plot, labeled over the chart image](assets/figures/outliers.png){ width="640" }
 
 <div class="grid cards" markdown>

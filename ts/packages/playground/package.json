@@ -1,0 +1,28 @@
+{
+  "name": "@label-anything/playground",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Label Anything playground: the engine running live in the browser (WebAssembly and TypeScript), its options in a UI, moving objects. Published with the documentation site under /playground/.",
+  "license": "MIT",
+  "type": "module",
+  "repository": { "type": "git", "url": "https://github.com/fabian-beck/label-anything", "directory": "ts/packages/playground" },
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --serve",
+    "typecheck": "tsc -p tsconfig.json",
+    "test:browser": "node build.mjs && playwright test -c test/playwright.config.mjs"
+  },
+  "dependencies": {
+    "@label-anything/core": "0.1.0",
+    "@label-anything/extras": "0.1.0",
+    "@label-anything/wasm": "0.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/d3-force": "3.0.10",
+    "@types/d3-geo": "3.1.0",
+    "d3-force": "^3.0.0",
+    "d3-geo": "^3.1.1",
+    "esbuild": "^0.28.2"
+  }
+}
