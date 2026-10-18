@@ -14,11 +14,12 @@ from __future__ import annotations
 import copy
 import difflib
 import math
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from . import _background
 from ._errors import ValidationError
+from ._json import plain, pointer_token
 from ._types import JSONDict
 from .labels import anchor_dict, font_dict, label_dict, leaders_dict, wrap_dict
 from .priority import Priority
@@ -296,6 +297,18 @@ def is_number_list(v: Any) -> bool:
     ) and not all(isinstance(x, Mapping) for x in vals[:1])
 
 
+def is_tier_list(v: Any) -> bool:
+    """A non-empty sequence of ints or ``None`` (an explicit tier per item), not tier rules."""
+    if v is None or isinstance(v, (str, bytes, Mapping)) or not isinstance(v, Iterable):
+        return False
+    if hasattr(v, "dtype"):  # NumPy array
+        return getattr(v.dtype, "kind", "") in "iu" and int(getattr(v, "size", 0)) > 0
+    vals = list(v)
+    return bool(vals) and all(
+        t is None or (isinstance(t, int) and not isinstance(t, bool)) or hasattr(t, "item") for t in vals
+    )
+
+
 def _finite_number(v: Any, pointer: str) -> float:
     try:
         x = float(v)
@@ -334,7 +347,7 @@ def make_item(
         a["mark"] = mark_dict(mark)
     item["anchor"] = a
     item["label"] = label_dict(label)
-    cleaned = clean_attrs(attrs) if attrs else None
+    cleaned = clean_attrs(attrs, f"{pointer}/attrs") if attrs else None
     if cleaned:
         item["attrs"] = cleaned
     if priority is not None:
@@ -354,17 +367,25 @@ def make_item(
     return item
 
 
-def clean_attrs(attrs: Mapping[str, Any]) -> JSONDict:
-    """Item attributes; NaN / missing values (pandas ``NaN``, ``NA``) are dropped."""
+def clean_attrs(attrs: Mapping[str, Any], pointer: str = "/attrs") -> JSONDict:
+    """Item attributes as JSON values (NumPy scalars as numbers, dates and times as ISO 8601
+    strings, durations in seconds); NaN / missing values (pandas ``NaN``, ``NA``, ``NaT``)
+    are dropped."""
     out: JSONDict = {}
     for k, v in attrs.items():
         if isinstance(v, float) and math.isnan(v):
             continue
         if type(v).__name__ in ("NAType", "NaTType"):
             continue
-        if hasattr(v, "dtype") and getattr(v, "shape", None) == () and v != v:  # NumPy NaN
+        if hasattr(v, "dtype") and getattr(v, "shape", None) == () and v != v:  # NumPy NaN, NaT
             continue
-        out[str(k)] = v
+        try:
+            out[str(k)] = plain(v)
+        except TypeError:
+            raise TypeError(
+                f"{pointer}/{pointer_token(k)}: a value of type {type(v).__name__!r} has no JSON "
+                "encoding (attributes are numbers, strings, booleans, dates, lists or dicts)"
+            ) from None
     return out
 
 
@@ -383,6 +404,13 @@ def attrs_list(attrs: Any, n: int) -> List[Optional[Mapping[str, Any]]]:
     if len(recs) != n:
         raise ValueError(f"attrs has {len(recs)} entries but there are {n} items")
     return recs
+
+
+def _length(v: Any) -> Optional[int]:
+    try:
+        return len(v)
+    except TypeError:
+        return None
 
 
 def per_item(name: str, values: Any, n: int) -> Optional[List[Any]]:
@@ -413,6 +441,20 @@ def apply_priority_fn(items: List[JSONDict], fn: PriorityFn) -> None:
                 it["priority"] = _finite_number(score, pointer)
         else:
             it["priority"] = _finite_number(v, pointer)
+
+
+def _set_per_item(items: List[JSONDict], key: str, vals: List[Any], when: str) -> None:
+    """Write explicit ``priority`` / ``tier`` values (one per item; ``None`` skips)."""
+    if len(vals) != len(items):
+        name = "priority" if key == "priority" else "tiers"
+        raise ValueError(
+            f"{name} has {len(vals)} values{when} but there are {len(items)} items "
+            f"(per-item values can also go with the items: .items(..., {name}=[...]))"
+        )
+    for i, (it, v) in enumerate(zip(items, vals)):
+        if v is None:
+            continue
+        it[key] = _finite_number(v, f"/items/{i}/{key}") if key == "priority" else int(v)
 
 
 def unknown_option(name: str) -> TypeError:
@@ -446,6 +488,8 @@ class Problem:
         self._bg_defaults: Dict[str, Any] = {}
         self._vector: List[JSONDict] = []
         self._priority_fn: Optional[PriorityFn] = None
+        #: Per-item ``priority`` / ``tier`` values given before the items (applied at build).
+        self._pending: Dict[str, List[Any]] = {}
         if options:
             self.set(**options)
 
@@ -491,7 +535,13 @@ class Problem:
         if "priority" in opts:
             self.priority(opts["priority"])
         if "tiers" in opts:
-            set_path(doc, "priority.tiers", tier_rules(opts["tiers"]))
+            tiers = opts["tiers"]
+            if isinstance(tiers, Iterator):
+                tiers = list(tiers)
+            if is_tier_list(tiers):
+                self._per_item("tier", tiers)
+            else:
+                set_path(doc, "priority.tiers", tier_rules(tiers))
         return self
 
     def option(self, path: str, value: Any) -> Problem:
@@ -501,14 +551,16 @@ class Problem:
 
     def canvas(self, width: Any, height: Optional[float] = None, **canvas_options: Any) -> Problem:
         """Set the canvas: ``canvas(800, 600, padding=4)``, ``canvas((800, 600))`` or a dict."""
-        c = self._doc.setdefault("canvas", {})
         if isinstance(width, Mapping):
-            merge(c, width)
-        elif height is None:
-            w, h = width
-            c["width"], c["height"] = float(w), float(h)
+            merge(self._doc.setdefault("canvas", {}), width)
         else:
+            if height is None:
+                if isinstance(width, (str, bytes)) or _length(width) != 2:
+                    raise TypeError(f"canvas must be (width, height) or a dict (got {width!r})")
+                width, height = width
+            c = self._doc.setdefault("canvas", {})
             c["width"], c["height"] = float(width), float(height)
+        c = self._doc["canvas"]
         for k, v in canvas_options.items():
             if v is not None:
                 c[k] = _normalize("region", v) if k == "region" else v
@@ -567,16 +619,25 @@ class Problem:
         svg_ids: Optional[Iterable[Optional[str]]] = None,
         placement: Optional[Iterable[Optional[Mapping[str, Any]]]] = None,
     ) -> Problem:
-        """Add many items. Every keyword is a sequence with one entry per item (``None``
-        entries are skipped); ``attrs`` may also be a dict of columns or a DataFrame,
-        ``marks`` a single mark for all, ``required`` a set of ids."""
+        """Add many items. ``anchors``: ``(x, y)`` pairs, an ``(N, 2)`` array or a two-column
+        DataFrame, :class:`Area` polygons or anchor dicts. Every keyword is a sequence with
+        one entry per item (``None`` entries are skipped); ``attrs`` may also be a dict of
+        columns or a DataFrame, ``marks`` a single mark for all, ``required`` a set of ids."""
         if isinstance(labels, (str, bytes)):
             raise TypeError("labels must be a sequence of labels, not a single string")
+        if hasattr(anchors, "columns") and hasattr(anchors, "to_numpy"):
+            # a pandas DataFrame iterates over its column names: use its rows
+            if len(anchors.columns) != 2:
+                raise ValueError(f"a DataFrame of anchors needs two columns, x and y (got {len(anchors.columns)})")
+            anchors = anchors.to_numpy(dtype=float)
         anchor_list = list(anchors)
         label_list = list(labels)
         n = len(anchor_list)
         if len(label_list) != n:
-            raise ValueError(f"{n} anchors but {len(label_list)} labels")
+            hint = ""
+            if n == 2 and all(_length(a) == len(label_list) for a in anchor_list):
+                hint = " (anchors are (x, y) pairs: for separate x and y sequences pass zip(x, y))"
+            raise ValueError(f"{n} anchors but {len(label_list)} labels{hint}")
         id_list = per_item("ids", ids, n)
         attr_list = attrs_list(attrs, n) if attrs is not None else None
         if marks is not None and (isinstance(marks, Mapping) or not isinstance(marks, Iterable)):
@@ -699,8 +760,9 @@ class Problem:
     # --- priority -----------------------------------------------------------------
     def priority(self, spec: Any) -> Problem:
         """The priority: a :class:`Priority` (terms), an attribute name, a list of term
-        dicts, a whole ``priority`` dict, or a callable ``f(item) -> score | (tier, score)``
-        evaluated once per item at :meth:`build`."""
+        dicts, a whole ``priority`` dict, a list of numbers (one per item; given before
+        the items, they apply at :meth:`build`), or a callable
+        ``f(item) -> score | (tier, score)`` evaluated once per item at :meth:`build`."""
         pr = self._doc.setdefault("priority", {})
         self._priority_fn = None
         if isinstance(spec, Priority):
@@ -713,15 +775,20 @@ class Problem:
             self._priority_fn = spec
             pr.pop("terms", None)
         elif is_number_list(spec):
-            vals = list(spec)
-            if len(vals) != len(self._items):
-                raise ValueError(f"priority has {len(vals)} values but there are {len(self._items)} items")
-            for i, (it, v) in enumerate(zip(self._items, vals)):
-                if v is not None:
-                    it["priority"] = _finite_number(v, f"/items/{i}/priority")
+            self._per_item("priority", spec)
         else:
             pr["terms"] = [dict(t) for t in spec]
         return self
+
+    def _per_item(self, key: str, values: Any) -> None:
+        """Explicit ``priority`` / ``tier`` values, one per item: applied to the items now,
+        or at :meth:`build` when they are given before the items (``Problem(priority=[...])``)."""
+        vals = list(values)
+        if not self._items:
+            self._pending[key] = vals
+            return
+        self._pending.pop(key, None)
+        _set_per_item(self._items, key, vals, "")
 
     def tier(self, where: str, tier: int) -> Problem:
         """Append a tier rule ``{where, tier}`` (first match wins)."""
@@ -738,6 +805,8 @@ class Problem:
     def _compile(self, *, embed_background: bool = False) -> Tuple[JSONDict, Optional[_background.RawRaster]]:
         doc = copy.deepcopy(self._doc)
         items = copy.deepcopy(self._items)
+        for key, vals in self._pending.items():
+            _set_per_item(items, key, vals, " (given before the items)")
         if self._priority_fn is not None:
             apply_priority_fn(items, self._priority_fn)
             pr = doc.get("priority")
@@ -803,6 +872,7 @@ class Problem:
         p._bg_defaults = dict(self._bg_defaults)
         p._vector = copy.deepcopy(self._vector)
         p._priority_fn = self._priority_fn
+        p._pending = copy.deepcopy(self._pending)
         return p
 
     def __len__(self) -> int:

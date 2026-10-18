@@ -3,8 +3,9 @@
 * ``str`` / ``Path``: a raster file (PNG, JPEG, WebP) or an SVG file, recognized by the
   extension or, failing that, by the content;
 * ``bytes``: an encoded image (embedded as a ``data:`` URL) or SVG text;
-* a NumPy ``uint8`` array ``H×W×4`` / ``H×W×3`` / ``H×W`` (floats in [0, 1] are
-  converted) or a PIL image: handed to the engine directly (``raster_override``), and the
+* a NumPy ``uint8`` array ``H×W×4`` / ``H×W×3`` / ``H×W`` (floats in [0, 1] and bools
+  are converted; floats outside [0, 1], e.g. 0–255 values, raise ``ValueError``) or a PIL
+  image: handed to the engine directly (``raster_override``), and the
   problem gets a placeholder raster source ``{"rgba": {"width", "height", "data": ""}}``
   that carries the options;
 * a string of SVG markup;
@@ -25,6 +26,8 @@ from ._types import JSONDict
 _PNG = b"\x89PNG\r\n\x1a\n"
 _BASE64_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=-_\r\n ")
 RASTER_SUFFIXES = {".png": "png", ".jpg": "jpeg", ".jpeg": "jpeg", ".webp": "webp"}
+#: Rounding slack of float pixel values outside [0, 1] (clipped, not an error).
+_FLOAT_SLACK = 1e-3
 
 
 @dataclass
@@ -133,7 +136,15 @@ def raw_raster(obj: Any) -> RawRaster:
         a = obj
         kind = a.dtype.kind
         if kind == "f":
-            a = (np.clip(np.nan_to_num(a), 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8)
+            a = np.nan_to_num(a)
+            lo, hi = (float(a.min()), float(a.max())) if a.size else (0.0, 0.0)
+            if lo < -_FLOAT_SLACK or hi > 1.0 + _FLOAT_SLACK:
+                # most likely 0–255 values in a float array: clipping would turn them white
+                raise ValueError(
+                    f"float background arrays must hold values in [0, 1] (got {lo:g} to {hi:g}); "
+                    "for 0–255 values pass a uint8 array (a.astype(np.uint8)) or divide by 255"
+                )
+            a = (np.clip(a, 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8)
         elif kind == "b":
             a = a.astype(np.uint8) * 255
         elif a.dtype != np.uint8:

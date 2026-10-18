@@ -70,6 +70,12 @@ def test_parse_errors() -> None:
     assert info2.value.errors[0]["code"] == "parse"
     report = la.validate("{")
     assert not report.valid and report.errors[0]["code"] == "parse"
+    # JSON that is not an object is no path either
+    with pytest.raises(la.ValidationError, match="a problem must be a JSON object") as info3:
+        la.place_problem(" [1, 2]")
+    assert info3.value.errors[0]["code"] == "type"
+    with pytest.raises(FileNotFoundError, match="no file 'problem.json'"):
+        la.place_problem("problem.json")
 
 
 def test_warnings_are_reported() -> None:

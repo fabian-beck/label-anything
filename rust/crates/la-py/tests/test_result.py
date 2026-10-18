@@ -39,6 +39,10 @@ def test_placements() -> None:
     assert res["0"] is res.placements[0] and res.get("nope") is None
     with pytest.raises(KeyError):
         res["nope"]
+    # ids are strings; other keys are looked up as str(key), as the API converts ids
+    assert res[0] is res["0"] and res.get(14) is res["14"]
+    numbered = la.place([(10, 10), (50, 50)], ["a", "b"], ids=[101, 202], canvas=(100, 100))
+    assert numbered[101].id == "101" and numbered.get(202) is numbered["202"] and numbered.get(303) is None
     # placed boxes do not overlap
     boxes = [p.box for p in placed if p.box is not None]
     for i, a in enumerate(boxes):

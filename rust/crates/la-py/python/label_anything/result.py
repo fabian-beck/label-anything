@@ -194,11 +194,15 @@ class Result:
         return s if isinstance(s, str) else None
 
     # --- access -------------------------------------------------------------------
-    def __getitem__(self, item_id: str) -> Placement:
-        return self._by_id[item_id]
+    def __getitem__(self, item_id: object) -> Placement:
+        """The placement of an item by id. Ids are strings; other keys are looked up as
+        ``str(key)``, as the API converts them (``ids=[101, 202]`` → ``res[101]``; items
+        without an id are ``"0"``, ``"1"``, ... → ``res[0]``)."""
+        return self._by_id[item_id if isinstance(item_id, str) else str(item_id)]
 
-    def get(self, item_id: str) -> Optional[Placement]:
-        return self._by_id.get(item_id)
+    def get(self, item_id: object) -> Optional[Placement]:
+        """The placement of an item by id (as ``res[item_id]``), or ``None``."""
+        return self._by_id.get(item_id if isinstance(item_id, str) else str(item_id))
 
     def __iter__(self) -> Iterator[Placement]:
         return iter(self.placements)

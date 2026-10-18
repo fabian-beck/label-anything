@@ -225,6 +225,87 @@ def test_attrs_from_a_dataframe() -> None:
     assert items[1]["attrs"] == {"name": "y"}
 
 
+def test_dates_and_durations_in_attrs() -> None:
+    import datetime as dt
+
+    pd = pytest.importorskip("pandas")
+    np = pytest.importorskip("numpy")
+    df = pd.DataFrame({
+        "when": pd.to_datetime(["2024-01-01T00:00", "2024-02-01T12:30", None]),
+        "took": pd.to_timedelta([1, 2, 3], unit="h"),
+    })
+    items = la.Problem(canvas=(100, 100)).items([(10, 10), (50, 50), (90, 90)], ["a", "b", "c"], attrs=df).build()["items"]
+    # ISO 8601 strings (they compare chronologically in expressions), seconds, NaT dropped
+    assert [it["attrs"] for it in items] == [
+        {"when": "2024-01-01T00:00:00", "took": 3600.0},
+        {"when": "2024-02-01T12:30:00", "took": 7200.0},
+        {"took": 10800.0},
+    ]
+    attrs = [
+        {"d": dt.date(2024, 3, 1), "t": dt.timedelta(minutes=1), "n": np.datetime64("2024-03-01T10:00:00.000000000")},
+        {"d": np.datetime64("2024-03-02"), "t": np.timedelta64(90, "s"), "n": np.datetime64("NaT", "s")},
+    ]
+    items = la.Problem().items([(1, 1), (2, 2)], ["a", "b"], attrs=attrs).build()["items"]
+    assert items[0]["attrs"] == {"d": "2024-03-01", "t": 60.0, "n": "2024-03-01T10:00:00"}
+    assert items[1]["attrs"] == {"d": "2024-03-02", "t": 90.0}
+    res = la.place([(10, 10), (50, 50), (90, 90)], ["a", "b", "c"], canvas=(100, 100), attrs=df,
+                   tiers=[("attrs.when >= '2024-01-15'", 1)])
+    assert [p.priority["tier"] for p in res if p.priority] == [0, 1, 0]
+
+
+def test_attrs_without_a_json_encoding() -> None:
+    with pytest.raises(TypeError, match=r"/items/1/attrs/thing: a value of type .object. has no JSON encoding"):
+        la.place([(1, 1), (2, 2)], ["a", "b"], attrs=[{}, {"thing": object()}])
+    with pytest.raises(TypeError, match=r"/obstacles/vector/0/points/0: a value of type .object. has no JSON encoding"):
+        la.Problem(canvas=(10, 10)).vector("dots", points=[object()]).to_json()
+
+
+def test_per_item_values_before_the_items() -> None:
+    pts, names = [(10, 10), (40, 40), (70, 70)], ["a", "b", "c"]
+    items = la.Problem(canvas=(100, 100), priority=[3, None, 1], tiers=[1, 0, 0]).items(pts, names).build()["items"]
+    assert [it.get("priority") for it in items] == [3.0, None, 1.0]
+    assert [it.get("tier") for it in items] == [1, 0, 0]
+    # the same as with the items, or set afterwards
+    assert la.Problem(canvas=(100, 100)).items(pts, names, priority=[3, None, 1], tiers=[1, 0, 0]).build()["items"] == items
+    assert la.Problem(canvas=(100, 100)).items(pts, names).set(priority=[3, None, 1], tiers=[1, 0, 0]).build()["items"] == items
+    assert la.Problem(tiers=iter([1, 0, 0])).items(pts, names).build()["items"][0]["tier"] == 1
+    assert la.Problem(tiers=[("attrs.x == 1", 2)]).build()["priority"] == {"tiers": [{"where": "attrs.x == 1", "tier": 2}]}
+    with pytest.raises(ValueError, match=r"priority has 2 values \(given before the items\) but there are 3 items"):
+        la.Problem(priority=[1, 2]).items(pts, names).build()
+    with pytest.raises(ValueError, match="tiers has 2 values but there are 3 items"):
+        la.Problem().items(pts, names).set(tiers=[1, 0])
+
+
+def test_canvas_forms() -> None:
+    for canvas in [(80, 60), [80, 60], {"width": 80, "height": 60}]:
+        assert la.Problem(canvas=canvas).build()["canvas"] == {"width": 80, "height": 60}
+    assert la.Problem().canvas(80, 60).build()["canvas"] == {"width": 80.0, "height": 60.0}
+    for bad in [400, "400x300", (1, 2, 3)]:
+        with pytest.raises(TypeError, match="canvas must be \\(width, height\\) or a dict"):
+            la.place([(1, 1)], ["a"], canvas=bad)
+    with pytest.raises(TypeError, match="canvas must be"):
+        la.Problem().canvas(800)
+
+
+def test_anchor_forms() -> None:
+    pd = pytest.importorskip("pandas")
+    df = pd.DataFrame({"x": [10, 50, 90], "y": [20.0, 60.0, 30.0]})
+    res = la.place(df, ["a", "b", "c"], canvas=(100, 100))
+    assert [p.anchor for p in res] == [(10.0, 20.0), (50.0, 60.0), (90.0, 30.0)]
+    with pytest.raises(ValueError, match="needs two columns"):
+        la.place(df.assign(z=1), ["a", "b", "c"], canvas=(100, 100))
+    # dicts without a type: an area with a polygon, else a point
+    items = la.Problem().item({"x": 1, "y": 2}, "p").item({"polygon": [(0, 0), (9, 0), (0, 9)]}, "a").build()["items"]
+    assert [it["anchor"]["type"] for it in items] == ["point", "area"]
+    with pytest.raises(la.ValidationError) as info:
+        la.place([{"X": 1, "Y": 2}], ["a"], canvas=(100, 100))
+    assert {e["pointer"] for e in info.value.errors} >= {"/items/0/anchor/X", "/items/0/anchor/Y"}
+    assert not any("polygon" in e["message"] for e in info.value.errors)
+    # x and y as two sequences instead of (x, y) pairs
+    with pytest.raises(ValueError, match=r"2 anchors but 3 labels \(anchors are \(x, y\) pairs: .* zip\(x, y\)\)"):
+        la.place((df.x.tolist(), df.y.tolist()), ["a", "b", "c"], canvas=(100, 100))
+
+
 def test_numpy_inputs() -> None:
     np = pytest.importorskip("numpy")
     pts = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
