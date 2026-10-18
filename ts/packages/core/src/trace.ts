@@ -78,8 +78,10 @@ export interface TraceVariant {
 export interface TraceItem {
   id: string;
   text: string;
-  /** The resolved mark, as `item_shape` of a placement. */
+  /** The resolved mark, as `item_shape` of a placement (for an area anchor: the dot at its pole). */
   shape: Record<string, unknown>;
+  /** The polygon of an area anchor (as `shape`), or null. */
+  area: Record<string, unknown> | null;
   anchor: [number, number];
   /** Priority key level (0 = most important; equal keys form a band of the greedy pass). */
   key: number;
@@ -435,6 +437,7 @@ export class Tracer {
         id: it.id,
         text: labelText(it.label),
         shape: shapeJson(it.shape) as Record<string, unknown>,
+        area: it.area === null ? null : (shapeJson(it.area.shape) as Record<string, unknown>),
         anchor: [it.anchor.x, it.anchor.y],
         key: p.key,
         rank: p.rank,
