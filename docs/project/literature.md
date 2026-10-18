@@ -48,9 +48,9 @@ stacked by isotonic regression. Three gaps stand out:
    whether the omitted labels of W1 are lost to geometry or to the algorithm.
 2. **Labels without room are discovered expensively** (W5). Most of the time of the large
    problem goes into ladder variants of labels that are omitted anyway. A conservative
-   "does the smallest variant fit anywhere within reach" test on the occupancy grid, and
-   the safe reduction rules of Wagner et al. (2001), detect many of them before any
-   candidate is built.
+   "does the smallest variant fit anywhere within reach" test on the occupancy grid
+   looked like a way to detect them before any candidate is built; measured, it is not
+   (S1, ADR 0034).
 3. **Animations are solved frame by frame** (W4). The dynamic-labeling literature gets
    consistency from zoom-aware selection (active ranges, Been et al. 2006, 2010) and from
    preferring a label's previous side (as MapLibre does) — both possible without the
@@ -114,9 +114,16 @@ port).
 ADR 0014 should also say that the exact objective is the static cost only
 (`exact.rs:212`).
 
-**O4 — Neighbourhoods that change the number of labels.** The local search keeps the
-priority objective from ever getting worse (`solver/local.rs`), so annealing acts on cost
-alone and the label count rises only through `try_insert`. The independent-set
+**O4 — Neighbourhoods that change the number of labels.** *Measured on 2026-10-18 (ADR
+0035): not adopted.* With the default priorities every item has its own key, so in
+`strict` mode trading one label for two of lower priority makes the objective worse, and
+the useful case — inserting a more important label — is already the eviction move. Where
+weights add up or keys tie, a prototype added up to 1 % labels (one to three accepted
+swaps per solve). The text below is the idea as first written.
+
+The local search keeps the priority objective from ever getting worse
+(`solver/local.rs`), so annealing acts on cost alone and the label count rises only
+through `try_insert`. The independent-set
 literature's workhorse is the (1,2)-swap: remove one label, insert two; Andrade et al.
 (2012) find one, or show that none exists, in linear time; online reductions speed it up
 further (Dahlum et al. 2016; Lamm et al. 2017; weighted: Großmann et al. 2024). With
@@ -148,23 +155,31 @@ in the ladder.
 
 ### Speed (W5)
 
-**S1 — Detect labels without room before the ladder.** Before an item runs the ladder, test
-conservatively whether the smallest box the ladder could produce (after `wrap` and the
-last `shrink`) fits anywhere within reach of the item (anchor ± `max_distance` or
-`max_length`): mark the cells occupied by hard obstacles and by labels of equal or higher
-key, build a summed-area table of them, and look for a free window of that size; a second
-table answers "any fit in this rectangle" in constant time per item. When nothing fits,
-the item skips the steps that only generate candidates (keeping `evict_lower` when labels
-of lower key lie within reach, and `soft_overlap`). The occupancy grid and its summed-area
-table exist already (`grid/occupancy.rs`, ADR 0015); the approach follows the occupancy
-bitmaps of Kittivorawong et al. (2020) and Pavlovec & Čmolík (2022) and the conflict
-particles of Luboschik et al. (2008); exact largest-empty-rectangle algorithms (Naamad et
-al. 1984; Chazelle et al. 1986) are background, not needed. Caveat: candidates the ladder
-builds are reused by the local search, so skipping them can change results even when the
-ladder would not have placed the label; the explanation of the omission (`reason`,
-`blocked_by`, 13 % of the time) must stay the same. The specification already promises
-early rejection by the distance transform (spec §4.7), which the code does not do: the
-transform drives only the free-space seeds (`leaders.rs:272-275`).
+**S1 — Detect labels without room before the ladder.** *Measured on 2026-10-18 (ADR 0034):
+not adopted.* On the 2,000-label problem, 1,128 items run the ladder and are omitted; only
+18 of them have every candidate box rejected by the occupancy grids — the others fail on
+discrete positions, the label margin and overlaps thinner than a cell, which only the
+exact test sees. A sound pretest therefore skips almost nothing. The same profile led to
+resolving the item option defaults once (−3.3 % instructions). The text below is the idea
+as first written.
+
+Before an item runs the ladder, test conservatively whether the smallest box the ladder
+could produce (after `wrap` and the last `shrink`) fits anywhere within reach of the item
+(anchor ± `max_distance` or `max_length`): mark the cells occupied by hard obstacles and
+by labels of equal or higher key, build a summed-area table of them, and look for a free
+window of that size; a second table answers "any fit in this rectangle" in constant time
+per item. When nothing fits, the item skips the steps that only generate candidates
+(keeping `evict_lower` when labels of lower key lie within reach, and `soft_overlap`). The
+occupancy grid and its summed-area table exist already (`grid/occupancy.rs`, ADR 0015);
+the approach follows the occupancy bitmaps of Kittivorawong et al. (2020) and Pavlovec &
+Čmolík (2022) and the conflict particles of Luboschik et al. (2008); exact
+largest-empty-rectangle algorithms (Naamad et al. 1984; Chazelle et al. 1986) are
+background, not needed. Caveat: candidates the ladder builds are reused by the local
+search, so skipping them can change results even when the ladder would not have placed the
+label; the explanation of the omission (`reason`, `blocked_by`, 13 % of the time) must
+stay the same. The specification already promises early rejection by the distance
+transform (spec §4.7), which the code does not do: the transform drives only the
+free-space seeds (`leaders.rs:272-275`).
 
 **S2 — Safe reduction rules.** Wagner et al. (2001) shrink the conflict graph without
 losing an optimal solution (a candidate without conflicts is taken and its item's other
@@ -217,10 +232,12 @@ the shape, a one-bend leader, or a leader along the descent of the density field
 (Lhuillier et al. 2019) first would keep more labels near their marks; mixing leader
 types restores feasibility in boundary labeling (Bekos et al. 2010).
 
-**L5 — One bend instead of two in orthogonal columns.** The `orthogonal` style draws `opo`
-leaders (two bends) to boundary labels (spec §7). The readability study of Barth et al.
+**L5 — One bend, not two, in orthogonal columns.** The readability study of Barth et al.
 (2019) recommends `po` leaders (one bend) as the best compromise between task performance
-and preference and does not recommend `opo` (from the abstract).
+and preference and does not recommend `opo` (from the abstract). *Corrected on
+2026-10-18 (ADR 0036):* spec §7 said that the `orthogonal` style draws `opo` leaders to
+boundary labels, which is what this note first took over; both implementations draw `po`
+leaders. The spec and the leaders tutorial now say so, and a conformance case checks it.
 
 **L6 — A budget for leaders in the scene.** A cost or limit on the number and total length
 of leaders would make an 11 em leader compete with omission at the scene level (clutter-aware
@@ -323,10 +340,10 @@ Bobák et al. entry of `CITATION.cff` once the CVM record is confirmed.
 
 1. Measurement: O1's upper bound and literature instances, D7's benchmark additions.
    Both are cheap and decide how much O2–O4 can gain.
-2. S1 and S2: less work for omitted labels, aimed at the missed performance target.
-3. O3, then O2 on top of it; O4 if the gap of step 1 is large.
+2. S2: safe reductions of the candidates (S1 was measured and dropped, ADR 0034).
+3. O3, then O2 on top of it (O4 was measured and dropped, ADR 0035).
 4. D2 (small, measurable on scenario 11), then D1 for zooming hosts.
-5. L1 and L5 for columns; L2–L4 as the gallery shows need.
+5. L1 for columns (L5 holds already, ADR 0036); L2–L4 as the gallery shows need.
 
 ## Provenance of these notes
 
