@@ -121,7 +121,7 @@ the definitions of spec §4.6. Item marks are defined by the problem's anchors (
 | 02 | volcano plot | `top20-vector`, `top50-svg`, `top30-transform`, `nfcore-top20-vector` | Galaxy volcanoplot table (16,406 genes); nf-core DESeq2 results | no |
 | 03 | Gapminder bubbles | `y2005-vector`, `y2005-svg`, `y1955-all-vector` | vega-datasets gapminder.json | no |
 | 04 | embedding map | `k40-ink`, `k40-saliency`, `k120-areas` | 50,000 WordNet 3.0 noun glosses, t-SNE computed here | no (computed embedding) |
-| 05 | airports on an SVG world map | `world-iata-300-none`, `world-iata-1000-vector`, `world-iata-3000-svg`, `europe-names-400-svg`, `europe-hubs-svg`, `world-hubs-100-svg` | OpenFlights airports/routes, Natural Earth countries | no |
+| 05 | airports on an SVG world map | `world-iata-300-none`, `world-iata-1000-vector`, `world-iata-1000-lower-vector`, `world-iata-3000-svg`, `europe-names-400-svg`, `europe-hubs-svg`, `world-hubs-100-svg` | OpenFlights airports/routes, Natural Earth countries | no |
 | 06 | city POIs on raster tiles | `monaco-ink`, `monaco-saliency`, `monaco-pins-ink` | OpenStreetMap extract of Monaco, map rendered here | no (rendered tiles) |
 | 07 | node-link | `lesmis-circles`, `lesmis-shapes`, `lesmis-force`, `flare-imports`, `cora-circles` | Les Misérables and Flare's imports (vega-datasets), Cora citation network | no |
 | 08 | technical / anatomical illustration | `astronaut-boundary`, `retina-boundary`, `rocket-distant` | scikit-image sample photos + hand-made CC0 polygons | no |

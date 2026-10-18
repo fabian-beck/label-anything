@@ -66,11 +66,12 @@ covered other labeled airports' dots, FRA over GVA); more distant candidates, lo
 leaders, fans, `required` hubs (no change: LGW's dot lies half under Heathrow's at 6 px per
 degree); hub-only world maps (BRU and DUS still lost). The general fix — a label may cover
 the marks of less important items, which then lose their own label — is an engine change
-for a later decision.
+for a later decision (taken in ADR 0040: `avoid.label.lower_items`).
 
 ## Consequences
 Europe's 30 busiest airports and the next 70 are all labeled, the five London airports next
-to their dots; on the world map 98 of the 100 busiest airports are (LGW and DUS are not).
+to their dots; on the world map 98 of the 100 busiest airports are (LGW and DUS are not;
+with `lower_items`, ADR 0040, all 30 hubs are, and STN and GVA of the next 70 are not).
 Les Misérables keeps all 77 names; Flare labels 91 of its 100 classes. The 100-outlier chart
 places 74 labels instead of 59. A gallery without a run is about 7 MB (WebP: 8 MB); every image
 stays sharp at any zoom.

@@ -5,6 +5,9 @@ Configs (canvas px, y down; equirectangular projection, 5 px/degree for the worl
 * ``world-iata-300-none``   top 300 airports by routes, IATA labels, no background,
                             the other served airports as soft ``points`` (quick suite),
 * ``world-iata-1000-vector`` top 1000, country outlines + graticule as ``lines`` vector layers,
+* ``world-iata-1000-lower-vector`` the same, but labels may cover the marks of less important airports
+                            (``avoid.label.lower_items``), whose labels then go: the hubs of dense
+                            regions keep theirs,
 * ``world-iata-3000-svg``   top 3000, SVG world map (countries = ``areas``, graticule =
                             ``lines``, title/credit = ``text``, other airports = ``points``),
 * ``europe-names-400-svg``  Europe window at 30 px/degree, 400 airports labeled with city names,
@@ -13,6 +16,8 @@ Configs (canvas px, y down; equirectangular projection, 5 px/degree for the worl
                             other airport a soft ``points`` dot without a label (context),
 * ``world-hubs-100-svg``    hubs first on a world map at 6 px/degree: the 100 busiest airports (IATA
                             codes, 8 px, the top 30 a tier of their own), all others as context dots.
+
+The hub maps let labels cover the marks of less important labeled airports too (``lower_items``).
 
 Priority: traffic (number of routes, log1p, minmax). Preset ``map``.
 """
@@ -79,6 +84,10 @@ def outline_scene(proj, width, height, countries, tol=0.6) -> Scene:
     return sc
 
 
+# a label may cover the mark of a less important airport, at a cost, which then stays unlabeled
+LOWER = {"label": {"lower_items": 10.0}, "leader": {"lower_items": 2.5}}
+
+
 def hub_radius(routes: int) -> float:
     """Marks of the hub maps: smaller than ``mark_radius``, so that neighbouring hubs stay apart."""
     return round(min(6.0, 1.8 + 0.1 * math.sqrt(routes)), 2)
@@ -102,7 +111,7 @@ def hubs_problem(proj, vis, n_hubs: int, n_items: int, label_fn, ids, font: floa
     if n_hubs:
         p["priority"].update(tiers=[{"where": "attrs.hub", "tier": 1}],
                              font_classes=[{"first": n_hubs, "scale": 1.2}, {"scale": 0.9}])
-    merge_avoid(p, {"points": 0.3}, {"points": 0.2}, ignore_background=True)
+    merge_avoid(p, {"points": 0.3, **LOWER["label"]}, {"points": 0.2, **LOWER["leader"]}, ignore_background=True)
     p["obstacles"] = {"svg": svg_source(sc)}
     return p, sc
 
@@ -133,6 +142,10 @@ def main() -> None:
     wr.config("world-iata-1000-vector", world_problem(1000, osc.vector_layers()),
               svg=osc.svg(), png=png_bytes(osc.png()),
               description="Top 1000 airports, country outlines and graticule as soft 'lines' vector layers.")
+    p = world_problem(1000, osc.vector_layers())
+    merge_avoid(p, LOWER["label"], LOWER["leader"])
+    wr.config("world-iata-1000-lower-vector", p, svg=osc.svg(), png=png_bytes(osc.png()),
+              description="The same 1000 airports; labels may cover the marks of less important airports.")
     # 3. SVG world map with 3000 anchors
     sc = A.map_scene(A.WORLD, W, H, countries, title="World airports by number of routes")
     for a in aps[3000:]:

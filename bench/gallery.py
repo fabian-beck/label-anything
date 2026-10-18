@@ -59,7 +59,7 @@ Solve = Callable[[Path, Path], dict]
 class Fig:
     """A benchmark problem (``scenario/config``) and its caption. ``text`` is HTML; it may use the
     figure's numbers (``{placed}``, ``{total}``, ``{leaders}``, ``{omitted}``, ``{fans}``,
-    ``{tier_placed}``, ``{tier_total}``, ``{omitted_ids}``, ``{top_omitted}``, ``{first_cut}``,
+    ``{tier_placed}``, ``{tier_total}``, ``{omitted_ids}``, ``{top_omitted}``, ``{top_placed}``, ``{first_cut}``,
     ``{first_cut_rank}``, …; see ``solve_figure``) as in str.format. ``limit``: the figure shows a
     shortcoming (drawn with the notes of the "Where it falls short" section)."""
     key: str
@@ -84,7 +84,8 @@ SECTIONS = (
             "small airport's label is welcome only where it leaves them room. The two maps model exactly that. "
             "The busiest airports are a tier of their own (<code>priority.tiers</code>), placed first and set "
             "larger (<code>priority.font_classes</code>); the next ones are items too, labeled where the hubs "
-            "leave room; every other airport is a dot without a label, which a label may cover at a small cost "
+            "leave room, and a hub's label may cover their dots (<code>avoid.label.lower_items</code>), which then "
+            "go unlabeled; every other airport is a dot without a label, which a label may cover at a small cost "
             "(<code>avoid.label.points: 0.3</code>), so the map keeps its context. What counts is the dense "
             "regions: London, the Low Countries and the Rhine, northern Italy, the US east coast, eastern China.", (
                 Fig("05-airports/europe-hubs-svg", "Europe's busiest airports",
@@ -96,9 +97,15 @@ SECTIONS = (
                 Fig("05-airports/world-hubs-100-svg", "The world's 100 busiest airports",
                     "IATA codes at 8 px on a world map at 6 px per degree, the 30 busiest a size larger; the "
                     "{context} other served airports are dots. {tier_placed} of the {tier_total} hubs and "
-                    "{rest_placed} of the next {rest_total} are labeled; left out: {omitted_ids}, in western "
-                    "Europe's core, where eight hubs share a patch smaller than two labels. Zoom in: the image is "
-                    "a vector graphic.", wide=True),
+                    "{rest_placed} of the next {rest_total} are labeled; left out: {omitted_ids}. In western "
+                    "Europe's core eight hubs share a patch smaller than two labels; zoom in: the image is a vector "
+                    "graphic.", wide=True),
+                Fig("05-airports/world-iata-1000-lower-vector", "Every airport an item, the hubs first",
+                    "The 1,000 busiest airports, all of them items, as in the last figure of the page, but a "
+                    "label may now cover the dot of a less important airport (<code>avoid.label.lower_items: "
+                    "10</code>); that airport then stays unlabeled, so no label sits on a dot it does not belong "
+                    "to. {top_placed} of the ten busiest airports are labeled (left out: {top_omitted}), and "
+                    "{placed:,} of all {total:,}.", wide=True),
                 Fig("06-city-pois/monaco-pins-ink", "375 points of interest in Monaco",
                     "Icon and name labels over an OpenStreetMap raster, the main sights a size larger; the "
                     "engine reads streets and buildings from the pixels (ink mode) and keeps names off the "
@@ -186,9 +193,9 @@ SECTIONS = (
             "The 1,000 busiest airports, all of them items. An item's mark is a hard obstacle for every other "
             "label, whatever the item's priority, so where airports crowd the busiest find no free position: "
             "{top_omitted} — {n_top_omitted} of the ten busiest airports — stay unlabeled while small airports "
-            "elsewhere are labeled ({placed:,} of {total:,}). The hub maps above avoid this by making only the "
-            "airports worth a label items; letting a label cover the marks of less important items would be "
-            "the general fix.", wide=True, limit=True),
+            "elsewhere are labeled ({placed:,} of {total:,}). That is the default; "
+            "<code>avoid.label.lower_items</code> lets a label cover the marks of less important items, as in "
+            "the hub maps above.", wide=True, limit=True),
     )),
 )
 
@@ -344,6 +351,7 @@ def solve_figure(fig: Fig, files: dict, solve: Solve, out: Path, tmp: Path) -> d
             "rest_placed": sum(1 for i in rest if by_id[i].get("placed")), "rest_total": len(rest),
             "context": context, "omitted_ids": ", ".join(omitted[:12]) or "none",
             "top_omitted": ", ".join(top_omitted) or "none", "n_top_omitted": len(top_omitted),
+            "top_placed": sum(1 for p in pl if p.get("placed") and rank.get(p["id"], 0) < 10),
             "first_cut": texts.get(first, "") if first else "", "first_cut_rank": rank.get(first, -1) + 1,
             "split_words": split,
             "settings": settings(problem),
@@ -970,12 +978,12 @@ def notes_html(figs: dict[str, dict]) -> str:
     if split:
         k, ex = split[0]
         notes.append(("Wrapped names can break inside a word",
-                      f"A label with wrap settings takes balanced line breaks within <code>wrap.max_width</code>; "
-                      f"when a word is wider than the balanced width, the line ends inside it (an emergency "
-                      f"break, spec §5.3): <a href=\"#{k.replace('/', '--')}\">“{E(ex[0])}”</a>"
-                      + (f" and {len(ex) - 1} more" if len(ex) > 1 else "") + ". The <code>wrap</code> step of "
-                      "the ladder already skips such variants for labels without wrap settings; labels with them "
-                      "do not yet."))
+                      f"A label with wrap settings takes balanced line breaks within <code>wrap.max_width</code>, "
+                      f"at break opportunities; a word wider than <code>wrap.max_width</code> still has to end "
+                      f"a line inside it (an emergency break, spec §5.3): "
+                      f"<a href=\"#{k.replace('/', '--')}\">“{E(ex[0])}”</a>"
+                      + (f" and {len(ex) - 1} more" if len(ex) > 1 else "") + ". A larger "
+                      "<code>wrap.max_width</code> or a shorter text avoids it."))
     shrunk = [(k, t) for k, t in (("02-volcano/top50-svg", "volcano"), ("09-line-end-labels/life-62-boundary",
                                                                          "life expectancy"),
                                   ("07-node-link/flare-imports", "Flare")) if n(k)]
