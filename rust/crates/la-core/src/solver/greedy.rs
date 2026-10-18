@@ -90,7 +90,10 @@ pub fn run(s: &mut Solve) {
         }
         g.set_members.push(set);
     }
+    // the guard runs from the start of this pass: preparation always completes, and its
+    // time must not leave the most important bands unplaced (ADR 0042)
     let budget_guard = s.model.solver.time_budget_ms * 10.0;
+    let started = s.now();
     if s.model.omission == Omission::Prefix {
         let order = s.pri.order.clone();
         let mut cut = false;
@@ -124,7 +127,7 @@ pub fn run(s: &mut Solve) {
         s.env
             .progress("greedy", (r - band.len()) as f64 / order.len() as f64);
         let cancelled = s.poll_cancel();
-        if cancelled || s.time_guard_hit || (s.now() - s.start_ms > budget_guard && s.now() > 0.0) {
+        if cancelled || s.time_guard_hit || (s.now() - started > budget_guard && s.now() > 0.0) {
             s.time_guard_hit |= !cancelled;
             for &i in &band {
                 if !g.done[i] {

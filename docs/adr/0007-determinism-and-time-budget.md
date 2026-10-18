@@ -1,6 +1,6 @@
 # 0007 — Determinism and the time budget
 
-* Status: accepted
+* Status: accepted; the greedy guard amended by ADR 0042
 * Date: 2026-10-16
 
 ## Context

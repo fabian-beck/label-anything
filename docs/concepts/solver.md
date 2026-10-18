@@ -34,7 +34,9 @@ load ([ADR 0007](../adr/0007-determinism-and-time-budget.md)).
 
 A wall-clock **guard** protects against pathologically slow machines: local search stops
 at 3 × the budget after the start of the solve, and the greedy pass stops opening new
-priority bands at 10 × (the remaining items are `budget_exhausted`). Either sets
+priority bands 10 × the budget after it started (the remaining items are
+`budget_exhausted`), so a slow preparation — a host `measure` callback for many labels —
+still leaves the most important labels their turn. Either sets
 `stats.time_guard_hit` — the only case in which results may depend on timing.
 
 For interactive use, lower the budget; for publication graphics, raise it (and allow the

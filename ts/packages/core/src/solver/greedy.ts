@@ -162,7 +162,10 @@ export function run(s: Solve): void {
     for (const i of set) g.sets[i] = si;
     g.setMembers.push(set);
   });
+  // the guard runs from the start of this pass: preparation always completes, and its
+  // time must not leave the most important bands unplaced (ADR 0042)
   const budgetGuard = s.model.solver.timeBudgetMs * 10;
+  const started = s.now();
   if (s.model.omission === Omission.Prefix) {
     const order = s.pri.order.slice();
     let cut = false;
@@ -191,7 +194,7 @@ export function run(s: Solve): void {
     }
     envProgress(s.env, "greedy", (r - band.length) / order.length);
     const cancelled = s.pollCancel();
-    if (cancelled || s.timeGuardHit || (s.now() - s.startMs > budgetGuard && s.now() > 0)) {
+    if (cancelled || s.timeGuardHit || (s.now() - started > budgetGuard && s.now() > 0)) {
       s.timeGuardHit = s.timeGuardHit || !cancelled;
       for (const i of band) {
         if (!g.done[i]) {

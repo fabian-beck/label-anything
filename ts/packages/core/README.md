@@ -56,7 +56,7 @@ throw a `PlaceError` with the same pointers and codes as `validate`.
 the Rust core) is turned into a fixed iteration budget (40 local-search moves per ms;
 ADR 0007), so results do not depend on the machine's speed. The clock only acts as a
 safety net: local search stops 3 × the budget after the start, and the greedy pass stops
-opening new priority bands after 10 × the budget. `signal` is polled every 64 greedy
+opening new priority bands 10 × the budget after the greedy pass started. `signal` is polled every 64 greedy
 steps, 256 local-search moves and 4,096 exact-search nodes; a cancelled solve returns
 the best valid placement found so far (`stats.cancelled`).
 
