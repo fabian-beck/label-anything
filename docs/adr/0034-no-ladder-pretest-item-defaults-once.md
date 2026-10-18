@@ -47,6 +47,7 @@ Considered and rejected:
 
 ## Consequences
 scatter-2000: 1,428.5 M → 1,381.8 M instructions per solve (−3.3 %). Placements are
-identical on every static benchmark problem and every parity fixture. The target is still
+identical on every static benchmark problem (as built at commit 69fc5fb) and every parity
+fixture. The target is still
 missed: the time of an omitted label is the number of its candidate boxes, not the cost of
 testing one (about 55 instructions in the grid), and fewer boxes means fewer labels.

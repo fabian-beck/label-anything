@@ -22,7 +22,8 @@ where keys tie (equal priorities: as many labels as possible).
 A prototype tried, for an unplaced item `u`, its cheapest candidates blocked by one placed
 label `j` only, removed `j`, placed `u` and placed the cheapest free candidate of another
 unplaced item near `j`'s box, kept when the objective improved (10 % of the moves, enabled
-only for `weighted` or tied keys). Deterministic solves at the default 10,000 moves: the
+only for `weighted` or tied keys). Deterministic solves at the default 10,000 moves, on the
+benchmark problems as built at commit 69fc5fb (before the hub-first airport maps): the
 three `weighted` airport problems 537 → 542, 532 → 536 and 519 → 524 labels (+1 %); equal-
 priority copies of the Monaco POIs 206 → 209, the 2,000 random points 872 → 874, 1,000
 airports 494 → 495, 400 European airports 366 → 367; nine other problems unchanged; cost
