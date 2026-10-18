@@ -59,6 +59,14 @@ Use a priority that does not depend on the view (population, rank, a category), 
 computed from the current screen positions (`outlierness`, `centrality` change as you
 pan).
 
+In a dense region the priority alone is not enough: by default every dot keeps every
+other label away, so a big city in a cluster of small towns can be left without a label
+(`no_feasible_candidate`, blocked by `items`) while the towns at the cluster's edge keep
+theirs. Let important labels cover the dots of less important items —
+`avoid: {label: {lower_items: 10}, leader: {lower_items: 2.5}}`, in every helper's
+`avoid` option — and the towns under them make way instead
+([important labels over minor marks](priority.md#important-labels-over-minor-marks)).
+
 ## Moving points
 
 The same works when the points move on their own: a force-directed graph layout that is
