@@ -72,3 +72,24 @@ def test_region_coverage_counts_populated_cells_with_a_label():
     m = evaluate(prob, result([placed("A", 25, 5), omitted("B"), omitted("C")]), removal_test=False)
     assert m["spread"]["regions"] == 2 and m["spread"]["labeled"] == 1
     assert m["summary"]["region_coverage"] == pytest.approx(0.5)
+
+
+def _leader_to(small_at, extra):
+    """Item A (r = 3) at ``small_at`` labeled by a leader from its outline to the right; ``extra`` other items."""
+    x, y = small_at
+    prob = problem([item("A", x, y, r=3)] + extra, width=300, height=200)
+    lead = {"points": [[x + 4, y], [x + 60, y]], "style": "straight"}
+    return evaluate(prob, result([placed("A", x + 60, y - 5, side="distant", model="distant", leader=lead)]
+                                 + [omitted(it["id"]) for it in extra]), removal_test=False)
+
+
+def test_a_leader_to_a_mark_on_a_larger_one_is_not_ambiguous():
+    # A lies on B (r = 30): the leader starts inside B, 1 px from A's outline and 25 px from B's
+    m = _leader_to((100, 100), [item("B", 95, 100, r=30)])
+    assert m["ambiguity"]["count"] == 0
+
+
+def test_a_leader_starting_at_another_outline_is_ambiguous():
+    # C's outline is 0.5 px from the leader's start, A's 1 px
+    m = _leader_to((100, 100), [item("C", 104, 103, r=2.5)])
+    assert m["ambiguity"]["count"] == 1

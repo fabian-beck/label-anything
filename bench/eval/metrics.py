@@ -435,10 +435,12 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     for p in placed:
         own = p.item.own_shape
         if p.has_leader:
+            # a leader is read by the outline it ends at: where a mark lies on a larger one, the leader
+            # ends inside the larger shape but at the smaller one's outline
             q = p.leaders[0][0]
-            d_own = own.sdist(q)
-            probe = Box(q[0], q[1], q[0], q[1]).grow(max(d_own, 0.0) + 1e-6)
-            nearest_other = min((prob.items[j].own_shape.sdist(q) for j in shape_index.query(probe)
+            d_own = abs(own.sdist(q))
+            probe = Box(q[0], q[1], q[0], q[1]).grow(d_own + 1e-6)
+            nearest_other = min((abs(prob.items[j].own_shape.sdist(q)) for j in shape_index.query(probe)
                                  if prob.items[j].id != p.id), default=math.inf)
         else:
             d_own = own.sdist_box(p.box)
