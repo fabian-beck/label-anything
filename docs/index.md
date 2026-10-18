@@ -208,12 +208,14 @@ the largest problems' speed.
 
 ## Good to know
 
-!!! warning "Experimental"
+!!! warning "Experimental, developed by AI"
 
     Label Anything is still experimental and under active development, not
-    production-ready software. The problem format, the APIs of the language bindings and
-    the placements themselves can change in any 0.x release, without deprecation. Try it
-    and report what you find; pin an exact version if you build on it.
+    production-ready software. It is written mostly by an AI coding assistant (Claude Code)
+    with limited human oversight, code and documentation alike: expect mistakes, and check
+    the results that matter to you. The problem format, the APIs of the language bindings
+    and the placements themselves can change without deprecation. Try it and report what
+    you find.
 
 * **Not on the registries yet.** The packages are built from this repository for now
   ([getting started](getting-started/index.md)).

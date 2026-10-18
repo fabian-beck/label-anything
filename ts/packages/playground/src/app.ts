@@ -898,7 +898,7 @@ export class App {
 
   #renderCredits(): void {
     const el = document.getElementById("credits")!;
-    el.innerHTML = `${this.scene.credits} Label Anything is experimental: options and layouts can change in any 0.x release. <a href="https://github.com/fabian-beck/label-anything">Source</a> (MIT) · <a href="THIRD-PARTY-NOTICES.txt">third-party notices</a>.`;
+    el.innerHTML = `${this.scene.credits} Label Anything is experimental and developed mostly by AI with limited human oversight: options and layouts can change. <a href="https://github.com/fabian-beck/label-anything">Source</a> (MIT) · <a href="THIRD-PARTY-NOTICES.txt">third-party notices</a>.`;
   }
 
   toast(text: string, kind: "error" | "info" = "info", ms = 5000): void {

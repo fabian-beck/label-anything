@@ -1,8 +1,8 @@
 # label-anything (Python)
 
-> **Experimental:** Label Anything is still experimental and under active development.
-> The API, the problem format and the placements can change in any 0.x release, without
-> deprecation.
+> **Experimental:** Label Anything is still experimental and under active development,
+> mostly by an AI coding assistant (Claude Code) with limited human oversight. The API,
+> the problem format and the placements can change without deprecation.
 
 Python binding of **Label Anything**, a label placement engine for charts, maps and
 diagrams: place text, icons or any sized label next to points, areas and shapes, avoid
