@@ -113,6 +113,9 @@ describe("renderLabels", () => {
     expect(g.querySelectorAll("path.la-leader").length).toBe(1);
     expect(g.firstElementChild!.getAttribute("class")).toBe("la-leaders");
     expect(g.lastElementChild!.getAttribute("stroke")).toBe("white");
+    // the boxes start at x: inherited alignment (e.g. Observable Plot's) must not apply
+    expect(g.lastElementChild!.getAttribute("text-anchor")).toBe("start");
+    expect(g.lastElementChild!.getAttribute("dominant-baseline")).toBe("alphabetic");
     renderLabels(g, { ...result, placements: [] }, { font });
     expect(g.querySelectorAll("text").length).toBe(0);
   });
