@@ -27,7 +27,7 @@ python3 examples/tutorials/make_figures.py --cli rust/target/release/label-anyth
   next to the site, as on GitHub Pages: `mkdocs serve` shows its static logo. To see it
   live, build the playground (`npm run build -w @label-anything/playground`), copy
   `ts/packages/playground/dist/` to `site/playground/` after `mkdocs build` and serve
-  `site/` ([ADR 0048](../adr/0048-home-page-header-labeled-live.md)).
+  `site/` ([ADR 0049](../adr/0049-home-page-header-labeled-live.md)).
 
 The site is deployed to GitHub Pages from release tags (`v*`) and on demand
 (`.github/workflows/pages.yml`).
