@@ -217,7 +217,7 @@ export function narrate(ex: Explained, k: number): Narration {
       const la = contenders.length > 0;
       let html = `<p>${plural(e.options.length, "free candidate")}, each with its <i>static</i> cost (what it covers, its distance and position rank, its leader) and its cost against the labels already placed.</p>`;
       html += la
-        ? `<p>The ${contenders.length === e.options.length ? (contenders.length === 1 ? "only one" : `${fmtInt(contenders.length)}`) : `${fmtInt(contenders.length)} cheapest`} also get a <i>lookahead</i> cost: the share of candidates ${contenders.length === 1 ? "it" : "each"} would take from items still waiting. The lowest total wins: ${esc(where(ex, e.chosen))}, ${fmtCost(ch.cost)} + ${fmtCost(ch.dynamic)} + ${fmtCost(ch.lookahead)} = <b>${fmtCost(total)}</b>.</p>`
+        ? `<p>The cheapest also get a <i>lookahead</i> cost — the share of candidates each would take from items still waiting — in order of cost, up to eight, until the next one costs more by itself than the best total so far (it could not win): here ${contenders.length === 1 ? "one" : fmtInt(contenders.length)}. The lowest total wins: ${esc(where(ex, e.chosen))}, ${fmtCost(ch.cost)} + ${fmtCost(ch.dynamic)} + ${fmtCost(ch.lookahead)} = <b>${fmtCost(total)}</b>.</p>`
         : `<p>The cheapest wins: ${esc(where(ex, e.chosen))}, ${fmtCost(ch.cost)} + ${fmtCost(ch.dynamic)} = <b>${fmtCost(total)}</b>.</p>`;
       const cheapest = (la ? contenders : e.options).reduce((a, b) => (a.cost + a.dynamic <= b.cost + b.dynamic ? a : b));
       if (la && cheapest.cand !== e.chosen) {

@@ -143,7 +143,7 @@ export function buildOverlay(ex: Explained, k: number, pinned: number | null): O
       break;
     case "score": {
       ov.focus = e.item;
-      // with lookahead, only the eight cheapest compete (they have a lookahead value)
+      // with lookahead, only the candidates with a lookahead value compete (the cheapest)
       const la = e.options.some((o) => o.lookahead !== null);
       const contenders = e.options.filter((o) => !la || o.lookahead !== null);
       const totals = new Map(contenders.map((o) => [o.cand, o.cost + o.dynamic + (o.lookahead ?? 0)]));

@@ -24,7 +24,7 @@ step is about, and the panel says what was decided and why, with the numbers.
 |---|---|
 | Prepare | the items and their priority bands (the marks' colors) |
 | Candidates | per item, the [candidate positions](concepts/candidates.md) and their static costs: usable ones shaded by cost, those that break a hard rule dashed, the positions the occupancy grid rejected before building them counted |
-| Greedy | per band: the item taken next (the most constrained: the fewest free candidates), the scores of its free candidates — static cost, cost against the labels placed so far, lookahead for the eight cheapest — the placement and the waiting candidates it rules out (crossed out), deferrals, the steps of the [degradation ladder](concepts/candidates.md#the-degradation-ladder), omissions |
+| Greedy | per band: the item taken next (the most constrained: the fewest free candidates), the scores of its free candidates — static cost, cost against the labels placed so far, lookahead for the cheapest (up to eight) — the placement and the waiting candidates it rules out (crossed out), deferrals, the steps of the [degradation ladder](concepts/candidates.md#the-degradation-ladder), omissions |
 | Local search | every move: relocate, swap, insert; its cost change, the temperature, and whether the Metropolis rule accepted it; a chart of the cost over the moves |
 | Repairs | [fan labels](concepts/candidates.md#fan-labels), boundary columns, uncrossing, priority repair — where they change anything |
 | Verify | the independent check of every hard rule, and the result |

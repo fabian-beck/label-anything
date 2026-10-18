@@ -820,7 +820,7 @@ export class ExplainApp {
         }
         out.push(t);
         if (e.options.length > rows.length) out.push(h("p", { class: "hint" }, `and ${e.options.length - rows.length} more`));
-        if (la && rows.some((r) => r.out)) out.push(h("p", { class: "hint" }, "Grey rows are not among the eight cheapest: they get no lookahead and do not compete."));
+        if (la && rows.some((r) => r.out)) out.push(h("p", { class: "hint" }, "Grey rows got no lookahead: they are beyond the eight cheapest, or cost more by themselves than the best total, so they cannot win."));
         break;
       }
       case "place": {
