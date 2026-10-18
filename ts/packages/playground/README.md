@@ -4,7 +4,7 @@ The engine running in the browser on six scenes — a world map, a network, a sc
 a line chart, a swarm of moving points and annotated photographs — with every option of
 the problem format in a panel. Published with the documentation site at
 <https://fabian-beck.github.io/label-anything/playground/>; the decisions behind it are in
-[ADR 0031](../../../docs/adr/0031-playground.md).
+[ADR 0032](../../../docs/adr/0032-playground.md).
 
 ## Run it locally
 

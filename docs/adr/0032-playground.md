@@ -1,4 +1,4 @@
-# 0031 — A playground on the documentation site, with both engines in the browser
+# 0032 — A playground on the documentation site, with both engines in the browser
 
 * Status: accepted (ts/packages/playground, the `wasm` job of CI, the Pages workflow)
 * Date: 2026-10-18
