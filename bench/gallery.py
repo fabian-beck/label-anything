@@ -189,13 +189,14 @@ SECTIONS = (
                     wide=True),
             )),
     Section("weak", "Where it falls short", "", "What the current defaults and models still do badly.", (
-        Fig("05-airports/world-iata-1000-vector", "Every airport an item: the hubs lose",
-            "The 1,000 busiest airports, all of them items. An item's mark is a hard obstacle for every other "
-            "label, whatever the item's priority, so where airports crowd the busiest find no free position: "
-            "{top_omitted} — {n_top_omitted} of the ten busiest airports — stay unlabeled while small airports "
-            "elsewhere are labeled ({placed:,} of {total:,}). That is the default; "
-            "<code>avoid.label.lower_items</code> lets a label cover the marks of less important items, as in "
-            "the hub maps above.", wide=True, limit=True),
+        Fig("05-airports/world-iata-1000-vector", "Every airport an item: a hub can lose",
+            "The 1,000 busiest airports, all of them items. A label may cover the marks of less important "
+            "airports (the <code>map</code> preset), never those of more important ones, and the busiest 5 % "
+            "have larger type. Where hubs crowd, the labels and marks of the busiest leave the next ones no "
+            "free position: {top_omitted} — {n_top_omitted} of the ten busiest airports — stay unlabeled while "
+            "small airports elsewhere are labeled ({placed:,} of {total:,}). Strict priority keeps the more "
+            "important labels; the same type for all (<code>priority.font_classes</code>) or fewer items would "
+            "make room.", wide=True, limit=True),
     )),
 )
 
