@@ -327,6 +327,15 @@ def run(name, mode, grid, scale=1, offset=(0, 0), cls=None):
     return r
 
 
+def backdrop(name, grid, layers=((1, (0, 0)),), background=(255, 255, 255)):
+    """A backdrop luma run: the case's image at each `(scale, offset)` of `layers`, in order."""
+    cols, rows, cell = grid[:3]
+    origin = grid[3] if len(grid) > 3 else (0, 0)
+    return {"name": name, "background": list(background),
+            "layers": [{"scale": sc, "offset": list(off)} for sc, off in layers],
+            "grid": {"origin": list(origin), "cell": cell, "cols": cols, "rows": rows}}
+
+
 def case(stem, name, image, runs=(), **extra):
     c = {"kind": "raster", "name": name}
     if image is not None:
@@ -360,6 +369,14 @@ def build_cases(imgs):
                  run("scale 0.5 (pixels larger than cells), negative offset, cell 3", ink(dilate=1), (40, 30, 3), 0.5, (-7, 5)),
                  run("scale 3, cell 0.75, grid origin (-1, -1)", ink(threshold=0.05, dilate=0), (40, 30, 0.75, (-1, -1)), 3),
                  run("alpha on an opaque image", alpha(), (32, 20, 2)),
+             ], backdrop=[
+                 backdrop("over white, cell 2", (32, 20, 2)),
+                 backdrop("over grey, HiDPI scale 2, fractional offset, cell 1", (40, 22, 1), [(2, (3.25, -1.5))],
+                          (128, 128, 128)),
+                 backdrop("scale 0.5, negative offset, cell 3", (40, 30, 3), [(0.5, (-7, 5))], (0, 0, 0)),
+                 backdrop("two layers: the second covers the first where they overlap", (40, 30, 1.5),
+                          [(1, (0, 0)), (1.5, (10.5, 6.25))], (20, 40, 60)),
+                 backdrop("grid origin (-1, -1), cell 0.75", (40, 30, 0.75, (-1, -1)), [(3, (0, 0))]),
              ]))
     add(case("cost-saliency", "cost and saliency: strokes and a photo-like image",
              file_image("photo-rgb8.png"), [
@@ -369,6 +386,10 @@ def build_cases(imgs):
                  run("saliency, scale 0.5, cell 3, origin (2, 2)", saliency(), (44, 33, 3, (2, 2)), 0.5),
                  run("saliency, cell 0.5 (checksum + samples)", saliency(), (128, 96, 0.5)),
                  run("ink, threshold 0.05", ink(threshold=0.05, dilate=1), (32, 24, 2)),
+             ], backdrop=[
+                 backdrop("photo over white, cell 2", (32, 24, 2)),
+                 backdrop("photo, cell 0.5 (checksum + samples)", (128, 96, 0.5)),
+                 backdrop("photo, scale 1.5, cell 2.5, offset (1, 2), origin (2, 2)", (28, 22, 2.5, (2, 2)), [(1.5, (1, 2))]),
              ]))
     add(case("cost-strokes", "cost and saliency on near-white line art",
              file_image("strokes-rgb8.png"), [
@@ -384,6 +405,12 @@ def build_cases(imgs):
                  run("cost over white", cost(), (24, 16, 2)),
                  run("saliency", saliency(), (24, 16, 2)),
                  run("classmap red/green", classmap([["#dc1e1e", "roads"], ["#14a03c", "parks"]], 0.1), (24, 16, 2)),
+             ], backdrop=[
+                 backdrop("translucent pixels over white", (24, 16, 2)),
+                 backdrop("translucent pixels over black", (24, 16, 2), background=(0, 0, 0)),
+                 backdrop("over itself, shifted: transparent pixels show the layer below", (26, 18, 2),
+                          [(1, (0, 0)), (1, (3.5, 2.5))], (90, 200, 30)),
+                 backdrop("scale 2, cell 1, offset (0.5, 0.5)", (25, 17, 1), [(2, (0.5, 0.5))]),
              ]))
     add(case("classmap-map", "classmap on a 4-bit palette map with tRNS (partially and fully transparent entries)",
              file_image("map-p4.png"), [
@@ -502,6 +529,17 @@ def build_cases(imgs):
         run("cell 0.1 at origin (0.05, 0.05)", alpha(), (64, 44, 0.1, (0.05, 0.05))),
         run("classmap without classes", classmap([], 0.1, False), (6, 4, 1)),
         run("dilation larger than the grid", ink("#000000", 0.0, 50), (6, 4, 1)),
+    ], backdrop=[
+        backdrop("raster entirely outside the grid", (4, 4, 1), [(1, (100, 100))], (10, 10, 10)),
+        backdrop("raster partially left of and above the grid", (6, 4, 1), [(1, (-2.5, -1.25))]),
+        backdrop("one cell covering everything", (1, 1, 50, (-10, -10))),
+        backdrop("zero columns", (0, 3, 1)),
+        backdrop("scale 1/3", (20, 14, 1), [(0.3333333333333333, (0.1, 0.2))]),
+        backdrop("scale 7, cell 0.3, origin 0.1", (20, 14, 0.3, (0.1, 0.1)), [(7, (0, 0))]),
+        backdrop("layers with scale 0 or -1 are skipped: the background everywhere", (6, 4, 1),
+                 [(0, (0, 0)), (-1, (0, 0))], (30, 60, 90)),
+        backdrop("cell 0: the background everywhere", (6, 4, 0), [(1, (0, 0))], (250, 0, 0)),
+        backdrop("no layers", (6, 4, 1), [], (0, 255, 0)),
     ]))
     colors = [[0, 0, 0], [255, 255, 255], [255, 0, 0], [0, 255, 0], [0, 0, 255], [128, 128, 128], [1, 1, 1],
               [10, 11, 12], [254, 254, 254], [250, 250, 248], [120, 170, 220], [220, 60, 50], [99, 7, 201]]
@@ -590,6 +628,18 @@ def finish(stem, c, result):
                     x["samples"] = samples(cov, g["cols"], g["rows"])
                 expect.append(x)
             out["runs"].append(dict(r, expect=expect))
+    if "backdrop" in c:
+        out["backdrop"] = []
+        for r, got in zip(c["backdrop"], result["backdrop"]):
+            g = r["grid"]
+            luma = base64.b64decode(got)
+            assert len(luma) == g["cols"] * g["rows"], (stem, r["name"])
+            x = {"fnv1a32": fnv1a32(luma), "sum": sum(luma), "nonzero": sum(1 for v in luma if v)}
+            if len(luma) <= INLINE_COVERAGE_CELLS:
+                x["luma"] = got
+            else:
+                x["samples"] = samples(luma, g["cols"], g["rows"])
+            out["backdrop"].append(dict(r, expect=x))
     for key in ("oklab", "hex", "base64"):
         if key in c:
             items = []

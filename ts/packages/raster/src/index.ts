@@ -5,12 +5,14 @@
  * Decode a PNG (or take raw RGBA; JPEG/WebP via {@link decodeAsync} where the platform
  * provides a decoder), turn every pixel into a value in [0, 1] with one of five modes
  * (`ink`, `alpha`, `cost`, `classmap`, `saliency`) and area-average the values into
- * per-class `Uint8Array` coverage grids. The arithmetic is specified to the bit, so the
+ * per-class `Uint8Array` coverage grids, and compute the luma of the backdrop behind labels
+ * ({@link backdropLuma}). The arithmetic is specified to the bit, so the
  * coverage is identical to the Rust crate `label-anything-raster` (checked by
  * `conformance/raster`).
  *
  * @packageDocumentation
  */
+export { backdropLuma } from "./backdrop.js";
 export { decodeBase64, sourceBytes } from "./base64.js";
 export { cbrt, estimateBackground, oklabDistance, parseHexColor, srgbToOklab, type Oklab, type Rgb } from "./color.js";
 export { decode, decodeAsync, decodeSource, decodeSourceAsync, sniffFormat, type ImageFormat } from "./decode.js";

@@ -22,6 +22,7 @@ are stale.
 | `canvas.allow_outside` | `false` | bool | Allow labels outside the canvas; disables the `canvas_edge` class. |
 | `canvas.device_pixel_ratio` | `1` | > 0 | Informational. Raster resolution is set per source with `obstacles.raster.scale`. |
 | `canvas.region` | `null` | rect or null | Sub-rectangle labels must stay inside; leaders may leave it. |
+| `canvas.background` | `"#ffffff"` | #rrggbb | Colour of the canvas where no raster lies: the backdrop of labels there (`contrast` cost term). |
 | `y_axis` | `"down"` | down \| up | `up` flips input y: y_px = canvas.height − y (after `transform`). |
 | `transform` | `null` | 6 numbers or null | Affine data→pixel map `[a,b,c,d,e,f]`. |
 | `preset` | `"auto"` | enum | Bundle of defaults, see `spec/presets/`. |
@@ -104,6 +105,7 @@ are stale.
 | `weights.ambiguity` | `1.0` | ≥ 0 | Label closer to another item's shape than to its own. |
 | `weights.lookahead` | `0.3` | ≥ 0 | × Σ fraction of other unplaced items' candidates invalidated. |
 | `weights.starve` | `2.0` | ≥ 0 | × number of unplaced items whose last candidates would be invalidated. |
+| `weights.contrast` | `0.5` | ≥ 0 | × 4 · lightness variance of the raster backdrop under the label box, per em² (spec §8): a label half on black, half on white costs the weight per em² of its box. |
 | `weights.stability` | `1.0` | ≥ 0 | × displacement from `warm_start`: 1 per em up to 1 em, then 1/4 per em up to 5 em (at most 2 per label). |
 | `obstacles.vector.r` | `2` | ≥ 0 | Radius of vector points. |
 | `obstacles.vector.width` | `1` | ≥ 0 | Stroke width of vector polylines. |

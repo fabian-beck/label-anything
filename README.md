@@ -110,7 +110,7 @@ CI runs):
 | Spacing | 1 px from the own mark · 0.2 em from other labels and other marks |
 | Candidates | models adjacent + slider + distant (preset `auto`: distant only when crowded) · perceptual position order (top first) · fan labels for crowds left without labels |
 | Leaders | straight, crossings hard, 0.4 em clear of other marks and leaders |
-| Label vs. | labels, items, text, canvas edge: **hard** · ink 0.1 per em² |
+| Label vs. | labels, items, text, canvas edge: **hard** · ink 0.1 per em² · across a light–dark border of a raster background 0.5 per em² |
 | Leader vs. | labels, items, leaders **hard** |
 | Solver | time budget 100 ms (Rust) / 250 ms (TS) · seed 0 · deterministic |
 | Degradation | alternatives → wrap → distant → evict_lower → shrink 0.85 → soft_overlap → omit |

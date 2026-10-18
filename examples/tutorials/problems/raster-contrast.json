@@ -1,0 +1,15 @@
+{
+  "canvas": { "width": 680, "height": 400, "background": "#ffffff" },
+  "obstacles": {
+    "raster": { "source": "../data/night.png", "offset": [100, 40], "mode": "ink" }
+  },
+  "weights": { "contrast": 0.5 },
+  "items": [
+    { "id": "vega", "anchor": { "type": "point", "x": 104, "y": 128 }, "label": { "type": "text", "text": "Vega" } },
+    { "id": "deneb", "anchor": { "type": "point", "x": 574, "y": 180 }, "label": { "type": "text", "text": "Deneb" } },
+    { "id": "mizar", "anchor": { "type": "point", "x": 250, "y": 50 }, "label": { "type": "text", "text": "Mizar" } },
+    { "id": "moon", "anchor": { "type": "point", "x": 480, "y": 80 }, "label": { "type": "text", "text": "Moon" } },
+    { "id": "ridge", "anchor": { "type": "point", "x": 330, "y": 362 }, "label": { "type": "text", "text": "Ridge" } },
+    { "id": "pass", "anchor": { "type": "point", "x": 178, "y": 356 }, "label": { "type": "text", "text": "Pass" } }
+  ]
+}

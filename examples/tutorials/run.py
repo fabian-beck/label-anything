@@ -135,6 +135,23 @@ def leader_styles(style: str) -> Callable[[dict[str, Any]], str | None]:
     return check
 
 
+def on_one_side(x0: float, y0: float, x1: float, y1: float, *ids: str) -> Callable[[dict[str, Any]], str | None]:
+    """The labels lie wholly inside or wholly outside the rectangle (of a raster)."""
+
+    def check(res: dict[str, Any]) -> str | None:
+        bad = []
+        for i in ids:
+            b = placements(res)[i]["box"]
+            bx0, by0, bx1, by1 = b["x"], b["y"], b["x"] + b["w"], b["y"] + b["h"]
+            inside = x0 <= bx0 and bx1 <= x1 and y0 <= by0 and by1 <= y1
+            outside = bx1 <= x0 or bx0 >= x1 or by1 <= y0 or by0 >= y1
+            if not (inside or outside):
+                bad.append(i)
+        return f"labels across the raster's edge: {bad}" if bad else None
+
+    return check
+
+
 def models(*wanted: str) -> Callable[[dict[str, Any]], str | None]:
     def check(res: dict[str, Any]) -> str | None:
         used = {p.get("model") for p in res["placements"] if p["placed"]}
@@ -198,6 +215,7 @@ PROBLEM_CHECKS: dict[str, tuple[int, Callable[[dict[str, Any]], str | None] | No
     "raster-cost.json": (18, None),
     "raster-classmap.json": (10, None),
     "raster-saliency.json": (5, None),
+    "raster-contrast.json": (6, on_one_side(100, 40, 580, 360, "vega", "deneb", "mizar")),
     "leaders-straight.json": (10, leader_styles("straight")),
     "leaders-angles.json": (10, leader_styles("angles")),
     "leaders-orthogonal.json": (8, leader_styles("orthogonal")),

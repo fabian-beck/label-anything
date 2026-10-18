@@ -7,7 +7,8 @@ p = 0.05 are drawn as ``lines``.
 
 Configs:
 * ``top20-vector`` (quick)  dense table (16,406 genes), points/thresholds/axes as vector layers,
-* ``top50-svg``             dense table, SVG chart (colored significant genes, dashed thresholds),
+* ``top50-svg``             dense table, SVG chart (colored significant genes, dashed thresholds; the
+                            labeled genes carry the same colors in ``attrs.color``),
 * ``top30-transform``       dense table in data units: ``transform`` + ``y_axis: "up"``, no background,
 * ``nfcore-top20-vector``   nf-core DESeq2 results (977 genes with p values), vector layers.
 """
@@ -90,20 +91,27 @@ def scene_for(rows, ax: Axes, sel: set[int], colored: bool, title: str | None) -
         if k in sel:
             continue
         x, y = ax.px(r["fc"], -math.log10(r["p"]))
-        col = "#9aa3ab"
-        if colored and r["p"] < 0.05 and abs(r["fc"]) >= 1:
-            col = "#d1495b" if r["fc"] > 0 else "#2e86ab"
-        sc.circle(x, y, 1.8, "gene", "points", fill=col, opacity=0.7)
+        sc.circle(x, y, 1.8, "gene", "points", fill=gene_color(r) if colored else GREY, opacity=0.7)
     if title:
-        sc.text(PLOT[0] + 6, PLOT[1] - 12, title, "title", "text", size=12, weight=700, fill="#222222")
+        sc.text(PLOT[0] + 6, PLOT[1] - 12, title, "title", "text", size=12, fill="#222222")
     return sc
+
+
+GREY, UP, DOWN = "#9aa3ab", "#d1495b", "#2e86ab"
+
+
+def gene_color(r) -> str:
+    """Red (up) or blue (down) for genes past both thresholds (p < 0.05, |log2FC| ≥ 1), else grey."""
+    if r["p"] < 0.05 and abs(r["fc"]) >= 1:
+        return UP if r["fc"] > 0 else DOWN
+    return GREY
 
 
 def ranked(rows) -> list[int]:
     return sorted(range(len(rows)), key=lambda k: (rows[k]["p"], rows[k]["gene"]))
 
 
-def items_for(rows, idx, pos) -> list[dict]:
+def items_for(rows, idx, pos, colored: bool = False) -> list[dict]:
     out = []
     seen: dict[str, int] = {}
     for k in idx:
@@ -115,6 +123,8 @@ def items_for(rows, idx, pos) -> list[dict]:
         attrs = {"log2fc": r["fc"], "pvalue": r["p"], "neglog10p": round(-math.log10(r["p"]), 4)}
         if r["padj"] is not None:
             attrs["padj"] = r["padj"]
+        if colored:
+            attrs["color"] = gene_color(r)
         out.append({"id": iid, "anchor": {"type": "point", "x": round(x, 4), "y": round(y, 4),
                                           "mark": {"shape": "circle", "r": 3.0}},
                     "label": {"type": "text", "text": g}, "attrs": attrs})
@@ -149,13 +159,13 @@ def main() -> None:
                 notes=f"dense: {len(dense)} genes (Galaxy volcanoplot test data); small: {len(small)} genes "
                       "with p values (nf-core SRP254919 DESeq2 results).")
     p, sc = vector_config(dense, 20)
-    wr.config("top20-vector", p, quick=True, png=png_bytes(sc.png()),
+    wr.config("top20-vector", p, quick=True, svg=sc.svg(), png=png_bytes(sc.png()),
               description="Top 20 of 16,406 genes; other genes, thresholds, axes and ticks as vector layers.")
     ax = axes_for(dense)
     order = ranked(dense)
     sel = set(order[:50])
     sc = scene_for(dense, ax, sel, colored=True, title="Differential expression")
-    p = problem(items_for(dense, order[:50], lambda r: ax.px(r["fc"], -math.log10(r["p"]))),
+    p = problem(items_for(dense, order[:50], lambda r: ax.px(r["fc"], -math.log10(r["p"])), colored=True),
                 {"svg": svg_source(sc)})
     merge_avoid(p, {"grid": 0.2}, {"grid": 0.1}, ignore_background=True)
     wr.config("top50-svg", p, truth=sc.truth(), svg=sc.svg(), png=png_bytes(sc.png()),
@@ -173,7 +183,7 @@ def main() -> None:
     wr.config("top30-transform", p, png=png_bytes(scene_for(dense, ax, sel, False, None).png()),
               description="Top 30 genes, anchors and points in data units mapped by transform + y_axis up.")
     p, sc = vector_config(small, 20)
-    wr.config("nfcore-top20-vector", p, png=png_bytes(sc.png()),
+    wr.config("nfcore-top20-vector", p, svg=sc.svg(), png=png_bytes(sc.png()),
               description="Top 20 of 977 genes of an nf-core DESeq2 result table, vector layers.")
     wr.finish()
 

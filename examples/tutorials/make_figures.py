@@ -54,7 +54,10 @@ COMPOSITES = [
     ("raster-cost", "problems/raster-cost.json"),
     ("raster-classmap", "problems/raster-classmap.json"),
     ("raster-saliency", "problems/raster-saliency.json"),
+    ("raster-contrast", "problems/raster-contrast.json"),
 ]
+# (output name, problem, options merged into it): variants of a problem for comparisons
+VARIANTS = [("raster-contrast-off", "problems/raster-contrast.json", {"weights": {"contrast": 0}})]
 # debug overlays rendered during the solve (place --debug-svg): with the cost heatmaps
 DEBUG_SVGS = [("debug-overlay", "problems/raster-classmap.json")]
 
@@ -146,6 +149,22 @@ def main() -> int:
             problem = HERE / rel
             result = json.loads(solve(cli, problem, tmp).read_text(encoding="utf-8"))
             composite(problem, result, FIGURES / f"{name}.png")
+            print(f"docs/assets/figures/{name}.png")
+        for name, rel, options in VARIANTS:
+            if args.only and name not in args.only:
+                continue
+            base = HERE / rel
+            problem = json.loads(base.read_text(encoding="utf-8"))
+            for key, value in options.items():
+                problem[key] = {**problem.get(key, {}), **value}
+            # next to the original: its raster sources are relative paths
+            variant = base.with_name(f".{name}.json")
+            variant.write_text(json.dumps(problem), encoding="utf-8")
+            try:
+                result = json.loads(solve(cli, variant, tmp).read_text(encoding="utf-8"))
+                composite(variant, result, FIGURES / f"{name}.png")
+            finally:
+                variant.unlink()
             print(f"docs/assets/figures/{name}.png")
         for name, rel in DEBUG_SVGS:
             if args.only and name not in args.only:

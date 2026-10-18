@@ -28,6 +28,38 @@ def test_render_svg_and_png():
     assert r > 150 and g < 120
 
 
+def test_standalone_svg_vector_background_font_and_colors(tmp_path):
+    prob = problem([item("A", 50, 50, attrs={"color": "#e15759"}), item("B", 120, 50, r=6)],
+                   obstacles={"vector": [{"class": "lines", "polylines": [[[0, 90], [200, 90]]]}]})
+    res = naive.solve(prob)
+    res["placements"][0]["text"] = {"lines": ["Ab V"], "baseline_offsets": [9.0], "font_size": 10.0,
+                                    "font_weight": 400, "x_offset": 0.0}
+    res["placements"][1] = omitted("B")
+    bg = tmp_path / "p.bg.svg"
+    bg.write_text('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100">'
+                  '<rect class="bg" width="200" height="100" fill="#d7e7f1"/>'
+                  '<text x="5" y="20" font-size="9">Map &amp; title</text></svg>\n', encoding="utf-8")
+    svg = render.standalone_svg(prob, res, bg, title="Tiny")
+    root = ET.fromstring(svg)                       # well-formed XML
+    ns = "{http://www.w3.org/2000/svg}"
+    assert root.get("viewBox") == "0 0 200 100" and root.find(ns + "title").text == "Tiny"
+    # the background is inlined as vectors (no grey obstacle layer), the font subset is embedded
+    assert root.find(f"{ns}svg") is not None and root.find(f"{ns}g[@class='obstacles']") is None
+    assert "@font-face" in svg and "data:font/woff;base64," in svg
+    # every glyph of a label at its pen position: one x per character
+    t = next(e for e in root.iter(ns + "text") if e.text == "Ab V")
+    xs = [float(v) for v in t.get("x").split()]
+    assert len(xs) == 4 and xs[0] == round(res["placements"][0]["box"]["x"], 2) and xs == sorted(xs)
+    # the item's data color, a darker outline; the omitted item as a red cross
+    marks = list(root.find(f"{ns}g[@class='marks']"))
+    assert marks[0].get("fill") == "#e15759" and marks[0].get("stroke") == render._darker("#e15759")
+    assert marks[1].get("fill") == render.MARK_FILL
+    assert len(list(root.find(f"{ns}g[@class='unplaced']"))) == 1
+    # without a background, the vector layers are drawn in grey
+    root = ET.fromstring(render.standalone_svg(prob, res))
+    assert root.find(f"{ns}g[@class='obstacles']") is not None
+
+
 def test_warm_start_shift_and_percentile():
     p0 = problem([item("A", 50, 50), item("B", 100, 50)])
     p1 = problem([item("A", 80, 60), item("C", 10, 10)])

@@ -19,6 +19,7 @@ exclude_docs: |
   /requirements.txt
   /_hooks/
   /_overrides/
+  /project/literature/
 
 hooks:
   - docs/_hooks/la_docs.py
@@ -139,5 +140,6 @@ nav:
           - Release procedure and gates: benchmark.md
       - Architecture decisions:
           - project/decisions.md
+      - Literature and improvement notes: project/literature.md
       - Contributing: project/contributing.md
       - Porting the core to TypeScript: dev/porting.md

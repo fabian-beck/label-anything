@@ -223,5 +223,174 @@
         }
       ]
     }
+  ],
+  "backdrop": [
+    {
+      "name": "over white, cell 2",
+      "background": [
+        255,
+        255,
+        255
+      ],
+      "layers": [
+        {
+          "scale": 1,
+          "offset": [
+            0,
+            0
+          ]
+        }
+      ],
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 32,
+        "rows": 20
+      },
+      "expect": {
+        "fnv1a32": "69552a3b",
+        "sum": 137114,
+        "nonzero": 640,
+        "luma": "+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr67uX6+vr6+vr6+vr6+vr6+vr6+vr6tLS0tLS0tLT6+vruk4rW+vr6+vr6+vr6+vr6+vr6+vq0tLS0d4W0tPr6+vr67pyJy/r6+vr6+vr6+vr6+vr6+rS0pEYlg7S0+vr6+vr6+vSngZdfX573+vr6+vr6+vr6tHwoP6G0tLT6+vr6+vr6+vqeV1dXV576+vr6+vr6+ulNI3CytLS0tPr6+vr6+vr6+l9XV1dXX+76+vr6+vqyL0fU+vr6+vr6+vr6+vr6+vr6X1dXV1dfhJno+vrsbSKM9vr6+vr6+vr6+vr6+vr6+vqeV1dXV57635CQpjZAzfr6+vr6+vr6+vr6+vr6+vr6+veeX1+e9/r68HIhPdD6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+sM5OcPup37F+vr6+vr6+vr6+vro6Ojo6Ojo6Pr6+vOCInvw+vr69LN+uff6+vr6+vr6+ujo6Ojo6Ojo+vrNQDa5+vr6+vr6+vq/gaf0+vr6+vr66Ojo6Ojo6Oj2jCJt7Pr6+vr6+vr6+vr6y4mc7vr6+vro6Ojo6OjoxUcvsvr6+vr6+vr6+vr6+vr6+taKk+76+ujo6Ojo5YwkY+n6+vr6+vr6+voKgoKCCoKCvgrl7vr66Ojo6M9KK5z6+vr6+vr6+vr6+gqCCoIKggqCCvr6+vro6OimKFTS6Pr6+vr6+vr6+vr6CoIKggqCCoIK+vr6+vr6+rWh+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+g=="
+      }
+    },
+    {
+      "name": "over grey, HiDPI scale 2, fractional offset, cell 1",
+      "background": [
+        128,
+        128,
+        128
+      ],
+      "layers": [
+        {
+          "scale": 2,
+          "offset": [
+            3.25,
+            -1.5
+          ]
+        }
+      ],
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 40,
+        "rows": 22
+      },
+      "expect": {
+        "fnv1a32": "c11cfab3",
+        "sum": 162252,
+        "nonzero": 880,
+        "luma": "gICA+uKQ3/r6+vr6+vr6+vr6+vr6+vr6+rS0tLSvr7S0+vqAgICAgICAgPr66JmE1vr6+vr6+vr6+vr6+vr6+vq0tLSPMWC0tPr6gICAgICAgID6+vr67qd+xeiwsOj6+vr6+vr6+vr6tK9iIF2ttLT6+oCAgICAgICA+vr6+vr69JVXV1df1vr6+vr6+vr6+pY1L4i0tLS0+vqAgICAgICAgPr6+vr6+vp2V1dXV3b6+vr6+vr69owga87X19fX1/r6gICAgICAgID6+vr6+vr6V1dXV1dXnO76+vr61Ecvsvr6+vr6+vr6+oCAgICAgICA+vr6+vr6+nZXV1dXdtaKk+X2liVj6fr6+vr6+vr6+vqAgICAgICAgPr6+vr6+vrWX1dXX9b6+uWAPCqo+vr6+vr6+vr6+vr6gICAgICAgID6+vr6+vr6+uiwsOj6+vqdKFiTicv6+vr6+vr6+vr6+oCAgICAgICA+vHx8fHx8fHx+vr6+uJYKJ36+vSngb/6+vr6+vr6+vqAgICAgICAgPro6Ojo6Ojo6Pr6+qgsTt76+vr6+ve5frP0+vr6+vr6gICAgICAgID66Ojo6Ojo6Oj66WMllvb6+vr6+vr6+vrFfqfu+vr6+oCAgICAgICA+ujo6Ojo6Ojosi9H1Pr6+vr6+vr6+vr6+vrWhJno+vqAgICAgICAgPro6Ojo6OjbZiKM9vr6+vr6+vr6gr76voK++vpnkOL6gICAgICAgID66Ojo6OisND7N+vr6+vr6+vr6+gqCCoIKggqCCvr6+oCAgICAgICA+ujo6N5zIXri+vr6+vr6+vr6+voKggqCCoIKggr6+vqAgICAgICAgPrx8fF6Ob7x8fr6+vr6+vr6+vr6gr6CvoK+gr6C+vr6gICAgICAgID6+vr68/P6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+oCAgICAgICAvb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb2AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA=="
+      }
+    },
+    {
+      "name": "scale 0.5, negative offset, cell 3",
+      "background": [
+        0,
+        0,
+        0
+      ],
+      "layers": [
+        {
+          "scale": 0.5,
+          "offset": [
+            -7,
+            5
+          ]
+        }
+      ],
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 3,
+        "cols": 40,
+        "rows": 30
+      },
+      "expect": {
+        "fnv1a32": "41fc8f64",
+        "sum": 229793,
+        "nonzero": 1120,
+        "luma": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX36+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr63Pf6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6tLS0tLS0tLS0tNf6+qez3/r6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+rS0tLS0tKuvtLTX+vr6v5mEp/T6+vr6+vr6+vr6+vr6+vr6+vr6+vq0tLS0j10eYLS01/r6+vrunIShy/r6+vr6+vr6+vr6+vr6+vr6+vr6tLS0pEYlRIO0tNf6+vr6+vr61qeBk3ZfX3bW9/r6+vr6+vr6+vr6+rSkSyg/c7S0tLTX+vr6+vr6+vr0lVtXV1dXjdb6+vr6+vr6+vr6+vqWYiAviKu0tLS01/r6+vr6+vr6+nZXV1dXV1d2+vr6+vr6+vr6+tGMIDOpztfX19fX1+j6+vr6+vr6+vpfV1dXV1dXX+76+vr6+vr6+ulmL0eP9vr6+vr6+vr6+vr6+vr6+vr6X1dXV1dXV1+Egb/o+vr67G0zR4z2+vr6+vr6+vr6+vr6+vr6+vr6+nZXV1dXV1d21q17k+X315YlLLLp+vr6+vr6+vr6+vr6+vr6+vr6+vrWjVdXV1eN1vr69+WAUyUqqOL6+vr6+vr6+vr6+vr6+vr6+vr6+vr699Z2X1921vf6+vrwcjEsPdD0+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vB7OTl78O6nhJzF+vr6+vr6+vr6+vr6+vHx8fHx8fHx8fX6+vr6+uKkKCid3vr69NaKgb/o+vr6+vr6+vr6+vro6Ojo6Ojo6Ojx+vr64qgsJZre+vr6+vr6+ve5loqz9Pr6+vr6+vr66Ojo6Ojo6Ojo8fr69oJANnDs+vr6+vr6+vr6+uiTgafW+vr6+vr6+ujo6Ojo6Ojo6PH2jEczbez6+vr6+vr6+vr6+vr6+vrLoYSc7vr6+vro6Ojo6Ojo6Ojgsi8ij9T6+vr6+vr6+vr6+vr6+vr6+vSnhJm/+vr66Ojo6Ojo6NusMSKM0fr6+vr6+vr6+vr6voK++vqCgr76+vpnd6fi+ujo6Ojo6OWMSixj6fr6+vr6+vr6+vr6+oIKgoK+CgqCvoK+Cn/c7vro6Ojo6JBKK1rb+vr6+vr6+vr6+vr6+vqCCoIKggoKgoIKggqC+vr66Ojo3rU3IXq88fr6+vr6+vr6+vr6+vr6ggqCCoIKCoKCCoIKgvr6+vHx8Xoeer7x8fX6+vr6+vr6+vr6+vr6+r6CvoK+goK+voK+gr76+vr6+vq1ft76+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+n19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      }
+    },
+    {
+      "name": "two layers: the second covers the first where they overlap",
+      "background": [
+        20,
+        40,
+        60
+      ],
+      "layers": [
+        {
+          "scale": 1,
+          "offset": [
+            0,
+            0
+          ]
+        },
+        {
+          "scale": 1.5,
+          "offset": [
+            10.5,
+            6.25
+          ]
+        }
+      ],
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1.5,
+        "cols": 40,
+        "rows": 30
+      },
+      "expect": {
+        "fnv1a32": "a9613e71",
+        "sum": 240274,
+        "nonzero": 1200,
+        "luma": "+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr66NfX19fX19fX19f6+qeQ3/f6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+te0tLS0tK+vtLS0+vrFk4qt9Pr6+vr6+vr6+vr6+vr6+vr6+vr6+vrXtLS0tKF3ha+0tPr6+vruy4T6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6k4OvtLT6+vr6+vrR+u73+vr6+vr6+vr6+vr6+vr6+te0tLS0tLTX+rittLS0+vr6+vr6+vrue630+vr6+vr6+vr6+vr6+vrXtLS0d4W01/rXtLS0tPr6+vr6+vr6+vrLrdDF6LCw+vr6+vr6+vr617STRFaKtNf617S0tLT6+vr6+vr6+vr6+vr6lVdXV436+vr6+vr6+tViIIi0tLTX+vr6+vr6+vr6+vr6+vr6+vr6+nZXV1dXx/r6+vr6+tFGM6nX19fX6Pr6+vr6+vr6+vr6+vr6+vr6+vpXV1dXV27L+vr6+tQiZun6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6j1dXV1/TsLykqn5Htfr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+veeX1/W+vr6ciE90Pr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vrweznD7qec6Pr6+vr6+vr6+vr6+vr69fHx8fHx+ujo6Ojo6Oj6+vrKQDnw+vr63IqW3/r6+vr6+vr6+vr6+vHo6Ojo6Pro6Ojo6Ojo+ul0UpPs+vr6+vr66KTFre76+vr6+vr6+vrx6Ojo6Oj66Ojo6Ojo6LIvj/b6+vr6+vr6+vr6+taEmfr6+vr6+vr68ejo6Ojo+ujo6Ojo22YijPr6+vr6+vr6gvr6gr76+men+tzu+vr6+vHo6Ojo6Pro6Ojo2zQ+zfr6+vr6+vr6+gqCggqCCoIK+vrchIG/6Prx6Ojo6Oj66Ojig0GQ4vr6+vr6+vr6+voKgoIKggqCCvr6+tate5P68ejo6Ojo+vr6837e+vr6+vr6+vr6+vr6+vr6+vr6+vr6+r6+gn/l+vHo6Ojo6Pr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vqCgoKC+vrx6Ojo6LVzIT684vr6+vr6+vr6+vr6+vr6ggqCgoKCCgqCCoKCgvr68ejo6OJQKFSZ6Oj6+vr6+vr6+vr6+vr6+oIKgoKCggoKggqCgoL6+vr6+vrzfqH6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+uzz+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vqQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUl"
+      }
+    },
+    {
+      "name": "grid origin (-1, -1), cell 0.75",
+      "background": [
+        255,
+        255,
+        255
+      ],
+      "layers": [
+        {
+          "scale": 3,
+          "offset": [
+            0,
+            0
+          ]
+        }
+      ],
+      "grid": {
+        "origin": [
+          -1,
+          -1
+        ],
+        "cell": 0.75,
+        "cols": 40,
+        "rows": 30
+      },
+      "expect": {
+        "fnv1a32": "149de47c",
+        "sum": 284131,
+        "nonzero": 1200,
+        "luma": "///////////////////////////////////////////////////////+/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/P///////////////O7l+vr6+vr6+vr6+vr6+vr6+vq0tLS0tLS0+vr///////////////zuk4rW+vr6+vr6+vr6+vr6+vr6tLS0oWC0tPr6///////////////8+vrunKHu+vr6+vr6+vr6+vr6+rS0eSVEtLT6+v///////////////Pr6+vrWipN2X573+vr6+vr6+vq0SyNztLS0+vr///////////////z6+vr6+sdXV1dXdvr6+vr6+vaMIKnX19fX1/r6///////////////8+vr6+vqpV1dXV1ec+vr6+tRHL7L6+vr6+vr6+v///////////////Pr6+vr6x1dXV1d21nu/99clY+n6+vr6+vr6+vr///////////////z6+vr6+vqNV1df1vr3v1MlqPr6+vr6+vr6+vr6///////////////8+vr6+vr6+vr6+vr6ex578Kd+xfr6+vr6+vr6+v///////////////Ojo6Ojo6Ojx+vrzgjnD+vr69LN+3/r6+vr6+vr///////////////zo6Ojo6Ojo8frNQDbs+vr6+vr6+pOK1vr6+vr6///////////////86Ojo6Ojo6PGMIm3s+vr6+vr6+vr67qGE7vr6+v///////////////Ojo6Ojo6KwxjPb6+vr6+vr6gr76goL6+meQ4vr///////////////zo6Ojo22khf/r6+vr6+vr6+gqCCgoKggoK+vr6///////////////86Ojo3jc+vPH6+vr6+vr6+voKggoKCoIKCvr6+v///////////////PHx8Xp65/H1+vr6+vr6+vr6gr6CgoK+goL6+vr///////////////z6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6+vr6////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////"
+      }
+    }
   ]
 }

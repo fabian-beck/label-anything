@@ -84,7 +84,8 @@ Sequences: `python -m bench.eval sequence <sequence.json> --results <dir-with-fr
 
 **Render one result.** `python bench/render.py problem.json result.json -o out.svg --png out.png`
 (the PNG uses `<problem>.bg.png` as background when present; `--font-href` embeds an
-`@font-face` URL for Noto Sans in the SVG).
+`@font-face` URL for Noto Sans in the SVG; `--standalone` makes `-o` a self-contained SVG as in
+the gallery, with `<problem>.bg.svg` inlined when the problem has no background of its own).
 
 ## Output layout
 
@@ -97,7 +98,7 @@ bench/out/problems/11-stability/<seq>/f000….json + sequence.json
 bench/out/perf/scatter-200.json, scatter-2000.json, raster-2048.json   performance-target problems
 bench-report/results.json, index.html, results/<solver>/…, metrics/<solver>/…, img/<solver>/…,
              overlay/<solver>/… (engine debug overlays), plots/runtime-{engine,wall}.svg
-bench-report/gallery/index.html, img/…, img/full/…, fonts/…, gallery.json    the gallery (python -m bench.gallery)
+bench-report/gallery/index.html, img/*.svg, fonts/…, gallery.json    the gallery (python -m bench.gallery)
 ```
 
 **truth.json** (every config; `bench/common/truth.py`) — `{"version": 1, "canvas": [W, H],
@@ -120,14 +121,14 @@ the definitions of spec §4.6. Item marks are defined by the problem's anchors (
 | 02 | volcano plot | `top20-vector`, `top50-svg`, `top30-transform`, `nfcore-top20-vector` | Galaxy volcanoplot table (16,406 genes); nf-core DESeq2 results | no |
 | 03 | Gapminder bubbles | `y2005-vector`, `y2005-svg`, `y1955-all-vector` | vega-datasets gapminder.json | no |
 | 04 | embedding map | `k40-ink`, `k40-saliency`, `k120-areas` | 50,000 WordNet 3.0 noun glosses, t-SNE computed here | no (computed embedding) |
-| 05 | airports on an SVG world map | `world-iata-300-none`, `world-iata-1000-vector`, `world-iata-3000-svg`, `europe-names-400-svg` | OpenFlights airports/routes, Natural Earth countries | no |
+| 05 | airports on an SVG world map | `world-iata-300-none`, `world-iata-1000-vector`, `world-iata-3000-svg`, `europe-names-400-svg`, `europe-hubs-svg`, `world-hubs-100-svg` | OpenFlights airports/routes, Natural Earth countries | no |
 | 06 | city POIs on raster tiles | `monaco-ink`, `monaco-saliency`, `monaco-pins-ink` | OpenStreetMap extract of Monaco, map rendered here | no (rendered tiles) |
-| 07 | node-link | `lesmis-circles`, `lesmis-shapes`, `cora-circles` | Les Misérables (vega-datasets), Cora citation network | no |
+| 07 | node-link | `lesmis-circles`, `lesmis-shapes`, `lesmis-force`, `flare-imports`, `cora-circles` | Les Misérables and Flare's imports (vega-datasets), Cora citation network | no |
 | 08 | technical / anatomical illustration | `astronaut-boundary`, `retina-boundary`, `rocket-distant` | scikit-image sample photos + hand-made CC0 polygons | no |
 | 09 | line chart end labels | `unemployment-14-vector`, `stocks-5-svg`, `life-62-boundary` | vega-datasets unemployment, stocks, gapminder | no |
 | 10 | stress / scale | `n00200` … `n20000` (7 sizes) | scenario 05 at 10× density (jittered copies) | **yes** |
 | 11 | interactive stability | sequences `zoom-pan-1000` (quick), `zoom-pan-3000` (30 frames each), `force-lesmis` (quick, 61 frames), `drag-lesmis` (quick, 41 frames) | scenarios 05 and 07 | camera path and force simulation only |
-| 12 | priority showcase | `metrics-attr-strict` (quick) + 17 more `<dataset>-<type>-<mode>` (types attr, outlier, coverage; modes strict, prefix, weighted) | scenarios 01 and 05 | no |
+| 12 | priority showcase | `metrics-attr-strict` (quick) + 17 more `<dataset>-<type>-<mode>` (types attr, outlier, coverage; modes strict, prefix, weighted), `europe-attr-strict`, `europe-attr-prefix` | scenarios 01 and 05 | no |
 
 217 problems in the full suite (incl. 162 sequence frames), all valid against the schema,
 each ≤ 3.5 MB; the quick suite (11 configs + the three quick sequences, 132 frames) is ≈ 7.5 MB.
@@ -198,6 +199,7 @@ Hard/soft/ignore come from the effective options (defaults.md ← preset ← pro
 | | `near_crossings.{count,min_px,parallel}` | label pairs whose leaders come closer than 4 px without crossing (the start-start approach of neighbouring marks exempt): they read as crossing; `parallel` = distant leaders starting within 1 em that diverge by less than 10° |
 | | `leader_marks.{touches,leaders_touching}`, `.classes.<k>.{points,lines,areas,leaders}` | leader–mark pairs passing within 1.5 px (half stroke + 1 px) of another item's mark (exemptions as `leader_item`); per vector class the primitives leaders pass that close (the first 3 px of a leader skipped: lines ending at the own mark) |
 | | `labels_over.<k>.{points_hidden,lines_hidden,areas_hidden,lines_em}` | soft vector classes under placed labels: primitives touched (circles = points, polylines = lines, the rest = areas) and polyline length inside labels / font size |
+| | `contrast.{labels,border,rate}` | with raster sources: labels across a contrast border, whose backdrop luma (Rec. 709 of the rasters in order over `canvas.background`, at each canvas pixel centre in the box) spreads by ≥ 0.5 between its 10th and 90th percentile, e.g. half on black and half on white; internal labels of point items skipped; `null` without rasters |
 | ambiguity | `ambiguity.rate` | fraction of placed labels whose nearest item shape is not their own: signed distance from the label box (min over box points; ≤ 0 when overlapping); leadered labels: from the leader's first point |
 | shape fidelity | `adjacent_gap_mean`, `_abs_mean`, `_max_abs`, `adjacent_touch_rate` | gap = signed distance(box, own shape) − `placement.offset` for adjacent/slider labels without leader (target 0; touch = \|gap\| ≤ t) |
 | | `own_mark_violations`, `internal_outside` | as above |
@@ -340,21 +342,29 @@ with identical results show no change.
 ## Gallery
 
 `python -m bench.gallery --engine rust/target/release/label-anything --run bench-report` writes
-`bench-report/gallery/` (`index.html`, `img/*.webp`, `img/full/*.webp`, `fonts/`,
-`gallery.json`): selected problems of the full suite — charts, maps, photos, embeddings,
-networks, priority — each solved once with the engine (`--warmup 3`, as by the runner) and
-drawn by the renderer, under it the evaluator's numbers (placed, leaders and the longest one,
-hard violations) and the engine's runtime; from the run, its renderings of three problems by
-every baseline and three frames of its stability sequence; and what the defaults still do
-badly. Selecting an image opens a viewer for inspecting it: pinch, double-tap or scroll to zoom
-into a rendering at twice the page's resolution (`img/full/`, loaded on demand), drag to pan,
-swipe or use the arrow keys for the next image; between the labelers' renderings of one problem
-the view stays where it is, for comparing the same spot. The problems must be built (`python -m
-bench.scenarios build` builds every config); a figure whose problem is missing is left out. The
-page loads nothing from other servers (Noto Sans is copied next to it). A gallery written into
-its run directory is linked from the run's report; the CI `baselines` job builds both, so the
-Pages workflow publishes the gallery at `<site>/benchmark-report/gallery/`.
-`bench/gallery.py` lists the figures and their captions.
+`bench-report/gallery/` (`index.html`, `img/*.svg`, `fonts/`, `gallery.json`): selected problems
+of the full suite — hub-first airport maps, charts, photos, embeddings, networks, priority —
+each solved once with the engine (`--warmup 3`, as by the runner) and drawn by the renderer as
+one self-contained vector image (`render.standalone_svg`: SVG backgrounds inlined, raster
+backgrounds embedded, the label text in an embedded subset of Noto Sans with every glyph at the
+measured pen position), under it the evaluator's numbers (placed, leaders and the longest one,
+hard violations, the omitted labels by reason), the engine's runtime and the settings the
+problem gives; from the run, its results of three problems by every baseline and three frames
+of its stability sequence, drawn the same way; and, last, what the engine still does badly, with
+figures. Selecting an image opens a viewer for inspecting it: pinch, double-tap or scroll to
+zoom (once a zoom settles, the vector image is drawn again at that size, so it stays sharp),
+drag to pan, swipe or use the arrow keys for the next image; between the labelers' renderings
+of one problem the view stays where it is, for comparing the same spot. The problems must be
+built (`python -m bench.scenarios build` builds every config); a figure whose problem is
+missing is left out. The page uses one font weight and loads nothing from other servers (Noto
+Sans is copied next to it). A gallery written into its run directory is linked from the run's
+report; the CI `baselines` job builds both, so the Pages workflow publishes the gallery at
+`<site>/benchmark-report/gallery/`. `bench/gallery.py` lists the figures and their captions.
+
+**Data colors.** An item whose `attrs.color` is a `#rrggbb` string is drawn in that color by the
+renderer (PNG, SVG and standalone SVG) — the region of a bubble, the series of a line end, the
+community of a node, the significance of a gene — so that labeled marks keep the color the
+chart gives the data; other items are blue. The engine ignores the attribute.
 
 ## Release gates
 

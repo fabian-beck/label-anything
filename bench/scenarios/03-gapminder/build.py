@@ -3,7 +3,8 @@
 x = fertility (babies per woman), y = life expectancy (years); bubble area ∝
 population (radius = 60 px · sqrt(pop / max pop of the year), at least 2 px, so
 radii vary ≈ 30×). Items are ``circle`` marks with the bubble radius; big
-bubbles can hold their label inside.
+bubbles can hold their label inside. Every bubble has the color of its region (the dataset's
+``cluster``), the labeled ones too (``attrs.color``, which the benchmark's renderer draws).
 
 Configs:
 * ``y2005-vector`` (quick)  40 most populous countries + 6 regression outliers, other bubbles and
@@ -29,7 +30,7 @@ SCENARIO = "03-gapminder"
 SOURCES = ["vega-datasets-3.2.1"]
 W, H = 960.0, 640.0
 PLOT = (70.0, 30.0, W - 20.0, H - 60.0)
-REGIONS = {0: "South Asia", 1: "Europe & Central Asia", 2: "Sub-Saharan Africa", 3: "America",
+REGIONS = {0: "South Asia", 1: "Europe & Central Asia", 2: "Sub-Saharan Africa", 3: "Americas",
            4: "East Asia & Pacific", 5: "Middle East & North Africa"}
 COLORS = {0: "#4e79a7", 1: "#f28e2b", 2: "#e15759", 3: "#76b7b2", 4: "#59a14f", 5: "#edc948"}
 
@@ -61,7 +62,7 @@ def chart(rows, year, labeled: set[str], watermark: bool) -> tuple[Axes, Scene]:
     sc = Scene(W, H, background="#ffffff")
     if watermark:
         sc.text((PLOT[0] + PLOT[2]) / 2, (PLOT[1] + PLOT[3]) / 2 + 60, str(year), "watermark", "watermark",
-                size=170, anchor="middle", fill="#f0f0f0", weight=700)
+                size=170, anchor="middle", fill="#f0f0f0")
     ax.decorate(sc, xlabel="Fertility (babies per woman)", ylabel="Life expectancy (years)", size=10.0)
     pmax = rows[0]["pop"]
     for r in rows:  # largest first so small bubbles stay visible
@@ -89,7 +90,7 @@ def items_for(rows, ax, labeled: set[str], big_prefer: bool = False) -> list[dic
                                              "mark": {"shape": "circle", "r": radius(r["pop"], pmax)}},
               "label": {"type": "text", "text": r["country"]},
               "attrs": {"pop": r["pop"], "life_expect": r["life_expect"], "fertility": r["fertility"],
-                        "region": REGIONS[r["cluster"]]}}
+                        "region": REGIONS[r["cluster"]], "color": COLORS[r["cluster"]]}}
         out.append(it)
     return out
 
@@ -114,7 +115,7 @@ def main() -> None:
     ax, sc = chart(rows, 2005, labeled, watermark=False)
     p = problem(items_for(rows, ax, labeled), {"vector": sc.vector_layers()}, "prefer")
     merge_avoid(p, {"grid": 0.2, "bubbles": 0.5}, {"grid": 0.1, "bubbles": 0.3})
-    wr.config("y2005-vector", p, quick=True, png=png_bytes(sc.png()),
+    wr.config("y2005-vector", p, quick=True, svg=sc.svg(), png=png_bytes(sc.png()),
               description="2005: 46 labeled bubbles (40 largest + 6 outliers); internal labels preferred.")
     ax, sc = chart(rows, 2005, labeled, watermark=True)
     p = problem(items_for(rows, ax, labeled), {"svg": svg_source(sc)}, "prefer")
@@ -127,7 +128,7 @@ def main() -> None:
     ax, sc = chart(rows, 1955, labeled, watermark=False)
     p = problem(items_for(rows, ax, labeled), {"vector": sc.vector_layers()}, None)
     merge_avoid(p, {"grid": 0.2}, {"grid": 0.1})
-    wr.config("y1955-all-vector", p, png=png_bytes(sc.png()),
+    wr.config("y1955-all-vector", p, svg=sc.svg(), png=png_bytes(sc.png()),
               description="1955: all 62 countries labeled; default internal policy (auto).")
     wr.finish()
 

@@ -243,5 +243,134 @@
         }
       ]
     }
+  ],
+  "backdrop": [
+    {
+      "name": "photo over white, cell 2",
+      "background": [
+        255,
+        255,
+        255
+      ],
+      "layers": [
+        {
+          "scale": 1,
+          "offset": [
+            0,
+            0
+          ]
+        }
+      ],
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 32,
+        "rows": 24
+      },
+      "expect": {
+        "fnv1a32": "68937962",
+        "sum": 108773,
+        "nonzero": 768,
+        "luma": "R0xMVE1PVVhXUVpVVFNWXFhVWltcX19eYmVfX2dqaGNMTVRWWE9cVFpSW1hWYmBcWFlWYWNmZmZhZG5gZWlrZFpcWlhXU1pZXFhgYGRkbVteXmJhZ2psZ11kZWptbWdsXGFVZGFaYWBaWV9pYmVsaGljZGtpaG1pbGxpanJsd29YYmRfZmFmZWNiY2Rka25gamtwa2lubm5pbHJvcnNxfGNdX2ZnZl9oaWNvamtsdnFwdYuvrZJweWp2eoF1eH15aGRnbGpua21kb3BtdnV5cIDO7+/v78+Bdnt2gHt5e3ZmaXB0cGppc3BveHV3dW52zu/v7+/v7859f3p7gnyKgXRvcXh4c3p2eXV2d3V5eZTv7+/v7+/v75mBhoiEhnyIc315enNzd353ent8fX6Ds+/v7+/v7+/vtoaEhoGGhotzgHeBf3x+eH6BgnyJg4G37+/v7+/v7++2koOLjo+IjoB6fXp9hX+BiIKKgomFhJjv7+/v7+/v76SWj5KVjI2Qf4KIhIN/g3+Gin6HhoqPitXv7+/v7+/UjpiPlpyUnpt9iYuKi4SHgYWOjo2Tj5CTj9bv7+/v2JeXk6GYl5mclI+HhIeMkI6RlZWRlpWUjJmbmKbFwamao6GWoKeZoZ+fhY2YGxsbGxsbGxuOn5WZmpmXmpWfm6WdmJ2jopygo6OVlJQbGxsbGxsbG5qel6CbmZ+knJudpZ6eoaesw9ns9p2YnRsbGxsbGxsbn6WanKKppq+nn6KnuM/j+Pfo0r6xnJqiGxsbGxsbGxump6inpJ+rtMvW7/zt2Mm6r6u1sLGno54bGxsbGxsbG7CrrrnU5ff359XFsq6vr6+3tLW4s6mroxsbGxsbGzhq2u/8793Lt664tLGts7Gyu7m2uL27qKOoGyJRgrjq6rjSxq6urrK6uK29sbDAurTDv7a3ybe1xtzu/fDfzLu0sLKzuba/tLW3u8DAvbq1vLzCw8S8xPjl1MO3tbC4urqytcG6ura2wb7AvL3BwMW/x8TBwcvO"
+      }
+    },
+    {
+      "name": "photo, cell 0.5 (checksum + samples)",
+      "background": [
+        255,
+        255,
+        255
+      ],
+      "layers": [
+        {
+          "scale": 1,
+          "offset": [
+            0,
+            0
+          ]
+        }
+      ],
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 0.5,
+        "cols": 128,
+        "rows": 96
+      },
+      "expect": {
+        "fnv1a32": "77c64325",
+        "sum": 1740128,
+        "nonzero": 12288,
+        "samples": [
+          [
+            0,
+            0,
+            63
+          ],
+          [
+            127,
+            0,
+            90
+          ],
+          [
+            0,
+            95,
+            250
+          ],
+          [
+            127,
+            95,
+            207
+          ],
+          [
+            64,
+            48,
+            211
+          ],
+          [
+            116,
+            66,
+            255
+          ]
+        ]
+      }
+    },
+    {
+      "name": "photo, scale 1.5, cell 2.5, offset (1, 2), origin (2, 2)",
+      "background": [
+        255,
+        255,
+        255
+      ],
+      "layers": [
+        {
+          "scale": 1.5,
+          "offset": [
+            1,
+            2
+          ]
+        }
+      ],
+      "grid": {
+        "origin": [
+          2,
+          2
+        ],
+        "cell": 2.5,
+        "cols": 28,
+        "rows": 22
+      },
+      "expect": {
+        "fnv1a32": "aeecf4b4",
+        "sum": 132857,
+        "nonzero": 616,
+        "luma": "TFBPUlRZVlpOV1hgZ11ha6///////////////19dVl5VYV1mXWRhal9wbHK2//////////////9aY2tqYGZpa3FscHJtcHpxuP//////////////Y2NqZ25wcHCk7+/Ye3qAerv//////////////2p2cXRzeYB25+/v77J/hILE//////////////97dnh8fHqBh+/v7++7jIaIyP//////////////h4KBhoqJiYre7+/vqJOXlMr//////////////4mNh4WSmZOPncPItqCdnqbJ//////////////+QGxsbG1eVlpyhk6Ocm5+w5v//////////////mxsbGxtfpJ6lranG09fTzdr//////////////6AbGxsbacvT1tfWuKm3uLvZ//////////////+mgI2g09W7tbq0uLCztr7C3f//////////////2dnUt7W2vcK4v73EwMTFw+L//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////w=="
+      }
+    }
   ]
 }

@@ -215,6 +215,7 @@ def place(
     allow_outside: Optional[bool] = None,
     device_pixel_ratio: Optional[float] = None,
     region: Optional[Sequence[float]] = None,
+    canvas_background: Optional[str] = None,
     y_axis: Optional[str] = None,
     transform: Optional[Sequence[float]] = None,
     preset: Optional[str] = None,

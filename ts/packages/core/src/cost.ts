@@ -185,6 +185,13 @@ export class Evaluator {
       }
     }
     if (!acc.relaxed) return finish(c, acc);
+    // 3b. backdrop contrast: the luma variance under the box (none on a mark)
+    const bd = obs.backdrop;
+    if (bd !== null && !onMark) {
+      const cell = bd.grid.cell;
+      const d = bd.deviation(r);
+      acc.add("contrast", (w.contrast * ((4 * d * (cell * cell)) / 65025)) / em2);
+    }
     // 4. leaders
     for (const l of c.leaders) this.leaderTerms(i, l, r, c.kind === Kind.Fan || c.kind === Kind.Boundary, acc);
     if (!acc.relaxed) return finish(c, acc);

@@ -7,6 +7,8 @@ is under the SIL Open Font License 1.1. It is under active development (0.x).
 * [Benchmark](benchmark.md) — the real-world benchmark, its scenarios, metrics and report;
   [release procedure and gates](../benchmark.md).
 * [Architecture decisions](decisions.md) — why things are the way they are.
+* [Literature and improvement notes](literature.md) — what the research literature
+  suggests for the engine, and where its building blocks come from.
 * [Contributing](contributing.md) — ground rules (spec first, both implementations, one
   behaviour), development commands, these docs.
 * [Porting the core to TypeScript](../dev/porting.md) — how the TypeScript engine mirrors

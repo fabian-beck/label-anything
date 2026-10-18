@@ -38,7 +38,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.9966648281274402,
+        "cost": 1.5938379309391197,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -62,7 +62,7 @@
       "candidates": 40,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 0.9966648281274402,
+      "total_cost": 1.5938379309391197,
       "degraded": {},
       "grid": {
         "cell": 3.0,

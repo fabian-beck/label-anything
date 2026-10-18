@@ -4,7 +4,7 @@
 use crate::geom::{dist_point_seg, dist_seg_rect, polygon, seg_overlaps_rect, Rect, EPS, P};
 use crate::grid::dt::{distance_transform, dt_maxima};
 use crate::grid::raster::MaskRaster;
-use crate::grid::{GridSpec, Sat};
+use crate::grid::{Backdrop, GridSpec, Sat};
 use crate::index::StaticIndex;
 use crate::math::{maxf, minf};
 use crate::model::{Model, Prim};
@@ -105,6 +105,9 @@ pub struct Obstacles {
     /// (to exclude the own mark from `items` costs).
     pub items_sat: Sat,
     pub own: Vec<(GridSpec, Sat)>,
+    /// The luma behind labels, for the `contrast` cost term (`None` without rasters, with
+    /// `weights.contrast` 0, or when the backdrop is uniform).
+    pub backdrop: Option<Backdrop>,
     /// Free space, computed on first use (see [`Obstacles::free_space`]).
     free: std::sync::OnceLock<FreeSpace>,
     pub label_area: Option<Rect>,
@@ -200,6 +203,35 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
             }
         }
     }
+    let backdrop = if model.weights.contrast > 0.0 && !model.rasters.is_empty() {
+        let layers: Vec<(&la_raster::Rgba, la_raster::RasterPlacement)> = model
+            .rasters
+            .iter()
+            .map(|r| {
+                (
+                    &r.img,
+                    la_raster::RasterPlacement {
+                        scale: r.opts.scale,
+                        offset: [r.opts.offset.x, r.opts.offset.y],
+                    },
+                )
+            })
+            .collect();
+        let bg = Backdrop::grid_of(&grid);
+        let bgrid = la_raster::GridSpec {
+            origin_x: bg.ox,
+            origin_y: bg.oy,
+            cell: bg.cell,
+            cols: bg.cols,
+            rows: bg.rows,
+        };
+        Backdrop::new(
+            bg,
+            &la_raster::backdrop_luma(&layers, model.background, &bgrid),
+        )
+    } else {
+        None
+    };
     names.remove("ignore");
     names.remove("items");
     names.remove("labels");
@@ -356,6 +388,7 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         item_occ,
         items_sat,
         own,
+        backdrop,
         free: std::sync::OnceLock::new(),
         label_area: model.label_area,
         leader_area: model.leader_area,

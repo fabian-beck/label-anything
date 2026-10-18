@@ -1,4 +1,5 @@
-//! Rough timings of `process` on 2048×2048 synthetic rasters (decode excluded):
+//! Rough timings of `process` and `backdrop_luma` on 2048×2048 synthetic rasters
+//! (decode excluded):
 //!
 //! * `chart`: white background, grid lines, 3000 anti-aliased scatter points, line series
 //!   and text-like blocks (typical line art);
@@ -13,7 +14,9 @@
 
 use std::time::Instant;
 
-use label_anything_raster::{process, ClassCoverage, GridSpec, Mode, RasterPlacement, Rgba};
+use label_anything_raster::{
+    backdrop_luma, process, ClassCoverage, GridSpec, Mode, RasterPlacement, Rgba,
+};
 
 struct Lcg(u32);
 
@@ -200,6 +203,12 @@ fn main() {
         });
         bench(filter, &format!("{name} saliency"), 5, || {
             process(&img, &Mode::Saliency, "salient", &place, &grid)
+        });
+        bench(filter, &format!("{name} luma"), 9, || {
+            vec![ClassCoverage {
+                class: "luma".into(),
+                coverage: backdrop_luma(&[(&img, place)], [255, 255, 255], &grid),
+            }]
         });
     }
 }

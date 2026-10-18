@@ -12,6 +12,10 @@ function and the omission semantics decide what is shown:
 * omission modes: ``strict``, ``prefix``, ``weighted``.
 
 18 problems named ``<dataset>-<type>-<mode>``; quick suite: ``metrics-attr-strict``.
+
+Two more on the Europe map of scenario 05 (``europe-attr-strict``, ``europe-attr-prefix``): the
+250 busiest airports in the window are items with city labels, every other airport a context dot
+(soft ``points``); priority = routes.
 """
 from __future__ import annotations
 
@@ -20,7 +24,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from bench.common.scenario import Writer, base_problem  # noqa: E402
+from bench.common.scenario import Writer, base_problem, png_bytes  # noqa: E402
 from bench.scenarios import load_module  # noqa: E402
 
 M = load_module("01", "metrics")
@@ -60,6 +64,25 @@ PRIORITIES = {
 }
 
 
+def europe_problems(wr: Writer) -> None:
+    """The 250 busiest airports of scenario 05's Europe window, the others as context dots."""
+    eu = B5.Equirect(-12.0, 32.0, 61.0, 35.0, 1320.0, 780.0)
+    aps = [a for a in A.load_airports() if B5.in_window(a, eu, eu.width, eu.height)]
+    ids = B5.unique_ids(aps)
+    cities: dict[str, int] = {}
+    for a in aps[:250]:
+        cities[a.city] = cities.get(a.city, 0) + 1
+
+    def label(a):
+        return a.city if cities[a.city] == 1 else f"{a.city} ({a.code})"
+
+    for mode in ("strict", "prefix"):
+        p, sc = B5.hubs_problem(eu, aps, 0, 250, label, ids, 9.0, None, 10.0, 0.4)
+        p["priority"]["omission"] = mode
+        wr.config(f"europe-attr-{mode}", p, truth=sc.truth(), svg=sc.svg(), png=png_bytes(sc.png()),
+                  description=f"europe: 250 busiest airports + context dots, priority 'attr', omission '{mode}'.")
+
+
 def main() -> None:
     wr = Writer(SCENARIO, "Priority and omission showcase", M.SOURCES + A.SOURCES,
                 notes="All items labeled; priority terms x omission modes decide the placed set.")
@@ -76,6 +99,7 @@ def main() -> None:
                 name = f"{ds}-{ptype}-{mode}"
                 wr.config(name, p, quick=(name == "metrics-attr-strict"),
                           description=f"{ds}: {len(items)} items, priority '{ptype}', omission '{mode}'.")
+    europe_problems(wr)
     wr.finish()
 
 

@@ -43,6 +43,7 @@ METRICS = [
     ("leader_len_p90_em", "leader p90 em", "{:.1f}", -1),
     ("label_points_hidden", "points hidden", "{:d}", -1),
     ("label_lines_em", "lines hidden em", "{:.1f}", -1),
+    ("labels_on_contrast_border", "contrast border", "{:d}", -1),
     ("schema_errors", "schema err.", "{:d}", -1),
 ]
 TABLE_COLS = ["placed_rate", "hard_violations", "leader_crossings", "leader_near_crossings", "leader_mark_touches",

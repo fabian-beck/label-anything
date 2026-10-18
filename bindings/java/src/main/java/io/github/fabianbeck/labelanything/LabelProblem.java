@@ -231,6 +231,14 @@ public final class LabelProblem {
       return put("canvas.region", new double[] {x, y, w, h});
     }
 
+    /**
+     * Colour of the canvas where no raster lies ({@code "#rrggbb"}, default white): the
+     * backdrop of the labels there for the {@code contrast} cost term.
+     */
+    public Builder canvasBackground(String color) {
+      return put("canvas.background", color);
+    }
+
     /** Informational device pixel ratio. */
     public Builder devicePixelRatio(double ratio) {
       return put("canvas.device_pixel_ratio", ratio);

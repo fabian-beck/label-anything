@@ -10,7 +10,8 @@ Force layout of scenario 07's Les Misérables graph (77 nodes, 254 edges) under 
 d3-force-style simulation (``bench.common.forcesim``): every 4th of the first 240 ticks
 from the start (layout running), and a node dragged along an arc (40 ticks of the settled
 layout reheated to alpha 0.3, Valjean moved 240 px). Every frame is an independent
-problem (1000 × 760 px, preset ``graph``, 10 px names, priority = degree, edges as soft
+problem (1000 × 760 px, preset ``graph``, 10 px names written out as in scenario 07's
+``lesmis-force``, nodes in the colors of their communities, priority = degree, edges as soft
 ``lines``).
 
 Item ids are stable across frames. ``sequence.json`` lists the frames in order with their
@@ -75,11 +76,12 @@ def graph_problem(G, nodes, xy) -> dict:
     for n in nodes:
         deg = G.degree(n)
         x, y = pos[n]
+        grp = G.nodes[n]["group"]
         items.append({"id": G.nodes[n]["name"],
                       "anchor": {"type": "point", "x": x, "y": y,
                                  "mark": {"shape": "circle", "r": round(3 + 1.5 * math.sqrt(deg), 3)}},
-                      "label": {"type": "text", "text": G.nodes[n]["name"]},
-                      "attrs": {"degree": deg}})
+                      "label": {"type": "text", "text": G07.display_name(G.nodes[n]["name"])},
+                      "attrs": {"degree": deg, "color": G07.GROUP_COLORS[grp % len(G07.GROUP_COLORS)]}})
     p = base_problem(GW, GH, "graph", font_size=10.0)
     p["items"] = items
     p["obstacles"] = {"vector": [G07.edge_layer(G, pos)]}

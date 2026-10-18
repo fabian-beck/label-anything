@@ -199,3 +199,24 @@ def test_baseline_results_validate_against_the_schema(solver):
     t = next(p for p in res["placements"] if p["id"] == "T")
     if t["placed"]:
         assert len(t["text"]["lines"]) >= 2          # wrapped at the package dots
+
+
+def test_labels_across_contrast_borders():
+    import base64
+
+    # a black 10 x 10 raster at scale 0.1 (canvas x 0-100) on a white canvas of 200 x 100
+    black = {"rgba": {"width": 10, "height": 10, "data": base64.b64encode(bytes([0, 0, 0, 255]) * 100).decode()},
+             "scale": 0.1}
+    prob = problem([item("A", 100, 50), item("B", 150, 50), item("C", 40, 50)], obstacles={"raster": black})
+    res = result([placed("A", 85, 30), placed("B", 140, 30), placed("C", 25, 30)])
+    c = evaluate(prob, res)["visual"]["contrast"]
+    # A lies half on black, B on white only, C on black only
+    assert (c["labels"], c["border"], c["examples"]) == (3, 1, ["A"])
+    # a sliver of the other side is no border: B with 2 of its 30 px on black
+    c = evaluate(prob, result([placed("B", 98, 30)]))["visual"]["contrast"]
+    assert c["border"] == 0
+    # a black canvas behind a black raster: no border anywhere
+    prob["canvas"]["background"] = "#000000"
+    assert evaluate(prob, res)["visual"]["contrast"]["border"] == 0
+    # without rasters the metric is absent
+    assert evaluate(problem([item("A", 100, 50)]), result([placed("A", 85, 30)]))["visual"]["contrast"] is None

@@ -58,6 +58,7 @@ The cost of a candidate is a sum of terms, each with a weight in `weights`:
 | shape | `shape` (0.5) | wrapped lines, alternatives, truncation, shrinking, relaxed overlap |
 | edge | `edge` (0.2) | proximity to the label area's edge (1 at the edge, 0 at ≥ 1 em) |
 | ambiguity | `ambiguity` (1.0) | the label is closer to another item's shape than to its own |
+| contrast | `contrast` (0.5) | with raster backgrounds: how much the backdrop's luma varies under the label (4 × its variance, per em²): 1 per em² for a label half on black, half on white, 0 on any uniform backdrop |
 | stability | `stability` (1.0) | displacement from the `warm_start` box: 1 per em up to 1 em, then 1/4 per em up to 5 em |
 | lookahead | `lookahead` (0.3), `starve` (2.0) | how many candidates of unplaced items the choice would take away |
 

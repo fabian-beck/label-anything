@@ -216,6 +216,132 @@ export class Sat {
   }
 }
 
+/**
+ * Summed-area table of the squares of a `u8` grid with exact sums (the backdrop luma: the
+ * sums stay below 2⁵³ for any grid up to 16 M cells; Rust `Sat64`, `u64`).
+ */
+export class Sat64 {
+  readonly cols: number;
+  readonly rows: number;
+  /** `(rows + 1) × (cols + 1)` prefix sums, row-major. */
+  private readonly data: Float64Array;
+
+  private constructor(cols: number, rows: number, data: Float64Array) {
+    this.cols = cols;
+    this.rows = rows;
+    this.data = data;
+  }
+
+  /** The table of the squares of a `cols × rows` grid of `u8` values (row-major). */
+  static ofSquares(cols: number, rows: number, vals: Uint8Array): Sat64 {
+    const w = cols + 1;
+    const data = new Float64Array(w * (rows + 1));
+    for (let r = 0; r < rows; r++) {
+      let rowSum = 0;
+      const src = r * cols;
+      const prev = r * w;
+      const cur = (r + 1) * w;
+      for (let c = 0; c < cols; c++) {
+        const v = vals[src + c]!;
+        rowSum += v * v;
+        data[cur + c + 1] = data[prev + c + 1]! + rowSum;
+      }
+    }
+    return new Sat64(cols, rows, data);
+  }
+
+  /** Sum of cells `[c0, c1) × [r0, r1)` (bounds must be within the grid). */
+  block(c0: number, c1: number, r0: number, r1: number): number {
+    if (c1 <= c0 || r1 <= r0) return 0;
+    const d = this.data;
+    const w = this.cols + 1;
+    return d[r1 * w + c1]! + d[r0 * w + c0]! - d[r1 * w + c0]! - d[r0 * w + c1]!;
+  }
+
+  /** Exact integral of the piecewise-constant values over `rect`, as {@link Sat.integral}. */
+  integral(g: GridSpec, rect: Rect): number {
+    const cols = this.cols;
+    const rows = this.rows;
+    const u0 = clamp01((rect.x0 - g.ox) / g.cell, cols);
+    const u1 = clamp01((rect.x1 - g.ox) / g.cell, cols);
+    const v0 = clamp01((rect.y0 - g.oy) / g.cell, rows);
+    const v1 = clamp01((rect.y1 - g.oy) / g.cell, rows);
+    if (u1 <= u0 || v1 <= v0) return 0;
+    axisParts(u0, u1, cols, XI, XW);
+    axisParts(v0, v1, rows, YI, YW);
+    let total = 0;
+    for (let j = 0; j < 3; j++) {
+      const wy = YW[j]!;
+      if (wy === 0) continue;
+      const ya = YI[2 * j]!;
+      const yb = YI[2 * j + 1]!;
+      for (let i = 0; i < 3; i++) {
+        const wx = XW[i]!;
+        if (wx === 0) continue;
+        const s = this.block(XI[2 * i]!, XI[2 * i + 1]!, ya, yb);
+        if (s !== 0) total += wx * wy * s;
+      }
+    }
+    return total;
+  }
+}
+
+/**
+ * The backdrop of the `contrast` cost term (spec §4.6, §8): the luma `s` of a grid of
+ * 2 × 2 obstacle cells, as summed-area tables of `s` and `s²` (Rust `Backdrop`).
+ */
+export class Backdrop {
+  private constructor(
+    readonly grid: GridSpec,
+    readonly sum: Sat,
+    readonly sq: Sat64,
+  ) {}
+
+  /**
+   * The grid of the backdrop of obstacle grid `g`: cells of `2·c` from the same origin,
+   * `ceil(cols / 2) × ceil(rows / 2)` of them.
+   */
+  static gridOf(g: GridSpec): GridSpec {
+    return new GridSpec(g.ox, g.oy, 2 * g.cell, Math.ceil(g.cols / 2), Math.ceil(g.rows / 2));
+  }
+
+  /**
+   * The backdrop of a luma grid (`0..=255`, row-major) on `grid`, or `null` when the luma
+   * is the same everywhere (no label can cost anything).
+   */
+  static of(grid: GridSpec, luma: Uint8Array): Backdrop | null {
+    const { cols, rows } = grid;
+    if (cols === 0 || rows === 0 || luma.length !== cols * rows) return null;
+    const first = luma[0]!;
+    let uniform = true;
+    for (let i = 1; i < luma.length; i++) {
+      if (luma[i] !== first) {
+        uniform = false;
+        break;
+      }
+    }
+    if (uniform) return null;
+    return new Backdrop(grid, Sat.fromCoverage(cols, rows, luma), Sat64.ofSquares(cols, rows, luma));
+  }
+
+  /**
+   * `D = ∫ (s − s̄)² dA` over `rect` clipped to the grid, in units of `s²` × backdrop cells:
+   * `I₂ − I₁ · I₁ / A`; 0 unless it exceeds `10⁻¹² · I₂` (rounding).
+   */
+  deviation(rect: Rect): number {
+    const g = this.grid;
+    const cols = g.cols;
+    const rows = g.rows;
+    const du = clamp01((rect.x1 - g.ox) / g.cell, cols) - clamp01((rect.x0 - g.ox) / g.cell, cols);
+    const dv = clamp01((rect.y1 - g.oy) / g.cell, rows) - clamp01((rect.y0 - g.oy) / g.cell, rows);
+    if (du <= 0 || dv <= 0) return 0;
+    const i1 = this.sum.integral(g, rect);
+    const i2 = this.sq.integral(g, rect);
+    const d = i2 - (i1 * i1) / (du * dv);
+    return d > 1e-12 * i2 ? d : 0;
+  }
+}
+
 function clamp01(v: number, n: number): number {
   if (v < 0) return 0;
   if (v > n) return n;

@@ -48,8 +48,8 @@ All examples label the same dense cluster of twelve asteroids among 60 unlabeled
     --8<-- "examples/tutorials/problems/leaders-orthogonal.json:5:5"
     ```
 
-    Horizontal and vertical segments with at most one bend (two for boundary labels);
-    fewer bends first.
+    Horizontal and vertical segments with at most one bend, also to labels in the
+    margins (along the side, then into the label); fewer bends first.
 
     ![Orthogonal leaders](../assets/gallery/leaders-orthogonal.png)
 

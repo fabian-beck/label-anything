@@ -20,3 +20,9 @@ labels: `priority_inversions` must be 0), `prefix` (the placed set is a prefix o
 priority order) and `weighted` (maximize the priority-weighted count). The evaluator
 reports inversions by its own removal test, prefix length, NDCG@k, placed_weighted and
 coverage satisfaction. Quick suite: `metrics-attr-strict`.
+
+Two more problems on the Europe map of scenario 05, `europe-attr-strict` and
+`europe-attr-prefix`: the 250 busiest airports of the view are items (city names, 9 px,
+priority = routes), every other airport is a context dot (`points`, soft); the SVG Europe map
+is the background. Strict omission fills every gap with smaller airports; prefix shows exactly
+the busiest airports up to the first one without a free position.

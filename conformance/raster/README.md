@@ -1,9 +1,9 @@
 # `raster` cases
 
 Language-neutral tests of raster backgrounds (spec §4.6): decoding, background
-estimation, the five pixel modes, area averaging, quantization and dilation. Expected
-values are produced by the Rust implementation; **every implementation must reproduce
-the coverage arrays byte for byte** (spec §1: *identical*).
+estimation, the five pixel modes, area averaging, quantization and dilation, and the
+backdrop luma. Expected values are produced by the Rust implementation; **every
+implementation must reproduce the coverage arrays byte for byte** (spec §1: *identical*).
 
 Runners:
 
@@ -40,6 +40,16 @@ One JSON object per file:
         { "class": "ink", "fnv1a32": "1911bd06", "sum": 84215, "nonzero": 372,
           "coverage": "<base64 of rows*cols bytes>" }   // or "samples": [[col, row, value], …]
       ]
+    }
+  ],
+  "backdrop": [                                      // backdrop_luma: the image at each placement
+    {
+      "name": "two layers ...",
+      "background": [20, 40, 60],                    // the canvas colour
+      "layers": [ { "scale": 1, "offset": [0, 0] }, { "scale": 1.5, "offset": [10.5, 6.25] } ],
+      "grid": { "origin": [0, 0], "cell": 1.5, "cols": 40, "rows": 30 },
+      "expect": { "fnv1a32": "…", "sum": 123, "nonzero": 45,
+                  "luma": "<base64 of rows*cols bytes>" }   // or "samples"
     }
   ],
   "oklab":  [ { "rgb": [255, 0, 0], "lab": [0.6279553606145516, 0.22486306106597398, 0.1258462985307351],
@@ -86,6 +96,13 @@ position of the raster's top-left corner) and `grid` is `GridSpec`.
 coverage in palette order, then `ink`). Each entry has the FNV-1a, the sum and the
 number of non-zero cells of the coverage array, plus either the complete array
 (`coverage`, base64, for grids up to 4096 cells) or `samples` (`[col, row, value]`).
+
+### `backdrop`
+
+The backdrop luma of the `contrast` cost term (spec §4.6): the case's image drawn at every
+placement of `layers`, in order, over a canvas of colour `background`, sampled on `grid`.
+`expect` is checked like a coverage entry (`luma` holds the complete array for grids up to
+4096 cells, else `samples`).
 
 ### `oklab`, `hex`, `base64`
 
