@@ -269,3 +269,55 @@ def test_milestones_m3_and_m4():
     # prefix mode: the inversions are the placed items after the first omitted one
     assert milestones.inversions({"placed": 10, "total": 100, "prefix_rate": 0.08}, "prefix") == 2
     assert milestones.inversions({"placed": 10, "priority_inversions": 3}, "strict") == 3
+
+
+def test_scaling_exponent_is_the_log_log_slope():
+    from bench.report import scaling_exponent
+
+    rows = [{"solver": "rust", "scenario": "10-stress", "n_items": n, "summary": {},
+             "runtime_reported": {"median": 0.5 * n ** 1.5}} for n in (200, 2000, 20000)]
+    assert abs(scaling_exponent(rows, "rust") - 1.5) < 1e-9
+    assert scaling_exponent(rows[:2], "rust") is None
+    # without an engine-reported runtime, the wall time
+    walls = [{"solver": "b", "scenario": "10-stress", "n_items": n, "summary": {}, "runtime": {"median": float(n)}}
+             for n in (100, 1000, 10000)]
+    assert abs(scaling_exponent(walls, "b") - 1.0) < 1e-9
+
+
+class _Stub:
+    """A baseline that places A and B where soft classes are left out, only A where they are avoided."""
+
+    name = "stub"
+
+    def __init__(self):
+        self.modes = []
+
+    def solve(self, problem, path, result_path, timeout, options=None):
+        mode = (options or {})["soft"]
+        self.modes.append(mode)
+        ids = ["A", "B"] if mode == "ignore" else ["A"]
+        res = {"version": "1", "stats": {"placed": len(ids), "total": 2, "hard_violations": 0,
+                                         "leader_crossings": 0, "runtime_ms": 1.0, "seed": 0},
+               "placements": [{"id": i, "placed": i in ids, "anchor_side": "top-right", "model": "adjacent",
+                               "box": {"x": x + 4, "y": 30, "w": 30, "h": 10}} if i in ids else
+                              {"id": i, "placed": False, "reason": "no_feasible_candidate"}
+                              for i, x in (("A", 50), ("B", 120))]}
+        return res, 1.0
+
+
+def test_choose_soft_keeps_the_emulation_with_more_usable_labels(tmp_path):
+    prob = problem([item("A", 50, 45), item("B", 120, 45)],
+                   obstacles={"vector": [{"class": "grid", "polylines": [[[0, 35], [200, 35]]], "width": 1}]},
+                   avoid={"label": {"grid": 0.2}})
+    path = tmp_path / "p.json"
+    write_json(path, prob)
+    assert run.has_soft_classes(prob, path)
+    stub = _Stub()
+    mode, res, _wall, choice = run.choose_soft(stub, prob, path, tmp_path / "r.json", 10.0, None)
+    assert stub.modes == ["hard", "ignore"]
+    assert mode == "ignore" and res["stats"]["placed"] == 2
+    assert choice["tried"]["hard"]["usable"] == 1 and choice["tried"]["ignore"]["usable"] == 2
+    assert read_json(tmp_path / "r.json")["stats"]["placed"] == 2
+    # without soft classes there is nothing to choose
+    plain = problem([item("A", 50, 45)])
+    assert not run.has_soft_classes(plain, path)

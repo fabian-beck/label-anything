@@ -195,14 +195,16 @@ published with the latest benchmark report.
 
 ## Benchmark
 
-The [real-world benchmark](project/benchmark.md) scores Label Anything and six baselines
-(naive, greedy, textalloc, adjustText, vega-label, ggrepel) on twelve scenarios built from
-open data — software metrics, volcano plots, embeddings, airports on a world map, city
-POIs on map tiles, node-link diagrams, illustrations, line charts, stress sizes,
-interactive zooming and priority — with one implementation-independent evaluator.
+The [real-world benchmark](project/benchmark.md) scores Label Anything and nine baselines
+(naive, greedy, textalloc, adjustText, vega-label, ggrepel, ECharts, d3fc, D3-Labeler) on
+twelve scenarios built from open data — software metrics, volcano plots, embeddings,
+airports on a world map, city POIs on map tiles, node-link diagrams, illustrations, line
+charts, stress sizes, interactive zooming and priority — with one
+implementation-independent evaluator.
 [What the results show](project/benchmark.md#what-the-results-show): no overlaps and no
-crossing leaders anywhere, more labels than the other tools that avoid every overlap — and
-where it still falls short: dense data, moving labels, the largest problems' speed.
+crossing leaders anywhere, the most usable labels on every problem of the quick suite,
+though often by a few percent — and where it still falls short: dense data, moving labels,
+the largest problems' speed.
 
 ## Good to know
 

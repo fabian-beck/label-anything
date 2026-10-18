@@ -171,8 +171,9 @@ def scene_json(scene: Scene) -> tuple[dict, list[Note]]:
             notes)
 
 
-def solve(problem: dict, problem_path=None) -> dict:
-    scene = build_scene(problem, problem_path)
+def solve(problem: dict, problem_path=None, options: dict | None = None) -> dict:
+    """``options``: ``soft`` (``hard`` or ``ignore``), how soft classes reach the tool (``build_scene``)."""
+    scene = build_scene(problem, problem_path, soft=(options or {}).get("soft", "hard"))
     js, notes = scene_json(scene)
     H = scene.height
     with tempfile.TemporaryDirectory(prefix="la-ggrepel-") as d:

@@ -1,7 +1,7 @@
 # Benchmark: release procedure and how to read the report
 
 The real-world benchmark (`bench/`, details in `bench/README.md`) compares every Label Anything
-implementation with each other and with six baselines on twelve scenarios built from real data,
+implementation with each other and with nine baselines on twelve scenarios built from real data,
 and enforces the release gates. This page is the maintainer's view: what to run before a release,
 what the gates check and how to read the report.
 
@@ -151,8 +151,13 @@ cluster of marks or across the picture.
 ## Reading the report
 
 * **Summary** — one row per solver. Label Anything rows must show 0 hard violations; baselines
-  usually do not (adjustText never omits labels, ggrepel's repulsion is not guaranteed to
-  separate everything, the naive baseline ignores collisions).
+  usually do not (adjustText and D3-Labeler never omit labels, ggrepel's repulsion is not
+  guaranteed to separate everything, d3fc and ECharts compare labels only, the naive baseline
+  ignores collisions). *Usable* counts the labels left when conflicts are dropped in priority
+  order — the fair number to compare across tools; *conflicts* are the hard violations
+  without the engine's own spacing rules (leader clearance and angles). *Peak MB* is the
+  largest resident memory of a solver process, *runtime ∝ n^k* the slope of log runtime over
+  log size on the stress scenario (full suite).
 * **Performance targets** — median engine time per target and implementation, with every run.
   Machine details are printed; compare numbers from the same machine only.
 * **Runtime vs. size** — log–log small multiples; the engine-reported chart compares the solve
@@ -166,6 +171,10 @@ cluster of marks or across the picture.
   The engine's debug overlay shows the cost grids and the candidates it considered.
 
 Baselines are configured from the problem (canvas, label area, offsets, priority order, obstacle
-classes) with tool defaults elsewhere; they cannot express soft costs, leader styles, boundary or
-internal labels, and receive raster and SVG backgrounds as emulations. Their rows are reference
-points, not tuned competitors: `bench/baselines/README.md` lists every choice.
+classes) with tool defaults elsewhere; they cannot express leader styles or boundary labels, and
+receive raster and SVG backgrounds as emulations. They have no soft costs either: a problem with
+soft classes is solved both with them avoided like hard obstacles and with them left out, and
+the report keeps whichever gives the tool more usable labels (`--baseline-soft`). Avoiding them
+always — as the benchmark did until 2026-10 — left vega-label 2 of 375 labels on the Monaco
+tiles where it places 154 now. Their rows are reference points, not tuned competitors:
+`bench/baselines/README.md` lists every choice.

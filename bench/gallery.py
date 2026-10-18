@@ -210,10 +210,12 @@ COMPARISONS = (
     ("02-volcano", "top20-vector", "Volcano plot, top 20 genes",
      "A sparse case: every tool places almost everything, and the differences are in overlaps."),
 )
-COMPARE_SOLVERS = ("rust", "ggrepel", "adjusttext", "textalloc", "vega-label", "greedy")
+COMPARE_SOLVERS = ("rust", "ggrepel", "adjusttext", "textalloc", "vega-label", "echarts", "d3fc", "d3-labeler",
+                   "greedy")
 NAMES = {"rust": "Label Anything", "ggrepel": "ggrepel (R)", "adjusttext": "adjustText", "textalloc": "textalloc",
-         "vega-label": "vega-label", "greedy": "Greedy baseline", "naive": "Naive (no collision test)"}
-NUMBERS = {2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven"}
+         "vega-label": "vega-label", "echarts": "ECharts (hideOverlap)", "d3fc": "d3fc label layout",
+         "d3-labeler": "D3-Labeler", "greedy": "Greedy baseline", "naive": "Naive (no collision test)"}
+NUMBERS = {2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"}
 REASONS = {"omitted_by_priority": "behind more important labels", "no_feasible_candidate": "no free position",
            "budget_exhausted": "out of time", "keep_with": "with their set", "grouped": "in a group label"}
 
@@ -1021,8 +1023,8 @@ def page(meta: dict, figs: dict[str, dict], sections=SECTIONS, cmps=(), stab=Non
     if cmps:
         toc.append(("baselines", "Other labelers"))
         body.append('<section id="baselines"><h2>Next to other labelers</h2><p class="lede">The benchmark runs other '
-                    "label placers on the same problems: ggrepel (R), adjustText and textalloc (Python), vega-label "
-                    "(JavaScript) and a plain greedy baseline. Label Anything's cell has the blue frame.</p>"
+                    "label placers on the same problems: ggrepel (R), adjustText and textalloc (Python), vega-label, the "
+                    "label layouts of ECharts and d3fc and D3-Labeler (JavaScript), and a plain greedy baseline. Label Anything's cell has the blue frame.</p>"
                     + "".join(comparison_html(c) for c in cmps) + "</section>")
     stabs = [stab] if isinstance(stab, dict) else list(stab or [])
     if stabs:

@@ -2,7 +2,8 @@
 #
 # The Label Anything benchmark with every baseline, reproducible in one image:
 #   Python 3.13 + bench/requirements.txt + bench/baselines/requirements.txt (textalloc, adjustText),
-#   Node 22 + bench/baselines/package-lock.json (vega, vega-label, canvas),
+#   Node 22 + bench/baselines/package-lock.json (vega, vega-label, canvas, d3fc-label-layout, echarts;
+#   D3-Labeler is vendored in bench/baselines/vendor),
 #   R 4.3.3 + ggrepel 0.9.5 + ggplot2 3.4.4 + jsonlite 1.8.8 (Ubuntu 24.04 packages, pinned),
 #   a JDK (scenario 01 builds its metrics with CkLite.java) and Rust (builds the engine CLI).
 #
@@ -67,7 +68,8 @@ COPY bench/baselines/requirements.txt bench/baselines/requirements.txt
 RUN python3.13 -m venv bench/.venv \
  && bench/.venv/bin/pip install --no-cache-dir -r bench/requirements.txt -r bench/baselines/requirements.txt
 
-# vega-label baseline (exact versions from the lockfile; canvas ships prebuilt binaries).
+# Node baselines: vega-label, d3fc, ECharts (exact versions from the lockfile; canvas ships prebuilt
+# binaries).
 COPY bench/baselines/package.json bench/baselines/package-lock.json bench/baselines/
 RUN npm ci --prefix bench/baselines --no-audit --no-fund
 

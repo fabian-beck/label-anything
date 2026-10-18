@@ -33,6 +33,16 @@ def leader_for(lab: LabelItem, box: Box, port: Point | None) -> dict | None:
     return {"points": [[start[0], start[1]], [port[0], port[1]]], "style": "straight", "port": [port[0], port[1]]}
 
 
+def is_internal(lab: LabelItem, box: Box) -> bool:
+    """The box lies inside the item's own shape (shrunk by the tolerance, as the evaluator tests internal
+    labels) and the problem allows internal labels for the item: an internal label, not one covering its
+    own mark."""
+    it = lab.item
+    if it.internal == "never" or "internal" not in (it.models or []):
+        return False
+    return it.own_shape.contains_box(box.shrink(TOL))
+
+
 def build_result(scene: Scene, boxes: dict[str, Box], ports: dict[str, Point | None], runtime_ms: float,
                  implementation: str, tool_notes: list | None = None) -> dict:
     """``boxes``: placed labels (canvas px); ``ports``: end point of the tool's connector on the box (or None)."""
@@ -50,9 +60,14 @@ def build_result(scene: Scene, boxes: dict[str, Box], ports: dict[str, Point | N
                                "reason": omitted.get(it.id, "no_feasible_candidate"), "priority": prio})
             continue
         leader = leader_for(lab, box, ports.get(it.id))
-        p = {"id": it.id, "placed": True, "box": box.as_dict(), "anchor_side": "distant" if leader else
-             side_of(box, lab.x, lab.y), "model": "distant" if leader else "slider", "leader": leader,
-             "priority": prio}
+        if leader:
+            side, model = "distant", "distant"
+        elif is_internal(lab, box):
+            side, model = "internal", "internal"
+        else:
+            side, model = side_of(box, lab.x, lab.y), "slider"
+        p = {"id": it.id, "placed": True, "box": box.as_dict(), "anchor_side": side, "model": model,
+             "leader": leader, "priority": prio}
         t = text_info(it.label)
         if t is not None:
             p["text"] = t

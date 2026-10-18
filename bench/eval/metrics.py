@@ -162,6 +162,11 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
             "canvas_edge": 0, "leader_leader": 0, "leader_near": 0, "leader_angle": 0, "leader_label": 0, "leader_own_label": 0,
             "leader_item": 0, "leader_canvas": 0}
     examples: dict[str, list] = {}
+    # conflicts (geometric overlaps every labeler must avoid) per placed label: unary (the label against
+    # marks, classes, the canvas) and pairs of labels; leader_item splits into leaders through a mark
+    # (conflict) and leaders within the clearance only (a spacing rule, like leader_near/leader_angle)
+    conf_unary: set[int] = set()
+    conf_pairs: set[tuple[int, int]] = set()
 
     def note(kind, what):
         lst = examples.setdefault(kind, [])
@@ -191,6 +196,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                 overlap_pairs.append((p.id, placed[j].id))
     if labels_hard:
         hard["label_label"] = len(overlap_pairs)
+        conf_pairs.update((pidx[a], pidx[b]) for a, b in overlap_pairs)
         for a, b in overlap_pairs[:max_list]:
             note("label_label", [a, b])
 
@@ -208,34 +214,41 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                 if lower and covers_lower and other.id in placed_ids:
                     hard["label_lower"] += 1
                     note("label_lower", [p.id, other.id])
+                    conf_pairs.add((pidx[p.id], pidx[other.id]))
                 if lower_hard if lower else items_hard:
                     hard["label_item"] += 1
                     note("label_item", [p.id, other.id])
+                    conf_unary.add(pidx[p.id])
         own = p.item.shape if p.item.shape is not None else p.item.dot
         if p.internal:
             shp = p.item.own_shape
             if not shp.contains_box(sb):
                 hard["internal_outside"] += 1
                 note("internal_outside", p.id)
+                conf_unary.add(pidx[p.id])
         elif own is not None and own_policy != "ignore":
             if own_policy == "hard":
                 if own.intersects_box(sb):
                     hard["own_mark"] += 1
                     note("own_mark", p.id)
+                    conf_unary.add(pidx[p.id])
             elif isinstance(own_policy, str) and own_policy.startswith("partial:"):
                 f = float(own_policy.split(":", 1)[1])
                 a = own.area()
                 if a > 0 and own.clip_area(p.box) / a > f + 0.01:
                     hard["own_mark"] += 1
                     note("own_mark", p.id)
+                    conf_unary.add(pidx[p.id])
         for c in hard_classes:
             if classes[c].box_hits(sb):
                 key = f"class:{c}"
                 hard[key] = hard.get(key, 0) + 1
                 note(key, p.id)
+                conf_unary.add(pidx[p.id])
         if area is not None and edge_hard and not area.contains_box(p.box, tol):
             hard["canvas_edge"] += 1
             note("canvas_edge", p.id)
+            conf_unary.add(pidx[p.id])
 
     # -- leaders
     seg_index = GridIndex(32.0)
@@ -265,6 +278,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
 
     if spec.is_hard(a_leader, "leaders"):
         hard["leader_leader"] = leader_crossings
+        conf_pairs.update(crossing_pairs)
         for a, b in sorted(crossing_pairs)[:max_list]:
             note("leader_leader", [placed[a].id, placed[b].id])
         # leaders closer than the clearance (except where both start), and distant leaders
@@ -303,6 +317,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
             note("leader_angle", [placed[a].id, placed[b].id])
     leader_label_pairs = set()
     leader_item_pairs = set()
+    leader_item_touch = set()
     leader_class_hits: dict[str, int] = {}
     lengths_em, bends = [], []
     leader_items_hard = spec.is_hard(a_leader, "items")
@@ -327,6 +342,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
             if canvas is not None and not all(canvas.grow(tol).contains_point(e) for e in pl):
                 hard["leader_canvas"] += 1
                 note("leader_canvas", p.id)
+                conf_unary.add(k)
             seglist = list(_segments(pl))
             for si, (a, b) in enumerate(seglist):
                 q = Box(min(a[0], b[0]), min(a[1], b[1]), max(a[0], b[0]), max(a[1], b[1]))
@@ -338,6 +354,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                 if not (port_inside and si == len(seglist) - 1) and geom.seg_box_intersects(a, b, own_sb):
                     hard["leader_own_label"] += 1
                     note("leader_own_label", p.id)
+                    conf_unary.add(k)
                 if leader_items_hard or leader_lower_hard:
                     # leaders keep the clearance from other marks (spec §7); a fan or boundary leader
                     # must only not cross a mark closer than the clearance to its start (crowded marks)
@@ -345,7 +362,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                     start = pl[0]
                     for j in (item_index.query(q.grow(r)) if r > 0 else ()):
                         other = prob.items[j]
-                        if (j, k) in leader_item_pairs or vis.exempt_mark(p.item, other):
+                        if (j, k) in leader_item_touch or vis.exempt_mark(p.item, other):
                             continue
                         if not (leader_lower_hard if item_keys[other.id] < item_keys[p.id] else leader_items_hard):
                             continue
@@ -356,14 +373,20 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                             if other.own_shape.sdist(start) < clearance(p.item):
                                 rr = 0.0
                         if other.shape.intersects_segment(a, b, rr):
-                            leader_item_pairs.add((j, k))
-                            note("leader_item", [p.id, other.id])
+                            if (j, k) not in leader_item_pairs:
+                                leader_item_pairs.add((j, k))
+                                note("leader_item", [p.id, other.id])
+                            if other.shape.intersects_segment(a, b, 0.0):
+                                leader_item_touch.add((j, k))
+                                conf_unary.add(k)
                 for c in leader_hard_classes:
                     if classes[c].segment_hits(a, b):
                         leader_class_hits[c] = leader_class_hits.get(c, 0) + 1
                         note(f"leader_class:{c}", p.id)
+                        conf_unary.add(k)
     if spec.is_hard(a_leader, "labels"):
         hard["leader_label"] = len(leader_label_pairs)
+        conf_pairs.update(leader_label_pairs)
         for a, b in sorted(leader_label_pairs)[:max_list]:
             note("leader_label", [placed[a].id, placed[b].id])
     if leader_items_hard or leader_lower_hard:
@@ -371,6 +394,10 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     for c, v in leader_class_hits.items():
         hard[f"leader_class:{c}"] = v
     hard_total = int(sum(v for v in hard.values()))
+    spacing = hard["leader_near"] + hard["leader_angle"] + (hard["leader_item"] - len(leader_item_touch)
+                                                             if leader_items_hard or leader_lower_hard else 0)
+    usable = _usable(placed, ranks, conf_unary, conf_pairs)
+    usable_weighted = (sum(pr.gain(ranks[placed[k].id]) for k in usable) / gsum) if gsum > 0 else 0.0
 
     # ---------------------------------------------------------------- soft coverage
     coverage: dict[str, dict] = {}
@@ -435,6 +462,9 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
             eligible += 1
             if p.internal:
                 internal_ok += 1
+
+    # ---------------------------------------------------------------- spread over the data
+    region = _region_coverage(prob, placed_ids, float(opts.get("defaults", {}).get("font", {}).get("size", 12)))
 
     # ---------------------------------------------------------------- position preference
     pos_ranks = []
@@ -515,7 +545,10 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                       "placed_weighted": placed_weighted, "required_total": len(required),
                       "required_placed": not req_missing, "required_missing": req_missing[:max_list],
                       "models": _hist(p.model or "none" for p in placed)},
-        "hard": {"total": hard_total, **hard, "examples": examples},
+        "hard": {"total": hard_total, **hard, "conflicts": hard_total - spacing, "spacing": spacing,
+                 "examples": examples},
+        "usable": {"count": len(usable), "rate": len(usable) / n if n else None, "weighted": usable_weighted,
+                   "in_conflict": len(conf_unary | {k for pair in conf_pairs for k in pair})},
         "leaders": {"count": sum(len(p.leaders) for p in placed),
                     "labels_with_leader": sum(1 for p in placed if p.leaders),
                     "rate": (sum(1 for p in placed if p.leaders) / n_placed) if n_placed else None,
@@ -533,6 +566,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                   "internal_eligible": eligible,
                   "internal_rate": (internal_ok / eligible) if eligible else None},
         "position": {"n": len(pos_ranks), "rank_mean": _mean(pos_ranks), "hist": hist},
+        "spread": region,
         "priority": {"rank_source": rank_source, "prefix_length": prefix, "prefix_rate": prefix / n if n else None,
                      "ndcg_at_k": ndcg, "k": n_placed, "inversions": inversions,
                      "inversion_examples": inversion_ids[:max_list],
@@ -552,6 +586,39 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     return out
 
 
+REGION_EM = 8.0
+
+
+def _region_coverage(prob: Problem, placed_ids: set[str], em: float) -> dict:
+    """Of the populated regions (cells of ``REGION_EM`` em of the default font holding an item's reference
+    point), the share with at least one label: whether the labels spread over the data or crowd where it is
+    sparse (even distribution, Imhof 1975)."""
+    cell = REGION_EM * em
+    populated: dict[tuple[int, int], bool] = {}
+    for it in prob.items:
+        k = (math.floor(it.ref[0] / cell), math.floor(it.ref[1] / cell))
+        populated[k] = populated.get(k, False) or it.id in placed_ids
+    labeled = sum(1 for v in populated.values() if v)
+    return {"cell_px": cell, "regions": len(populated), "labeled": labeled,
+            "region_coverage": labeled / len(populated) if populated else None}
+
+
+def _usable(placed: list[Placed], ranks: dict[str, int], unary: set[int], pairs: set[tuple[int, int]]) -> list[int]:
+    """The placed labels a host keeps by dropping conflicts in priority order: a label in a unary conflict
+    (over a mark, a hard class, the canvas edge; its leader through a mark or its own label) is dropped,
+    and of two conflicting labels (overlap, crossing leaders, a leader through a label, a label over the
+    mark of a placed item) the more important one is kept. Equals every placed label without conflicts."""
+    other: dict[int, set[int]] = {}
+    for a, b in pairs:
+        other.setdefault(a, set()).add(b)
+        other.setdefault(b, set()).add(a)
+    kept: set[int] = set()
+    for k in sorted(range(len(placed)), key=lambda k: (ranks[placed[k].id], k)):
+        if k not in unary and not (other.get(k, set()) & kept):
+            kept.add(k)
+    return sorted(kept)
+
+
 def _hist(vals) -> dict:
     h: dict[str, int] = {}
     for v in vals:
@@ -566,9 +633,14 @@ def summary(m: dict) -> dict:
     return {
         "placed": m["placement"]["placed"], "total": m["placement"]["total"],
         "placed_rate": m["placement"]["placed_rate"], "placed_weighted": m["placement"]["placed_weighted"],
-        "hard_violations": m["hard"]["total"], "leader_crossings": m["leaders"]["crossings"],
+        "hard_violations": m["hard"]["total"], "hard_conflicts": m["hard"].get("conflicts"),
+        "hard_spacing": m["hard"].get("spacing"), "usable": (m.get("usable") or {}).get("count"),
+        "usable_rate": (m.get("usable") or {}).get("rate"),
+        "usable_weighted": (m.get("usable") or {}).get("weighted"),
+        "leader_crossings": m["leaders"]["crossings"],
         "leader_rate": m["leaders"]["rate"], "ambiguity_rate": m["ambiguity"]["rate"],
         "adjacent_gap_abs_mean": m["shape"]["adjacent_gap_abs_mean"], "internal_rate": m["shape"]["internal_rate"],
+        "region_coverage": (m.get("spread") or {}).get("region_coverage"),
         "position_rank_mean": m["position"]["rank_mean"], "priority_inversions": m["priority"]["inversions"],
         "prefix_rate": m["priority"]["prefix_rate"], "ndcg_at_k": m["priority"]["ndcg_at_k"],
         "coverage_satisfaction": (m["priority"]["coverage"] or {}).get("satisfaction"),
