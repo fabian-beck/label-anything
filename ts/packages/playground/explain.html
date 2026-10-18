@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How Label Anything Works</title>
+<meta name="description" content="Step through a real solve of the Label Anything engine: candidate positions and their costs, the greedy pass, the degradation ladder, local search and the final checks.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='9' width='20' height='11' rx='2' fill='%233949ab'/%3E%3Cpath d='M23 20l5 6' stroke='%233949ab' stroke-width='2.5' stroke-linecap='round'/%3E%3Ccircle cx='28' cy='26' r='2.5' fill='%233949ab'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="explain.css">
+<script type="module" src="explain.js"></script>
+</head>
+<body class="xp-body">
+<header class="top">
+  <a class="brand" href="../" title="Label Anything documentation">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="9" width="20" height="11" rx="2"/><path d="M23 20l5 6"/><circle cx="28" cy="26" r="2.5"/></svg>
+    <span>Label Anything</span>
+  </a>
+  <span class="product">How it works</span>
+  <nav class="scenes" id="scenes" aria-label="Scenes"></nav>
+  <div class="top-end">
+    <a class="toplink" href="./">Playground</a>
+    <a class="toplink" href="../concepts/candidates/">Docs</a>
+    <a class="toplink" href="https://github.com/fabian-beck/label-anything">GitHub</a>
+  </div>
+</header>
+<main class="xp">
+  <section class="xp-stage" aria-label="Drawing">
+    <div class="xp-canvas-wrap">
+      <canvas id="stage" tabindex="0" aria-label="The drawing after the current step"></canvas>
+      <div class="hud xp-legend" id="legend"></div>
+      <div class="hud xp-zoom" id="zoom"></div>
+      <div class="xp-tip" id="tip" hidden></div>
+      <div class="banner" id="banner" hidden></div>
+    </div>
+    <div class="xp-bar">
+      <div class="xp-transport" id="transport"></div>
+      <canvas class="xp-timeline" id="timeline" aria-label="Timeline of the solve: drag to move through the steps"></canvas>
+    </div>
+  </section>
+  <aside class="panel xp-panel" aria-label="Explanation">
+    <section class="xp-now" id="now" aria-live="polite">
+      <div class="xp-phase" id="phase"></div>
+      <h2 id="title"></h2>
+      <div class="xp-story" id="story"></div>
+      <div class="xp-details" id="details"></div>
+    </section>
+    <section class="xp-item" id="item" aria-label="The item you follow"></section>
+    <details class="section" open>
+      <summary>Scene <span class="busy" id="busy" title="solving"></span></summary>
+      <div class="body">
+        <p class="about" id="about"></p>
+        <div class="xp-opts" id="opts-scene"></div>
+      </div>
+    </details>
+    <details class="section">
+      <summary>Algorithm options</summary>
+      <div class="body"><p class="note">Each option is a field of the problem; the engine solves again at once.</p><div class="xp-opts" id="opts-algo"></div></div>
+    </details>
+    <details class="section">
+      <summary>Problem JSON</summary>
+      <div class="body"><pre class="xp-json" id="problem-json"></pre></div>
+    </details>
+    <footer class="credits">
+      <p id="verdict"></p>
+      <p>Every step is a decision of the real solver, recorded while it ran (<code>placeTraced</code>); nothing is simulated. <span id="credits"></span></p>
+    </footer>
+  </aside>
+</main>
+<noscript><p class="noscript">This page needs JavaScript.</p></noscript>
+</body>
+</html>
