@@ -21,7 +21,7 @@ import {
 } from "../env.js";
 import { Affine, P, Rect, bboxOf } from "../geom/index.js";
 import { PathError, flatten } from "../geom/path.js";
-import { convexHull, polylabel } from "../geom/polygon.js";
+import { convexHull, orientHoles, polylabel } from "../geom/polygon.js";
 import { Shape } from "../geom/shape.js";
 import { asArray, asBool, asF64, asI64, asStr, asU64, at, get, isObject, items as itemsOf, parseRustF64 } from "../json.js";
 import { clampf, maxf, minf } from "../math.js";
@@ -1228,6 +1228,7 @@ export function markShape(
       const pv = get(m, "points");
       const rings: P[][] = [pointsOf(pv === undefined ? null : pv).map(map)];
       for (const h of itemsOf(get(m, "holes"))) rings.push(pointsOf(h).map(map));
+      orientHoles(rings);
       return [Shape.polygon(rings, false, atp), false];
     }
     case "path": {
@@ -1379,6 +1380,7 @@ function buildItem(
     const pv = get(anchorV, "polygon");
     const rings: P[][] = [pointsOf(pv === undefined ? null : pv).map((p) => toPx.apply(p))];
     for (const h of itemsOf(get(anchorV, "holes"))) rings.push(pointsOf(h).map((p) => toPx.apply(p)));
+    orientHoles(rings);
     const [pole, poleDist] = polylabel(rings, false, 0.5);
     const areaShape = Shape.polygon(rings, false, pole);
     const dotV = get(anchorV, "dot");

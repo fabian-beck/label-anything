@@ -57,11 +57,11 @@ int main(void) {
         rgba[4 * i + 3] = 255;
     }
     const char *over_pixels =
-        "{\"obstacles\": {\"raster\": {\"source\": \"host\", \"mode\": \"ink\"}},"   /* options for the pixels */
+        "{\"obstacles\": {\"raster\": {\"source\": \"host\", \"mode\": \"ink\"}},"   /* options for the pixels; source not read */
         " \"avoid\": {\"label\": {\"ink\": \"hard\"}}, \"items\": [{\"id\": \"p\","
         " \"anchor\": {\"type\": \"point\", \"x\": 200, \"y\": 150}, \"label\": {\"type\": \"text\", \"text\": \"Next to the band\"}}]}";
-    rc = la_place_json(over_pixels, rgba, W, H, &result);   /* the pixels are read, not copied through JSON */
-    free(rgba);
+    rc = la_place_json(over_pixels, rgba, W, H, &result);   /* by pointer: no PNG, no base64 */
+    free(rgba);                                 /* the library keeps no pointer to it */
     /* --8<-- [end:pixels] */
     CHECK(rc == LA_OK && strstr(result, "\"placed\":true") != NULL);
     printf("%s\nlabel-anything %s: ok\n", result, la_version());

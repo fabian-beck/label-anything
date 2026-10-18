@@ -40,10 +40,14 @@ pub struct PlaceError {
     pub errors: Vec<Issue>,
 }
 
+/// One line per error (`pointer code: message`), without a trailing newline.
 impl std::fmt::Display for PlaceError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for e in &self.errors {
-            writeln!(
+        for (k, e) in self.errors.iter().enumerate() {
+            if k > 0 {
+                writeln!(f)?;
+            }
+            write!(
                 f,
                 "{} {}: {}",
                 if e.pointer.is_empty() {

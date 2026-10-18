@@ -16,7 +16,7 @@ native Rust build: the test suite compares every conformance problem with the CL
 npm install @label-anything/wasm
 ```
 
-The package contains the compiled module (`wasm/label_anything_bg.wasm`, about 950 KB
+The package contains the compiled module (`wasm/label_anything_bg.wasm`, about 980 KB
 gzip), the wasm-bindgen glue (`wasm/label_anything.js`) and the TypeScript wrapper
 (`dist/`). It depends on `@label-anything/core` for its type declarations only; no
 JavaScript of that package is loaded.
@@ -149,10 +149,11 @@ Sizes of `label_anything_bg.wasm` (wasm-bindgen output without name section; gzi
 
 | Variant | How to build | raw | gzip | brotli |
 |---|---|---:|---:|---:|
-| **default**: full shaping + SVG + image decoders | `npm run build:wasm` | 2,554 KB ⁴ | **969 KB** ⁴ | 720 KB ⁴ |
-| lite: no image decoders | `npm run build:wasm -- --no-default-features` | 2,087 KB | 784 KB | 581 KB |
-| default, opt-level "s" everywhere | `npm run build:wasm -- --core-opt-level s` | 2,365 KB | 873 KB | 648 KB |
-| lite, opt-level "s" everywhere | `… -- --no-default-features --core-opt-level s` | 1,938 KB | 711 KB | 527 KB |
+| **default**: full shaping + SVG + image decoders | `npm run build:wasm` | 2,575 KB ⁵ | **982 KB** ⁵ | 734 KB ⁵ |
+| lite: no image decoders | `npm run build:wasm -- --no-default-features` | 2,097 KB ⁵ | 802 KB ⁵ | 600 KB ⁵ |
+| default, "s" instead of "z" (the former default) | `npm run build:wasm -- --opt-level s` | 2,627 KB ⁵ | 999 KB ⁵ | 741 KB ⁵ |
+| default, opt-level "s" everywhere | `npm run build:wasm -- --opt-level s --core-opt-level s` | 2,365 KB | 873 KB | 648 KB |
+| lite, opt-level "s" everywhere | `… -- --no-default-features --opt-level s --core-opt-level s` | 1,938 KB | 711 KB | 527 KB |
 | default, opt-level 3 everywhere | `npm run build:wasm -- --opt-level 3` | 2,782 KB | 1,019 KB | 740 KB |
 | without full shaping ¹ ² | needs a `la-core` feature | 1,948 KB | 731 KB | 552 KB |
 | without full shaping and decoders ¹ ² | needs a `la-core` feature | 1,520 KB | 566 KB | 429 KB |
@@ -166,19 +167,24 @@ SVG backend (`la-svg`) are compiled into `la-core` unconditionally today. ² At 
 rows predate that change). ⁴ With font classes and fan labels, after the solver crate's
 sorts were reduced to one copy of the standard library's sort per element type (its 27
 call sites had one each, 35 KB gzip; native builds are unchanged, see
-`la-core/src/sort.rs`).
+`la-core/src/sort.rs`). ⁵ With opt-level "z" for the crates that do not run hot (below);
+brotli measured with Node's `zlib`.
 
 What the optional parts cost (gzip): full shaping (rustybuzz + ttf-parser, used for
 complex scripts when `text.shaping` is `auto` or `full`) 212 KB, PNG/JPEG/WebP decoding
 164 KB, the SVG backend 66 KB, opt-level 3 for the solver crate 74 KB. The default keeps
 everything the native facade has, so a problem that places natively places here too, and
 stays below 1 MB gzip. It compiles the solver crate (`label-anything-core`) and the
-raster pipeline (`label-anything-raster`) at opt-level 3 and everything else for size
-("s"): that is as fast as opt-level 3 everywhere (which is just over 1 MB) and 9–16 %
-faster than "s" everywhere (A/B on p200, p2000 and the local-search sample
-`priority-prefix.json`); with the raster crate at "s", preparing a 2048² raster background
-took 2.3 times as long (88 instead of 38 ms). opt-level "z" is 11 % smaller than "s" but
-about half as fast. `wasm-opt` is not used: it made the module smaller raw, not gzip.
+raster pipeline (`label-anything-raster`) at opt-level 3: that is as fast as opt-level 3
+everywhere (which is just over 1 MB) and 9–16 % faster than "s" everywhere (A/B on p200,
+p2000 and the local-search sample `priority-prefix.json`); with the raster crate at "s",
+preparing a 2048² raster background took 2.3 times as long (88 instead of 38 ms). JSON
+parsing (`serde_json`), the SVG backend, text layout and the image decoders get "s", the
+rest "z": as fast as "s" for all of them (within noise, on the problems of the speed
+table below, raster backgrounds and 2048² JPEG/PNG/WebP sources) and 17 KB smaller.
+With these crates at "z" as well it is another 18 KB smaller, but decoding WebP takes
+1.5 times as long and problems with SVG backgrounds or large JSON 8–12 % longer.
+`wasm-opt` is not used: it made the module smaller raw, not gzip.
 In browsers, a `measure` callback covers complex scripts without full shaping.
 
 Raster pixels (`options.raster`, `obstacles.raster.rgba`) work in every variant; in
@@ -228,9 +234,10 @@ Passing pixels avoids the base64 decode of the JSON route (another 60–100 ms h
 2.2 times as long as later ones: fresh memory, cold caches); the rest is V8, which
 compiles functions lazily with its baseline compiler and optimizes hot ones in the
 background, while a long call keeps running baseline code in its outermost loops.
-Instantiation takes about 10 ms. Chrome caches the optimized code of modules loaded with
-`instantiateStreaming` for later page loads; a short warm-up solve after `init()` also
-helps a little.
+Growing the memory in large steps (see Limitations) took the first p2000 call from 1.0 to
+0.7 s on a later commit. Instantiation takes about 10 ms. Chrome caches the optimized
+code of modules loaded with `instantiateStreaming` for later page loads; a short warm-up
+solve after `init()` also helps a little.
 
 `npm run bench -w @label-anything/wasm -- problem.json…` reproduces the WebAssembly side.
 
@@ -258,7 +265,8 @@ checks the size budget (gzip < 1 MB) and runs the smoke test in Chromium.
 The WebAssembly build uses its own Cargo profile (`wasm-release`, passed with `--config`:
 fat LTO, one codegen unit), so it does not invalidate native release builds. Options of
 `scripts/build-wasm.mjs`: `--no-default-features`, `--features …`, `--opt-level` (default
-`s`), `--core-opt-level` (default `3`), `--keep-names` (keep the name section for
+`z`; the hot crates named in the script get "s" then, else the same level),
+`--core-opt-level` (default `3`), `--keep-names` (keep the name section for
 profiling). Without `wasm/`, the WebAssembly tests are skipped with a warning (they fail
 instead when `LA_WASM_REQUIRED` is set, as in CI).
 
@@ -294,6 +302,10 @@ Tests (`ts/packages/wasm-adapter/test`):
 * The first `place` call after instantiation is slower than later ones because V8
   compiles the module lazily and optimizes hot functions while they run; see Performance.
 * WebAssembly memory grows to the peak need of the largest solve and is not returned to
-  the system until the instance is dropped (a reset after a panic or a page reload).
+  the system until the instance is dropped (a reset after a panic or a page reload). It
+  grows in steps of half its size (at most 64 MiB): V8 runs a full garbage collection on
+  every growth, and growing by what each allocation needed made the first solve of 20,000
+  items take 6.4 instead of 1.4 s (437 collections instead of 6), for up to 15 % more
+  memory (321 instead of 278 MB there).
 * No file access except through `readFile`; no system fonts (only the bundled Noto Sans
   metrics, font files via `readFile` or data URLs, or a `measure` callback).

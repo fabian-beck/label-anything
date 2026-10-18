@@ -1,6 +1,6 @@
 [package]
 name = "label-anything-capi"
-description = "C ABI of Label Anything (label placement): JSON in, JSON out, plus a zero-copy raster entry point."
+description = "C ABI of Label Anything (label placement): JSON in, JSON out, plus raster pixels by pointer (no PNG or base64 encoding)."
 version.workspace = true
 edition.workspace = true
 license.workspace = true

@@ -164,12 +164,50 @@ function render(path: Path): string {
   return out;
 }
 
+/**
+ * The known property `k` was most likely meant as: equal up to ASCII case, `_` and `-`,
+ * else within an edit distance of a third of its length (at least 1); ties go to the
+ * alphabetically first.
+ */
+function suggest(k: string, known: readonly string[]): string | null {
+  const norm = (s: string): string[] => Array.from(s.replace(/[_-]/g, "").replace(/[A-Z]/g, (c) => c.toLowerCase()));
+  const a = norm(k);
+  const limit = Math.max(Math.trunc(a.length / 3), 1);
+  let best: [number, string] | null = null;
+  for (const cand of known) {
+    const d = editDistance(a, norm(cand));
+    if (d <= limit && (best === null || d < best[0] || (d === best[0] && cand < best[1]))) best = [d, cand];
+  }
+  return best === null ? null : best[1];
+}
+
+/**
+ * Edit distance of two code point sequences: insertions, deletions, substitutions and
+ * swaps of two neighbours (`widht`) cost 1 (optimal string alignment).
+ */
+function editDistance(a: readonly string[], b: readonly string[]): number {
+  const w = b.length + 1;
+  const d: number[] = new Array<number>((a.length + 1) * w).fill(0);
+  for (let j = 0; j < w; j++) d[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    d[i * w] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] !== b[j - 1] ? 1 : 0;
+      let v = Math.min(d[(i - 1) * w + j - 1]! + cost, d[(i - 1) * w + j]! + 1, d[i * w + j - 1]! + 1);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) v = Math.min(v, d[(i - 2) * w + j - 2]! + 1);
+      d[i * w + j] = v;
+    }
+  }
+  return d[a.length * w + b.length]!;
+}
+
 function typeName(v: unknown): string {
   switch (typeof v) {
     case "boolean":
       return "boolean";
     case "number":
-      return "number";
+      // NaN and ±Infinity are no JSON numbers (JSON.stringify writes null)
+      return Number.isFinite(v) ? "number" : String(v);
     case "string":
       return "string";
     case "object":
@@ -185,7 +223,7 @@ function typeIs(t: string, v: unknown): boolean {
       // `v.as_f64().map(|f| f.fract() == 0.0)`: also true for serde_json floats like 1.0
       return typeof v === "number" && Number.isInteger(v);
     case "number":
-      return typeof v === "number";
+      return typeof v === "number" && Number.isFinite(v);
     default:
       return typeName(v) === t;
   }
@@ -454,7 +492,11 @@ class Interp {
         }
       }
       if (!found) {
-        sink.err(ptr, "enum", () => `must be one of ${e.map((x) => short(x)).join(", ")}`);
+        sink.err(ptr, "enum", () => {
+          const list = e.map((x) => short(x)).join(", ");
+          const near = typeof v === "string" ? suggest(v, e.filter((x): x is string => typeof x === "string")) : null;
+          return near !== null ? `must be one of ${list} (did you mean "${near}"?)` : `must be one of ${list}`;
+        });
         if (sink.failed()) return evaluated;
       }
     }
@@ -558,7 +600,10 @@ class Interp {
           if (val === undefined) continue;
           if (props !== null && hasOwnProperty.call(props, k)) continue;
           if (ap === false) {
-            sink.err(keyPath(ptr, k), "unknown_property", () => `unknown property '${k}'`);
+            sink.err(keyPath(ptr, k), "unknown_property", () => {
+              const s = suggest(k, props !== null ? Object.keys(props) : []);
+              return s !== null ? `unknown property '${k}' (did you mean '${s}'?)` : `unknown property '${k}'`;
+            });
           } else {
             this.check(ap, val, keyPath(ptr, k), false, false, sink);
           }
@@ -716,6 +761,14 @@ function bestAlternative(results: Issue[][], ptr: string): Issue[] {
   let b0 = 0;
   let b1 = 0;
   let b2 = 0;
+  // the types of the alternatives that failed on the value's type alone
+  const otherTypes: string[] = [];
+  for (const errs of results) {
+    const e = errs.length === 1 ? errs[0]! : null;
+    if (e === null || e.pointer !== ptr || e.code !== "type" || !e.message.startsWith("expected ")) continue;
+    const at = e.message.indexOf(", got ");
+    if (at >= 0) otherTypes.push(e.message.slice("expected ".length, at));
+  }
   for (const errs of results) {
     const rootType = errs.some((e) => e.pointer === ptr && e.code === "type") ? 1 : 0;
     const disc = errs.some(
@@ -731,7 +784,24 @@ function bestAlternative(results: Issue[][], ptr: string): Issue[] {
       b2 = n;
     }
   }
-  return best ?? [];
+  const out = best ?? [];
+  // a value outside an enum, where other alternatives take other types: name them too
+  // (`must be one of "hard", "ignore", or a number`)
+  if (out.length === 1 && out[0]!.pointer === ptr && out[0]!.code === "enum") {
+    const e = out[0]!;
+    for (const t of otherTypes) {
+      const at = e.message.indexOf(" (did you mean");
+      e.message =
+        at >= 0 ? `${e.message.slice(0, at)}, or ${withArticle(t)}${e.message.slice(at)}` : `${e.message}, or ${withArticle(t)}`;
+    }
+  }
+  return out;
+}
+
+/** `a number`, `an integer`, `null`. */
+function withArticle(t: string): string {
+  if (t === "null") return t;
+  return /^[aeiou]/.test(t) ? `an ${t}` : `a ${t}`;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -863,6 +933,35 @@ function semantic(p: unknown, errors: Issue[], warnings: Issue[]): void {
         if (typeof k === "string" && !known.has(k)) {
           warnings.push(new Issue(`/avoid/relaxable/${i}`, "unknown_class", `class '${k}' is not produced by any obstacle source`));
         }
+      }
+    }
+  }
+  // degradation steps: name the steps instead of quoting the pattern
+  const steps = ["alternatives", "wrap", "truncate", "distant", "boundary", "evict_lower", "soft_overlap", "omit"];
+  const degrade = getKey(root, "degrade");
+  for (const e of errors) {
+    if (!e.pointer.startsWith("/degrade/") || e.code !== "pattern" || e.pointer.indexOf("/", "/degrade/".length) >= 0) continue;
+    const step = Array.isArray(degrade) ? degrade[Number(e.pointer.slice("/degrade/".length))] : undefined;
+    if (step === undefined) continue;
+    const s = typeof step === "string" ? step : "";
+    if (s.startsWith("shrink")) {
+      e.message = `${short(step)}: shrink needs a factor f with 0 < f ≤ 1, e.g. "shrink:0.85"`;
+    } else {
+      const near = suggest(s, steps);
+      const hint = near !== null ? ` (did you mean "${near}"?)` : "";
+      e.message = `unknown step ${short(step)}${hint}: the steps are ${steps.join(", ")}, and shrink:f with 0 < f ≤ 1`;
+    }
+  }
+  // priority terms on attributes that no item has → warnings (the term is 0 everywhere)
+  const terms = getKey(getKey(root, "priority"), "terms");
+  if (Array.isArray(terms)) {
+    const has = (name: string): boolean => items !== null && items.some((it) => getKey(getKey(it, "attrs"), name) !== undefined);
+    for (let i = 0; i < terms.length; i++) {
+      const name = getKey(terms[i], "attr");
+      if (typeof name === "string" && !has(name)) {
+        warnings.push(
+          new Issue(`/priority/terms/${i}/attr`, "unknown_attr", `no item has the attribute '${name}' (in attrs): the term is 0 for every item`),
+        );
       }
     }
   }

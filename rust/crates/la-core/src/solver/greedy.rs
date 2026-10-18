@@ -90,12 +90,23 @@ pub fn run(s: &mut Solve) {
         }
         g.set_members.push(set);
     }
+    // the guard runs from the start of this pass: preparation always completes, and its
+    // time must not leave the most important bands unplaced (ADR 0042)
     let budget_guard = s.model.solver.time_budget_ms * 10.0;
+    let started = s.now();
     if s.model.omission == Omission::Prefix {
         let order = s.pri.order.clone();
         let mut cut = false;
-        for &i in &order {
+        for (k, &i) in order.iter().enumerate() {
             if g.done[i] {
+                continue;
+            }
+            if !cut && k % 64 == 63 && guard_passed(s, started, budget_guard) {
+                s.time_guard_hit = true;
+            }
+            if s.time_guard_hit {
+                g.done[i] = true;
+                s.reasons[i] = Some(Reason::BudgetExhausted);
                 continue;
             }
             if cut || g.cap_reached {
@@ -124,7 +135,7 @@ pub fn run(s: &mut Solve) {
         s.env
             .progress("greedy", (r - band.len()) as f64 / order.len() as f64);
         let cancelled = s.poll_cancel();
-        if cancelled || s.time_guard_hit || (s.now() - s.start_ms > budget_guard && s.now() > 0.0) {
+        if cancelled || s.time_guard_hit || guard_passed(s, started, budget_guard) {
             s.time_guard_hit |= !cancelled;
             for &i in &band {
                 if !g.done[i] {
@@ -138,11 +149,24 @@ pub fn run(s: &mut Solve) {
         let capped = cap_may_hit(s, &band);
         let mut deferred: Vec<usize> = Vec::new();
         if capped {
-            for &i in &band {
-                if !g.done[i] {
-                    process_unit(s, &mut g, i, true);
+            for (k, &i) in band.iter().enumerate() {
+                if g.done[i] {
+                    continue;
                 }
+                if k % 64 == 63 && guard_passed(s, started, budget_guard) {
+                    s.time_guard_hit = true;
+                    break;
+                }
+                if label_cap_reached(s) {
+                    // nothing later in the total order can be placed: evict_lower only
+                    // evicts lower keys, and none is placed yet
+                    g.done[i] = true;
+                    s.reasons[i] = Some(Reason::OmittedByPriority);
+                    continue;
+                }
+                process_unit(s, &mut g, i, true);
             }
+            exhaust(s, &mut g, &band);
             continue;
         }
         // warm start: labels placed in the previous solve keep their position when it is
@@ -187,8 +211,14 @@ pub fn run(s: &mut Solve) {
                 continue;
             }
             popped += 1;
-            if popped.is_multiple_of(64) && s.poll_cancel() {
-                break;
+            if popped.is_multiple_of(64) {
+                if s.poll_cancel() {
+                    break;
+                }
+                if guard_passed(s, started, budget_guard) {
+                    s.time_guard_hit = true;
+                    break;
+                }
             }
             if !process_unit(s, &mut g, i, false) && !g.done[i] {
                 g.tried0[i] = true;
@@ -198,18 +228,41 @@ pub fn run(s: &mut Solve) {
         g.band_key = None;
         // ladder pass in total order
         crate::sort::sort_by_key(&mut deferred, |&i| s.pri.prio[i].rank);
-        for i in deferred {
-            if !g.done[i] && !s.poll_cancel() {
-                process_unit(s, &mut g, i, true);
+        for (k, &i) in deferred.iter().enumerate() {
+            if s.time_guard_hit || g.done[i] || s.poll_cancel() {
+                continue;
             }
+            if k % 64 == 63 && guard_passed(s, started, budget_guard) {
+                s.time_guard_hit = true;
+                continue;
+            }
+            process_unit(s, &mut g, i, true);
         }
-        if s.cancelled {
-            for &i in &band {
-                if !g.done[i] && s.state.placed[i].is_none() {
-                    g.done[i] = true;
-                    s.reasons[i] = Some(Reason::BudgetExhausted);
-                }
-            }
+        exhaust(s, &mut g, &band);
+    }
+}
+
+/// Whether the greedy guard has passed: `guard` ms after `started` (ADR 0042; never
+/// without a clock).
+fn guard_passed(s: &Solve, started: f64, guard: f64) -> bool {
+    s.now() > 0.0 && s.now() - started > guard
+}
+
+/// Whether `priority.budget.max_labels` labels are placed.
+fn label_cap_reached(s: &Solve) -> bool {
+    s.model.max_labels.is_some_and(|m| s.state.n_placed >= m)
+}
+
+/// After a cancellation or the time guard, the band's undecided items are
+/// `budget_exhausted`.
+fn exhaust(s: &mut Solve, g: &mut Greedy, band: &[usize]) {
+    if !(s.cancelled || s.time_guard_hit) {
+        return;
+    }
+    for &i in band {
+        if !g.done[i] && s.state.placed[i].is_none() {
+            g.done[i] = true;
+            s.reasons[i] = Some(Reason::BudgetExhausted);
         }
     }
 }

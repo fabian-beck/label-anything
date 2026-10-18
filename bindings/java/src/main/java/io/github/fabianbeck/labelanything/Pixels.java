@@ -6,9 +6,9 @@ import java.util.Objects;
 
 /**
  * Raw RGBA8 pixels (row-major, straight alpha) handed to the native library through the
- * pointer entry point of {@code la_place_json}: a direct buffer is passed in place
- * (zero-copy); a heap array is passed as a region (JNI) or copied once into native memory
- * (FFM).
+ * pointer entry point of {@code la_place_json}, without encoding them as PNG or base64: a
+ * direct buffer is passed in place; a heap array is passed as a region (JNI) or copied once
+ * into native memory (FFM). The native library copies the pixels into its image.
  */
 final class Pixels {
   final int width;

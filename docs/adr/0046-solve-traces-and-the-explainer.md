@@ -1,4 +1,4 @@
-# 0041 — Solve traces and an explainer of the algorithm
+# 0046 — Solve traces and an explainer of the algorithm
 
 * Status: accepted (TypeScript `@label-anything/core` `placeTraced`, `ts/packages/playground` `explain.html`)
 * Date: 2026-10-18

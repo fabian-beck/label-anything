@@ -2,12 +2,14 @@
 
 Terms combine with ``+`` and ``-`` and scale with a number::
 
-    la.Priority.outlierness(k=5) + 0.5 * la.Priority.attr("cbo", "log1p") \\
+    la.Priority.outlierness(k=5) + 0.5 * la.Priority.attr("cbo", "log1p", normalize="minmax") \\
         - 0.2 * la.Priority.label_size()
 
 gives the terms ``outlierness(k=5)`` (weight 1), ``attr cbo`` with ``log1p`` (weight 0.5)
 and ``label_size`` (weight -0.2). Each term's raw value is transformed, normalized over
-all items (``rank`` by default) and weighted; the item's score is the sum.
+all items (``rank`` by default, ``minmax`` or ``none``) and weighted; the item's score is
+the sum. Under ``rank`` only the order of a term's values counts, so a monotonic
+transform (``log1p``, ``sqrt``) changes the scores only with ``minmax`` or ``none``.
 """
 
 from __future__ import annotations
@@ -122,7 +124,8 @@ class Priority:
         *,
         normalize: Optional[str] = None,
     ) -> Priority:
-        """An item attribute (``item.attrs[name]``), e.g. ``attr("cbo", "log1p")``."""
+        """An item attribute (``item.attrs[name]``), e.g.
+        ``attr("pop", "log1p", normalize="minmax")``."""
         return cls(((_term("attr", name, transform=transform, normalize=normalize), 1.0),))
 
     @classmethod

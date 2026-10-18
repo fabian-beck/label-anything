@@ -1,0 +1,56 @@
+{
+  "kind": "place",
+  "name": "the wrap step never strands a line narrower than 1.5 em (France / 3)",
+  "problem": {
+    "canvas": {
+      "width": 50,
+      "height": 200
+    },
+    "degrade": [
+      "wrap",
+      "omit"
+    ],
+    "items": [
+      {
+        "id": "sa",
+        "anchor": {
+          "type": "point",
+          "x": 25,
+          "y": 50
+        },
+        "label": {
+          "type": "text",
+          "text": "Saudi Arabia"
+        }
+      },
+      {
+        "id": "fr",
+        "anchor": {
+          "type": "point",
+          "x": 25,
+          "y": 150
+        },
+        "label": {
+          "type": "text",
+          "text": "France 3"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "text_lines": {
+      "sa": [
+        "Saudi",
+        "Arabia"
+      ]
+    },
+    "reasons": {
+      "fr": "no_feasible_candidate"
+    }
+  }
+}

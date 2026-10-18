@@ -99,7 +99,7 @@ export class Solve {
   timeGuardHit = false;
   /** The host cancelled the solve (sticky once seen; see {@link pollCancel}). */
   cancelled = false;
-  /** Observer of the solver's decisions (TypeScript only, ADR 0041); null: not traced. */
+  /** Observer of the solver's decisions (TypeScript only, ADR 0046); null: not traced. */
   trace: Tracer | null = null;
   /** Static cost evaluation (scratch buffers). */
   readonly evaluator: Evaluator;

@@ -1,0 +1,157 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 400,
+      "height": 200
+    },
+    "items": [
+      {
+        "id": "p",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Paris\n2.1M"
+        }
+      },
+      {
+        "id": "c",
+        "anchor": {
+          "type": "point",
+          "x": 300,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Line one\r\nLine two"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "p",
+        "placed": true,
+        "box": {
+          "x": 84.286,
+          "y": 62.656000000000006,
+          "w": 31.427999999999997,
+          "h": 34.343999999999994
+        },
+        "anchor": [
+          100.0,
+          100.0
+        ],
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Paris",
+            "2.1M"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628,
+            29.028
+          ],
+          "line_widths": [
+            27.792,
+            27.828
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.024999999999999998,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "c",
+        "placed": true,
+        "box": {
+          "x": 274.134,
+          "y": 62.656000000000006,
+          "w": 51.73199999999997,
+          "h": 34.343999999999994
+        },
+        "anchor": [
+          300.0,
+          100.0
+        ],
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Line one",
+            "Line two"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628,
+            29.028
+          ],
+          "line_widths": [
+            48.132,
+            47.712
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.024999999999999998,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 1
+        }
+      }
+    ],
+    "stats": {
+      "placed": 2,
+      "total": 2,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 800,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 80,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.049999999999999996,
+      "degraded": {
+        "wrapped": 2
+      },
+      "grid": {
+        "cell": 3.0,
+        "cols": 134,
+        "rows": 67,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

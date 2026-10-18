@@ -10,7 +10,7 @@ the problem format in a panel. Published with the documentation site at
 its decisions while it solves (`placeTraced`), and the page replays them — candidates and
 their costs, the greedy pass, the ladder, every local-search move, the repairs and the
 verification — on four small scenes whose marks can be dragged ([ADR
-0041](../../../docs/adr/0041-solve-traces-and-the-explainer.md)).
+0046](../../../docs/adr/0046-solve-traces-and-the-explainer.md)).
 
 ## Run it locally
 

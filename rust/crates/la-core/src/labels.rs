@@ -24,35 +24,34 @@ pub fn user_fonts(
     let mut book: Option<FontBook> = None;
     let mut loaded: Vec<(String, String)> = Vec::new(); // (file, family)
     for (i, item) in model.items.iter_mut().enumerate() {
-        let crate::model::Item { font, label, .. } = item;
-        let mut fonts: Vec<&mut FontSel> = vec![font];
+        let crate::model::Item {
+            font, label, raw, ..
+        } = item;
+        // (composite part index, font)
+        let mut fonts: Vec<(Option<usize>, &mut FontSel)> = vec![(None, font)];
         match label {
-            LabelSpec::Text(t) => fonts.push(&mut t.font),
+            LabelSpec::Text(t) => fonts.push((None, &mut t.font)),
             LabelSpec::Composite { parts, .. } => {
-                for p in parts.iter_mut() {
+                for (k, p) in parts.iter_mut().enumerate() {
                     if let PartSpec::Text(t) = p {
-                        fonts.push(&mut t.font);
+                        fonts.push((Some(k), &mut t.font));
                     }
                 }
             }
             _ => {}
         }
-        for f in fonts {
+        for (part, f) in fonts {
             let Some(file) = f.file.clone() else { continue };
             if let Some((_, fam)) = loaded.iter().find(|(fl, _)| *fl == file) {
                 f.family = fam.clone();
                 continue;
             }
+            let ptr = font_file_ptr(raw, i, part, &file);
             let bytes = if file.starts_with("data:") {
-                crate::model::data_url_bytes(&file).ok_or_else(|| {
-                    (
-                        format!("/items/{i}/label/font/file"),
-                        "invalid data URL".to_string(),
-                    )
-                })?
+                crate::model::data_url_bytes(&file)
+                    .ok_or_else(|| (ptr.clone(), "invalid data URL".to_string()))?
             } else {
-                env.read_file(&file)
-                    .map_err(|e| (format!("/items/{i}/label/font/file"), e))?
+                env.read_file(&file).map_err(|e| (ptr.clone(), e))?
             };
             let family = if f.family.eq_ignore_ascii_case("default") {
                 format!("user-font-{}", loaded.len())
@@ -61,12 +60,28 @@ pub fn user_fonts(
             };
             let b = book.get_or_insert_with(FontBook::with_bundled);
             b.register(&family, f.weight, f.italic, bytes)
-                .map_err(|e| (format!("/items/{i}/label/font/file"), format!("{e:?}")))?;
+                .map_err(|e| (ptr, e.to_string()))?;
             f.family = family.clone();
             loaded.push((file, family));
         }
     }
     Ok(book)
+}
+
+/// Where the font file of item `i` (of its composite part `part`) is set: the part's or
+/// the label's `font.file` when it names `file`, else `defaults.font.file`.
+fn font_file_ptr(raw: &serde_json::Value, i: usize, part: Option<usize>, file: &str) -> String {
+    let names =
+        |v: &serde_json::Value| v.pointer("/font/file").and_then(|f| f.as_str()) == Some(file);
+    if let Some(k) = part {
+        if raw.pointer(&format!("/label/parts/{k}")).is_some_and(names) {
+            return format!("/items/{i}/label/parts/{k}/font/file");
+        }
+    }
+    if raw.get("label").is_some_and(names) {
+        return format!("/items/{i}/label/font/file");
+    }
+    "/defaults/font/file".to_string()
 }
 
 /// Text measurement with the host callback first, then the font book.
@@ -268,6 +283,19 @@ fn to_wrap_opts(spec: &TextSpec, scale: f64) -> Option<WrapOptions> {
     })
 }
 
+/// The lines of a text broken by line feeds (hard breaks, spec §5.3; a `\r` before a
+/// line feed is dropped), or `None` when it has none.
+fn hard_lines(text: &str) -> Option<Vec<String>> {
+    if !text.contains('\n') {
+        return None;
+    }
+    Some(
+        text.split('\n')
+            .map(|l| l.strip_suffix('\r').unwrap_or(l).to_string())
+            .collect(),
+    )
+}
+
 /// Normal-level variants of one text (original or alternative).
 fn text_variants(
     m: &Measurer,
@@ -305,6 +333,10 @@ fn text_variants(
             scale,
         }];
     }
+    if let Some(lines) = hard_lines(text) {
+        // the author's lines: never wrapped or truncated
+        return vec![text_variant(m, spec, pad, scale, lines, used, false)];
+    }
     let measure = |s: &str| m.width(&spec.font, scale, s);
     match to_wrap_opts(spec, scale) {
         None => vec![text_variant(
@@ -338,6 +370,9 @@ fn text_variants(
     }
 }
 
+/// Narrowest line of a `wrap` step variant, in em of the label's font (spec §5.3).
+const MIN_WRAP_LINE_EM: f64 = 1.5;
+
 /// Variants for the `wrap` ladder step.
 fn extra_wrap(
     m: &Measurer,
@@ -348,7 +383,7 @@ fn extra_wrap(
     used: &str,
     wrap_max_lines: usize,
 ) -> Vec<Variant> {
-    if spec.explicit.is_some() {
+    if spec.explicit.is_some() || text.contains('\n') {
         return vec![];
     }
     let width = |s: &str| m.width(&spec.font, scale, s);
@@ -377,8 +412,11 @@ fn extra_wrap(
         }
         None => wrap_max_lines,
     };
+    // no line narrower than MIN_WRAP_LINE_EM: `France / 3` strands the 3 (spec §5.3)
+    let min_line = MIN_WRAP_LINE_EM * spec.font.size * scale;
     la_text::extra_wrap_variants(text, normal_max, measure)
         .into_iter()
+        .filter(|tv| tv.widths.iter().all(|&w| w >= min_line))
         .map(|tv| {
             let mut v = text_variant(m, spec, pad, scale, tv.lines, used, tv.truncated);
             v.penalty += 0.25 * (v.lines() as f64 - 1.0);
@@ -390,7 +428,7 @@ fn extra_wrap(
 
 /// Truncated single-line variants for the `truncate` ladder step.
 fn truncated(m: &Measurer, spec: &TextSpec, text: &str, pad: f64, scale: f64) -> Vec<Variant> {
-    if spec.explicit.is_some() {
+    if spec.explicit.is_some() || text.contains('\n') {
         return vec![];
     }
     let measure = |s: &str| m.width(&spec.font, scale, s);

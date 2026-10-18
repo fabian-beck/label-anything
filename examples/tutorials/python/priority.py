@@ -37,21 +37,23 @@ assert res["Roslin"].blocked_by == ("Achros", "Dorsted"), res["Roslin"]
 assert res.omission_order == sorted((p.id for p in res.unplaced), key=lambda i: pop[i])
 
 # --8<-- [start:terms]
-priority = la.Priority.attr("pop", "log1p") + 0.5 * la.Priority.outlierness() - 0.2 * la.Priority.label_size()
-print(priority.to_terms())   # [{'attr': 'pop', 'transform': 'log1p'}, {'builtin': 'outlierness', 'weight': 0.5}, ...]
+# min-max normalization keeps the log-scaled population's spread (rank keeps only its order)
+priority = (la.Priority.attr("pop", "log1p", normalize="minmax") + 0.5 * la.Priority.outlierness()
+            - 0.2 * la.Priority.label_size())
+print(priority.to_terms())   # [{'attr': 'pop', 'transform': 'log1p', 'normalize': 'minmax'}, ...]
 res = la.place(anchors, names, priority=priority, **common)
 # --8<-- [end:terms]
 assert res.stats["priority_inversions"] == 0 and res.placed[0].priority["terms"], res.placed[0].priority
 
 # --8<-- [start:tiers]
-res = la.place(anchors, names, priority=la.Priority.attr("pop", "log1p"),
+res = la.place(anchors, names, priority=la.Priority.attr("pop"),
                tiers=[("attrs.capital == true", 1)], **common)          # tier 1 outranks tier 0
 print([(p.id, p.placed, p.priority["tier"]) for p in res if p.priority["tier"] == 1])
 # --8<-- [end:tiers]
 assert all(p.placed for p in res if p.priority["tier"] == 1)
 
 # --8<-- [start:coverage]
-res = la.place(anchors, names, priority=la.Priority.attr("pop", "log1p"),
+res = la.place(anchors, names, priority=la.Priority.attr("pop"),
                coverage=("attrs.region", 2), **common)   # >= 2 labels per region while space exists
 by_region = {}
 for p, a in zip(res.placements, attrs):
@@ -113,7 +115,7 @@ res = la.place(anchors, names, priority=importance, **common)
 assert all(p.placed for p, a in zip(res.placements, attrs) if a.get("capital"))
 
 # --8<-- [start:full]
-res = la.place(anchors, names, priority=la.Priority.attr("pop", "log1p"),
+res = la.place(anchors, names, priority=la.Priority.attr("pop"),
                tiers=[("attrs.capital == true", 1)], coverage=("attrs.region", 2), omission="strict", **common)
 # --8<-- [end:full]
 same = la.place_problem(Path("../problems/priority-cities.json"))

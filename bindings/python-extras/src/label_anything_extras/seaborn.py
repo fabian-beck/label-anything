@@ -34,6 +34,13 @@ def _column(data: Any, v: Any, name: str) -> List[Any]:
     return list(v)
 
 
+def _has_column(data: Any, name: str) -> bool:
+    try:
+        return name in data
+    except TypeError:
+        return False
+
+
 def label_points(
     ax: Optional[Axes] = None,
     data: Any = None,
@@ -49,7 +56,8 @@ def label_points(
     ``x``, ``y``, ``label``: column names of ``data`` (a DataFrame or a dict of columns)
     or sequences. ``ax`` defaults to the current axes. ``attrs`` may name columns too:
     ``attrs=["population"]`` puts those columns into each item's ``attrs`` (for
-    ``priority=la.Priority.attr("population")``). Other keywords go to
+    ``priority=la.Priority.attr("population")``); ``priority="population"`` (a column
+    name) adds its column to ``attrs`` by itself. Other keywords go to
     :func:`label_anything_extras.matplotlib.label_points`.
     """
     if ax is None:
@@ -61,7 +69,14 @@ def label_points(
     labels = [str(v) for v in _column(data, label, "label")]
     attrs = opts.get("attrs")
     if isinstance(attrs, Sequence) and not isinstance(attrs, (str, Mapping)) and attrs and all(isinstance(a, str) for a in attrs):
-        opts["attrs"] = {a: _column(data, a, "attrs") for a in attrs}
+        attrs = opts["attrs"] = {a: _column(data, a, "attrs") for a in attrs}
+    # priority="pop" names an attribute: take it from the column of that name
+    prio = opts.get("priority")
+    if isinstance(prio, str) and data is not None and _has_column(data, prio):
+        if attrs is None:
+            opts["attrs"] = {prio: _column(data, prio, "priority")}
+        elif isinstance(attrs, Mapping) and prio not in attrs:
+            opts["attrs"] = {**attrs, prio: _column(data, prio, "priority")}
     if marker_size is None:
         import matplotlib as mpl
 

@@ -21,6 +21,9 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 import label_anything as la
+from label_anything.problem import avoid_dict, merge
+
+from ._defaults import default_avoid
 
 __all__ = ["PlotlyLabels", "label_points"]
 
@@ -121,6 +124,20 @@ def _numeric(seq: Any) -> List[float]:
     return out
 
 
+def _sizes(marker_size: Any, n: int) -> List[float]:
+    """Marker diameters: one number for all points, or one per point (a sequence, NumPy
+    array or pandas Series)."""
+    if isinstance(marker_size, (str, bytes)):
+        raise TypeError(f"marker_size must be a number or one number per point (got {marker_size!r})")
+    try:
+        sizes = [float(s) for s in marker_size]
+    except TypeError:  # a number (also a NumPy scalar or 0-d array)
+        return [float(marker_size)] * n
+    if len(sizes) != n:
+        raise ValueError(f"marker_size has {len(sizes)} values but there are {n} points")
+    return sizes
+
+
 def _fmt(v: float) -> str:
     return repr(round(v, 6))
 
@@ -151,7 +168,9 @@ def label_points(
     * ``marker_size``: marker diameter in px, scalar or one per point (default 6).
     * ``avoid_traces``: other scatter traces on these axes are obstacles.
     * ``add``: add the annotations and shapes to ``fig``.
-    * ``annotation_kw`` / ``line_kw``: extra annotation properties / shape line style.
+    * ``annotation_kw`` / ``line_kw``: extra annotation properties / shape line style; a
+      ``font`` in ``annotation_kw`` is merged into the measured one (``color``,
+      ``family``, ...); a different ``size`` raises ``TypeError`` (use ``font_size``).
     * ``**opts``: keyword options of :func:`label_anything.place`.
     """
     for k in ("canvas", "anchors", "labels", "background"):
@@ -200,9 +219,7 @@ def label_points(
 
     ids_opt = opts.pop("ids", None)
     ids = [str(i) for i in (ids_opt if ids_opt is not None else range(n))]
-    if marker_size is None:
-        marker_size = 6.0
-    sizes = [float(marker_size)] * n if not isinstance(marker_size, Sequence) else [float(s) for s in marker_size]
+    sizes = _sizes(6.0 if marker_size is None else marker_size, n)
     marks = [la.Mark.circle(sizes[i] / 2.0) for i in keep]
 
     def pick(v: Any) -> Any:
@@ -241,6 +258,12 @@ def label_points(
                 lw = _get(t, "line", "width")
                 vector.append({"class": "lines", "polylines": [[list(p) for p in pts]], "width": float(lw) if lw else 2.0})
 
+    avoid = default_avoid(opts)
+    if avoid:
+        user_avoid = opts.pop("avoid", None)
+        if user_avoid is not None:
+            merge(avoid, avoid_dict(user_avoid))
+        opts["avoid"] = avoid
     if font_size is None:
         fs = _layout(fig, "font", "size")
         font_size = float(fs) if fs else 12.0
@@ -259,6 +282,12 @@ def label_points(
 
     akw: Dict[str, Any] = {"showarrow": False, "xanchor": "center", "yanchor": "middle"}
     akw.update(annotation_kw or {})
+    font_kw: Dict[str, Any] = dict(akw.pop("font", None) or {})
+    if font_kw.get("size") not in (None, font_size):
+        raise TypeError(
+            f"annotation_kw font size {font_kw['size']!r} differs from the measured labels "
+            f"({font_size!r} px); set it with font_size="
+        )
     line: Dict[str, Any] = {"color": "#555555", "width": 1}
     line.update(line_kw or {})
     annotations: List[Dict[str, Any]] = []
@@ -274,7 +303,7 @@ def label_points(
             "xref": xref,
             "yref": yref,
             "text": "<br>".join(p.lines),
-            "font": {"size": size},
+            "font": {**font_kw, "size": size},
         }
         ann.update(akw)
         annotations.append(ann)

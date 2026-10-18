@@ -23,6 +23,20 @@ pub fn signed_area(ring: &[P]) -> f64 {
     s * 0.5
 }
 
+/// Turns every hole (ring after the first) against the outer ring, so that the non-zero
+/// rule cuts it out whichever way it was given (spec §3.2).
+pub fn orient_holes(rings: &mut [Vec<P>]) {
+    let Some((outer, holes)) = rings.split_first_mut() else {
+        return;
+    };
+    let outer = signed_area(outer);
+    for h in holes {
+        if signed_area(h) * outer > 0.0 {
+            h.reverse();
+        }
+    }
+}
+
 /// Winding number of `p` with respect to one ring.
 pub fn winding(ring: &[P], p: P) -> i32 {
     let n = ring.len();

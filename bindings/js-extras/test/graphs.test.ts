@@ -40,6 +40,8 @@ describe("Cytoscape labels", () => {
     expect(vector.find((v) => v.class === "nodes")!.shapes).toEqual([{ shape: "circle", r: 10, x: 60, y: 30 }]);
     expect(vector.find((v) => v.class === "edges")!.polylines!.length).toBe(2);
     expect(problem.avoid?.label).toMatchObject({ nodes: "hard" });
+    // Cytoscape draws the labels as styled: no step may wrap or shrink them
+    expect(problem.degrade).toEqual(["alternatives", "distant", "evict_lower", "soft_overlap", "omit"]);
     const a = labels.result!.placements[0]!;
     const node = cy.getElementById("a");
     expect(node.style("text-valign")).toBe("center");

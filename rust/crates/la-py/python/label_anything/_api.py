@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 import os
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Optional, Union
 
@@ -14,7 +14,7 @@ from ._background import RawRaster, raw_raster
 from ._json import dumps
 from ._types import Candidate, FontSpec, JSONDict, Length
 from .labels import FontLike, LeadersLike, WrapLike
-from .problem import Problem, apply_priority_fn, is_number_list
+from .problem import Problem, apply_priority_fn, is_number_list, is_tier_list
 from .result import Report, Result
 
 __all__ = ["place", "place_problem", "render_svg", "validate"]
@@ -74,10 +74,10 @@ def solve(
 
 
 def _path_text(text: str) -> Optional[Path]:
-    """A string naming a file rather than holding problem JSON: problem JSON is an
-    object, so its text starts with ``{``; anything else is read as a path. Raises
-    ``FileNotFoundError`` when no such file exists (the text is neither)."""
-    if text.lstrip().startswith("{"):
+    """A string naming a file rather than holding problem JSON: JSON text starts with
+    ``{`` (a problem) or ``[`` (not a problem, reported as such); anything else is read as
+    a path. Raises ``FileNotFoundError`` when no such file exists (the text is neither)."""
+    if text.lstrip().startswith(("{", "[")):
         return None
     path = Path(text)
     if not path.is_file():
@@ -189,10 +189,10 @@ def _split_per_item(priority: Any, tiers: Any) -> tuple[Any, Any, Any, Any]:
     if priority is not None and is_number_list(priority):
         per_prio, priority = priority, None
     per_tier = None
-    if tiers is not None and not isinstance(tiers, (str, Mapping)):
-        vals = list(tiers)
-        if all(t is None or (isinstance(t, int) and not isinstance(t, bool)) or hasattr(t, "item") for t in vals):
-            per_tier, tiers = vals, None
+    if isinstance(tiers, Iterator):
+        tiers = list(tiers)
+    if is_tier_list(tiers):
+        per_tier, tiers = list(tiers), None
     return priority, per_prio, tiers, per_tier
 
 
@@ -314,8 +314,10 @@ def place(
     """Place labels in one call.
 
     ``anchors`` are ``(x, y)`` pairs in canvas pixels (or data units with ``transform`` /
-    ``y_axis``), :class:`Area` polygons or anchor dicts; ``labels`` are strings,
-    :class:`Text`, :class:`Icon`, :class:`Box`, :class:`Composite` or label dicts.
+    ``y_axis``; an ``(N, 2)`` array or a two-column DataFrame works too), :class:`Area`
+    polygons or anchor dicts; ``labels`` are strings, :class:`Text`, :class:`Icon`,
+    :class:`Box`, :class:`Composite` or label dicts. ``attrs`` values may be dates
+    (ISO 8601 strings in the problem) and durations (seconds).
     Every other keyword maps 1:1 to a schema field (see ``docs/bindings/python.md``);
     ``None`` leaves the spec default.
 

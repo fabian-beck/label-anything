@@ -207,6 +207,33 @@ CASES["truncate-none-keeps-lines"] = case(
                                                 "truncate": "none"})]},
     {"placed": 1, "text_lines": {"n": ["aaa bbb", "ccc ddd"]}})
 
+CASES["hard-line-breaks"] = case(
+    "a line feed breaks the line; the given lines are never rewrapped (CRLF too)",
+    {"canvas": {"width": 400, "height": 200},
+     "items": [pt("p", 100, 100, "Paris\n2.1M"), pt("c", 300, 100, "Line one\r\nLine two")]},
+    {"placed": 2, "text_lines": {"p": ["Paris", "2.1M"], "c": ["Line one", "Line two"]}})
+
+CASES["wrap-no-short-lines"] = case(
+    "the wrap step never strands a line narrower than 1.5 em (France / 3)",
+    {"canvas": {"width": 50, "height": 200}, "degrade": ["wrap", "omit"],
+     "items": [pt("sa", 25, 50, "Saudi Arabia"), pt("fr", 25, 150, "France 3")]},
+    {"placed": 1, "text_lines": {"sa": ["Saudi", "Arabia"]}, "reasons": {"fr": "no_feasible_candidate"}})
+
+# --- shapes ------------------------------------------------------------------------------
+_RING = [[30, 130], [180, 130], [180, 300], [30, 300]]
+_HOLE = [[50, 150], [160, 150], [160, 280], [50, 280]]
+CASES["area-hole-either-winding"] = case(
+    "a hole wound like its outer ring is still a hole: both areas label the same band",
+    {"canvas": {"width": 500, "height": 400},
+     "items": [{"id": "same", "anchor": {"type": "area", "polygon": [[x + 300, y] for x, y in _RING],
+                                         "holes": [[[x + 300, y] for x, y in _HOLE]]},
+                "label": {"type": "text", "text": "Holey"}},
+               {"id": "opp", "anchor": {"type": "area", "polygon": _RING, "holes": [_HOLE[::-1]]},
+                "label": {"type": "text", "text": "Holey"}}]},
+    {"placed": 2, "model": {"same": "adjacent", "opp": "adjacent"},
+     "box": {"same": {"x": 323.97075, "y": 118.77475, "w": 35.496, "h": 19.944, "tol": 0.01},
+             "opp": {"x": 23.97075, "y": 118.77475, "w": 35.496, "h": 19.944, "tol": 0.01}}})
+
 # --- leaders and models ----------------------------------------------------------------
 CASES["distant-when-crowded"] = case(
     "a point whose neighbourhood is hard-blocked gets a distant label with a leader",

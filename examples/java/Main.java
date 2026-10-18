@@ -32,8 +32,8 @@ public class Main {
     System.out.println("label-anything " + LabelAnything.version() + " via "
         + LabelAnything.backend());
 
-    // A raster background: white with a dark diagonal "river". A direct buffer is handed
-    // to the native library in place (no base64, no image decoding).
+    // A raster background: white with a dark diagonal "river". A direct buffer goes to the
+    // native library by its address (no base64, no image decoding).
     ByteBuffer rgba = ByteBuffer.allocateDirect(W * H * 4);
     for (int y = 0; y < H; y++) {
       for (int x = 0; x < W; x++) {

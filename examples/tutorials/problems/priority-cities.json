@@ -1,7 +1,7 @@
 {
   "canvas": { "width": 480, "height": 320 },
   "priority": {
-    "terms": [ { "attr": "pop", "transform": "log1p" } ],
+    "terms": [ { "attr": "pop" } ],
     "tiers": [ { "where": "attrs.capital == true", "tier": 1 } ],
     "coverage": { "by": "attrs.region", "min_per_group": 2 },
     "omission": "strict"

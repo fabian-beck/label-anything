@@ -5,7 +5,7 @@ Two packages implement the same API ([`LabelAnythingApi`](../reference/javascrip
 * **`@label-anything/core`** — the engine in pure TypeScript: no native code, no
   WebAssembly. It runs in browsers, workers, Node, Deno and Bun, and reproduces the Rust
   core's decisions for the same iteration budget.
-* **`@label-anything/wasm`** — the Rust core compiled to WebAssembly (about 950 KB gzip),
+* **`@label-anything/wasm`** — the Rust core compiled to WebAssembly (about 980 KB gzip),
   with full text shaping and image decoders. Switching is a change of the import (plus
   `await init()` in browsers). Details: the [WebAssembly guide](../bindings/wasm.md).
 
@@ -18,6 +18,10 @@ type-checked in TypeScript.
 npm install @label-anything/core       # or @label-anything/wasm
 npm install @label-anything/extras     # visualization helpers (optional)
 ```
+
+The packages are not on npm yet: until they are,
+[pack them from the repository](index.md#install-from-this-repository) and install the
+tarballs.
 
 ## Place labels
 

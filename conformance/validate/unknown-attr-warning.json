@@ -1,0 +1,43 @@
+{
+  "kind": "validate",
+  "name": "unknown-attr-warning",
+  "problem": {
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 1,
+          "y": 1
+        },
+        "label": {
+          "type": "text",
+          "text": "A"
+        },
+        "attrs": {
+          "pop": 3
+        }
+      }
+    ],
+    "priority": {
+      "terms": [
+        {
+          "attr": "pop"
+        },
+        {
+          "attr": "poop"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "valid": true,
+    "errors": [],
+    "warnings": [
+      {
+        "pointer": "/priority/terms/1/attr",
+        "code": "unknown_attr"
+      }
+    ]
+  }
+}

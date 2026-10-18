@@ -88,14 +88,18 @@ export function renderLabels(group: SVGGElement | Element, result: LabelResult, 
     "stroke-width": options.leaderWidth ?? 1,
   });
   const f = options.font;
+  // Boxes are laid out from the text's start and alphabetic baseline: pin both, since
+  // hosts set them on ancestors (Observable Plot's <svg> has text-anchor="middle").
   const textAttrs: Record<string, string | number> = {
     class: `${cls}-texts`,
     "font-family": f.family,
     "font-size": f.size,
     "font-weight": f.weight,
+    "font-style": f.italic ? "italic" : "normal",
+    "text-anchor": "start",
+    "dominant-baseline": "alphabetic",
     fill: options.fill ?? "currentColor",
   };
-  if (f.italic) textAttrs["font-style"] = "italic";
   if (options.halo) {
     Object.assign(textAttrs, {
       stroke: options.halo,

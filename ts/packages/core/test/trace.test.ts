@@ -1,4 +1,4 @@
-// Solve traces (ADR 0041): a traced solve makes the decisions of an untraced one, and the
+// Solve traces (ADR 0046): a traced solve makes the decisions of an untraced one, and the
 // trace replays to the result. Every parity fixture (the Rust result of a conformance
 // problem, solved without a clock) is solved again with a tracer: the result must still be
 // the Rust one bit for bit, and applying the placement changes of the events in order must

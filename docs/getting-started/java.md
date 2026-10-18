@@ -6,6 +6,24 @@ the result is parsed into records. Java 22+ calls the C ABI through the Foreign 
 Memory API; Java 17–21 use JNI. Both paths give identical results. The complete API is in
 the [Java API reference](../bindings/java.md).
 
+## Install
+
+The JAR is not in Maven Central yet: build it from this repository
+([install from this repository](index.md#install-from-this-repository)) and install it into
+your local Maven repository. Building needs JDK 22+ (for the FFM classes; an enforcer rule
+stops older JDKs), Maven 3.9 and Rust ≥ 1.88; the JAR runs on Java 17+.
+
+```sh
+# liblabelanything: the C ABI (Java 22+) and the JNI entry points (Java 17–21)
+cargo build --release --manifest-path rust/Cargo.toml -p label-anything-capi --features jni
+# the JAR, with the library bundled: bindings/java/target/ and ~/.m2/repository
+mvn -f bindings/java/pom.xml install
+```
+
+`install` runs the unit tests, then the integration tests against the packaged JAR, once
+with FFM and once with JNI; `-DskipITs` skips the integration tests, `-DskipTests` all
+tests. Then your Maven projects can depend on it:
+
 ```xml
 <dependency>
   <groupId>io.github.fabian-beck</groupId>
@@ -16,8 +34,23 @@ the [Java API reference](../bindings/java.md).
 
 Start the JVM with `--enable-native-access=ALL-UNNAMED` (Java 22+ warns without it;
 executable JARs can set `Enable-Native-Access: ALL-UNNAMED` in their manifest). The JAR
-bundles `liblabelanything` for its platform and finds it on its own
+bundles `liblabelanything` for the platform it was built on and finds it on its own
 ([lookup order](../bindings/java.md#native-library-lookup)).
+
+**Java 17–21** run the same JAR through JNI, which needs the library built with
+`--features jni`. Without a JDK 22+ to build the JAR, compile the JNI path (the base
+classes) with the JDK you have. The result uses JNI on every Java version and does not
+bundle the library: point `labelanything.library.path` at it.
+
+```sh
+javac --release 17 -d bindings/java/target/jni-classes $(find bindings/java/src/main/java -name '*.java')
+jar --create --file bindings/java/target/label-anything-0.1.0-jni.jar -C bindings/java/target/jni-classes .
+java -Dlabelanything.library.path=rust/target/release \
+     -cp bindings/java/target/label-anything-0.1.0-jni.jar MyApp.java
+# Maven projects: install that JAR under the coordinates above
+mvn install:install-file -Dfile=bindings/java/target/label-anything-0.1.0-jni.jar \
+    -DgroupId=io.github.fabian-beck -DartifactId=label-anything -Dversion=0.1.0 -Dpackaging=jar
+```
 
 ## The builder
 
@@ -62,10 +95,11 @@ Problems written elsewhere go in as text; `validate` never throws for invalid pr
 --8<-- "examples/tutorials/java/GettingStarted.java:raw"
 ```
 
-## Raster pixels without copies
+## Raster pixels by pointer {#raster-pixels-without-copies}
 
-A direct `ByteBuffer` of RGBA8 pixels is read in place by the native library (no base64,
-no image decoding); heap arrays are copied once.
+RGBA8 pixels go to the native library by pointer, without encoding them as PNG or base64:
+a direct `ByteBuffer` by its address, a heap array after one copy into native memory (FFM)
+or as an array region (JNI). The native library copies them into its own image.
 
 ```java
 --8<-- "examples/tutorials/java/GettingStarted.java:pixels"

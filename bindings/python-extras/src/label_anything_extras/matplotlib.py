@@ -23,6 +23,7 @@ from __future__ import annotations
 import contextlib
 import io
 import math
+import warnings
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple, Union
@@ -40,6 +41,8 @@ from matplotlib.text import Text
 
 import label_anything as la
 from label_anything.problem import avoid_dict, merge
+
+from ._defaults import default_avoid
 
 __all__ = [
     "FigureBackground",
@@ -331,6 +334,63 @@ def text_measure(fig: Figure, renderer: Optional[RendererAgg] = None) -> Callabl
     return measure
 
 
+#: ``text_kw`` keys (matplotlib aliases) that are the label font: measured like the
+#: ``fontsize``, ``fontfamily``, ``fontweight`` and ``fontstyle`` arguments.
+_FONT_KW = {
+    "fontsize": "fontsize",
+    "size": "fontsize",
+    "fontfamily": "fontfamily",
+    "family": "fontfamily",
+    "fontname": "fontfamily",
+    "fontweight": "fontweight",
+    "weight": "fontweight",
+    "fontstyle": "fontstyle",
+    "style": "fontstyle",
+}
+#: ``text_kw`` keys that change the size, shape or position of the drawn text in ways the
+#: measurement does not see.
+_UNMEASURED_KW = (
+    "fontproperties",
+    "font_properties",
+    "font",
+    "fontstretch",
+    "stretch",
+    "fontvariant",
+    "variant",
+    "rotation",
+    "usetex",
+    "math_fontfamily",
+    "wrap",
+    "horizontalalignment",
+    "ha",
+    "verticalalignment",
+    "va",
+    "transform",
+)
+
+
+def _split_text_kw(text_kw: Optional[Mapping[str, Any]], font: Dict[str, Any]) -> Dict[str, Any]:
+    """Move the font keys of ``text_kw`` into ``font`` (the measured font) and reject keys
+    that would make the drawn labels differ from the measured ones; returns the rest."""
+    rest = dict(text_kw or {})
+    for key, name in _FONT_KW.items():
+        if key not in rest:
+            continue
+        value = rest.pop(key)
+        if font[name] is not None and font[name] != value:
+            raise TypeError(
+                f"the label {name} is given twice: {name}={font[name]!r} and text_kw[{key!r}]={value!r}"
+            )
+        font[name] = value
+    bad = [k for k in rest if k in _UNMEASURED_KW]
+    if bad:
+        raise TypeError(
+            f"text_kw[{bad[0]!r}] would change the drawn labels after they were measured and placed; "
+            "set the font with fontsize=, fontfamily=, fontweight= and fontstyle="
+        )
+    return rest
+
+
 def _font_px(fontsize: Union[float, str, None], dpi: float) -> float:
     pt = FontProperties(size=fontsize).get_size_in_points()
     return float(pt) * dpi / 72.0
@@ -371,20 +431,36 @@ def label_points(
       point; default ``rcParams["lines.markersize"] ** 2``).
     * ``measure``: ``True`` measures with the figure's renderer, ``False`` uses the
       engine's bundled font, or a callable.
+    * ``avoid_texts``: the figure's visible texts are hard ``text`` obstacles.
     * ``draw``: add the text and leader artists (otherwise only solve).
-    * ``text_kw`` / ``leader_kw``: extra properties of the text and ``Line2D`` artists.
+    * ``text_kw`` / ``leader_kw``: extra properties of the text and ``Line2D`` artists
+      (``color``, ``zorder``, ``bbox``, ...). Font keys (``fontsize``/``size``,
+      ``fontfamily``/``family``, ``fontweight``/``weight``, ``fontstyle``/``style``) act
+      like the arguments above; keys that change the text without being measured
+      (``rotation``, ``fontproperties``, ``fontstretch``, ``usetex``, alignment, ...)
+      raise ``TypeError``.
+    * ``preset``: the problem preset (default ``"scatter"``).
     * ``**opts``: keyword options of :func:`label_anything.place` (``priority``,
       ``max_labels``, ``leaders``, ``avoid``, ``ids``, ``attrs``, ...).
 
-    The axes limits are fixed (autoscaling off), because the layout is computed for the
-    current view. Points with non-finite coordinates are skipped.
+    ``x`` and ``y`` are in the units of the axes' data: dates, categories and other
+    matplotlib units are converted like the plotted data. The axes limits are fixed
+    (autoscaling off), because the layout is computed for the current view; call
+    ``label_points`` when the figure is final (size, layout, scales, colorbars and
+    legends), as later changes move the data under the labels. Points with non-finite
+    coordinates are skipped; a warning says when no point lies inside the canvas.
     """
     for k in ("canvas", "anchors", "labels"):
         if k in opts:
             raise TypeError(f"label_points computes {k!r} itself")
     fig = _root_figure(ax)
-    xs = np.asarray(x, dtype=float).ravel()
-    ys = np.asarray(y, dtype=float).ravel()
+    font: Dict[str, Any] = dict(fontsize=fontsize, fontfamily=fontfamily, fontweight=fontweight, fontstyle=fontstyle)
+    text_kw = _split_text_kw(text_kw, font)
+    fontsize, fontfamily = font["fontsize"], font["fontfamily"]
+    fontweight, fontstyle = font["fontweight"], font["fontstyle"]
+    # dates, categories, ...: the axes' unit converters give the plotted values
+    xs = np.asarray(_axis_units(ax.xaxis, x), dtype=float).ravel()
+    ys = np.asarray(_axis_units(ax.yaxis, y), dtype=float).ravel()
     label_list = list(labels)
     n = len(label_list)
     if len(xs) != n or len(ys) != n:
@@ -409,6 +485,14 @@ def label_points(
     canvas_xy = frame.to_canvas(disp)
     keep = np.isfinite(canvas_xy).all(axis=1)
     idx = np.flatnonzero(keep)
+    inside = (canvas_xy[idx] >= 0.0).all(axis=1) & (canvas_xy[idx] <= (frame.width, frame.height)).all(axis=1)
+    if len(idx) and not inside.any():
+        where = "axes" if region == "axes" else "figure"
+        warnings.warn(
+            f"label_points: none of the {len(idx)} points lies inside the {where} "
+            "(are x and y in the units of the plotted data?)",
+            stacklevel=2,
+        )
 
     ids_opt = opts.pop("ids", None)
     ids = [str(i) for i in (ids_opt if ids_opt is not None else range(n))]
@@ -454,10 +538,10 @@ def label_points(
     vector = list(opts.pop("vector", None) or [])
     if avoid_texts and snap.text_rects:
         vector.append({"class": "text", "rects": snap.text_rects})
-    avoid: Dict[str, Any] = {}
+    avoid = default_avoid(opts)
     if snap.legend_rects:
         vector.append({"class": "legend", "rects": snap.legend_rects})
-        avoid = {"label": {"legend": "hard"}}
+        merge(avoid, {"label": {"legend": "hard"}})
     user_avoid = opts.pop("avoid", None)
     if user_avoid is not None:
         merge(avoid, avoid_dict(user_avoid))
@@ -495,6 +579,12 @@ def label_points(
         texts, leaders = _draw(ax, res, frame, dpi, fontfamily, fontweight, fontstyle, text_kw, leader_kw)
     _refresh(fig)
     return MatplotlibLabels(res, texts, leaders)
+
+
+def _axis_units(axis: Any, v: Any) -> Any:
+    """Values in the units of an axis (dates, categories, ... through its unit converter);
+    one-shot iterators become a list first, as the converters look at the values twice."""
+    return axis.convert_units(list(v) if isinstance(v, Iterator) else v)
 
 
 def _label_aligns(res: la.Result) -> Dict[str, str]:

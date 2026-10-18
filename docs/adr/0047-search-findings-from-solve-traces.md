@@ -1,10 +1,10 @@
-# 0042 — Findings from solve traces: a lookahead bound, a true-cost restore, explanations from evaluated candidates
+# 0047 — Findings from solve traces: a lookahead bound, a true-cost restore, explanations from evaluated candidates
 
 * Status: accepted (spec §10.1, §10.2; Rust `la-core` and TypeScript `@label-anything/core`; conformance case `search-restore-true-total`)
 * Date: 2026-10-18
 
 ## Context
-The solve traces of ADR 0041 show every decision of the solver with its numbers. Read over
+The solve traces of ADR 0046 show every decision of the solver with its numbers. Read over
 the 67 parity fixtures, the explainer's scenes and a few hundred generated crowded
 problems, they showed five things:
 

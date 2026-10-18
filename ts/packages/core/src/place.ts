@@ -49,7 +49,7 @@ export interface Placed {
 /**
  * Solve a problem that already passed `validate` (its warnings are passed through).
  * Throws {@link PlaceError} when the problem cannot be prepared. `trace` records the
- * solver's decisions (ADR 0041).
+ * solver's decisions (ADR 0046).
  */
 export function placeValidated(
   problem: unknown,
@@ -200,7 +200,7 @@ export function placeValidated(
 }
 
 /**
- * Solve a problem and record the solver's decisions (ADR 0041): the result, identical to
+ * Solve a problem and record the solver's decisions (ADR 0046): the result, identical to
  * {@link placeWith}'s, and the trace (`trace.ts`).
  */
 export function placeTracedWith(problem: unknown, env: Env, profile: BudgetProfile = "ts"): { result: Record<string, unknown>; trace: SolveTrace } {

@@ -4,7 +4,7 @@
  * wasm-bindgen glue into ../wasm (label_anything.js, label_anything_bg.wasm, snippets/).
  *
  *   node scripts/build-wasm.mjs [--no-default-features] [--features a,b]
- *                               [--opt-level s] [--core-opt-level 3] [--keep-names]
+ *                               [--opt-level z] [--core-opt-level 3] [--keep-names]
  *
  * The default build has full shaping, SVG backgrounds and PNG/JPEG/WebP decoding
  * (cargo feature `decode`); `--no-default-features` leaves out the image decoders.
@@ -15,11 +15,15 @@
  *
  * The build uses its own Cargo profile (`wasm-release`: fat LTO, one codegen unit),
  * passed with `--config`, so it never invalidates the native release artifacts. Code is
- * optimized for size (opt-level "s") except the solver crate label-anything-core and the
- * raster pipeline label-anything-raster (opt-level 3): that is as fast as opt-level 3
- * everywhere (within noise) for 8 % more gzip than "s" everywhere, which is 9-16 % slower
- * (and raster backgrounds 2.3x slower with the raster crate at "s"). wasm-opt is not used: it does not
- * reduce the gzip size of this module. docs/bindings/wasm.md lists the variants.
+ * optimized for size (opt-level "z") except the crates that run hot: the solver crate
+ * label-anything-core and the raster pipeline label-anything-raster at opt-level 3, and
+ * JSON parsing, the SVG backend, text layout and the image decoders at "s" (`HOT`). That
+ * is as fast as "s" for all of them (within noise) and 17 KB (gzip) smaller; "z" for the
+ * decoders made WebP decoding 1.5x slower, "z" for the JSON, SVG and text crates the
+ * SVG-background and large-JSON problems 8-12 % slower. "s" everywhere is 9-16 % slower
+ * (and raster backgrounds 2.3x slower with the raster crate at "s"). wasm-opt is not used:
+ * it does not reduce the gzip size of this module. docs/bindings/wasm.md lists the
+ * variants.
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
@@ -33,7 +37,7 @@ function option(name, fallback) {
 }
 const features = option("--features", "");
 const noDefault = args.includes("--no-default-features");
-const optLevel = option("--opt-level", "s");
+const optLevel = option("--opt-level", "z");
 const coreOptLevel = option("--core-opt-level", "3");
 const keepNames = args.includes("--keep-names");
 
@@ -64,6 +68,11 @@ if (!locked || cli !== locked) {
 }
 
 const tomlLevel = (level) => (/^\d$/.test(level) ? level : JSON.stringify(level));
+// crates that run hot in common problems (JSON, SVG backgrounds, text, image decoding):
+// never below "s"
+const HOT = ["serde_json", "label-anything-svg", "label-anything-render", "label-anything-text"];
+HOT.push("png", "fdeflate", "miniz_oxide", "image-webp", "zune-jpeg");
+const hotLevel = optLevel === "z" ? "s" : optLevel;
 const profile = "wasm-release";
 const cargoArgs = [
   "build",
@@ -87,6 +96,7 @@ const cargoArgs = [
   // backgrounds: as fast as the solver
   "--config",
   `profile.${profile}.package.label-anything-raster.opt-level=${tomlLevel(coreOptLevel)}`,
+  ...HOT.flatMap((c) => ["--config", `profile.${profile}.package.${c}.opt-level=${tomlLevel(hotLevel)}`]),
 ];
 if (noDefault) cargoArgs.push("--no-default-features");
 if (features) cargoArgs.push("--features", features);

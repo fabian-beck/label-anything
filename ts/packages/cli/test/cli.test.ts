@@ -1,9 +1,9 @@
 // Smoke tests of `label-anything-ts` (place, validate, render), in process and as a Node
 // process, and its agreement with the Rust CLI when that has been built.
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
 import { type Io, loadWasmEngine, run, wantsWasm } from "../src/main.js";
@@ -127,7 +127,37 @@ describe("label-anything-ts", () => {
     const invalid = io(JSON.stringify({ items: 3 }));
     expect(run(["place", "-"], invalid)).toBe(1);
     expect(invalid.err).toMatch(/^error /);
-    expect(run(["place", "-"], io("{ not json"))).toBe(2);
+    // malformed JSON is an invalid problem, as in the Rust CLI
+    const malformed = io("{ not json");
+    expect(run(["place", "-"], malformed)).toBe(1);
+    expect(malformed.err).toMatch(/^error {3}\/ \[parse\] invalid JSON/);
+  });
+
+  it("reports options on sections of the wrong type as invalid problems", () => {
+    const t = io(JSON.stringify({ solver: "fast", items: [] }));
+    expect(run(["place", "-", "--time", "50"], t)).toBe(1);
+    expect(t.err).toBe("error   /solver [type] expected object, got string (a command-line option sets a field in it)\n");
+  });
+
+  it("keeps the other canvas options with --canvas and prints warnings", () => {
+    const problem = {
+      canvas: { width: 100, height: 100, padding: 0, region: [0, 0, 60, 400] },
+      items: [{ id: "a", anchor: { type: "point", x: 30, y: 30 }, label: { type: "text", text: "Alpha" } }],
+      avoid: { label: { lnies: 0.5 } },
+    };
+    const t = io("\uFEFF" + JSON.stringify(problem)); // a byte order mark is skipped
+    expect(run(["place", "-", "--canvas", "400x300"], t)).toBe(0);
+    expect(t.err).toContain("warning /avoid/label/lnies [unknown_class]");
+    const box = (JSON.parse(t.out) as { placements: { box: { x: number; w: number } }[] }).placements[0]!.box;
+    expect(box.x + box.w).toBeLessThanOrEqual(60); // inside the region
+  });
+
+  it("reads --background relative to the current directory", () => {
+    const sub = join(tmp, "sub");
+    mkdirSync(sub, { recursive: true });
+    writeFileSync(join(sub, "p.json"), JSON.stringify({ canvas: { width: 50, height: 50 }, items: [] }));
+    writeFileSync(join(tmp, "bg.svg"), '<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="10" height="10"/></svg>');
+    expect(run(["place", join(sub, "p.json"), "--background", relative(process.cwd(), join(tmp, "bg.svg"))], io())).toBe(0);
   });
 
   it("renders a result", () => {
@@ -136,7 +166,14 @@ describe("label-anything-ts", () => {
     const t = io();
     expect(run(["render", join(PROBLEMS, "minimal.json"), res, "-o", "-"], t)).toBe(0);
     expect(t.out).toMatch(/^<svg [\s\S]*<\/svg>\n$/);
-    expect(run(["render", join(PROBLEMS, "minimal.json"), res, "-o", join(tmp, "x.png")], io())).toBe(2);
+    expect(run(["render", join(PROBLEMS, "minimal.json"), res, "-o", join(tmp, "x.PNG")], io())).toBe(2);
+    // the result of another problem, an invalid problem
+    const other = io();
+    expect(run(["render", join(PROBLEMS, "scatter-basic.json"), res], other)).toBe(1);
+    expect(other.err).toMatch(/is not a result of .*scatter-basic\.json: \d+ placements for \d+ items/);
+    const invalid = io(JSON.stringify({ items: 3 }));
+    expect(run(["render", "-", res], invalid)).toBe(1);
+    expect(invalid.err).toMatch(/^error /);
   });
 
   it.skipIf(!existsSync(MAIN))("runs as a Node process", () => {

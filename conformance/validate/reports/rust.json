@@ -126,13 +126,24 @@
       "errors": [],
       "warnings": []
     },
+    "validate/anchor-missing-type.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/items/0/anchor/type",
+          "code": "required",
+          "message": "missing required property 'type'"
+        }
+      ],
+      "warnings": []
+    },
     "validate/bad-degrade-step.json": {
       "valid": false,
       "errors": [
         {
           "pointer": "/degrade/1",
           "code": "pattern",
-          "message": "\"shrink:2\" does not match ^(alternatives|wrap|truncate|distant|boundary|evict_lower|soft_overlap|omit|shrink:(0(\\.[0-9]+)?|1(\\.0+)?|\\.[0-9]+))$"
+          "message": "\"shrink:2\": shrink needs a factor f with 0 < f ≤ 1, e.g. \"shrink:0.85\""
         }
       ],
       "warnings": []
@@ -233,7 +244,13 @@
           "message": "unknown identifier 'nope' (at 0)"
         }
       ],
-      "warnings": []
+      "warnings": [
+        {
+          "pointer": "/priority/terms/1/attr",
+          "code": "unknown_attr",
+          "message": "no item has the attribute 'x' (in attrs): the term is 0 for every item"
+        }
+      ]
     },
     "validate/icon-missing-height.json": {
       "valid": false,
@@ -286,6 +303,27 @@
           "pointer": "/items/0/anchor/mark/rx",
           "code": "unknown_property",
           "message": "unknown property 'rx'"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/mark-missing-shape.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/items/0/anchor/mark/h",
+          "code": "unknown_property",
+          "message": "unknown property 'h'"
+        },
+        {
+          "pointer": "/items/0/anchor/mark/shape",
+          "code": "required",
+          "message": "missing required property 'shape'"
+        },
+        {
+          "pointer": "/items/0/anchor/mark/w",
+          "code": "unknown_property",
+          "message": "unknown property 'w'"
         }
       ],
       "warnings": []
@@ -356,6 +394,17 @@
       ],
       "warnings": []
     },
+    "validate/unknown-attr-warning.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": [
+        {
+          "pointer": "/priority/terms/1/attr",
+          "code": "unknown_attr",
+          "message": "no item has the attribute 'poop' (in attrs): the term is 0 for every item"
+        }
+      ]
+    },
     "validate/unknown-class-warning.json": {
       "valid": true,
       "errors": [],
@@ -373,7 +422,7 @@
         {
           "pointer": "/solverr",
           "code": "unknown_property",
-          "message": "unknown property 'solverr'"
+          "message": "unknown property 'solverr' (did you mean 'solver'?)"
         }
       ],
       "warnings": []

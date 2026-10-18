@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import type { LabelResult } from "@label-anything/core";
 import { LatestRunner, resolveEngine, setDefaultEngine, type AsyncEngine } from "../src/engine.js";
-import { buildProblem, labelOf, resolveFont } from "../src/options.js";
+import { buildProblem, keepHostText, labelOf, resolveFont } from "../src/options.js";
 import { followAnchors, leaderPath, renderLabels } from "../src/render.js";
 import { LabelMemory } from "../src/stable.js";
 import { fakeEngine } from "./engines.js";
@@ -33,6 +33,22 @@ describe("buildProblem", () => {
     const p = buildProblem(base, { priority: { omission: "prefix" }, problem: { canvas: { width: 5, height: 5 } } }, font);
     expect(p.priority).toEqual({ omission: "prefix" });
     expect(p.canvas).toEqual({ width: 5, height: 5 });
+  });
+
+  it("lets important labels cover the dots of less important items when there is a priority", () => {
+    expect(buildProblem(base, {}, font).avoid).toBeUndefined();
+    const item = { anchor: { type: "point" as const, x: 1, y: 1 }, label: { type: "text" as const, text: "A" }, priority: 3 };
+    expect(buildProblem({ ...base, items: [item] }, {}, font).avoid).toEqual({
+      label: { lower_items: 10 },
+      leader: { lower_items: 2.5 },
+    });
+    const own = buildProblem(base, { priority: { omission: "strict" }, avoid: { label: { lower_items: "hard", ink: 1 } } }, font);
+    expect(own.avoid).toEqual({ label: { lower_items: "hard", ink: 1 }, leader: { lower_items: 2.5 } });
+  });
+
+  it("keeps host-drawn text as it is: no wrap, truncate or shrink steps", () => {
+    expect(keepHostText({ ...base }).degrade).toEqual(["alternatives", "distant", "evict_lower", "soft_overlap", "omit"]);
+    expect(keepHostText({ ...base, degrade: ["wrap", "truncate", "shrink:0.9", "distant", "omit"] }).degrade).toEqual(["distant", "omit"]);
   });
 });
 
@@ -113,6 +129,9 @@ describe("renderLabels", () => {
     expect(g.querySelectorAll("path.la-leader").length).toBe(1);
     expect(g.firstElementChild!.getAttribute("class")).toBe("la-leaders");
     expect(g.lastElementChild!.getAttribute("stroke")).toBe("white");
+    // the boxes start at x: inherited alignment (e.g. Observable Plot's) must not apply
+    expect(g.lastElementChild!.getAttribute("text-anchor")).toBe("start");
+    expect(g.lastElementChild!.getAttribute("dominant-baseline")).toBe("alphabetic");
     renderLabels(g, { ...result, placements: [] }, { font });
     expect(g.querySelectorAll("text").length).toBe(0);
   });

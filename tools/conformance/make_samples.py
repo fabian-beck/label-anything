@@ -315,6 +315,9 @@ invalid = {
     "type-error": ({"items": [{"anchor": {"type": "point", "x": "1", "y": 2}, "label": {"type": "text", "text": "A"}}]}, [("/items/0/anchor/x", "type")], []),
     "canvas-range": ({"canvas": {"width": 0, "height": 10}, "items": []}, [("/canvas/width", "range")], []),
     "unknown-class-warning": ({"items": [], "avoid": {"label": {"outlierz": "hard"}}}, [], [("/avoid/label/outlierz", "unknown_class")]),
+    "unknown-attr-warning": ({"items": [pt("a", 1, 1, "A", attrs={"pop": 3})],
+                              "priority": {"terms": [{"attr": "pop"}, {"attr": "poop"}]}},
+                             [], [("/priority/terms/1/attr", "unknown_attr")]),
     # lower_items is a key of the label and leader maps (spec §4.4), a class name elsewhere
     "lower-items-key": ({"items": [], "avoid": {"label": {"lower_items": 2.0}, "leader": {"lower_items": "hard"},
                                                "buffer": {"lower_items": 1.0}}},
@@ -328,6 +331,13 @@ invalid = {
     "duplicate-implicit-id": ({"items": [pt("1", 1, 1, "A"), {"anchor": {"type": "point", "x": 1, "y": 1}, "label": {"type": "text", "text": "B"}}]}, [("/items/1", "duplicate_id")], []),
     "version-const": ({"version": "2", "items": []}, [("/version", "const")], []),
     "raster-no-source": ({"items": [], "obstacles": {"raster": {"mode": "ink"}}}, [("/obstacles/raster", "exclusive")], []),
+    # a missing discriminator is one error, not the requirements of every variant
+    "anchor-missing-type": ({"items": [{"anchor": {"x": 1, "y": 1}, "label": {"type": "text", "text": "A"}}]},
+                            [("/items/0/anchor/type", "required")], [], True),
+    "mark-missing-shape": ({"items": [{"anchor": {"type": "point", "x": 1, "y": 1, "mark": {"w": 4, "h": 4}},
+                                       "label": {"type": "text", "text": "A"}}]},
+                           [("/items/0/anchor/mark/shape", "required"), ("/items/0/anchor/mark/w", "unknown_property"),
+                            ("/items/0/anchor/mark/h", "unknown_property")], [], True),
 }
 
 
@@ -336,10 +346,12 @@ def main():
     VAL.mkdir(parents=True, exist_ok=True)
     for name, p in problems.items():
         (PROB / f"{name}.json").write_text(json.dumps(p, indent=2, ensure_ascii=False) + "\n")
-    for name, (p, errs, warns) in invalid.items():
+    for name, (p, errs, warns, *exact) in invalid.items():
         case = {"kind": "validate", "name": name, "problem": p,
                 "expect": {"valid": not errs, "errors": [{"pointer": a, "code": b} for a, b in errs],
                            "warnings": [{"pointer": a, "code": b} for a, b in warns]}}
+        if exact:
+            case["expect"]["exact"] = exact[0]
         (VAL / f"{name}.json").write_text(json.dumps(case, indent=2, ensure_ascii=False) + "\n")
     # every sample problem must be valid
     case = {"kind": "validate", "name": "all sample problems are valid", "problem_files": sorted(f"../problems/{n}.json" for n in problems),

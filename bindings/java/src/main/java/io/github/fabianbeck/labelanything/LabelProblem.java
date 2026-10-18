@@ -30,7 +30,7 @@ import java.util.function.ToDoubleFunction;
  * }</pre>
  *
  * <p>When the first raster background is raw pixels ({@link Raster#pixels}), the pixels
- * travel to the native library through the zero-copy pointer entry point and {@link
+ * travel to the native library through the pointer entry point (no base64) and {@link
  * #toJson()} carries only the raster's options and size; {@link #toPortableJson()} embeds
  * the pixels as base64 so the JSON is self-contained (e.g. for the CLI).
  */
@@ -397,7 +397,7 @@ public final class LabelProblem {
 
     /**
      * Add a raster background of raw RGBA8 pixels; a direct buffer is passed to the native
-     * library in place (zero-copy) when this is the first raster.
+     * library in place (no base64) when this is the first raster.
      */
     public Builder backgroundPixels(int width, int height, ByteBuffer rgba, RasterMode mode) {
       return background(Raster.pixels(width, height, rgba).mode(mode));

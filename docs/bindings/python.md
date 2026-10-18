@@ -12,10 +12,11 @@ pip install label-anything                  # the engine and the API (no depende
 pip install "label-anything[matplotlib]"    # + label_anything.matplotlib (also: plotly, seaborn, all)
 ```
 
-From source (Rust ≥ 1.88 and [maturin](https://www.maturin.rs/)):
+Not on PyPI yet; from source, at the repository root (Rust ≥ 1.88 and
+[maturin](https://www.maturin.rs/)):
 
 ```sh
-cd rust/crates/la-py && maturin build --release      # wheel in rust/target/wheels/
+maturin build --release -m rust/crates/la-py/Cargo.toml   # wheel in rust/target/wheels/
 pip install rust/target/wheels/label_anything-*.whl bindings/python-extras
 ```
 
@@ -39,8 +40,9 @@ res = la.place(
     leaders="elbow",                            # or la.Leaders(style="angles", angles=range(0, 360, 45))
     preset="scatter",
     attrs={"cbo": cbo},                         # per item: list of dicts, dict of columns, DataFrame
-    priority=la.Priority.outlierness(k=5) + 0.5 * la.Priority.attr("cbo", "log1p")
-             - 0.2 * la.Priority.label_size(), # or a column name, a list of numbers, a callable(item)
+    priority=la.Priority.outlierness(k=5)       # or a column name, a list of numbers, a callable(item)
+             + 0.5 * la.Priority.attr("cbo", "log1p", normalize="minmax")
+             - 0.2 * la.Priority.label_size(),
     omission="strict",                          # strict | prefix | weighted
     max_labels=None,
 )
@@ -50,9 +52,19 @@ for p in res.placed:
 res.to_svg("debug.svg")
 ```
 
-Per-item keywords take one entry per anchor: `ids`, `attrs`, `marks` (mark dicts, see
-`la.Mark`, or radii), `required` (bools or a set of ids), `groups`, `keep_with`,
-`svg_ids`, `item_placement`, and `priority` / `tiers` when given as lists of numbers.
+Anchors are `(x, y)` pairs, an `(N, 2)` array or a two-column DataFrame (x and y as two
+separate sequences: `zip(x, y)`). Per-item keywords take one entry per anchor: `ids`,
+`attrs`, `marks` (mark dicts, see `la.Mark`, or radii), `required` (bools or a set of
+ids), `groups`, `keep_with`, `svg_ids`, `item_placement`, and `priority` / `tiers` when
+given as lists of numbers. Attribute values are numbers, strings, booleans, lists and
+dicts; NumPy scalars become numbers, dates and times (`datetime`, pandas `Timestamp`,
+`datetime64`) ISO 8601 strings, which compare chronologically in expressions
+(`attrs.when >= "2024-01-15"`), and durations seconds; NaN, `NA` and `NaT` are dropped.
+
+Priority terms are normalized over the items, by `rank` unless `normalize="minmax"` or
+`"none"`. Under `rank` only the order of a term's values counts, so a transform such as
+`log1p` changes the scores only with `minmax` or `none` (above: the coupling `cbo`,
+log-scaled, weighs against outlierness and label size).
 
 | keyword | schema field | keyword | schema field |
 |---|---|---|---|
@@ -76,12 +88,15 @@ p = (la.Problem(canvas=(800, 600), preset="map", seed=3)
        .vector("rivers", polylines=[river], width=2)
        .avoid(lines=0.8, text="hard")
        .leaders("straight", max_length="6em")
-       .priority(la.Priority.attr("pop", "log1p"))
+       .priority(la.Priority.attr("pop"))
        .tier("attrs.capital == true", 1)
        .option("output.cost_breakdown", True))
 problem = p.build()          # the problem dict (JSON-serializable)
 res = p.solve()
 ```
+
+The constructor and `set()` take the keywords of `la.place`; per-item `priority` /
+`tiers` lists given before the items apply to them at `build()`.
 
 `build(embed_background=True)` / `to_json()` embed a NumPy background as base64 so the
 JSON is self-contained (e.g. for the CLI).
@@ -107,8 +122,10 @@ as `warm_start`, the boxes move with it), `anchor_side`, `model`, `leader`
 `reason` (why it was omitted), `priority` (`{tier, score, rank}`), `degrade_steps`,
 `blocking`, `blocked_by`, `members`/`leaders` (group labels), `parts` (composite labels)
 and `raw`. `Result` also has `placed`, `unplaced`, `omission_order`, `stats`, `warnings`,
-`raw`, `problem`, `res["id"]`, `to_dict()`, `to_json()` and `to_svg(path=None)` (the
-overlay rendered during the solve when `debug_svg=True`, with cost-grid heatmaps).
+`raw`, `problem`, `res["id"]` and `res.get("id")` (ids are strings; other keys are looked
+up as `str(key)`, as the API converts ids: `res[101]`, or `res[0]` for items without an
+id), `to_dict()`, `to_json()` and `to_svg(path=None)` (the overlay rendered during the
+solve when `debug_svg=True`, with cost-grid heatmaps).
 
 ## Callbacks
 
@@ -147,7 +164,7 @@ traceback. Ctrl-C is honoured the same way on the main thread.
 | `str` / `Path` of an SVG file | `obstacles.svg.path` |
 | `bytes` of an encoded image | `obstacles.raster.source` as a `data:` URL |
 | `bytes` / `str` of SVG markup | `obstacles.svg.source` |
-| NumPy `uint8` `H×W×4`, `H×W×3`, `H×W` (floats in [0, 1] and bools are converted), PIL image | pixels handed to the engine directly (`raster_override`, one copy); the problem gets a placeholder `{"rgba": {"width", "height", "data": ""}}` carrying the options |
+| NumPy `uint8` `H×W×4`, `H×W×3`, `H×W` (floats in [0, 1] and bools are converted; floats outside [0, 1], such as 0–255 values, raise `ValueError`), PIL image | pixels handed to the engine directly (`raster_override`, one copy); the problem gets a placeholder `{"rgba": {"width", "height", "data": ""}}` carrying the options |
 
 Options: `background_mode` (`ink`, `alpha`, `cost`, `classmap`, `saliency`),
 `background_class`, `background_scale`, `background_offset`, `background_options`
@@ -175,10 +192,40 @@ layout is computed for this view), renders the figure **without its text artists
 Agg as the background (an RGBA array of the axes region, ink background = axes
 facecolor), adds the visible texts as hard `text` obstacles and legends as hard
 `legend` obstacles, measures labels with the figure's own renderer, solves, and adds one
-`Text` per label line plus `Line2D` leaders. Options: `region="axes" | "figure"`,
-`background="raster" | "svg" | None`, `fontsize` (points), `fontfamily`, `fontweight`,
-`marker_size` (points², like `scatter(s=)`), `measure`, `draw`, `text_kw`, `leader_kw`;
-everything else goes to `la.place`.
+`Text` per label line plus `Line2D` leaders. `x` and `y` are in the units of the plotted
+data: dates, categories and other matplotlib units are converted by the axes, and a
+warning says when no point lies inside the axes. Options:
+
+* `region="axes" | "figure"` (labels may use the figure margins);
+* `background="raster" | "svg" | None`, or any `background=` input of `la.place`;
+* `fontsize` (points or a size name), `fontfamily`, `fontweight`, `fontstyle`: the label
+  font, measured with the figure's renderer (`measure=False`: the bundled font, or a
+  `measure` callable);
+* `marker_size` (points², like `scatter(s=)`; one number or one per point): the marks
+  the labels keep clear of;
+* `avoid_texts` (default `True`): the figure's visible texts are hard obstacles;
+* `draw` (default `True`): add the artists, or only solve;
+* `text_kw`, `leader_kw`: extra properties of the `Text` and `Line2D` artists. Font keys
+  of `text_kw` (`fontsize`/`size`, `fontfamily`/`family`, `fontweight`/`weight`,
+  `fontstyle`/`style`) act like the arguments above; keys that would change the drawn
+  text after it was measured (`rotation`, `fontproperties`, `fontstretch`, `usetex`,
+  alignment, `transform`, ...) raise `TypeError`;
+* `preset` (default `"scatter"`);
+* everything else goes to `la.place` (`priority`, `max_labels`, `avoid`, `leaders`,
+  `degrade`, `ids`, `attrs`, ...).
+
+Call `label_points` when the figure is final: its size and layout (`tight_layout`,
+constrained layout), the axis scales and limits, colorbars and legends. The labels are
+in data coordinates, so any savefig dpi works, but a later change of the axes' size or
+scale moves the points under labels that keep their size, and labels then overlap
+points and each other.
+
+With a `priority` (or `tiers`), the helpers set `avoid` `lower_items` (10 for labels, 2.5
+for leaders): an important label may cover the markers of less important points, which
+then go unlabeled. Otherwise an important point in a crowd of minor ones could be left
+without a label while minor points at the edge of the crowd keep theirs
+([important labels over minor marks](../tutorials/priority.md#important-labels-over-minor-marks)).
+Your own `avoid` wins; `avoid={"lower_items": "hard"}` keeps every marker clear.
 
 `background="svg"` saves the figure as SVG (texts hidden) and classifies it with
 `svg_classes()`: the figure and axes background patches are tagged with gids and
@@ -192,9 +239,14 @@ fills `ink`. Use the same rules when you pass a matplotlib SVG yourself:
 `annotations` centred on the label boxes and leader `shapes` (`type="path"`), computed
 from the layout size, margins, axis domains and ranges; it fixes the figure size and the
 axis ranges. Linear and log axes; other scatter traces on the axes are obstacles.
+Options: `xref`/`yref` or `row`/`col`, `font_size` (px), `marker_size` (marker diameter
+in px, one number or one per point), `avoid_traces`, `add`, `annotation_kw` (a `font`
+there is merged into the measured one; a different `size` raises `TypeError`),
+`line_kw`, `preset` (default `"scatter"`); everything else goes to `la.place`.
 
 `label_anything.seaborn.label_points(ax, data=df, x="gdp", y="life", label="country",
-attrs=["pop"], **opts)` resolves seaborn-style column names for axes-level plots.
+attrs=["pop"], **opts)` resolves seaborn-style column names for axes-level plots;
+`priority="pop"`, a column name, puts that column into the items' `attrs` by itself.
 
 ## Limitations
 
