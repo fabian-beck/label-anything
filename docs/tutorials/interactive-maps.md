@@ -140,7 +140,7 @@ box that grows or shrinks, leaders attached to the gliding box) and the opacitie
 labels and leaders that fade; `renderLabels` draws them, or any renderer reads them. The
 Leaflet, MapLibre and sigma.js helpers below do this after every solve (option
 `transition`, in ms; 0 draws each solve as it is; [ADR 0026](../adr/0026-smooth-label-transitions.md),
-[ADR 0033](../adr/0033-calm-label-transitions.md)). The
+[ADR 0038](../adr/0038-calm-label-transitions.md)). The
 [playground](../try.md) has the options in its Motion section.
 
 ## Leaflet

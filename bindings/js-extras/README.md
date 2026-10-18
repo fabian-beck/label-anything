@@ -105,7 +105,7 @@ renderLabels(group, frame.result, { font, opacity: frame.opacity, leaderOpacity:
 ```
 
 `anchors` maps item ids to their current positions, so labels follow moving points
-between solves. The transitions are calm by design ([ADR 0033](https://github.com/fabian-beck/label-anything/blob/main/docs/adr/0033-calm-label-transitions.md)):
+between solves. The transitions are calm by design ([ADR 0038](https://github.com/fabian-beck/label-anything/blob/main/docs/adr/0038-calm-label-transitions.md)):
 
 | Option | Default | |
 |---|---|---|

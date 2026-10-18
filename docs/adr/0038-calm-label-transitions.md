@@ -1,4 +1,4 @@
-# 0033 — Calm label transitions: labels hold, wait and make way
+# 0038 — Calm label transitions: labels hold, wait and make way
 
 * Status: accepted (`@label-anything/extras`; amends ADR 0026; no change to the engine)
 * Date: 2026-10-18
@@ -93,7 +93,8 @@ The same scenes, the same motion, before → after (the library change alone):
 
 Labels no longer rest on top of each other (overlaps of more than 2 px between still,
 opaque labels: 0.01–0.08 pairs per frame, 0.5 in the scatterplot's transition, whose
-points cross faster than solves come; the other overlaps are labels gliding or fading). With the playground's scene changes, 19 % of the swarm's labels and 17 % of the
+points cross faster than solves come; the other overlaps are labels gliding or fading).
+With the playground's scene changes, 19 % of the swarm's labels and 17 % of the
 network's change at any moment. A long move is now two fades instead of a glide, so a
 label changes about as often as before (0.98 against 0.76 changes per second in the
 swarm), but at most about once per 500 ms. The drawing lags the solver by up to the

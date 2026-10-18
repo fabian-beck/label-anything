@@ -1,6 +1,6 @@
 # 0026 — Smooth label transitions in the JavaScript helpers
 
-* Status: accepted (`@label-anything/extras`; no change to the engine); amended by ADR 0033
+* Status: accepted (`@label-anything/extras`; no change to the engine); amended by ADR 0038
   (labels hold before they move or go, wait before they appear, make way when they meet)
 * Date: 2026-10-17
 
