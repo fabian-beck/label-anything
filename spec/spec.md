@@ -1101,7 +1101,7 @@ with the item's best candidate (fewest evictions, then cost) and re-queues them.
 `degrade_options.soft_overlap_weight`. `omit` gives up. Required items are a band of
 their own above everything and therefore run first.
 
-Time guard (ADR 0007, 0042, 0046): with a clock, the pass stops running bands and ladders
+Time guard (ADR 0007, 0042, 0048): with a clock, the pass stops running bands and ladders
 10 × `time_budget_ms` after it began (checked before every band and every 64 items).
 The items still undecided then — except `keep_with` members and items whose level-0
 attempt already failed — are visited once more in total order and take their best free

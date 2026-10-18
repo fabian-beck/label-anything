@@ -1,4 +1,4 @@
-# 0046 — A level-0 pass after the greedy guard
+# 0048 — A level-0 pass after the greedy guard
 
 * Status: accepted (amends ADR 0007 and ADR 0042; Rust `la-core`, TypeScript `@label-anything/core`)
 * Date: 2026-10-18

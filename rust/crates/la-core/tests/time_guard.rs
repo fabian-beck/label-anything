@@ -83,7 +83,7 @@ fn after_the_guard_the_rest_get_level_0() {
     let r = place(&rows("strict"), &Ticking::new(1.0)).unwrap();
     assert_eq!(r["stats"]["time_guard_hit"], true);
     // every label has a free level-0 position: the level-0 pass after the guard places them
-    // all (ADR 0046); before, the items after the guard were budget_exhausted
+    // all (ADR 0048); before, the items after the guard were budget_exhausted
     assert_eq!(r["stats"]["placed"], 200);
 }
 
@@ -95,7 +95,7 @@ fn after_the_guard_a_prefix_continues_at_level_0() {
     assert_eq!(r["stats"]["time_guard_hit"], true);
     let placements = r["placements"].as_array().unwrap();
     let placed = r["stats"]["placed"].as_u64().unwrap() as usize;
-    // before ADR 0046 the 63 items before the first check were all that was placed
+    // before ADR 0048 the 63 items before the first check were all that was placed
     assert!(placed > 64 && placed < 200, "placed {placed}");
     // still a prefix of the priority order (= input order here), the rest out of time
     assert!(placements[..placed].iter().all(|p| p["placed"] == true));

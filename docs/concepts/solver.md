@@ -39,7 +39,7 @@ between priority bands and every 64 items), so a slow preparation — a host `me
 callback for many labels — still leaves the most important labels their turn. The items
 not reached by then still get their best free normal position, in priority order and
 without the ladder, for up to another 10 × the budget
-([ADR 0046](../adr/0046-level-0-pass-after-the-greedy-guard.md)); the ones left are
+([ADR 0048](../adr/0048-level-0-pass-after-the-greedy-guard.md)); the ones left are
 `budget_exhausted`. Either guard sets `stats.time_guard_hit` — the only case in which
 results may depend on timing.
 

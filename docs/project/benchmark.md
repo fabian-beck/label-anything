@@ -87,7 +87,7 @@ D3-Labeler's annealing hours).
   [ADR 0028](../adr/0028-label-margin.md) trades labels for space between them: 1–4 % of
   the labels in typical scenes, 10 % of the 2,000 points. On very large inputs the greedy
   pass reaches its time guard; the items it has not reached then still get their normal
-  positions, in priority order ([ADR 0046](../adr/0046-level-0-pass-after-the-greedy-guard.md)):
+  positions, in priority order ([ADR 0048](../adr/0048-level-0-pass-after-the-greedy-guard.md)):
   914 labels for 20,000 anchors, where only the first 279 got one before.
 * **Leaders where it is crowded.** In crowded scenes many labels need leaders (14 of the
   32 Gapminder labels, 58 of 149 in the Cora network), up to 8 and 11 em long, some

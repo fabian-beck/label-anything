@@ -61,7 +61,7 @@ describe("time guard", () => {
     const r = placeWith(rows("strict"), new Ticking(1)) as Res;
     expect(r.stats.time_guard_hit).toBe(true);
     // every label has a free level-0 position: the level-0 pass after the guard places them
-    // all (ADR 0046); before, the items after the guard were budget_exhausted
+    // all (ADR 0048); before, the items after the guard were budget_exhausted
     expect(r.stats.placed).toBe(200);
   });
 
@@ -71,7 +71,7 @@ describe("time guard", () => {
     const r = placeWith(rows("prefix"), new Ticking(6)) as Res;
     expect(r.stats.time_guard_hit).toBe(true);
     const placed = r.stats.placed as number;
-    // before ADR 0046 the 63 items before the first check were all that was placed
+    // before ADR 0048 the 63 items before the first check were all that was placed
     expect(placed).toBeGreaterThan(64);
     expect(placed).toBeLessThan(200);
     // still a prefix of the priority order (= input order here), the rest out of time

@@ -169,7 +169,7 @@ export function run(s: Solve): void {
   if (s.model.omission === Omission.Prefix) {
     const order = s.pri.order.slice();
     let cut = false;
-    // after the guard, level 0 only (ADR 0046): the first item without a free level-0
+    // after the guard, level 0 only (ADR 0048): the first item without a free level-0
     // position ends the prefix, and the guard of that pass ends it as well
     let finish: number | null = null;
     for (let k = 0; k < order.length; k++) {
@@ -317,7 +317,7 @@ export function run(s: Solve): void {
 }
 
 /**
- * After the greedy guard (ADR 0046): the undecided items, in total order, get their best
+ * After the greedy guard (ADR 0048): the undecided items, in total order, get their best
  * free level-0 candidate — no ladder, no explanation of a failure — until the guard passes
  * once more from the start of this pass; whatever is left is `budget_exhausted`.
  */
@@ -334,7 +334,7 @@ function finishLevel0(s: Solve, g: Greedy, guard: number): void {
 }
 
 /**
- * The best free level-0 candidate of undecided item `i`, after the greedy guard (ADR 0046).
+ * The best free level-0 candidate of undecided item `i`, after the greedy guard (ADR 0048).
  * Not for members of a `keep_with` set (placed together or not at all) or items whose
  * level-0 attempt already failed (their candidates have not become freer since). A cap
  * that the candidate would exceed omits the item; any other failure leaves it undecided.
