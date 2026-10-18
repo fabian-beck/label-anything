@@ -244,6 +244,61 @@ def test_non_finite_points_are_skipped() -> None:
     assert [it["attrs"] for it in out.result.problem["items"]] == [{"k": 0}, {"k": 3}]
 
 
+def test_dates_and_categories_use_the_axis_units() -> None:
+    pd = pytest.importorskip("pandas")
+    dates = pd.date_range("2024-01-01", periods=60, freq="D")
+    fig, ax = plt.subplots()
+    ax.plot(dates, np.sin(np.arange(60) / 6))
+    picks = [10, 30, 50]
+    out = label_points(ax, dates[picks], np.sin(np.asarray(picks) / 6), ["a", "b", "c"])
+    assert len(out.result.placed) == 3
+    for t, i in zip(out.texts, picks):  # each label next to its point
+        tx, ty = t.get_position()
+        assert abs(tx - matplotlib.dates.date2num(dates[i])) < 5
+    fig, ax = plt.subplots()
+    ax.scatter(["apples", "pears", "plums"], [3, 5, 2])
+    out = label_points(ax, ["apples", "pears", "plums"], [3, 5, 2], ["a", "b", "c"])
+    assert [p.anchor for p in out.result.placed] == [p.anchor for p in label_points(ax, [0, 1, 2], [3, 5, 2], ["a", "b", "c"], draw=False).result.placed]
+
+
+def test_line_feeds_break_lines() -> None:
+    fig, ax = plt.subplots()
+    ax.scatter([1, 2], [1, 2])
+    seen: List[str] = []
+    measure = text_measure(fig)
+
+    def spy(text: str, font: la.FontSpec) -> la.TextMetrics:
+        seen.append(text)
+        return measure(text, font)
+
+    out = label_points(ax, [1, 2], [1, 2], ["Paris\n2.1M", "Rome"], measure=spy)
+    assert sorted(t.get_text() for t in out.texts) == ["2.1M", "Paris", "Rome"]
+    assert not any("\n" in t for t in seen)
+
+
+def test_points_outside_the_canvas_warn() -> None:
+    fig, ax = plt.subplots()
+    ax.scatter([0, 1], [0, 1])
+    with pytest.warns(UserWarning, match="none of the 2 points lies inside the axes"):
+        out = label_points(ax, [100, 200], [100, 200], ["a", "b"])
+    assert out.result.placed == []
+
+
+def test_font_keys_of_text_kw_are_measured() -> None:
+    fig, ax, x, y = scatter(20)
+    out = label_points(ax, x, y, [f"label {i}" for i in range(20)], text_kw={"size": 12, "weight": "bold", "color": "C3"})
+    fig.canvas.draw()
+    for t, bb in zip(out.texts, extents(out.texts, fig)):
+        p = next(q for q in out.result.placed if t.get_text() in q.lines)
+        assert p.box is not None and p.text is not None
+        assert t.get_fontsize() == pytest.approx(12 * p.text["scale"]) and t.get_color() == "C3"
+        assert bb.width == pytest.approx(max(p.text["line_widths"]), abs=1.0)
+    with pytest.raises(TypeError, match="fontsize is given twice"):
+        label_points(ax, x, y, ["a"] * 20, fontsize=8, text_kw={"fontsize": 12})
+    with pytest.raises(TypeError, match=r"text_kw\['rotation'\] would change the drawn labels"):
+        label_points(ax, x, y, ["a"] * 20, text_kw={"rotation": 30})
+
+
 def test_temporary_canvas_is_restored() -> None:
     from matplotlib.backends.backend_svg import FigureCanvasSVG
     from matplotlib.figure import Figure
@@ -274,3 +329,4 @@ def test_shim_module() -> None:
     import label_anything.matplotlib as shim
 
     assert shim.label_points is label_points
+    assert shim.svg_classes is svg_classes and shim.figure_background is figure_background

@@ -41,6 +41,25 @@ def test_columns_by_name() -> None:
     assert top <= {p.id for p in res.placed}
 
 
+def test_priority_by_column_name() -> None:
+    df = frame()
+    ax = sns.scatterplot(data=df, x="gdp", y="life")
+    out = label_points(ax, data=df, x="gdp", y="life", label="country", priority="pop", max_labels=10)
+    # the column becomes an attribute without attrs=["pop"]
+    assert out.result.problem["items"][3]["attrs"] == {"pop": int(df["pop"][3])}
+    top = set(df["pop"].nlargest(3).index.astype(str))
+    assert top <= {p.id for p in out.result.placed}
+    both = label_points(ax, data=df, x="gdp", y="life", label="country", attrs=["life"], priority="pop", draw=False)
+    assert both.result.problem["items"][0]["attrs"].keys() == {"life", "pop"}
+
+
+def test_dates_on_the_x_axis() -> None:
+    df = pd.DataFrame({"day": pd.date_range("2024-01-01", periods=20, freq="D"), "v": np.arange(20.0), "n": [f"d{i}" for i in range(20)]})
+    ax = sns.scatterplot(data=df, x="day", y="v")
+    out = label_points(ax, data=df, x="day", y="v", label="n")
+    assert len(out.result.placed) > 10
+
+
 def test_vectors_and_current_axes() -> None:
     df = frame(20)
     sns.regplot(data=df, x="gdp", y="life")

@@ -21,7 +21,7 @@ p = (la.Problem(canvas=(480, 320), font_size=12, seed=1)
        .vector("rivers", polylines=[[(0, 120), (480, 60)]], width=3)
        .avoid(rivers="hard")
        .leaders("straight", max_length="6em")
-       .priority(la.Priority.attr("pop", "log1p")))
+       .priority(la.Priority.attr("pop")))
 problem = p.build()          # a JSON-serializable dict (problem.v1)
 res = p.solve()
 # --8<-- [end:builder]

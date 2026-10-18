@@ -89,8 +89,10 @@ without the GIL; callbacks take it back.
 
 `label_points(ax, x, y, labels, **opts)` draws the figure, renders it without its texts as
 the background, adds the visible texts and legends as hard obstacles, measures labels with
-the figure's renderer, solves, and adds the label texts and leaders to the axes. Every
-other keyword goes to `la.place`.
+the figure's renderer, solves, and adds the label texts and leaders to the axes. `x` and
+`y` are in the units of the plotted data (dates and categories too). Every other keyword
+goes to `la.place`; the [API reference](../bindings/python.md#plotting-helpers) lists the
+helper's own options.
 
 ```python
 --8<-- "examples/tutorials/python/helpers_matplotlib.py:matplotlib"
@@ -98,9 +100,18 @@ other keyword goes to `la.place`.
 
 ![Output of the matplotlib helper](../assets/figures/matplotlib.png){ width="560" }
 
-The default degradation ladder may move a label that fits nowhere else into the plot
-margins with a long leader (the `boundary` step); the example leaves that step out, as
-most scatter plots should.
+The default [degradation ladder](../concepts/candidates.md) may shrink a label that fits
+nowhere else (`shrink:0.85`, down to 0.7) or relax hard obstacle classes
+(`soft_overlap`); the example's shorter ladder leaves both out, so every label keeps the
+chosen size and the labels that do not fit are omitted.
+
+Call `label_points` when the figure is final — size, layout (`tight_layout`), axis scales
+and limits, colorbars, legends: the labels are in data coordinates, so any savefig dpi
+works, but a later change of the axes' size or scale moves the points under labels that
+keep their size. For the top N of a dense plot, `avoid={"lower_items": 10}` lets an
+important label cover the dots of less important points
+([important labels over minor marks](../tutorials/priority.md#important-labels-over-minor-marks)),
+which keeps the most important labels in a crowd.
 
 ### Plotly
 
@@ -115,11 +126,14 @@ ranges, which it fixes. Other scatter traces of the same axes are obstacles.
 ### seaborn
 
 `label_anything.seaborn.label_points(ax, data=df, x=..., y=..., label=...)` takes column
-names like seaborn's axes-level functions, and seaborn's default marker size.
+names like seaborn's axes-level functions, and seaborn's default marker size; a
+`priority` given as a column name (`priority="pop"`) ranks the points by that column.
 
 ```python
 --8<-- "examples/tutorials/python/helpers_seaborn.py:seaborn"
 ```
 
 All programs on this page are in
-[`examples/tutorials/python`](gh:examples/tutorials/python) and run in CI.
+[`examples/tutorials/python`](gh:examples/tutorials/python) and run in CI. They read their
+data (`points.csv`, ...) from [`examples/tutorials/data`](gh:examples/tutorials/data):
+run them there, or all at once with `python3 examples/tutorials/run.py python`.

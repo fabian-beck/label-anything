@@ -37,8 +37,10 @@ assert res["Roslin"].blocked_by == ("Achros", "Dorsted"), res["Roslin"]
 assert res.omission_order == sorted((p.id for p in res.unplaced), key=lambda i: pop[i])
 
 # --8<-- [start:terms]
-priority = la.Priority.attr("pop", "log1p") + 0.5 * la.Priority.outlierness() - 0.2 * la.Priority.label_size()
-print(priority.to_terms())   # [{'attr': 'pop', 'transform': 'log1p'}, {'builtin': 'outlierness', 'weight': 0.5}, ...]
+# min-max normalization keeps the log-scaled population's spread (rank keeps only its order)
+priority = (la.Priority.attr("pop", "log1p", normalize="minmax") + 0.5 * la.Priority.outlierness()
+            - 0.2 * la.Priority.label_size())
+print(priority.to_terms())   # [{'attr': 'pop', 'transform': 'log1p', 'normalize': 'minmax'}, ...]
 res = la.place(anchors, names, priority=priority, **common)
 # --8<-- [end:terms]
 assert res.stats["priority_inversions"] == 0 and res.placed[0].priority["terms"], res.placed[0].priority

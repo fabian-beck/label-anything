@@ -96,6 +96,25 @@ def test_subplots() -> None:
     assert out.result.problem["canvas"]["width"] == pytest.approx((dom[1] - dom[0]) * (700 - 160))
 
 
+def test_marker_sizes_per_point() -> None:
+    pd = pytest.importorskip("pandas")
+    x, y = data(5)
+    sizes = [6.0, 10.0, 14.0, 18.0, 22.0]
+    for ms in [sizes, np.array(sizes), pd.Series(sizes, index=[7, 8, 9, 10, 11])]:
+        out = label_points(go.Figure(go.Scatter(x=x, y=y, mode="markers")), x, y, list("abcde"), marker_size=ms)
+        assert [it["anchor"]["mark"]["r"] for it in out.result.problem["items"]] == [s / 2 for s in sizes]
+    with pytest.raises(ValueError, match="marker_size has 2 values but there are 5 points"):
+        label_points(go.Figure(), x, y, list("abcde"), marker_size=[6, 8])
+
+
+def test_annotation_font_is_merged() -> None:
+    x, y = data(10)
+    out = label_points(go.Figure(), x, y, list("abcdefghij"), font_size=14, annotation_kw={"font": {"color": "red"}})
+    assert all(a["font"] == {"color": "red", "size": 14} for a in out.annotations)
+    with pytest.raises(TypeError, match="font size 20 differs"):
+        label_points(go.Figure(), x, y, list("abcdefghij"), font_size=14, annotation_kw={"font": {"size": 20}})
+
+
 def test_category_axes_are_rejected() -> None:
     fig = go.Figure(go.Scatter(x=["a", "b"], y=[1, 2]))
     fig.update_xaxes(type="category")
