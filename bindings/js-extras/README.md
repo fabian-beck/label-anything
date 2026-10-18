@@ -22,6 +22,11 @@ problem, solves it, and draws or applies the result:
 None of the libraries is a dependency: the helpers use only the methods listed in their
 `…Like` interfaces (Observable Plot is an optional peer dependency of `/plot`).
 
+The helpers that draw the labels themselves render what the engine returns, including
+wrapped lines and shrunk fonts. Vega and Cytoscape draw their own text and the helpers
+only move it, so there labels are never wrapped or shrunk: the degradation ladder leaves
+out `wrap`, `truncate` and `shrink`, and a label that does not fit is left out instead.
+
 ## Engine
 
 By default the helpers solve with `@label-anything/core` (pure TypeScript). To use the

@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import type { LabelResult } from "@label-anything/core";
 import { LatestRunner, resolveEngine, setDefaultEngine, type AsyncEngine } from "../src/engine.js";
-import { buildProblem, labelOf, resolveFont } from "../src/options.js";
+import { buildProblem, keepHostText, labelOf, resolveFont } from "../src/options.js";
 import { followAnchors, leaderPath, renderLabels } from "../src/render.js";
 import { LabelMemory } from "../src/stable.js";
 import { fakeEngine } from "./engines.js";
@@ -33,6 +33,11 @@ describe("buildProblem", () => {
     const p = buildProblem(base, { priority: { omission: "prefix" }, problem: { canvas: { width: 5, height: 5 } } }, font);
     expect(p.priority).toEqual({ omission: "prefix" });
     expect(p.canvas).toEqual({ width: 5, height: 5 });
+  });
+
+  it("keeps host-drawn text as it is: no wrap, truncate or shrink steps", () => {
+    expect(keepHostText({ ...base }).degrade).toEqual(["alternatives", "distant", "evict_lower", "soft_overlap", "omit"]);
+    expect(keepHostText({ ...base, degrade: ["wrap", "truncate", "shrink:0.9", "distant", "omit"] }).degrade).toEqual(["distant", "omit"]);
   });
 });
 

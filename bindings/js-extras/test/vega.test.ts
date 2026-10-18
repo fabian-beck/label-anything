@@ -63,6 +63,8 @@ describe("Vega labelAnything transform", () => {
     expect(problem.obstacles?.vector).toEqual([{ class: "trend", polylines: [[[0, 100], [300, 100]]], width: 1 }]);
     expect(problem.avoid?.label).toMatchObject({ trend: "hard" });
     expect(problem.placement?.models).toEqual(["adjacent", "slider"]);
+    // Vega draws the text items as encoded: no step may wrap or shrink them
+    expect(problem.degrade).toEqual(["alternatives", "distant", "evict_lower", "soft_overlap", "omit"]);
     for (const t of items) {
       expect(t.align).toBe("left");
       expect(t.baseline).toBe("alphabetic");

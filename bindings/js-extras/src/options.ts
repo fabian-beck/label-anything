@@ -133,6 +133,19 @@ export function buildProblem<D>(
   return { ...p, ...options.problem };
 }
 
+/** The default degradation ladder (`degrade` in spec/defaults.md). */
+const DEFAULT_DEGRADE = ["alternatives", "wrap", "distant", "evict_lower", "shrink:0.85", "soft_overlap", "omit"];
+
+/**
+ * For helpers whose host draws the label text itself (Vega, Cytoscape) and only moves it:
+ * leaves the steps that change the text out of the degradation ladder (`wrap`,
+ * `truncate`, `shrink`), since the host would still draw it on one line at its own size.
+ */
+export function keepHostText(problem: LabelProblem): LabelProblem {
+  const ladder = (problem.degrade ?? DEFAULT_DEGRADE).filter((s) => s !== "wrap" && s !== "truncate" && !s.startsWith("shrink"));
+  return { ...problem, degrade: ladder };
+}
+
 /** Solve options: the measurement (canvas by default) plus `placeOptions`. */
 export function placeOptionsOf<D>(options: LabelOptions<D>, measure?: MeasureFn): PlaceOptions {
   const m = options.measure === false ? undefined : (options.measure ?? measure ?? defaultMeasure());

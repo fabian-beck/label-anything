@@ -11,12 +11,14 @@
  * solve runs in model coordinates, so panning and zooming keep the layout valid (labels
  * scale with the graph); it re-runs after layouts, node drags and graph changes. Leaders
  * (if enabled) are drawn in an SVG overlay. Unlabeled nodes are hard obstacles (class
- * `nodes`), edges soft ones (class `edges`).
+ * `nodes`), edges soft ones (class `edges`). Cytoscape draws the labels as styled, so
+ * they are moved but never wrapped or shrunk (the ladder leaves out `wrap`, `truncate`
+ * and `shrink`).
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
 import { LatestRunner, resolveEngine } from "./engine.js";
 import { numericWeight } from "./measure.js";
-import { buildProblem, itemExtras, labelOf, placeOptionsOf, resolveFont, type LabelOptions, type Mark } from "./options.js";
+import { buildProblem, itemExtras, keepHostText, labelOf, placeOptionsOf, resolveFont, type LabelOptions, type Mark } from "./options.js";
 import { renderLabels, type RenderOptions } from "./render.js";
 import { SVG_NS } from "./svg.js";
 
@@ -192,7 +194,7 @@ export function labelCytoscape(cy: CytoscapeLike, options: CytoscapeLabelOptions
     if (unlabeled!.length) vector.push({ class: "nodes", shapes: unlabeled });
     if (polylines.length) vector.push({ class: "edges", polylines: polylines as never, width: edgeWidth });
     const avoid = { ...options.avoid, label: { nodes: "hard" as const, ...options.avoid?.label } };
-    const problem = buildProblem({ items, ...(vector.length ? { obstacles: { vector } } : {}) }, { ...options, avoid }, font);
+    const problem = keepHostText(buildProblem({ items, ...(vector.length ? { obstacles: { vector } } : {}) }, { ...options, avoid }, font));
     runner.run(problem, placeOptionsOf(options), apply, (e) => (options.onError ? options.onError(e) : console.error(e)));
   };
 
