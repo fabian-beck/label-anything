@@ -11,6 +11,15 @@ Configs:
                               radius 3 + 1.5·sqrt(degree), every character labeled,
 * ``lesmis-shapes``           same layout, UML/ER-like nodes: rounded rects (corner radius 4) sized to
                               hold the name for degree ≥ 8, ellipses for the others,
+* ``lesmis-force``            the layout of scenario 11's force sequences at rest (d3-force style, 300
+                              ticks), fitted to the canvas: circles r = 3 + 1.5·sqrt(degree) in the color
+                              of the character's community (the dataset's ``group``, ``attrs.color``),
+                              edges as wide as the characters' co-occurrences, readable names,
+* ``flare-imports``           the Flare visualization toolkit (vega-datasets ``flare.json``,
+                              ``flare-dependencies.json``): 220 classes and their 708 import pairs in the same
+                              force layout (rotated, principal axis horizontal), circles by degree in the
+                              color of the class's top-level package; the 100 most connected classes are
+                              labeled with their names, the other 120 are hard ``nodes`` obstacles,
 * ``cora-circles``            Cora citation network, largest connected component (2,485 papers,
                               5,069 links), 150 most cited papers labeled with their paper ids (alternative: last 4 digits), other papers are hard
                               ``nodes`` obstacles.
@@ -29,7 +38,10 @@ from scipy.spatial import cKDTree
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from bench.common import fetch, text  # noqa: E402
-from bench.common.scenario import FONT_CLASSES_SPARSE, Writer, base_problem, merge_avoid  # noqa: E402
+from bench.common.forcesim import Simulation  # noqa: E402
+from bench.common.scenario import (FONT_CLASSES_SPARSE, Writer, base_problem, merge_avoid,  # noqa: E402
+                                   png_bytes)
+from bench.common.scene import Scene  # noqa: E402
 
 SCENARIO = "07-node-link"
 SOURCES = ["vega-datasets-3.2.1", "cora-cites", "cora-content"]
@@ -125,6 +137,52 @@ def lesmis():
     return G, separate(pos, half, 1000.0, 760.0, 60.0)
 
 
+GROUP_COLORS = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7",
+                "#9c755f", "#bab0ac", "#d37295"]
+"""One color per community of the Les Misérables data (``group`` 0–10)."""
+NAMES = {"MotherInnocent": "Mother Innocent", "CountessdeLo": "Countess de Lo", "Mme.deR": "Mme. de R.",
+         "BaronessT": "Baroness T.", "MotherPlutarch": "Mother Plutarch", "OldMan": "Old Man",
+         "Child1": "Child 1", "Child2": "Child 2", "Woman1": "Woman 1", "Woman2": "Woman 2"}
+
+
+def display_name(name: str) -> str:
+    """The character's name as a reader writes it (the data runs words together: ``Mme.Thenardier``)."""
+    return NAMES.get(name, name.replace(".", ". "))
+
+
+def lesmis_force(G, ticks: int = 300) -> dict:
+    """The d3-force style layout of scenario 11 (``bench.common.forcesim``) after ``ticks`` ticks, fitted
+    to the 1000 × 760 canvas with a 40 px margin."""
+    nodes = sorted(G.nodes())
+    idx = {n: k for k, n in enumerate(nodes)}
+    sim = Simulation(len(nodes), [(idx[a], idx[b]) for a, b in sorted(G.edges())])
+    for _ in range(ticks):
+        sim.tick()
+    return fit({n: (float(sim.x[idx[n]][0]), float(sim.x[idx[n]][1])) for n in nodes}, 1000.0, 760.0, 40.0)
+
+
+def flare():
+    """Flare's classes (leaves of ``flare.json``) and their imports; the top-level package of every class."""
+    tgz = fetch.ensure("vega-datasets-3.2.1", verbose=False)
+    nodes = json.loads(fetch.read_tar_member(tgz, "package/data/flare.json"))
+    deps = json.loads(fetch.read_tar_member(tgz, "package/data/flare-dependencies.json"))
+    by_id = {n["id"]: n for n in nodes}
+
+    def package(n):
+        while by_id[n["parent"]].get("parent") is not None and by_id[by_id[n["parent"]]["parent"]].get("parent"):
+            n = by_id[n["parent"]]
+        return by_id[n["parent"]]["name"] if by_id[n["parent"]].get("parent") else n["name"]
+
+    G = nx.Graph()
+    for n in sorted(nodes, key=lambda n: n["id"]):
+        if "size" in n:
+            G.add_node(n["id"], name=n["name"], package=package(n))
+    for e in deps:
+        if e["source"] in G and e["target"] in G and e["source"] != e["target"]:
+            G.add_edge(e["source"], e["target"])
+    return G
+
+
 def cora():
     content = fetch.ensure("cora-content", verbose=False)
     cites = fetch.ensure("cora-cites", verbose=False)
@@ -197,6 +255,66 @@ def main() -> None:
     p["priority"] = {"terms": [{"attr": "degree"}]}
     wr.config("lesmis-shapes", p,
               description="Same layout with UML-like rounded rects (internal labels) and ER-like ellipses.")
+    # the force layout at rest: circles by degree, colored by community, edges by co-occurrence
+    fpos = lesmis_force(G)
+    sc = Scene(1000.0, 760.0, background="#ffffff")
+    for a, b in sorted(G.edges()):
+        w = round(0.5 + 0.25 * math.sqrt(G.edges[a, b]["weight"]), 1)
+        sc.polyline([fpos[a], fpos[b]], "edge", "lines", stroke="#aab2bb", width=w, opacity=0.8)
+    items = []
+    for n in sorted(G.nodes()):
+        deg = G.degree(n)
+        x, y = fpos[n]
+        grp = G.nodes[n]["group"]
+        items.append({"id": G.nodes[n]["name"],
+                      "anchor": {"type": "point", "x": x, "y": y,
+                                 "mark": {"shape": "circle", "r": round(3 + 1.5 * math.sqrt(deg), 3)}},
+                      "label": {"type": "text", "text": display_name(G.nodes[n]["name"])},
+                      "attrs": {"degree": deg, "group": grp, "color": GROUP_COLORS[grp % len(GROUP_COLORS)]}})
+    p = base_problem(1000.0, 760.0, "graph", font_size=10.0)
+    p["items"] = items
+    p["obstacles"] = {"vector": sc.vector_layers()}
+    p["priority"] = {"terms": [{"attr": "degree"}], "font_classes": FONT_CLASSES_SPARSE}
+    wr.config("lesmis-force", p, svg=sc.svg(), png=png_bytes(sc.png()),
+              description="Les Misérables in its d3-force layout at rest: circles by degree, colored by community.")
+    # Flare: a software dependency network in the same force layout
+    F = flare()
+    fnodes = sorted(F.nodes())
+    fidx = {n: k for k, n in enumerate(fnodes)}
+    sim = Simulation(len(fnodes), [(fidx[a], fidx[b]) for a, b in sorted(F.edges())], charge=-150.0)
+    for _ in range(300):
+        sim.tick()
+    W, Hh = 1400.0, 1000.0
+    fpos = fit(orient({n: (float(sim.x[fidx[n]][0]), float(sim.x[fidx[n]][1])) for n in fnodes}), W, Hh, 40.0)
+    labeled = set(sorted(fnodes, key=lambda n: (-F.degree(n), F.nodes[n]["name"], n))[:100])
+    packages = sorted({F.nodes[n]["package"] for n in F})
+    pcolor = {pk: GROUP_COLORS[k % len(GROUP_COLORS)] for k, pk in enumerate(packages)}
+    sc = Scene(W, Hh, background="#ffffff")
+    for a, b in sorted(F.edges()):
+        sc.polyline([fpos[a], fpos[b]], "edge", "lines", stroke="#b4bcc4", width=0.6, opacity=0.7)
+    for k, pk in enumerate(packages):
+        sc.rect(16, 18 + 15 * k - 8, 9, 9, "swatch", "legend", fill=pcolor[pk])
+        sc.text(30, 18 + 15 * k, f"flare.{pk}", "legendtext", "text", size=10, fill="#333333")
+    items = []
+    for n in fnodes:
+        deg = F.degree(n)
+        x, y = fpos[n]
+        pk = F.nodes[n]["package"]
+        r = round(2 + 0.8 * math.sqrt(deg), 3)
+        if n not in labeled:
+            sc.circle(x, y, r, "node", "nodes", fill=pcolor[pk], opacity=0.75, stroke="#ffffff", stroke_width=0.6)
+            continue
+        items.append({"id": f"{pk}.{F.nodes[n]['name']}#{n}",
+                      "anchor": {"type": "point", "x": x, "y": y, "mark": {"shape": "circle", "r": r}},
+                      "label": {"type": "text", "text": F.nodes[n]["name"]},
+                      "attrs": {"degree": deg, "package": pk, "color": pcolor[pk]}})
+    p = base_problem(W, Hh, "graph", font_size=9.0)
+    p["items"] = items
+    p["obstacles"] = {"vector": sc.vector_layers()}
+    p["priority"] = {"terms": [{"attr": "degree"}], "font_classes": FONT_CLASSES_SPARSE}
+    merge_avoid(p, {"legend": "hard", "nodes": "hard"}, {"legend": "hard", "nodes": 1.0})
+    wr.config("flare-imports", p, svg=sc.svg(), png=png_bytes(sc.png()),
+              description="Flare: 220 classes and their imports, force layout; the 100 most connected labeled.")
     H, pos, topic, citations = cora()
     ranked = sorted(H.nodes(), key=lambda n: (-citations.get(n, 0), int(n)))
     labeled = set(ranked[:150])

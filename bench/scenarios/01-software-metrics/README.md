@@ -16,14 +16,14 @@ attribution, documented approximation; see the header of `CkLite.java`): CBO (di
 referenced types, `java.*`/`javax.*` ignored), RFC (distinct invocations by receiver,
 name and arity), WMC (Σ 1 + branches), LOC, NOM, NOF. Needs a JDK ≥ 11 (`java` on PATH).
 
-**Configs** (canvas 1000 × 720 px, preset `scatter`, font 10 px, priority = outlierness, font classes: the top 5 % bold at 1.25 ×, the rest at 0.9 ×):
+**Configs** (canvas 1000 × 720 px, preset `scatter`, font 10 px, priority = outlierness, font classes: the top 5 % at 1.25 ×, the rest at 0.9 ×):
 
 | config | labels | background | notes |
 |---|---|---|---|
 | `cbo-rfc-10-none` (quick) | 10 | none | other classes as soft `points` (r 2.5) |
 | `cbo-rfc-30-vector` | 30 | vector layers | axes (hard), grid (0.2), tick labels (`text`, hard) |
-| `cbo-rfc-100-svg` | 100 | SVG | FQCNs wrap (`max_width` 16 em, 3 lines) |
-| `wmc-loc-30-raster` | 30 | PNG, raster mode `ink` | WMC vs LOC |
+| `cbo-rfc-100-svg` | 100 | SVG | names without the shared prefix `com.facebook.react.` (or `com.facebook.`) wrap (`max_width` 16 em, 3 lines) |
+| `wmc-loc-30-raster` | 30 | PNG, raster mode `ink` | WMC vs LOC; names as in `cbo-rfc-100-svg` |
 
 **Rendering recipe.** x = log10(1 + CBO), y = log10(1 + RFC) (or WMC/LOC), each value
 jittered deterministically by at most ±0.3 metric units (SHA-256 of the class name) so

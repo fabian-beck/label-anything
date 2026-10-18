@@ -8,8 +8,10 @@ are labeled with their fully qualified class names, all other classes are
 ``points`` obstacles.
 
 Configs: ``cbo-rfc-10-none`` (quick), ``cbo-rfc-30-vector`` (axes/grid/ticks as
-vector layers), ``cbo-rfc-100-svg`` (SVG chart, wrapped FQCNs), ``wmc-loc-30-raster``
-(WMC vs LOC drawn into a PNG background, raster mode ``ink``).
+vector layers), ``cbo-rfc-100-svg`` (SVG chart, wrapped names without the prefix that every
+class shares: ``uimanager.UIViewOperationQueue`` for ``com.facebook.react.uimanager.…``),
+``wmc-loc-30-raster`` (WMC vs LOC drawn into a PNG background, raster mode ``ink``, names as in
+``cbo-rfc-100-svg``).
 """
 from __future__ import annotations
 
@@ -57,12 +59,20 @@ def decorated_scene(ax, xt, yt, xlab, ylab, pts=None, outliers=()) -> Scene:
     return sc
 
 
-def make_items(ms, pts, outl, idx, wrap=None) -> list[dict]:
+def short_name(fqcn: str) -> str:
+    """The class name without the package prefix every class of the code base shares."""
+    for prefix in ("com.facebook.react.", "com.facebook."):
+        if fqcn.startswith(prefix):
+            return fqcn[len(prefix):]
+    return fqcn
+
+
+def make_items(ms, pts, outl, idx, wrap=None, name=lambda n: n) -> list[dict]:
     items = []
     for k in idx:
         m = ms[k]
         x, y = pts[k]
-        lab = {"type": "text", "text": m.name}
+        lab = {"type": "text", "text": name(m.name)}
         if wrap:
             lab["wrap"] = wrap
         items.append({"id": m.name, "anchor": {"type": "point", "x": round(x, 3), "y": round(y, 3),
@@ -111,11 +121,11 @@ def main() -> None:
     # 3. 100 outliers, SVG chart, wrapped names
     sel = order[:100]
     sc = decorated_scene(ax, xt, yt, "Coupling between objects (CBO)", "Response for a class (RFC)", pts, set(sel))
-    p = problem_with(make_items(ms, pts, outl, sel, wrap={"max_width": "16em", "max_lines": 3}),
+    p = problem_with(make_items(ms, pts, outl, sel, wrap={"max_width": "16em", "max_lines": 3}, name=short_name),
                      {"obstacles": {"svg": svg_source(sc)}})
     merge_avoid(p, {"grid": 0.2}, {"grid": 0.1}, ignore_background=True)
     wr.config("cbo-rfc-100-svg", p, truth=sc.truth(), svg=sc.svg(), png=png_bytes(sc.png()),
-              description="100 outliers on an SVG scatterplot; FQCNs wrap at package dots (max 16 em, 3 lines).")
+              description="100 outliers on an SVG scatterplot; names below com.facebook(.react) wrap at package dots.")
     # 4. WMC vs LOC on a raster background
     ax2, pts2, xt2, yt2 = chart(ms, lambda m: m.wmc, lambda m: m.loc, "WMC", "LOC")
     outl2 = M.knn_outlierness(pts2, 5)
@@ -123,7 +133,7 @@ def main() -> None:
     sel = order2[:30]
     sc = decorated_scene(ax2, xt2, yt2, "Weighted methods per class (WMC)", "Lines of code (LOC)", pts2, set(sel))
     png = png_bytes(sc.png(), palette=True)
-    p = problem_with(make_items(ms, pts2, outl2, sel),
+    p = problem_with(make_items(ms, pts2, outl2, sel, name=short_name),
                      {"obstacles": {"raster": {"source": data_url(png), "mode": "ink", "class": "ink"}}})
     wr.config("wmc-loc-30-raster", p, png=png,
               description="WMC vs LOC, 30 outliers; the whole chart is a PNG background (raster mode ink).")

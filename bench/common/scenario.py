@@ -173,11 +173,12 @@ def _log_ticks(dom) -> list[float]:
     return [10.0 ** k for k in range(lo, hi + 1) if dom[0] <= 10.0 ** k <= dom[1]]
 
 
-# Type sizes by importance (priority.font_classes, spec §9.4).
-FONT_CLASSES_SPARSE = [{"first": "5%", "scale": 1.3, "weight": "bold"}, {"first": "25%", "scale": 1.1}]
-"""Charts with room to spare: the most important 5 % of the labels bold at 1.3 ×, the next 20 % at 1.1 ×."""
-FONT_CLASSES_DENSE = [{"first": "5%", "scale": 1.25, "weight": "bold"}, {"scale": 0.9}]
-"""Dense charts and maps: the most important 5 % bold at 1.25 ×, the rest at 0.9 ×."""
+# Type sizes by importance (priority.font_classes, spec §9.4). One weight: importance shows in the size
+# only, so that the labels of a picture read as one set.
+FONT_CLASSES_SPARSE = [{"first": "5%", "scale": 1.3}, {"first": "25%", "scale": 1.1}]
+"""Charts with room to spare: the most important 5 % of the labels at 1.3 ×, the next 20 % at 1.1 ×."""
+FONT_CLASSES_DENSE = [{"first": "5%", "scale": 1.25}, {"scale": 0.9}]
+"""Dense charts and maps: the most important 5 % at 1.25 ×, the rest at 0.9 ×."""
 
 
 def base_problem(width: float, height: float, preset: str, font_size: float = 11.0, padding: float = 4.0) -> dict:

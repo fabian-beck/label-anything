@@ -16,11 +16,12 @@ threadpoolctl). No precomputed embedding was reachable, hence this computation.
 
 **Clusters and names.** k-means (seed 0, 4 inits) on the 2-D canvas positions. Topic name
 = description of the cluster's dominant WordNet category (lexnames) + the three most
-distinctive gloss terms (in-cluster document frequency × global IDF). Point anchors use
+distinctive gloss terms (in-cluster document frequency × global IDF; English stop words and gloss
+phrasing such as "whereby" or "consisting" are not terms). Point anchors use
 the cluster member closest to the centroid.
 
 **Configs** (canvas 1600 × 1200 px, preset `scatter`, font 11 px, wrap 11 em / 3 lines,
-priority = log cluster size, font classes: the top 5 % bold at 1.3 ×, the next 20 % at 1.1 ×):
+priority = log cluster size, font classes: the top 5 % at 1.3 ×, the next 20 % at 1.1 ×):
 
 | config | clusters | anchors | raster mode |
 |---|---|---|---|

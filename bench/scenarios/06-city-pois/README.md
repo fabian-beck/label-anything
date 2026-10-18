@@ -17,7 +17,7 @@ flood-filled from a seed point inside the coastline-bounded water area.
 **POIs.** Named nodes and the centroids of named POI areas whose tags map to a category
 (`osmmap.category`); priority = category importance (sights 5, culture 4, hotels and
 leisure 3, food and services 2, shops and artworks 1), ties by name; font classes: the
-top 5 % bold at 1.25 ×, the rest at 0.9 × (the icons keep their size).
+top 5 % at 1.25 ×, the rest at 0.9 × (the icons keep their size).
 
 **Configs** (preset `map`, font 10 px, composite label = icon 9 × 9 + gap 2 + name,
 padding 1.5 px):
