@@ -23,6 +23,9 @@ def test_overlapping_labels_keep_the_more_important_one():
     assert m["usable"]["in_conflict"] == 2
     assert m["usable"]["weighted"] == pytest.approx((G[0] + G[2]) / (G[0] + G[1] + G[2]))
     assert m["summary"]["usable"] == 2 and m["summary"]["hard_conflicts"] == 1
+    # the usable prefix stops at B (rank 1), the placed prefix does not
+    assert m["usable"]["prefix"] == 1 and m["summary"]["usable_prefix"] == 1
+    assert m["priority"]["prefix_length"] == 3
 
 
 def test_a_label_over_another_mark_is_dropped_whatever_its_rank():

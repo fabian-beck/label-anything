@@ -484,6 +484,13 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
             prefix += 1
         else:
             break
+    usable_ids = {placed[k].id for k in usable}
+    usable_prefix = 0
+    for it in order:
+        if it.id in usable_ids:
+            usable_prefix += 1
+        else:
+            break
     ndcg = pr.ndcg_at_k([ranks[i] for i in placed_ids], list(ranks.values()))
     inversions = None
     inversion_ids: list[str] = []
@@ -550,6 +557,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
         "hard": {"total": hard_total, **hard, "conflicts": hard_total - spacing, "spacing": spacing,
                  "examples": examples},
         "usable": {"count": len(usable), "rate": len(usable) / n if n else None, "weighted": usable_weighted,
+                   "prefix": usable_prefix,
                    "in_conflict": len(conf_unary | {k for pair in conf_pairs for k in pair})},
         "leaders": {"count": sum(len(p.leaders) for p in placed),
                     "labels_with_leader": sum(1 for p in placed if p.leaders),
@@ -639,6 +647,7 @@ def summary(m: dict) -> dict:
         "hard_spacing": m["hard"].get("spacing"), "usable": (m.get("usable") or {}).get("count"),
         "usable_rate": (m.get("usable") or {}).get("rate"),
         "usable_weighted": (m.get("usable") or {}).get("weighted"),
+        "usable_prefix": (m.get("usable") or {}).get("prefix"),
         "leader_crossings": m["leaders"]["crossings"],
         "leader_rate": m["leaders"]["rate"], "ambiguity_rate": m["ambiguity"]["rate"],
         "adjacent_gap_abs_mean": m["shape"]["adjacent_gap_abs_mean"], "internal_rate": m["shape"]["internal_rate"],
