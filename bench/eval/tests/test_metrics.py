@@ -186,6 +186,24 @@ def test_lower_items_marks_and_their_labels():
     assert m["hard"]["label_item"] == 0
 
 
+def test_removal_test_keeps_the_label_margin():
+    # "lo" may only go right of its mark: [103, 45, 133, 55]; the margin is 0.2 em = 2.4 px
+    items = [item("hi", 170, 80, priority=2), item("lo", 100, 50, priority=1)]
+    prob = problem(items, placement={"position_order": ["right"]})
+    near = result([placed("hi", 134.5, 45), omitted("lo")])   # 1.5 px from the free box
+    assert evaluate(prob, near)["priority"]["inversions"] == 0
+    far = result([placed("hi", 137, 45), omitted("lo")])      # 4 px away: room enough
+    assert evaluate(prob, far)["priority"]["inversions"] == 1
+    prob["defaults"] = {"margin": 0}
+    assert evaluate(prob, near)["priority"]["inversions"] == 1
+    # the marks of other items keep it at the margin too
+    items = [item("lo", 100, 50, priority=1), item("m", 137.5, 50, priority=0)]
+    prob = problem(items, placement={"position_order": ["right"]})
+    assert evaluate(prob, result([omitted("lo"), omitted("m")]))["priority"]["inversions"] == 1  # m itself
+    m = evaluate(prob, result([omitted("lo"), placed("m", 141, 45, side="right")]))
+    assert m["priority"]["inversions"] == 0                    # m's mark is 2.5 px from lo's box
+
+
 def test_removal_test_uses_only_the_items_candidates():
     # "lo" sits right below a wall of hard 'block' rects on its right side; only 'left' is free.
     items = [item("lo", 100, 50)]

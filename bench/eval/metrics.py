@@ -672,15 +672,26 @@ def _candidate_positions(it: Item) -> list[tuple[str, Box]]:
     return out
 
 
+def _box_gap(a: Box, b: Box) -> float:
+    """Distance between two boxes (0 when they touch or overlap)."""
+    return math.hypot(max(0.0, a.x0 - b.x1, b.x0 - a.x1), max(0.0, a.y0 - b.y1, b.y0 - a.y1))
+
+
 def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dict, hard_classes: list[str],
                   tol: float) -> list[str]:
     """Omitted items that have a feasible adjacent position given only the placed items of
     higher or equal key (spec §9.2 removal test, 8 adjacent positions + area pole).
 
     Conservative: a position counts as feasible only if the label box *grown* by ``tol``
-    is free, so contacts within the tolerance never produce an inversion.
+    is free, so contacts within the tolerance never produce an inversion. Hard labels and
+    marks keep the label margin (spec §4.4) from it, by ``tol`` more.
     """
     opts = prob.opts
+    margin_opt = (opts.get("defaults") or {}).get("margin", "0.2em")
+
+    def margin(it: Item) -> float:
+        return spec.length(margin_opt, it.label.em)
+
     band = float(opts.get("priority", {}).get("band", 0) or 0)
     keys = pr.keys(infos, band)
     a_label = opts.get("avoid", {}).get("label", {})
@@ -698,6 +709,7 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
         if it.shape is not None:
             item_index.insert(it.index, it.shape.bbox())
     order = sorted(placed, key=lambda p: keys[p.id], reverse=True)
+    m_max = max((margin(p.item) for p in placed), default=0.0)
     box_index = GridIndex(32.0)
     seg_list: list[tuple[int, Point, Point]] = []
     seg_index = GridIndex(32.0)
@@ -721,14 +733,16 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
         cands = _candidate_positions(it)
         if not cands:
             untestable.append(it.id)
+        m_h = margin(it)
         for _side, b in cands:
             g = b.grow(tol)
             if area is not None and edge_hard and not area.contains_box(b):
                 continue
             ok = True
             if labels_hard:
-                for k in box_index.query(g):
-                    if keys[order[k].id] >= kh and order[k].box.overlaps(g):
+                for k in box_index.query(g.grow(m_h + m_max)):
+                    o = order[k]
+                    if keys[o.id] >= kh and (o.box.overlaps(g) or _box_gap(o.box, b) < max(m_h, margin(o.item)) + tol):
                         ok = False
                         break
             if ok and leader_labels_hard:
@@ -738,10 +752,15 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
                         ok = False
                         break
             if ok and (items_hard or lower_hard):
-                for j in item_index.query(g):
+                for j in item_index.query(g.grow(m_h)):
                     other = prob.items[j]
-                    if other.id == it.id or not other.shape.intersects_box(g):
+                    if other.id == it.id:
                         continue
+                    if not other.shape.intersects_box(g):
+                        # the margin, never more than the mark keeps from the own mark's box
+                        d = other.shape.dist_box(b)
+                        if own is None or d >= m_h + tol or d >= other.shape.dist_box(own.bbox()) + tol:
+                            continue
                     lower = keys[other.id] < kh and not same_group(it, other)
                     if lower_hard if lower else items_hard:
                         ok = False
