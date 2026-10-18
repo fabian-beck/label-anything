@@ -399,7 +399,7 @@ function phaseIntro(ex: Explained, k: number, phase: string): Narration {
     case "repair":
       return {
         title: "Priority repair",
-        html: `<p>An item without a label that could take a position held only by less important labels takes it, so that no label is missing in favour of a less important one.</p>${events.some((e) => e.type === "pass") ? "" : "<p>Nothing to repair.</p>"}`,
+        html: `<p>An item without a label that could take a position held only by less important labels takes it, so that no label is missing in favour of a less important one. One held by a more important label it may get by moving that label to another of its positions, when at most one less important label gives way.</p>${events.some((e) => e.type === "pass") ? "" : "<p>Nothing to repair.</p>"}`,
       };
     case "verify":
       return { title: "Verification", html: "<p>Finally, an independent pass checks the result.</p>" };
@@ -489,6 +489,11 @@ function narratePass(ex: Explained, e: Extract<TraceEvent, { type: "pass" }>): N
       return {
         title: "Priority repaired",
         html: `<p>${name(ex, e.items[0]!)} takes a position held only by less important labels${e.items.length > 1 ? ` (${names(ex, e.items.slice(1))}, tried again in their turn)` : ""}.</p>`,
+      };
+    case "relocate":
+      return {
+        title: "Label moved aside",
+        html: `<p>${name(ex, e.items[1]!)} moves to another of its positions so that ${name(ex, e.items[0]!)} gets a label${e.items.length > 2 ? `; ${name(ex, e.items[2]!)}, less important, gives way and is tried again in its turn` : ""}.</p>`,
       };
     default:
       return { title: e.what, html: "" };

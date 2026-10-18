@@ -1,7 +1,7 @@
 //! Post-search repairs: joint boundary slot assignment (spec §6.6), leader uncrossing and
 //! the priority repair of strict omission (spec §10.3).
 
-use super::greedy::explain;
+use super::greedy::{explain, pair_conflict};
 use super::{Reason, Solve};
 use crate::boundary::{column_candidate, column_port, slot_area};
 use crate::candidates::{Cand, Kind};
@@ -617,6 +617,19 @@ pub fn priority_repair(s: &mut Solve) {
     if s.model.omission != Omission::Strict || s.cancelled {
         return;
     }
+    // a label moved aside may leave room for an item visited before: the pass without
+    // moves, once more, leaves no inversion
+    let mut freed = Vec::new();
+    priority_pass(s, true, &mut freed);
+    if !freed.is_empty() {
+        priority_pass(s, false, &mut freed);
+    }
+}
+
+/// One pass of the priority repair over the omitted items in total order. With
+/// `relocate`, an item may move one label aside (ADR 0049), whose old place joins `freed`;
+/// without, an item near a place in `freed` also tries its pruned level-0 candidates.
+fn priority_pass(s: &mut Solve, relocate: bool, freed: &mut Vec<crate::geom::Rect>) {
     let soft_ok = s.model.ladder.contains(&Step::SoftOverlap);
     let keys: Vec<usize> = s.pri.prio.iter().map(|p| p.key).collect();
     let order = s.pri.order.clone();
@@ -702,10 +715,312 @@ pub fn priority_repair(s: &mut Solve) {
                 s.state.place(h, c, &s.cands, relaxed);
                 s.reasons[h] = None;
             }
-            None if s.reasons[h].is_none() => s.reasons[h] = Some(explain(s, h)),
-            None => {}
+            None if !relocate && near_freed(s, h, freed) => {
+                match pruned_choice(s, h, &keys, soft_ok) {
+                    Some((c, removed)) => {
+                        let id = s.cands.len() as u32;
+                        s.cands.push(c);
+                        s.by_item[h].push(id);
+                        for j in removed {
+                            s.state.unplace(j as usize, &s.cands);
+                            s.reasons[j as usize] = None;
+                        }
+                        let relaxed = !s.cands[id as usize].feasible;
+                        s.state.place(h, id, &s.cands, relaxed);
+                        s.reasons[h] = None;
+                    }
+                    None if s.reasons[h].is_none() => s.reasons[h] = Some(explain(s, h)),
+                    None => {}
+                }
+            }
+            None => match relocate.then(|| relocation(s, h, &keys, soft_ok)).flatten() {
+                Some(m) => {
+                    if let Some(j) = m.removed {
+                        s.state.unplace(j, &s.cands);
+                        s.reasons[j] = None;
+                    }
+                    let old = s.state.placed[m.b].expect("moved labels are placed");
+                    freed.push(s.cands[old as usize].bbox());
+                    s.state.unplace(m.b, &s.cands);
+                    let to = match m.fresh {
+                        Some(c) => {
+                            let id = s.cands.len() as u32;
+                            s.cands.push(c);
+                            s.by_item[m.b].push(id);
+                            id
+                        }
+                        None => m.to,
+                    };
+                    let relaxed = !s.cands[to as usize].feasible;
+                    s.state.place(m.b, to, &s.cands, relaxed);
+                    let relaxed = !s.cands[m.c as usize].feasible;
+                    s.state.place(h, m.c, &s.cands, relaxed);
+                    s.reasons[h] = None;
+                }
+                None if s.reasons[h].is_none() => s.reasons[h] = Some(explain(s, h)),
+                None => {}
+            },
         }
     }
+}
+
+/// Whether the level-0 labels of item `h` (its largest box beside its mark or area, at
+/// `placement.offset`) may reach a place in `freed` (within the largest margin).
+fn near_freed(s: &Solve, h: usize, freed: &[crate::geom::Rect]) -> bool {
+    if freed.is_empty() {
+        return false;
+    }
+    let item = &s.model.items[h];
+    let mut r = item.shape.bbox();
+    if let Some(a) = &item.area {
+        r = r.union(&a.shape.bbox());
+    }
+    let size = s.variants[h]
+        .iter()
+        .filter(|v| v.level == 0)
+        .map(|v| maxf(v.w, v.h))
+        .fold(0.0, maxf);
+    let r = r.inflate(item.len.offset + size + s.state.margin_max());
+    freed.iter().any(|f| f.touches(&r))
+}
+
+/// The first rule of the priority repair over the level-0 candidates of `h` that the
+/// pruning dropped (fan and boundary ones excepted): the candidate and the labels removed.
+fn pruned_choice(
+    s: &mut Solve,
+    h: usize,
+    keys: &[usize],
+    soft_ok: bool,
+) -> Option<(Cand, Vec<u32>)> {
+    let key_h = keys[h];
+    let fresh = s.unpruned_level0(h, soft_ok);
+    let mut confl = Vec::new();
+    // ((removed labels, their gain, cost), candidate, removed)
+    type Choice = ((usize, f64, f64), usize, Vec<u32>);
+    let mut best: Option<Choice> = None;
+    for (k, cand) in fresh.iter().enumerate() {
+        if matches!(cand.kind, Kind::Fan | Kind::Boundary)
+            || s.state
+                .first_conflict(cand, &s.cands, s.obs, h, |j| keys[j] <= key_h)
+                .is_some()
+        {
+            continue;
+        }
+        s.state.conflicts(cand, &s.cands, s.obs, h, &mut confl);
+        if !confl
+            .iter()
+            .all(|&j| keys[j as usize] > key_h && !s.model.items[j as usize].required)
+        {
+            continue;
+        }
+        if let Some(m) = s.model.max_labels {
+            if s.state.n_placed + 1 > m + confl.len() {
+                continue;
+            }
+        }
+        if let (Some(f), Some(canvas)) = (s.model.max_ink_fraction, s.model.canvas) {
+            let mut area = s.state.label_area_sum;
+            for &j in &confl {
+                area -= s.cands[s.state.placed[j as usize].unwrap() as usize]
+                    .rect
+                    .area();
+            }
+            if (area + cand.rect.area()) / canvas.area().max(1e-9) > f {
+                continue;
+            }
+        }
+        let gain: f64 = confl.iter().map(|&j| s.pri.prio[j as usize].gain).sum();
+        let score = (confl.len(), gain, relaxed_cost(cand));
+        let better = match &best {
+            None => true,
+            Some((b, _, _)) => {
+                score.0 < b.0
+                    || (score.0 == b.0 && (score.1 < b.1 || (score.1 == b.1 && score.2 < b.2)))
+            }
+        };
+        if better {
+            best = Some((score, k, confl.clone()));
+        }
+    }
+    let (_, k, removed) = best?;
+    Some((
+        fresh
+            .into_iter()
+            .nth(k)
+            .expect("index of a fresh candidate"),
+        removed,
+    ))
+}
+
+/// The candidates of an omitted item that the relocation tries, and the places it tries
+/// for the label moved aside (spec §10.3).
+const RELOCATE_TRIES: usize = 8;
+const RELOCATE_MOVES: usize = 16;
+/// Ids of the moved label's regenerated level-0 candidates: after all others.
+const FRESH: u32 = u32::MAX / 2;
+
+/// Item `h` takes candidate `c` once label `b` moved to `to` (or to the regenerated
+/// candidate `fresh`) and the label `removed` is removed.
+struct Relocation {
+    c: u32,
+    b: usize,
+    to: u32,
+    fresh: Option<Cand>,
+    removed: Option<usize>,
+}
+
+/// The usable candidates of item `i` but `except` (statically feasible, or relaxed when
+/// `soft_ok`; no fan or boundary labels), cheapest first (relaxed ones at their relaxed
+/// cost), ties by id.
+fn usable_by_cost(s: &mut Solve, i: usize, soft_ok: bool, except: Option<u32>) -> Vec<(f64, u32)> {
+    let mut out = Vec::new();
+    for k in 0..s.by_item[i].len() {
+        let c = s.by_item[i][k];
+        let cand = &s.cands[c as usize];
+        if Some(c) == except
+            || matches!(cand.kind, Kind::Fan | Kind::Boundary)
+            || cand.evaluated && !(cand.feasible || soft_ok && cand.relaxed)
+        {
+            continue;
+        }
+        s.ensure_eval(c);
+        let cand = &s.cands[c as usize];
+        if cand.feasible || soft_ok && cand.relaxed {
+            out.push((relaxed_cost(cand), c));
+        }
+    }
+    crate::sort::sort_by(&mut out, |a, b| {
+        crate::math::cmp_f64(a.0, b.0).then(a.1.cmp(&b.1))
+    });
+    out
+}
+
+fn relaxed_cost(c: &Cand) -> f64 {
+    c.cost + if c.feasible { 0.0 } else { c.relax_cost }
+}
+
+/// Move one label aside (spec §10.3, ADR 0049): omitted item `h` takes one of its usable
+/// candidates whose conflicts are one label `b` of a key not lower than its own (or a
+/// required one) and at most one removable label (strictly lower key, not required); `b`
+/// moves to one of its usable candidates, or of its level-0 candidates the pruning
+/// dropped, that conflicts with neither `h`'s nor a placed label but removable ones. At
+/// most one label is removed in all. Fewest removed, then the smallest gain removed, then
+/// the smallest cost change (`h`'s candidate plus `b`'s move); the first found on ties.
+fn relocation(s: &mut Solve, h: usize, keys: &[usize], soft_ok: bool) -> Option<Relocation> {
+    let key_h = keys[h];
+    let removable = |s: &Solve, j: usize| keys[j] > key_h && !s.model.items[j].required;
+    let ours = usable_by_cost(s, h, soft_ok, None);
+    let dy = s.obs.dynamic;
+    let mut confl = Vec::new();
+    let mut confl_b = Vec::new();
+    let mut fresh: Vec<(usize, Vec<Cand>)> = Vec::new();
+    let mut tried = 0;
+    // ((removed, their gain, cost change), relocation)
+    let mut best: Option<((usize, f64, f64), Relocation)> = None;
+    for &(cost_c, c) in &ours {
+        if tried == RELOCATE_TRIES {
+            break;
+        }
+        s.state
+            .conflicts(&s.cands[c as usize], &s.cands, s.obs, h, &mut confl);
+        let mut fixed = confl
+            .iter()
+            .map(|&j| j as usize)
+            .filter(|&j| !removable(s, j));
+        let (Some(b), None) = (fixed.next(), fixed.next()) else {
+            continue;
+        };
+        let lower: Vec<usize> = confl
+            .iter()
+            .map(|&j| j as usize)
+            .filter(|&j| j != b)
+            .collect();
+        let old = s.state.placed[b].expect("conflicts are placed");
+        if lower.len() > 1 || matches!(s.cands[old as usize].kind, Kind::Fan | Kind::Boundary) {
+            continue;
+        }
+        tried += 1;
+        let cost_old = relaxed_cost(&s.cands[old as usize]);
+        // its usable candidates, then the pruned level-0 ones (generated once per item)
+        let mut places = usable_by_cost(s, b, soft_ok, Some(old));
+        let f = match fresh.iter().position(|e| e.0 == b) {
+            Some(f) => f,
+            None => {
+                let regenerated = s.unpruned_level0(b, soft_ok);
+                fresh.push((b, regenerated));
+                fresh.len() - 1
+            }
+        };
+        for (k, fc) in fresh[f].1.iter().enumerate() {
+            places.push((relaxed_cost(fc), FRESH + k as u32));
+        }
+        crate::sort::sort_by(&mut places, |a, b| {
+            crate::math::cmp_f64(a.0, b.0).then(a.1.cmp(&b.1))
+        });
+        let sp = s.state.spacing(b, h);
+        for &(cost_b, to) in places.iter().take(RELOCATE_MOVES) {
+            let place = if to >= FRESH {
+                &fresh[f].1[(to - FRESH) as usize]
+            } else {
+                &s.cands[to as usize]
+            };
+            let ch = &s.cands[c as usize];
+            if pair_conflict(place, ch, &dy, sp) || s.state.pair_lower(place, ch) {
+                continue;
+            }
+            s.state.conflicts(place, &s.cands, s.obs, b, &mut confl_b);
+            if !confl_b.iter().all(|&j| removable(s, j as usize)) {
+                continue;
+            }
+            let mut removed = lower.clone();
+            removed.extend(confl_b.iter().map(|&j| j as usize));
+            removed.sort_unstable();
+            removed.dedup();
+            if removed.len() > 1 {
+                continue;
+            }
+            if let Some(m) = s.model.max_labels {
+                if s.state.n_placed + 1 > m + removed.len() {
+                    continue;
+                }
+            }
+            if let (Some(f), Some(canvas)) = (s.model.max_ink_fraction, s.model.canvas) {
+                let mut area = s.state.label_area_sum - s.cands[old as usize].rect.area()
+                    + place.rect.area()
+                    + ch.rect.area();
+                for &j in &removed {
+                    area -= s.cands[s.state.placed[j].unwrap() as usize].rect.area();
+                }
+                if area / canvas.area().max(1e-9) > f {
+                    continue;
+                }
+            }
+            let gain: f64 = removed.iter().map(|&j| s.pri.prio[j].gain).sum();
+            let score = (removed.len(), gain, cost_c + cost_b - cost_old);
+            let better = match &best {
+                None => true,
+                Some((b, _)) => {
+                    score.0 < b.0
+                        || (score.0 == b.0 && (score.1 < b.1 || (score.1 == b.1 && score.2 < b.2)))
+                }
+            };
+            if better {
+                let fresh = (to >= FRESH).then(|| place.clone());
+                let removed = removed.first().copied();
+                best = Some((
+                    score,
+                    Relocation {
+                        c,
+                        b,
+                        to,
+                        fresh,
+                        removed,
+                    },
+                ));
+            }
+        }
+    }
+    best.map(|b| b.1)
 }
 
 #[cfg(test)]

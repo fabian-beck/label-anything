@@ -131,7 +131,9 @@ priority outcome worse. An exact branch-and-bound search runs for small problems
 large budget. Crowds with items left without a label then get [fan labels](#fan-labels).
 With `strict` omission, a priority repair then gives every omitted item a
 position that only lower-priority labels hold (those labels are tried again), so no
-label is missing in favour of a less important one. Finally, a verification pass
+label is missing in favour of a less important one; an item kept out by one more
+important label may also move that label to another of its positions, when at most one
+less important label gives way ([ADR 0049](../adr/0049-move-one-label-aside.md)). Finally, a verification pass
 re-checks every hard constraint exactly. The [explainer](../explainer.md) steps through
 these phases on a real solve.
 [The solver](solver.md) describes budgets and determinism; the

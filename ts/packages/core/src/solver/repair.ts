@@ -13,7 +13,7 @@ import { leaderStart } from "../leaders.js";
 import { clampf, cmpF64, maxf } from "../math.js";
 import { LeaderStyle, Models, Omission } from "../model/index.js";
 import { applyUnlessInverting } from "./fan.js";
-import { explain } from "./greedy.js";
+import { explain, pairConflict } from "./greedy.js";
 import { Reason, type Solve } from "./index.js";
 
 /**
@@ -519,6 +519,19 @@ function movedTo(s: Solve, i: number, from: number, center: P): Cand {
  */
 export function priorityRepair(s: Solve): void {
   if (s.model.omission !== Omission.Strict || s.cancelled) return;
+  // a label moved aside may leave room for an item visited before: the pass without
+  // moves, once more, leaves no inversion
+  const freed: Rect[] = [];
+  priorityPass(s, true, freed);
+  if (freed.length > 0) priorityPass(s, false, freed);
+}
+
+/**
+ * One pass of the priority repair over the omitted items in total order. With
+ * `relocate`, an item may move one label aside (ADR 0049), whose old place joins `freed`;
+ * without, an item near a place in `freed` also tries its pruned level-0 candidates.
+ */
+function priorityPass(s: Solve, relocate: boolean, freed: Rect[]): void {
   const softOk = s.model.ladder.some((x) => x.kind === "soft_overlap");
   const prio = s.pri.prio;
   const items = s.model.items;
@@ -580,8 +593,250 @@ export function priorityRepair(s: Solve): void {
       s.state.place(h, bestC, s.cands, bestRelaxed);
       s.reasons[h] = null;
       if (s.trace !== null) s.trace.pass("repair", "repair", [h, ...bestRemoved]);
+      continue;
+    }
+    if (!relocate && nearFreed(s, h, freed)) {
+      const pc = prunedChoice(s, h, softOk);
+      if (pc !== null) {
+        const id = s.cands.length;
+        s.cands.push(pc.cand);
+        s.byItem[h]!.push(id);
+        for (const j of pc.removed) {
+          s.state.unplace(j, s.cands);
+          s.reasons[j] = null;
+        }
+        s.state.place(h, id, s.cands, !s.cands[id]!.feasible);
+        s.reasons[h] = null;
+        if (s.trace !== null) s.trace.pass("repair", "repair", [h, ...pc.removed]);
+      } else if (s.reasons[h] === null) {
+        s.reasons[h] = explain(s, h);
+      }
+      continue;
+    }
+    const m = relocate ? relocation(s, h, softOk) : null;
+    if (m !== null) {
+      if (m.removed >= 0) {
+        s.state.unplace(m.removed, s.cands);
+        s.reasons[m.removed] = null;
+      }
+      freed.push(s.cands[s.state.placed[m.b]!]!.bbox());
+      s.state.unplace(m.b, s.cands);
+      let to = m.to;
+      if (m.fresh !== null) {
+        to = s.cands.length;
+        s.cands.push(m.fresh);
+        s.byItem[m.b]!.push(to);
+      }
+      s.state.place(m.b, to, s.cands, !s.cands[to]!.feasible);
+      s.state.place(h, m.c, s.cands, !s.cands[m.c]!.feasible);
+      s.reasons[h] = null;
+      if (s.trace !== null) s.trace.pass("repair", "relocate", m.removed >= 0 ? [h, m.b, m.removed] : [h, m.b]);
     } else if (s.reasons[h] === null) {
       s.reasons[h] = explain(s, h);
     }
   }
+}
+
+/**
+ * Whether the level-0 labels of item `h` (its largest box beside its mark or area, at
+ * `placement.offset`) may reach a place in `freed` (within the largest margin).
+ */
+function nearFreed(s: Solve, h: number, freed: readonly Rect[]): boolean {
+  if (freed.length === 0) return false;
+  const item = s.model.items[h]!;
+  let r = item.shape.bbox();
+  if (item.area !== null) r = r.union(item.area.shape.bbox());
+  let size = 0;
+  for (const v of s.variants[h]!) if (v.level === 0) size = maxf(size, maxf(v.w, v.h));
+  r = r.inflate(item.len.offset + size + s.state.marginMax());
+  return freed.some((f) => f.touches(r));
+}
+
+/**
+ * The first rule of the priority repair over the level-0 candidates of `h` that the
+ * pruning dropped (fan and boundary ones excepted): the candidate and the labels removed.
+ */
+function prunedChoice(s: Solve, h: number, softOk: boolean): { cand: Cand; removed: number[] } | null {
+  const prio = s.pri.prio;
+  const items = s.model.items;
+  const keyH = prio[h]!.key;
+  const fresh = s.unprunedLevel0(h, softOk);
+  const confl: number[] = [];
+  let bestN = 0;
+  let bestGain = 0;
+  let bestCost = 0;
+  let best = -1;
+  let bestRemoved: number[] = [];
+  for (let k = 0; k < fresh.length; k++) {
+    const cand = fresh[k]!;
+    if (cand.kind === Kind.Fan || cand.kind === Kind.Boundary) continue;
+    if (s.state.firstConflict(cand, s.cands, s.obs, h, keyH) >= 0) continue;
+    s.state.conflicts(cand, s.cands, s.obs, h, confl);
+    if (!confl.every((j) => prio[j]!.key > keyH && !items[j]!.required)) continue;
+    const maxLabels = s.model.maxLabels;
+    if (maxLabels !== null && s.state.nPlaced + 1 > maxLabels + confl.length) continue;
+    const f = s.model.maxInkFraction;
+    const canvas = s.model.canvas;
+    if (f !== null && canvas !== null) {
+      let area = s.state.labelAreaSum;
+      for (const j of confl) area -= s.cands[s.state.placed[j]!]!.rect.area();
+      if ((area + cand.rect.area()) / maxf(canvas.area(), 1e-9) > f) continue;
+    }
+    let gain = -0;
+    for (const j of confl) gain += prio[j]!.gain;
+    const n = confl.length;
+    const cost = relaxedCost(cand);
+    const better =
+      best < 0 || n < bestN || (n === bestN && (gain < bestGain || (gain === bestGain && cost < bestCost)));
+    if (better) {
+      bestN = n;
+      bestGain = gain;
+      bestCost = cost;
+      best = k;
+      bestRemoved = confl.slice();
+    }
+  }
+  return best < 0 ? null : { cand: fresh[best]!, removed: bestRemoved };
+}
+
+/**
+ * The candidates of an omitted item that the relocation tries, and the places it tries
+ * for the label moved aside (spec §10.3).
+ */
+const RELOCATE_TRIES = 8;
+const RELOCATE_MOVES = 16;
+/** Ids of the moved label's regenerated level-0 candidates: after all others. */
+const FRESH = Math.floor(0xffffffff / 2);
+
+/**
+ * Item `h` takes candidate `c` once label `b` moved to `to` (or to the regenerated
+ * candidate `fresh`) and the label `removed` (-1: none) is removed.
+ */
+interface Relocation {
+  c: number;
+  b: number;
+  to: number;
+  fresh: Cand | null;
+  removed: number;
+}
+
+/**
+ * The usable candidates of item `i` but `except` (statically feasible, or relaxed when
+ * `softOk`; no fan or boundary labels), cheapest first (relaxed ones at their relaxed
+ * cost), ties by id.
+ */
+function usableByCost(s: Solve, i: number, softOk: boolean, except: number): [number, number][] {
+  const out: [number, number][] = [];
+  const ids = s.byItem[i]!;
+  for (let k = 0; k < ids.length; k++) {
+    const c = ids[k]!;
+    let cand = s.cands[c]!;
+    if (
+      c === except ||
+      cand.kind === Kind.Fan ||
+      cand.kind === Kind.Boundary ||
+      (cand.evaluated && !(cand.feasible || (softOk && cand.relaxed)))
+    ) {
+      continue;
+    }
+    s.ensureEval(c);
+    cand = s.cands[c]!;
+    if (cand.feasible || (softOk && cand.relaxed)) out.push([relaxedCost(cand), c]);
+  }
+  out.sort((a, b) => cmpF64(a[0], b[0]) || a[1] - b[1]);
+  return out;
+}
+
+function relaxedCost(c: Cand): number {
+  return c.cost + (c.feasible ? 0 : c.relaxCost);
+}
+
+/**
+ * Move one label aside (spec §10.3, ADR 0049): omitted item `h` takes one of its usable
+ * candidates whose conflicts are one label `b` of a key not lower than its own (or a
+ * required one) and at most one removable label (strictly lower key, not required); `b`
+ * moves to one of its usable candidates, or of its level-0 candidates the pruning
+ * dropped, that conflicts with neither `h`'s nor a placed label but removable ones. At
+ * most one label is removed in all. Fewest removed, then the smallest gain removed, then
+ * the smallest cost change (`h`'s candidate plus `b`'s move); the first found on ties.
+ */
+function relocation(s: Solve, h: number, softOk: boolean): Relocation | null {
+  const prio = s.pri.prio;
+  const items = s.model.items;
+  const keyH = prio[h]!.key;
+  const removable = (j: number): boolean => prio[j]!.key > keyH && !items[j]!.required;
+  const ours = usableByCost(s, h, softOk, -1);
+  const dy = s.obs.dynamic;
+  const confl: number[] = [];
+  const conflB: number[] = [];
+  const fresh: [number, Cand[]][] = [];
+  let tried = 0;
+  let best: Relocation | null = null;
+  let bestN = 0;
+  let bestGain = 0;
+  let bestCost = 0;
+  for (const [costC, c] of ours) {
+    if (tried === RELOCATE_TRIES) break;
+    s.state.conflicts(s.cands[c]!, s.cands, s.obs, h, confl);
+    let b = -1;
+    let fixed = 0;
+    for (const j of confl) {
+      if (!removable(j)) {
+        fixed += 1;
+        if (b < 0) b = j;
+      }
+    }
+    if (fixed !== 1) continue;
+    const lower: number[] = [];
+    for (const j of confl) if (j !== b) lower.push(j);
+    const old = s.state.placed[b]!;
+    const oldKind = s.cands[old]!.kind;
+    if (lower.length > 1 || oldKind === Kind.Fan || oldKind === Kind.Boundary) continue;
+    tried += 1;
+    const costOld = relaxedCost(s.cands[old]!);
+    // its usable candidates, then the pruned level-0 ones (generated once per item)
+    const places = usableByCost(s, b, softOk, old);
+    let f = fresh.findIndex((e) => e[0] === b);
+    if (f < 0) {
+      fresh.push([b, s.unprunedLevel0(b, softOk)]);
+      f = fresh.length - 1;
+    }
+    const regenerated = fresh[f]![1];
+    for (let k = 0; k < regenerated.length; k++) places.push([relaxedCost(regenerated[k]!), FRESH + k]);
+    places.sort((x, y) => cmpF64(x[0], y[0]) || x[1] - y[1]);
+    const sp = s.state.spacing(b, h);
+    const ch = s.cands[c]!;
+    for (const [costB, to] of places.slice(0, RELOCATE_MOVES)) {
+      const place = to >= FRESH ? regenerated[to - FRESH]! : s.cands[to]!;
+      if (pairConflict(place, ch, dy, sp) || s.state.pairLower(place, ch)) continue;
+      s.state.conflicts(place, s.cands, s.obs, b, conflB);
+      if (!conflB.every(removable)) continue;
+      const removed = lower.concat(conflB);
+      removed.sort((x, y) => x - y);
+      const uniq = removed.filter((j, k) => k === 0 || removed[k - 1] !== j);
+      if (uniq.length > 1) continue;
+      const maxLabels = s.model.maxLabels;
+      if (maxLabels !== null && s.state.nPlaced + 1 > maxLabels + uniq.length) continue;
+      const fr = s.model.maxInkFraction;
+      const canvas = s.model.canvas;
+      if (fr !== null && canvas !== null) {
+        let area = s.state.labelAreaSum - s.cands[old]!.rect.area() + place.rect.area() + ch.rect.area();
+        for (const j of uniq) area -= s.cands[s.state.placed[j]!]!.rect.area();
+        if (area / maxf(canvas.area(), 1e-9) > fr) continue;
+      }
+      let gain = -0;
+      for (const j of uniq) gain += prio[j]!.gain;
+      const n = uniq.length;
+      const cost = costC + costB - costOld;
+      const better =
+        best === null || n < bestN || (n === bestN && (gain < bestGain || (gain === bestGain && cost < bestCost)));
+      if (better) {
+        bestN = n;
+        bestGain = gain;
+        bestCost = cost;
+        best = { c, b, to, fresh: to >= FRESH ? place : null, removed: n > 0 ? uniq[0]! : -1 };
+      }
+    }
+  }
+  return best;
 }
