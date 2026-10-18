@@ -26,6 +26,11 @@ export interface View {
   warmStart: boolean;
   settle: boolean;
   transition: number;
+  moveDelay: number;
+  appearDelay: number;
+  holdTime: number;
+  collisions: boolean;
+  fadeJumps: boolean;
   maxRate: number;
   budgetRest: number;
   budgetMoving: number;
@@ -44,6 +49,11 @@ export const VIEW_DEFAULTS: View = {
   warmStart: true,
   settle: true,
   transition: 300,
+  moveDelay: 500,
+  appearDelay: 250,
+  holdTime: 500,
+  collisions: true,
+  fadeJumps: true,
   maxRate: 30,
   budgetRest: 100,
   budgetMoving: 10,
@@ -77,6 +87,19 @@ const DEFAULT_TREE: Obj = Object.entries(DEFAULTS).reduce<Obj>((acc, [k, v]) => 
 
 /** Settings that change only the drawing (no solve). */
 const DRAW_ONLY = new Set(["labelStyle", "showBoxes", "showOmitted", "showObstacles", "compare", "speed"]);
+/** View settings of the label transitions. */
+const MOTION = new Set(["transition", "moveDelay", "appearDelay", "holdTime", "collisions", "fadeJumps"]);
+
+function motionOf(v: View): LabelMotion {
+  return new LabelMotion({
+    duration: v.transition,
+    moveDelay: v.moveDelay,
+    appearDelay: v.appearDelay,
+    holdTime: v.holdTime,
+    collisions: v.collisions,
+    jump: v.fadeJumps ? 2 : Infinity,
+  });
+}
 
 export class App {
   readonly scenes: Scene[];
@@ -99,7 +122,7 @@ export class App {
   selected: string | null = null;
 
   #engines: Engines;
-  #motion = new LabelMotion({ duration: VIEW_DEFAULTS.transition });
+  #motion = motionOf(VIEW_DEFAULTS);
   #version = 0;
   #inFlight = false;
   #coldPending = true;
@@ -128,6 +151,10 @@ export class App {
   #hashTimer = 0;
   #inspectTimer = 0;
   #titleTimer = 0;
+  /** The overlay rectangles of the last problem, by element. */
+  #hudCache = new Map<string, number[]>();
+  /** A solve from the current labels at rest (the overlays changed). */
+  #warmPending = false;
   #wasPlaying = false;
 
   constructor(scenes: Scene[], base: URL) {
@@ -138,6 +165,11 @@ export class App {
     this.#panel = new Panel(document.getElementById("panel-options")!, this.#panelModel());
     this.#inspector = new Inspector(document.getElementById("panel-inspect")!, this);
     this.#code = new CodeView(document.getElementById("panel-code")!, this);
+  }
+
+  /** The label transitions (for tests and measurements). */
+  get motion(): LabelMotion {
+    return this.#motion;
   }
 
   // --- start ----------------------------------------------------------------------
@@ -185,7 +217,7 @@ export class App {
     if (state?.json !== undefined) this.view.customJson = state.json;
     else this.view.customJson = this.#json.get(scene.id) ?? "";
     this.#parseJson();
-    this.#motion = new LabelMotion({ duration: this.view.transition });
+    this.#motion = motionOf(this.view);
     this.result = undefined;
     this.problem = undefined;
     this.history = [];
@@ -270,7 +302,7 @@ export class App {
     if (key.startsWith("view.")) {
       const k = key.slice(5) as keyof View;
       (this.view as unknown as Obj)[k] = value;
-      if (k === "transition") this.#motion = new LabelMotion({ duration: Number(value) });
+      if (MOTION.has(k)) this.#motion = motionOf(this.view);
       if (k === "customJson") {
         this.#json.set(this.scene.id, String(value));
         this.#parseJson();
@@ -308,7 +340,7 @@ export class App {
     this.#json.delete(this.scene.id);
     this.view = { ...VIEW_DEFAULTS, ...(this.scene.view as Partial<View>) };
     this.#parseJson();
-    this.#motion = new LabelMotion({ duration: this.view.transition });
+    this.#motion = motionOf(this.view);
     this.#invalidate();
     this.#panel.update();
     this.#renderTransport();
@@ -374,6 +406,12 @@ export class App {
       this.#coldPending = false;
       this.#positionsDirty = false;
       this.#solve("cold", moving);
+      return;
+    }
+    if (this.#warmPending) {
+      this.#warmPending = false;
+      this.#positionsDirty = false;
+      this.#solve("warm", moving);
       return;
     }
     const gap = this.view.maxRate >= 60 ? 0 : 1000 / this.view.maxRate;
@@ -773,19 +811,37 @@ export class App {
     const box = document.querySelector("#hud-title .title");
     if (!box || box.classList.contains("gone")) return;
     box.classList.add("gone");
-    if (this.view.avoidHud) this.#invalidate();
+    // the labels may take the room: a solve from the current labels, not a fresh one
+    if (this.view.avoidHud) this.#warmPending = true;
   }
 
-  /** Rectangles of the controls over the drawing, in canvas px (4 px around each). */
+  /** Rectangles of the controls over the drawing, in canvas px (4 px around each, out to 8 px steps). */
   #hudRects(): number[][] {
     const c = this.#canvas.getBoundingClientRect();
     const out: number[][] = [];
-    const els = document.querySelectorAll<HTMLElement>("#hud-tr > *, #hud-bl > *, #hud-br > *, #hud-legend > *, #hud-title > .title:not(.gone)");
-    for (const el of els) {
+    const els = document.querySelectorAll<HTMLElement>("#hud-stats > *, #hud-transport > *, #hud-view > *, #hud-legend > *, #hud-title > .title:not(.gone)");
+    const seen = new Set<string>();
+    els.forEach((el) => {
       const r = el.getBoundingClientRect();
-      if (r.width === 0 || r.height === 0) continue;
-      out.push([round2(r.left - c.left - 4), round2(r.top - c.top - 4), round2(r.width + 8), round2(r.height + 8)]);
-    }
+      if (r.width === 0 || r.height === 0) return;
+      const key = `${el.parentElement?.id}:${[...(el.parentElement?.children ?? [])].indexOf(el)}`;
+      seen.add(key);
+      const [x0, y0, x1, y1] = [r.left - c.left - 4, r.top - c.top - 4, r.right - c.left + 4, r.bottom - c.top + 4];
+      // an overlay that changes a little (a digit of the statistics) keeps its rectangle:
+      // obstacles that change at every solve would move the labels next to them
+      const old = this.#hudCache.get(key);
+      if (old && x0 >= old[0] && y0 >= old[1] && x1 <= old[0] + old[2] && y1 <= old[1] + old[3] && old[2] - (x1 - x0) <= 32 && old[3] - (y1 - y0) <= 16) {
+        out.push(old);
+        return;
+      }
+      const q = 8;
+      const rect = [Math.floor(x0 / q) * q, Math.floor(y0 / q) * q, 0, 0];
+      rect[2] = Math.ceil(x1 / q) * q - rect[0]!;
+      rect[3] = Math.ceil(y1 / q) * q - rect[1]!;
+      this.#hudCache.set(key, rect);
+      out.push(rect);
+    });
+    for (const key of [...this.#hudCache.keys()]) if (!seen.has(key)) this.#hudCache.delete(key);
     return out;
   }
 

@@ -45,11 +45,13 @@ gives the same layout in Python, Java, the CLI or your own JavaScript.
 
 The engines run in Web Workers, so the drawing never waits for a solve. While things
 move, each solve starts from the previous result (`warm_start`) with a short time budget,
-and the labels glide between solves ([smooth transitions](tutorials/interactive-maps.md#smooth-transitions));
-once the motion stops, one more solve with the full budget and a lower stability weight
-lets the labels that a better place awaits move there. Between two solves the labels
-follow their anchors, so they can overlap for a moment while things move fast; at rest
-the verified result shows. The buttons and boxes on the drawing are obstacles of the
+and the labels are drawn calmly ([smooth transitions](tutorials/interactive-maps.md#smooth-transitions)):
+a label the solver moved waits half a second before it follows, one that left stays as
+long, a new one waits a quarter of a second, short moves glide and long ones fade. Once
+the motion stops, one more solve with the full budget and a lower stability weight lets
+the labels that a better place awaits move there. Between two solves the labels follow
+their anchors; where two meet, the less important makes way. At rest the verified result
+shows. The buttons and boxes on the drawing are obstacles of the
 class `overlay`, so labels keep clear of them.
 
 Time budgets are those of the Rust core (100 search moves per ms); the TypeScript engine

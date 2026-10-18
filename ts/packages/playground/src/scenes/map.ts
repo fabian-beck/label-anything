@@ -92,6 +92,8 @@ export class MapScene implements Scene {
   #host!: SceneHost;
   /** Poles of the area labels of the latest result, in base coordinates. */
   #poles = new Map<string, P>();
+  /** Simplified outlines by country and zoom band. */
+  #simple = new Map<string, P[][]>();
   #raw: { countries: (Omit<Country, "shapes" | "main" | "bounds" | "labelXY"> & { parts: P[][][] })[] } | null = null;
 
   get animated(): boolean {
@@ -161,6 +163,7 @@ export class MapScene implements Scene {
       } as Country;
     });
     this.#poles.clear();
+    this.#simple.clear();
   }
 
   setParam(key: string, value: unknown): void {
@@ -311,11 +314,12 @@ export class MapScene implements Scene {
       if (!this.#visible(c) || !c.main.length) continue;
       // only the visible part counts: the label goes there, and the engine samples less
       const view: [number, number, number, number] = [-2, -2, this.#w + 2, this.#h + 2];
-      const ring = simplifyRing(clipRing(c.main[0]!.map((p) => this.#toScreen(p)), view), 0.8).map(roundP);
+      const [outer, ...inner] = this.#simplified(c);
+      const ring = clipRing(outer!.map((p) => this.#toScreen(p)), view).map(roundP);
       let anchor: Record<string, unknown>;
       if (ring.length >= 3 && Math.abs(ringArea(ring)) >= 12) {
         anchor = { type: "area", polygon: ring };
-        const holes = c.main.slice(1).map((h) => simplifyRing(clipRing(h.map((p) => this.#toScreen(p)), view), 0.8).map(roundP)).filter((h) => h.length >= 3);
+        const holes = inner.map((h) => clipRing(h.map((p) => this.#toScreen(p)), view).map(roundP)).filter((h) => h.length >= 3);
         if (holes.length) anchor.holes = holes;
       } else {
         // a country of a few pixels: a point at its label point
@@ -340,6 +344,24 @@ export class MapScene implements Scene {
       } as Item);
     }
     return out;
+  }
+
+  /**
+   * The label part of a country, simplified for the zoom: by 0.8 px at the smallest zoom of
+   * its band (bands of a factor √2). Within a band the outline stays the same, only moved
+   * and scaled, so that panning and zooming do not change the area, and its label, by
+   * itself.
+   */
+  #simplified(c: Country): P[][] {
+    const band = Math.floor(Math.log2(this.#v.k) * 2);
+    const key = `${c.id}:${band}`;
+    let rings = this.#simple.get(key);
+    if (!rings) {
+      const tol = 0.8 / 2 ** (band / 2);
+      rings = c.main.map((r) => simplifyRing(r, tol));
+      this.#simple.set(key, rings);
+    }
+    return rings;
   }
 
   obstacles() {
@@ -493,7 +515,7 @@ export class MapScene implements Scene {
   }
 }
 
-/** Douglas–Peucker in screen px: vertices closer than `tol` to the outline add nothing at this zoom. */
+/** Douglas–Peucker: vertices closer than `tol` to the outline add nothing at this zoom. */
 function simplifyRing(ring: P[], tol: number): P[] {
   if (ring.length <= 8) return ring;
   const keep = new Uint8Array(ring.length);

@@ -71,7 +71,7 @@ describe("Leaflet labelLayer", () => {
 });
 
 describe("label transitions", () => {
-  it("glides moved labels into place and fades out omitted ones", () => {
+  it("moves labels after the move delay and fades out omitted ones after the hold time", () => {
     vi.useFakeTimers({ toFake: ["requestAnimationFrame", "cancelAnimationFrame", "performance"] });
     try {
       const map = fakeMap();
@@ -96,12 +96,17 @@ describe("label transitions", () => {
       map.fire("moveend");
       expect(y()).toBeCloseTo(y0, 6);
       vi.advanceTimersByTime(150);
+      // both wait (500 ms): the next solve may put them back
+      expect(y()).toBeCloseTo(y0, 6);
+      const opacity = () => svg.querySelector('g[data-id="n"]')!.getAttribute("opacity");
+      expect(opacity()).toBeNull();
+      vi.advanceTimersByTime(500);
       expect(y()).toBeGreaterThan(y0 + 1);
       expect(y()).toBeLessThan(y0 + 12);
-      const fading = Number(svg.querySelector('g[data-id="n"]')!.getAttribute("opacity"));
+      const fading = Number(opacity());
       expect(fading).toBeGreaterThan(0);
       expect(fading).toBeLessThan(1);
-      vi.advanceTimersByTime(400);
+      vi.advanceTimersByTime(600);
       expect(y()).toBeCloseTo(y0 + 12, 6);
       expect(svg.querySelector('g[data-id="n"]')).toBeNull();
       labels.remove();

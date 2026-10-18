@@ -24,8 +24,8 @@ node ts/packages/playground/test/server.mjs 8000  # http://127.0.0.1:8000/
   engine's validator accepts; the merge, path and share-link helpers.
 * `npm run test:browser -w @label-anything/playground` — builds, then checks in Chromium
   that every scene solves without overlaps, that WebAssembly and TypeScript give identical
-  placements, that options and share links take effect and that clicking the picture adds
-  a label. CI runs both (job `wasm`) and uploads dist/ as the artifact the Pages workflow
+  placements, that options and share links take effect, that labels keep off the controls
+  on the drawing and that clicking the picture adds a label. CI runs both (job `wasm`) and uploads dist/ as the artifact the Pages workflow
   publishes.
 
 ## Layout

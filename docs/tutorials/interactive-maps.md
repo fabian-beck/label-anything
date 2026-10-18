@@ -107,33 +107,48 @@ For animation:
 ### Smooth transitions
 
 Warm starts keep most labels in place, but each solve still moves some and adds or
-removes others; about half of the labels that disappear come back a solve or two later.
-Drawn as they come, these changes jump and blink. `LabelMotion` from
-`@label-anything/extras` turns them into transitions: labels glide to their new places
-(a critically damped spring, 300 ms by default: no overshoot, and a move that changes
-direction mid-way bends into the new one), fade in and out instead of popping, and follow
-their points meanwhile. A label that is gone for a single solve only dims. Give it every
-result, and draw what it returns on every frame:
+removes others; about half of the labels that disappear come back a solve or two later,
+and a label that moved often moves again soon. Drawn as they come, these changes jump and
+blink. `LabelMotion` from `@label-anything/extras` draws the results calmly:
+
+* a shown label that the solver moved stays where it is until its new place has held for
+  `moveDelay` (500 ms), then moves once; it moves at once when a label at its new place
+  needs the room or it covers another item's point (a node being dragged);
+* a label that leaves the results stays for `holdTime` (500 ms), and a new one waits
+  `appearDelay` (250 ms) and shows only if it is still placed: labels that come and go
+  within a few solves neither blink nor flash;
+* short moves glide (a critically damped spring, `duration` 300 ms: no overshoot, and a
+  move that changes direction mid-way bends into the new one); moves further than two
+  label heights (`jump`) fade out and in at the new place instead of sweeping across the
+  drawing;
+* labels follow their points between solves, and where two meet, the less important
+  makes way (`collisions`); labels in a column (fan and boundary labels) stay with their
+  column, and their leaders follow the points.
+
+Give it every result, and draw what it returns on every frame:
 
 ```js
 --8<-- "examples/tutorials/js/browser/force.mjs:force-motion"
 ```
 
 When the simulation ends, `settle` solves once more with a lower `weights.stability`, and
-the few labels that a better place awaits glide there (see the tips above).
+the few labels that a better place awaits move there half a second later (see the tips
+above).
 
 `frame()` returns the placements as they are drawn at that moment (the text scaled with a
 box that grows or shrinks, leaders attached to the gliding box) and the opacities of the
 labels and leaders that fade; `renderLabels` draws them, or any renderer reads them. The
 Leaflet, MapLibre and sigma.js helpers below do this after every solve (option
-`transition`, in ms; 0 draws each solve as it is; [ADR 0026](../adr/0026-smooth-label-transitions.md)).
+`transition`, in ms; 0 draws each solve as it is; [ADR 0026](../adr/0026-smooth-label-transitions.md),
+[ADR 0033](../adr/0033-calm-label-transitions.md)). The
+[playground](../try.md) has the options in its Motion section.
 
 ## Leaflet
 
 `labelLayer` from `@label-anything/extras/leaflet` is a Leaflet layer that collects the
 visible points in container pixels, solves, draws the labels in an SVG pane, and after
-every move re-solves warm-started from the previous result; the labels glide into their
-new places and fade in and out.
+every move re-solves warm-started from the previous result; the labels move to their
+new places and fade in and out calmly (above).
 
 ```js
 --8<-- "examples/tutorials/js/browser/leaflet.mjs:leaflet"

@@ -109,15 +109,22 @@ export class Overlay<D> {
         this.memory.remember(result, anchors);
         this.motion.target(result, anchors);
         this.follow();
-        this.#animate();
         c.onResult?.(result);
       },
       (error) => (c.onError ? c.onError(error) : console.error(error)),
     );
   }
 
-  /** Redraws the labels, every one moved along with its anchor (no solve). */
+  /**
+   * Redraws the labels, every one moved along with its anchor (no solve), and keeps
+   * drawing while labels fade (labels that meet while the view moves make way).
+   */
   follow(anchors?: Anchors): void {
+    this.#draw(anchors);
+    this.#animate();
+  }
+
+  #draw(anchors?: Anchors): void {
     if (!this.motion.result) return;
     const f = this.motion.frame(anchors ?? this.#anchors(this.#config.collect()));
     renderLabels(this.group, f.result, {
@@ -134,12 +141,12 @@ export class Overlay<D> {
     const raf = globalThis.requestAnimationFrame;
     if (typeof raf !== "function") {
       this.motion.finish();
-      this.follow();
+      this.#draw();
       return;
     }
     const step = () => {
       this.#frame = undefined;
-      this.follow();
+      this.#draw();
       if (this.motion.moving) this.#frame = raf(step);
     };
     this.#frame = raf(step);

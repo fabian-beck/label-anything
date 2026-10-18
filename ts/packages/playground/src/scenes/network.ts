@@ -257,7 +257,8 @@ export class NetworkScene implements Scene {
     this.#drag = n;
     n.fx = n.x;
     n.fy = n.y;
-    this.#sim?.alphaTarget(0.25);
+    // a gentle reheat: the neighbours follow, the rest of the graph (and its labels) stays calm
+    this.#sim?.alphaTarget(0.12);
     this.playing = true;
     return true;
   }

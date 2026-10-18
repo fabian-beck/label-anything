@@ -43,7 +43,7 @@ start do has to install a binding first.
 * **The controls on the drawing are obstacles** (class `overlay`, hard for labels): the
   engine keeps labels from under the buttons, as any host can keep them off its legend.
 * **Maps solve the visible part.** Country outlines are clipped to the view and simplified
-  to 0.8 px before each solve. Internal candidates of an area are sampled over its bounding
+  to 0.8 px before each solve (once per zoom band, ADR 0033). Internal candidates of an area are sampled over its bounding
   box at label-height spacing, so a country thousands of pixels wide on a zoomed map made
   each solve take 100–350 ms in WebAssembly and placed almost nothing within the moving
   budget's guard; clipped, a solve takes 10–60 ms.
@@ -57,6 +57,6 @@ page's width.
 The `wasm` CI job gains a type check, a build and Playwright tests of the playground (every
 scene solves without overlaps, both engines agree, options and share links take effect).
 The site's navigation links the playground, and the landing page and the README point to
-it. While things move, labels follow their anchors between solves and can overlap for a
-moment until the next solve; at rest the verified result shows. A world map solve takes
+it. While things move, labels follow their anchors between solves and make way for each
+other where they meet (ADR 0033); at rest the verified result shows. A world map solve takes
 about 100 ms in WebAssembly and three to four times as long in TypeScript.

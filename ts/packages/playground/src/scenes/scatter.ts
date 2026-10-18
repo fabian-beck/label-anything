@@ -238,7 +238,7 @@ export class ScatterScene implements Scene {
     if (this.#t >= 1) {
       // hold a moment on each pair of axes, then travel to the next
       this.#hold += dt;
-      if (this.#hold < 1600) return false;
+      if (this.#hold < 2400) return false;
       this.#hold = 0;
       if (this.params.data === "countries") {
         this.#cycle = (this.#cycle + 1) % CYCLE.length;
@@ -254,7 +254,7 @@ export class ScatterScene implements Scene {
       this.#layout(true);
       return true;
     }
-    this.#t = Math.min(1, this.#t + dt / 1800);
+    this.#t = Math.min(1, this.#t + dt / 2400);
     const e = easeInOut(this.#t);
     for (const p of this.#pts) {
       if (p === this.#drag) continue;

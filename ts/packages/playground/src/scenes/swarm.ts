@@ -138,7 +138,8 @@ export class SwarmScene implements Scene {
   }
 
   step(dt: number): boolean {
-    const s = dt / 1000;
+    // at 0.6 of real time: labels can follow agents that pass each other at this pace
+    const s = (dt / 1000) * 0.6;
     if (s <= 0) return false;
     const b = this.params.behavior as Behavior;
     if (b === "orbit") this.#orbit(s);

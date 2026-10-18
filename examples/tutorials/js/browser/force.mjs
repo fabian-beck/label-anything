@@ -10,7 +10,7 @@ import { LabelMotion, renderLabels } from "@label-anything/extras";
 export function forceLabels(svg, nodes, links, width, height) {
   const group = svg.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "g"));
   const font = { family: "Noto Sans, sans-serif", size: 12, weight: 400 };   // what the engine measured
-  const motion = new LabelMotion({ duration: 300 });  // glide and fade in 300 ms
+  const motion = new LabelMotion();                    // glides and fades, calmly
   const anchors = () => new Map(nodes.map((n) => [n.id, [n.x, n.y]]));
   let result, ticks = 0;
   const draw = () => {

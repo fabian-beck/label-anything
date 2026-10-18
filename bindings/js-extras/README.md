@@ -98,11 +98,21 @@ default 300 ms; 0 draws each solve as it is). The same is available for any rend
 ```js
 import { LabelMotion, renderLabels } from "@label-anything/extras";
 
-const motion = new LabelMotion({ duration: 300 });
+const motion = new LabelMotion();              // the defaults below
 motion.target(result);                         // after every solve
 const frame = motion.frame(anchors);           // every animation frame while motion.moving
 renderLabels(group, frame.result, { font, opacity: frame.opacity, leaderOpacity: frame.leaderOpacity });
 ```
 
 `anchors` maps item ids to their current positions, so labels follow moving points
-between solves.
+between solves. The transitions are calm by design ([ADR 0033](https://github.com/fabian-beck/label-anything/blob/main/docs/adr/0033-calm-label-transitions.md)):
+
+| Option | Default | |
+|---|---|---|
+| `duration` | 300 | ms of a glide or fade; 0 draws every result as it is |
+| `moveDelay` | 500 | ms a moved label stays until its new place has held (it moves at once when a label at the new place needs the room or it covers another item's point) |
+| `holdTime` | 500 | ms a label stays after it left the results |
+| `appearDelay` | 250 | ms a new label waits; it shows only if it is still placed then |
+| `collisions` | `true` | of two labels that meet between solves, the less important makes way |
+| `jump` | 2 | label heights: longer moves fade out and in instead of gliding (`Infinity`: always glide) |
+| `fadeInFirst` | `false` | the first result fades in too |

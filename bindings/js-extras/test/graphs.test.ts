@@ -129,7 +129,7 @@ describe("sigma labels", () => {
     expect(r.settings.nodeReducer).toBeNull();
   });
 
-  it("moves labels smoothly into the places of a new solve", async () => {
+  it("moves labels smoothly into the places of a new solve once they have held", async () => {
     vi.useFakeTimers({ toFake: ["requestAnimationFrame", "cancelAnimationFrame", "performance", "setTimeout", "clearTimeout"] });
     try {
       const r = fakeSigma();
@@ -157,9 +157,11 @@ describe("sigma labels", () => {
       const refreshes = r.refreshes();
       vi.advanceTimersByTime(150);
       expect(r.refreshes()).toBeGreaterThan(refreshes + 3); // redrawn on animation frames
+      expect(yAt()).toBeCloseTo(y0, 6); // the move delay (500 ms)
+      vi.advanceTimersByTime(500);
       expect(yAt()).toBeGreaterThan(y0 + 1);
       expect(yAt()).toBeLessThan(y0 + 20);
-      vi.advanceTimersByTime(400);
+      vi.advanceTimersByTime(600);
       expect(yAt()).toBeCloseTo(y0 + 20, 6);
       labels.remove();
     } finally {

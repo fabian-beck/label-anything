@@ -15,6 +15,9 @@ function result(...placements: Placement[]): LabelResult {
 }
 
 const boxOf = (f: { result: LabelResult }, id: string) => f.result.placements.find((p) => p.id === id)?.box;
+const idsOf = (f: { result: LabelResult }) => f.result.placements.map((p) => p.id);
+const rank = (r: number): Partial<Placement> => ({ priority: { tier: 0, score: 0, rank: r } as Placement["priority"] });
+const at = (...a: [string, number, number][]) => new Map<string, [number, number]>(a.map(([id, x, y]) => [id, [x, y]]));
 
 describe("LabelMotion", () => {
   it("shows the first result at once and follows the anchors", () => {
@@ -31,9 +34,10 @@ describe("LabelMotion", () => {
   });
 
   it("glides to a new place without overshooting and settles within the duration", () => {
-    const m = new LabelMotion({ duration: 300 });
-    m.target(result(lab("a", [12, 0, 30, 10], [10, 5])), undefined, 0);
-    m.target(result(lab("a", [42, 0, 30, 10], [10, 5])), undefined, 1000);
+    const m = new LabelMotion({ duration: 300, moveDelay: 0 });
+    // 30 px: less than two label heights
+    m.target(result(lab("a", [12, 0, 30, 20], [10, 5])), undefined, 0);
+    m.target(result(lab("a", [42, 0, 30, 20], [10, 5])), undefined, 1000);
     expect(m.moving).toBe(true);
     const xs: number[] = [];
     for (let t = 1000; t <= 1300; t += 10) xs.push(boxOf(m.frame(undefined, t), "a")!.x);
@@ -47,43 +51,184 @@ describe("LabelMotion", () => {
     expect(m.moving).toBe(false);
   });
 
-  it("fades new labels in and gone labels out", () => {
-    const m = new LabelMotion({ duration: 200 });
+  it("fades a new label in after the appear delay and a gone one out after the hold time", () => {
+    const m = new LabelMotion({ duration: 200, appearDelay: 200, holdTime: 400 });
     m.target(result(lab("a", [0, 0, 10, 10], [0, 0]), lab("b", [30, 0, 10, 10], [30, 0])), undefined, 0);
     m.target(result(lab("a", [0, 0, 10, 10], [0, 0]), lab("c", [60, 0, 10, 10], [60, 0])), undefined, 100);
     let f = m.frame(undefined, 100);
-    expect(f.opacity.get("c")).toBe(0);
-    expect(f.opacity.has("b")).toBe(false); // still fully visible
-    expect(f.result.placements.map((p) => p.id)).toEqual(["b", "a", "c"]); // fading ones first, below
-    f = m.frame(undefined, 200);
-    expect(f.opacity.get("c")).toBeCloseTo(0.5, 9);
-    expect(f.opacity.get("b")).toBeCloseTo(0.5, 9);
-    expect(f.result.placements[0]!.id).toBe("b");
+    expect(idsOf(f)).toEqual(["b", "a"]); // c waits; b stays, below the labels of the result
+    expect(f.opacity.size).toBe(0);
     f = m.frame(undefined, 300);
-    expect(f.result.placements.map((p) => p.id).sort()).toEqual(["a", "c"]);
+    expect(idsOf(f)).toEqual(["b", "a"]); // c starts now
+    f = m.frame(undefined, 400);
+    expect(f.opacity.get("c")).toBeCloseTo(0.5, 9);
+    expect(f.opacity.has("b")).toBe(false);
+    f = m.frame(undefined, 600);
+    expect(f.opacity.get("b")).toBeCloseTo(0.5, 9); // fading since 500
+    expect(f.opacity.has("c")).toBe(false);
+    expect(m.moving).toBe(true);
+    f = m.frame(undefined, 700);
+    expect(idsOf(f)).toEqual(["a", "c"]);
     expect(f.opacity.size).toBe(0);
     expect(m.moving).toBe(false);
   });
 
-  it("lets a label that is gone for one solve only dim", () => {
-    const m = new LabelMotion({ duration: 300 });
+  it("never shows a label placed for less than the appear delay", () => {
+    const m = new LabelMotion();
+    m.target(result(lab("a", [0, 0, 10, 10], [0, 0])), undefined, 0);
+    m.target(result(lab("a", [0, 0, 10, 10], [0, 0]), lab("c", [60, 0, 10, 10], [60, 0])), undefined, 1000);
+    expect(m.moving).toBe(true);
+    expect(idsOf(m.frame(undefined, 1150))).toEqual(["a"]);
+    m.target(result(lab("a", [0, 0, 10, 10], [0, 0])), undefined, 1150);
+    for (let t = 1150; t <= 2000; t += 50) expect(idsOf(m.frame(undefined, t))).toEqual(["a"]);
+    expect(m.moving).toBe(false);
+  });
+
+  it("keeps a label that is gone for less than the hold time, where it is", () => {
+    const m = new LabelMotion({ duration: 300, holdTime: 400, moveDelay: 400 });
     const a = lab("a", [0, 0, 10, 10], [0, 0]);
     const b = lab("b", [30, 0, 10, 10], [30, 0]);
     m.target(result(a, b), undefined, 0);
     m.target(result(a), undefined, 1000);
-    m.target(result(a, lab("b", [30, 5, 10, 10], [30, 0])), undefined, 1100);
-    const ops: number[] = [];
-    for (let t = 1100; t <= 1400; t += 50) ops.push(m.frame(undefined, t).opacity.get("b") ?? 1);
-    expect(Math.min(...ops)).toBeCloseTo(2 / 3, 9);
-    expect(ops[ops.length - 1]).toBe(1);
-    // it glides to its new place instead of popping up there
-    const y = boxOf(m.frame(undefined, 1150), "b")!.y;
+    expect(m.frame(undefined, 1300).opacity.has("b")).toBe(false);
+    m.target(result(a, lab("b", [30, 5, 10, 10], [30, 0])), undefined, 1350);
+    for (let t = 1350; t <= 1700; t += 50) {
+      const f = m.frame(undefined, t);
+      expect(f.opacity.has("b")).toBe(false);
+      expect(boxOf(f, "b")!.y).toBe(0); // until its new place has held for the move delay
+    }
+    const y = boxOf(m.frame(undefined, 1850), "b")!.y; // gliding since 1750
     expect(y).toBeGreaterThan(0);
     expect(y).toBeLessThan(5);
   });
 
+  it("moves a label only once its new place has held for the move delay", () => {
+    const m = new LabelMotion({ duration: 300, moveDelay: 400 });
+    const at12 = lab("a", [12, 0, 30, 20], [10, 5]);
+    m.target(result(at12), undefined, 0);
+    m.target(result(lab("a", [22, 0, 30, 20], [10, 5])), undefined, 1000);
+    expect(m.moving).toBe(true);
+    expect(boxOf(m.frame(undefined, 1200), "a")!.x).toBe(12);
+    // back within the delay: it never moves
+    m.target(result(at12), undefined, 1300);
+    for (let t = 1300; t <= 2000; t += 100) expect(boxOf(m.frame(undefined, t), "a")!.x).toBe(12);
+    expect(m.moving).toBe(false);
+    // moved twice within the delay: one glide, to the last place, 400 ms after the first move
+    m.target(result(lab("a", [22, 0, 30, 20], [10, 5])), undefined, 3000);
+    m.target(result(lab("a", [32, 0, 30, 20], [10, 5])), undefined, 3200);
+    expect(boxOf(m.frame(undefined, 3399), "a")!.x).toBe(12);
+    m.frame(undefined, 3400);
+    expect(boxOf(m.frame(undefined, 3550), "a")!.x).toBeGreaterThan(12);
+    expect(boxOf(m.frame(undefined, 4500), "a")!.x).toBe(32);
+    expect(m.moving).toBe(false);
+  });
+
+  it("moves a label at once when a label at its new place needs the room", () => {
+    const m = new LabelMotion({ duration: 300, moveDelay: 400, appearDelay: 250 });
+    m.target(result(lab("a", [0, 0, 20, 10], [0, 0]), lab("b", [30, 0, 20, 10], [30, 0])), undefined, 0);
+    // b moves up; a new label c takes b's place
+    m.target(result(lab("a", [0, 0, 20, 10], [0, 0]), lab("b", [30, -12, 20, 10], [30, 0]), lab("c", [30, 0, 20, 10], [40, 5])), undefined, 1000);
+    expect(boxOf(m.frame(undefined, 1249), "b")!.y).toBe(0);
+    m.frame(undefined, 1250); // c's turn: b goes
+    const f = m.frame(undefined, 1350);
+    expect(boxOf(f, "b")!.y).toBeLessThan(0);
+    expect(f.opacity.get("c")).toBeCloseTo(1 / 3, 9);
+  });
+
+  it("moves a label at once when it covers another item's anchor", () => {
+    const m = new LabelMotion({ duration: 300, moveDelay: 400 });
+    m.target(result(lab("a", [12, 0, 30, 10], [10, 5]), lab("b", [62, 45, 20, 10], [60, 50])), undefined, 0);
+    // b's point moves into a's label; the solve puts a on the other side of its point
+    const moved = at(["a", 10, 5], ["b", 25, 5]);
+    m.target(result(lab("a", [-32, 0, 30, 10], [10, 5]), lab("b", [27, 10, 20, 10], [25, 5])), moved, 1000);
+    m.frame(moved, 1000);
+    expect(m.frame(moved, 1075).opacity.get("a")).toBeCloseTo(0.5, 9); // fades out, twice as fast
+    m.frame(moved, 1150);
+    const f = m.frame(moved, 1300);
+    expect(boxOf(f, "a")!.x).toBe(-32); // and in on the other side
+    expect(f.opacity.get("a")).toBeCloseTo(0.5, 9);
+  });
+
+  it("fades a label out and in where it jumps further than two label heights, unless it jumps back", () => {
+    const m = new LabelMotion({ duration: 300, moveDelay: 0 });
+    const right = lab("a", [12, 0, 30, 10], [10, 5]);
+    const left = lab("a", [-32, 0, 30, 10], [10, 5], { anchor_side: "left" });
+    m.target(result(right), undefined, 0);
+    m.target(result(left), undefined, 1000);
+    let f = m.frame(undefined, 1075);
+    expect(boxOf(f, "a")!.x).toBe(12); // fades out where it is, twice as fast
+    expect(f.opacity.get("a")).toBeCloseTo(0.5, 9);
+    expect(idsOf(m.frame(undefined, 1150))).toEqual([]);
+    f = m.frame(undefined, 1300);
+    expect(boxOf(f, "a")!.x).toBe(-32); // and in at the new place
+    expect(f.opacity.get("a")).toBeCloseTo(0.5, 9);
+    expect(m.frame(undefined, 1450).opacity.has("a")).toBe(false);
+    expect(m.moving).toBe(false);
+    // flips back and forth: it comes back where it is
+    m.target(result(right), undefined, 2000);
+    expect(m.frame(undefined, 2075).opacity.get("a")).toBeCloseTo(0.5, 9);
+    m.target(result(left), undefined, 2075);
+    f = m.frame(undefined, 2150);
+    expect(boxOf(f, "a")!.x).toBe(-32);
+    expect(f.opacity.get("a")).toBeCloseTo(0.75, 9);
+    expect(m.frame(undefined, 2300).opacity.has("a")).toBe(false);
+  });
+
+  it("hides the less important of two labels that meet for 150 ms until it has been clear for the appear delay", () => {
+    const m = new LabelMotion({ duration: 300, appearDelay: 200 });
+    m.target(result(lab("a", [0, 0, 20, 10], [0, 0], rank(0)), lab("b", [30, 0, 20, 10], [30, 0], rank(1))), undefined, 0);
+    expect(m.frame(at(["a", 0, 0], ["b", 30, 0]), 0).opacity.size).toBe(0);
+    // b's point moves onto a's label: a new solve usually separates them soon
+    const met = at(["a", 0, 0], ["b", 15, 0]);
+    expect(m.frame(met, 100).opacity.size).toBe(0);
+    expect(m.frame(met, 249).opacity.size).toBe(0);
+    m.frame(met, 250); // it did not: b makes way
+    expect(m.frame(met, 325).opacity.get("b")).toBeCloseTo(0.5, 9);
+    expect(idsOf(m.frame(met, 400))).toEqual(["a"]);
+    expect(m.moving).toBe(false);
+    // clear again: it waits, then fades in
+    const apart = at(["a", 0, 0], ["b", 30, 0]);
+    expect(idsOf(m.frame(apart, 450))).toEqual(["a"]);
+    expect(m.moving).toBe(true);
+    expect(idsOf(m.frame(apart, 650))).toEqual(["a"]);
+    expect(m.frame(apart, 800).opacity.get("b")).toBeCloseTo(0.5, 9);
+    expect(m.frame(apart, 950).opacity.size).toBe(0);
+    // the more important label stays, whichever moves
+    const met2 = at(["a", 25, 0], ["b", 30, 0]);
+    for (const t of [1000, 1150, 1300]) m.frame(met2, t);
+    expect(idsOf(m.frame(met2, 1400))).toEqual(["a"]);
+  });
+
+  it("shows a hidden label again when a new result moves it clear", () => {
+    const m = new LabelMotion({ duration: 300, appearDelay: 200 });
+    const a = lab("a", [0, 0, 20, 10], [0, 0], rank(0));
+    m.target(result(a, lab("b", [30, 0, 20, 10], [30, 0], rank(1))), undefined, 0);
+    const met = at(["a", 0, 0], ["b", 15, 0]);
+    for (const t of [100, 250, 400]) m.frame(met, t);
+    expect(m.moving).toBe(false);
+    // solved for the moved point: b goes below it, clear of a
+    m.target(result(a, lab("b", [15, 12, 20, 10], [15, 0], rank(1))), met, 500);
+    expect(m.moving).toBe(true);
+    m.frame(met, 500);
+    expect(m.frame(met, 850).opacity.get("b")).toBeCloseTo(0.5, 9);
+    expect(boxOf(m.frame(met, 1000), "b")).toEqual({ x: 15, y: 12, w: 20, h: 10 });
+  });
+
+  it("fades out a lingering label that a new one needs room from before showing the new one", () => {
+    const m = new LabelMotion({ duration: 300, appearDelay: 200, holdTime: 400 });
+    m.target(result(lab("a", [0, 0, 20, 10], [0, 0]), lab("b", [30, 0, 20, 10], [30, 0])), undefined, 0);
+    m.target(result(lab("a", [0, 0, 20, 10], [0, 0]), lab("c", [34, 2, 20, 10], [32, 0])), undefined, 1000);
+    expect(idsOf(m.frame(undefined, 1100))).toEqual(["b", "a"]); // b lingers, c waits
+    m.frame(undefined, 1200); // c's turn: b makes way
+    expect(m.frame(undefined, 1275).opacity.get("b")).toBeCloseTo(0.5, 9);
+    expect(idsOf(m.frame(undefined, 1350))).toEqual(["a"]); // b is gone: c starts
+    const f = m.frame(undefined, 1500);
+    expect(f.opacity.get("c")).toBeCloseTo(0.5, 9);
+    expect(idsOf(f)).toEqual(["a", "c"]);
+  });
+
   it("attaches leaders to the gliding box and fades out a leader that is no longer needed", () => {
-    const m = new LabelMotion({ duration: 300 });
+    const m = new LabelMotion({ duration: 300, jump: Infinity, moveDelay: 0 });
     const near = lab("a", [104, 95, 30, 10], [100, 100]);
     const leader = { points: [[104, 98], [140, 80]] as [number, number][], style: "straight" as const, port: [140, 80] as [number, number] };
     const far = lab("a", [140, 75, 30, 10], [100, 100], { leader, model: "distant", anchor_side: "distant" });
@@ -109,8 +254,27 @@ describe("LabelMotion", () => {
     expect(f.result.placements[0]!.leader).toBeNull();
   });
 
+  it("keeps a label in a column where the column is while its point moves", () => {
+    const m = new LabelMotion();
+    const leader = { points: [[10, 10], [80, 10]] as [number, number][], style: "straight" as const, port: [80, 10] as [number, number] };
+    m.target(result(lab("a", [80, 5, 30, 10], [10, 10], { model: "fan", anchor_side: "distant", leader })), undefined, 0);
+    const p = m.frame(at(["a", 10, 30]), 10).result.placements[0]!;
+    expect(p.box).toEqual({ x: 80, y: 5, w: 30, h: 10 });
+    expect(p.leader!.points).toEqual([[10, 30], [80, 10]]); // the leader follows the point
+    // back next to its point, after the move delay: out of the column, in next to the point
+    const here = at(["a", 10, 30]);
+    m.target(result(lab("a", [12, 25, 30, 10], [10, 30])), here, 1000);
+    let f = m.frame(here, 1575);
+    expect(boxOf(f, "a")!.x).toBe(80);
+    expect(f.opacity.get("a")).toBeCloseTo(0.5, 9);
+    m.frame(here, 1650);
+    f = m.frame(here, 1800);
+    expect(boxOf(f, "a")).toEqual({ x: 12, y: 25, w: 30, h: 10 });
+    expect(f.opacity.get("a")).toBeCloseTo(0.5, 9);
+  });
+
   it("scales the text with a box that shrinks", () => {
-    const m = new LabelMotion({ duration: 300 });
+    const m = new LabelMotion({ duration: 300, moveDelay: 0 });
     const text = { lines: ["Alpha"], used: "original" as const, baseline_offsets: [8], font_size: 10, x_offset: 1 };
     m.target(result(lab("a", [0, 0, 40, 12], [0, 0], { text })), undefined, 0);
     const small = { ...text, font_size: 8.5, baseline_offsets: [6.8], x_offset: 0.85 };

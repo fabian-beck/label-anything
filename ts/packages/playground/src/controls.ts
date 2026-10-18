@@ -86,6 +86,7 @@ const em = (fallback: number) => ({
 
 const px = (n: number) => `${Math.round(n * 10) / 10} px`;
 const ms = (n: number) => `${n >= 100 ? Math.round(n) : Math.round(n * 10) / 10} ms`;
+const transitions = (g: (key: string) => unknown) => Number(g("view.transition")) > 0;
 
 /** Font classes by priority (spec §9.4), as named choices. */
 export const FONT_CLASSES: Choice[] = [
@@ -244,6 +245,11 @@ export const SECTIONS: Section[] = [
       { key: "weights.stability", label: "Stability", kind: "range", min: 0, max: 4, step: 0.1, format: (n) => n.toFixed(1), hint: "Cost of moving away from the previous place", when: (g) => g("view.warmStart") === true },
       { key: "view.settle", label: "Settle at rest", kind: "toggle", hint: "One more solve, freer to improve, once things stop", when: (g) => g("view.warmStart") === true },
       { key: "view.transition", label: "Smooth transitions", kind: "range", min: 0, max: 1000, step: 10, format: (n) => (n === 0 ? "off" : ms(n)), hint: "Labels glide and fade (LabelMotion)" },
+      { key: "view.moveDelay", label: "Move delay", kind: "range", min: 0, max: 2000, step: 10, format: ms, hint: "A label the solver moved stays until its new place has held this long", when: transitions },
+      { key: "view.appearDelay", label: "Appear delay", kind: "range", min: 0, max: 1000, step: 10, format: ms, hint: "A new label shows only if it is still placed after this time", when: transitions },
+      { key: "view.holdTime", label: "Hold time", kind: "range", min: 0, max: 2000, step: 10, format: ms, hint: "A label that is left out stays this long, in case it is back in the next solves", when: transitions },
+      { key: "view.collisions", label: "Labels make way", kind: "toggle", hint: "Of two labels that meet between solves, the less important one fades out", when: transitions },
+      { key: "view.fadeJumps", label: "Fade long moves", kind: "toggle", hint: "A label that moves further than two lines fades out and in instead of gliding", when: transitions },
       { key: "view.maxRate", label: "Solves per second", kind: "range", min: 2, max: 60, step: 1, format: (n) => (n >= 60 ? "as fast as possible" : `at most ${n}`) },
     ],
   },

@@ -1,6 +1,7 @@
 // Browser tests of the built playground (dist/): every scene solves in a worker and draws
 // labels without overlaps, the two engines give identical layouts, options and share
-// links take effect, and the picture scene adds labels where it is clicked.
+// links take effect, labels keep off the controls on the canvas, and the picture scene
+// adds labels where it is clicked.
 import { expect, test } from "@playwright/test";
 import { startServer } from "./server.mjs";
 
@@ -87,6 +88,38 @@ test("moving objects are solved warm-started, then settle", async ({ page }) => 
   expect(warm).toBeGreaterThan(0);
   await page.evaluate(() => globalThis.playground.setPlaying(false));
   await page.waitForFunction(() => globalThis.playground.history.at(-1)?.kind === "settle", null, { timeout: 20_000 });
+});
+
+test("labels keep off the controls drawn on the canvas, and stay in place while one changes a little", async ({ page }) => {
+  await open(page, "network", 3); // the statistics show from the first result on
+  const overlay = () =>
+    page.evaluate(() => globalThis.playground.problem.obstacles.vector.find((v) => v.class === "overlay")?.rects ?? []);
+  const rects = await overlay();
+  // the title, the statistics, the transport and the view buttons
+  expect(rects.length).toBeGreaterThanOrEqual(4);
+  // the middle of the statistics, in canvas px (the chip is redrawn at every solve)
+  const [x, y] = await page.evaluate(() => {
+    const r = document.querySelector("#hud-stats > *").getBoundingClientRect();
+    const c = document.getElementById("stage").getBoundingClientRect();
+    return [r.left - c.left + r.width / 2, r.top - c.top + r.height / 2];
+  });
+  expect(rects.some(([rx, ry, rw, rh]) => rx <= x && x <= rx + rw && ry <= y && y <= ry + rh)).toBe(true);
+  // the statistics change at every solve: the obstacle stays when the chip shrinks a little,
+  // and grows with it
+  const [same, grown, w] = await page.evaluate(() => {
+    const app = globalThis.playground;
+    const chip = document.querySelector("#hud-stats > *");
+    const rectOf = () => app.buildProblem("warm", false).problem.obstacles.vector.find((v) => v.class === "overlay").rects[1];
+    const w = chip.getBoundingClientRect().width;
+    const before = rectOf();
+    chip.style.width = `${w - 12}px`;
+    const same = JSON.stringify(rectOf()) === JSON.stringify(before);
+    chip.style.width = `${w + 60}px`;
+    return [same, rectOf()[2] - before[2], w];
+  });
+  expect(same).toBe(true);
+  expect(grown).toBeGreaterThanOrEqual(56);
+  expect(w).toBeGreaterThan(0);
 });
 
 test("a share link restores the scene and its options", async ({ page, context }) => {
