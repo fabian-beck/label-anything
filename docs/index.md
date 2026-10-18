@@ -62,9 +62,6 @@ One chart, the main features:
   text or the legend; large economies' labels may cover small economies' bubbles, at a
   cost.
 
-The problem and the script that draws the chart are in
-[`examples/showcase/`](gh:examples/showcase/make_showcase.py).
-
 The *anything* is the host and the label: adjustText (matplotlib), ggrepel (ggplot2) and
 vega-label (Vega) each serve one plotting library; Label Anything is one engine and one
 problem format for any chart, map or diagram, any label with a size and every language.
@@ -128,6 +125,37 @@ things — a dragged node, a panned map — are labeled again from the previous 
 labels stay put ([interactive maps](tutorials/interactive-maps.md)). The
 [playground](try.md) runs the engine live on a world map, a network, charts, moving
 objects and photographs, with every option in reach.
+
+## Gallery
+
+Pictures from open data as a host would draw them, labeled by the engine (click one to see
+it in full; the scripts and the problems are in
+[`examples/showcase/`](gh:examples/showcase/make_showcase.py)).
+
+<figure markdown>
+[![The countries and capitals of Europe, labeled](assets/figures/europe.svg)](assets/figures/europe.svg)
+<figcaption markdown>**A map.** The countries and capitals of Europe (Natural Earth): each
+name inside its country where it fits, abbreviated where the country is narrow (U.K.,
+AUST.), out on a leader where it is too small (Luxembourg, Malta, the Balkans); the capitals
+beside their dots, in the cartographer's order of positions; no label covers the name of a
+sea. All 91 labels placed.</figcaption>
+</figure>
+
+<figure markdown>
+[![A fundus photograph with its parts labeled in the margins](assets/figures/retina.svg)](assets/figures/retina.svg)
+<figcaption markdown>**A photograph.** The back of an eye (fundus photograph: M. Häggström,
+CC0), labeled as an anatomy atlas would: the names stacked in columns in the margins
+(boundary labels), a leader from each to a dot on its part, over the photograph as a raster
+background.</figcaption>
+</figure>
+
+<figure markdown>
+[![The module graph of the library's TypeScript packages, labeled](assets/figures/modules.svg)](assets/figures/modules.svg)
+<figcaption markdown>**A diagram.** This library's own TypeScript modules: 112 nodes, 412
+imports. The most imported modules come first and are set in bold; a label may cross an
+edge at a cost, never a node; in the crowded core a few labels go out on leaders. 111 of
+112 placed.</figcaption>
+</figure>
 
 ## Five lines
 
@@ -210,7 +238,7 @@ the largest problems' speed.
   Go or on the command line.
 * [Tutorials](tutorials/index.md): one task each, with code that runs in CI and a figure of
   its result.
-* [The gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/):
+* [The benchmark's gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/):
   charts, maps, photos, embeddings and networks from the benchmark, next to other labelers.
 * [Concepts](concepts/index.md): the problem and result formats, avoidance, candidates,
   presets, the solver.

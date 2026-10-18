@@ -78,19 +78,28 @@ problem), so the reader switches it for all; *small scenes of a map, a network a
 (the first version) made the header look like a geographic library, and nobody moves a
 lake; *a gentle idle motion* would make the labels move while being read.
 
-### The example below the header
-The page's one figure is a real chart that a reader recognizes, labeled with every main
-feature at once: the world's economies as a bubble chart (Natural Earth, 2019; the
-playground's `world.json`), every country a bubble sized by its GDP, drawn as an SVG and
-handed to the engine as its background with CSS selector classes (grid lines ignored;
-axes, their text and the legend hard). Every country has a label in the order of its GDP:
-the largest set larger and bold (font classes), China's inside its bubble, the crowded
-ones on leaders, long names falling back to their ISO code, and what does not fit left out
-(strict priority; large economies' labels may cover small economies' bubbles at a cost).
-`examples/showcase/make_showcase.py` writes the chart, the problem and the figure (solved
-by the CLI, the text in embedded Noto Sans). It replaces the scatter plot of outliers
-(still the subject of "Five lines" and its tutorial) and the grid of tutorial renderings
-in their debugging colours, which the tutorials keep.
+### The examples below the header
+The figures below the header are pictures a reader recognizes, from open data, drawn as a
+host would draw them and labeled by the engine, not the tutorials' renderings in debugging
+colours (which the tutorials keep). `examples/showcase/make_showcase.py` writes each
+picture, its problem and the figure (solved by the CLI, the text in embedded Noto Sans):
+
+* **A chart** leads, with every main feature at once: the world's economies as a bubble
+  chart (Natural Earth, 2019), drawn as an SVG and handed to the engine as its background
+  with CSS selector classes (grid lines ignored; axes, their text and the legend hard).
+  Every country has a label in the order of its GDP: the largest set larger and bold (font
+  classes), China's inside its bubble, the crowded ones on leaders, long names falling back
+  to their ISO code, and what does not fit left out (strict priority; large economies'
+  labels may cover small economies' bubbles at a cost).
+* **A map** of Europe's countries (area labels: inside, wrapped, abbreviated, else on a
+  leader) and capitals (point labels in the cartographic order), the seas' names hard.
+* **A photograph** labeled like an anatomy atlas: boundary labels in the margins, over the
+  photograph as a raster background.
+* **A diagram**: the module graph of the library's own TypeScript packages, edges a soft
+  obstacle, the most imported modules first.
+
+They replace the scatter plot of outliers (still the subject of "Five lines" and its
+tutorial) and the grid of tutorial renderings.
 
 ## Consequences
 The home page leads with what the project does, shown and then told; the experimental
