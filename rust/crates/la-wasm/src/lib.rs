@@ -25,6 +25,8 @@
 //!   --experimental-reset-state-function`).
 
 mod env;
+#[cfg(target_arch = "wasm32")]
+mod heap;
 mod js;
 
 use env::JsEnv;
@@ -32,6 +34,10 @@ use label_anything::Issue;
 use serde_json::Value;
 use std::sync::atomic::{AtomicU32, Ordering};
 use wasm_bindgen::prelude::*;
+
+#[cfg(target_arch = "wasm32")]
+#[global_allocator]
+static ALLOC: heap::Growing = heap::Growing;
 
 static DEPTH: AtomicU32 = AtomicU32::new(0);
 
