@@ -445,6 +445,9 @@
       "allOf": [
         {
           "if": {
+            "required": [
+              "type"
+            ],
             "properties": {
               "type": {
                 "const": "point"
@@ -473,6 +476,9 @@
         },
         {
           "if": {
+            "required": [
+              "type"
+            ],
             "properties": {
               "type": {
                 "const": "area"
@@ -1826,6 +1832,9 @@
       "allOf": [
         {
           "if": {
+            "required": [
+              "shape"
+            ],
             "properties": {
               "shape": {
                 "const": "circle"
@@ -1844,6 +1853,9 @@
         },
         {
           "if": {
+            "required": [
+              "shape"
+            ],
             "properties": {
               "shape": {
                 "const": "ellipse"
@@ -1874,6 +1886,9 @@
         },
         {
           "if": {
+            "required": [
+              "shape"
+            ],
             "properties": {
               "shape": {
                 "const": "rect"
@@ -1908,6 +1923,9 @@
         },
         {
           "if": {
+            "required": [
+              "shape"
+            ],
             "properties": {
               "shape": {
                 "const": "polygon"
@@ -1938,6 +1956,9 @@
         },
         {
           "if": {
+            "required": [
+              "shape"
+            ],
             "properties": {
               "shape": {
                 "const": "path"
@@ -1964,6 +1985,9 @@
         },
         {
           "if": {
+            "required": [
+              "shape"
+            ],
             "properties": {
               "shape": {
                 "const": "icon"
@@ -1998,6 +2022,9 @@
         },
         {
           "if": {
+            "required": [
+              "shape"
+            ],
             "properties": {
               "shape": {
                 "const": "from_svg"

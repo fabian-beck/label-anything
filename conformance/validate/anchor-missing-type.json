@@ -1,0 +1,29 @@
+{
+  "kind": "validate",
+  "name": "anchor-missing-type",
+  "problem": {
+    "items": [
+      {
+        "anchor": {
+          "x": 1,
+          "y": 1
+        },
+        "label": {
+          "type": "text",
+          "text": "A"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/items/0/anchor/type",
+        "code": "required"
+      }
+    ],
+    "warnings": [],
+    "exact": true
+  }
+}

@@ -126,6 +126,17 @@
       "errors": [],
       "warnings": []
     },
+    "validate/anchor-missing-type.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/items/0/anchor/type",
+          "code": "required",
+          "message": "missing required property 'type'"
+        }
+      ],
+      "warnings": []
+    },
     "validate/bad-degrade-step.json": {
       "valid": false,
       "errors": [
@@ -286,6 +297,27 @@
           "pointer": "/items/0/anchor/mark/rx",
           "code": "unknown_property",
           "message": "unknown property 'rx'"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/mark-missing-shape.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/items/0/anchor/mark/h",
+          "code": "unknown_property",
+          "message": "unknown property 'h'"
+        },
+        {
+          "pointer": "/items/0/anchor/mark/shape",
+          "code": "required",
+          "message": "missing required property 'shape'"
+        },
+        {
+          "pointer": "/items/0/anchor/mark/w",
+          "code": "unknown_property",
+          "message": "unknown property 'w'"
         }
       ],
       "warnings": []
