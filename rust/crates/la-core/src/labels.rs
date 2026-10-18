@@ -268,6 +268,19 @@ fn to_wrap_opts(spec: &TextSpec, scale: f64) -> Option<WrapOptions> {
     })
 }
 
+/// The lines of a text broken by line feeds (hard breaks, spec §5.3; a `\r` before a
+/// line feed is dropped), or `None` when it has none.
+fn hard_lines(text: &str) -> Option<Vec<String>> {
+    if !text.contains('\n') {
+        return None;
+    }
+    Some(
+        text.split('\n')
+            .map(|l| l.strip_suffix('\r').unwrap_or(l).to_string())
+            .collect(),
+    )
+}
+
 /// Normal-level variants of one text (original or alternative).
 fn text_variants(
     m: &Measurer,
@@ -304,6 +317,10 @@ fn text_variants(
             steps: vec![],
             scale,
         }];
+    }
+    if let Some(lines) = hard_lines(text) {
+        // the author's lines: never wrapped or truncated
+        return vec![text_variant(m, spec, pad, scale, lines, used, false)];
     }
     let measure = |s: &str| m.width(&spec.font, scale, s);
     match to_wrap_opts(spec, scale) {
@@ -351,7 +368,7 @@ fn extra_wrap(
     used: &str,
     wrap_max_lines: usize,
 ) -> Vec<Variant> {
-    if spec.explicit.is_some() {
+    if spec.explicit.is_some() || text.contains('\n') {
         return vec![];
     }
     let width = |s: &str| m.width(&spec.font, scale, s);
@@ -396,7 +413,7 @@ fn extra_wrap(
 
 /// Truncated single-line variants for the `truncate` ladder step.
 fn truncated(m: &Measurer, spec: &TextSpec, text: &str, pad: f64, scale: f64) -> Vec<Variant> {
-    if spec.explicit.is_some() {
+    if spec.explicit.is_some() || text.contains('\n') {
         return vec![];
     }
     let measure = |s: &str| m.width(&spec.font, scale, s);

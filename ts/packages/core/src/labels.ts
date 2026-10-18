@@ -287,6 +287,15 @@ function toWrapOpts(spec: TextSpec, scale: number): WrapOptions | null {
   };
 }
 
+/**
+ * The lines of a text broken by line feeds (hard breaks, spec §5.3; a `\r` before a line
+ * feed is dropped), or `null` when it has none.
+ */
+function hardLines(text: string): string[] | null {
+  if (!text.includes("\n")) return null;
+  return text.split("\n").map((l) => (l.endsWith("\r") ? l.slice(0, -1) : l));
+}
+
 /** Normal-level variants of one text (original or alternative). */
 function textVariants(m: Measurer, spec: TextSpec, text: string, pad: number, scale: number, used: string): Variant[] {
   if (spec.explicit !== null) {
@@ -319,6 +328,9 @@ function textVariants(m: Measurer, spec: TextSpec, text: string, pad: number, sc
       ),
     ];
   }
+  const hard = hardLines(text);
+  // the author's lines: never wrapped or truncated
+  if (hard !== null) return [textVariant(m, spec, pad, scale, hard, used, false)];
   const measure = (s: string): number => m.width(spec.font, scale, s);
   const opts = toWrapOpts(spec, scale);
   if (opts === null) return [textVariant(m, spec, pad, scale, [text], used, false)];
@@ -349,7 +361,7 @@ function extraWrap(
   used: string,
   wrapMaxLines: number,
 ): Variant[] {
-  if (spec.explicit !== null) return [];
+  if (spec.explicit !== null || text.includes("\n")) return [];
   const width = (s: string): number => m.width(spec.font, scale, s);
   const measure = m.wrapMeasure(spec.font, scale, width);
   let normalMax: number;
@@ -389,7 +401,7 @@ function extraWrap(
 
 /** Truncated single-line variants for the `truncate` ladder step. */
 function truncated(m: Measurer, spec: TextSpec, text: string, pad: number, scale: number): Variant[] {
-  if (spec.explicit !== null) return [];
+  if (spec.explicit !== null || text.includes("\n")) return [];
   const measure = (s: string): number => m.width(spec.font, scale, s);
   const full = measure(text);
   const mw = spec.wrap !== null ? spec.wrap.maxWidth : null;

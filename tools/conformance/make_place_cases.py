@@ -207,6 +207,12 @@ CASES["truncate-none-keeps-lines"] = case(
                                                 "truncate": "none"})]},
     {"placed": 1, "text_lines": {"n": ["aaa bbb", "ccc ddd"]}})
 
+CASES["hard-line-breaks"] = case(
+    "a line feed breaks the line; the given lines are never rewrapped (CRLF too)",
+    {"canvas": {"width": 400, "height": 200},
+     "items": [pt("p", 100, 100, "Paris\n2.1M"), pt("c", 300, 100, "Line one\r\nLine two")]},
+    {"placed": 2, "text_lines": {"p": ["Paris", "2.1M"], "c": ["Line one", "Line two"]}})
+
 CASES["wrap-no-short-lines"] = case(
     "the wrap step never strands a line narrower than 1.5 em (France / 3)",
     {"canvas": {"width": 50, "height": 200}, "degrade": ["wrap", "omit"],
