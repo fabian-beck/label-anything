@@ -34,12 +34,12 @@ takes the place of a higher-priority one.
 
 ```text
 Walros omitted_by_priority ('items', 'labels') ('Hofkel',) {'tier': 0, 'score': 6882.0, 'rank': 37}
-Brücklin omitted_by_priority ('items', 'labels') ('Feldor', 'Dorsted', 'Talber') {'tier': 0, 'score': 2554.0, 'rank': 39}
+Brücklin omitted_by_priority ('items', 'labels', 'leaders') ('Achros', 'Feldor', 'Dorsted', 'Talber') {'tier': 0, 'score': 2554.0, 'rank': 39}
 Linsted no_feasible_candidate ('items',) () {'tier': 0, 'score': 9409.0, 'rank': 35}
 ...
-Roslin omitted_by_priority ('items', 'labels', 'leaders') ('Achros', 'Dorsted') {'tier': 0, 'score': 62102.0, 'rank': 14}
+Berau omitted_by_priority ('items', 'labels') ('Kelsted',) {'tier': 0, 'score': 66376.0, 'rank': 13}
 ...
-['Brücklin', 'Walros', 'Linsted', 'Achheim', 'Munfel', 'Aufel', 'Talheim', 'Linheim', 'Munham', 'Heimlin', 'Roslin', 'Berau']
+['Brücklin', 'Walros', 'Linsted', 'Achheim', 'Munfel', 'Aufel', 'Dormun', 'Talheim', 'Linheim', 'Munham', 'Heimlin', 'Berau']
 0
 ```
 
