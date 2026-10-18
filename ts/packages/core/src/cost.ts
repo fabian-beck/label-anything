@@ -105,10 +105,16 @@ export class Evaluator {
     const buf = this.buf;
     obs.itemIndex.query(r.inflate(reach), buf);
     const labelItemsHard = dy.labelItems.kind === AvoidKind.Hard;
+    // the marks of less important items follow `lower_items` where it differs from `items`
+    const lowerRule = !dy.labelLower.equals(dy.labelItems);
+    const labelLowerHard = dy.labelLower.isHard();
+    let lowerCov = 0;
     let otherFound = false;
     for (let q = 0; q < buf.len; q++) {
       const j = buf.get(q);
       const sj = model.items[j]!.shape;
+      const lower = lowerRule && j !== i && model.isLower(i, j);
+      if (lower) lowerCov += obs.ownCovered(j, r);
       if (j === i) {
         if (c.kind === Kind.Internal) continue;
         const om = dy.ownMark;
@@ -124,7 +130,7 @@ export class Evaluator {
         continue;
       }
       otherFound = true;
-      if (!labelItemsHard) continue;
+      if (!(lower ? labelLowerHard : labelItemsHard)) continue;
       if (c.labelOverlapsShape(sj)) {
         acc.violate(BLOCK_ITEMS, false, 0);
       } else if (margin > EPS) {
@@ -134,7 +140,11 @@ export class Evaluator {
         if (d < margin - EPS && d < sj.distRect(item.shape.bbox())) acc.violate(BLOCK_ITEMS, false, 0);
       }
     }
-    if (dy.labelItems.kind === AvoidKind.Soft) acc.add("items", (dy.labelItems.w * obs.otherItemsCovered(i, r)) / em2);
+    if (dy.labelItems.kind === AvoidKind.Soft) {
+      const cov = obs.otherItemsCovered(i, r);
+      acc.add("items", (dy.labelItems.w * (lowerRule ? maxf(cov - lowerCov, 0) : cov)) / em2);
+    }
+    if (lowerRule && dy.labelLower.kind === AvoidKind.Soft) acc.add("lower_items", (dy.labelLower.w * lowerCov) / em2);
     // the ring only sees other items when the item query found any besides the own
     if (dy.bufferItems > 0 && otherFound) {
       const ringArea = maxf(ring.area() - area, 1e-9);
@@ -306,12 +316,13 @@ export class Evaluator {
     const clearance = item.len.clearance;
     const buf = this.buf;
     obs.itemIndex.query(l.bbox().inflate(clearance), buf);
-    const li = dy.leaderItems;
+    const lowerRule = !dy.leaderLower.equals(dy.leaderItems);
     const anchor = l.member !== null ? model.items[l.member]!.anchor : item.anchor;
     const start = l.pts[0]!;
     for (let q = 0; q < buf.len; q++) {
       const j = buf.get(q);
       if (j === i || (model.groupOf[j] ?? null) === i) continue;
+      const li = lowerRule && model.isLower(i, j) ? dy.leaderLower : dy.leaderItems;
       if (li.kind === AvoidKind.Ignore) continue;
       const sj = model.items[j]!.shape;
       if (sj.contains(anchor) || (column && sj.contains(start))) continue;

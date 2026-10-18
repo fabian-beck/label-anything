@@ -12,8 +12,9 @@ import { EPS, P, Rect, segLenInRect, segOverlapsRectXY, segSegDistXY } from "../
 import { Occupancy } from "../grid/occupancy.js";
 import { type Spacing, candLeadersConflict } from "../leaders.js";
 import { maxf, minf } from "../math.js";
+import type { Shape } from "../geom/shape.js";
 import { AvoidKind, type Dynamic, type Obstacles } from "../obstacles.js";
-import { DynIndex, IdList } from "../spatial.js";
+import { DynIndex, IdList, StaticIndex } from "../spatial.js";
 
 /** Whether any segment of `c`'s leaders passes through the interior of `r`. */
 export function leadersOverlapRect(c: Cand, r: Rect): boolean {
@@ -28,6 +29,29 @@ export function leadersOverlapRect(c: Cand, r: Rect): boolean {
   return false;
 }
 
+
+/**
+ * The marks a label may cover when they belong to less important items
+ * (`avoid.label.lower_items` given and not hard, spec §4.4): such a label conflicts with
+ * every label of the item whose mark it covers.
+ */
+export class LowerMarks {
+  readonly index: StaticIndex;
+
+  /** `groupOf`: the group representative of every item (a group's label may cover its members). */
+  constructor(
+    readonly marks: readonly Shape[],
+    readonly groupOf: readonly (number | null)[],
+    extent: Rect,
+    cell: number,
+  ) {
+    this.index = new StaticIndex(
+      marks.map((m) => m.bbox()),
+      extent,
+      cell,
+    );
+  }
+}
 
 /** The set of placed labels with spatial indexes. */
 export class State {
@@ -79,6 +103,9 @@ export class State {
   private reach: number;
   /** Placed items already tested by a conflict query. */
   private seen: number[] = [];
+  /** Marks of less important items that labels may cover (see {@link LowerMarks}). */
+  private lower: LowerMarks | null;
+  private lbuf = new IdList();
 
   /**
    * `keys`: the priority key level of every item (smaller = more important); `clr` and
@@ -94,6 +121,7 @@ export class State {
     em: readonly number[],
     margin: readonly number[],
     cosMin: number,
+    lower: LowerMarks | null = null,
   ) {
     let nKeys = 0;
     for (const k of keys) if (k + 1 > nKeys) nKeys = k + 1;
@@ -118,6 +146,83 @@ export class State {
     this.pendAt = new Int32Array(nItems).fill(-1);
     this.keys = keys;
     this.keyCount = new Uint32Array(nKeys);
+    this.lower = lower;
+  }
+
+  /**
+   * Conflicts of `c` by the `lower_items` rule (in this order): placed items of lower key
+   * whose mark the label of `c` covers, then placed items of higher key whose label covers
+   * the mark of `c`'s item; only items with key at most `keyLimit`. With `first`, stops at
+   * the first one.
+   */
+  private lowerConflicts(c: Cand, cands: readonly Cand[], skip: number, keyLimit: number, first: boolean, out: number[]): void {
+    const lw = this.lower;
+    if (lw === null) return;
+    const i = c.item;
+    const keys = this.keys;
+    const buf = this.lbuf;
+    lw.index.query(c.rect, buf);
+    for (let q = 0; q < buf.len; q++) {
+      const j = buf.get(q);
+      if (j === i || j === skip || this.placed[j]! < 0 || keys[j]! <= keys[i]! || (lw.groupOf[j] ?? null) === i || !(keys[j]! <= keyLimit)) continue;
+      if (c.labelOverlapsShape(lw.marks[j]!)) {
+        out.push(j);
+        if (first) return;
+      }
+    }
+    const mark = lw.marks[i]!;
+    this.labelIx.query(mark.bbox(), buf);
+    for (let q = 0; q < buf.len; q++) {
+      const j = buf.get(q);
+      if (j === i || j === skip || keys[j]! >= keys[i]! || (lw.groupOf[i] ?? null) === j || !(keys[j]! <= keyLimit)) continue;
+      const pid = this.placed[j]!;
+      if (pid < 0) continue;
+      if (cands[pid]!.labelOverlapsShape(mark)) {
+        out.push(j);
+        if (first) return;
+      }
+    }
+  }
+
+  /** The less important items whose marks the label of `c` covers (see {@link LowerMarks}), in index-query order. */
+  lowerCovered(c: Cand, out: number[]): void {
+    out.length = 0;
+    const lw = this.lower;
+    if (lw === null) return;
+    const i = c.item;
+    const keys = this.keys;
+    const buf = this.lbuf;
+    lw.index.query(c.rect, buf);
+    for (let q = 0; q < buf.len; q++) {
+      const j = buf.get(q);
+      if (j !== i && keys[j]! > keys[i]! && (lw.groupOf[j] ?? null) !== i && c.labelOverlapsShape(lw.marks[j]!)) out.push(j);
+    }
+  }
+
+  /** The bounding box of item `i`'s mark (when labels may cover less important marks), else null. */
+  markBBox(i: number): Rect | null {
+    return this.lower === null ? null : this.lower.marks[i]!.bbox();
+  }
+
+  /** Whether labels may cover the marks of less important items (see {@link LowerMarks}). */
+  hasLower(): boolean {
+    return this.lower !== null;
+  }
+
+  /**
+   * Whether the labels of `a` and `b` (different items) exclude each other by the
+   * `lower_items` rule: one covers the mark of the other's, less important, item.
+   */
+  pairLower(a: Cand, b: Cand): boolean {
+    const lw = this.lower;
+    if (lw === null) return false;
+    const i = a.item;
+    const j = b.item;
+    const keys = this.keys;
+    return (
+      (keys[j]! > keys[i]! && (lw.groupOf[j] ?? null) !== i && a.labelOverlapsShape(lw.marks[j]!)) ||
+      (keys[i]! > keys[j]! && (lw.groupOf[i] ?? null) !== j && b.labelOverlapsShape(lw.marks[i]!))
+    );
   }
 
   /** The largest label margin: how far label-label conflicts reach beyond a box. */
@@ -312,6 +417,7 @@ export class State {
       seen.push(j);
       if (this.leadersHit(c, cands[this.placed[j]!]!, dy, j)) out.push(j);
     }
+    this.lowerConflicts(c, cands, skip, Infinity, false, out);
     if (out.length > 1) {
       out.sort((a, b) => a - b);
       let w = 1;
@@ -359,6 +465,11 @@ export class State {
         seen.push(j);
         if (this.leadersHit(c, cands[this.placed[j]!]!, dy, j)) return j;
       }
+    }
+    if (this.lower !== null) {
+      const hit: number[] = [];
+      this.lowerConflicts(c, cands, skip, keyLimit, true, hit);
+      if (hit.length > 0) return hit[0]!;
     }
     return -1;
   }

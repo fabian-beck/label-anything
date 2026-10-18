@@ -130,6 +130,20 @@ CASES["strict-repair"] = case(
     {"problem_file": "../problems/strict-repair.json"},
     {"placed_min": 50})
 
+# the hub's only position covers the mark of a minor item: by default the mark blocks it; with
+# lower_items soft the hub is labeled and the minor item, whose top position is free, is not
+LOWER = {"canvas": {"width": 200, "height": 80}, "placement": ONE_SLOT, "degrade": ["omit"],
+         "items": [pt("hub", 60, 50, "Hub", priority=2.0),
+                   {**pt("minor", 85, 50, "Minor", priority=1.0, placement={"position_order": ["top"]}),
+                    "anchor": {"type": "point", "x": 85, "y": 50, "mark": {"shape": "circle", "r": 12}}}]}
+CASES["lower-items-default"] = case(
+    "by default a label avoids the marks of less important items",
+    LOWER, {"placed": 1, "placed_ids": ["minor"], "unplaced_ids": ["hub"], "reasons": {"hub": "no_feasible_candidate"}})
+CASES["lower-items-cover"] = case(
+    "with lower_items soft a label covers the mark of a less important item, which stays unlabeled",
+    {**LOWER, "avoid": {"label": {"lower_items": 2.0}}},
+    {"placed": 1, "placed_ids": ["hub"], "unplaced_ids": ["minor"], "reasons": {"minor": "omitted_by_priority"}})
+
 CASES["max-labels"] = case(
     "a label budget keeps the highest priorities",
     {"canvas": {"width": 600, "height": 200}, "priority": {"budget": {"max_labels": 2}},

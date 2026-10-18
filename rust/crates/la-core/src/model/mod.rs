@@ -435,6 +435,9 @@ pub struct Model {
     pub font_classes: Vec<FontClass>,
     /// The font class of each item (set once the priorities are known).
     pub font_class: Vec<Option<usize>>,
+    /// Priority key level of every item (spec §9.1; 0 = the most important), set with the
+    /// font classes; empty before priorities are computed.
+    pub key_level: Vec<usize>,
     pub focus: Option<P>,
     pub priority_value: Value,
     /// `auto` preset: (crowded fraction, models when crowded) unless the user set models.
@@ -456,6 +459,12 @@ pub struct Model {
 
 impl Model {
     /// Members of the group represented by `rep` (empty if `rep` is not a representative).
+    /// Whether item `j` has a lower priority key than item `i` (spec §9.1): the
+    /// `lower_items` policy applies to its mark for the labels and leaders of `i`.
+    pub fn is_lower(&self, i: usize, j: usize) -> bool {
+        !self.key_level.is_empty() && self.key_level[j] > self.key_level[i]
+    }
+
     pub fn group_members(&self, rep: usize) -> &[usize] {
         self.groups
             .iter()
@@ -1238,6 +1247,7 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
             .map(|a| a.iter().filter_map(FontClass::from_value).collect())
             .unwrap_or_default(),
         font_class: Vec::new(),
+        key_level: Vec::new(),
         focus,
         priority_value: o.get("priority"),
         auto_crowded,

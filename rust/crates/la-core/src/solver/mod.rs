@@ -19,6 +19,7 @@ use crate::model::opts::{Models, Step};
 use crate::model::Model;
 use crate::obstacles::Obstacles;
 use crate::priority::Priorities;
+use state::LowerMarks;
 use state::State;
 
 /// Why an item ended up unplaced.
@@ -131,6 +132,16 @@ impl<'a> Solve<'a> {
                 } else {
                     1.0
                 },
+                obs.dynamic.lower_cover.then(|| {
+                    LowerMarks::new(
+                        model.items.iter().map(|it| it.shape.clone()).collect(),
+                        (0..n)
+                            .map(|k| model.group_of.get(k).copied().flatten())
+                            .collect(),
+                        &model.extent,
+                        obs.index_cell,
+                    )
+                }),
             ),
             reasons: vec![None; n],
             steps_tried: vec![Vec::new(); n],

@@ -427,13 +427,15 @@ function commit(s: Solve, g: Greedy, i: number, c: number, relaxed: boolean): vo
   const cand = s.cands[c]!;
   const ids = g.ids;
   s.candIx.query(cand.bbox().inflate(1e-6 + s.state.leaderReach(s.obs) + s.state.marginMax()), ids);
+  const all: number[] = [];
+  for (let q = 0; q < ids.len; q++) all.push(ids.get(q));
+  lowerAffected(s, i, c, all);
   const dy = s.obs.dynamic;
-  for (let q = 0; q < ids.len; q++) {
-    const k = ids.get(q);
+  for (const k of all) {
     if (!g.alive[k]) continue;
     const j = s.cands[k]!.item;
     if (j === i || s.state.placed[j]! >= 0) continue;
-    if (pairConflict(s.cands[k]!, cand, dy, s.state.spacing(i, j))) {
+    if (pairConflict(s.cands[k]!, cand, dy, s.state.spacing(i, j)) || s.state.pairLower(s.cands[k]!, cand)) {
       g.alive[k] = 0;
       g.live[j] -= 1;
       // re-queue with its new live count, but only within the running band (items of
@@ -441,6 +443,22 @@ function commit(s: Solve, g: Greedy, i: number, c: number, relaxed: boolean): vo
       if (!g.done[j] && g.bandKey === s.pri.prio[j]!.key) g.heap.push(g.live[j]!, s.pri.prio[j]!.rank, j);
     }
   }
+}
+
+/**
+ * With the `lower_items` rule, the label `c` of item `i` also excludes the labels of the
+ * less important items whose marks it covers, wherever they are, and the labels of more
+ * important items that would cover the mark of `i`: their level-0 candidates join `ids`.
+ */
+function lowerAffected(s: Solve, i: number, c: number, ids: number[]): void {
+  const mark = s.state.markBBox(i);
+  if (mark === null) return;
+  const covered: number[] = [];
+  s.state.lowerCovered(s.cands[c]!, covered);
+  for (const j of covered) for (const k of s.byItem[j]!) if (k < s.nLevel0) ids.push(k);
+  const near = new IdList();
+  s.candIx.query(mark, near);
+  for (let q = 0; q < near.len; q++) ids.push(near.get(q));
 }
 
 function unplaceItem(s: Solve, g: Greedy, i: number): void {
@@ -460,8 +478,10 @@ function unplaceItem(s: Solve, g: Greedy, i: number): void {
   // revive level-0 candidates that only conflicted with this label
   const ids = new IdList();
   s.candIx.query(s.cands[c]!.bbox().inflate(1e-6 + s.state.leaderReach(s.obs) + s.state.marginMax()), ids);
-  for (let q = 0; q < ids.len; q++) {
-    const k = ids.get(q);
+  const all: number[] = [];
+  for (let q = 0; q < ids.len; q++) all.push(ids.get(q));
+  lowerAffected(s, i, c, all);
+  for (const k of all) {
     if (g.alive[k] || !s.cands[k]!.feasible) continue;
     const j = s.cands[k]!.item;
     if (s.state.placed[j]! >= 0) continue;
@@ -534,7 +554,7 @@ function lookahead(s: Solve, g: Greedy, i: number, c: number): number {
     if (!g.alive[k]) continue;
     const j = s.cands[k]!.item;
     if (j === i || g.done[j]) continue;
-    if (pairConflict(s.cands[k]!, cand, dy, s.state.spacing(i, j))) {
+    if (pairConflict(s.cands[k]!, cand, dy, s.state.spacing(i, j)) || s.state.pairLower(s.cands[k]!, cand)) {
       if (g.killed[j] === 0) g.touched.push(j);
       g.killed[j] += 1;
     }

@@ -1,0 +1,79 @@
+{
+  "kind": "place",
+  "name": "with lower_items soft a label covers the mark of a less important item, which stays unlabeled",
+  "problem": {
+    "canvas": {
+      "width": 200,
+      "height": 80
+    },
+    "placement": {
+      "models": [
+        "adjacent"
+      ],
+      "position_order": [
+        "right"
+      ]
+    },
+    "degrade": [
+      "omit"
+    ],
+    "items": [
+      {
+        "id": "hub",
+        "anchor": {
+          "type": "point",
+          "x": 60,
+          "y": 50
+        },
+        "label": {
+          "type": "text",
+          "text": "Hub"
+        },
+        "priority": 2.0
+      },
+      {
+        "id": "minor",
+        "anchor": {
+          "type": "point",
+          "x": 85,
+          "y": 50,
+          "mark": {
+            "shape": "circle",
+            "r": 12
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Minor"
+        },
+        "priority": 1.0,
+        "placement": {
+          "position_order": [
+            "top"
+          ]
+        }
+      }
+    ],
+    "avoid": {
+      "label": {
+        "lower_items": 2.0
+      }
+    }
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "placed_ids": [
+      "hub"
+    ],
+    "unplaced_ids": [
+      "minor"
+    ],
+    "reasons": {
+      "minor": "omitted_by_priority"
+    }
+  }
+}

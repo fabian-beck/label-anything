@@ -177,8 +177,11 @@ export function run(s: Solve, maxNodes: number): boolean {
     for (let y = x + 1; y < pool.length; y++) {
       const b = pool[y]!;
       const cb = s.cands[b]!;
-      if (ca.item === cb.item || !bba.touches(bboxes[y]!)) continue;
-      if (pairConflict(ca, cb, dy, s.state.spacing(ca.item, cb.item))) {
+      if (ca.item === cb.item) continue;
+      // a label may exclude the label of an item whose mark it covers, wherever that is
+      const near = bba.touches(bboxes[y]!);
+      if (!near && !s.state.hasLower()) continue;
+      if ((near && pairConflict(ca, cb, dy, s.state.spacing(ca.item, cb.item))) || s.state.pairLower(ca, cb)) {
         addConflict(a, b);
         addConflict(b, a);
       }

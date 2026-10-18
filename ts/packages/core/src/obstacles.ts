@@ -59,6 +59,11 @@ export class AvoidW {
     return this.kind === AvoidKind.Hard;
   }
 
+  /** Whether both are the same policy (Rust `==`). */
+  equals(o: AvoidW): boolean {
+    return this.kind === o.kind && this.w === o.w;
+  }
+
   isSoft(): boolean {
     return this.kind === AvoidKind.Soft;
   }
@@ -94,10 +99,19 @@ export interface Class {
 export interface Dynamic {
   labelLabels: AvoidW;
   labelItems: AvoidW;
+  /** Labels vs. the marks of items of lower priority key (`avoid.label.lower_items`, else `items`). */
+  labelLower: AvoidW;
   labelEdge: AvoidW;
   leaderLeaders: AvoidW;
   leaderLabels: AvoidW;
   leaderItems: AvoidW;
+  /** Leaders vs. the marks of items of lower priority key (`avoid.leader.lower_items`, else `items`). */
+  leaderLower: AvoidW;
+  /**
+   * `avoid.label.lower_items` is given and not hard: a label covering the mark of a less
+   * important item conflicts with that item's label.
+   */
+  lowerCover: boolean;
   bufferItems: number;
   bufferLeaders: number;
   bufferLabels: number;
@@ -263,6 +277,12 @@ export class Obstacles {
     return o;
   }
 
+  /** Covered area (px²) of `r` by the mark of item `j`. */
+  ownCovered(j: number, r: Rect): number {
+    const own = this.own(j);
+    return own[1].coveredArea(own[0], r);
+  }
+
   /** Covered area (px²) of `r` by the marks of all items except `i`. */
   otherItemsCovered(i: number, r: Rect): number {
     const all = this.itemsSat().coveredArea(this.grid, r);
@@ -423,13 +443,19 @@ export function prepare(model: Model, minFont: number): Obstacles {
   let ownMark: OwnMark = { kind: "hard" };
   if (om === "ignore") ownMark = { kind: "ignore" };
   else if (typeof om === "string" && om.startsWith("partial:")) ownMark = { kind: "partial", f: parseRustF64(om.slice(8)) ?? 0 };
+  // lower_items: the policy for the marks of less important items, `items` when not given
+  const lower = (map: Record<string, unknown>): AvoidW => AvoidW.parse(get(map, "lower_items")) ?? pol(map, "items");
+  const lowerGiven = AvoidW.parse(get(model.avoidLabel, "lower_items"));
   const dynamic: Dynamic = {
     labelLabels: pol(model.avoidLabel, "labels"),
     labelItems: pol(model.avoidLabel, "items"),
+    labelLower: lower(model.avoidLabel),
     labelEdge: model.labelArea !== null ? pol(model.avoidLabel, "canvas_edge") : AvoidW.IGNORE,
     leaderLeaders: pol(model.avoidLeader, "leaders"),
     leaderLabels: pol(model.avoidLeader, "labels"),
     leaderItems: pol(model.avoidLeader, "items"),
+    leaderLower: lower(model.avoidLeader),
+    lowerCover: lowerGiven !== null && !lowerGiven.isHard(),
     bufferItems: buf("items"),
     bufferLeaders: buf("leaders"),
     bufferLabels: buf("labels"),
@@ -446,7 +472,7 @@ export function prepare(model: Model, minFont: number): Obstacles {
   );
   // items coverage (global and per item): Obstacles.itemsSat and Obstacles.own, on demand
   let itemOcc: Occupancy | null = null;
-  if (dynamic.labelItems.isHard() && dynamic.ownMark.kind === "hard") {
+  if (dynamic.labelItems.isHard() && dynamic.labelLower.isHard() && dynamic.ownMark.kind === "hard") {
     const occ = new Occupancy(model.extent);
     for (const it of model.items) occ.markShape(it.shape);
     // static from here on: O(1) window queries

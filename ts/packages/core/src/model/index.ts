@@ -417,6 +417,8 @@ export class Model {
   fontClasses: FontClass[] = [];
   /** The font class of each item (set once the priorities are known). */
   fontClass: (number | null)[] = [];
+  /** Priority key level of every item (spec §9.1; 0 = the most important), set with the font classes. */
+  keyLevel: number[] = [];
   focus: P | null = null;
   priorityValue: unknown = null;
   /** `auto` preset: (crowded fraction, models when crowded) unless the user set models. */
@@ -436,6 +438,14 @@ export class Model {
   groups: [number, number[]][] = [];
   /** For each item: the representative of its group (itself for representatives). */
   groupOf: (number | null)[] = [];
+
+  /**
+   * Whether item `j` has a lower priority key than item `i` (spec §9.1): the `lower_items`
+   * policy applies to its mark for the labels and leaders of `i`.
+   */
+  isLower(i: number, j: number): boolean {
+    return this.keyLevel.length > 0 && this.keyLevel[j]! > this.keyLevel[i]!;
+  }
 
   /** Members of the group represented by `rep` (empty if `rep` is not a representative). */
   groupMembers(rep: number): readonly number[] {

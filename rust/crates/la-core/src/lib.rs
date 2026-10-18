@@ -125,6 +125,7 @@ pub fn place_validated(
     let pri = priority::compute(&m, &variants, env);
     // font classes (spec §9.4): the priorities stay those of the nominal sizes
     m.font_class = priority::font_classes(&m, &pri);
+    m.key_level = pri.prio.iter().map(|p| p.key).collect();
     for ((item, class), v) in m.items.iter_mut().zip(&m.font_class).zip(&mut variants) {
         if let Some(c) = class.map(|k| m.font_classes[k]) {
             if c.scale != 1.0 || c.weight.is_some() {

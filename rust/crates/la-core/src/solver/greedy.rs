@@ -406,6 +406,7 @@ fn commit(s: &mut Solve, g: &mut Greedy, i: usize, c: u32, relaxed: bool) {
         &bb.inflate(1e-6 + s.state.leader_reach(s.obs) + s.state.margin_max()),
         &mut ids,
     );
+    lower_affected(s, i, c, &mut ids);
     let dy = s.obs.dynamic;
     for k in ids {
         let k = k as usize;
@@ -417,7 +418,9 @@ fn commit(s: &mut Solve, g: &mut Greedy, i: usize, c: u32, relaxed: bool) {
             continue;
         }
         let sp = s.state.spacing(i, j);
-        if pair_conflict(&s.cands[k], &s.cands[c as usize], &dy, sp) {
+        if pair_conflict(&s.cands[k], &s.cands[c as usize], &dy, sp)
+            || s.state.pair_lower(&s.cands[k], &s.cands[c as usize])
+        {
             g.alive[k] = false;
             g.live[j] -= 1;
             // re-queue with its new live count, but only within the running band (items
@@ -428,6 +431,28 @@ fn commit(s: &mut Solve, g: &mut Greedy, i: usize, c: u32, relaxed: bool) {
             }
         }
     }
+}
+
+/// With the `lower_items` rule, the label `c` of item `i` also excludes the labels of the
+/// less important items whose marks it covers, wherever they are, and the labels of more
+/// important items that would cover the mark of `i`: their level-0 candidates join `ids`.
+fn lower_affected(s: &mut Solve, i: usize, c: u32, ids: &mut Vec<u32>) {
+    let Some(mark) = s.state.mark_bbox(i) else {
+        return;
+    };
+    let mut covered = Vec::new();
+    s.state.lower_covered(&s.cands[c as usize], &mut covered);
+    for j in covered {
+        ids.extend(
+            s.by_item[j as usize]
+                .iter()
+                .copied()
+                .filter(|&k| (k as usize) < s.n_level0),
+        );
+    }
+    let mut near = Vec::new();
+    s.cand_ix.query(&mark, &mut near);
+    ids.extend(near);
 }
 
 fn unplace_item(s: &mut Solve, g: &mut Greedy, i: usize) {
@@ -456,6 +481,7 @@ fn unplace_item(s: &mut Solve, g: &mut Greedy, i: usize) {
         &bb.inflate(1e-6 + s.state.leader_reach(s.obs) + s.state.margin_max()),
         &mut ids,
     );
+    lower_affected(s, i, c, &mut ids);
     let mut scratch = Vec::new();
     for k in ids {
         let k = k as usize;
@@ -557,7 +583,9 @@ fn lookahead(s: &Solve, g: &mut Greedy, i: usize, c: u32) -> f64 {
         if j == i || g.done[j] {
             continue;
         }
-        if pair_conflict(&s.cands[k], cand, &dy, s.state.spacing(i, j)) {
+        if pair_conflict(&s.cands[k], cand, &dy, s.state.spacing(i, j))
+            || s.state.pair_lower(&s.cands[k], cand)
+        {
             if g.killed[j] == 0 {
                 g.touched.push(j);
             }

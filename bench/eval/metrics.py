@@ -13,6 +13,7 @@ import functools
 import math
 import statistics
 from dataclasses import dataclass, field
+from typing import Any
 
 from ..common import geom, spec
 from ..common.geom import Box, GridIndex, Point
@@ -26,6 +27,23 @@ TOL = 0.5
 SIDES = tuple(DIRECTIONS)
 PERCEPT_RANK = {s: i for i, s in enumerate(PERCEPTUAL)}
 RESERVED = ("items", "labels", "leaders", "canvas_edge")
+
+
+def lower_policy(amap: dict) -> Any:
+    """The policy for the marks of items of lower priority key (``lower_items``, else that of
+    ``items``; spec §4.4)."""
+    return amap["lower_items"] if "lower_items" in amap else spec.avoid_value(amap, "items")
+
+
+def lower_cover(a_label: dict) -> bool:
+    """``avoid.label.lower_items`` given and not hard: a label may cover the mark of a less
+    important item, which then stays unlabeled (spec §4.4)."""
+    return "lower_items" in a_label and a_label["lower_items"] != "hard"
+
+
+def same_group(a: Item, b: Item) -> bool:
+    g = a.raw.get("group")
+    return g is not None and b.raw.get("group") == g
 
 
 @dataclass
@@ -140,8 +158,8 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
             item_index.insert(it.index, it.shape.bbox())
         shape_index.insert(it.index, it.own_shape.bbox())
 
-    hard = {"label_label": 0, "label_item": 0, "own_mark": 0, "internal_outside": 0, "canvas_edge": 0,
-            "leader_leader": 0, "leader_near": 0, "leader_angle": 0, "leader_label": 0, "leader_own_label": 0,
+    hard = {"label_label": 0, "label_item": 0, "label_lower": 0, "own_mark": 0, "internal_outside": 0,
+            "canvas_edge": 0, "leader_leader": 0, "leader_near": 0, "leader_angle": 0, "leader_label": 0, "leader_own_label": 0,
             "leader_item": 0, "leader_canvas": 0}
     examples: dict[str, list] = {}
 
@@ -152,6 +170,9 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
 
     labels_hard = spec.is_hard(a_label, "labels")
     items_hard = spec.is_hard(a_label, "items")
+    lower_hard = lower_policy(a_label) == "hard"
+    covers_lower = lower_cover(a_label)
+    item_keys = pr.keys(infos, float(opts.get("priority", {}).get("band", 0) or 0))
     edge_hard = spec.is_hard(a_label, "canvas_edge")
     own_policy = a_label.get("own_mark", "hard")
     hard_classes = sorted(c for c in classes if c not in RESERVED and spec.is_hard(a_label, c))
@@ -176,12 +197,18 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     # -- label vs items, own mark, internal containment, classes, canvas edge
     for p in placed:
         sb = p.box.shrink(tol)
-        if items_hard:
+        if items_hard or lower_hard or covers_lower:
             for j in item_index.query(sb):
                 other = prob.items[j]
-                if other.id == p.id:
+                if other.id == p.id or not other.shape.intersects_box(sb):
                     continue
-                if other.shape.intersects_box(sb):
+                # the marks of less important items follow lower_items; a label covering one
+                # excludes that item's label
+                lower = item_keys[other.id] < item_keys[p.id] and not same_group(p.item, other)
+                if lower and covers_lower and other.id in placed_ids:
+                    hard["label_lower"] += 1
+                    note("label_lower", [p.id, other.id])
+                if lower_hard if lower else items_hard:
                     hard["label_item"] += 1
                     note("label_item", [p.id, other.id])
         own = p.item.shape if p.item.shape is not None else p.item.dot
@@ -279,6 +306,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     leader_class_hits: dict[str, int] = {}
     lengths_em, bends = [], []
     leader_items_hard = spec.is_hard(a_leader, "items")
+    leader_lower_hard = lower_policy(a_leader) == "hard"
     baseline_port = opts.get("leaders", {}).get("port") == "baseline"
     for k, p in enumerate(placed):
         if not p.leaders:
@@ -310,7 +338,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                 if not (port_inside and si == len(seglist) - 1) and geom.seg_box_intersects(a, b, own_sb):
                     hard["leader_own_label"] += 1
                     note("leader_own_label", p.id)
-                if leader_items_hard:
+                if leader_items_hard or leader_lower_hard:
                     # leaders keep the clearance from other marks (spec §7); a fan or boundary leader
                     # must only not cross a mark closer than the clearance to its start (crowded marks)
                     r = clearance(p.item) - tol
@@ -318,6 +346,8 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                     for j in (item_index.query(q.grow(r)) if r > 0 else ()):
                         other = prob.items[j]
                         if (j, k) in leader_item_pairs or vis.exempt_mark(p.item, other):
+                            continue
+                        if not (leader_lower_hard if item_keys[other.id] < item_keys[p.id] else leader_items_hard):
                             continue
                         rr = r
                         if p.model in ("fan", "boundary"):
@@ -336,7 +366,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
         hard["leader_label"] = len(leader_label_pairs)
         for a, b in sorted(leader_label_pairs)[:max_list]:
             note("leader_label", [placed[a].id, placed[b].id])
-    if leader_items_hard:
+    if leader_items_hard or leader_lower_hard:
         hard["leader_item"] = len(leader_item_pairs)
     for c, v in leader_class_hits.items():
         hard[f"leader_class:{c}"] = v
@@ -583,6 +613,8 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
     a_leader = opts.get("avoid", {}).get("leader", {})
     labels_hard = spec.is_hard(a_label, "labels")
     items_hard = spec.is_hard(a_label, "items")
+    lower_hard = lower_policy(a_label) == "hard"
+    covers_lower = lower_cover(a_label)
     leader_labels_hard = spec.is_hard(a_leader, "labels")
     edge_hard = spec.is_hard(a_label, "canvas_edge")
     area = prob.label_area()
@@ -607,6 +639,11 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
         if it.id in placed_ids:
             continue
         kh = keys[it.id]
+        own = it.shape
+        if covers_lower and own is not None and any(
+                keys[order[k].id] > kh and not same_group(order[k].item, it)
+                and own.intersects_box(order[k].box.grow(tol)) for k in box_index.query(own.bbox().grow(tol))):
+            continue  # a more important label covers its mark (lower_items)
         cands = _candidate_positions(it)
         if not cands:
             untestable.append(it.id)
@@ -626,10 +663,13 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
                     if keys[order[k].id] >= kh and geom.seg_box_intersects(a, c, g):
                         ok = False
                         break
-            if ok and items_hard:
+            if ok and (items_hard or lower_hard):
                 for j in item_index.query(g):
                     other = prob.items[j]
-                    if other.id != it.id and other.shape.intersects_box(g):
+                    if other.id == it.id or not other.shape.intersects_box(g):
+                        continue
+                    lower = keys[other.id] < kh and not same_group(it, other)
+                    if lower_hard if lower else items_hard:
                         ok = False
                         break
             if ok:

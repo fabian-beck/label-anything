@@ -31,7 +31,7 @@ import type { Obstacles } from "../obstacles.js";
 import type { Priorities } from "../priority.js";
 import { StaticIndex } from "../spatial.js";
 import { newWindow } from "../grid/occupancy.js";
-import { State } from "./state.js";
+import { LowerMarks, State } from "./state.js";
 
 /** Why an item ended up unplaced. */
 export const Reason = {
@@ -126,6 +126,14 @@ export class Solve {
       model.items.map((it) => it.em()),
       model.items.map((it) => it.len.margin),
       model.leaders.minAngleBetween > 0 ? cosDeg(model.leaders.minAngleBetween) : 1,
+      obs.dynamic.lowerCover
+        ? new LowerMarks(
+            model.items.map((it) => it.shape),
+            model.items.map((_, k) => model.groupOf[k] ?? null),
+            model.extent,
+            obs.indexCell,
+          )
+        : null,
     );
     this.reasons = new Array<Reason | null>(n).fill(null);
     this.stepsTried = [];

@@ -77,10 +77,19 @@ pub struct Class {
 pub struct Dynamic {
     pub label_labels: AvoidW,
     pub label_items: AvoidW,
+    /// Labels vs. the marks of items of lower priority key (`avoid.label.lower_items`, else
+    /// `items`).
+    pub label_lower: AvoidW,
     pub label_edge: AvoidW,
     pub leader_leaders: AvoidW,
     pub leader_labels: AvoidW,
     pub leader_items: AvoidW,
+    /// Leaders vs. the marks of items of lower priority key (`avoid.leader.lower_items`,
+    /// else `items`).
+    pub leader_lower: AvoidW,
+    /// `avoid.label.lower_items` is given and not hard: a label covering the mark of a
+    /// less important item conflicts with that item's label.
+    pub lower_cover: bool,
     pub buffer_items: f64,
     pub buffer_leaders: f64,
     pub buffer_labels: f64,
@@ -97,8 +106,8 @@ pub struct Obstacles {
     pub prim_index: StaticIndex,
     /// Item marks.
     pub item_index: StaticIndex,
-    /// Cells inside item marks, when labels may overlap no mark at all (`label_items`
-    /// and the own-mark policy hard): quick, exact rejection of non-internal label boxes
+    /// Cells inside item marks, when labels may overlap no mark at all (`label_items`,
+    /// `label_lower` and the own-mark policy hard): quick, exact rejection of non-internal label boxes
     /// during candidate generation.
     pub item_occ: Option<crate::grid::occupancy::Occupancy>,
     /// Coverage of all item marks, and of each item's own mark on an aligned local grid
@@ -314,9 +323,14 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         }
         _ => OwnMark::Hard,
     };
+    // lower_items: the policy for the marks of less important items, `items` when not given
+    let lower = |map: &serde_json::Map<String, Value>| -> AvoidW {
+        AvoidW::parse(map.get("lower_items")).unwrap_or_else(|| pol(map, "items"))
+    };
     let dynamic = Dynamic {
         label_labels: pol(&model.avoid_label, "labels"),
         label_items: pol(&model.avoid_label, "items"),
+        label_lower: lower(&model.avoid_label),
         label_edge: if model.label_area.is_some() {
             pol(&model.avoid_label, "canvas_edge")
         } else {
@@ -325,6 +339,11 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         leader_leaders: pol(&model.avoid_leader, "leaders"),
         leader_labels: pol(&model.avoid_leader, "labels"),
         leader_items: pol(&model.avoid_leader, "items"),
+        leader_lower: lower(&model.avoid_leader),
+        lower_cover: !matches!(
+            AvoidW::parse(model.avoid_label.get("lower_items")),
+            None | Some(AvoidW::Hard)
+        ),
         buffer_items: buf("items"),
         buffer_leaders: buf("leaders"),
         buffer_labels: buf("labels"),
@@ -367,7 +386,10 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         )
     });
     let items_sat = Sat::from_coverage(grid.cols, grid.rows, &all_items.into_coverage());
-    let item_occ = if dynamic.label_items.is_hard() && dynamic.own_mark == OwnMark::Hard {
+    let item_occ = if dynamic.label_items.is_hard()
+        && dynamic.label_lower.is_hard()
+        && dynamic.own_mark == OwnMark::Hard
+    {
         let mut occ = crate::grid::occupancy::Occupancy::new(&model.extent);
         for it in &model.items {
             occ.mark_shape(&it.shape);
@@ -584,6 +606,12 @@ impl Obstacles {
         }
         let (g, s) = &self.own[i];
         maxf(all - s.covered_area(g, r), 0.0)
+    }
+
+    /// Covered area (px²) of `r` by the mark of item `j`.
+    pub fn own_covered(&self, j: usize, r: &Rect) -> f64 {
+        let (g, s) = &self.own[j];
+        s.covered_area(g, r)
     }
 
     /// Mean class coverage (0..1) sampled along segment `ab` once per cell length, times

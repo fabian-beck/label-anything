@@ -67,8 +67,8 @@ are stale.
 | `leaders.clearance` | `"0.4em"` | length ≥ 0 | Distance leaders keep from other items' marks and from other leaders (spec §7). |
 | `leaders.min_angle_between` | `10` | 0–90 degrees | Distant leaders starting within 1 em of each other must diverge at least this much. |
 | `leaders.width` | `1` | ≥ 0 | Leader stroke width for collision tests. |
-| `avoid.label` | `{"labels":"hard","items":"hard","text":"hard","canvas_edge":"hard","own_mark":"hard","ink":0.1,"*":1.0}` | map | Label box vs. classes. |
-| `avoid.leader` | `{"leaders":"hard","labels":"hard","items":"hard","ink":0.05,"*":0.2}` | map | Leader vs. classes (`leaders` = crossings and approaches closer than `leaders.clearance`, `items` = other marks within `leaders.clearance`). |
+| `avoid.label` | `{"labels":"hard","items":"hard","text":"hard","canvas_edge":"hard","own_mark":"hard","ink":0.1,"*":1.0}` | map | Label box vs. classes. Key `own_mark`: the own-mark policy; key `lower_items`: the policy for the marks of items of lower priority key (default: that of `items`; when given and not hard, a label covering such a mark excludes that item's label; spec §4.4). |
+| `avoid.leader` | `{"leaders":"hard","labels":"hard","items":"hard","ink":0.05,"*":0.2}` | map | Leader vs. classes (`leaders` = crossings and approaches closer than `leaders.clearance`, `items` = other marks within `leaders.clearance`; key `lower_items`: the policy for the marks of items of lower priority key, default that of `items`). |
 | `avoid.buffer` | `{"items":1.0,"leaders":0.5}` | map | Soft ambiguity buffer ring vs. classes. |
 | `avoid.relaxable` | `["points","ink","lines"]` | list | Classes the `soft_overlap` step may relax from hard to soft. |
 | `priority.terms` | `[]` | list | No terms: score = explicit `item.priority`, else 0 (ties by `priority.ties`). |

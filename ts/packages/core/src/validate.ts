@@ -850,7 +850,7 @@ function semantic(p: unknown, errors: Issue[], warnings: Issue[]): void {
       if (!isObject(m)) continue;
       for (const k of Object.keys(m)) {
         if (m[k] === undefined) continue;
-        if (k === "*" || (section === "label" && k === "own_mark") || known.has(k)) continue;
+        if (k === "*" || (section === "label" && k === "own_mark") || (section !== "buffer" && k === "lower_items") || known.has(k)) continue;
         warnings.push(
           new Issue(`/avoid/${section}/${ptrToken(k)}`, "unknown_class", `class '${k}' is not produced by any obstacle source`),
         );

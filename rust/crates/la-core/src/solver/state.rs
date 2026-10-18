@@ -1,12 +1,39 @@
 //! Placement state: placed candidates, dynamic indexes, exact conflicts and dynamic costs.
 
 use crate::candidates::Cand;
+use crate::geom::shape::Shape;
 use crate::geom::{seg_len_in_rect, seg_overlaps_rect, seg_seg_dist, Rect, EPS, P};
 use crate::grid::occupancy::Occupancy;
-use crate::index::DynIndex;
+use crate::index::{DynIndex, StaticIndex};
 use crate::leaders::{cand_leaders_conflict, Spacing};
 use crate::math::{maxf, minf};
 use crate::obstacles::{AvoidW, Obstacles};
+
+/// The marks a label may cover when they belong to less important items
+/// (`avoid.label.lower_items` given and not hard, spec §4.4): such a label conflicts with
+/// every label of the item whose mark it covers.
+pub struct LowerMarks {
+    marks: Vec<Shape>,
+    index: StaticIndex,
+    /// The group representative of every item (a group's label may cover its members).
+    group_of: Vec<Option<usize>>,
+}
+
+impl LowerMarks {
+    pub fn new(
+        marks: Vec<Shape>,
+        group_of: Vec<Option<usize>>,
+        extent: &Rect,
+        cell: f64,
+    ) -> LowerMarks {
+        let index = StaticIndex::new(marks.iter().map(|m| m.bbox()).collect(), extent, cell);
+        LowerMarks {
+            marks,
+            index,
+            group_of,
+        }
+    }
+}
 
 /// The set of placed labels with spatial indexes.
 pub struct State {
@@ -39,6 +66,9 @@ pub struct State {
     reach: f64,
     /// Placed items already tested by a conflict query.
     seen: Vec<u32>,
+    /// Marks of less important items that labels may cover (see [`LowerMarks`]).
+    lower: Option<LowerMarks>,
+    lbuf: Vec<u32>,
 }
 
 impl State {
@@ -55,6 +85,7 @@ impl State {
         em: Vec<f64>,
         margin: Vec<f64>,
         cos_min: f64,
+        lower: Option<LowerMarks>,
     ) -> State {
         let n_keys = keys.iter().copied().max().map(|k| k + 1).unwrap_or(0);
         let mut reach = clr.iter().copied().fold(0.0, maxf);
@@ -84,7 +115,107 @@ impl State {
             cos_min,
             reach,
             seen: Vec::new(),
+            lower,
+            lbuf: Vec::new(),
         }
+    }
+
+    /// Conflicts of `c` by the `lower_items` rule (in this order): placed items of lower
+    /// key whose mark the label of `c` covers, then placed items of higher key whose label
+    /// covers the mark of `c`'s item. With `first`, stops at the first one.
+    fn lower_conflicts(
+        &mut self,
+        c: &Cand,
+        cands: &[Cand],
+        skip: usize,
+        pred: &dyn Fn(usize) -> bool,
+        first: bool,
+        out: &mut Vec<u32>,
+    ) {
+        let Some(lw) = &self.lower else { return };
+        let i = c.item as usize;
+        let mut buf = std::mem::take(&mut self.lbuf);
+        lw.index.query(&c.rect, &mut buf);
+        for &j in &buf {
+            let j = j as usize;
+            if j == i
+                || j == skip
+                || self.placed[j].is_none()
+                || self.keys[j] <= self.keys[i]
+                || lw.group_of[j] == Some(i)
+                || !pred(j)
+            {
+                continue;
+            }
+            if c.label_overlaps_shape(&lw.marks[j]) {
+                out.push(j as u32);
+                if first {
+                    self.lbuf = buf;
+                    return;
+                }
+            }
+        }
+        let mark = &lw.marks[i];
+        self.label_ix.query(&mark.bbox(), &mut buf);
+        for &j in &buf {
+            let j = j as usize;
+            if j == i
+                || j == skip
+                || self.keys[j] >= self.keys[i]
+                || lw.group_of[i] == Some(j)
+                || !pred(j)
+            {
+                continue;
+            }
+            let Some(pid) = self.placed[j] else { continue };
+            if cands[pid as usize].label_overlaps_shape(mark) {
+                out.push(j as u32);
+                if first {
+                    break;
+                }
+            }
+        }
+        self.lbuf = buf;
+    }
+
+    /// The less important items whose marks the label of `c` covers (see [`LowerMarks`]),
+    /// in index-query order.
+    pub fn lower_covered(&mut self, c: &Cand, out: &mut Vec<u32>) {
+        out.clear();
+        let Some(lw) = &self.lower else { return };
+        let i = c.item as usize;
+        lw.index.query(&c.rect, out);
+        let keys = &self.keys;
+        out.retain(|&j| {
+            let j = j as usize;
+            j != i
+                && keys[j] > keys[i]
+                && lw.group_of[j] != Some(i)
+                && c.label_overlaps_shape(&lw.marks[j])
+        });
+    }
+
+    /// The bounding box of item `i`'s mark (when labels may cover less important marks).
+    pub fn mark_bbox(&self, i: usize) -> Option<Rect> {
+        self.lower.as_ref().map(|lw| lw.marks[i].bbox())
+    }
+
+    /// Whether labels may cover the marks of less important items (see [`LowerMarks`]).
+    pub fn has_lower(&self) -> bool {
+        self.lower.is_some()
+    }
+
+    /// Whether the labels of `a` and `b` (different items) exclude each other by the
+    /// `lower_items` rule: one covers the mark of the other's, less important, item.
+    pub fn pair_lower(&self, a: &Cand, b: &Cand) -> bool {
+        let Some(lw) = &self.lower else { return false };
+        let (i, j) = (a.item as usize, b.item as usize);
+        (self.keys[j] > self.keys[i]
+            && lw.group_of[j] != Some(i)
+            && a.label_overlaps_shape(&lw.marks[j]))
+            || (self.keys[i] > self.keys[j]
+                && lw.group_of[i] != Some(j)
+                && b.label_overlaps_shape(&lw.marks[i]))
     }
 
     /// The largest label margin: how far label-label conflicts reach beyond a box.
@@ -251,6 +382,7 @@ impl State {
                 out.push(j);
             }
         }
+        self.lower_conflicts(c, cands, skip, &|_| true, false, out);
         out.sort_unstable();
         out.dedup();
     }
@@ -337,6 +469,11 @@ impl State {
                     return Some(ju);
                 }
             }
+        }
+        if self.lower.is_some() {
+            let mut hit = Vec::new();
+            self.lower_conflicts(c, cands, skip, &pred, true, &mut hit);
+            return hit.first().map(|&j| j as usize);
         }
         None
     }

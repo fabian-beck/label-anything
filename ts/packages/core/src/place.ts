@@ -71,6 +71,7 @@ export function placeValidated(problem: unknown, env: Env, warnings: Issue[], pr
   const pri = compute(m, variants, env);
   // font classes (spec §9.4): the priorities stay those of the nominal sizes
   m.fontClass = fontClasses(m, pri);
+  m.keyLevel = pri.prio.map((p) => p.key);
   for (let i = 0; i < m.items.length; i++) {
     const k = m.fontClass[i];
     if (k === null || k === undefined) continue;

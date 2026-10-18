@@ -507,7 +507,7 @@ export interface SvgClassRule {
 }
 export interface Avoid {
   /**
-   * Label box vs. classes. Key "*" sets the weight of classes not listed. Key own_mark sets the own-mark policy.
+   * Label box vs. classes. Key "*" sets the weight of classes not listed. Key own_mark sets the own-mark policy. Key lower_items sets the policy for the marks of items of lower priority key (default: that of items); when given and not hard, a label covering such a mark excludes that item's label.
    */
   label?: {
     own_mark?: OwnMarkValue;
@@ -526,7 +526,7 @@ export interface Avoid {
   relaxable?: ClassName[];
 }
 /**
- * Leader vs. classes. leaders = crossings between leaders.
+ * Leader vs. classes. leaders = crossings between leaders. Key lower_items sets the policy for the marks of items of lower priority key (default: that of items).
  */
 export interface AvoidMap {
   [k: string]: AvoidValue;

@@ -186,6 +186,18 @@ are tested on their grid: a rectangle "touches" a raster class iff its covered a
 key `"*"` is the default for classes not listed. Unknown classes in `avoid` (not present
 in any source and not reserved) produce a validation **warning** `unknown_class`.
 
+**Marks of less important items** (`lower_items`, ADR 0040). The key `lower_items` of
+`avoid.label` and `avoid.leader` (not a class; `"*"` does not set it) is the policy for
+the marks of items `j` of lower priority key than the label's item `i` (§9.1:
+`key(j) < key(i)`; never members of `i`'s group, §5.7); without it they follow `items`.
+A soft `lower_items` counts its own coverage cost instead of that of `items` (§8). When
+`avoid.label.lower_items` is given and not hard, a label of `i` that overlaps the mark
+of a less important `j` (the exact test of `items`) **excludes every label of `j`**: the
+two labels conflict like overlapping labels, whatever `avoid.label.labels` says. A
+covered mark thus stays unlabeled, never wrongly attributed, and the labels of the
+important items may claim the space of the marks around them — a hub keeps its label
+in a dense region instead of losing it to the marks of minor items nearby.
+
 **Label margin** (`defaults.margin`, 0.2 em; ADR 0028). Hard `labels` and `items` keep a
 label away from what is not its own, while it touches its own mark at `placement.offset`:
 
@@ -882,7 +894,8 @@ its font size.
   avoids those. The leader of a fan or boundary label (§6.8, §6.6) is also exempt from
   marks that contain its start, and a mark closer than `clearance` to its start it must
   only not cross (it leaves a crowd of touching marks in the order of its column). With a soft weight `w`,
-  every mark closer than `clearance` costs `w · (1 − d / clearance)`.
+  every mark closer than `clearance` costs `w · (1 − d / clearance)`. The marks of less
+  important items follow `avoid.leader.lower_items` where it is given (§4.4).
 * **Spacing between leaders** (with `avoid.leader.leaders` hard): two leaders of
   different labels conflict when a segment of one intersects a segment of the other, or
   when a vertex of one (start, bends, port, underline ends) is closer than `clr` to a
@@ -922,7 +935,8 @@ cost = Σ_class w_label[class] · covered(label_k, class) / em²
   size (a thin line across a long label costs as much as across a short one), and what a
   leader runs over, whatever its length. A weight `w` is thus the cost of hiding one em²
   of a class (`w_leader` = 1 costs as much as hiding 1 em² of weight 1). The same holds
-  for `canvas_edge` (the label area outside the canvas), soft `items` and the relaxed
+  for `canvas_edge` (the label area outside the canvas), soft `items` (and soft
+  `lower_items` for the marks of less important items, §4.4) and the relaxed
   costs of `soft_overlap`. Internal labels of point items cover only their own mark,
   which hides what lies under it: they have no soft class costs (hard classes still
   apply).
@@ -996,7 +1010,9 @@ then index; `random`/`random(n)`: a PCG32 permutation with seed `n` or `solver.s
 ### 9.2 Omission modes
 
 * `strict`: for every omitted `h`, `h` has no feasible candidate (over all ladder levels
-  it may use) given only the placed items whose key ≥ key(h). `stats.priority_inversions`
+  it may use) given only the placed items whose key ≥ key(h) (with a soft or ignored
+  `avoid.label.lower_items`, a placed label of higher key covering the mark of `h`
+  leaves `h` no candidate, §4.4). `stats.priority_inversions`
   counts violations of this (verified after solving by the same removal test) and MUST
   be 0.
 * `prefix`: the placed set is a prefix of the total order. Items after the first omitted

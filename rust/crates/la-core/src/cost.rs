@@ -142,9 +142,16 @@ impl<'a> Evaluator<'a> {
         );
         self.buf.clear();
         obs.item_index.query(&r.inflate(reach), &mut self.buf);
+        // the marks of less important items follow `lower_items` where it differs from `items`
+        let lower_rule = dy.label_lower != dy.label_items;
+        let mut lower_cov = 0.0;
         for &j in &self.buf {
             let j = j as usize;
             let sj = &model.items[j].shape;
+            let lower = lower_rule && j != i && model.is_lower(i, j);
+            if lower {
+                lower_cov += obs.own_covered(j, &r);
+            }
             if j == i {
                 if c.kind == Kind::Internal {
                     continue;
@@ -168,7 +175,12 @@ impl<'a> Evaluator<'a> {
                 }
                 continue;
             }
-            if !matches!(dy.label_items, AvoidW::Hard) {
+            let hard = if lower {
+                dy.label_lower.is_hard()
+            } else {
+                dy.label_items.is_hard()
+            };
+            if !hard {
                 continue;
             }
             if c.label_overlaps_shape(sj) {
@@ -183,7 +195,16 @@ impl<'a> Evaluator<'a> {
             }
         }
         if let AvoidW::Soft(wt) = dy.label_items {
-            acc.add("items", wt * obs.other_items_covered(i, &r) / em2);
+            let cov = obs.other_items_covered(i, &r);
+            let cov = if lower_rule {
+                maxf(cov - lower_cov, 0.0)
+            } else {
+                cov
+            };
+            acc.add("items", wt * cov / em2);
+        }
+        if let (true, AvoidW::Soft(wt)) = (lower_rule, dy.label_lower) {
+            acc.add("lower_items", wt * lower_cov / em2);
         }
         // the ring only sees other items when the item query found any besides the own
         if dy.buffer_items > 0.0 && self.buf.iter().any(|&j| j as usize != i) {
@@ -437,7 +458,12 @@ impl<'a> Evaluator<'a> {
             for &(a, b) in &segs {
                 dmin = minf(dmin, sj.dist_segment(a, b));
             }
-            match dy.leader_items {
+            let pol = if dy.leader_lower != dy.leader_items && model.is_lower(i, j) {
+                dy.leader_lower
+            } else {
+                dy.leader_items
+            };
+            match pol {
                 AvoidW::Hard => {
                     let lim = if column && sj.signed_distance(start) < clearance {
                         EPS

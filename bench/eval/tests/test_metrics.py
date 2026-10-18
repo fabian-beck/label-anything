@@ -162,6 +162,30 @@ def test_removal_test_respects_keys_and_blocking():
     assert m["priority"]["inversions"] == 1
 
 
+def test_lower_items_marks_and_their_labels():
+    # "hi" covers the mark of the less important "lo" (C's label covers B's mark in the test above)
+    items = [item("hi", 50, 50, priority=2), item("lo", 100, 50, r=5, priority=1)]
+    hi = placed("hi", 85, 47, side="left")
+    m = evaluate(problem(items), result([hi, omitted("lo")]))
+    assert m["hard"]["label_item"] == 1                                   # items hard, no lower_items
+    soft = {"label": {"lower_items": 2.0}}
+    m = evaluate(problem(items, avoid=soft), result([hi, omitted("lo")]))
+    assert m["hard"]["total"] == 0
+    # "lo" stays unlabeled: covered by a more important label, not an inversion
+    assert m["priority"]["inversions"] == 0
+    # labeling it as well breaks the rule
+    lx, ly = top_right_box(100, 50, r=5)
+    m = evaluate(problem(items, avoid=soft), result([hi, placed("lo", lx, ly)]))
+    assert m["hard"]["label_lower"] == 1 and m["hard"]["examples"]["label_lower"] == [["hi", "lo"]]
+    # the rule only reaches down: a less important label must still avoid the marks above it
+    items[0]["priority"], items[1]["priority"] = 1, 2
+    m = evaluate(problem(items, avoid=soft), result([hi, omitted("lo")]))
+    assert m["hard"]["label_item"] == 1 and m["hard"]["label_lower"] == 0
+    # a hard lower_items with soft items: only the marks of less important items count
+    m = evaluate(problem(items, avoid={"label": {"items": 1.0, "lower_items": "hard"}}), result([hi, omitted("lo")]))
+    assert m["hard"]["label_item"] == 0
+
+
 def test_removal_test_uses_only_the_items_candidates():
     # "lo" sits right below a wall of hard 'block' rects on its right side; only 'left' is free.
     items = [item("lo", 100, 50)]

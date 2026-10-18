@@ -160,11 +160,16 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
     for (x, &a) in pool.iter().enumerate() {
         for &b in &pool[x + 1..] {
             let (ca, cb) = (&s.cands[a as usize], &s.cands[b as usize]);
-            if ca.item == cb.item || !ca.bbox().inflate(reach).touches(&cb.bbox()) {
+            if ca.item == cb.item {
+                continue;
+            }
+            // a label may exclude the label of an item whose mark it covers, wherever that is
+            let near = ca.bbox().inflate(reach).touches(&cb.bbox());
+            if !near && !s.state.has_lower() {
                 continue;
             }
             let sp = s.state.spacing(ca.item as usize, cb.item as usize);
-            if pair_conflict(ca, cb, &dy, sp) {
+            if (near && pair_conflict(ca, cb, &dy, sp)) || s.state.pair_lower(ca, cb) {
                 conflicts.entry(a).or_default().push(b);
                 conflicts.entry(b).or_default().push(a);
             }

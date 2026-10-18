@@ -863,6 +863,7 @@ fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
                 for k in m.keys() {
                     if k == "*"
                         || (section == "label" && k == "own_mark")
+                        || (section != "buffer" && k == "lower_items")
                         || known.contains(k.as_str())
                     {
                         continue;
