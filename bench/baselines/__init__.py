@@ -12,6 +12,9 @@ textalloc      textalloc (Python, matplotlib)                  bench/baselines/r
 adjusttext     adjustText ≥ 1.0 (Python, matplotlib)           bench/baselines/requirements.txt
 vega-label     Vega's label transform, headless (Node)         npm ci --prefix bench/baselines
 ggrepel        ggplot2 + ggrepel, positions after grid.force   Rscript + bench/baselines/install-r.sh
+d3fc           d3fc-label-layout removeOverlaps(greedy) (Node) npm ci --prefix bench/baselines
+echarts        ECharts scatter labels, hideOverlap (Node, SSR) npm ci --prefix bench/baselines
+d3-labeler     D3-Labeler simulated annealing (Node, vendored) bench/baselines/vendor/d3-labeler
 =============  ==============================================  ===============================
 
     python -m bench.baselines NAME problem.json -o result.json
@@ -44,18 +47,23 @@ class Baseline:
         return mod.available()
 
     def solve(self, problem: dict, problem_path=None, options: dict | None = None) -> dict:
-        if options is None:
-            return self.load().solve(problem, problem_path)
+        """``options``: ``soft`` (``hard``: soft classes are avoided like hard ones, the default; ``ignore``:
+        they are left out) and the adapter's own sequence options."""
         return self.load().solve(problem, problem_path, options)
 
-    def sequence_options(self, frames) -> dict | None:
-        """Options for every frame of a sequence (``(problem, path)`` pairs), when the adapter plans them
-        (adjustText: one budget for the whole sequence); may raise ``Unsupported``."""
+    def sequence_options(self, frames, soft: str = "hard") -> dict:
+        """Options for every frame of a sequence (``(problem, path)`` pairs): ``soft`` and, when the adapter
+        plans them, its own (adjustText: one budget for the whole sequence); may raise ``Unsupported``."""
         mod = self.load()
-        return mod.sequence_options(frames) if hasattr(mod, "sequence_options") else None
+        return mod.sequence_options(frames, soft) if hasattr(mod, "sequence_options") else {"soft": soft}
 
     def version(self) -> str | None:
         return self.load().version()
+
+    @property
+    def uses_obstacles(self) -> bool:
+        """Whether the tool is told the obstacle classes (otherwise the soft emulations give the same result)."""
+        return getattr(self.load(), "OBSTACLES", True)
 
 
 BASELINES: dict[str, Baseline] = {
@@ -67,4 +75,10 @@ BASELINES: dict[str, Baseline] = {
                            "Node ≥ 20 + vega + canvas (npm ci --prefix bench/baselines)"),
     "ggrepel": Baseline("ggrepel", "bench.baselines.ggrepel_baseline",
                         "R: Rscript + ggplot2 + ggrepel + jsonlite (bench/baselines/install-r.sh)"),
+    "d3fc": Baseline("d3fc", "bench.baselines.d3fc_baseline",
+                     "Node ≥ 20 + @d3fc/d3fc-label-layout (npm ci --prefix bench/baselines)"),
+    "echarts": Baseline("echarts", "bench.baselines.echarts_baseline",
+                        "Node ≥ 20 + echarts (npm ci --prefix bench/baselines)"),
+    "d3-labeler": Baseline("d3-labeler", "bench.baselines.d3_labeler_baseline",
+                           "Node ≥ 20 + the vendored labeler.js (bench/baselines/vendor/d3-labeler)"),
 }

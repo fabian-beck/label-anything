@@ -556,6 +556,18 @@ CASES["outliers-hard"] = case(
     {"problem_file": "../problems/outliers-hard.json"},
     {"placed": 12})
 
+CASES["search-restore-true-total"] = case(
+    "local search keeps the best state it saw only when its total cost is lower than the walk's (leaders in "
+    "other labels' buffer rings make the running sum drift)",
+    {"canvas": {"width": 400, "height": 300}, "placement": {"models": ["adjacent", "slider", "distant"]},
+     "items": [pt("p0", 205.8, 159, "Ash"), pt("p1", 203.2, 179, "Birch"), pt("p2", 189.1, 62.1, "Cedar"),
+               pt("p3", 156.3, 140.7, "Elm"), pt("p4", 169.7, 105.9, "Fir"), pt("p5", 138.8, 165.7, "Hazel"),
+               pt("p6", 267.4, 158.1, "Larch"), pt("p7", 192, 156.6, "Maple"), pt("p8", 189.4, 119.9, "Oak"),
+               pt("p9", 216, 101.7, "Pine"), pt("p10", 219.2, 179.3, "Rowan"), pt("p11", 231.4, 214.5, "Yew"),
+               pt("p12", 160, 156.3, "Alder"), pt("p13", 250.4, 155.3, "Aspen"),
+               pt("p14", 163.3, 137.6, "Beech"), pt("p15", 164.9, 166.8, "Holly")]},
+    {"placed": 16})
+
 
 def main():
     check = "--check" in sys.argv

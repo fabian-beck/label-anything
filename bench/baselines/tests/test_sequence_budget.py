@@ -22,7 +22,7 @@ def frames(n: int, labels: int = 6) -> list[tuple[dict, None]]:
 
 def test_small_sequences_keep_the_full_iteration_budget():
     opts = BASELINES["adjusttext"].sequence_options(frames(3))
-    assert opts == {"step": at.STEPS[0], "iter_lim": at.ITER_LIM}
+    assert opts == {"step": at.STEPS[0], "iter_lim": at.ITER_LIM, "soft": "hard"}
 
 
 def test_the_budget_divides_by_the_comparisons_of_all_frames(monkeypatch):
@@ -56,5 +56,6 @@ def test_frames_are_solved_with_the_planned_iterations():
     assert not any("iterations" in m for m in baseline_info(at.solve(p))["emulations"])
 
 
-def test_other_baselines_plan_nothing():
-    assert BASELINES["textalloc"].sequence_options(frames(2)) is None
+def test_other_baselines_plan_only_the_soft_emulation():
+    assert BASELINES["textalloc"].sequence_options(frames(2)) == {"soft": "hard"}
+    assert BASELINES["textalloc"].sequence_options(frames(2), "ignore") == {"soft": "ignore"}

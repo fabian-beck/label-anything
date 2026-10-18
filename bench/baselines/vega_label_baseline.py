@@ -151,8 +151,9 @@ def box_from_label(x: float, y: float, align: str, baseline: str, w: float, h: f
     return Box(x0, y0, x0 + w, y0 + h)
 
 
-def solve(problem: dict, problem_path=None) -> dict:
-    scene = build_scene(problem, problem_path)
+def solve(problem: dict, problem_path=None, options: dict | None = None) -> dict:
+    """``options``: ``soft`` (``hard`` or ``ignore``), how soft classes reach the tool (``build_scene``)."""
+    scene = build_scene(problem, problem_path, soft=(options or {}).get("soft", "hard"))
     js, notes = scene_json(scene)
     with tempfile.TemporaryDirectory(prefix="la-vega-") as d:
         sp, op = Path(d) / "scene.json", Path(d) / "out.json"

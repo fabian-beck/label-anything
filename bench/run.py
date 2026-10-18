@@ -8,7 +8,8 @@ Solvers (``--solver``, repeatable; default: the built-in baselines ``naive`` and
 
 * ``naive`` / ``greedy``                 built-in Python baselines (bench/solvers/),
 * ``textalloc`` / ``adjusttext`` /       third-party baselines (bench/baselines/; skipped with a
-  ``vega-label`` / ``ggrepel``           message when their toolchain is missing),
+  ``vega-label`` / ``ggrepel`` /         message when their toolchain is missing),
+  ``d3fc`` / ``echarts`` / ``d3-labeler``
 * ``NAME=COMMAND``                       external command template with ``{problem}`` and
                                          ``{result}`` placeholders, e.g.
                                          ``rust=label-anything place {problem} -o {result}``.
@@ -16,7 +17,7 @@ Solvers (``--solver``, repeatable; default: the built-in baselines ``naive`` and
 Solvers named ``rust``, ``wasm`` or ``ts`` (optionally ``-suffix``) are Label Anything
 implementations: they get the performance targets, the parity table and the release
 gates. ``--engine PATH`` adds ``rust=PATH place {problem} -o {result} --warmup N`` and its debug
-overlay; ``--baselines`` adds all six baselines (what ``label-anything bench --baselines``
+overlay; ``--baselines`` adds all nine baselines (what ``label-anything bench --baselines``
 passes). ``--overlay NAME=COMMAND`` (placeholders ``{problem}``, ``{result}``, ``{svg}``)
 renders an engine debug overlay next to the benchmark rendering, from one extra untimed run.
 
@@ -51,6 +52,7 @@ import statistics
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from pathlib import Path
 
@@ -70,7 +72,7 @@ from bench.solvers import greedy, naive  # noqa: E402
 
 BUILTIN = {"naive": naive.solve, "greedy": greedy.solve}
 BUILTIN_NAMES = set(BUILTIN) | set(BASELINES)
-ALL_BASELINES = ["naive", "greedy", "textalloc", "adjusttext", "vega-label", "ggrepel"]
+ALL_BASELINES = ["naive", "greedy", "textalloc", "adjusttext", "vega-label", "ggrepel", "d3fc", "echarts", "d3-labeler"]
 fmt = rep.fmt
 
 
@@ -112,11 +114,45 @@ def _rel(p: Path) -> str:
 # ---------------------------------------------------------------------------
 # solving
 # ---------------------------------------------------------------------------
+def run_command(args: list[str], timeout: float) -> tuple[int, str, float, float | None]:
+    """Run ``args``; returns the exit code, stderr, the wall time in ms and the peak resident memory of the
+    process in MB (``None`` where ``os.wait4`` is missing). The child is reaped by a thread blocked in
+    ``wait4``, so the measurement adds no polling delay to the wall time."""
+    if not hasattr(os, "wait4"):  # pragma: no cover - Windows
+        t0 = time.perf_counter()
+        r = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
+        return r.returncode, r.stderr, (time.perf_counter() - t0) * 1000.0, None
+    t0 = time.perf_counter()
+    proc = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+    err: list[str] = []
+    drain = threading.Thread(target=lambda: err.append(proc.stderr.read()), daemon=True)
+    drain.start()
+    waited: dict = {}
+    reap = threading.Thread(target=lambda: waited.setdefault("w", os.wait4(proc.pid, 0)), daemon=True)
+    reap.start()
+    reap.join(timeout)
+    if reap.is_alive():
+        proc.kill()
+        reap.join()
+        drain.join()
+        proc.returncode = -9
+        raise subprocess.TimeoutExpired(args, timeout)
+    wall = (time.perf_counter() - t0) * 1000.0
+    _pid, status, usage = waited["w"]
+    proc.returncode = os.waitstatus_to_exitcode(status)
+    drain.join()
+    proc.stderr.close()
+    rss = usage.ru_maxrss / (1024.0 * 1024.0) if sys.platform == "darwin" else usage.ru_maxrss / 1024.0
+    return proc.returncode, "".join(err), wall, rss
+
+
 class Solver:
     """A built-in baseline (naive, greedy), a third-party baseline or an external command."""
 
-    def __init__(self, spec: str, overlay: str | None = None):
+    def __init__(self, spec: str, overlay: str | None = None, soft: str = "best"):
         self.overlay = overlay
+        self.soft = soft  # third-party baselines: how soft classes reach the tool (hard | ignore | best)
+        self.last_rss_mb: float | None = None  # peak resident memory of the last external run
         self.cmd = None
         self.fn = None
         self.baseline = None
@@ -160,11 +196,9 @@ class Solver:
             write_json(result_path, res, nd=3)
             return res, wall
         cmd = self.cmd.format(problem=shlex.quote(str(problem_path)), result=shlex.quote(str(result_path)))
-        t0 = time.perf_counter()
-        r = subprocess.run(shlex.split(cmd), capture_output=True, text=True, timeout=timeout)
-        wall = (time.perf_counter() - t0) * 1000.0
-        if r.returncode != 0:
-            raise RuntimeError(f"{self.name} failed ({r.returncode}): {r.stderr.strip()[:500]}")
+        code, err, wall, self.last_rss_mb = run_command(shlex.split(cmd), timeout)
+        if code != 0:
+            raise RuntimeError(f"{self.name} failed ({code}): {err.strip()[:500]}")
         return read_json(result_path), wall
 
     def render_overlay(self, problem_path: Path, svg_path: Path, timeout: float) -> None:
@@ -175,6 +209,41 @@ class Solver:
             r = subprocess.run(shlex.split(cmd), capture_output=True, text=True, timeout=timeout)
         if r.returncode != 0 or not svg_path.exists():
             raise RuntimeError(f"overlay failed ({r.returncode}): {r.stderr.strip()[:300]}")
+
+
+SOFT_MODES = ("hard", "ignore")
+
+
+def has_soft_classes(problem: dict, problem_path: Path) -> bool:
+    """Whether the problem has obstacle classes with a cost (neither hard nor ignored) for labels: only then do
+    the two soft emulations of the baselines differ."""
+    from bench.baselines.scene import build_scene
+
+    return any(n.feature == "soft-classes" for n in build_scene(problem, problem_path, soft="ignore").notes)
+
+
+def choose_soft(solver: Solver, problem: dict, problem_path: Path, result_path: Path, timeout: float,
+                truth: dict | None) -> tuple[str, dict, float, dict]:
+    """Solve with soft classes avoided like hard ones and with them left out, and keep the emulation under which
+    the tool does better by its own result: more usable labels (priority-weighted, ``usable_weighted``), then
+    fewer conflicts, then ``hard``. Returns the mode, its result and wall time and what both gave; raises
+    ``Unsupported`` only when the tool cannot run the problem either way."""
+    runs, why = {}, None
+    for mode in SOFT_MODES:
+        try:
+            res, wall = solver.solve(problem, problem_path, result_path, timeout, {"soft": mode})
+        except Unsupported as e:
+            why = e
+            continue
+        s = evaluate(problem, res, truth, removal_test=False)["summary"]
+        runs[mode] = (res, wall, s)
+    if not runs:
+        raise why
+    best = max(runs, key=lambda m: (round(runs[m][2]["usable_weighted"] or 0.0, 9),
+                                     -(runs[m][2]["hard_conflicts"] or 0), m == "hard"))
+    write_json(result_path, runs[best][0], nd=3)
+    tried = {m: {k: runs[m][2][k] for k in ("placed", "usable", "usable_weighted", "hard_conflicts")} for m in runs}
+    return best, runs[best][0], runs[best][1], {"soft": best, "tried": tried}
 
 
 def pct(vals: list[float], q: float) -> float:
@@ -198,13 +267,36 @@ def run_problem(solver: Solver, prob_entry: dict, out: Path, runs: int, timeout:
     problem = read_json(prob_entry["path"])
     rel = Path(prob_entry["scenario"]) / prob_entry["config"]
     res_path = out / "results" / solver.name / rel.with_suffix(".json")
-    walls, reported, digests = [], [], []
+    walls, reported, digests, rss = [], [], [], []
     res = None
     error = None
     entry = _base_entry(solver, prob_entry)
+    truth = read_json(prob_entry["truth"]) if prob_entry["truth"] else None
+    options, choice = None, None
+    if solver.kind == "baseline":
+        mode = solver.soft
+        if mode == "best" and not (solver.baseline.uses_obstacles and has_soft_classes(problem, prob_entry["path"])):
+            mode = "hard"
+        if mode == "best":
+            try:
+                mode, res, wall, choice = choose_soft(solver, problem, prob_entry["path"], res_path, timeout, truth)
+            except Unsupported as e:
+                entry["skipped"] = str(e)
+                return entry
+            except Exception as e:  # noqa: BLE001 - report and continue
+                entry["error"] = f"{type(e).__name__}: {e}"
+                return entry
+            if runs == 1:  # the chosen run is the timed one
+                walls.append(wall)
+                rt = (res.get("stats") or {}).get("runtime_ms")
+                if isinstance(rt, (int, float)):
+                    reported.append(float(rt))
+                digests.append(digest(res))
+                runs = 0
+        options = {"soft": mode}
     for _ in range(runs):
         try:
-            res, wall = solver.solve(problem, prob_entry["path"], res_path, timeout)
+            res, wall = solver.solve(problem, prob_entry["path"], res_path, timeout, options)
         except Unsupported as e:
             entry["skipped"] = str(e)
             return entry
@@ -216,24 +308,30 @@ def run_problem(solver: Solver, prob_entry: dict, out: Path, runs: int, timeout:
         if isinstance(rt, (int, float)):
             reported.append(float(rt))
         digests.append(digest(res))
+        if solver.kind == "external" and solver.last_rss_mb is not None:
+            rss.append(solver.last_rss_mb)
     if error is not None or res is None:
         entry["error"] = error
         return entry
-    truth = read_json(prob_entry["truth"]) if prob_entry["truth"] else None
     metrics = evaluate(problem, res, truth)
     metrics["runtime"]["wall_ms"] = {"median": statistics.median(walls), "p95": pct(walls, 0.95), "runs": walls}
     if reported:
         metrics["runtime"]["reported_ms"] = {"median": statistics.median(reported), "p95": pct(reported, 0.95)}
+    if rss:
+        metrics["runtime"]["peak_rss_mb"] = {"median": statistics.median(rss), "max": max(rss)}
     metrics["deterministic"] = len(set(digests)) == 1
     mpath = out / "metrics" / solver.name / rel.with_suffix(".json")
     write_json(mpath, metrics, nd=6, indent=1)
     entry.update({"result": str(res_path.relative_to(out)), "metrics": str(mpath.relative_to(out)),
                   "summary": metrics["summary"], "runtime": metrics["runtime"]["wall_ms"],
                   "runtime_reported": metrics["runtime"].get("reported_ms"),
+                  "peak_rss_mb": metrics["runtime"].get("peak_rss_mb"),
                   "deterministic": metrics["deterministic"], "digest": digests[-1],
                   "implementation": (res.get("stats") or {}).get("implementation")})
     if solver.kind == "baseline":
-        entry["baseline"] = baseline_info(res)
+        entry["baseline"] = {**baseline_info(res), "soft": options["soft"]}
+        if choice is not None:
+            entry["baseline"]["soft_choice"] = choice["tried"]
     if do_render:
         img = out / "img" / solver.name / rel.with_suffix(".png")
         img.parent.mkdir(parents=True, exist_ok=True)
@@ -285,10 +383,23 @@ def run_sequence(solver: Solver, seq: dict, out: Path, timeout: float, do_render
     head = {"solver": solver.name, "kind": rep.kind(solver.name), "scenario": seq["scenario"], "sequence": seq["name"]}
     options = None
     if solver.baseline is not None:
+        # one soft emulation for every frame, chosen on the first (as a host configures a tool once);
         # adjustText plans the whole sequence: one emulation and one iteration budget for all frames
+        mode = solver.soft
+        if mode == "best" and man["frames"]:
+            f0 = base / man["frames"][0]["file"]
+            p0 = read_json(f0)
+            mode = "hard"
+            if solver.baseline.uses_obstacles and has_soft_classes(p0, f0):
+                try:
+                    mode = choose_soft(solver, p0, f0, tmp / "soft-choice.json", timeout, None)[0]
+                except Unsupported:
+                    pass
+                except Exception as e:  # noqa: BLE001
+                    return {**head, "error": f"{type(e).__name__}: {e}"}
         try:
             options = solver.baseline.sequence_options([(read_json(base / fr["file"]), base / fr["file"])
-                                                        for fr in man["frames"]])
+                                                        for fr in man["frames"]], mode)
         except Unsupported as e:
             return {**head, "skipped": str(e)}
     for fr in man["frames"]:
@@ -368,7 +479,7 @@ def build_solvers(a, log=print) -> tuple[list[Solver], dict[str, str]]:
                 log(f"skipping baseline {spec}: {why}")
                 skipped[spec] = why
                 continue
-        s = Solver(spec, overlays.get(name))
+        s = Solver(spec, overlays.get(name), getattr(a, "baseline_soft", "best"))
         if any(t.name == s.name for t in solvers):
             raise SystemExit(f"duplicate solver name {s.name!r}")
         solvers.append(s)
@@ -379,7 +490,8 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--suite", choices=["quick", "full"], default="quick")
     ap.add_argument("--solver", action="append",
-                    help="naive | greedy | textalloc | adjusttext | vega-label | ggrepel | NAME=COMMAND (repeatable)")
+                    help="naive | greedy | textalloc | adjusttext | vega-label | ggrepel | d3fc | echarts | d3-labeler | "
+                         "NAME=COMMAND (repeatable)")
     ap.add_argument("--engine", help="Rust CLI binary: adds rust=ENGINE place {problem} -o {result} and its overlay")
     ap.add_argument("--ts", action="store_true",
                     help="add ts= the TypeScript engine (ts/packages/cli, built with npm run build)")
@@ -387,13 +499,17 @@ def main(argv=None) -> int:
                     help="add wasm= the WebAssembly engine through the TypeScript CLI (npm run build:wasm)")
     ap.add_argument("--warmup", type=int, default=3,
                     help="warm-up solves before each timed rust/ts/wasm solve (steady state; default 3)")
-    ap.add_argument("--baselines", action="store_true", help="add all baselines (naive, greedy and the four tools)")
+    ap.add_argument("--baselines", action="store_true", help="add all baselines (naive, greedy and the seven tools)")
     ap.add_argument("--require-baselines", action="store_true",
                     help="fail instead of skipping a requested baseline whose toolchain is missing")
     ap.add_argument("--overlay", action="append",
                     help="NAME=COMMAND rendering the engine debug overlay ({problem}, {result}, {svg})")
     ap.add_argument("--runs", type=int, default=7, help="runs per problem (median and p95 runtime)")
     ap.add_argument("--baseline-runs", type=int, default=1, help="runs per problem for the baselines")
+    ap.add_argument("--baseline-soft", choices=["best", *SOFT_MODES], default="best",
+                    help="third-party baselines have no soft costs: soft classes are avoided like hard ones (hard), "
+                         "left out (ignore), or per problem whichever gives the tool more usable labels (best, the "
+                         "default; sequences: chosen on the first frame)")
     ap.add_argument("--scenario", action="append", help="restrict to scenario ids/names (repeatable)")
     ap.add_argument("--problems", default=str(paths.PROBLEMS))
     ap.add_argument("--out", default=str(paths.REPORT))

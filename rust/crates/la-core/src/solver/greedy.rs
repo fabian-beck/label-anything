@@ -97,16 +97,31 @@ pub fn run(s: &mut Solve) {
     if s.model.omission == Omission::Prefix {
         let order = s.pri.order.clone();
         let mut cut = false;
+        // after the guard, level 0 only (ADR 0048): the first item without a free
+        // level-0 position ends the prefix, and the guard of that pass ends it as well
+        let mut finish: Option<f64> = None;
         for (k, &i) in order.iter().enumerate() {
             if g.done[i] {
                 continue;
             }
-            if !cut && k % 64 == 63 && guard_passed(s, started, budget_guard) {
-                s.time_guard_hit = true;
+            if !cut && k % 64 == 63 {
+                match finish {
+                    None if guard_passed(s, started, budget_guard) => {
+                        s.time_guard_hit = true;
+                        finish = Some(s.now());
+                    }
+                    Some(f) if guard_passed(s, f, budget_guard) => cut = true,
+                    _ => {}
+                }
             }
-            if s.time_guard_hit {
-                g.done[i] = true;
-                s.reasons[i] = Some(Reason::BudgetExhausted);
+            if s.time_guard_hit && !g.cap_reached {
+                if !cut && !place_level0(s, &mut g, i) && !g.done[i] {
+                    cut = true;
+                }
+                if !g.done[i] {
+                    g.done[i] = true;
+                    s.reasons[i] = Some(Reason::BudgetExhausted);
+                }
                 continue;
             }
             if cut || g.cap_reached {
@@ -137,12 +152,8 @@ pub fn run(s: &mut Solve) {
         let cancelled = s.poll_cancel();
         if cancelled || s.time_guard_hit || guard_passed(s, started, budget_guard) {
             s.time_guard_hit |= !cancelled;
-            for &i in &band {
-                if !g.done[i] {
-                    g.done[i] = true;
-                    s.reasons[i] = Some(Reason::BudgetExhausted);
-                }
-            }
+            // after the guard the undecided items wait for the level-0 pass below
+            exhaust(s, &mut g, &band, false);
             continue;
         }
         // a band that may hit a cap is processed in total order (caps follow priority)
@@ -166,7 +177,7 @@ pub fn run(s: &mut Solve) {
                 }
                 process_unit(s, &mut g, i, true);
             }
-            exhaust(s, &mut g, &band);
+            exhaust(s, &mut g, &band, false);
             continue;
         }
         // warm start: labels placed in the previous solve keep their position when it is
@@ -238,8 +249,53 @@ pub fn run(s: &mut Solve) {
             }
             process_unit(s, &mut g, i, true);
         }
-        exhaust(s, &mut g, &band);
+        exhaust(s, &mut g, &band, false);
     }
+    if s.time_guard_hit && !s.cancelled {
+        finish_level0(s, &mut g, budget_guard);
+    }
+    let all: Vec<usize> = (0..n).collect();
+    exhaust(s, &mut g, &all, true);
+}
+
+/// After the greedy guard (ADR 0048): the undecided items, in total order, get their best
+/// free level-0 candidate — no ladder, no explanation of a failure — until the guard passes
+/// once more from the start of this pass; whatever is left is `budget_exhausted`.
+fn finish_level0(s: &mut Solve, g: &mut Greedy, guard: f64) {
+    let started = s.now();
+    let order = s.pri.order.clone();
+    let mut tried = 0usize;
+    for &i in &order {
+        if g.done[i] || s.state.placed[i].is_some() {
+            continue;
+        }
+        tried += 1;
+        if tried.is_multiple_of(64) && (s.poll_cancel() || guard_passed(s, started, guard)) {
+            break;
+        }
+        place_level0(s, g, i);
+    }
+}
+
+/// The best free level-0 candidate of undecided item `i`, after the greedy guard (ADR 0048).
+/// Not for members of a `keep_with` set (placed together or not at all) or items whose
+/// level-0 attempt already failed (their candidates have not become freer since). A cap
+/// that the candidate would exceed omits the item; any other failure leaves it undecided.
+fn place_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> bool {
+    if g.sets[i].is_some() || g.tried0[i] {
+        return false;
+    }
+    let Some(c) = best_level0(s, g, i) else {
+        return false;
+    };
+    g.done[i] = true;
+    if !cap_allows(s, &s.cands[c as usize]) {
+        g.cap_reached = true;
+        s.reasons[i] = Some(Reason::OmittedByPriority);
+        return false;
+    }
+    commit(s, g, i, c, false);
+    true
 }
 
 /// Whether the greedy guard has passed: `guard` ms after `started` (ADR 0042; never
@@ -253,10 +309,10 @@ fn label_cap_reached(s: &Solve) -> bool {
     s.model.max_labels.is_some_and(|m| s.state.n_placed >= m)
 }
 
-/// After a cancellation or the time guard, the band's undecided items are
-/// `budget_exhausted`.
-fn exhaust(s: &mut Solve, g: &mut Greedy, band: &[usize]) {
-    if !(s.cancelled || s.time_guard_hit) {
+/// After a cancellation, or at the end of the pass after the time guard (`last`: its
+/// level-0 pass is over), the undecided items of `band` are `budget_exhausted`.
+fn exhaust(s: &mut Solve, g: &mut Greedy, band: &[usize], last: bool) {
+    if !(s.cancelled || (last && s.time_guard_hit)) {
         return;
     }
     for &i in band {

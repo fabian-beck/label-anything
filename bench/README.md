@@ -193,6 +193,9 @@ Hard/soft/ignore come from the effective options (defaults.md ← preset ← pro
 | | `placed_weighted` | Σ_placed g(rank) / Σ_all g(rank), g(r) = 1/log2(r + 2); rank = the result's `priority.rank`, else the reference priority order (input order without priorities) |
 | | `required_placed` | every `required` item is placed |
 | hard | `hard.total` and breakdown | `label_label` (pairs), `label_item` (label vs another item's true mark, `items` hard; the marks of items of lower key follow `avoid.label.lower_items` where given), `label_lower` (a placed item whose mark a label of higher key covers, with `avoid.label.lower_items` given and not hard, spec §4.4), `own_mark` (external label vs own mark: `hard` = intersects, `partial:f` = covers > f + 0.01 of the mark), `internal_outside` (internal label not inside its shape), `class:<k>` (hard vector classes from the problem and truth.json; raster classes: integral of the §4.6 pixel mask over the shrunk box > 0), `canvas_edge` (outside the canvas/region minus padding, unless `allow_outside`), `leader_leader` (proper crossings, contacts within t of an endpoint ignored), `leader_near` (leaders of two labels closer than the larger `leaders.clearance` − t without crossing, the start-start approach of neighbouring marks exempt, spec §7), `leader_angle` (distant leaders starting within 1 em that diverge by less than `leaders.min_angle_between`), `leader_label` (leader or underline through another label), `leader_own_label` (leader enters its own label; last segment exempt for `port: baseline`), `leader_item` (a leader within `leaders.clearance` − t of another item's mark, marks of its group and marks covering its anchor exempt) / `leader_class:<k>` (when hard for leaders), `leader_canvas` |
+| | `hard.conflicts`, `hard.spacing` | the hard violations split into **conflicts** — geometric overlaps every labeler must avoid: labels over labels, marks, hard classes or the canvas edge, crossing leaders, leaders through labels or marks — and **spacing** rules of the engine: `leader_near`, `leader_angle` and `leader_item` pairs whose leader passes within the clearance of a mark without touching it |
+| usable labels | `usable.{count,rate,weighted,in_conflict}` | the labels a host keeps by dropping conflicts in priority order: a label in a conflict of its own (over a mark, a hard class or the canvas edge; its leader through a mark or its own label) is dropped, and of two conflicting labels (overlap, crossing leaders, a leader through a label, a label over the mark of a placed item) the more important one stays; `weighted` as `placed_weighted`; equals placed for a result without conflicts. Compares tools that never omit a label (adjustText, D3-Labeler) with tools that do |
+| spread | `spread.{regions,labeled,region_coverage}` | of the populated regions (cells of 8 em of the default font holding an item's reference point), the share with at least one label: whether labels spread over the data or crowd where it is sparse (even distribution; Imhof 1975) |
 | soft coverage | `coverage.<class>.{mean,max,touching}` | covered px² / label px² per placed label (union area: exact clipping for one primitive, 1/8 px point sampling otherwise, ≤ 6 thin strokes: clipped length × width; raster classes: integral of the value map), averaged; also `items` (other marks) and `labels` (other labels); classes ignored for labels are skipped |
 | leaders | `crossings`, `label_intersections`, `length_mean_em`, `length_max_em`, `bends_mean`, `rate` | pairs of crossing leaders (always counted), leader–other-label pairs, polyline length / label font size, points − 2 |
 | visual (`bench/eval/visual.py`) | `leader_length.{p50_em,p90_em,max_em,max_diag,long,far}` | leader length / font size; `far` = longer than 25 % of the canvas diagonal (with `far_boundary`: those of boundary labels); `long` = longer than 10 em |
@@ -212,6 +215,7 @@ Hard/soft/ignore come from the effective options (defaults.md ← preset ← pro
 | | `rank_source`, `reported_inversions` | where ranks came from; the result's own stat for comparison |
 | text | `wrapped`, `alternative`, `truncated`, `shrunk` | fractions of placed text labels (incl. composite text parts): > 1 line without wrap settings, `used` = `alternative:i`, `used` = `truncated`, `scale` < 1 or smaller font |
 | runtime | `runtime_ms`, `wall_ms` (runner: median, p95, runs), `iterations`, `time_guard_hit` | from `stats` and the runner |
+| memory | `peak_rss_mb` (runner: median, max) | peak resident memory of the solver process (external commands: the engines' CLIs, `os.wait4`), steady state after `--warmup` solves |
 | checks | `result_check` | result schema errors, unknown/missing/duplicate ids, placed without box |
 | stability | `displacement_mean_px`/`_median_px`/`_mean_em`, `flip_rate`, `added_total`, `removed_total`, `nesting_rate`, `nesting_fraction_mean` | consecutive frames: change of (box center − anchor) for labels placed in both; side flips; labels appearing/disappearing among items visible in both; zoom-in steps with P_t ∩ V_{t+1} ⊆ P_{t+1} |
 
@@ -256,6 +260,10 @@ NAME=COMMAND` (`{problem}`, `{result}`, `{svg}`) renders the engine's debug over
 grids, candidates) from one extra untimed run; `--engine` sets it up for `rust` with `place
 --debug-svg`. Sequences are solved frame by frame; frame t+1 gets `warm_start.placements` =
 frame t's placements with each box (and leader) shifted by its anchor's movement.
+Third-party baselines solve a problem with soft classes twice — avoided like hard ones and
+left out — and keep the better result by their own usable labels (`--baseline-soft best`, the
+default; see `bench/baselines/README.md`). The peak resident memory of every external solver
+run is recorded (`peak_rss_mb`).
 `--suite quick` = configs marked `quick` (one small config per scenario) + the quick
 sequences; `--suite full` = everything; `--scenario` restricts to scenario ids. Further
 flags: `--perf` (performance targets), `--previous OLD/results.json` (changes), `--gate`
@@ -275,13 +283,17 @@ ignores `models`) and does not parse SVG backgrounds.
 
 The third-party baselines of brief §8.3 — **textalloc**, **adjustText**, **vega-label** (Vega's
 label transform, headless in Node) and **ggrepel** (R; final positions read from the drawn grob
-tree after `grid.force()`) — live in `bench/baselines/` with pinned toolchains
-(`requirements.txt`, `package.json` + `package-lock.json`, `install-r.sh`). Each adapter
+tree after `grid.force()`) — and the label layouts of two widely used chart libraries,
+**d3fc** (`d3fc-label-layout`, greedy + removeOverlaps) and **ECharts** (`labelLayout.hideOverlap`,
+rendered server-side), plus the classic simulated annealing of **D3-Labeler**, live in
+`bench/baselines/` with pinned toolchains (`requirements.txt`, `package.json` +
+`package-lock.json`, `install-r.sh`, `vendor/`). Each adapter
 translates a problem into the tool's native input in canvas pixel coordinates, hands the tool
 the problem's own label boxes (spec §5 measurement, padding included) and the items in priority
 order, and converts the tool's output back into a result; features a tool cannot express are
 emulated (raster masks as cells or pixel runs, SVG backgrounds as their truth geometry, lines
-as sampled points, soft costs as hard obstacles) or reported "n/a", and every emulation is
+as sampled points, soft costs as hard obstacles or left out, whichever serves the tool better)
+or reported "n/a", and every emulation is
 listed in the result's `warnings` and marked ≈ in the report. Methods, parameters, the
 emulation table and the ggrepel extraction: `bench/baselines/README.md`. A baseline whose
 toolchain is missing is skipped with a message.
@@ -316,8 +328,9 @@ bench/.venv/bin/python -m bench.perf generate bench/out/perf      # the problems
 
 `bench-report/index.html` (static, no external scripts) and `results.json` contain:
 
-* a **summary** per solver (problems run / n/a / failed, mean placed rate, hard violations,
-  ambiguity, inversions, summed runtimes);
+* a **summary** per solver (problems run / n/a / failed, mean placed and usable rate, hard
+  violations and conflicts, ambiguity, inversions, summed runtimes, peak memory, and the
+  empirical scaling exponent k of runtime ∝ nᵏ over the stress scenario's sizes);
 * the **performance-target table** (median, target, ratio, every run) and the **release-gate**
   summary when evaluated;
 * **runtime vs. problem size**: log–log small multiples — one panel for the Label Anything

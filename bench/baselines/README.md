@@ -12,8 +12,15 @@ document; every emulation is written into the result's `warnings` (codes
 | `adjusttext` | [adjustText](https://github.com/Phlya/adjustText) `adjust_text` | 1.4.0 (matplotlib 3.11.2) | Python, in-process | MIT | arrows | never |
 | `vega-label` | Vega's [`label` transform](https://vega.github.io/vega/docs/transforms/label/) (vega-label) | vega 6.4.0, vega-label 2.1.3, canvas 3.2.3 | Node ≥ 20, subprocess | BSD-3-Clause | none | yes (opacity 0) |
 | `ggrepel` | [ggrepel](https://github.com/slowkow/ggrepel) `geom_text_repel` | ggrepel 0.9.5, ggplot2 3.4.4, R 4.3.3 | Rscript, subprocess | GPL-3 (tool only) | segments | yes (`max.overlaps`) |
+| `d3fc` | [d3fc-label-layout](https://github.com/d3fc/d3fc/tree/master/packages/d3fc-label-layout) `layoutRemoveOverlaps(layoutGreedy())` | 7.0.4 (d3-array 3.2.4) | Node ≥ 20, subprocess | MIT | none | yes (hidden) |
+| `echarts` | [Apache ECharts](https://echarts.apache.org/) scatter labels, `labelLayout.hideOverlap` | echarts 6.1.0 (zrender 6.1.0), server-side rendering | Node ≥ 20, subprocess | Apache-2.0 | none | yes (hidden) |
+| `d3-labeler` | [D3-Labeler](https://github.com/tinker10/D3-Labeler) (simulated annealing) | `labeler.js` at commit `6de8670`, vendored (`vendor/d3-labeler`) | Node ≥ 20, subprocess | MIT | lines to the anchor | never |
 
 `naive` and `greedy` (`bench/solvers/`) are the built-in reference baselines.
+
+The first four tools avoid obstacles; d3fc, ECharts and D3-Labeler — the label layouts of
+two widely used chart libraries and the classic simulated-annealing labeler of D3 — avoid
+only other labels (D3-Labeler also the labeled anchors), which is how they are used.
 
 ## Installation and use
 
@@ -81,14 +88,30 @@ is emulated by handing over only the first *k* items. Results report that refere
 in `placements[].priority`.
 
 **Obstacles.** Every class the problem does not `ignore` for labels is an obstacle, plus every
-item's mark (labels must not cover other marks). The tools have no soft costs: soft classes are
-avoided like hard ones (noted as an emulation). Sources:
+item's mark (labels must not cover other marks). Sources:
 
 | source | how it reaches the tools |
 |---|---|
 | `obstacles.vector` | exact geometry (circles, polylines with width, rects, polygons, positioned shapes) |
 | `obstacles.svg` | the scenario's `truth.json` geometry — the classified shapes the host drew — instead of the SVG (emulation: the tools cannot read SVG); without a truth file the SVG is ignored (unsupported) |
 | `obstacles.raster` | the per-pixel class masks of spec §4.6 (`bench/common/raster.py`; continuous modes thresholded at 0.5), as occupied cells or pixel runs (emulation) |
+
+**Soft classes.** The tools have no soft costs. A class the problem gives a cost (neither
+`hard` nor `ignore`: grid lines, background points, raster ink, …) is either avoided like a
+hard one (`hard`) or left out, so labels may cover it (`ignore`); neither is what the problem
+asks for, and which comes closer depends on the problem: as hard obstacles, 15 grid lines
+under 40-character class names leave vega-label no position at all (`01/cbo-rfc-30-vector`),
+and raster ink leaves it two labels of 375 (`06/monaco-ink`). The runner therefore solves
+every problem with soft classes both ways and keeps the result under which the tool does
+better by its own numbers — more usable labels, priority-weighted (`usable_weighted`), then
+fewer conflicts, then `hard` (`bench/run.py --baseline-soft best`, the default; `hard` or
+`ignore` force one way; a sequence takes the way chosen on its first frame). The result's
+warnings say which (`soft-classes`), and `results.json` keeps what both gave
+(`baseline.soft_choice`). Tools told no obstacles (d3fc, ECharts, D3-Labeler) run once.
+
+**Internal labels.** A box that lies inside the item's own shape (shrunk by the 0.5 px
+tolerance), where the problem allows internal labels, is reported as an internal label — a
+label on a large bubble, not one covering its own mark.
 
 **Results.** Each placed label is the problem's box at the position the tool chose, with the
 problem's text layout (`text`, `parts`) so the renderer draws it like any other result. A
@@ -197,6 +220,54 @@ tree (repelled positions only exist at draw time):
 5. The reported box is the label box centred on the text position (hjust = vjust = 0.5); a
    segment becomes a leader ending where it enters that box.
 
+## d3fc
+
+`d3fc_layout.mjs` imports the strategies from the package's published ES sources (its `main`, a
+rollup bundle, is not in the npm tarball; a resolve hook adds the `.js` extensions the sources
+omit) and runs the README's strategy, `layoutRemoveOverlaps(layoutGreedy().bounds(area))`:
+
+| element | value |
+|---|---|
+| rects | one per label in priority order: the label box grown by m = mark radius + `placement.offset` on every side, at the anchor point (d3fc puts a corner or an edge midpoint of the rect at the point: 8 positions); the reported box is the rect shrunk back by m — d3fc's own way to keep a label off its point (`layoutTextLabel().padding`) |
+| `bounds` | the label area (greedy minimizes overlap area, then the area outside the bounds; it does not enforce them) |
+| removeOverlaps | hides the label with the largest overlap area until none overlaps (ties: the earlier one) |
+
+d3fc compares labels only: marks and obstacle classes are not avoided. With large marks the
+grown rect is large too (a bubble of radius 60 adds 120 px to each side), so labels of large
+bubbles overlap much and are hidden first. Above 2,500 labels the problem is **n/a**
+(removeOverlaps is cubic in dense problems). Deterministic.
+
+## ECharts
+
+`echarts_layout.mjs` renders one chart server-side (`echarts.init(null, null, {renderer: 'svg',
+ssr: true})`, no DOM) and reads every label's rect and visibility from the scene graph:
+
+| element | value |
+|---|---|
+| series | one `scatter` series on value axes of exactly the canvas (y inverted, no grid margins, `clip: false`), one data item per label in priority order: `symbol` circle of the mark's diameter (other marks: a `rect` symbol of their bounding box) |
+| `label` | `position`: the first position of the problem's order that ECharts has outside a symbol (top / right / bottom / left; a diagonal first position gives its horizontal side), `distance`: `placement.offset`, `padding` 0, `lineHeight` = the box height; the text measurement (`setPlatformAPI({measureText})`) returns the box width, so ECharts lays out exactly the problem's box |
+| `labelLayout` | `{hideOverlap: true}`: in order of decreasing symbol area (ECharts' default `priority`; a stable sort, so ties keep the priority order) a label overlapping one already shown is hidden |
+
+ECharts compares labels only and gives every label the same position: marks and obstacle
+classes are not avoided, there are no alternatives and no leaders. Deterministic.
+
+## D3-Labeler
+
+`d3_labeler.mjs` loads the original `labeler.js` (Evan Wang, 2013; MIT; vendored at commit
+`6de8670`, `vendor/d3-labeler`) into a `d3` global and runs it as its README shows:
+
+| element | value |
+|---|---|
+| labels / anchors | the labels in priority order, each starting with its baseline-left corner at its anchor; anchors with the mark radius (the tool's label–anchor overlap uses the square of side 2r); layout coordinates = canvas px minus the label area's origin |
+| `width`, `height` | the label area (walls keep a label's baseline-left corner inside, not its box) |
+| `start(nsweeps)` | 1,000 sweeps (the README's value); fewer when 2 n² energy terms per sweep would exceed 4 × 10⁹ for the run (noted), **n/a** below 100 sweeps (above about 4,500 labels) |
+| randomness | `Math.random` replaced by a seeded generator (mulberry32, seed 1): reproducible runs |
+
+Its energy weighs leader length, leader crossings, label–label and label–anchor overlap and an
+orientation bias; it never omits a label. A label whose box is away from its mark gets a
+straight leader from the mark to the box edge facing it, as the tool's demo draws one. Other
+marks and obstacle classes are not avoided.
+
 ## Emulations at a glance
 
 | problem feature | textalloc | adjustText | vega-label | ggrepel |
@@ -206,7 +277,7 @@ tree (repelled positions only exist at draw time):
 | rects / polygons | ≈ outlines (+ rect centres) | rects native, polygons ≈ outline points | native | ≈ sampled points |
 | raster backgrounds | ≈ cells as points | ≈ cells as boxes | ≈ pixel-run paths | ≈ cell centres |
 | SVG backgrounds | ≈ truth geometry | ≈ truth geometry | ≈ truth geometry | ≈ truth geometry |
-| soft costs (weights) | ≈ hard | ≈ hard | ≈ hard | ≈ hard |
+| soft costs (weights) | ≈ hard or left out | ≈ hard or left out | ≈ hard or left out | ≈ hard or left out |
 | area anchors, internal / boundary labels | ≈ pole as a point; n/a | same | same | same |
 | composite / icon labels | ≈ box size via measurement | same | same | ≈ padded text |
 | leader styles, angles, ports | straight connectors | straight arrows | n/a (no leaders) | straight segments |
@@ -216,6 +287,8 @@ tree (repelled positions only exist at draw time):
 
 Benchmark tooling only; nothing here is distributed with Label Anything. Python:
 textalloc and adjustText MIT, matplotlib (PSF-style matplotlib license) and its dependencies
-BSD / MIT / Apache-2.0 / MPL-2.0 (`requirements.txt`). npm (98 packages in
-`package-lock.json`): vega BSD-3-Clause, canvas MIT, the rest MIT / ISC / BSD-3-Clause /
-Apache-2.0 / Unlicense. R: R GPL-2 | GPL-3, ggrepel GPL-3, ggplot2 MIT, jsonlite MIT.
+BSD / MIT / Apache-2.0 / MPL-2.0 (`requirements.txt`). npm (105 packages in
+`package-lock.json`): vega BSD-3-Clause, canvas MIT, d3fc-label-layout MIT, echarts and
+zrender Apache-2.0, the rest MIT / ISC / BSD-3-Clause / Apache-2.0 / Unlicense / 0BSD.
+Vendored: D3-Labeler MIT (`vendor/d3-labeler/LICENSE`). R: R GPL-2 | GPL-3, ggrepel GPL-3,
+ggplot2 MIT, jsonlite MIT.

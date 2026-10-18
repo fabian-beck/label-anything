@@ -154,7 +154,8 @@ enum Cmd {
         /// Problem suite: quick or full.
         #[arg(long, default_value = "quick")]
         suite: String,
-        /// Also run the baselines (naive, greedy, textalloc, adjustText, vega-label, ggrepel).
+        /// Also run the baselines (naive, greedy, textalloc, adjustText, vega-label, ggrepel, d3fc,
+        /// ECharts, D3-Labeler).
         #[arg(long)]
         baselines: bool,
         /// Measure the performance targets.

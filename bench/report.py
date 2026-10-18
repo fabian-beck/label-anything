@@ -26,6 +26,10 @@ METRICS = [
     ("placed_rate", "placed", "{:.1%}", +1),
     ("placed_weighted", "placed (weighted)", "{:.3f}", +1),
     ("hard_violations", "hard viol.", "{:d}", -1),
+    ("hard_conflicts", "conflicts", "{:d}", -1),
+    ("hard_spacing", "spacing viol.", "{:d}", -1),
+    ("usable_rate", "usable", "{:.1%}", +1),
+    ("usable_weighted", "usable (weighted)", "{:.3f}", +1),
     ("leader_crossings", "crossings", "{:d}", -1),
     ("leader_rate", "leaders", "{:.1%}", 0),
     ("ambiguity_rate", "ambig.", "{:.1%}", -1),
@@ -36,6 +40,7 @@ METRICS = [
     ("adjacent_gap_abs_mean", "gap px", "{:.2f}", -1),
     ("internal_rate", "internal", "{:.1%}", 0),
     ("position_rank_mean", "pos. rank", "{:.2f}", -1),
+    ("region_coverage", "regions labeled", "{:.1%}", +1),
     ("soft_coverage_mean", "soft cov.", "{:.3f}", -1),
     ("leader_near_crossings", "near cross.", "{:d}", -1),
     ("leader_mark_touches", "leader–mark", "{:d}", -1),
@@ -46,9 +51,9 @@ METRICS = [
     ("labels_on_contrast_border", "contrast border", "{:d}", -1),
     ("schema_errors", "schema err.", "{:d}", -1),
 ]
-TABLE_COLS = ["placed_rate", "hard_violations", "leader_crossings", "leader_near_crossings", "leader_mark_touches",
-              "ambiguity_rate", "priority_inversions", "ndcg_at_k", "adjacent_gap_abs_mean", "position_rank_mean",
-              "soft_coverage_mean"]
+TABLE_COLS = ["placed_rate", "usable_rate", "hard_violations", "hard_conflicts", "leader_crossings",
+              "leader_near_crossings", "leader_mark_touches", "ambiguity_rate", "priority_inversions", "ndcg_at_k",
+              "adjacent_gap_abs_mean", "position_rank_mean", "region_coverage", "soft_coverage_mean"]
 SEQ_METRICS = [
     ("displacement_mean_px", "displacement px", "{:.2f}", -1),
     ("flip_rate", "flip rate", "{:.1%}", -1),
@@ -401,12 +406,37 @@ def _mean(v: list[float]) -> float | None:
     return sum(v) / len(v) if v else None
 
 
+SCALING_SCENARIO = "10-stress"
+
+
+def scaling_exponent(results: list[dict], solver: str, scenario: str = SCALING_SCENARIO) -> float | None:
+    """Empirical scaling exponent k of runtime ∝ nᵏ: the least-squares slope of log runtime over log items on
+    the problems of ``scenario`` (one problem family at growing sizes), from the engine-reported runtime where
+    the solver reports one, else the wall time; None with fewer than three sizes."""
+    pts = []
+    for r in results:
+        if r.get("solver") != solver or r.get("scenario") != scenario or "summary" not in r:
+            continue
+        t = (r.get("runtime_reported") or {}).get("median") or (r.get("runtime") or {}).get("median")
+        n = r.get("n_items")
+        if isinstance(t, (int, float)) and t > 0 and n:
+            pts.append((math.log(n), math.log(t)))
+    if len({x for x, _ in pts}) < 3:
+        return None
+    mx = sum(x for x, _ in pts) / len(pts)
+    my = sum(y for _, y in pts) / len(pts)
+    den = sum((x - mx) ** 2 for x, _ in pts)
+    return sum((x - mx) * (y - my) for x, y in pts) / den if den > 0 else None
+
+
 def _summary_table(report: dict) -> list[str]:
     """One row per solver: aggregates over the problems it ran."""
     o = ["<div class='scroll'><table><tr><th class='l'>solver</th><th class='l'>kind</th><th>problems</th>"
-         "<th>n/a</th><th>errors</th><th>placed (mean)</th><th>hard viol. (sum)</th><th>problems with hard viol.</th>"
+         "<th>n/a</th><th>errors</th><th>placed (mean)</th><th>usable (mean)</th><th>hard viol. (sum)</th>"
+         "<th>conflicts (sum)</th><th>problems with hard viol.</th>"
          "<th>ambig. (mean)</th><th>inversions (sum)</th><th>engine ms (sum of medians)</th>"
-         "<th>wall ms (sum of medians)</th></tr>"]
+         "<th>wall ms (sum of medians)</th><th>peak MB (max)</th>"
+         f"<th title='slope of log runtime over log items on {SCALING_SCENARIO}'>runtime ∝ n^k</th></tr>"]
     for s in report["solvers"]:
         rs = [r for r in report["results"] if r["solver"] == s]
         ok = [r for r in rs if "summary" in r]
@@ -415,16 +445,22 @@ def _summary_table(report: dict) -> list[str]:
         engs = [v for v in ((r.get("runtime_reported") or {}).get("median") for r in ok) if isinstance(v, (int, float))]
         eng = sum(engs) if engs else None
         wall = sum(r["runtime"]["median"] for r in ok) if ok else None
+        mem = [v for v in ((r.get("peak_rss_mb") or {}).get("max") for r in ok) if isinstance(v, (int, float))]
         hv, inv = _numbers(ok, "hard_violations"), _numbers(ok, "priority_inversions")
+        conf = _numbers(ok, "hard_conflicts")
         k = kind(s)
         o.append(f"<tr class='{'la' if k == 'label-anything' else ''}'><td class='l solver'>{esc(s)}</td>"
                  f"<td class='l'>{esc(k)}</td><td>{len(ok)}</td><td>{na}</td><td>{er}</td>"
                  f"<td>{fmt(_mean(_numbers(ok, 'placed_rate')), '{:.1%}')}</td>"
+                 f"<td>{fmt(_mean(_numbers(ok, 'usable_rate')), '{:.1%}')}</td>"
                  f"<td>{fmt(sum(hv) if hv else None, '{:d}')}</td>"
+                 f"<td>{fmt(sum(conf) if conf else None, '{:d}')}</td>"
                  f"<td>{sum(1 for r in ok if r['summary'].get('hard_violations'))}</td>"
                  f"<td>{fmt(_mean(_numbers(ok, 'ambiguity_rate')), '{:.1%}')}</td>"
                  f"<td>{fmt(sum(inv) if inv else None, '{:d}')}</td>"
-                 f"<td>{fmt(eng, '{:,.1f}')}</td><td>{fmt(wall, '{:,.1f}')}</td></tr>")
+                 f"<td>{fmt(eng, '{:,.1f}')}</td><td>{fmt(wall, '{:,.1f}')}</td>"
+                 f"<td>{fmt(max(mem) if mem else None, '{:,.0f}')}</td>"
+                 f"<td>{fmt(scaling_exponent(report['results'], s), '{:.2f}')}</td></tr>")
     o.append("</table></div>")
     return o
 
@@ -604,16 +640,17 @@ def _scenario_sections(report: dict) -> list[str]:
         o.append(f"<h2 id='sc-{esc(sc)}'>{esc(sc)}</h2>")
         o.append("<div class='scroll'><table><tr><th class='l'>config</th><th class='l'>solver</th><th>items</th>"
                  + "".join(f"<th>{esc(META[k][0])}</th>" for k in TABLE_COLS)
-                 + "<th>engine ms</th><th>wall ms (median / p95)</th><th>det.</th><th class='l'>notes</th></tr>")
+                 + "<th>engine ms</th><th>wall ms (median / p95)</th><th>peak MB</th><th>det.</th>"
+                   "<th class='l'>notes</th></tr>")
         for r in sorted(rows, key=lambda r: (r["config"], _order(solvers, r["solver"]))):
             cls = "la" if kind(r["solver"]) == "label-anything" else ""
             head = f"<td class='l'>{esc(r['config'])}</td><td class='l solver'>{esc(r['solver'])}</td>"
             if "skipped" in r:
-                o.append(f"<tr class='na'>{head}<td>{r.get('n_items') or ''}</td><td colspan='{len(TABLE_COLS) + 3}' "
+                o.append(f"<tr class='na'>{head}<td>{r.get('n_items') or ''}</td><td colspan='{len(TABLE_COLS) + 4}' "
                          f"class='l'>n/a</td><td class='l wrap small'>{esc(r['skipped'])}</td></tr>")
                 continue
             if "error" in r:
-                o.append(f"<tr class='{cls}'>{head}<td>{r.get('n_items') or ''}</td><td colspan='{len(TABLE_COLS) + 4}'"
+                o.append(f"<tr class='{cls}'>{head}<td>{r.get('n_items') or ''}</td><td colspan='{len(TABLE_COLS) + 5}'"
                          f" class='l err wrap'>{esc(r['error'])}</td></tr>")
                 continue
             s = r["summary"]
@@ -626,7 +663,8 @@ def _scenario_sections(report: dict) -> list[str]:
                 c = " class='bad'" if (k == "hard_violations" and hv and cls == "la") else ""
                 cells.append(f"<td{c}>{fmt(s.get(k), META[k][1])}</td>")
             o.append(f"<tr class='{cls}'>{head}<td>{r['n_items']}</td>" + "".join(cells)
-                     + f"<td>{fmt(eng, '{:,.1f}')}</td><td>{rt['median']:,.1f} / {rt['p95']:,.1f}</td><td>{det}</td>"
+                     + f"<td>{fmt(eng, '{:,.1f}')}</td><td>{rt['median']:,.1f} / {rt['p95']:,.1f}</td>"
+                       f"<td>{fmt((r.get('peak_rss_mb') or {}).get('max'), '{:,.0f}')}</td><td>{det}</td>"
                        f"<td class='l'>{_baseline_note(r)}</td></tr>")
         o.append("</table></div>")
         for cfg in sorted({r["config"] for r in rows}):
@@ -702,6 +740,12 @@ BASELINE_METHODS = {
                   "leaders.",
     "ggrepel": "geom_text_repel on a png(type='cairo') device of canvas size at 288 dpi; positions read from the "
                "text grobs after grid.force(); obstacles as empty-label points; default max.overlaps.",
+    "d3fc": "d3fc-label-layout layoutRemoveOverlaps(layoutGreedy()) in Node: labels in priority order, grown by mark "
+            "radius + offset, 8 positions at the anchor, bounds = label area; labels only (no obstacles), no leaders.",
+    "echarts": "ECharts scatter series rendered server-side, every label at one position at the offset, "
+               "labelLayout.hideOverlap (larger symbols first, then priority order); labels only, no leaders.",
+    "d3-labeler": "D3-Labeler's simulated annealing (labeler.js, vendored), 1,000 sweeps, seeded: labels start at "
+                  "their anchors; labels and labeled anchors only; never omits labels; leaders to the anchor.",
 }
 
 
