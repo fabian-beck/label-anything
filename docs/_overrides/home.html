@@ -1,0 +1,64 @@
+{#-
+  The home page (docs/index.md, `template: home.html`): a header whose logo is a live
+  labeling demo, above the page's content. The logo is a label (the name), its leader and
+  a dot. playground/hero.js (ts/packages/playground/src/hero.ts, published with the
+  playground) takes over from this static logo: it places the name and the labels of a
+  small map, network and chart with the engine, keeping off the elements marked
+  `data-la-avoid`, while things are dragged or added. Without it (e.g. under
+  `mkdocs serve`) the static logo stays.
+-#}
+{% extends "main.html" %}
+
+{% block tabs %}
+  {{ super() }}
+  <section class="la-hero" data-la-hero>
+    <div class="la-hero__stage" data-la-hero-stage></div>
+    <div class="la-hero__content">
+      <h1 class="la-lockup" data-la-hero-name>
+        <span class="la-lockup__label" data-la-hero-label>Label Anything</span>
+        <svg class="la-lockup__tail" viewBox="0 0 100 100" aria-hidden="true">
+          <path d="M-12 -12L60 68" stroke-width="12" stroke-linecap="round" data-la-hero-leader />
+          <circle cx="60" cy="68" r="22" data-la-hero-dot />
+        </svg>
+      </h1>
+      <p class="la-hero__tagline" data-la-avoid="text">Put a label on anything.</p>
+      <p class="la-hero__lead" data-la-avoid="text">
+        A label placement engine for charts, maps and diagrams. Hand it your points and
+        shapes, their labels and what must stay visible: it finds a place for every label,
+        with no overlaps and leader lines where needed, and says why a label had to go.
+      </p>
+      <ul class="la-hero__langs" data-la-avoid="children" aria-label="Languages">
+        <li>Python</li><li>JavaScript</li><li>TypeScript</li><li>Java</li><li>Rust</li><li>C</li><li>Go</li><li>CLI</li>
+      </ul>
+      <div class="la-hero__actions md-typeset" data-la-avoid="children">
+        <a class="md-button md-button--primary" href="{{ 'playground/' | url }}">Try the playground</a>
+        <a class="md-button" href="{{ 'getting-started/' | url }}">Get started</a>
+      </div>
+      <p class="la-hero__hint" data-la-hero-hint data-la-avoid>
+        <span class="la-hero__hint-line">
+          <span class="la-hero__live">Live</span>
+          Drag anything, click to add more, hover a label to see why it sits there.
+        </span>
+        <span class="la-hero__hint-line">
+          <span class="la-hero__styles" data-la-hero-styles role="group" aria-label="Leader style">
+            Leaders
+            <button type="button" data-style="straight" aria-pressed="true">straight</button>
+            <button type="button" data-style="elbow" aria-pressed="false">elbow</button>
+            <button type="button" data-style="curved" aria-pressed="false">curved</button>
+          </span>
+          <span class="la-hero__stats" data-la-hero-stats></span>
+          <button type="button" class="la-hero__reset" data-la-hero-reset>Reset</button>
+        </span>
+      </p>
+    </div>
+  </section>
+{% endblock %}
+
+{% block content %}
+  {{ page.content }}
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script type="module" src="{{ 'playground/hero.js' | url }}"></script>
+{% endblock %}

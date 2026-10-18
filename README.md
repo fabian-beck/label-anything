@@ -1,4 +1,9 @@
-# Label Anything
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-lockup-dark.svg">
+    <img src="docs/assets/logo-lockup.svg" alt="Label Anything" width="360">
+  </picture>
+</h1>
 
 > [!WARNING]
 > **Experimental.** Label Anything is still experimental and under active development, not

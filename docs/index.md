@@ -1,40 +1,60 @@
 ---
 title: Label placement for charts, maps and diagrams
 description: Label Anything places labels and leaders in scatterplots, maps, node-link diagrams and illustrations, avoiding what must stay visible, from any language.
+template: home.html
+hide:
+  - navigation
+  - toc
 ---
 
-# Label Anything
+## What it does
 
-!!! warning "Experimental"
+A label belongs next to the thing it names, and it must not hide other labels or what
+the picture shows. Placing hundreds of them by hand is tedious; Label Anything does it
+for any chart, map or diagram, in three steps:
 
-    Label Anything is still experimental and under active development, not
-    production-ready software. The problem format, the APIs of the language bindings and
-    the placements themselves can change in any 0.x release, without deprecation. Try it
-    and report what you find; pin an exact version if you build on it.
+<div class="grid cards la-steps" markdown>
 
-**Label placement for charts, maps and diagrams, from any language.** Label Anything
-decides where labels go: it places text, icons, or anything with a size next to the
-points and areas of scatterplots, maps, node-link diagrams and illustrations. It avoids
-whatever you say should not be covered, draws leader lines when a label has to sit at a
-distance, and never lets leaders cross. One problem goes in (JSON, or your language's
-API), one result comes out: a box per label, its leader, and an explanation for every
-label that did not fit.
+-   :material-numeric-1-circle:{ .lg .middle } **You describe**
 
-The *anything* is the host and the label: one engine for any chart, map or diagram and
-any label with a size, where adjustText (matplotlib), ggrepel (ggplot2) or vega-label
-(Vega) each serve one plotting library. Labels go to points and areas of any shape;
-lines such as roads or rivers are obstacles, not labeled features. Label Anything places
-labels in graphics: it is not a tool for labeling data, and it is unrelated to the
-few-shot segmentation model of the same name (ECAI 2025).
+    ---
 
-**Try it in your browser:** the [playground](try.md) runs the engine live on a world map,
-a network, charts, moving objects and photographs, with every option in reach.
+    The items to label — points, circles, rectangles, polygons, areas — with their labels
+    (text, icons, any box) and what must stay visible: other marks, lines, an SVG or a
+    raster image of the chart.
 
+-   :material-numeric-2-circle:{ .lg .middle } **It places**
+
+    ---
+
+    Every label goes next to its item, or out on a leader line: no two labels overlap,
+    nothing protected is covered and no leaders cross. What does not fit is left out,
+    least important first, and the result says why.
+
+-   :material-numeric-3-circle:{ .lg .middle } **You draw**
+
+    ---
+
+    You get a box per label, its leader and its text lines, as plain coordinates: draw
+    them with matplotlib, D3, Canvas, SVG or anything else.
+
+</div>
+
+<figure markdown>
 ![The outliers of a scatter plot, labeled over the chart image](assets/figures/outliers.svg){ width="640" }
+<figcaption>The outliers of a scatter plot, labeled over the chart's image: the labels
+keep off the dots, the axes, the trend line and each other.</figcaption>
+</figure>
+
+The *anything* is the host and the label: adjustText (matplotlib), ggrepel (ggplot2) and
+vega-label (Vega) each serve one plotting library; Label Anything is one engine and one
+problem format for any chart, map or diagram, any label with a size and every language.
+
+## Why Label Anything
 
 <div class="grid cards" markdown>
 
--   **Graded avoidance**
+-   :material-shield-check-outline:{ .lg .middle } **Graded avoidance**
 
     ---
 
@@ -42,7 +62,7 @@ a network, charts, moving objects and photographs, with every option in reach.
     cover outliers, covering other points costs a little, never cross a leader" is one
     line of configuration. [Avoidance](concepts/avoidance.md)
 
--   **Priority-driven omission**
+-   :material-sort-variant:{ .lg .middle } **You decide what goes**
 
     ---
 
@@ -50,7 +70,7 @@ a network, charts, moving objects and photographs, with every option in reach.
     outlierness, tiers, coverage per category, or a callback — and every omitted label
     says why and who is in its way. [Priority](tutorials/priority.md)
 
--   **Shape-aware**
+-   :material-shape-outline:{ .lg .middle } **Shape-aware**
 
     ---
 
@@ -58,7 +78,7 @@ a network, charts, moving objects and photographs, with every option in reach.
     Labels touch the true outline; large shapes get internal labels, small ones external
     labels or leaders. [Shapes](tutorials/shapes.md)
 
--   **Any background**
+-   :material-layers-outline:{ .lg .middle } **Any background**
 
     ---
 
@@ -66,7 +86,7 @@ a network, charts, moving objects and photographs, with every option in reach.
     one of five modes (ink, alpha, cost, classmap, saliency).
     [SVG](tutorials/svg-background.md) · [raster](tutorials/raster-backgrounds.md)
 
--   **Deterministic**
+-   :material-equal-box:{ .lg .middle } **Deterministic**
 
     ---
 
@@ -74,7 +94,7 @@ a network, charts, moving objects and photographs, with every option in reach.
     turned into an iteration budget, and floating-point work is specified operation by
     operation. [Solver](concepts/solver.md)
 
--   **Every language**
+-   :material-code-braces:{ .lg .middle } **Every language**
 
     ---
 
@@ -83,6 +103,12 @@ a network, charts, moving objects and photographs, with every option in reach.
     JSON format. [Getting started](getting-started/index.md)
 
 </div>
+
+Hundreds of labels take milliseconds, thousands a few hundred milliseconds. Moving
+things — a dragged node, a panned map — are labeled again from the previous result, so
+labels stay put ([interactive maps](tutorials/interactive-maps.md)). The
+[playground](try.md) runs the engine live on a world map, a network, charts, moving
+objects and photographs, with every option in reach.
 
 ## Five lines
 
@@ -179,6 +205,23 @@ implementation-independent evaluator.
 crossing leaders anywhere, the most usable labels on every problem of the quick suite,
 though often by a few percent — and where it still falls short: dense data, moving labels,
 the largest problems' speed.
+
+## Good to know
+
+!!! warning "Experimental"
+
+    Label Anything is still experimental and under active development, not
+    production-ready software. The problem format, the APIs of the language bindings and
+    the placements themselves can change in any 0.x release, without deprecation. Try it
+    and report what you find; pin an exact version if you build on it.
+
+* **Not on the registries yet.** The packages are built from this repository for now
+  ([getting started](getting-started/index.md)).
+* **Labels for points and areas.** Labels go to points and areas of any shape; lines such
+  as roads or rivers are obstacles, not labeled features.
+* **Labels in graphics, not labeled data.** Label Anything places labels in pictures: it
+  is not a tool for labeling data, and it is unrelated to the few-shot segmentation model
+  of the same name (ECAI 2025).
 
 ## Where next
 
