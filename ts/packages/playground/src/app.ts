@@ -311,6 +311,7 @@ export class App {
     this.#motion = new LabelMotion({ duration: this.view.transition });
     this.#invalidate();
     this.#panel.update();
+    this.#renderTransport();
     this.#saveHash();
   }
 
