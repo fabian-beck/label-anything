@@ -106,6 +106,37 @@ maximum over the image. Smooth sky is cheap, windows and edges are expensive.
 
 ![saliency mode: labels in the sky rather than on the facades](../assets/figures/raster-saliency.png)
 
+## Contrast borders
+
+Whatever the mode, labels also avoid lying across a border between a light and a dark
+backdrop: partly on the white page and partly on a dark photo, or half on a black road
+and half on a light field. Here the night sky is the raster's own background colour, so
+`ink` sees only the stars and the moon, and the white page around the picture is no raster
+at all: nothing else would stop the labels of Vega, Mizar and Deneb from straddling the
+picture's edge.
+
+```json
+--8<-- "examples/tutorials/problems/raster-contrast.json:1:7"
+```
+
+![contrast borders: the labels at the picture's edge lie wholly on the night sky](../assets/figures/raster-contrast.png)
+
+With `"weights": {"contrast": 0}` they take the first free position instead, across the
+edge:
+
+![without the contrast term: three labels half on the page, half on the sky](../assets/figures/raster-contrast-off.png)
+
+* The engine samples the luma of what lies behind the labels (Rec. 709, as in `cost`): the
+  raster sources in order, transparent pixels letting what lies below show through, over
+  `canvas.background` (default `"#ffffff"`; set it when the host draws on another colour).
+* `weights.contrast` (0.5) weighs how much that luma varies under a label: a label half on
+  black and half on white costs 0.5 per em² of its box, as much as hiding half of it under
+  ink of weight 1; a label on any uniform backdrop, dark or light, costs
+  nothing. `output.cost_breakdown` reports it as `contrast`.
+* The backdrop is averaged over about half an em, so thin lines and fine texture hardly
+  count: they are what the modes above are for. SVG backgrounds and vector layers do not
+  change it.
+
 ## In Python
 
 A path with mode options, as in the JSON problems above:

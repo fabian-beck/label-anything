@@ -1,6 +1,6 @@
 """Data of the tutorials (docs/tutorials/): a scatter chart as PNG and as SVG, its outliers
-as CSV and as a problem JSON, and one small raster per raster mode. Deterministic and
-standard library only.
+as CSV and as a problem JSON, one small raster per raster mode and a night sky for contrast
+borders. Deterministic and standard library only.
 
     python3 examples/tutorials/data/make_data.py           # (re)write the files
     python3 examples/tutorials/data/make_data.py --check   # verify the committed files
@@ -342,6 +342,20 @@ def photo_png() -> Image:
     return img
 
 
+def night_png() -> Image:
+    """Contrast borders: a dark night sky (its own background for ``ink``) to set into a
+    white page; only the stars and the moon are ink."""
+    img = Image(RW, RH, (14, 18, 40, 255))
+    rng = random.Random(11)
+    for _ in range(90):  # stars
+        img.disc(rng.uniform(4, RW - 4), rng.uniform(4, RH * 0.6), rng.choice([0.6, 0.8, 1.2]), "#fff6d5")
+    img.disc(380, 80, 22, "#f4f1de")  # moon
+    for x in range(RW):  # hills, too dark against the sky to count as ink
+        top = 250 + 25 * math.sin(x / 47.0) + 12 * math.sin(x / 13.0)
+        img.rect(x, top, x + 1, RH, "#05070d")
+    return img
+
+
 # ---------------------------------------------------------------------------------------
 
 
@@ -357,6 +371,7 @@ def outputs() -> dict[str, object]:
         "overlay.png": overlay_png(),
         "map.png": map_png(),
         "photo.png": photo_png(),
+        "night.png": night_png(),
     }
 
 

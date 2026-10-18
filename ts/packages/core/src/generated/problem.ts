@@ -331,6 +331,10 @@ export interface Canvas {
    * Sub-rectangle [x,y,w,h] that labels must stay inside (leaders may leave it).
    */
   region?: Rect4 | null;
+  /**
+   * Colour of the canvas where no raster lies (the backdrop of the contrast cost term).
+   */
+  background?: string;
 }
 export interface ItemDefaults {
   font?: Font;
@@ -663,6 +667,7 @@ export interface Weights {
   ambiguity?: number;
   lookahead?: number;
   starve?: number;
+  contrast?: number;
   stability?: number;
 }
 export interface Output {

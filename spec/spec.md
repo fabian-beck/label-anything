@@ -75,6 +75,10 @@ of all geometry grown by `max(placement.max_distance, 20 em)`.
 `canvas.allow_outside`. This is the `canvas_edge` class. Leaders may leave the region,
 but not the canvas.
 
+`canvas.background` (default white) is the colour of the canvas where no raster lies. It
+only enters the backdrop luma of the `contrast` cost term (§4.6, §8): labels avoid
+straddling the edge between a dark raster and a light canvas.
+
 ### 2.4 Merging defaults and presets
 
 Effective options = `defaults.md` ← `presets/<preset>.json#options` ← problem. Objects
@@ -434,6 +438,25 @@ quantized grid, cells outside the grid ignored.
 
 Inconsistent geometry (scale or cell not finite and > 0, non-finite offsets or grid
 origin) yields zero coverage.
+
+**Backdrop luma** (for the `contrast` cost term, §8; ADR 0031). With `weights.contrast >
+0` and at least one raster source, the engine also records how light the backdrop behind
+the labels is, whatever the sources' modes. The backdrop grid has cells of `C = 2c` from
+the grid origin, `ceil(cols / 2) × ceil(rows / 2)` of them (one per 2 × 2 grid cells).
+Each backdrop cell `(col, row)` is sampled at the 2 × 2 points
+`(x0 + (2·col + i + 0.5)·(C/2), y0 + (2·row + j + 0.5)·(C/2))`, `i, j ∈ {0, 1}`: the
+centres of its grid cells. A sample starts with the luma numerator
+`n = 2126·R + 7152·G + 722·B` of `canvas.background`. Every raster source in order
+(later sources lie on top) whose pixel `px = floor((x − ox)·s)`, `py = floor((y − oy)·s)`
+exists (`0 ≤ px < width`, `0 ≤ py < height`) changes it with that pixel's alpha `a` and
+the numerator `n_px` of its own colour: to `n_px` if `a = 255`, to
+`(a·n_px + (255 − a)·n) / 255` if `0 < a < 255`, not at all if `a = 0`. The cell's value
+`v = ((n₀₀ + n₁₀) + (n₀₁ + n₁₁)) / 4` (`n_ij` of sample `(i, j)`) is quantized to
+`s = min(255, floor(v / 10 000 + ½))` (the Rec. 709 luma of `cost` × 255). Sources with
+inconsistent geometry are skipped. If every cell has the same `s` there is no backdrop
+and the term is 0; otherwise summed-area tables of `s` (`u32`, as in §4.1) and of `s²`
+(exact integer sums, below 2⁵³) are built. SVG backgrounds and vector layers carry no
+colours here: they do not change the backdrop.
 
 ### 4.7 Distance transform
 
@@ -878,6 +901,7 @@ For candidate `k` of item `i` (all terms ≥ 0, summed in this order):
 ```
 cost = Σ_class w_label[class] · covered(label_k, class) / em²
      + Σ_class w_buffer[class] · covered(ring_k, class) / area(ring_k)
+     + w_contrast · (4 · D(label_k) · C² / 65025) / em²
      + [leader] (w_leader + w_leader_length · len/em + Σ_class w_leader[class] · covered_len/em + w_bends · bends)
      + w_position · rank / n_positions
      + w_distance · gap(label_k, S_i) / em
@@ -897,6 +921,15 @@ cost = Σ_class w_label[class] · covered(label_k, class) / em²
   which hides what lies under it: they have no soft class costs (hard classes still
   apply).
 * `ring_k` = the label box grown by `buffer`, minus the label box.
+* `D(label_k)` (ADR 0031): how much the backdrop luma `s` (§4.6) varies under the label
+  box, `D = I₂ − I₁ · I₁ / A`, with `I₁` and `I₂` the exact integrals of `s` and `s²` over
+  the box on the backdrop grid (as covered areas, §4.1, in backdrop cells) and `A` the
+  area of the box inside that grid in backdrop cells (the box corners in cell units,
+  clamped to the grid: `(u1 − u0) · (v1 − v0)`); `D = 0` when `A ≤ 0`, when
+  `D ≤ 10⁻¹² · I₂` and without a backdrop. `4 · D · C² / 65025` is four times the
+  integral of `(Y − Ȳ)²` over the box in px², `Y` the luma in `[0, 1]`: a label half on
+  black and half on white costs `w_contrast` per em² of its box, a label on any uniform
+  backdrop nothing. Internal labels of point items, which lie on their mark, have none.
 * `d` = the distance between the centers of the label box and the item's warm-start box
   (§6.7): 1 per em up to 1 em, then 1/4 per em up to 5 em, so that a label that has to
   move prefers a near place (ADR 0027); 0 without a warm-start box.

@@ -346,6 +346,7 @@ pub struct Weights {
     pub ambiguity: f64,
     pub lookahead: f64,
     pub starve: f64,
+    pub contrast: f64,
     pub stability: f64,
 }
 
@@ -362,6 +363,7 @@ impl Weights {
             ambiguity: o.f64("weights.ambiguity"),
             lookahead: o.f64("weights.lookahead"),
             starve: o.f64("weights.starve"),
+            contrast: o.f64("weights.contrast"),
             stability: o.f64("weights.stability"),
         }
     }

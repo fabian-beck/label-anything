@@ -75,6 +75,9 @@ Mark rotations are degrees **clockwise** on screen (as in SVG); leader angles ar
 * `region` `[x, y, w, h]`: labels must stay inside this sub-rectangle, e.g. a chart's plot
   area.
 * `allow_outside: true` drops the `canvas_edge` class.
+* `background` (`"#rrggbb"`, white): the colour of the canvas where no raster lies. Labels
+  avoid lying across the edge between it and a raster of another lightness (the
+  [`contrast` cost](../tutorials/raster-backgrounds.md#contrast-borders)).
 
 Without `canvas`, the canvas is the first raster background's size (divided by its
 `scale`), else the first SVG's viewport, else the problem is **unbounded**: there is no

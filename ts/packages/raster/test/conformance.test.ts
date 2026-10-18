@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  backdropLuma,
   decode,
   decodeBase64,
   decodeSource,
@@ -25,6 +26,27 @@ const DIR = join(dirname(fileURLToPath(import.meta.url)), "../../../../conforman
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Json = any;
+
+/**
+ * Compares a grid of bytes (`cols` per row) with an expectation: the complete array (base64
+ * under `key`) if present, the checksum, sum and non-zero count, and `samples`.
+ */
+function compare(got: Uint8Array, cols: number, e: Json, key: string, what: string): void {
+  if (e[key] !== undefined) {
+    const want = new Uint8Array(Buffer.from(e[key], "base64"));
+    expect(got.length, `${what}: length`).toBe(want.length);
+    const first = got.findIndex((v, k) => v !== want[k]);
+    expect(first, `${what}: first differing cell`).toBe(-1);
+  }
+  let sum = 0;
+  let nonzero = 0;
+  for (const v of got) {
+    sum += v;
+    if (v > 0) nonzero++;
+  }
+  expect([fnv1a32(got), sum, nonzero], what).toEqual([e.fnv1a32, e.sum, e.nonzero]);
+  for (const [x, y, v] of e.samples ?? []) expect(got[y * cols + x], `${what}: cell ${x},${y}`).toBe(v);
+}
 
 export function fnv1a32(bytes: Uint8Array | Uint8ClampedArray): string {
   let h = 0x811c9dc5;
@@ -120,24 +142,13 @@ describe("conformance/raster", () => {
           const grid = parseGrid(r.grid);
           const got = process(img!, parseMode(r.mode), r.class ?? "ink", parsePlacement(r.placement), grid);
           expect(got.map((g) => g.class), r.name).toEqual(r.expect.map((e: Json) => e.class));
-          got.forEach((g, i) => {
-            const e = r.expect[i];
-            const cov = g.coverage;
-            if (e.coverage !== undefined) {
-              const want = new Uint8Array(Buffer.from(e.coverage, "base64"));
-              expect(cov.length, `${r.name}: length`).toBe(want.length);
-              const first = cov.findIndex((v, k) => v !== want[k]);
-              expect(first, `${r.name} (${g.class}): first differing cell`).toBe(-1);
-            }
-            let sum = 0;
-            let nonzero = 0;
-            for (const v of cov) {
-              sum += v;
-              if (v > 0) nonzero++;
-            }
-            expect([fnv1a32(cov), sum, nonzero], `${r.name} (${g.class})`).toEqual([e.fnv1a32, e.sum, e.nonzero]);
-            for (const [x, y, v] of e.samples ?? []) expect(cov[y * grid.cols + x], `${r.name}: cell ${x},${y}`).toBe(v);
-          });
+          got.forEach((g, i) => compare(g.coverage, grid.cols, r.expect[i], "coverage", `${r.name} (${g.class})`));
+        }
+        for (const r of c.backdrop ?? []) {
+          const grid = parseGrid(r.grid);
+          const layers = r.layers.map((l: Json) => [img!, parsePlacement(l)] as const);
+          const got = backdropLuma(layers, r.background, grid);
+          compare(got, grid.cols, r.expect, "luma", `backdrop ${r.name}`);
         }
       }
       for (const e of c.oklab ?? []) {

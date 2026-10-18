@@ -39,6 +39,7 @@ OPTION_PATHS: Dict[str, str] = {
     "allow_outside": "canvas.allow_outside",
     "device_pixel_ratio": "canvas.device_pixel_ratio",
     "region": "canvas.region",
+    "canvas_background": "canvas.background",
     # label defaults
     "font_family": "defaults.font.family",
     "font_size": "defaults.font.size",

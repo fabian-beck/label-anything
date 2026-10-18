@@ -6,7 +6,7 @@
  * @module
  */
 
-import { process as rasterProcess } from "@label-anything/raster";
+import { backdropLuma, process as rasterProcess } from "@label-anything/raster";
 import {
   EPS,
   P,
@@ -19,7 +19,7 @@ import {
   segSegDistXY,
 } from "./geom/index.js";
 import * as polygon from "./geom/polygon.js";
-import { GridSpec, Sat } from "./grid/index.js";
+import { Backdrop, GridSpec, Sat } from "./grid/index.js";
 import { distanceTransform, dtMaxima, type Seed } from "./grid/dt.js";
 import { Occupancy } from "./grid/occupancy.js";
 import { MaskRaster } from "./grid/raster.js";
@@ -146,6 +146,11 @@ export class Obstacles {
     public labelArea: Rect | null,
     public leaderArea: Rect | null,
     public indexCell: number,
+    /**
+     * The luma behind labels, for the `contrast` cost term (`null` without rasters, with
+     * `weights.contrast` 0, or when the backdrop is uniform).
+     */
+    public backdrop: Backdrop | null,
   ) {}
 
   private free: FreeSpace | null = null;
@@ -340,6 +345,15 @@ export function prepare(model: Model, minFont: number): Obstacles {
       }
     }
   }
+  let backdrop: Backdrop | null = null;
+  if (model.weights.contrast > 0 && model.rasters.length > 0) {
+    const bg = Backdrop.gridOf(grid);
+    const layers = model.rasters.map(
+      (r) => [r.img, { scale: r.opts.scale, offset: [r.opts.offset.x, r.opts.offset.y] as const }] as const,
+    );
+    const bgrid = { originX: bg.ox, originY: bg.oy, cell: bg.cell, cols: bg.cols, rows: bg.rows };
+    backdrop = Backdrop.of(bg, backdropLuma(layers, model.background, bgrid));
+  }
   for (const k of ["ignore", "items", "labels", "leaders", "canvas_edge"]) nameSet.delete(k);
   const names = Array.from(nameSet).sort(cmpStr);
   const pol = (map: Record<string, unknown>, k: string): AvoidW =>
@@ -454,6 +468,7 @@ export function prepare(model: Model, minFont: number): Obstacles {
     model.labelArea,
     model.leaderArea,
     indexCell,
+    backdrop,
   );
 }
 

@@ -7,7 +7,7 @@ mod support;
 use std::path::{Path, PathBuf};
 
 use label_anything_raster::{
-    decode_base64, estimate_background, parse_hex_color, process, srgb_to_oklab,
+    backdrop_luma, decode_base64, estimate_background, parse_hex_color, process, srgb_to_oklab,
 };
 use serde_json::Value;
 use support::{fnv1a32, load_image, parse_grid, parse_mode, parse_placement};
@@ -36,6 +36,58 @@ fn cases() -> Vec<(String, Value)> {
 
 fn as_u64(v: &Value) -> u64 {
     v.as_u64().expect("integer")
+}
+
+/// `[r, g, b]` → bytes.
+fn parse_rgb(v: &Value) -> [u8; 3] {
+    let c: Vec<u8> = v
+        .as_array()
+        .expect("[r, g, b]")
+        .iter()
+        .map(|c| as_u64(c) as u8)
+        .collect();
+    [c[0], c[1], c[2]]
+}
+
+/// Compares a grid of bytes (`cols` per row) with an expectation: the complete array
+/// (base64 under `key`) if present, the checksum, sum and non-zero count, and `samples`.
+fn compare(got: &[u8], cols: usize, e: &Value, key: &str) -> Vec<String> {
+    let mut fails = Vec::new();
+    if let Some(b64) = e.get(key).and_then(Value::as_str) {
+        let bytes = decode_base64(b64).expect("expected grid base64");
+        if got != bytes {
+            let first = got.iter().zip(&bytes).position(|(a, b)| a != b);
+            fails.push(format!(
+                "{key} differs (len {} vs {}, first diff at {first:?})",
+                got.len(),
+                bytes.len()
+            ));
+        }
+    }
+    let sum: u64 = got.iter().map(|&v| u64::from(v)).sum();
+    let nonzero = got.iter().filter(|&&v| v > 0).count() as u64;
+    if fnv1a32(got) != e["fnv1a32"].as_str().unwrap()
+        || sum != as_u64(&e["sum"])
+        || nonzero != as_u64(&e["nonzero"])
+    {
+        fails.push("checksum/sum/nonzero differ".into());
+    }
+    for s in e
+        .get("samples")
+        .and_then(Value::as_array)
+        .map(Vec::as_slice)
+        .unwrap_or(&[])
+    {
+        let (x, y, v) = (
+            as_u64(&s[0]) as usize,
+            as_u64(&s[1]) as usize,
+            as_u64(&s[2]),
+        );
+        if u64::from(got[y * cols + x]) != v {
+            fails.push(format!("cell ({x}, {y}) differs"));
+        }
+    }
+    fails
 }
 
 /// Checks one case and returns its failures (empty = pass) and the number of runs.
@@ -104,48 +156,28 @@ fn check(file: &str, case: &Value, dir: &Path) -> (Vec<String>, usize) {
                         continue;
                     }
                     for (c, e) in got.iter().zip(want) {
-                        let cov = &c.coverage;
-                        if let Some(b64) = e.get("coverage").and_then(Value::as_str) {
-                            let bytes = decode_base64(b64).expect("expected coverage base64");
-                            if *cov != bytes {
-                                let first = cov.iter().zip(&bytes).position(|(a, b)| a != b);
-                                fail(format!(
-                                    "run '{name}' class {}: coverage differs (len {} vs {}, first diff at {first:?})",
-                                    c.class,
-                                    cov.len(),
-                                    bytes.len()
-                                ));
-                            }
+                        for msg in compare(&c.coverage, grid.cols, e, "coverage") {
+                            fail(format!("run '{name}' class {}: {msg}", c.class));
                         }
-                        let sum: u64 = cov.iter().map(|&v| u64::from(v)).sum();
-                        let nonzero = cov.iter().filter(|&&v| v > 0).count() as u64;
-                        if fnv1a32(cov) != e["fnv1a32"].as_str().unwrap()
-                            || sum != as_u64(&e["sum"])
-                            || nonzero != as_u64(&e["nonzero"])
-                        {
-                            fail(format!(
-                                "run '{name}' class {}: checksum/sum/nonzero differ",
-                                c.class
-                            ));
-                        }
-                        for s in e
-                            .get("samples")
-                            .and_then(Value::as_array)
-                            .map(Vec::as_slice)
-                            .unwrap_or(&[])
-                        {
-                            let (x, y, v) = (
-                                as_u64(&s[0]) as usize,
-                                as_u64(&s[1]) as usize,
-                                as_u64(&s[2]),
-                            );
-                            if u64::from(cov[y * grid.cols + x]) != v {
-                                fail(format!(
-                                    "run '{name}' class {}: cell ({x}, {y}) differs",
-                                    c.class
-                                ));
-                            }
-                        }
+                    }
+                }
+                for run in case["backdrop"]
+                    .as_array()
+                    .map(Vec::as_slice)
+                    .unwrap_or(&[])
+                {
+                    runs += 1;
+                    let name = run["name"].as_str().unwrap_or("?");
+                    let grid = parse_grid(&run["grid"]);
+                    let layers: Vec<(&label_anything_raster::Rgba, _)> = run["layers"]
+                        .as_array()
+                        .expect("layers")
+                        .iter()
+                        .map(|l| (&img, parse_placement(l)))
+                        .collect();
+                    let got = backdrop_luma(&layers, parse_rgb(&run["background"]), &grid);
+                    for msg in compare(&got, grid.cols, &run["expect"], "luma") {
+                        fail(format!("backdrop '{name}': {msg}"));
                     }
                 }
             }

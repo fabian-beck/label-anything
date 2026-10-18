@@ -413,6 +413,8 @@ pub struct Model {
     /// Vector obstacle primitives with their class (names shared between primitives).
     pub vector: Vec<(Arc<str>, Prim)>,
     pub rasters: Vec<RasterSrc>,
+    /// `canvas.background`: the backdrop where no raster lies.
+    pub background: [u8; 3],
     pub avoid_label: serde_json::Map<String, Value>,
     pub avoid_leader: serde_json::Map<String, Value>,
     pub avoid_buffer: serde_json::Map<String, Value>,
@@ -1209,6 +1211,7 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         items,
         vector,
         rasters,
+        background: parse_color(&o.string("canvas.background")).unwrap_or([255, 255, 255]),
         avoid_label: o.map("avoid.label"),
         avoid_leader: o.map("avoid.leader"),
         avoid_buffer: o.map("avoid.buffer"),

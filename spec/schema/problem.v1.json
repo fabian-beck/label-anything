@@ -268,6 +268,10 @@
             }
           ],
           "description": "Sub-rectangle [x,y,w,h] that labels must stay inside (leaders may leave it)."
+        },
+        "background": {
+          "$ref": "#/$defs/color",
+          "description": "Colour of the canvas where no raster lies (the backdrop of the contrast cost term)."
         }
       }
     },
@@ -1696,6 +1700,10 @@
           "minimum": 0
         },
         "starve": {
+          "type": "number",
+          "minimum": 0
+        },
+        "contrast": {
           "type": "number",
           "minimum": 0
         },

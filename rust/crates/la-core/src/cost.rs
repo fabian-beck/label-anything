@@ -243,6 +243,17 @@ impl<'a> Evaluator<'a> {
         if !acc.relaxed {
             return finish(c, acc);
         }
+        // 3b. backdrop contrast: the luma variance under the box (none on a mark)
+        if let Some(bd) = &obs.backdrop {
+            if !on_mark {
+                let cell = bd.grid.cell;
+                let d = bd.deviation(&r);
+                acc.add(
+                    "contrast",
+                    w.contrast * (4.0 * d * (cell * cell) / 65025.0) / em2,
+                );
+            }
+        }
         // 4. leaders
         for l in &c.leaders {
             self.leader_terms(

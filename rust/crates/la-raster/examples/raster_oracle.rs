@@ -6,7 +6,7 @@
 //! ```json
 //! {"cases": [{"decode": {"width", "height", "rgba_fnv1a32"} | {"error": code},
 //!             "background": [r, g, b] | null,
-//!             "runs": [[{"class", "coverage": base64}]],
+//!             "runs": [[{"class", "coverage": base64}]], "backdrop": [base64],
 //!             "oklab": [[L, a, b]], "hex": [[r, g, b] | null],
 //!             "base64": [{"hex": "..."} | {"error": code}]}]}
 //! ```
@@ -20,7 +20,7 @@ use std::io::Read;
 use std::path::PathBuf;
 
 use label_anything_raster::{
-    decode_base64, estimate_background, parse_hex_color, process, srgb_to_oklab,
+    backdrop_luma, decode_base64, estimate_background, parse_hex_color, process, srgb_to_oklab,
 };
 use serde_json::{json, Value};
 use support::{base64_encode, fnv1a32, load_image, parse_grid, parse_mode, parse_placement};
@@ -60,6 +60,29 @@ fn main() {
                         ));
                     }
                     result.insert("runs".into(), Value::Array(runs));
+                    let mut backdrop = Vec::new();
+                    for run in case["backdrop"]
+                        .as_array()
+                        .map(Vec::as_slice)
+                        .unwrap_or(&[])
+                    {
+                        let layers: Vec<_> = run["layers"]
+                            .as_array()
+                            .expect("layers")
+                            .iter()
+                            .map(|l| (&img, parse_placement(l)))
+                            .collect();
+                        let c: Vec<u8> = run["background"]
+                            .as_array()
+                            .expect("background")
+                            .iter()
+                            .map(|c| c.as_u64().expect("u8") as u8)
+                            .collect();
+                        let luma =
+                            backdrop_luma(&layers, [c[0], c[1], c[2]], &parse_grid(&run["grid"]));
+                        backdrop.push(json!(base64_encode(&luma)));
+                    }
+                    result.insert("backdrop".into(), Value::Array(backdrop));
                 }
                 Err(e) => {
                     result.insert("decode".into(), json!({"error": e.code()}));

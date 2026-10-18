@@ -5,6 +5,7 @@ Every case is a small problem plus expected *properties* that any correct implem
 must satisfy (hard guarantees, forced outcomes, exact text layout), not one particular
 solution. Usage: python3 tools/conformance/make_place_cases.py [--check]
 """
+import base64
 import json
 import sys
 from pathlib import Path
@@ -445,6 +446,31 @@ CASES["raster-background"] = case(
     "raster background ink is avoided",
     {"problem_file": "../problems/raster-ink.json"},
     {"placed": 1})
+
+# a black 10 × 12 raster at scale 0.1: canvas x 0–100, the full height
+BLACK_STRIP = {"rgba": {"width": 10, "height": 12, "data": base64.b64encode(bytes([0, 0, 0, 255]) * 120).decode()},
+               "scale": 0.1}
+
+CASES["contrast-border"] = case(
+    "a label does not straddle the edge between a black raster and the white canvas",
+    {"canvas": {"width": 300, "height": 120}, "obstacles": {"raster": BLACK_STRIP},
+     "items": [pt("a", 100, 60, "Border")]},
+    {"placed": 1, "anchor_side": {"a": "right"}, "inside_canvas": True},
+    "The point lies on the raster's right edge. The first position (top) would be half on "
+    "black, half on white (contrast cost 0.5 per em² of the box); the right position lies "
+    "on the white canvas only.")
+
+CASES["contrast-off"] = case(
+    "without the contrast weight the label takes the first position across the edge",
+    {"canvas": {"width": 300, "height": 120}, "obstacles": {"raster": BLACK_STRIP},
+     "weights": {"contrast": 0}, "items": [pt("a", 100, 60, "Border")]},
+    {"placed": 1, "anchor_side": {"a": "top"}})
+
+CASES["contrast-canvas-background"] = case(
+    "a black canvas behind a black raster is no contrast border",
+    {"canvas": {"width": 300, "height": 120, "background": "#000000"}, "obstacles": {"raster": BLACK_STRIP},
+     "items": [pt("a", 100, 60, "Border")]},
+    {"placed": 1, "anchor_side": {"a": "top"}})
 
 CASES["y-up-transform"] = case(
     "y-up input coordinates",

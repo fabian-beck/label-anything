@@ -330,6 +330,7 @@ export class Weights {
   ambiguity = 0;
   lookahead = 0;
   starve = 0;
+  contrast = 0;
   stability = 0;
 
   static from(o: Opts): Weights {
@@ -344,6 +345,7 @@ export class Weights {
     w.ambiguity = o.f64("weights.ambiguity");
     w.lookahead = o.f64("weights.lookahead");
     w.starve = o.f64("weights.starve");
+    w.contrast = o.f64("weights.contrast");
     w.stability = o.f64("weights.stability");
     return w;
   }

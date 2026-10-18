@@ -268,5 +268,142 @@
         }
       ]
     }
+  ],
+  "backdrop": [
+    {
+      "name": "translucent pixels over white",
+      "background": [
+        255,
+        255,
+        255
+      ],
+      "layers": [
+        {
+          "scale": 1,
+          "offset": [
+            0,
+            0
+          ]
+        }
+      ],
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 24,
+        "rows": 16
+      },
+      "expect": {
+        "fnv1a32": "aad6a5d5",
+        "sum": 77898,
+        "nonzero": 384,
+        "luma": "//////////////////////////////////////////////////////////////////9GRkZGRkZGRv//99vNzdv3//////////9GRkZGRkZGRv/3zsvLy8vO9/////////9GRkZGRkZGRv/by8vLy8vL2/////////9GRkZGRkZGRv/Ny8vLy8vLzf////////9GRkZGRkZGRv/Ny8vLy8vLzf/////////////////////by8vLy8vL2//////////////////////3zsvLy8vO9/vTpNP/////////////////99vDo3dhNBhEcNP/////////////67uMWCwcUHyv3////////////9+vfFAcLFiMu+v/////////////03BEGDRolMvz////////////////////06TT+////////////////////////////fTr4trRyL+3rqWck4uCeXBoX1ZNRDwz/fTr4trRyL+3rqWck4uCeXBoX1ZNRDwz"
+      }
+    },
+    {
+      "name": "translucent pixels over black",
+      "background": [
+        0,
+        0,
+        0
+      ],
+      "layers": [
+        {
+          "scale": 1,
+          "offset": [
+            0,
+            0
+          ]
+        }
+      ],
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 24,
+        "rows": 16
+      },
+      "expect": {
+        "fnv1a32": "e8c6f87b",
+        "sum": 6372,
+        "nonzero": 146,
+        "luma": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRkZGRkZGRgAAByIvLyIHAAAAAAAAAABGRkZGRkZGRgAHLjAwMDAuBwAAAAAAAABGRkZGRkZGRgAiMDAwMDAwIgAAAAAAAABGRkZGRkZGRgAvMDAwMDAwLwAAAAAAAABGRkZGRkZGRgAvMDAwMDAwLwAAAAAAAAAAAAAAAAAAAAAiMDAwMDAwIgAAAAAAAAAAAAAAAAAAAAAHLjAwMDAuBwAAAAAAAAAAAAAAAAAAAAAAByItJhoGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMFBwkLDQ8RExUXGRsdICIkJigqLC4wAAMFBwkLDQ8RExUXGRsdICIkJigqLC4w"
+      }
+    },
+    {
+      "name": "over itself, shifted: transparent pixels show the layer below",
+      "background": [
+        90,
+        200,
+        30
+      ],
+      "layers": [
+        {
+          "scale": 1,
+          "offset": [
+            0,
+            0
+          ]
+        },
+        {
+          "scale": 1,
+          "offset": [
+            3.5,
+            2.5
+          ]
+        }
+      ],
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 2,
+        "cols": 26,
+        "rows": 18
+      },
+      "expect": {
+        "fnv1a32": "8705f320",
+        "sum": 59429,
+        "nonzero": 468,
+        "luma": "pKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkRkZGRkZGRkakpKKZlZWZoqSkpKSkpKSkpKRGRkZGRkZGRkZzlZSQi4qMnKSkpKSkpKSkpEZGRkZGRkZGRm2UjoqKioqNmqSkpKSkpKSkRkZGRkZGRkZGbZKKioqKiouUoaSkpKSkpKRGRkZGRkZGRkZtkIqKioqKi5SdpKSkpKSkpKR1RkZGRkZGRm2QioqKioqNlJ2kpKSkpKSkpKSkpKSkpKSkopOKioqKi5OThWmIpKSkpKSkpKSkpKSkpKSkopKGeGVYRSssPFxnpKSkpKSkpKSkpKSXeVo4HSZOT0c8MxIcOF+kpKSkpKSQcVAzEhw2Pj48LA8hQ1+DnaSkpKSkiEgsDyE8Pj48IQ8sSGmIoqSkpKSkpKSkpKSIaUM2HBIzUHGQpKSkpKSkpKSkpKSkpKSkpKOeYG2EioWBfHdybWhjXllUUEtGQTw3MqSko56WjYR8dG1mYFpUT0pGQj47ODY0MjExNGukpKGcl5KNiIN+eXRva2ZhXFdSTUhDPjk0a6SkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSk"
+      }
+    },
+    {
+      "name": "scale 2, cell 1, offset (0.5, 0.5)",
+      "background": [
+        255,
+        255,
+        255
+      ],
+      "layers": [
+        {
+          "scale": 2,
+          "offset": [
+            0.5,
+            0.5
+          ]
+        }
+      ],
+      "grid": {
+        "origin": [
+          0,
+          0
+        ],
+        "cell": 1,
+        "cols": 25,
+        "rows": 17
+      },
+      "expect": {
+        "fnv1a32": "00f63a11",
+        "sum": 88362,
+        "nonzero": 425,
+        "luma": "/////////////////////////////////////////////////////////////////////9Gjo6Ojo6Oj0f///evl6/3///////////+jRkZGRkZGRqP/89HLy8vR8///////////o0ZGRkZGRkaj/dHLy8vLy9H9/////////6NGRkZGRkZGo+vLy8vLy8vL6/////////+jRkZGRkZGRqPly8vLy8vLy+X/////////0aOjo6Ojo6PR68vLy8vLy8vr//////////////////////3Ry8vLy8vR/f//////////////////////89HLy8vKw5xsPDT//////////////////+/BfEwoGEx0rNf/////////////57OEVCQkVISz5//////////////XrHRMGDBgkMPv//////////////////80PGycz/f//////////////////////////Pfz7+rm4d3Z1NDLx8O+uraxraikoJvL//nw597VzMS7sqmhmI+GfnVsY1pRSUA3mP/89/Pv6ubh3dnU0MvHw766trGtqKSgm8s="
+      }
+    }
   ]
 }

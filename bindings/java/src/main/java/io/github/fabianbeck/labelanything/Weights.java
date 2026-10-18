@@ -67,6 +67,14 @@ public final class Weights extends Spec {
     return with("starve", w);
   }
 
+  /**
+   * × 4 · luma variance of the raster backdrop under the label, per em² (default 0.5): labels
+   * avoid straddling a border between light and dark.
+   */
+  public Weights contrast(double w) {
+    return with("contrast", w);
+  }
+
   /** Displacement from the warm start in em (default 1.0). */
   public Weights stability(double w) {
     return with("stability", w);

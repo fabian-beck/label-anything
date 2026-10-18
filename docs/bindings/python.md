@@ -56,7 +56,7 @@ Per-item keywords take one entry per anchor: `ids`, `attrs`, `marks` (mark dicts
 
 | keyword | schema field | keyword | schema field |
 |---|---|---|---|
-| `canvas=(w, h)` or dict | `canvas` | `canvas_padding`, `allow_outside`, `region`, `device_pixel_ratio` | `canvas.*` |
+| `canvas=(w, h)` or dict | `canvas` | `canvas_padding`, `allow_outside`, `region`, `device_pixel_ratio`, `canvas_background` | `canvas.*` |
 | `y_axis`, `transform`, `preset` | same | `font` (`la.Font`), `font_family`, `font_size`, `font_weight`, `font_style`, `line_height`, `font_file` | `defaults.font.*` |
 | `padding`, `buffer`, `margin`, `mark`, `wrap`, `truncate` | `defaults.*` | `shaping` | `text.shaping` |
 | `models`, `position_order`, `offset`, `min_distance`, `max_distance`, `slider_per_quadrant`, `k_distant`, `distant_rings`, `distant_directions`, `free_space_seeds`, `internal`, `inner_padding`, `internal_circle_ratio`, `prune_factor`, `boundary`, `fan` | `placement.*` | `leaders` | `leaders` |

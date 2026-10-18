@@ -1,10 +1,10 @@
-// Rough timings of process() on 2048×2048 synthetic rasters (decode excluded), the same
-// pixels as rust/crates/la-raster/examples/bench.rs (integer arithmetic only), so the
-// printed coverage checksums must equal the Rust ones.
+// Rough timings of process() and backdropLuma() on 2048×2048 synthetic rasters (decode
+// excluded), the same pixels as rust/crates/la-raster/examples/bench.rs (integer
+// arithmetic only), so the printed coverage checksums must equal the Rust ones.
 //
 // Run (from ts/, after `npx tsc -b packages/raster`):
 //   node packages/raster/bench/bench.mjs [size] [cell] [filter]
-import { process } from "../dist/index.js";
+import { backdropLuma, process } from "../dist/index.js";
 
 class Lcg {
   constructor(seed) {
@@ -151,4 +151,5 @@ for (const [name, img] of [
   bench(filter, `${name} cost`, 9, () => process(img, { kind: "cost", invert: false }, "cost", place, grid));
   bench(filter, `${name} classmap`, 9, () => process(img, classmap, "ink", place, grid));
   bench(filter, `${name} saliency`, 5, () => process(img, { kind: "saliency" }, "salient", place, grid));
+  bench(filter, `${name} luma`, 9, () => [{ class: "luma", coverage: backdropLuma([[img, place]], [255, 255, 255], grid) }]);
 }

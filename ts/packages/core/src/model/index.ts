@@ -395,6 +395,8 @@ export class Model {
   /** Vector obstacles by class (problem vector layers and SVG geometry). */
   vector: [string, Prim][] = [];
   rasters: RasterSrc[] = [];
+  /** `canvas.background`: the backdrop where no raster lies. */
+  background: [number, number, number] = [255, 255, 255];
   avoidLabel: Record<string, unknown> = {};
   avoidLeader: Record<string, unknown> = {};
   avoidBuffer: Record<string, unknown> = {};
@@ -1024,6 +1026,7 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.items = items;
   m.vector = vector;
   m.rasters = rasters;
+  m.background = parseColor(o.string("canvas.background")) ?? [255, 255, 255];
   m.avoidLabel = o.map("avoid.label");
   m.avoidLeader = o.map("avoid.leader");
   m.avoidBuffer = o.map("avoid.buffer");
