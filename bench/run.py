@@ -198,6 +198,10 @@ class Solver:
         cmd = self.cmd.format(problem=shlex.quote(str(problem_path)), result=shlex.quote(str(result_path)))
         code, err, wall, self.last_rss_mb = run_command(shlex.split(cmd), timeout)
         if code != 0:
+            if err.rstrip().endswith("(unsupported)"):
+                # a documented limit of the implementation (e.g. no JPEG decoder for the TypeScript
+                # engine in Node.js): n/a with the reason, like a baseline that cannot run a problem
+                raise Unsupported(err.strip()[:500])
             raise RuntimeError(f"{self.name} failed ({code}): {err.strip()[:500]}")
         return read_json(result_path), wall
 
