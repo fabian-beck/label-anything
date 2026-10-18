@@ -1,4 +1,4 @@
-"""Label Anything: a host-independent label placement engine.
+"""Label Anything: a label placement engine for charts, maps and diagrams.
 
 Place text, icons or any sized label next to points, areas and shapes, avoid what must
 not be covered (vector obstacles, SVG or raster backgrounds), draw leaders without

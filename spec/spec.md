@@ -439,7 +439,7 @@ quantized grid, cells outside the grid ignored.
 Inconsistent geometry (scale or cell not finite and > 0, non-finite offsets or grid
 origin) yields zero coverage.
 
-**Backdrop luma** (for the `contrast` cost term, §8; ADR 0031). With `weights.contrast >
+**Backdrop luma** (for the `contrast` cost term, §8; ADR 0037). With `weights.contrast >
 0` and at least one raster source, the engine also records how light the backdrop behind
 the labels is, whatever the sources' modes. The backdrop grid has cells of `C = 2c` from
 the grid origin, `ceil(cols / 2) × ceil(rows / 2)` of them (one per 2 × 2 grid cells).
@@ -853,7 +853,9 @@ its font size.
 * `angles`: as straight, but distant candidates are generated along the allowed rays,
   so the segment direction is one of `leaders.angles`.
 * `orthogonal`: `po` (one bend: vertical then horizontal, or horizontal then vertical)
-  or straight when aligned; `opo` (two bends) for boundary labels. Minimal bends first.
+  or straight when aligned. Boundary and fan labels get `po` leaders too: parallel to
+  the side up to the label's row (left, right) or column (top, bottom), then straight
+  into the label, so that no leader bends twice. Minimal bends first.
 * `elbow`: a first segment at an allowed angle, then horizontal into the label's side
   center.
 * `curved`: quadratic Bézier, flattened for collision tests (reported in `curve`).
@@ -921,7 +923,7 @@ cost = Σ_class w_label[class] · covered(label_k, class) / em²
   which hides what lies under it: they have no soft class costs (hard classes still
   apply).
 * `ring_k` = the label box grown by `buffer`, minus the label box.
-* `D(label_k)` (ADR 0031): how much the backdrop luma `s` (§4.6) varies under the label
+* `D(label_k)` (ADR 0037): how much the backdrop luma `s` (§4.6) varies under the label
   box, `D = I₂ − I₁ · I₁ / A`, with `I₁` and `I₂` the exact integrals of `s` and `s²` over
   the box on the backdrop grid (as covered areas, §4.1, in backdrop cells) and `A` the
   area of the box inside that grid in backdrop cells (the box corners in cell units,

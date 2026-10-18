@@ -22,6 +22,18 @@ from bench.common.scene import Scene  # noqa: E402
 
 SOURCES = ["openflights-airports", "openflights-routes", "ne-50m-countries"]
 
+CITY_NAMES = {
+    "Algier": "Algiers", "Biarritz-bayonne": "Biarritz", "Cluj-napoca": "Cluj-Napoca", "Connaught": "Knock",
+    "Doncaster, Sheffield": "Doncaster", "Duesseldorf": "Düsseldorf", "Gerona": "Girona", "Gothenborg": "Gothenburg",
+    "Isle Of Man": "Isle of Man", "Kerkyra/corfu": "Corfu", "Kiev": "Kyiv", "La Coruna": "A Coruña",
+    "Luxemburg": "Luxembourg", "Lvov": "Lviv", "Malmoe": "Malmö", "Milano": "Milan", "Minsk 2": "Minsk",
+    "Munster": "Münster", "Nuernberg": "Nuremberg", "Rhodos": "Rhodes", "Ronchi De Legionari": "Trieste",
+    "Saarbruecken": "Saarbrücken", "Sevilla": "Seville", "Tallinn-ulemiste International": "Tallinn",
+    "Tanger": "Tangier", "Thira": "Santorini", "Torino": "Turin", "Vaxjo": "Växjö", "Villafranca": "Verona",
+}
+"""OpenFlights city names that are not the place's usual English name (airport names, transliterations,
+two spellings of one city), as labels show them."""
+
 REGIONS = {"Europe": "Europe", "America": "Americas", "Asia": "Asia", "Africa": "Africa",
            "Australia": "Oceania", "Pacific": "Oceania", "Atlantic": "Atlantic", "Indian": "Indian Ocean",
            "Antarctica": "Antarctica", "Arctic": "Europe"}
@@ -72,7 +84,8 @@ def load_airports(min_routes: int = 1) -> list[Airport]:
             iata, icao = _null(row[4]), _null(row[5])
             if not (iata or icao):
                 continue
-            out.append(Airport(aid, row[1], _null(row[2]) or row[1], row[3], iata, icao, float(row[6]),
+            city = _null(row[2]) or row[1]
+            out.append(Airport(aid, row[1], CITY_NAMES.get(city, city), row[3], iata, icao, float(row[6]),
                                float(row[7]), region, n))
     out.sort(key=lambda a: (-a.routes, a.id))
     return out
@@ -122,7 +135,7 @@ def map_scene(proj, width: float, height: float, countries, *, title: str | None
                         width=0.5)
         lat += graticule
     if title:
-        sc.text(12, 22, title, "title", "text", size=14, fill="#24425c", weight=700)
+        sc.text(12, 22, title, "title", "text", size=14, fill="#24425c")
     if credit:
         sc.text(width - 8, height - 8, "Data: OpenFlights (ODbL) · Natural Earth", "credit", "text", size=9,
                 anchor="end", fill="#4d6577")

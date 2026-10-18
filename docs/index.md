@@ -1,6 +1,6 @@
 ---
-title: Label Anything
-description: A host-independent label placement engine for scatterplots, maps, node-link diagrams and illustrations.
+title: Label placement for charts, maps and diagrams
+description: Label Anything places labels and leaders in scatterplots, maps, node-link diagrams and illustrations, avoiding what must stay visible, from any language.
 ---
 
 # Label Anything
@@ -12,12 +12,23 @@ description: A host-independent label placement engine for scatterplots, maps, n
     the placements themselves can change in any 0.x release, without deprecation. Try it
     and report what you find; pin an exact version if you build on it.
 
-**A host-independent label placement engine.** Label Anything places labels — text,
-icons, or anything with a size — next to the features of scatterplots, maps, node-link
-diagrams and illustrations. It avoids whatever you say should not be covered, draws
-leader lines when a label has to sit at a distance, and never lets leaders cross. One
-problem goes in (JSON, or your language's API), one result comes out: a box per label,
-its leader, and an explanation for every label that did not fit.
+**Label placement for charts, maps and diagrams, from any language.** Label Anything
+decides where labels go: it places text, icons, or anything with a size next to the
+points and areas of scatterplots, maps, node-link diagrams and illustrations. It avoids
+whatever you say should not be covered, draws leader lines when a label has to sit at a
+distance, and never lets leaders cross. One problem goes in (JSON, or your language's
+API), one result comes out: a box per label, its leader, and an explanation for every
+label that did not fit.
+
+The *anything* is the host and the label: one engine for any chart, map or diagram and
+any label with a size, where adjustText (matplotlib), ggrepel (ggplot2) or vega-label
+(Vega) each serve one plotting library. Labels go to points and areas of any shape;
+lines such as roads or rivers are obstacles, not labeled features. Label Anything places
+labels in graphics: it is not a tool for labeling data, and it is unrelated to the
+few-shot segmentation model of the same name (ECAI 2025).
+
+**Try it in your browser:** the [playground](try.md) runs the engine live on a world map,
+a network, charts, moving objects and photographs, with every option in reach.
 
 ![The outliers of a scatter plot, labeled over the chart image](assets/figures/outliers.png){ width="640" }
 

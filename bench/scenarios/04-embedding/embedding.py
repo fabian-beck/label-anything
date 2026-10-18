@@ -90,6 +90,14 @@ def compute(n: int = N_POINTS) -> dict:
 STOP = set("""a an the of or and to in on for with by from as at that which who is are be used
 especially any one various genus family order type kind group member small large usually having
 part form something someone person people make made other its it their often""".split())
+# cluster names: also the words of scikit-learn's English stop list (the TF-IDF's) and gloss phrasing
+# ("a process whereby", "consisting of", "formerly"), which name no topic
+STOP |= set("""makes making whereby becoming consisting formerly like long high relating characterized
+typically commonly certain resembling containing including called known great new old way act state
+quality process thing things based using use""".split())
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS  # noqa: E402
+
+STOP |= set(ENGLISH_STOP_WORDS)
 
 
 def tokens(doc: str) -> set[str]:
@@ -118,4 +126,4 @@ def top_terms(docs: list[str], k: int = 3, df: dict[str, int] | None = None, n_d
             return float(c)
         return (c / len(docs)) * math.log(n_docs / df.get(w, 1)) if c >= 3 else 0.0
 
-    return [w for w in sorted(counts, key=lambda w: (-score(w), w))[:k]]
+    return [w for w in sorted(counts, key=lambda w: (-score(w), -counts[w], w))[:k]]

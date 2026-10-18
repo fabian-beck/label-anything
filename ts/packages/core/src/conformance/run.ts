@@ -148,6 +148,19 @@ function leaderSegments(p: Json): [Pt, Pt][] {
   return out;
 }
 
+/** The number of points of every leader of placement `p`. */
+function leaderPointCounts(p: Json): number[] {
+  const ls: unknown[] = [];
+  const l = get(p, "leader");
+  if (l !== undefined && l !== null) ls.push(l);
+  const many = get(p, "leaders");
+  if (Array.isArray(many)) ls.push(...many);
+  return ls.map((l) => {
+    const raw = get(l, "points");
+    return Array.isArray(raw) ? raw.length : 0;
+  });
+}
+
 /** The solver under test: `place` of `@label-anything/core` by default. */
 export type PlaceFn = (problem: unknown) => LabelResult;
 
@@ -214,6 +227,14 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
       const p = placementOf(r, id);
       const got = p !== undefined ? leaderSegments(p).length > 0 : false;
       if (got !== hl[id]) f.push(`has_leader.${id}: expected ${show(hl[id])}, got ${got}`);
+    }
+  }
+  const mb = get(exp, "max_bends");
+  if (typeof mb === "number") {
+    for (const p of r.placements as unknown[]) {
+      for (const n of leaderPointCounts(p as Json)) {
+        if (n > mb + 2) f.push(`max_bends: a leader of ${show(get(p, "id"))} bends ${n - 2} times`);
+      }
     }
   }
   const ul = get(exp, "underline");

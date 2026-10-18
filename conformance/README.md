@@ -89,6 +89,7 @@ points at the offending property; for `required` at the missing property (e.g.
     "omission_order": ["z", "y"],
     "anchor_side": { "a": "top" }, "model": { "a": "adjacent" },
     "has_leader": { "b": true },
+    "max_bends": 1,                    // every leader of every placed label bends at most so often
     "underline": { "b": true },        // baseline port: the underline starts at the leader's
                                        // end on a side edge, horizontal, in the box's lower half
     "inside_canvas": true,             // every box inside canvas minus padding

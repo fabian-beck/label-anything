@@ -14,12 +14,12 @@ SRP254919, MIT). Substitution note: the brief asked for "a public DE table on
 raw.githubusercontent.com with a clear license"; these two satisfy it (both repositories
 are MIT-licensed).
 
-**Configs** (canvas 900 × 680 px, preset `scatter`, font 10 px, priority = −log10 p, font classes: the top 5 % bold at 1.3 ×, the next 20 % at 1.1 ×):
+**Configs** (canvas 900 × 680 px, preset `scatter`, font 10 px, priority = −log10 p, font classes: the top 5 % at 1.3 ×, the next 20 % at 1.1 ×):
 
 | config | labels | background |
 |---|---|---|
 | `top20-vector` (quick) | 20 | other genes (`points`, r 1.8), dashed thresholds (`lines`), axes (`axes`, hard), ticks (`text`) as vector layers |
-| `top50-svg` | 50 | SVG chart; significant genes colored (|log2FC| ≥ 1, p < 0.05) |
+| `top50-svg` | 50 | SVG chart; significant genes colored (|log2FC| ≥ 1, p < 0.05; red up, blue down), the labeled genes too (`attrs.color`) |
 | `top30-transform` | 30 | none; anchors and points in **data units** with `transform` + `y_axis: "up"` |
 | `nfcore-top20-vector` | 20 | small DESeq2 table, vector layers |
 

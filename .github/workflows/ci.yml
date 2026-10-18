@@ -141,6 +141,16 @@ jobs:
         run: |
           npx playwright install --with-deps chromium
           npm run test:browser -w @label-anything/wasm
+      - name: Playground (type-check, build, browser tests)
+        run: |
+          npm run typecheck -w @label-anything/playground
+          npm run test:browser -w @label-anything/playground
+      - name: Upload the playground (published with the documentation site)
+        uses: actions/upload-artifact@v4
+        with:
+          name: playground
+          path: ts/packages/playground/dist/
+          retention-days: 90
 
   generated:
     name: Generated files are current

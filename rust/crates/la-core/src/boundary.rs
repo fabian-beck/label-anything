@@ -184,7 +184,8 @@ pub fn boundary_candidates(
                             if (start.y - port.y).abs() < 1e-9 {
                                 vec![start, port]
                             } else {
-                                // opo-like: diagonal/vertical to the port row, then horizontal
+                                // one bend: vertical (orthogonal, po) or diagonal (elbow) to
+                                // the port row, then horizontal
                                 let mid = if style == LeaderStyle::Elbow {
                                     let dy = port.y - start.y;
                                     let sx = if port.x >= start.x { 1.0 } else { -1.0 };

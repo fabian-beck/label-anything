@@ -1,0 +1,124 @@
+{
+  "kind": "place",
+  "name": "orthogonal leaders to boundary labels bend once: along the side, then into the label",
+  "$comment": "Six anchors 6 px apart: their labels stack in the margins away from the anchors' heights, so the leaders bend. An orthogonal leader to a boundary label runs parallel to the side to the label's height, then straight into the label (po, spec §7) — the one-bend shape that Barth et al. (2019) found the best compromise between reading performance and preference.",
+  "problem": {
+    "canvas": {
+      "width": 400,
+      "height": 240
+    },
+    "placement": {
+      "models": [
+        "boundary"
+      ],
+      "boundary": {
+        "sides": [
+          "left",
+          "right"
+        ]
+      }
+    },
+    "leaders": {
+      "style": "orthogonal"
+    },
+    "items": [
+      {
+        "id": "o0",
+        "anchor": {
+          "type": "point",
+          "x": 170,
+          "y": 104
+        },
+        "label": {
+          "type": "text",
+          "text": "Item 0"
+        }
+      },
+      {
+        "id": "o1",
+        "anchor": {
+          "type": "point",
+          "x": 182,
+          "y": 110
+        },
+        "label": {
+          "type": "text",
+          "text": "Item 1"
+        }
+      },
+      {
+        "id": "o2",
+        "anchor": {
+          "type": "point",
+          "x": 194,
+          "y": 116
+        },
+        "label": {
+          "type": "text",
+          "text": "Item 2"
+        }
+      },
+      {
+        "id": "o3",
+        "anchor": {
+          "type": "point",
+          "x": 206,
+          "y": 122
+        },
+        "label": {
+          "type": "text",
+          "text": "Item 3"
+        }
+      },
+      {
+        "id": "o4",
+        "anchor": {
+          "type": "point",
+          "x": 218,
+          "y": 128
+        },
+        "label": {
+          "type": "text",
+          "text": "Item 4"
+        }
+      },
+      {
+        "id": "o5",
+        "anchor": {
+          "type": "point",
+          "x": 230,
+          "y": 134
+        },
+        "label": {
+          "type": "text",
+          "text": "Item 5"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 6,
+    "model": {
+      "o0": "boundary",
+      "o1": "boundary",
+      "o2": "boundary",
+      "o3": "boundary",
+      "o4": "boundary",
+      "o5": "boundary"
+    },
+    "has_leader": {
+      "o0": true,
+      "o1": true,
+      "o2": true,
+      "o3": true,
+      "o4": true,
+      "o5": true
+    },
+    "max_bends": 1,
+    "inside_canvas": true
+  }
+}

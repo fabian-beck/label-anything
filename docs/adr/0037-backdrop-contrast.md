@@ -1,4 +1,4 @@
-# 0031 — Labels avoid contrast borders of raster backgrounds
+# 0037 — Labels avoid contrast borders of raster backgrounds
 
 * Status: accepted (spec §2.3, §4.6, §8; `weights.contrast`, `canvas.background`)
 * Date: 2026-10-18

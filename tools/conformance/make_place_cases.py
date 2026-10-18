@@ -229,6 +229,19 @@ CASES["boundary-labels"] = case(
      "items": [pt(f"b{k}", 120 + 40 * k, 60 + 30 * k, f"B{k}") for k in range(4)]},
     {"placed": 4, "model": {"b0": "boundary"}, "has_leader": {"b0": True}, "inside_canvas": True})
 
+CASES["orthogonal-boundary-one-bend"] = case(
+    "orthogonal leaders to boundary labels bend once: along the side, then into the label",
+    {"canvas": {"width": 400, "height": 240}, "placement": {"models": ["boundary"],
+                                                            "boundary": {"sides": ["left", "right"]}},
+     "leaders": {"style": "orthogonal"},
+     "items": [pt(f"o{k}", 170 + 12 * k, 104 + 6 * k, f"Item {k}") for k in range(6)]},
+    {"placed": 6, "model": {f"o{k}": "boundary" for k in range(6)},
+     "has_leader": {f"o{k}": True for k in range(6)}, "max_bends": 1, "inside_canvas": True},
+    "Six anchors 6 px apart: their labels stack in the margins away from the anchors' heights, so "
+    "the leaders bend. An orthogonal leader to a boundary label runs parallel to the side to the "
+    "label's height, then straight into the label (po, spec §7) — the one-bend shape that "
+    "Barth et al. (2019) found the best compromise between reading performance and preference.")
+
 CASES["area-internal"] = case(
     "an area anchor gets its label inside the polygon",
     {"canvas": {"width": 300, "height": 200},

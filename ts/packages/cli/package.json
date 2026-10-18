@@ -1,7 +1,7 @@
 {
   "name": "@label-anything/cli",
   "version": "0.1.0",
-  "description": "Command-line interface of Label Anything on the pure TypeScript engine: place, validate, render (Node).",
+  "description": "Command-line interface of Label Anything (label placement) on the pure TypeScript engine: place, validate, render (Node).",
   "license": "MIT",
   "type": "module",
   "bin": { "label-anything-ts": "./dist/main.js" },

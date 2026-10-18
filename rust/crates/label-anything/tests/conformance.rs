@@ -108,6 +108,20 @@ fn underline_at_port(p: &Value) -> bool {
         && b.0 <= x + w + 1e-6
 }
 
+/// The number of points of every leader of placement `p`.
+fn leader_point_counts(p: &Value) -> Vec<usize> {
+    let mut ls: Vec<&Value> = Vec::new();
+    if let Some(l) = p.get("leader").filter(|l| !l.is_null()) {
+        ls.push(l);
+    }
+    if let Some(a) = p.get("leaders").and_then(|v| v.as_array()) {
+        ls.extend(a.iter());
+    }
+    ls.iter()
+        .map(|l| l["points"].as_array().map(|a| a.len()).unwrap_or(0))
+        .collect()
+}
+
 fn leader_segments(p: &Value) -> Vec<Segment> {
     let mut out = Vec::new();
     let mut ls: Vec<&Value> = Vec::new();
@@ -209,6 +223,19 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
                 .unwrap_or(false);
             if Some(got) != want.as_bool() {
                 f.push(format!("has_leader.{id}: expected {want}, got {got}"));
+            }
+        }
+    }
+    if let Some(max) = exp.get("max_bends").and_then(|v| v.as_u64()) {
+        for p in r["placements"].as_array().into_iter().flatten() {
+            for n in leader_point_counts(p) {
+                if n > max as usize + 2 {
+                    f.push(format!(
+                        "max_bends: a leader of {} bends {} times",
+                        p["id"],
+                        n - 2
+                    ));
+                }
             }
         }
     }

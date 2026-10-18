@@ -1,7 +1,7 @@
 {
   "name": "@label-anything/core",
   "version": "0.1.0",
-  "description": "Label Anything: host-independent label placement engine (pure TypeScript, zero native/WASM dependencies).",
+  "description": "Label Anything: label placement engine for charts, maps and diagrams (pure TypeScript, zero native/WASM dependencies).",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

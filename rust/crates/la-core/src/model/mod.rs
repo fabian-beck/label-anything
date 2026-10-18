@@ -840,13 +840,14 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
             .as_bool()
             .unwrap_or(false)
     });
+    let item_defaults = ItemDefaults::new(&o);
     for (i, it) in items_json.iter().enumerate() {
         let ptr = format!("/items/{i}");
         let item = build_item(
             i,
             it,
             &ptr,
-            &o,
+            &item_defaults,
             &default_font,
             &to_px,
             &svgs,
@@ -1487,12 +1488,50 @@ pub fn mark_shape(
     })
 }
 
+/// The problem-wide item options (spec §2.4), resolved once: every item falls back to
+/// them unless it sets its own (looking them up per item cost 3 % of a 2,000-item solve).
+struct ItemDefaults {
+    len: ItemLengthSpec,
+    mark: Value,
+    wrap: Value,
+    truncate: String,
+    internal: String,
+    position_order: Value,
+}
+
+impl ItemDefaults {
+    fn new(o: &Opts) -> ItemDefaults {
+        ItemDefaults {
+            len: ItemLengthSpec {
+                padding: o.length("defaults.padding"),
+                buffer: o.length("defaults.buffer"),
+                margin: o.length("defaults.margin"),
+                offset: o.length("placement.offset"),
+                inner_padding: o.length("placement.inner_padding"),
+                max_distance: o.length("placement.max_distance"),
+                min_distance: o.length("placement.min_distance"),
+                leader_min: o.length("leaders.min_length"),
+                leader_max: o.length("leaders.max_length"),
+                anchor_gap: o.length("leaders.anchor_gap"),
+                clearance: o.length("leaders.clearance"),
+                boundary_gap: o.length("placement.boundary.gap"),
+                boundary_margin: o.length("placement.boundary.margin"),
+            },
+            mark: o.get("defaults.mark"),
+            wrap: o.get("defaults.wrap"),
+            truncate: o.string("defaults.truncate"),
+            internal: o.string("placement.internal"),
+            position_order: o.get("placement.position_order"),
+        }
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn build_item(
     i: usize,
     it: &Value,
     ptr: &str,
-    o: &Opts,
+    defs: &ItemDefaults,
     default_font: &FontSel,
     to_px: &Affine,
     svgs: &[(Box<dyn SvgDoc>, &Value, String)],
@@ -1511,26 +1550,13 @@ fn build_item(
     // font: defaults ← label.font
     let font = font_over(default_font, label_v.get("font"));
     let em = font.size;
-    let len_of = |key: &str, item_key: Option<&Value>| -> Length {
-        item_key
-            .and_then(Length::from_value)
-            .unwrap_or_else(|| o.length(key))
-    };
     let ip = it.get("placement");
+    let own =
+        |v: Option<&Value>, default: Length| v.and_then(Length::from_value).unwrap_or(default);
     let len_spec = ItemLengthSpec {
-        padding: len_of("defaults.padding", label_v.get("padding")),
-        buffer: len_of("defaults.buffer", None),
-        margin: len_of("defaults.margin", None),
-        offset: len_of("placement.offset", ip.and_then(|p| p.get("offset"))),
-        inner_padding: len_of("placement.inner_padding", None),
-        max_distance: len_of("placement.max_distance", None),
-        min_distance: len_of("placement.min_distance", None),
-        leader_min: len_of("leaders.min_length", None),
-        leader_max: len_of("leaders.max_length", None),
-        anchor_gap: len_of("leaders.anchor_gap", None),
-        clearance: len_of("leaders.clearance", None),
-        boundary_gap: len_of("placement.boundary.gap", None),
-        boundary_margin: len_of("placement.boundary.margin", None),
+        padding: own(label_v.get("padding"), defs.len.padding),
+        offset: own(ip.and_then(|p| p.get("offset")), defs.len.offset),
+        ..defs.len.clone()
     };
     let len = len_spec.resolve(em);
     // anchor + mark
@@ -1579,7 +1605,7 @@ fn build_item(
             let mark = anchor_v
                 .get("mark")
                 .cloned()
-                .unwrap_or_else(|| o.get("defaults.mark"));
+                .unwrap_or_else(|| defs.mark.clone());
             let mark = if auto_marks && svg_id.is_some() && anchor_v.get("mark").is_none() {
                 serde_json::json!({"shape": "from_svg", "svg_id": svg_id.clone().unwrap()})
             } else {
@@ -1617,7 +1643,7 @@ fn build_item(
                 balance: w.get("balance").and_then(|x| x.as_bool()).unwrap_or(true),
             }),
             Some(Value::Null) => None,
-            _ => match o.get("defaults.wrap") {
+            _ => match &defs.wrap {
                 Value::Object(w) => Some(WrapSpec {
                     max_width: w
                         .get("max_width")
@@ -1676,7 +1702,7 @@ fn build_item(
             truncate: Truncate::parse(
                 v.get("truncate")
                     .and_then(|t| t.as_str())
-                    .unwrap_or(&o.string("defaults.truncate")),
+                    .unwrap_or(&defs.truncate),
             ),
             explicit,
             align: v
@@ -1750,11 +1776,11 @@ fn build_item(
     let internal = InternalPolicy::parse(
         ip.and_then(|p| p.get("internal"))
             .and_then(|v| v.as_str())
-            .unwrap_or(&o.string("placement.internal")),
+            .unwrap_or(&defs.internal),
     );
     let positions = position_order(
         ip.and_then(|p| p.get("position_order"))
-            .unwrap_or(&o.get("placement.position_order")),
+            .unwrap_or(&defs.position_order),
     );
     let keep_with = match it.get("keep_with") {
         Some(Value::String(s)) => Some(KeepWith::Set(s.clone())),

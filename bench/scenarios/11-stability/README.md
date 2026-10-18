@@ -10,8 +10,9 @@ independent problem and item ids are stable across frames.
   the frame.
 * **Force layout** of scenario 07's Les Misérables graph (77 nodes, 254 edges) under a
   d3-force-style simulation (`bench/common/forcesim.py`: link, many-body and centering
-  forces, phyllotaxis start, deterministic): 1000 × 760 px, preset `graph`, names 10 px,
-  marks r = 3 + 1.5·sqrt(degree), priority = degree, edges as soft `lines`.
+  forces, phyllotaxis start, deterministic): 1000 × 760 px, preset `graph`, names 10 px
+  written out as in scenario 07's `lesmis-force` (`Mme. Thenardier`), marks r = 3 +
+  1.5·sqrt(degree) in their communities' colors, priority = degree, edges as soft `lines`.
 
 **Why.** Interactive maps relabel on every frame, graph layouts move their nodes while
 they run or while the user drags one; labels should not jump (displacement, side flips),
