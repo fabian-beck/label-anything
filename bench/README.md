@@ -48,8 +48,9 @@ sudo bench/baselines/install-r.sh                        # R + ggrepel (Ubuntu 2
 Run from the repository root. Single scenarios: `python -m bench.scenarios build 05` (or
 `python bench/scenarios/05-airports/build.py`). Requirements: Python 3.13 and the pinned
 packages; scenario 01 also needs a JDK ≥ 11 (`java` on PATH) to run `CkLite.java`.
-Building takes ≈ 12 minutes the first time, ≈ 10 of them for the t-SNE of scenario 04,
-which is cached (later builds: ≈ 2 minutes, dominated by the Cora force layout).
+Building takes ≈ 12 minutes the first time: ≈ 10 for the t-SNE of scenario 04 and ≈ 2 for
+the Cora force layout of scenario 07, both cached in `bench/data/` (later builds: under a
+minute).
 
 **Engine runs.** Build the Rust CLI (`cargo build --release --manifest-path
 rust/Cargo.toml -p label-anything-cli`) and the TypeScript packages (`npm run build`,
@@ -426,7 +427,7 @@ docker run --rm -v la-bench-data:/la/bench/data -v la-bench-out:/la/bench/out \
 The entrypoint (`bench/docker-run.sh`) fetches the data, builds the scenarios once per volume and
 runs `bench/run.py --suite quick --engine … --baselines --require-baselines --perf` plus the
 given arguments. In CI, the `bench` job runs the quick suite with the engine on pull requests
-(full suite on tags); the `baselines` job (tags, manual dispatch, weekly) runs the quick suite
+and pushes to main (full suite on tags); the `baselines` job (tags, manual dispatch, weekly) runs the quick suite
 with the engine and every baseline plus the performance targets, builds the gallery into the
 report, uploads it and, on tags, checks the release gates. When the CI run of a release tag succeeds, the Pages workflow
 (`.github/workflows/pages.yml`) publishes that report with the documentation site, under

@@ -42,9 +42,11 @@ from bench.common.forcesim import Simulation  # noqa: E402
 from bench.common.scenario import (FONT_CLASSES_SPARSE, Writer, base_problem, merge_avoid,  # noqa: E402
                                    png_bytes)
 from bench.common.scene import Scene  # noqa: E402
+from bench.scenarios import load_module  # noqa: E402
 
+C = load_module("07", "cora")
 SCENARIO = "07-node-link"
-SOURCES = ["vega-datasets-3.2.1", "cora-cites", "cora-content"]
+SOURCES = ["vega-datasets-3.2.1"] + C.SOURCES
 TOPICS = {"Case_Based": "Case-based reasoning", "Genetic_Algorithms": "Genetic algorithms",
           "Neural_Networks": "Neural networks", "Probabilistic_Methods": "Probabilistic methods",
           "Reinforcement_Learning": "Reinforcement learning", "Rule_Learning": "Rule learning",
@@ -184,27 +186,8 @@ def flare():
 
 
 def cora():
-    content = fetch.ensure("cora-content", verbose=False)
-    cites = fetch.ensure("cora-cites", verbose=False)
-    topic = {}
-    with open(content, encoding="utf-8") as f:
-        for line in f:
-            parts = line.rstrip("\n").split("\t")
-            topic[parts[0]] = parts[-1]
-    G = nx.Graph()
-    citations: dict[str, int] = {}
-    with open(cites, encoding="utf-8") as f:
-        for line in f:
-            cited, citing = line.split()
-            if cited != citing:
-                G.add_edge(cited, citing)
-                citations[cited] = citations.get(cited, 0) + 1
-    lcc = max(nx.connected_components(G), key=lambda c: (len(c), sorted(c)[0]))
-    H = nx.Graph()
-    H.add_nodes_from(sorted(lcc))
-    H.add_edges_from(sorted((min(a, b), max(a, b)) for a, b in G.subgraph(lcc).edges()))
-    pos = nx.forceatlas2_layout(H, seed=7, max_iter=300, strong_gravity=True, gravity=0.05)
-    pos = fit(orient(floats(pos)), 1600.0, 1200.0, 30.0)
+    H, topic, citations = C.load()
+    pos = fit(orient(C.layout(H)), 1600.0, 1200.0, 30.0)
     half = {n: (1.5 + 0.8 * math.sqrt(H.degree(n)),) * 2 for n in H}
     return H, separate(pos, half, 1600.0, 1200.0, 30.0), topic, citations
 
