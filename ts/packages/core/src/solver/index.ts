@@ -218,6 +218,67 @@ export class Solve {
     return out;
   }
 
+  /**
+   * The level-0 candidates of item `i` that the pruning of §6.7 dropped: generated again
+   * (without distant ones) and statically usable (feasible, or relaxed with `softOk`),
+   * none equal to one the item has. They are not added to the candidates.
+   */
+  unprunedLevel0(i: number, softOk: boolean): Cand[] {
+    const model = this.model;
+    const obs = this.obs;
+    const item = model.items[i]!;
+    const models = this.models[i]! & ~Models.DISTANT;
+    const variants = this.variants[i]!;
+    const itemOcc = obs.itemOcc;
+    const box = KEEP_BOX;
+    // the item-mark test of generateMode, without the placed labels
+    const keep: KeepFn = (vi) =>
+      itemOcc === null || !isRectShape(variants[vi]!.shape) || !itemOcc.blockedBox(box);
+    const adjKeep = itemOcc !== null ? keep : null;
+    const sliderPerGap = model.placement.sliderPerGap;
+    const circleRatio = model.placement.internalCircleRatio;
+    const vis: number[] = [];
+    for (let vi = 0; vi < variants.length; vi++) if (variants[vi]!.level === 0) vis.push(vi);
+    const fresh: Cand[] = [];
+    for (const vi of vis) {
+      const v = variants[vi]!;
+      if (item.area !== null) {
+        const rank = internalRank(item, v, models, circleRatio);
+        if (rank !== null) internal(item, vi, v, rank, fresh);
+        adjacent(item, vi, v, sliderPerGap, models, fresh, adjKeep);
+      } else {
+        adjacent(item, vi, v, sliderPerGap, models, fresh, adjKeep);
+        const rank = internalRank(item, v, models, circleRatio);
+        if (rank !== null) internal(item, vi, v, rank, fresh);
+      }
+    }
+    if (Models.has(models, Models.BOUNDARY)) boundaryCandidates(model, obs, item, variants, vis, keep, fresh);
+    const out: Cand[] = [];
+    for (const c of fresh) {
+      c.level = 0;
+      c.lshape = labelShape(c.rect, variants[c.variant]!.shape);
+      let known = false;
+      for (const k of this.byItem[i]!) {
+        const o = this.cands[k]!;
+        if (
+          o.variant === c.variant &&
+          o.kind === c.kind &&
+          o.rect.x0 === c.rect.x0 &&
+          o.rect.y0 === c.rect.y0 &&
+          o.rect.x1 === c.rect.x1 &&
+          o.rect.y1 === c.rect.y1
+        ) {
+          known = true;
+          break;
+        }
+      }
+      if (known) continue;
+      this.evaluator.eval(c, variants[c.variant]!, null);
+      if (c.feasible || (softOk && c.relaxed)) out.push(c);
+    }
+    return out;
+  }
+
   /** Statically evaluate candidate `cid` if it is not evaluated yet. */
   ensureEval(cid: number): void {
     const c = this.cands[cid]!;

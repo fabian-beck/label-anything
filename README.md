@@ -142,7 +142,8 @@ also lists where the performance targets stand). `python -m bench.gallery` turns
 renderings, published with each release's report.
 
 How good the results are, in short: no overlaps and no crossing leaders anywhere in the
-benchmark, and more usable labels than any other tool on every problem of the quick suite —
+benchmark, and more usable labels than any other tool on every problem of the quick suite and
+on 60 of the 62 of the full suite —
 often by a few percent only, once their overlapping labels are discounted; but in dense
 data many labels are left out or need leaders, labels in animations move a few pixels per
 frame, and the largest performance problems miss their targets. The numbers are on the

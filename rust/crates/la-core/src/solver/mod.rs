@@ -224,6 +224,46 @@ impl<'a> Solve<'a> {
         out
     }
 
+    /// The level-0 candidates of item `i` that the pruning of §6.7 dropped: generated
+    /// again (without distant ones) and statically usable (feasible, or relaxed with
+    /// `soft_ok`), none equal to one the item has. They are not added to the candidates.
+    pub fn unpruned_level0(&mut self, i: usize, soft_ok: bool) -> Vec<Cand> {
+        let item = &self.model.items[i];
+        let models = Models(self.models[i].0 & !Models::DISTANT);
+        let vis: Vec<usize> = (0..self.variants[i].len())
+            .filter(|&v| self.variants[i][v].level == 0)
+            .collect();
+        let (fresh, _) = raw_candidates(
+            self.model,
+            self.obs,
+            item,
+            &self.variants[i],
+            &vis,
+            models,
+            0,
+            &[],
+            &self.distant_dirs,
+            None,
+        );
+        let mut ev = Evaluator::new(self.model, self.obs, self.env);
+        let mut out = Vec::new();
+        for mut c in fresh {
+            let known = self.by_item[i].iter().any(|&k| {
+                let o = &self.cands[k as usize];
+                o.variant == c.variant && o.kind == c.kind && o.rect == c.rect
+            });
+            if known {
+                continue;
+            }
+            let v = &self.variants[i][c.variant as usize];
+            ev.eval(&mut c, v, None);
+            if c.feasible || soft_ok && c.relaxed {
+                out.push(c);
+            }
+        }
+        out
+    }
+
     /// Statically evaluate candidate `cid` if it is not evaluated yet.
     pub fn ensure_eval(&mut self, cid: u32) {
         if self.cands[cid as usize].evaluated {

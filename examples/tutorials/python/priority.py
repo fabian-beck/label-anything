@@ -26,14 +26,14 @@ assert res.stats["placed"] < len(cities) and res.stats["priority_inversions"] ==
 # --8<-- [start:explain]
 for p in res.unplaced:
     print(p.id, p.reason, p.blocking, p.blocked_by, p.priority)
-# Roslin omitted_by_priority ('items', 'labels', 'leaders') ('Achros', 'Dorsted') {'tier': 0, 'score': 62102.0, 'rank': 14}
+# Berau omitted_by_priority ('items', 'labels') ('Kelsted',) {'tier': 0, 'score': 66376.0, 'rank': 13}
 print(res.omission_order)                  # omitted ids, lowest priority first
 print(res.stats["priority_inversions"])    # 0: no omitted label would fit next to the more important ones
 # --8<-- [end:explain]
 for p in res.unplaced:   # blocked by more important labels, or too close to other cities everywhere
     assert (p.reason == "omitted_by_priority" and p.blocked_by
             or p.reason == "no_feasible_candidate" and p.blocking == ("items",)), p
-assert res["Roslin"].blocked_by == ("Achros", "Dorsted"), res["Roslin"]
+assert res["Berau"].blocked_by == ("Kelsted",), res["Berau"]
 assert res.omission_order == sorted((p.id for p in res.unplaced), key=lambda i: pop[i])
 
 # --8<-- [start:terms]

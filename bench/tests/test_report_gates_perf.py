@@ -321,3 +321,11 @@ def test_choose_soft_keeps_the_emulation_with_more_usable_labels(tmp_path):
     # without soft classes there is nothing to choose
     plain = problem([item("A", 50, 45)])
     assert not run.has_soft_classes(plain, path)
+
+
+def test_engine_wall_time_comes_from_a_cold_single_solve():
+    s = run.Solver("rust=/bin/la place {problem} -o {result} --warmup 3")
+    assert s.cold_cmd == "/bin/la place {problem} -o {result} --warmup 0"
+    assert run.Solver("rust=/bin/la place {problem} -o {result}").cold_cmd is None
+    assert run.Solver("rust=/bin/la place {problem} -o {result} --warmup 0").cold_cmd is None
+    assert run.Solver("other=/bin/x {problem} {result} --warmup 3").cold_cmd is None  # not an engine

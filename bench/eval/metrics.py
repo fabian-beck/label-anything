@@ -435,10 +435,12 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     for p in placed:
         own = p.item.own_shape
         if p.has_leader:
+            # a leader is read by the outline it ends at: where a mark lies on a larger one, the leader
+            # ends inside the larger shape but at the smaller one's outline
             q = p.leaders[0][0]
-            d_own = own.sdist(q)
-            probe = Box(q[0], q[1], q[0], q[1]).grow(max(d_own, 0.0) + 1e-6)
-            nearest_other = min((prob.items[j].own_shape.sdist(q) for j in shape_index.query(probe)
+            d_own = abs(own.sdist(q))
+            probe = Box(q[0], q[1], q[0], q[1]).grow(d_own + 1e-6)
+            nearest_other = min((abs(prob.items[j].own_shape.sdist(q)) for j in shape_index.query(probe)
                                  if prob.items[j].id != p.id), default=math.inf)
         else:
             d_own = own.sdist_box(p.box)
@@ -480,6 +482,13 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     for it in order:
         if it.id in placed_ids:
             prefix += 1
+        else:
+            break
+    usable_ids = {placed[k].id for k in usable}
+    usable_prefix = 0
+    for it in order:
+        if it.id in usable_ids:
+            usable_prefix += 1
         else:
             break
     ndcg = pr.ndcg_at_k([ranks[i] for i in placed_ids], list(ranks.values()))
@@ -548,6 +557,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
         "hard": {"total": hard_total, **hard, "conflicts": hard_total - spacing, "spacing": spacing,
                  "examples": examples},
         "usable": {"count": len(usable), "rate": len(usable) / n if n else None, "weighted": usable_weighted,
+                   "prefix": usable_prefix,
                    "in_conflict": len(conf_unary | {k for pair in conf_pairs for k in pair})},
         "leaders": {"count": sum(len(p.leaders) for p in placed),
                     "labels_with_leader": sum(1 for p in placed if p.leaders),
@@ -637,6 +647,7 @@ def summary(m: dict) -> dict:
         "hard_spacing": m["hard"].get("spacing"), "usable": (m.get("usable") or {}).get("count"),
         "usable_rate": (m.get("usable") or {}).get("rate"),
         "usable_weighted": (m.get("usable") or {}).get("weighted"),
+        "usable_prefix": (m.get("usable") or {}).get("prefix"),
         "leader_crossings": m["leaders"]["crossings"],
         "leader_rate": m["leaders"]["rate"], "ambiguity_rate": m["ambiguity"]["rate"],
         "adjacent_gap_abs_mean": m["shape"]["adjacent_gap_abs_mean"], "internal_rate": m["shape"]["internal_rate"],
@@ -670,15 +681,26 @@ def _candidate_positions(it: Item) -> list[tuple[str, Box]]:
     return out
 
 
+def _box_gap(a: Box, b: Box) -> float:
+    """Distance between two boxes (0 when they touch or overlap)."""
+    return math.hypot(max(0.0, a.x0 - b.x1, b.x0 - a.x1), max(0.0, a.y0 - b.y1, b.y0 - a.y1))
+
+
 def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dict, hard_classes: list[str],
                   tol: float) -> list[str]:
     """Omitted items that have a feasible adjacent position given only the placed items of
     higher or equal key (spec §9.2 removal test, 8 adjacent positions + area pole).
 
     Conservative: a position counts as feasible only if the label box *grown* by ``tol``
-    is free, so contacts within the tolerance never produce an inversion.
+    is free, so contacts within the tolerance never produce an inversion. Hard labels and
+    marks keep the label margin (spec §4.4) from it, by ``tol`` more.
     """
     opts = prob.opts
+    margin_opt = (opts.get("defaults") or {}).get("margin", "0.2em")
+
+    def margin(it: Item) -> float:
+        return spec.length(margin_opt, it.label.em)
+
     band = float(opts.get("priority", {}).get("band", 0) or 0)
     keys = pr.keys(infos, band)
     a_label = opts.get("avoid", {}).get("label", {})
@@ -696,6 +718,7 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
         if it.shape is not None:
             item_index.insert(it.index, it.shape.bbox())
     order = sorted(placed, key=lambda p: keys[p.id], reverse=True)
+    m_max = max((margin(p.item) for p in placed), default=0.0)
     box_index = GridIndex(32.0)
     seg_list: list[tuple[int, Point, Point]] = []
     seg_index = GridIndex(32.0)
@@ -719,14 +742,16 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
         cands = _candidate_positions(it)
         if not cands:
             untestable.append(it.id)
+        m_h = margin(it)
         for _side, b in cands:
             g = b.grow(tol)
             if area is not None and edge_hard and not area.contains_box(b):
                 continue
             ok = True
             if labels_hard:
-                for k in box_index.query(g):
-                    if keys[order[k].id] >= kh and order[k].box.overlaps(g):
+                for k in box_index.query(g.grow(m_h + m_max)):
+                    o = order[k]
+                    if keys[o.id] >= kh and (o.box.overlaps(g) or _box_gap(o.box, b) < max(m_h, margin(o.item)) + tol):
                         ok = False
                         break
             if ok and leader_labels_hard:
@@ -736,10 +761,15 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
                         ok = False
                         break
             if ok and (items_hard or lower_hard):
-                for j in item_index.query(g):
+                for j in item_index.query(g.grow(m_h)):
                     other = prob.items[j]
-                    if other.id == it.id or not other.shape.intersects_box(g):
+                    if other.id == it.id:
                         continue
+                    if not other.shape.intersects_box(g):
+                        # the margin, never more than the mark keeps from the own mark's box
+                        d = other.shape.dist_box(b)
+                        if own is None or d >= m_h + tol or d >= other.shape.dist_box(own.bbox()) + tol:
+                            continue
                     lower = keys[other.id] < kh and not same_group(it, other)
                     if lower_hard if lower else items_hard:
                         ok = False

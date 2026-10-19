@@ -1153,9 +1153,25 @@ usable candidate (statically feasible, or relaxed with `soft_overlap` in the lad
 conflicts with no placed label, or only with labels of strictly lower key (not required),
 takes the candidate with the fewest such labels (then the smallest sum of their gains,
 then the lowest cost, then the lowest candidate id) within the label budgets, and those
-labels are removed and visited in their turn. The search keeps the priority objective,
-but a move can free a position that a lower label then takes; after the repair the
-removal test of §9.2 finds no inversion. Then all hard constraints are re-verified
+labels are removed and visited in their turn. An item without such a candidate may
+**move one label aside** (ADR 0049): of its usable candidates (fan and boundary ones
+excepted), cheapest first (relaxed ones at their relaxed cost, ties by id), the first 8
+whose conflicts are one label `b` of a key not strictly lower than its own (or required,
+not a fan or boundary label) and at most one removable label are tried; `b` moves to one
+of the 16 cheapest of its usable candidates (fan and boundary ones excepted) and of its
+level-0 candidates that the pruning of §6.7 dropped (generated again, without distant
+ones, after all others on ties) that conflicts with neither the item's candidate nor a
+placed label but removable ones; at most one label is removed in all, within the label
+budgets. The choice: fewest removed, then the smallest gain removed, then the smallest
+cost change (the item's candidate plus `b`'s new cost minus its old), the first found on
+ties; the removed label is visited in its turn. When a label was moved aside, the pass
+runs once more without such moves; in it, an item that gets no candidate by the first
+rule tries its level-0 candidates that the pruning dropped by that rule too (fan and
+boundary ones excepted, the first found on ties) when its mark (and area), inflated by
+`placement.offset`, the largest width or height of its level-0 variants and the largest
+label margin, touches the old place (box and leaders) of a moved label. The search keeps
+the priority objective, but a move can free a position that a lower label then takes;
+after the repair the removal test of §9.2 finds no inversion. Then all hard constraints are re-verified
 exactly. A violation found here is a
 bug; the offending lower-key label is removed and the item reported as omitted.
 
