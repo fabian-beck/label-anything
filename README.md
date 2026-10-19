@@ -1,9 +1,17 @@
 <h1>
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-lockup-dark.svg">
-    <img src="docs/assets/logo-lockup.svg" alt="Label Anything" width="360">
-  </picture>
+  <a href="https://fabian-beck.github.io/label-anything/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-lockup-dark.svg">
+      <img src="docs/assets/logo-lockup.svg" alt="Label Anything" width="360">
+    </picture>
+  </a>
 </h1>
+
+**Website: [fabian-beck.github.io/label-anything](https://fabian-beck.github.io/label-anything/)** ·
+[Playground](https://fabian-beck.github.io/label-anything/playground/) ·
+[How it works](https://fabian-beck.github.io/label-anything/playground/explain.html) ·
+[Getting started](https://fabian-beck.github.io/label-anything/getting-started/) ·
+[Tutorials](https://fabian-beck.github.io/label-anything/tutorials/)
 
 > [!WARNING]
 > **Experimental, developed by AI.** Label Anything is still experimental and under active

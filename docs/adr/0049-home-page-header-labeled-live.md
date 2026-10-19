@@ -14,7 +14,15 @@ had Material's default book icon, the README none.
 * **The logo everywhere.** The site's header icon (`docs/_overrides/.icons/la/logo.svg`,
   drawn in the header's colour) and favicon (`docs/assets/logo.svg`) are the playground's
   logo. The README opens with the logo carrying the name (`docs/assets/logo-lockup*.svg`,
-  the name as outlines of the bundled Noto Sans Bold, made by `tools/logo/make_lockup.py`).
+  the name as outlines of the bundled Noto Sans Bold), linked to the site, with a line of
+  links to the site's main pages below it. `tools/logo/make_logo.py` makes the files.
+* **The leader grows out of the label.** Where the leader leaves the label, the label's
+  edges flow into the leader's sides in concave fillets and the corner there is square:
+  label, leader and dot are one shape, like a tag on its string, not a line stuck into a
+  rounded corner; from the label's corner it runs at 45° to the dot. The live header
+  draws the name the same way wherever the engine puts it, out of a corner or the middle
+  of a side, for every leader style (`ts/packages/playground/src/logo.ts`; the corners
+  next to the leader lose their rounding as it comes near them).
 * **The logo is the demo, and *anything* is meant literally.** The home page has its own
   template (`home.html`): a header whose logo is drawn large, with the name on its label.
   A script makes it live: the name is one item among random things — a rubber duck, a cup

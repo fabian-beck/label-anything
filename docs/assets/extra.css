@@ -182,7 +182,8 @@
   pointer-events: auto;
 }
 
-/* the static logo: the name on a label, its leader and dot (the live one replaces it) */
+/* the static logo: the name on a label, its leader growing out of the label's corner to a
+   dot (the live one replaces it) */
 .la-lockup {
   position: relative;
   display: flex;
@@ -197,8 +198,8 @@
 .la-lockup__label {
   position: relative;
   z-index: 1;
-  padding: 0.18em 0.5em;
-  border-radius: 0.24em;
+  padding: 0.2em 0.42em;
+  border-radius: 0.24em 0.24em 0 0.24em;
   background: var(--md-primary-fg-color);
 }
 
@@ -216,8 +217,10 @@
   stroke: var(--md-primary-fg-color);
 }
 
-.la-lockup__tail circle {
+.la-lockup__tail circle,
+.la-lockup__tail .la-lockup__join {
   fill: var(--md-primary-fg-color);
+  stroke: none;
 }
 
 .la-hero.is-live .la-lockup {

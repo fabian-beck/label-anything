@@ -15,7 +15,8 @@
  *
  * The page provides, inside `[data-la-hero]`: the stage the drawing goes into
  * (`[data-la-hero-stage]`), the static logo (`[data-la-hero-name]` with its label
- * `[data-la-hero-label]`, leader `[data-la-hero-leader]` and dot `[data-la-hero-dot]`),
+ * `[data-la-hero-label]`, leader `[data-la-hero-leader]`, dot `[data-la-hero-dot]` and the
+ * join where the leader grows out of the label `[data-la-hero-join]`),
  * the elements to keep labels off (`[data-la-avoid]`: `text` for the boxes of its lines,
  * `children` for each child's box, empty for its own box) and the hint shown while live
  * (`[data-la-hero-hint]`, out of the flow, with `[data-la-hero-stats]`, the leader styles
@@ -26,6 +27,7 @@
 import type { LabelProblem, LabelResult } from "@label-anything/core";
 import { LabelMotion } from "@label-anything/extras";
 import { createWorkerEngine, type WorkerEngine } from "@label-anything/extras/worker";
+import { labelPath } from "./logo.js";
 
 type Placement = LabelResult["placements"][number];
 type TextInfo = NonNullable<Placement["text"]>;
@@ -282,7 +284,7 @@ const SIDES: Record<string, string> = {
 
 interface Shown {
   g: SVGGElement;
-  bg?: SVGRectElement;
+  bg?: SVGPathElement;
   text: SVGTextElement;
 }
 
@@ -326,12 +328,14 @@ export class Hero {
   #glide: { from: Pt; to: Pt; t0: number } | null = null;
   #nameWarm: object | null = null;
   /**
-   * The name's dot radius, leader width and corner radius as the static logo draws them;
-   * the offset of its baseline from the top of its box.
+   * The name's dot radius, leader width, corner radius and the radius of the fillets where
+   * its leader grows out of the label, as the static logo draws them; the offset of its
+   * baseline from the top of its box.
    */
   #nameR = 8;
   #nameStroke = 4;
   #nameRx = 0;
+  #nameJoin = 0;
   #nameBase = 0;
   /** Things placed by a shuffle (or a reset) glide from where they were: offsets that shrink to 0. */
   #shuffle: { from: Map<string, Pt>; t0: number } | null = null;
@@ -441,8 +445,10 @@ export class Hero {
     const tail = this.#nameDot.ownerSVGElement;
     const scale = tail ? tail.getBoundingClientRect().width / (tail.viewBox.baseVal.width || 1) : 1;
     const leader = this.root.querySelector("[data-la-hero-leader]");
+    const join = this.root.querySelector("[data-la-hero-join]");
     this.#nameR = this.#nameDot.getBoundingClientRect().width / 2;
     this.#nameStroke = parseFloat(leader?.getAttribute("stroke-width") ?? "") * scale || 4;
+    this.#nameJoin = parseFloat(join?.getAttribute("data-la-hero-join") ?? "") * scale || 0;
     const cs = getComputedStyle(this.#nameLabel);
     this.#nameRx = parseFloat(cs.borderTopLeftRadius) || 0;
     // where the browser puts the baseline in a line box: half the leading, then the ascent
@@ -764,7 +770,11 @@ export class Hero {
         this.#labels.set(id, s);
       }
       const b = p.box;
-      if (s.bg) for (const [k, v] of Object.entries({ x: b.x, y: b.y, width: b.w, height: b.h, rx: this.#nameRx })) s.bg.setAttribute(k, px(v));
+      if (s.bg) {
+        // the name's leader grows out of its label where it leaves it
+        const pts = p.leader?.points.map((q) => [q[0]!, q[1]!] as Pt) ?? [];
+        s.bg.setAttribute("d", labelPath(b, this.#nameRx, pts.at(-1) ?? null, pts.at(-2) ?? null, this.#nameStroke, this.#nameJoin));
+      }
       if (main) {
         s.text.setAttribute("x", px(b.x + b.w / 2));
         s.text.setAttribute("y", px(b.y + this.#nameBase));
@@ -787,7 +797,7 @@ export class Hero {
     const g = this.#gLabels.appendChild(svg("g", main ? "la-hero__label la-hero__label--name" : "la-hero__label"));
     const s: Shown = { g, text: svg("text") };
     if (main) {
-      s.bg = g.appendChild(svg("rect", "la-hero__bg"));
+      s.bg = g.appendChild(svg("path", "la-hero__bg"));
       s.text.textContent = this.#nameLabel.textContent?.trim() ?? "";
       s.text.setAttribute("text-anchor", "middle");
       this.#styleName(s.text);
@@ -820,8 +830,8 @@ export class Hero {
     leaders.forEach((l, i) => {
       const pts = l.points.map((q) => [q[0]!, q[1]!] as Pt);
       if (main) {
-        // from the dot's centre (the dot covers its start) into the box, under its rounded
-        // corner, as the static logo draws it
+        // from the dot's centre (the dot covers its start) into the box (the label and its
+        // join cover its end), as the static logo draws it
         const a = anchors.get("name");
         if (a) pts[0] = a;
         const [q, e] = [pts[pts.length - 2]!, pts[pts.length - 1]!];

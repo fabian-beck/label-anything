@@ -27,9 +27,10 @@ const PAGE = `<!doctype html>
     max-width: 640px; margin: 0 auto; padding: 48px 16px 96px; text-align: center; pointer-events: none; }
   .la-hero__content > * { pointer-events: auto; }
   .la-lockup { position: relative; display: flex; margin: 0 0.95em 0.95em 0; font-size: 40px; line-height: 1.2; }
-  .la-lockup__label { position: relative; z-index: 1; padding: 0.18em 0.5em; border-radius: 0.24em; background: #4051b5; color: #fff; }
+  .la-lockup__label { position: relative; z-index: 1; padding: 0.2em 0.42em; border-radius: 0.24em 0.24em 0 0.24em; background: #4051b5; color: #fff; }
   .la-lockup__tail { position: absolute; top: 100%; left: 100%; width: 1em; height: 1em; overflow: visible; }
   .la-lockup__tail path { fill: none; stroke: #4051b5; }
+  .la-lockup__tail circle, .la-lockup__tail .la-lockup__join { fill: #4051b5; stroke: none; }
   .la-hero.is-live .la-lockup { opacity: 0; pointer-events: none; }
   .la-hero__tip { position: absolute; }
   p, ul, div { width: fit-content; }
@@ -43,8 +44,9 @@ const PAGE = `<!doctype html>
     <h1 class="la-lockup" data-la-hero-name>
       <span class="la-lockup__label" data-la-hero-label>Label Anything</span>
       <svg class="la-lockup__tail" viewBox="0 0 100 100" aria-hidden="true">
-        <path d="M-12 -12L60 68" stroke-width="12" stroke-linecap="round" data-la-hero-leader />
-        <circle cx="60" cy="68" r="22" data-la-hero-dot />
+        <path class="la-lockup__join" d="M-25.05 -10V0Q-8.49 0 3.23 11.72L11.72 3.23Q0 -8.49 0 -25.05H-10V-10Z" data-la-hero-join="40" />
+        <path d="M0 0L75 75" stroke-width="12" stroke-linecap="round" data-la-hero-leader />
+        <circle cx="75" cy="75" r="20" data-la-hero-dot />
       </svg>
     </h1>
     <p data-la-avoid="text">Put a label on anything.</p>
@@ -121,6 +123,9 @@ test("the logo keeps its place, and the labels keep off each other and the text"
   expect(name.placed).toBe(true);
   expect(name.leader).toBeTruthy();
   boxOf(name).forEach((v, i) => expect(Math.abs(v - s.label[i])).toBeLessThan(1));
+  // which grows out of the label: its outline has the join
+  const outline = await page.locator(".la-hero__label--name .la-hero__bg").getAttribute("d");
+  expect(outline.match(/M/g).length).toBe(2);
   const boxes = s.placements.filter((p) => p.placed).map(boxOf);
   for (const b of boxes) for (const t of s.text) expect(overlaps(b, t)).toBe(false);
   for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) expect(overlaps(boxes[i], boxes[j])).toBe(false);
