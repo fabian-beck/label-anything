@@ -93,8 +93,7 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 12px; }
 }
 .brand { display: flex; align-items: center; gap: 8px; color: var(--fg); text-decoration: none; font-weight: 650; white-space: nowrap; }
 .brand svg { width: 22px; height: 22px; flex: none; }
-.brand svg rect, .brand svg circle { fill: var(--accent); }
-.brand svg path { stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; fill: none; }
+.brand svg path { fill: var(--accent); }
 .product { color: var(--muted); font-weight: 500; padding-left: 12px; border-left: 1px solid var(--rule); white-space: nowrap; }
 .scenes { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; }
 .scenes::-webkit-scrollbar { display: none; }

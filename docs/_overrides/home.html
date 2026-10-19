@@ -1,11 +1,13 @@
 {#-
   The home page (docs/index.md, `template: home.html`): a header whose logo is a live
   labeling demo, above the page's content. The logo is a label (the name), its leader and
-  a dot. playground/hero.js (ts/packages/playground/src/hero.ts, published with the
-  playground) takes over from this static logo: it places the name and the labels of
-  random things (a rubber duck, coffee, the moon, …) with the engine, keeping off the
-  elements marked `data-la-avoid`. Nothing moves unless the user drags, adds, shuffles or
-  resets. Without it (e.g. under `mkdocs serve`) the static logo stays.
+  a dot; the leader grows out of the label's corner (the join: fillets of radius
+  `data-la-hero-join`, as tools/logo/make_logo.py prints it). playground/hero.js
+  (ts/packages/playground/src/hero.ts, published with the playground) takes over from
+  this static logo: it places the name and the labels of random things (a rubber duck,
+  coffee, the moon, …) with the engine, keeping off the elements marked `data-la-avoid`.
+  Nothing moves unless the user drags, adds, shuffles or resets. Without it (e.g. under
+  `mkdocs serve`) the static logo stays.
 -#}
 {% extends "main.html" %}
 
@@ -17,8 +19,9 @@
       <h1 class="la-lockup" data-la-hero-name>
         <span class="la-lockup__label" data-la-hero-label>Label Anything</span>
         <svg class="la-lockup__tail" viewBox="0 0 100 100" aria-hidden="true">
-          <path d="M-12 -12L60 68" stroke-width="12" stroke-linecap="round" data-la-hero-leader />
-          <circle cx="60" cy="68" r="22" data-la-hero-dot />
+          <path class="la-lockup__join" d="M-25.05 -10V0Q-8.49 0 3.23 11.72L11.72 3.23Q0 -8.49 0 -25.05H-10V-10Z" data-la-hero-join="40" />
+          <path d="M0 0L75 75" stroke-width="12" stroke-linecap="round" data-la-hero-leader />
+          <circle cx="75" cy="75" r="20" data-la-hero-dot />
         </svg>
       </h1>
       <p class="la-hero__tagline" data-la-avoid="text">Put a label on anything.</p>
