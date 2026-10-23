@@ -8,7 +8,8 @@ with CSS selectors: grid lines may be covered, axes, their text and the legend m
 Every country has a label, in the order of its GDP: the largest set larger and bold (font
 classes) and inside their bubble where they fit, the others on their bubble's outline or
 out on a leader, long names shortened to their ISO code, and what does not fit left out
-(strict priority); labels may cover the bubbles of smaller economies at a cost.
+(strict priority). No label covers another bubble or comes nearer to one than to its own (the
+defaults); where other bubbles are close, a label may stand off its bubble with a short stub.
 """
 
 from __future__ import annotations
@@ -142,10 +143,10 @@ def problem(cs: list[dict]) -> dict:
         },
         "items": items,
         "avoid": {
-            "label": {"grid": "ignore", "axes": "hard", "legend": "hard", "lower_items": 1.5},
-            "leader": {"grid": "ignore", "axes": "hard", "legend": "hard", "lower_items": 0.5},
+            "label": {"grid": "ignore", "axes": "hard", "legend": "hard"},
+            "leader": {"grid": "ignore", "axes": "hard", "legend": "hard"},
         },
-        # a label next to its bubble among other bubbles gets a stub that joins it to its own
+        # a label next to its bubble among other bubbles may stand off it with a stub
         "placement": {"models": ["adjacent", "slider", "internal", "distant"], "max_distance": "6em",
                       "stubs": "auto"},
         "leaders": {"style": "straight", "max_length": "9em"},

@@ -41,29 +41,30 @@ for any chart, map or diagram, in three steps:
 </div>
 
 <figure markdown>
-[![The world's economies as a bubble chart, 149 of its 195 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
+[![The world's economies as a bubble chart, 158 of its 195 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
 <figcaption>The world's economies: every country a bubble, sized by its GDP (Natural Earth,
-2019). Label Anything labels 149 of the 195 in about a quarter of a second.</figcaption>
+2019). Label Anything labels 158 of the 195 in a fraction of a second.</figcaption>
 </figure>
 
 One chart, the main features:
 
 * **On the true shape.** Each label touches its bubble's outline, slid along it to where
   there is room; China's fits inside its bubble.
-* **Leaders where it is crowded.** France, Italy and the United Kingdom overlap Germany's
-  bubble: their labels go out on leaders, and no two leaders cross.
-* **Stubs where a label could be a neighbour's.** Among the crowded small economies, a
-  label next to its point with other points close by stands off a little, joined to its
-  point by a short stub (Mali, Guinea, Zambia); labels with room around them have none.
+* **Never on another point, never nearer to one.** No label covers another country's
+  bubble, and every label is nearer to its own bubble than to any other.
+* **Leaders where it is crowded.** France and the United Kingdom overlap Germany's bubble:
+  their labels go out on leaders, and no two leaders cross.
+* **Stubs where they say whose a label is.** Where a label with other points close by can
+  stand off its point a little without coming nearer to another one, a short stub at a
+  right angle to its side joins it to its point (Mozambique, Myanmar, Barbados).
 * **Importance decides.** The larger the economy, the earlier its label is placed; the
-  eight largest are set larger and bold. 46 countries are left out: each would not fit even
+  eight largest are set larger and bold. 37 countries are left out: each would not fit even
   beside the larger economies' labels alone, and says which of them is in the way.
 * **Shortened before left out.** A name that does not fit falls back to its ISO code
-  (LBN: Lebanon).
+  (SAU: Saudi Arabia).
 * **Graded avoidance over any background.** The chart is an SVG, handed over as it is and
   classified with CSS selectors: labels may cross the grid lines, never the axes, their
-  text or the legend; large economies' labels may cover small economies' bubbles, at a
-  cost.
+  text or the legend.
 
 The *anything* is the host and the label: adjustText (matplotlib), ggrepel (ggplot2) and
 vega-label (Vega) each serve one plotting library; Label Anything is one engine and one

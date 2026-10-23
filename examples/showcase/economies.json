@@ -3972,14 +3972,12 @@
   "label": {
    "grid": "ignore",
    "axes": "hard",
-   "legend": "hard",
-   "lower_items": 1.5
+   "legend": "hard"
   },
   "leader": {
    "grid": "ignore",
    "axes": "hard",
-   "legend": "hard",
-   "lower_items": 0.5
+   "legend": "hard"
   }
  },
  "placement": {
