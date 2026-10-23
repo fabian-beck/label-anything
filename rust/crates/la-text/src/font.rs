@@ -19,6 +19,9 @@ pub struct Font {
     descender: i16,
     line_gap: i16,
     advances: Vec<u16>,
+    /// Vertical extent (yMin, yMax) of every glyph's outline, from the private table
+    /// `LAvb` of the bundled metrics fonts (spec §5.2); `None` without one.
+    vbounds: Option<Vec<(i16, i16)>>,
     cmap: CharMap,
     kerning: Kerning,
     /// The sfnt bytes, kept for full shaping.
@@ -167,6 +170,9 @@ impl Font {
             }
         }
         let advances = Self::parse_advances(tables.required(b"hmtx")?, long_metrics, num_glyphs)?;
+        let vbounds = tables
+            .get(b"LAvb")
+            .and_then(|t| Self::parse_vbounds(t, num_glyphs));
         let cmap = CharMap::parse(tables.required(b"cmap")?, num_glyphs)
             .map_err(malformed("cmap"))?
             .ok_or_else(|| invalid("no Unicode 'cmap' subtable of format 4 or 12"))?;
@@ -182,6 +188,7 @@ impl Font {
             descender,
             line_gap,
             advances,
+            vbounds,
             cmap,
             kerning,
             #[cfg(feature = "shaping")]
@@ -206,6 +213,37 @@ impl Font {
         let last = advances[advances.len() - 1];
         advances.resize(usize::from(num_glyphs), last);
         Ok(advances)
+    }
+
+    /// The `LAvb` table: version 1, `numGlyphs` as in `maxp`, then `(yMin, yMax)` per glyph
+    /// (int16, font units). Anything else is ignored.
+    fn parse_vbounds(t: Reader, num_glyphs: u16) -> Option<Vec<(i16, i16)>> {
+        if t.u16(0).ok()? != 1 || t.u16(2).ok()? != num_glyphs {
+            return None;
+        }
+        (0..usize::from(num_glyphs))
+            .map(|g| Some((t.i16(4 + 4 * g).ok()?, t.i16(6 + 4 * g).ok()?)))
+            .collect()
+    }
+
+    /// The ink of `text` under simple shaping (spec §5.2): the smallest `yMin` and the
+    /// largest `yMax` (font units, y up) of the glyphs its code points map to, glyphs
+    /// without outline (`yMin = yMax`) aside. `None` when the font has no glyph bounds or
+    /// no glyph of the text has an outline.
+    pub fn ink_units(&self, text: &str) -> Option<(i16, i16)> {
+        let bounds = self.vbounds.as_ref()?;
+        let mut ink: Option<(i16, i16)> = None;
+        for c in text.chars() {
+            let (y0, y1) = bounds[usize::from(self.glyph(c))];
+            if y0 == y1 {
+                continue;
+            }
+            ink = Some(match ink {
+                Some((a, b)) => (a.min(y0), b.max(y1)),
+                None => (y0, y1),
+            });
+        }
+        ink
     }
 
     /// Font design units per em (`head.unitsPerEm`).

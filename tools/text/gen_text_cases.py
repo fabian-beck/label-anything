@@ -20,6 +20,8 @@ crate (rust/crates/la-text/tests/data/).
 Case files hold, besides the keys documented in conformance/README.md:
   metrics        {units_per_em, ascender, descender, line_gap} of the resolved font
   widths[].units advance in font units (Font::advance_units), exact
+  widths[].ink   [yMin, yMax] of the text's glyph outlines in font units (Font::ink_units),
+                 exact; null for fonts without glyph bounds (the synthetic fonts)
   breaks         [{text, breaks}]                 break_opportunities
   wrap           [{text, max_width, lines}]       greedy_wrap
   balanced       [{text, lines_target, max_width (null = none), lines}]   balanced_wrap
@@ -46,6 +48,8 @@ from test_fonts import build_fonts, woff2
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "conformance/text"
 FONTS = {400: ROOT / "fonts/NotoSans-Regular.metrics.ttf", 700: ROOT / "fonts/NotoSans-Bold.metrics.ttf"}
+# the same subsets with outlines: the reference for the glyph bounds of the metrics fonts
+OUTLINES = {400: ROOT / "fonts/NotoSans-Regular.ttf", 700: ROOT / "fonts/NotoSans-Bold.ttf"}
 WOFF2_FIXTURE = ROOT / "rust/crates/la-text/tests/data/NotoSans-Regular.metrics.woff2"
 ELLIPSIS = "\u2026"
 
@@ -500,7 +504,30 @@ SYNTHETIC_STRINGS = {
 SYNTHETIC_SIZE = {"synthetic-gpos.ttf": 13.3}
 
 
-def width_cases(shaper, strings, size, harfbuzz=True):
+def outline_bounds(path):
+    """(yMin, yMax) of every glyph's outline by glyph id, (0, 0) without one."""
+    font = TTFont(path)
+    glyf = font["glyf"]
+    out = []
+    for name in font.getGlyphOrder():
+        g = glyf[name]
+        if g.numberOfContours == 0:
+            out.append((0, 0))
+            continue
+        g.recalcBounds(glyf)
+        out.append((g.yMin, g.yMax))
+    return out
+
+
+def ink(shaper, bounds, text):
+    """[yMin, yMax] of the outlines of the text's glyphs (spec §5.2), None without any."""
+    if bounds is None:
+        return None
+    ys = [bounds[g] for g in shaper.glyphs(text) if bounds[g][0] != bounds[g][1]]
+    return [min(y[0] for y in ys), max(y[1] for y in ys)] if ys else None
+
+
+def width_cases(shaper, strings, size, harfbuzz=True, bounds=None):
     entries = []
     for text in strings:
         units = shaper.units(text)
@@ -508,7 +535,8 @@ def width_cases(shaper, strings, size, harfbuzz=True):
             reference = harfbuzz_units(shaper.data, text)
             if reference != units:
                 sys.exit(f"fontTools and HarfBuzz disagree on {text!r}: {units} != {reference}")
-        entries.append({"text": text, "units": units, "width": units * size / shaper.upm, "tol": 0.01})
+        entries.append({"text": text, "units": units, "width": units * size / shaper.upm, "tol": 0.01,
+                        "ink": ink(shaper, bounds, text)})
     return entries
 
 
@@ -594,11 +622,12 @@ def main():
     outputs = {}  # path -> bytes
     for weight, path in FONTS.items():
         shaper = SimpleShaper(path.read_bytes())
+        bounds = outline_bounds(OUTLINES[weight])
         for size in (9, 12, 16.5):
             outputs[OUT / f"widths-{weight}-{size:g}.json"] = {
                 "$comment": comment, "kind": "text", "name": f"Noto Sans {weight} at {size:g} px: widths",
                 "font": {"family": "default", "weight": weight}, "size": size, "metrics": metrics_of(shaper),
-                "widths": width_cases(shaper, WIDTH_STRINGS, size)}
+                "widths": width_cases(shaper, WIDTH_STRINGS, size, bounds=bounds)}
         size = 12 if weight == 400 else 16.5
         outputs[OUT / f"wrap-{weight}-{size:g}.json"] = {
             "$comment": comment, "kind": "text", "name": f"Noto Sans {weight} at {size:g} px: breaks, wrapping, truncation",

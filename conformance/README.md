@@ -149,7 +149,7 @@ checked against HarfBuzz for widths; a Python transcription of spec §5.3 for wr
   "font": { "family": "default", "weight": 400 }      // or { "file": "fonts/x.ttf" } (relative to text/)
   "size": 12,
   "metrics": { "units_per_em": 1000, "ascender": 1069, "descender": -293, "line_gap": 0 },
-  "widths": [ { "text": "AV", "units": 1199, "width": 14.388, "tol": 0.01 } ],
+  "widths": [ { "text": "AV", "units": 1199, "ink": [0, 717], "width": 14.388, "tol": 0.01 } ],
   "breaks": [ { "text": "org.example.Foo", "breaks": [3, 11] } ],   // a line may end after code point k
   "wrap": [ { "text": "org.example.Foo", "max_width": 60, "lines": ["org.example.", "Foo"] } ],  // greedy
   "balanced": [ { "text": "...", "lines_target": 2, "max_width": null, "lines": ["...", "..."] } ],
@@ -160,8 +160,11 @@ checked against HarfBuzz for widths; a Python transcription of spec §5.3 for wr
   "extra_variants": [ { "text": "...", "max_lines": 2, "variants": [ ... ] } ] }
 ```
 
-`units` (advance in font units) must match exactly; widths (also inside variants) within
-`tol` (default 0.01 px). Line feeds are ordinary whitespace (no mandatory breaks).
+`units` (advance in font units) must match exactly, and so must `ink` (the lowest yMin and
+the highest yMax of the text's glyphs with an outline, font units, from the font's `LAvb`
+table, spec §5.2; `null`: the font has no glyph bounds, or no glyph of the text has an
+outline); widths (also inside variants) within `tol` (default 0.01 px). Line feeds are
+ordinary whitespace (no mandatory breaks).
 
 ## `expr` cases
 

@@ -6,10 +6,10 @@
   "size": 11,
   "metrics": {"units_per_em": 1000, "ascender": 800, "descender": -200, "line_gap": 100},
   "widths": [
-    {"text": "AV", "units": 2450, "width": 26.95, "tol": 0.01},
-    {"text": "VA", "units": 2460, "width": 27.06, "tol": 0.01},
-    {"text": "AVA", "units": 3660, "width": 40.26, "tol": 0.01},
-    {"text": "To", "units": 2100, "width": 23.1, "tol": 0.01},
-    {"text": "", "units": 0, "width": 0.0, "tol": 0.01}
+    {"text": "AV", "units": 2450, "width": 26.95, "tol": 0.01, "ink": null},
+    {"text": "VA", "units": 2460, "width": 27.06, "tol": 0.01, "ink": null},
+    {"text": "AVA", "units": 3660, "width": 40.26, "tol": 0.01, "ink": null},
+    {"text": "To", "units": 2100, "width": 23.1, "tol": 0.01, "ink": null},
+    {"text": "", "units": 0, "width": 0.0, "tol": 0.01, "ink": null}
   ]
 }

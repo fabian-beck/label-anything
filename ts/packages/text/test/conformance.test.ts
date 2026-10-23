@@ -36,7 +36,7 @@ interface TextCase {
   font: { family?: string; weight?: number | "normal" | "bold"; style?: string; file?: string };
   size: number;
   metrics?: { units_per_em: number; ascender: number; descender: number; line_gap: number };
-  widths?: { text: string; width: number; units?: number; tol?: number }[];
+  widths?: { text: string; width: number; units?: number; tol?: number; ink?: [number, number] | null }[];
   breaks?: { text: string; breaks: number[] }[];
   wrap?: { text: string; max_width: number; lines: string[] }[];
   balanced?: { text: string; lines_target: number; max_width?: number | null; lines: string[] }[];
@@ -114,6 +114,7 @@ describe("text conformance", () => {
             expect(Math.abs(w - e.width), e.text).toBeLessThanOrEqual(e.tol ?? 0.01);
             expect(Object.is(w, e.width), `${e.text}: ${w} vs ${e.width}`).toBe(true);
             if (e.units !== undefined) expect(font.advanceUnits(e.text), e.text).toBe(e.units);
+            if (e.ink !== undefined) expect(font.inkUnits(e.text), e.text).toEqual(e.ink);
           }
         });
       }
