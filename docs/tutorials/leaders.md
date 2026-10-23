@@ -139,7 +139,7 @@ Only labels that need one get it, and only where it is clear:
 
 In a tight crowd a label can rarely stand off its point without coming nearer to another
 one, so stubs appear at its edges: on the [economies chart](../index.md) of the home page
-Mozambique, Myanmar, Botswana, Barbados and St. Vincent have them. The result reports a
+Honduras, Palestine, Cyprus and Barbados have them. The result reports a
 stub as the label's `leader` with `"stub": true` (model `adjacent` or `slider`), so that a
 host can draw it more lightly than the leaders of distant labels — the chart draws stubs
 in the leaders' grey at 1 px with round caps; `@label-anything/extras` gives their paths

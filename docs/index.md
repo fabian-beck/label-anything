@@ -41,27 +41,30 @@ for any chart, map or diagram, in three steps:
 </div>
 
 <figure markdown>
-[![The world's economies as a bubble chart, 158 of its 195 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
+[![The world's economies as a bubble chart, 174 of its 195 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
 <figcaption>The world's economies: every country a bubble, sized by its GDP (Natural Earth,
-2019). Label Anything labels 158 of the 195 in a fraction of a second.</figcaption>
+2019). Label Anything labels 174 of the 195 in a fraction of a second.</figcaption>
 </figure>
 
 One chart, the main features:
 
 * **On the true shape.** Each label touches its bubble's outline, slid along it to where
   there is room; China's fits inside its bubble.
+* **Tight to its letters.** A label's box fits the ink of its text, not the font's whole
+  line height: above or below its bubble a label stands as close to it as beside it.
 * **Never on another point, never nearer to one.** No label covers another country's
   bubble, and every label is nearer to its own bubble than to any other.
 * **Leaders where it is crowded.** France and the United Kingdom overlap Germany's bubble:
   their labels go out on leaders, and no two leaders cross.
 * **Stubs where they say whose a label is.** Where a label with other points close by can
   stand off its point a little without coming nearer to another one, a short stub at a
-  right angle to its side joins it to its point (Mozambique, Myanmar, Barbados).
+  right angle to its side joins it to its point (Honduras, Cyprus, Barbados).
 * **Importance decides.** The larger the economy, the earlier its label is placed; the
-  eight largest are set larger and bold. 37 countries are left out: each would not fit even
-  beside the larger economies' labels alone, and says which of them is in the way.
+  eight largest are set larger and bold. 21 countries are left out: 20 would not fit even
+  beside the larger economies' labels alone and say which of them is in the way; Austria's
+  bubble lies among larger ones that its label may not cover.
 * **Shortened before left out.** A name that does not fit falls back to its ISO code
-  (SAU: Saudi Arabia).
+  (CAN: Canada).
 * **Graded avoidance over any background.** The chart is an SVG, handed over as it is and
   classified with CSS selectors: labels may cross the grid lines, never the axes, their
   text or the legend.
