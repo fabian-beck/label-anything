@@ -66,9 +66,9 @@
         "placed": true,
         "box": {
           "x": 103.0,
-          "y": 90.02799999999999,
+          "y": 92.2,
           "w": 35.891999999999996,
-          "h": 19.944000000000017
+          "h": 15.599999999999994
         },
         "anchor": [
           100.0,
@@ -83,7 +83,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             32.292
@@ -95,7 +95,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2726666666666674,
+        "cost": 0.09166666666666648,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -110,7 +110,7 @@
           "x": 105.384,
           "y": 119.0,
           "w": 29.231999999999985,
-          "h": 19.944000000000017
+          "h": 12.288000000000011
         },
         "anchor": [
           120.0,
@@ -125,7 +125,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.367999999999999
           ],
           "line_widths": [
             25.632
@@ -150,9 +150,9 @@
         "placed": true,
         "box": {
           "x": 35.879999999999995,
-          "y": 17.055999999999997,
+          "y": 24.592,
           "w": 48.24000000000001,
-          "h": 19.944000000000003
+          "h": 12.408000000000001
         },
         "anchor": [
           60.0,
@@ -167,7 +167,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.488
           ],
           "line_widths": [
             44.64
@@ -200,10 +200,10 @@
       "iterations": 1200,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 75,
+      "candidates": 78,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 0.4726666666666674,
+      "total_cost": 0.2916666666666665,
       "degraded": {},
       "grid": {
         "cell": 3.0,

@@ -1,7 +1,7 @@
 {
   "kind": "place",
   "name": "boundary labels for crowded line ends: one column, aligned toward the picture",
-  "$comment": "Ten ends 4 px apart that allow only `right`; no fans. Next to the ends a label would overlap the other ends' marks, and boundary labels at their ends' heights leave no room for each other. The right side's column takes all ten (spec §6.6): stacked around the ends' heights, matched to the slots by leader length and left-aligned on one line, x = 320 − 4 (canvas padding) − 4 (boundary margin) − 48.24 (Gamma, the widest label) = 263.76; its leaders leave the crowd past the neighbouring marks, which they only must not cross.",
+  "$comment": "Ten ends 3 px apart that allow only `right`; no fans. Next to the ends a label would come closer to the other ends' marks than the label margin, even shrunk, and boundary labels at their ends' heights leave no room for each other. The right side's column takes all ten (spec §6.6): stacked around the ends' heights, matched to the slots by leader length and left-aligned on one line, x = 320 − 4 (canvas padding) − 4 (boundary margin) − 48.24 (Gamma, the widest label) = 263.76; its leaders leave the crowd past the neighbouring marks, which they only must not cross.",
   "problem": {
     "canvas": {
       "width": 320,
@@ -40,7 +40,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 104
+          "y": 103
         },
         "label": {
           "type": "text",
@@ -52,7 +52,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 108
+          "y": 106
         },
         "label": {
           "type": "text",
@@ -64,7 +64,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 112
+          "y": 109
         },
         "label": {
           "type": "text",
@@ -76,7 +76,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 116
+          "y": 112
         },
         "label": {
           "type": "text",
@@ -88,7 +88,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 120
+          "y": 115
         },
         "label": {
           "type": "text",
@@ -100,7 +100,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 124
+          "y": 118
         },
         "label": {
           "type": "text",
@@ -112,7 +112,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 128
+          "y": 121
         },
         "label": {
           "type": "text",
@@ -124,7 +124,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 132
+          "y": 124
         },
         "label": {
           "type": "text",
@@ -136,7 +136,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 136
+          "y": 127
         },
         "label": {
           "type": "text",
@@ -179,16 +179,16 @@
     "box": {
       "alpha": {
         "x": 263.76,
-        "y": 7.48,
+        "y": 35.567,
         "w": 35.892,
-        "h": 19.944,
+        "h": 15.6,
         "tol": 0.01
       },
       "kappa": {
         "x": 263.76,
-        "y": 208.576,
+        "y": 175.607,
         "w": 39.252,
-        "h": 19.944,
+        "h": 15.048,
         "tol": 0.01
       }
     }

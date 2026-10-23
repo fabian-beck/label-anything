@@ -33,19 +33,16 @@ takes the place of a higher-priority one.
 ```
 
 ```text
-Walros omitted_by_priority ('items', 'labels') ('Hofkel',) {'tier': 0, 'score': 6882.0, 'rank': 37}
-Brücklin omitted_by_priority ('items', 'labels', 'leaders') ('Achros', 'Feldor', 'Dorsted', 'Talber') {'tier': 0, 'score': 2554.0, 'rank': 39}
-Linsted no_feasible_candidate ('items',) () {'tier': 0, 'score': 9409.0, 'rank': 35}
-...
-Berau omitted_by_priority ('items', 'labels') ('Kelsted',) {'tier': 0, 'score': 66376.0, 'rank': 13}
-...
-['Brücklin', 'Walros', 'Linsted', 'Achheim', 'Munfel', 'Aufel', 'Dormun', 'Talheim', 'Linheim', 'Munham', 'Heimlin', 'Berau']
+Rosmun omitted_by_priority ('items', 'labels') ('Stedau', 'Hofkel', 'Munham') {'tier': 0, 'score': 41105.0, 'rank': 20}
+Linsted omitted_by_priority ('items', 'labels') ('Kelsted', 'Berau', 'Roslin') {'tier': 0, 'score': 9409.0, 'rank': 35}
+Talheim no_feasible_candidate ('items',) () {'tier': 0, 'score': 36245.0, 'rank': 22}
+['Linsted', 'Talheim', 'Rosmun']
 0
 ```
 
-Seven cities give way to more important labels; five, Linsted among them, have no place
-at all: next to each of them a label would come closer to another city's mark than the
-label margin (`defaults.margin`, 0.2 em).
+Rosmun and Linsted give way to more important labels; Talheim has no place at all: next
+to it a label would come closer to another city's mark than the label margin
+(`defaults.margin`, 0.2 em).
 
 Every unplaced item reports:
 
@@ -169,9 +166,9 @@ decides between equal keys (`input_order`, `id`, `anchor_x`, `random`).
 ```
 
 ```text
-strict   placed 25  inversions 0  placed_weighted 0.717
-prefix   placed 14  inversions 0  placed_weighted 0.506
-weighted placed 25  inversions 0  placed_weighted 0.711
+strict   placed 25  inversions 0  placed_weighted 0.732
+prefix   placed 22  inversions 0  placed_weighted 0.675
+weighted placed 25  inversions 0  placed_weighted 0.731
 ```
 
 ## Important labels over minor marks
@@ -238,7 +235,7 @@ of 22 %).
 
 ![Crowded cities: the omitted ones are crossed](../assets/gallery/priority-cities.svg)
 
-The red crosses are the eleven omitted cities. The Python equivalent:
+The red crosses are the three omitted cities. The Python equivalent:
 
 ```python
 --8<-- "examples/tutorials/python/priority.py:full"

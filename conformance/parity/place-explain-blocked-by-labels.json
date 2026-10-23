@@ -2,8 +2,8 @@
   "kind": "parity",
   "problem": {
     "canvas": {
-      "width": 400,
-      "height": 300
+      "width": 396,
+      "height": 296
     },
     "items": [
       {
@@ -117,7 +117,7 @@
       "iterations": 800,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 239,
+      "candidates": 241,
       "omission_order": [
         "low"
       ],
@@ -126,8 +126,8 @@
       "degraded": {},
       "grid": {
         "cell": 3.0,
-        "cols": 134,
-        "rows": 100,
+        "cols": 132,
+        "rows": 99,
         "classes": []
       }
     },

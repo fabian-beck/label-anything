@@ -1,7 +1,7 @@
 {
   "kind": "place",
   "name": "fan labels keep to the label budget",
-  "$comment": "The ends of `fan-line-ends` with at most 4 labels: the search labels the outer ends (alpha, zeta; next to the inner ends a label would come closer to other ends than their margin), the column gives labels to the two most important ends left without one (input order) and leaves the others out.",
+  "$comment": "The ends of `fan-line-ends`, 3 px apart, with at most 4 labels: the search labels none of them (beside the ends a label would come closer to other ends than the label margin, and no leader leaves the crowd with its clearance); the column, which keeps to the budget, gives labels to the four most important ends (alpha to delta, in input order) and leaves the others out.",
   "problem": {
     "canvas": {
       "width": 320,
@@ -35,7 +35,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 93
+          "y": 91
         },
         "label": {
           "type": "text",
@@ -47,7 +47,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 98
+          "y": 94
         },
         "label": {
           "type": "text",
@@ -59,7 +59,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 103
+          "y": 97
         },
         "label": {
           "type": "text",
@@ -71,7 +71,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 108
+          "y": 100
         },
         "label": {
           "type": "text",
@@ -83,7 +83,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 113
+          "y": 103
         },
         "label": {
           "type": "text",
@@ -99,14 +99,14 @@
     "deterministic": true,
     "placed": 4,
     "unplaced_ids": [
-      "delta",
-      "epsilon"
+      "epsilon",
+      "zeta"
     ],
     "model": {
       "alpha": "fan",
       "beta": "fan",
       "gamma": "fan",
-      "zeta": "fan"
+      "delta": "fan"
     }
   }
 }

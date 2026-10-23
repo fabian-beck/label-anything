@@ -134,7 +134,9 @@ Callbacks are host extensions, not schema fields; they are passed to `place`,
 
 * `measure(text, font: la.FontSpec) -> la.TextMetrics | {width, ascent, descent} |
   (w, a, d) | None`: measure text with the host's engine (`font.size` in px; `None` uses
-  the bundled font). `measure("", font)` asks for the vertical metrics. Results are
+  the bundled font). `measure("", font)` asks for the vertical metrics: label boxes then
+  span the ascent and descent it returns (with the bundled font's, they fit the ink of
+  the text, spec §5.2). Results are
   cached per `(text, font)` during a solve. Wrapping then calls it for every distinct
   candidate line; without a callback the fonts measure candidate lines in constant time
   (ADR 0018).

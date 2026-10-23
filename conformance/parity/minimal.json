@@ -9,9 +9,9 @@
         "placed": true,
         "box": {
           "x": 61.108000000000004,
-          "y": 90.02799999999999,
+          "y": 92.2,
           "w": 35.891999999999996,
-          "h": 19.944000000000017
+          "h": 15.599999999999994
         },
         "anchor": [
           100.0,
@@ -26,7 +26,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             32.292
@@ -51,9 +51,9 @@
         "placed": true,
         "box": {
           "x": 111.0,
-          "y": 94.02799999999999,
+          "y": 97.856,
           "w": 29.232,
-          "h": 19.944000000000017
+          "h": 12.288000000000011
         },
         "anchor": [
           108.0,
@@ -68,7 +68,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.367999999999999
           ],
           "line_widths": [
             25.632
@@ -93,9 +93,9 @@
         "placed": true,
         "box": {
           "x": 275.88,
-          "y": 197.05599999999998,
+          "y": 204.59199999999998,
           "w": 48.24000000000001,
-          "h": 19.944000000000017
+          "h": 12.408000000000015
         },
         "anchor": [
           300.0,
@@ -110,7 +110,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.488
           ],
           "line_widths": [
             44.64
@@ -143,7 +143,7 @@
       "iterations": 1200,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 90,
+      "candidates": 91,
       "omission_order": [],
       "priority_inversions": 0,
       "total_cost": 0.375,

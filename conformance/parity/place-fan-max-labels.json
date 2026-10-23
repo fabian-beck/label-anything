@@ -33,7 +33,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 93
+          "y": 91
         },
         "label": {
           "type": "text",
@@ -45,7 +45,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 98
+          "y": 94
         },
         "label": {
           "type": "text",
@@ -57,7 +57,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 103
+          "y": 97
         },
         "label": {
           "type": "text",
@@ -69,7 +69,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 108
+          "y": 100
         },
         "label": {
           "type": "text",
@@ -81,7 +81,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 113
+          "y": 103
         },
         "label": {
           "type": "text",
@@ -97,10 +97,10 @@
         "id": "alpha",
         "placed": true,
         "box": {
-          "x": 175.516,
-          "y": 54.51200000000001,
+          "x": 170.88799999999998,
+          "y": 61.31200000000001,
           "w": 35.891999999999996,
-          "h": 19.94400000000001
+          "h": 15.599999999999994
         },
         "anchor": [
           150.0,
@@ -115,7 +115,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             32.292
@@ -129,21 +129,21 @@
         "leader": {
           "points": [
             [
-              152.57368290723494,
-              85.6280479994303
+              152.5960346641651,
+              85.65253242355656
             ],
             [
-              175.516,
-              64.48400000000001
+              170.88799999999998,
+              69.11200000000001
             ]
           ],
           "style": "straight",
           "port": [
-            175.516,
-            64.48400000000001
+            170.88799999999998,
+            69.11200000000001
           ]
         },
-        "cost": 2.2499935494428827,
+        "cost": 2.144764142085491,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -155,14 +155,14 @@
         "id": "beta",
         "placed": true,
         "box": {
-          "x": 175.516,
-          "y": 76.856,
+          "x": 170.88799999999998,
+          "y": 79.31200000000001,
           "w": 29.232,
-          "h": 19.944000000000017
+          "h": 12.288000000000011
         },
         "anchor": [
           150.0,
-          93.0
+          91.0
         ],
         "anchor_side": "fan",
         "model": "fan",
@@ -173,7 +173,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.367999999999999
           ],
           "line_widths": [
             25.632
@@ -187,21 +187,21 @@
         "leader": {
           "points": [
             [
-              153.40189305862924,
-              92.17712478610049
+              153.38287368249377,
+              90.1021327223408
             ],
             [
-              175.516,
-              86.828
+              170.88799999999998,
+              85.45600000000002
             ]
           ],
           "style": "straight",
           "port": [
-            175.516,
-            86.828
+            170.88799999999998,
+            85.45600000000002
           ]
         },
-        "cost": 2.083519835006208,
+        "cost": 2.111586035793438,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -213,14 +213,14 @@
         "id": "gamma",
         "placed": true,
         "box": {
-          "x": 175.516,
-          "y": 99.20000000000002,
+          "x": 170.88799999999998,
+          "y": 94.00000000000001,
           "w": 48.24000000000001,
-          "h": 19.94399999999999
+          "h": 12.407999999999987
         },
         "anchor": [
           150.0,
-          98.0
+          94.0
         ],
         "anchor_side": "fan",
         "model": "fan",
@@ -231,7 +231,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.488
           ],
           "line_widths": [
             44.64
@@ -245,21 +245,21 @@
         "leader": {
           "points": [
             [
-              153.20614680376514,
-              99.40378868520396
+              153.35513801332183,
+              94.99651839499468
             ],
             [
-              175.516,
-              109.17200000000001
+              170.88799999999998,
+              100.20400000000001
             ]
           ],
           "style": "straight",
           "port": [
-            175.516,
-            109.17200000000001
+            170.88799999999998,
+            100.20400000000001
           ]
         },
-        "cost": 2.116910786981196,
+        "cost": 2.1363704616823553,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -269,26 +269,61 @@
       },
       {
         "id": "delta",
-        "placed": false,
-        "reason": "no_feasible_candidate",
-        "blocking": [
-          "items"
+        "placed": true,
+        "box": {
+          "x": 170.88799999999998,
+          "y": 108.808,
+          "w": 33.28800000000001,
+          "h": 12.840000000000003
+        },
+        "anchor": [
+          150.0,
+          97.0
         ],
-        "blocked_by": [],
+        "anchor_side": "fan",
+        "model": "fan",
+        "text": {
+          "lines": [
+            "Delta"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            29.688
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              152.6370818206898,
+              99.30126040920784
+            ],
+            [
+              170.88799999999998,
+              115.22800000000001
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            170.88799999999998,
+            115.22800000000001
+          ]
+        },
+        "cost": 2.1909167833582712,
+        "degrade_steps": [],
         "priority": {
           "tier": 0,
           "score": 0.0,
           "rank": 3
-        },
-        "degrade_steps": [
-          "alternatives",
-          "wrap",
-          "distant",
-          "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
-          "omit"
-        ]
+        }
       },
       {
         "id": "epsilon",
@@ -315,67 +350,32 @@
       },
       {
         "id": "zeta",
-        "placed": true,
-        "box": {
-          "x": 175.516,
-          "y": 121.54400000000001,
-          "w": 28.295999999999992,
-          "h": 19.944000000000017
-        },
-        "anchor": [
-          150.0,
-          113.0
+        "placed": false,
+        "reason": "no_feasible_candidate",
+        "blocking": [
+          "items"
         ],
-        "anchor_side": "fan",
-        "model": "fan",
-        "text": {
-          "lines": [
-            "Zeta"
-          ],
-          "used": "original",
-          "truncated": false,
-          "baseline_offsets": [
-            14.628
-          ],
-          "line_widths": [
-            24.696
-          ],
-          "x_offset": 1.7999999999999998,
-          "font_size": 12.0,
-          "font_family": "default",
-          "font_weight": 400,
-          "scale": 1.0
-        },
-        "leader": {
-          "points": [
-            [
-              152.83274468153658,
-              115.05561610453564
-            ],
-            [
-              175.516,
-              131.51600000000002
-            ]
-          ],
-          "style": "straight",
-          "port": [
-            175.516,
-            131.51600000000002
-          ]
-        },
-        "cost": 2.183881554081363,
-        "degrade_steps": [],
+        "blocked_by": [],
         "priority": {
           "tier": 0,
           "score": 0.0,
           "rank": 5
-        }
+        },
+        "degrade_steps": [
+          "alternatives",
+          "wrap",
+          "distant",
+          "evict_lower",
+          "shrink:0.85",
+          "soft_overlap",
+          "omit"
+        ]
       }
     ],
     "stats": {
       "placed": 4,
       "total": 6,
-      "placed_weighted": 0.7526136409516658,
+      "placed_weighted": 0.7751482523375255,
       "required_placed": true,
       "hard_violations": 0,
       "leader_crossings": 0,
@@ -384,13 +384,13 @@
       "iterations": 2400,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 163,
+      "candidates": 274,
       "omission_order": [
-        "epsilon",
-        "delta"
+        "zeta",
+        "epsilon"
       ],
       "priority_inversions": 0,
-      "total_cost": 8.63430572551165,
+      "total_cost": 8.583637422919555,
       "degraded": {},
       "grid": {
         "cell": 3.0,

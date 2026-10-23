@@ -8,17 +8,17 @@
         "id": "d0",
         "placed": true,
         "box": {
-          "x": 258.9999999999966,
-          "y": 182.63253626721442,
+          "x": 345.5,
+          "y": 193.58,
           "w": 79.23599999999999,
-          "h": 19.944000000000017
+          "h": 12.839999999999975
         },
         "anchor": [
           256.0,
           200.0
         ],
-        "anchor_side": "top-right",
-        "model": "slider",
+        "anchor_side": "distant",
+        "model": "distant",
         "text": {
           "lines": [
             "Dense label 0"
@@ -26,7 +26,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             75.636
@@ -37,8 +37,24 @@
           "font_weight": 400,
           "scale": 1.0
         },
-        "leader": null,
-        "cost": 0.7433571370475396,
+        "leader": {
+          "points": [
+            [
+              259.5,
+              200.0
+            ],
+            [
+              345.5,
+              200.0
+            ]
+          ],
+          "style": "angles",
+          "port": [
+            345.5,
+            200.0
+          ]
+        },
+        "cost": 3.466666666666667,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -53,7 +69,7 @@
           "x": 255.36313417876846,
           "y": 207.17014625240705,
           "w": 79.23599999999999,
-          "h": 19.944000000000017
+          "h": 12.839999999999975
         },
         "anchor": [
           253.24181383520883,
@@ -68,7 +84,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             75.636
@@ -80,7 +96,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.8922899069119805,
+        "cost": 0.8887704308405644,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -90,82 +106,27 @@
       },
       {
         "id": "d2",
-        "placed": false,
-        "reason": "omitted_by_priority",
-        "blocking": [
-          "items",
-          "labels"
-        ],
-        "blocked_by": [
-          "d8"
-        ],
-        "priority": {
-          "tier": 0,
-          "score": 0.0,
-          "rank": 2
-        },
-        "degrade_steps": [
-          "alternatives",
-          "wrap",
-          "distant",
-          "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
-          "omit"
-        ]
-      },
-      {
-        "id": "d3",
-        "placed": false,
-        "reason": "omitted_by_priority",
-        "blocking": [
-          "items",
-          "leaders",
-          "labels"
-        ],
-        "blocked_by": [
-          "d4",
-          "d8",
-          "d9"
-        ],
-        "priority": {
-          "tier": 0,
-          "score": 0.0,
-          "rank": 3
-        },
-        "degrade_steps": [
-          "alternatives",
-          "wrap",
-          "distant",
-          "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
-          "omit"
-        ]
-      },
-      {
-        "id": "d4",
         "placed": true,
         "box": {
-          "x": 163.84213827482284,
-          "y": 175.62656671777165,
+          "x": 166.1457986371575,
+          "y": 207.57710490451376,
           "w": 79.23599999999999,
-          "h": 19.944000000000017
+          "h": 12.839999999999975
         },
         "anchor": [
-          246.07813827481831,
-          195.45918502815243
+          247.50311898071715,
+          205.4557845609541
         ],
-        "anchor_side": "top-left",
-        "model": "slider",
+        "anchor_side": "bottom-left",
+        "model": "adjacent",
         "text": {
           "lines": [
-            "Dense label 4"
+            "Dense label 2"
           ],
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             75.636
@@ -177,22 +138,90 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.7552432003345741,
+        "cost": 0.9617481427870027,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
           "score": 0.0,
-          "rank": 4
+          "rank": 2
         }
+      },
+      {
+        "id": "d3",
+        "placed": true,
+        "box": {
+          "x": 162.70272467683768,
+          "y": 185.88539970479957,
+          "w": 79.23599999999999,
+          "h": 12.839999999999975
+        },
+        "anchor": [
+          244.06004502039733,
+          200.8467200483592
+        ],
+        "anchor_side": "top-left",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Dense label 3"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            75.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.8903919192777013,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 3
+        }
+      },
+      {
+        "id": "d4",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items",
+          "labels"
+        ],
+        "blocked_by": [
+          "d3"
+        ],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 4
+        },
+        "degrade_steps": [
+          "alternatives",
+          "wrap",
+          "distant",
+          "evict_lower",
+          "shrink:0.85",
+          "soft_overlap",
+          "omit"
+        ]
       },
       {
         "id": "d5",
         "placed": true,
         "box": {
           "x": 212.08397311277938,
-          "y": 152.80245435202116,
+          "y": 159.9064543520212,
           "w": 79.23600000000002,
-          "h": 19.944000000000017
+          "h": 12.839999999999975
         },
         "anchor": [
           251.70197311277937,
@@ -207,7 +236,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             75.636
@@ -245,38 +274,54 @@
       },
       {
         "id": "d6",
-        "placed": false,
-        "reason": "omitted_by_priority",
-        "blocking": [
-          "items",
-          "labels"
+        "placed": true,
+        "box": {
+          "x": 257.88234206346186,
+          "y": 183.36218666724682,
+          "w": 79.23599999999999,
+          "h": 12.839999999999975
+        },
+        "anchor": [
+          255.7610217199022,
+          198.32350701080645
         ],
-        "blocked_by": [
-          "d0"
-        ],
+        "anchor_side": "top-right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Dense label 6"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            75.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.726625824088838,
+        "degrade_steps": [],
         "priority": {
           "tier": 0,
           "score": 0.0,
           "rank": 6
-        },
-        "degrade_steps": [
-          "alternatives",
-          "wrap",
-          "distant",
-          "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
-          "omit"
-        ]
+        }
       },
       {
         "id": "d7",
         "placed": true,
         "box": {
           "x": 214.90541352605985,
-          "y": 259.44191959231273,
+          "y": 225.44191959231273,
           "w": 79.23600000000002,
-          "h": 19.94399999999996
+          "h": 12.839999999999975
         },
         "anchor": [
           254.52341352605984,
@@ -291,7 +336,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             75.636
@@ -310,16 +355,16 @@
             ],
             [
               254.52341352605984,
-              259.44191959231273
+              225.44191959231273
             ]
           ],
           "style": "angles",
           "port": [
             254.52341352605984,
-            259.44191959231273
+            225.44191959231273
           ]
         },
-        "cost": 2.720833333333333,
+        "cost": 2.0950315245551305,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -329,70 +374,41 @@
       },
       {
         "id": "d8",
-        "placed": true,
-        "box": {
-          "x": 154.68820400163756,
-          "y": 211.16694527525107,
-          "w": 79.23599999999999,
-          "h": 19.944000000000017
-        },
-        "anchor": [
-          249.12699979714833,
-          205.9361494797403
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items",
+          "labels",
+          "leaders"
         ],
-        "anchor_side": "distant",
-        "model": "distant",
-        "text": {
-          "lines": [
-            "Dense label 8"
-          ],
-          "used": "original",
-          "truncated": false,
-          "baseline_offsets": [
-            14.628
-          ],
-          "line_widths": [
-            75.636
-          ],
-          "x_offset": 1.7999999999999998,
-          "font_size": 12.0,
-          "font_family": "default",
-          "font_weight": 400,
-          "scale": 1.0
-        },
-        "leader": {
-          "points": [
-            [
-              246.6521260629954,
-              208.41102321389323
-            ],
-            [
-              233.92420400163755,
-              221.13894527525107
-            ]
-          ],
-          "style": "angles",
-          "port": [
-            233.92420400163755,
-            221.13894527525107
-          ]
-        },
-        "cost": 2.084482462152266,
-        "degrade_steps": [],
+        "blocked_by": [
+          "d1",
+          "d2",
+          "d7"
+        ],
         "priority": {
           "tier": 0,
           "score": 0.0,
           "rank": 8
-        }
+        },
+        "degrade_steps": [
+          "alternatives",
+          "wrap",
+          "distant",
+          "evict_lower",
+          "shrink:0.85",
+          "soft_overlap",
+          "omit"
+        ]
       },
       {
         "id": "d9",
         "placed": true,
         "box": {
-          "x": 41.79721842869196,
-          "y": 192.50071091145054,
+          "x": 75.79721842869196,
+          "y": 196.05271091145056,
           "w": 79.23599999999999,
-          "h": 19.944000000000017
+          "h": 12.839999999999975
         },
         "anchor": [
           244.53321842869195,
@@ -407,7 +423,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             75.636
@@ -425,17 +441,17 @@
               202.47271091145055
             ],
             [
-              121.03321842869195,
+              155.03321842869195,
               202.47271091145055
             ]
           ],
           "style": "angles",
           "port": [
-            121.03321842869195,
+            155.03321842869195,
             202.47271091145055
           ]
         },
-        "cost": 4.2125,
+        "cost": 3.466666666666667,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -445,9 +461,9 @@
       }
     ],
     "stats": {
-      "placed": 7,
+      "placed": 8,
       "total": 10,
-      "placed_weighted": 0.7218018303820491,
+      "placed_weighted": 0.84860265890399,
       "required_placed": true,
       "hard_violations": 0,
       "leader_crossings": 0,
@@ -456,14 +472,13 @@
       "iterations": 4000,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 200,
+      "candidates": 198,
       "omission_order": [
-        "d6",
-        "d3",
-        "d2"
+        "d8",
+        "d4"
       ],
       "priority_inversions": 0,
-      "total_cost": 13.383706039779694,
+      "total_cost": 14.47090117488257,
       "degraded": {},
       "grid": {
         "cell": 3.0,

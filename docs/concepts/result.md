@@ -33,20 +33,20 @@ The result (numbers rounded, `b` shortened):
   "placements": [
     {
       "id": "a", "placed": true,
-      "box": { "x": 20.108, "y": 50.028, "w": 35.892, "h": 19.944 }, "anchor": [60, 60],
+      "box": { "x": 21.108, "y": 52.2, "w": 35.892, "h": 15.6 }, "anchor": [60, 60],
       "anchor_side": "left", "model": "adjacent", "leader": null,
       "text": {
         "lines": ["Alpha"], "used": "original", "truncated": false,
-        "baseline_offsets": [14.628], "line_widths": [32.292], "x_offset": 1.8,
+        "baseline_offsets": [10.92], "line_widths": [32.292], "x_offset": 1.8,
         "font_size": 12, "font_family": "default", "font_weight": 400, "scale": 1
       },
-      "cost": 0.275, "degrade_steps": [],
+      "cost": 0.418, "degrade_steps": [],
       "priority": { "tier": 0, "score": 3, "rank": 0 }
     },
-    { "id": "b", "placed": true, "box": { "x": 68, "y": 53.028, "w": 29.232, "h": 19.944 }, "anchor_side": "right", "model": "adjacent" },
+    { "id": "b", "placed": true, "box": { "x": 67, "y": 56.856, "w": 29.232, "h": 12.288 }, "anchor_side": "right", "model": "adjacent" },
     {
       "id": "c", "placed": true,
-      "box": { "x": 134.008, "y": 50.028, "w": 42.492, "h": 19.944 }, "anchor": [250, 60],
+      "box": { "x": 134.008, "y": 53.58, "w": 42.492, "h": 12.84 }, "anchor": [250, 60],
       "anchor_side": "distant", "model": "distant",
       "leader": { "points": [[246.5, 60], [176.5, 60]], "style": "straight", "port": [176.5, 60] },
       "priority": { "tier": 0, "score": 1, "rank": 2 }
@@ -63,7 +63,7 @@ The result (numbers rounded, `b` shortened):
     "hard_violations": 0, "leader_crossings": 0, "priority_inversions": 0,
     "omission_order": ["d"],
     "runtime_ms": 1.5, "strategy_used": "local", "seed": 0, "iterations": 1600,
-    "candidates": 52, "grid": { "cell": 3, "cols": 100, "rows": 40, "classes": ["legend"] },
+    "candidates": 51, "grid": { "cell": 3, "cols": 100, "rows": 40, "classes": ["legend"] },
     "implementation": "rust/0.1.0"
   }
 }
@@ -74,7 +74,7 @@ The result (numbers rounded, `b` shortened):
 | Field | |
 |---|---|
 | `id`, `placed` | the item and whether its label is placed |
-| `box` | the label box `{x, y, w, h}`: the collision box, including the label's padding |
+| `box` | the label box `{x, y, w, h}`: the collision box, including the label's padding; a text measured with the bundled fonts spans its lines' advance widths and, vertically, their ink, from the top of the first line's letters to the bottom of the last line's ([spec §5.2](../reference/spec.md#52-text-measurement)) |
 | `anchor` | `[x, y]`: the item's anchor in canvas px (area items: the pole of the polygon); a result passed back as `warm_start` moves each box with its anchor ([interactive maps](../tutorials/interactive-maps.md#warm-starts)) |
 | `anchor_side` | `top`, `right`, `bottom`, `left`, `top-right`, `bottom-right`, `top-left`, `bottom-left`; `internal`, `distant`, `boundary` or `fan` |
 | `model` | the candidate model: `adjacent`, `slider`, `internal`, `distant`, `boundary`, or `fan` for a label in a crowd's column ([fan labels](candidates.md#fan-labels)) |
@@ -92,8 +92,10 @@ The result (numbers rounded, `b` shortened):
 To draw a text label: for each line `i`, draw `text.lines[i]` at
 `(box.x + text.x_offset, box.y + text.baseline_offsets[i])` in the label's font at
 `text.font_size` (left-aligned on the baseline), and the leader as a polyline through
-`leader.points`. The `box` is the collision box; drawing it is optional (a halo or a
-background behind the text usually looks better).
+`leader.points`. Take the baselines from the result: the box fits the letters, so a
+baseline at the font's ascent below the box top would be too low. The `box` is the
+collision box; drawing it is optional (a halo or a background behind the text usually
+looks better).
 
 ## Statistics
 

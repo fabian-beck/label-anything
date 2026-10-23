@@ -1,7 +1,7 @@
 {
   "kind": "place",
   "name": "font classes scale labels by priority",
-  "$comment": "Four items ranked by `pop`: the first class takes rank 0 (bold, 1.5 × 10 px), the second ends at ceil(50 % × 4) = 2 and takes rank 1 (1.2 ×), the last the rest (0.9 ×). The offset (0.5 em) and the padding (0.15 em) follow each label's font size: the label of a starts at 40 + 2 (mark) + 7.5, of b at 140 + 2 + 6, of c at 240 + 2 + 4.5; regular 'Aa' is 1.2 em wide and 1.362 em high, plus twice the padding.",
+  "$comment": "Four items ranked by `pop`: the first class takes rank 0 (bold, 1.5 × 10 px), the second ends at ceil(50 % × 4) = 2 and takes rank 1 (1.2 ×), the last the rest (0.9 ×). The offset (0.5 em) and the padding (0.15 em) follow each label's font size: the label of a starts at 40 + 2 (mark) + 7.5, of b at 140 + 2 + 6, of c at 240 + 2 + 4.5; 'Aa' is 1.2 em wide (regular) and 0.727 em high (the ink from the top of A to the bottom of a), plus twice the padding.",
   "problem": {
     "canvas": {
       "width": 480,
@@ -132,21 +132,21 @@
     "box": {
       "a": {
         "x": 49.5,
-        "y": 87.535,
+        "y": 92.2975,
         "w": 23.865,
-        "h": 24.93
+        "h": 15.405
       },
       "b": {
         "x": 148.0,
-        "y": 90.028,
+        "y": 93.838,
         "w": 18.0,
-        "h": 19.944
+        "h": 12.324
       },
       "c": {
         "x": 246.5,
-        "y": 92.521,
+        "y": 95.3785,
         "w": 13.5,
-        "h": 14.958
+        "h": 9.243
       }
     }
   }

@@ -15,6 +15,7 @@ import {
   type Measure,
   balancedWrap,
   extraWrapVariants,
+  needsComplexShaping,
   truncateEnd,
   truncateMiddle,
   wrapVariants,
@@ -173,16 +174,33 @@ export class Measurer {
     return { font: this.fontOf(font), size: font.size * scale };
   }
 
-  /** `[ascent, descent]` in px, both positive. */
-  vmetrics(font: FontSel, scale: number): [number, number] {
+  /**
+   * The ink of `text` in px (spec §5.2): how far its glyphs reach above and below the
+   * baseline (the bounds of their outlines, `LAvb`), when the text is measured with simple
+   * shaping (as Rust measures it: not with shaping `full`, nor `auto` for a text with complex
+   * scripts), its font has glyph bounds and a glyph of it has an outline; else null. For
+   * boxes whose vertical metrics are the font's, not the host's.
+   */
+  ink(font: FontSel, scale: number, text: string): [number, number] | null {
+    if (this.shaping === "full" || (this.shaping === "auto" && needsComplexShaping(text))) return null;
+    const size = font.size * scale;
+    const f = this.fontOf(font);
+    const ink = f.inkUnits(text);
+    if (ink === null) return null;
+    const upm = f.unitsPerEm;
+    return [(ink[1] * size) / upm, (-ink[0] * size) / upm];
+  }
+
+  /** `[ascent, descent]` in px, both positive, and whether the host measured them. */
+  vmetrics(font: FontSel, scale: number): [number, number, boolean] {
     const size = font.size * scale;
     if (this.env.measure) {
       const m = this.env.measure("", font.spec(scale));
-      if (m !== null && m !== undefined) return [m.ascent, m.descent];
+      if (m !== null && m !== undefined) return [m.ascent, m.descent, true];
     }
     const f = this.fontOf(font);
     const upm = f.unitsPerEm;
-    return [(f.ascender * size) / upm, (-f.descender * size) / upm];
+    return [(f.ascender * size) / upm, (-f.descender * size) / upm, false];
   }
 }
 
@@ -272,17 +290,25 @@ function textVariant(
   used: string,
   truncated: boolean,
 ): Variant {
-  const [asc, desc] = m.vmetrics(spec.font, scale);
+  const [asc, desc, host] = m.vmetrics(spec.font, scale);
+  // the box fits the ink: from the top of the first line's glyphs to the bottom of the last
+  // line's, where their bounds are known and the font gives the vertical metrics (spec §5.2)
+  const ink = (l: string | undefined): [number, number] | null =>
+    l === undefined || host ? null : m.ink(spec.font, scale, l);
+  const first = ink(lines[0]);
+  const last = ink(lines[lines.length - 1]);
+  const top = first !== null ? first[0] : asc;
+  const bottom = last !== null ? last[1] : desc;
   const size = spec.font.size * scale;
   const pitch = spec.font.lineHeight * size;
   const widths = lines.map((l) => m.width(spec.font, scale, l));
   let wmax = 0;
   for (const w of widths) wmax = maxf(wmax, w);
   const n = lines.length > 1 ? lines.length : 1;
-  const contentH = asc + desc + (n - 1) * pitch;
+  const contentH = top + bottom + (n - 1) * pitch;
   const p = pad * scale;
   const baselines: number[] = [];
-  for (let i = 0; i < n; i++) baselines.push(p + asc + i * pitch);
+  for (let i = 0; i < n; i++) baselines.push(p + top + i * pitch);
   return new Variant(
     wmax + 2 * p,
     contentH + 2 * p,

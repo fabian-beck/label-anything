@@ -9,9 +9,9 @@
         "placed": true,
         "box": {
           "x": 135.28667965644036,
-          "y": 127.93467965644032,
+          "y": 132.55467965644033,
           "w": 62.591999999999985,
-          "h": 19.944000000000017
+          "h": 15.324000000000012
         },
         "anchor": [
           200.0,
@@ -26,7 +26,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.643999999999998
           ],
           "line_widths": [
             58.992
@@ -38,7 +38,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.6878710745130534,
+        "cost": 0.6880199888601365,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -340,7 +340,7 @@
       "iterations": 8000,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 493,
+      "candidates": 498,
       "omission_order": [
         "t19",
         "t18",
@@ -363,7 +363,7 @@
         "t1"
       ],
       "priority_inversions": 0,
-      "total_cost": 0.6878710745130534,
+      "total_cost": 0.6880199888601365,
       "degraded": {},
       "grid": {
         "cell": 3.0,

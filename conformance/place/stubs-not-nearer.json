@@ -1,7 +1,7 @@
 {
   "kind": "place",
   "name": "no stub where the label would come nearer to another mark than to its own",
-  "$comment": "Beta's mark is 4 px below the middle of Alpha's label: 0.5 em farther right it would still be 4 px away, nearer than Alpha's own mark (7 px), so Alpha keeps its place against its mark, without a stub.",
+  "$comment": "Beta's mark is 6.2 px below the middle of Alpha's label: 0.5 em farther right it would still be 6.2 px away, nearer than Alpha's own mark (7 px), so Alpha keeps its place against its mark, without a stub.",
   "problem": {
     "canvas": {
       "width": 240,
@@ -76,9 +76,9 @@
     "box": {
       "a": {
         "x": 103,
-        "y": 90.028,
+        "y": 92.2,
         "w": 35.892,
-        "h": 19.944,
+        "h": 15.6,
         "tol": 0.01
       }
     }

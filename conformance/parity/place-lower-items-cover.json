@@ -67,9 +67,9 @@
         "placed": true,
         "box": {
           "x": 63.00000000000001,
-          "y": 40.028,
+          "y": 43.58,
           "w": 27.288000000000004,
-          "h": 19.944000000000003
+          "h": 12.840000000000003
         },
         "anchor": [
           60.0,
@@ -84,7 +84,7 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             23.688
@@ -96,7 +96,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 5.19904443068553,
+        "cost": 4.058814346692478,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -141,7 +141,7 @@
         "minor"
       ],
       "priority_inversions": 0,
-      "total_cost": 5.19904443068553,
+      "total_cost": 4.058814346692478,
       "degraded": {},
       "grid": {
         "cell": 3.0,

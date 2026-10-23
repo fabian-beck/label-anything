@@ -495,7 +495,10 @@ free-space seeds for distant candidates and early rejection.
 
 ### 5.1 Label kinds
 
-* `text`: measured with the built-in shaper (§5.2) unless `width`/`height` are given.
+* `text`: measured with the built-in shaper (§5.2) unless `width`/`height` are given, or
+  with the host's measurement where a binding takes one (a `measure(text, font)` callback
+  returning width, ascent and descent; called with the empty string for a font's vertical
+  metrics; none: the built-in measurement).
 * `icon`, `box`: fixed `width × height`; `shape` (`rect`, `rounded:r`, `circle`,
   `polygon` with `polygon` points) is used for exact collision tests.
 * `composite`: parts laid out in a `row` (default) or `column`, `gap` (default 0)
@@ -564,9 +567,25 @@ shaping unless the host supplies `width`/`height`.
 
 **Vertical metrics:** ascent = `hhea.ascender`, descent = `−hhea.descender` (or the
 OS/2 typo metrics when USE_TYPO_METRICS, `fsSelection` bit 7, is set), scaled by
-`size/unitsPerEm`. A text block of `n` lines has height
-`ascent + descent + (n−1)·line_height·size`; the baseline of line `i` is at
-`padding + ascent + i·line_height·size` from the box top.
+`size/unitsPerEm`.
+
+**Ink:** a font may carry the vertical bounds of its glyphs' outlines in a private table
+`LAvb` (the bundled fonts do, `tools/fonts/bounds.py`): `uint16` version (1), `uint16`
+numGlyphs, then per glyph id `int16` yMin, `int16` yMax in font units, both 0 for a glyph
+without outline; a table of another version, of another glyph count than `maxp`'s or too
+short for its count is ignored. The **ink** of a line is the lowest yMin and the
+highest yMax over its code points' glyphs (the `cmap` of simple shaping) whose yMin ≠ yMax,
+scaled by `size/unitsPerEm`; a line has none when its font has no `LAvb`, when none of
+its glyphs has an outline, or when it is measured with full shaping.
+
+**Text block:** a block of `n` lines has height `top + bottom + (n−1)·line_height·size`,
+where `top` is the ink top (yMax) of the first line and `bottom` the ink bottom (−yMin) of
+the last line; an edge whose line has no ink, or every edge when the host measures the
+vertical metrics (a measurement of the empty string, §5.1), takes the ascent or descent
+instead. The baseline of line `i` is at `padding + top + i·line_height·size` from the box
+top. So a box fits its letters: one line of `Alpha` is `0.76 + 0.24 + 2 × 0.15 = 1.3 em`
+high with the default padding (with ascent and descent: 1.662 em), and a label above or
+below its anchor stands as close to it as one beside it (ADR 0052).
 
 ### 5.3 Line breaking, wrapping, truncation
 

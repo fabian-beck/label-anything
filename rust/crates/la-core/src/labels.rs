@@ -142,11 +142,32 @@ impl<'a> Measurer<'a> {
         }
     }
 
-    /// (ascent, descent) in px, both positive.
-    pub fn vmetrics(&self, font: &FontSel, scale: f64) -> (f64, f64) {
+    /// The ink of `text` in px (spec §5.2): how far its glyphs reach above and below the
+    /// baseline (the bounds of their outlines, `LAvb`), when the text is measured with
+    /// simple shaping, its font has glyph bounds and a glyph of it has an outline; else
+    /// `None`. For boxes whose vertical metrics are the font's, not the host's.
+    pub fn ink(&self, font: &FontSel, scale: f64, text: &str) -> Option<(f64, f64)> {
+        if match self.shaping {
+            "full" => true,
+            "auto" => la_text::needs_complex_shaping(text),
+            _ => false,
+        } {
+            return None;
+        }
+        let spec = font.spec(scale);
+        let f = self
+            .fonts
+            .font(self.fonts.resolve(&font.family, font.weight, font.italic));
+        let (y0, y1) = f.ink_units(text)?;
+        let upm = f.units_per_em() as f64;
+        Some((y1 as f64 * spec.size / upm, -(y0 as f64) * spec.size / upm))
+    }
+
+    /// (ascent, descent) in px, both positive, and whether the host measured them.
+    pub fn vmetrics(&self, font: &FontSel, scale: f64) -> (f64, f64, bool) {
         let spec: FontSpec = font.spec(scale);
         if let Some(m) = self.env.measure("", &spec) {
-            return (m.ascent, m.descent);
+            return (m.ascent, m.descent, true);
         }
         let f = self
             .fonts
@@ -155,6 +176,7 @@ impl<'a> Measurer<'a> {
         (
             f.ascender() as f64 * spec.size / upm,
             -(f.descender() as f64) * spec.size / upm,
+            false,
         )
     }
 }
@@ -233,7 +255,19 @@ fn text_variant(
     used: &str,
     truncated: bool,
 ) -> Variant {
-    let (asc, desc) = m.vmetrics(&spec.font, scale);
+    let (asc, desc, host) = m.vmetrics(&spec.font, scale);
+    // the box fits the ink: from the top of the first line's glyphs to the bottom of the
+    // last line's, where their bounds are known and the font gives the vertical metrics
+    // (spec §5.2)
+    let ink = |l: &String| {
+        if host {
+            None
+        } else {
+            m.ink(&spec.font, scale, l)
+        }
+    };
+    let top = lines.first().and_then(ink).map_or(asc, |ink| ink.0);
+    let bottom = lines.last().and_then(ink).map_or(desc, |ink| ink.1);
     let size = spec.font.size * scale;
     let pitch = spec.font.line_height * size;
     let widths: Vec<f64> = lines
@@ -245,9 +279,9 @@ fn text_variant(
         wmax = maxf(wmax, w);
     }
     let n = lines.len().max(1);
-    let content_h = asc + desc + (n as f64 - 1.0) * pitch;
+    let content_h = top + bottom + (n as f64 - 1.0) * pitch;
     let p = pad * scale;
-    let baselines = (0..n).map(|i| p + asc + i as f64 * pitch).collect();
+    let baselines = (0..n).map(|i| p + top + i as f64 * pitch).collect();
     Variant {
         w: wmax + 2.0 * p,
         h: content_h + 2.0 * p,
@@ -519,7 +553,7 @@ fn composite_variant(
     for part in parts {
         match part {
             PartSpec::Text(t) => {
-                let (asc, desc) = m.vmetrics(&t.font, scale);
+                let (asc, desc, _) = m.vmetrics(&t.font, scale);
                 let w = m.width(&t.font, scale, &t.text);
                 sizes.push((w, asc + desc, Some((t, asc))));
             }

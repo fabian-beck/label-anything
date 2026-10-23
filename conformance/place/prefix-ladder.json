@@ -3,8 +3,8 @@
   "name": "prefix omission runs the degradation ladder before it cuts the order",
   "problem": {
     "canvas": {
-      "width": 480,
-      "height": 120
+      "width": 120,
+      "height": 160
     },
     "priority": {
       "omission": "prefix"
@@ -14,131 +14,40 @@
         "id": "t0",
         "anchor": {
           "type": "point",
-          "x": 40,
-          "y": 60
+          "x": 60,
+          "y": 30
         },
         "label": {
           "type": "text",
-          "text": "Top item number 0"
+          "text": "Alpha"
         },
-        "priority": 100.0
+        "priority": 3.0
       },
       {
         "id": "t1",
         "anchor": {
           "type": "point",
-          "x": 76,
-          "y": 60
+          "x": 60,
+          "y": 80
         },
         "label": {
           "type": "text",
-          "text": "Top item number 1"
+          "text": "Federal Republic of Germany"
         },
-        "priority": 99.0
+        "priority": 2.0
       },
       {
         "id": "t2",
         "anchor": {
           "type": "point",
-          "x": 112,
-          "y": 60
+          "x": 60,
+          "y": 130
         },
         "label": {
           "type": "text",
-          "text": "Top item number 2"
+          "text": "Gamma"
         },
-        "priority": 98.0
-      },
-      {
-        "id": "t3",
-        "anchor": {
-          "type": "point",
-          "x": 148,
-          "y": 60
-        },
-        "label": {
-          "type": "text",
-          "text": "Top item number 3"
-        },
-        "priority": 97.0
-      },
-      {
-        "id": "t4",
-        "anchor": {
-          "type": "point",
-          "x": 184,
-          "y": 60
-        },
-        "label": {
-          "type": "text",
-          "text": "Top item number 4"
-        },
-        "priority": 96.0
-      },
-      {
-        "id": "t5",
-        "anchor": {
-          "type": "point",
-          "x": 220,
-          "y": 60
-        },
-        "label": {
-          "type": "text",
-          "text": "Top item number 5"
-        },
-        "priority": 95.0
-      },
-      {
-        "id": "t6",
-        "anchor": {
-          "type": "point",
-          "x": 256,
-          "y": 60
-        },
-        "label": {
-          "type": "text",
-          "text": "Top item number 6"
-        },
-        "priority": 94.0
-      },
-      {
-        "id": "t7",
-        "anchor": {
-          "type": "point",
-          "x": 292,
-          "y": 60
-        },
-        "label": {
-          "type": "text",
-          "text": "Top item number 7"
-        },
-        "priority": 93.0
-      },
-      {
-        "id": "t8",
-        "anchor": {
-          "type": "point",
-          "x": 328,
-          "y": 60
-        },
-        "label": {
-          "type": "text",
-          "text": "Top item number 8"
-        },
-        "priority": 92.0
-      },
-      {
-        "id": "t9",
-        "anchor": {
-          "type": "point",
-          "x": 364,
-          "y": 60
-        },
-        "label": {
-          "type": "text",
-          "text": "Top item number 9"
-        },
-        "priority": 91.0
+        "priority": 1.0
       }
     ]
   },
@@ -148,9 +57,12 @@
     "priority_inversions": 0,
     "deterministic": true,
     "prefix": true,
-    "placed_min": 5,
-    "model": {
-      "t2": "distant"
+    "placed": 3,
+    "text_lines": {
+      "t1": [
+        "Federal Republic",
+        "of Germany"
+      ]
     }
   }
 }
