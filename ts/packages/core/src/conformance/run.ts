@@ -388,6 +388,38 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
       if (d > gap + 1e-9 || d < -1e-6) f.push(`touch_gap_max: ${id} gap ${d}`);
     }
   }
+  if (get(exp, "own_nearest") === true) {
+    // circle marks: no other item's mark is nearer to a label without a distant leader
+    // (adjacent or slider, with or without a stub) than its own mark
+    const dm = pointer(problem, "/defaults/mark");
+    const defaultMark = dm !== undefined ? dm : defaultOf("defaults.mark", "rust");
+    const circles: [string, number, number, number][] = [];
+    const items = get(problem, "items");
+    for (const it of Array.isArray(items) ? items : []) {
+      const anchor = get(it, "anchor");
+      const mark = get(anchor, "mark") ?? defaultMark;
+      if (get(mark, "shape") !== "circle") continue;
+      const id = typeof get(it, "id") === "string" ? (get(it, "id") as string) : "";
+      circles.push([id, f64(get(anchor, "x")) ?? 0, f64(get(anchor, "y")) ?? 0, f64(get(mark, "r")) ?? 0]);
+    }
+    for (const [id, ax, ay, ar] of circles) {
+      const p = placementOf(r, id);
+      if (p === undefined || (p.model !== "adjacent" && p.model !== "slider")) continue;
+      if (p.leader !== null && p.leader !== undefined && !(isObj(p.leader) && p.leader.stub === true)) continue;
+      const b = boxOf(p);
+      if (b === null) continue;
+      const dist = (x: number, y: number, rr: number): number => {
+        const dx = Math.max(Math.max(b.x0 - x, x - b.x1), 0);
+        const dy = Math.max(Math.max(b.y0 - y, y - b.y1), 0);
+        return Math.sqrt(dx * dx + dy * dy) - rr;
+      };
+      const own = dist(ax, ay, ar);
+      for (const [jd, x, y, rr] of circles) {
+        const d = dist(x, y, rr);
+        if (jd !== id && d < own - 1e-6) f.push(`own_nearest: ${id} is ${d} from ${jd}, ${own} from its mark`);
+      }
+    }
+  }
   if (get(exp, "deterministic") === true) {
     const r2 = placeFn(problem);
     if (!jsonEq(r.placements, r2.placements)) f.push("deterministic: two runs differ");

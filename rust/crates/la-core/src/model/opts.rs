@@ -464,6 +464,8 @@ pub struct PlacementOpts {
     pub fan: FanMode,
     /// `placement.stubs: auto` (spec §6.9).
     pub stubs: bool,
+    /// `placement.own_nearest` (spec §4.4).
+    pub own_nearest: bool,
 }
 
 impl PlacementOpts {
@@ -494,6 +496,7 @@ impl PlacementOpts {
                 _ => FanMode::Auto,
             },
             stubs: o.string("placement.stubs") == "auto",
+            own_nearest: o.bool("placement.own_nearest"),
         }
     }
 }

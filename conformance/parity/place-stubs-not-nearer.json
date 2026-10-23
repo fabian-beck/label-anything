@@ -35,7 +35,7 @@
         "anchor": {
           "type": "point",
           "x": 120,
-          "y": 118
+          "y": 116
         },
         "label": {
           "type": "text",
@@ -56,25 +56,7 @@
         },
         "priority": 1
       }
-    ],
-    "warm_start": {
-      "placements": [
-        {
-          "id": "a",
-          "placed": true,
-          "anchor": [
-            100,
-            100
-          ],
-          "box": {
-            "x": 109,
-            "y": 93.028,
-            "w": 35.892,
-            "h": 19.944
-          }
-        }
-      ]
-    }
+    ]
   },
   "result": {
     "version": "1",
@@ -83,17 +65,17 @@
         "id": "a",
         "placed": true,
         "box": {
-          "x": 109.0,
-          "y": 93.028,
+          "x": 103.0,
+          "y": 90.02799999999999,
           "w": 35.891999999999996,
-          "h": 19.944000000000003
+          "h": 19.944000000000017
         },
         "anchor": [
           100.0,
           100.0
         ],
         "anchor_side": "right",
-        "model": "slider",
+        "model": "adjacent",
         "text": {
           "lines": [
             "Alpha"
@@ -112,45 +94,27 @@
           "font_weight": 400,
           "scale": 1.0
         },
-        "leader": {
-          "points": [
-            [
-              103.5,
-              100.0
-            ],
-            [
-              109.0,
-              100.0
-            ]
-          ],
-          "style": "straight",
-          "port": [
-            109.0,
-            100.0
-          ],
-          "stub": true
-        },
-        "cost": 0.31260021765755186,
+        "leader": null,
+        "cost": 0.2726666666666674,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
           "score": 3.0,
           "rank": 0
-        },
-        "displacement": 0.0
+        }
       },
       {
         "id": "b",
         "placed": true,
         "box": {
           "x": 105.384,
-          "y": 121.0,
+          "y": 119.0,
           "w": 29.231999999999985,
           "h": 19.944000000000017
         },
         "anchor": [
           120.0,
-          118.0
+          116.0
         ],
         "anchor_side": "bottom",
         "model": "adjacent",
@@ -236,22 +200,16 @@
       "iterations": 1200,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 76,
+      "candidates": 75,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 0.5126002176575518,
+      "total_cost": 0.4726666666666674,
       "degraded": {},
       "grid": {
         "cell": 3.0,
         "cols": 80,
         "rows": 54,
         "classes": []
-      },
-      "flicker": {
-        "moved": 0,
-        "added": 2,
-        "removed": 0,
-        "mean_displacement": 0.0
       }
     },
     "debug_svg": null

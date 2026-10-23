@@ -101,7 +101,12 @@ export class Evaluator {
     const ring = r.inflate(item.len.buffer);
     const gapGuess = item.len.offset + 0.5 * em;
     const margin = c.warm ? WARM_MARGIN * item.len.margin : item.len.margin;
-    const reach = maxf(item.len.buffer > gapGuess ? item.len.buffer : gapGuess, margin);
+    // a label without a distant leader comes no closer to another item's mark than to its
+    // own (spec §4.4)
+    const nearRule =
+      model.placement.ownNearest && c.kind !== Kind.Internal && (c.leaders.length === 0 || c.hasStub());
+    const dOwn = nearRule ? item.shape.distRect(r) : 0;
+    const reach = maxf(maxf(item.len.buffer > gapGuess ? item.len.buffer : gapGuess, margin), dOwn);
     const buf = this.buf;
     obs.itemIndex.query(r.inflate(reach), buf);
     const labelItemsHard = dy.labelItems.kind === AvoidKind.Hard;
@@ -133,12 +138,14 @@ export class Evaluator {
       if (!(lower ? labelLowerHard : labelItemsHard)) continue;
       if (c.labelOverlapsShape(sj)) {
         acc.violate(BLOCK_ITEMS, false, 0);
-      } else if (margin > EPS) {
-        // the margin (up to rounding), but never more than the mark keeps from the own
-        // mark's box
-        const d = sj.distRect(r);
-        if (d < margin - EPS && d < sj.distRect(item.shape.bbox())) acc.violate(BLOCK_ITEMS, false, 0);
+        continue;
       }
+      const d = sj.distRect(r);
+      // the margin (up to rounding), but never more than the mark keeps from the own mark's
+      // box
+      if (margin > EPS && d < margin - EPS && d < sj.distRect(item.shape.bbox())) acc.violate(BLOCK_ITEMS, false, 0);
+      // nearer to the label than its own mark (the marks of the item's group aside)
+      if (nearRule && d < dOwn - EPS && (model.groupOf[j] ?? null) !== i) acc.violate(BLOCK_ITEMS, false, 0);
     }
     if (dy.labelItems.kind === AvoidKind.Soft) {
       const cov = obs.otherItemsCovered(i, r);
@@ -317,8 +324,8 @@ export class Evaluator {
     // covers the leader's anchor, or a column leader's start: no leader avoids it); the
     // leader of a fan or boundary label must only not cross a mark closer than the
     // clearance to its start (it leaves a crowd of touching marks, in the order of its
-    // column); a stub, which lies between the mark and its label, keeps the label's margin
-    const clearance = l.stub ? item.len.margin : item.len.clearance;
+    // column)
+    const clearance = item.len.clearance;
     const buf = this.buf;
     obs.itemIndex.query(l.bbox().inflate(clearance), buf);
     const lowerRule = !dy.leaderLower.equals(dy.leaderItems);
@@ -338,13 +345,7 @@ export class Evaluator {
         dmin = minf(dmin, sj.distSegmentXY(a.x, a.y, b.x, b.y));
       }
       if (li.kind === AvoidKind.Hard) {
-        // a stub as the label's margin, never more than the mark keeps from the own mark
-        const lim =
-          column && sj.signedDistance(start) < clearance
-            ? EPS
-            : l.stub
-              ? maxf(minf(clearance, sj.distRect(item.shape.bbox())) - EPS, EPS)
-              : clearance - EPS;
+        const lim = column && sj.signedDistance(start) < clearance ? EPS : clearance - EPS;
         if (dmin < lim) acc.violate(BLOCK_ITEMS, false, 0);
       } else if (dmin < clearance) {
         const f = clearance > 0 ? 1 - dmin / clearance : 1;

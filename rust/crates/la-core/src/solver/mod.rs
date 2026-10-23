@@ -142,7 +142,8 @@ impl<'a> Solve<'a> {
                         obs.index_cell,
                     )
                 }),
-            ),
+            )
+            .with_stubs(model.placement.stubs),
             reasons: vec![None; n],
             steps_tried: vec![Vec::new(); n],
             level_done: vec![0; n],
@@ -567,8 +568,7 @@ impl<'a> Solve<'a> {
             };
             let item = &self.model.items[i];
             let v = &self.variants[i][vi];
-            let stubs = crate::leaders::Stubs::of(self.model, self.obs);
-            let mut c = candidates::warm(self.model, item, vi, v, b, stubs.as_ref())?;
+            let mut c = candidates::warm(self.model, item, vi, v, b)?;
             c.warm = true;
             c.level = level;
             c.lshape = candidates::label_shape(&c.rect, &v.shape);
@@ -598,10 +598,7 @@ impl<'a> Solve<'a> {
             let em = item.em();
             let steps = [0.05 * em, 0.1 * em, 0.2 * em, 0.4 * em, 0.8 * em];
             let v = &self.variants[i][vi];
-            let stubs = crate::leaders::Stubs::of(self.model, self.obs);
-            let nudges =
-                candidates::warm_nudges(item, vi, v, rect, &steps, self.models[i], stubs.as_ref());
-            for (si, mut c) in nudges {
+            for (si, mut c) in candidates::warm_nudges(item, vi, v, rect, &steps, self.models[i]) {
                 c.level = 0;
                 c.warm = true;
                 c.lshape = candidates::label_shape(&c.rect, &v.shape);
@@ -827,8 +824,7 @@ fn warm_candidate(
         .iter()
         .position(|v| (v.w - b.w()).abs() <= 0.5 && (v.h - b.h()).abs() <= 0.5)?;
     let v = &variants[vi];
-    let stubs = crate::leaders::Stubs::of(model, obs);
-    let mut c = candidates::warm(model, item, vi, v, *b, stubs.as_ref())?;
+    let mut c = candidates::warm(model, item, vi, v, *b)?;
     c.warm = true;
     c.level = 0;
     c.lshape = candidates::label_shape(&c.rect, &v.shape);

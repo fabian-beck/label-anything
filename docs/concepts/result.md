@@ -80,7 +80,7 @@ The result (numbers rounded, `b` shortened):
 | `model` | the candidate model: `adjacent`, `slider`, `internal`, `distant`, `boundary`, or `fan` for a label in a crowd's column ([fan labels](candidates.md#fan-labels)) |
 | `text` | the text as placed: `lines` (wrapped, truncated or an alternative), `used` (`original`, `alternative:i`, `truncated`, `group`), `baseline_offsets` (y of each baseline relative to `box.y`), `x_offset` (the text starts at `box.x + x_offset`), `line_widths`, `font_size`, `font_family`, `font_weight`, `scale` (< 1 when shrunk) |
 | `parts` | for composite labels: each part's `type`, `box` and `text` |
-| `leader` | `null`, or `points` (from the item to the label), `style`, `port` (where it meets the label), `underline` (for `port: baseline`), `curve` (Bézier control points for `curved`), `stub: true` for the short leader of an adjacent or slider label in a crowd ([stubs](../tutorials/leaders.md#stubs-for-labels-in-a-crowd)) |
+| `leader` | `null`, or `points` (from the item to the label), `style`, `port` (where it meets the label), `underline` (for `port: baseline`), `curve` (Bézier control points for `curved`), `stub: true` for the short leader of an adjacent or slider label in a crowd, at a right angle to its side ([stubs](../tutorials/leaders.md#stubs-for-labels-in-a-crowd)) |
 | `leaders`, `members` | for group labels: one fan leader per member, and the member ids |
 | `cost`, `cost_breakdown` | the label's final cost; per term with `output.cost_breakdown` |
 | `degrade_steps` | the ladder steps that were tried for it ([candidates](candidates.md#the-degradation-ladder)) |

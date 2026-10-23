@@ -1,7 +1,7 @@
 {
   "kind": "place",
   "name": "a label that another mark comes near stands farther out with a stub; others touch their mark",
-  "$comment": "Without stubs Alpha's box would start at x = 103 (mark radius 2, offset 1); with its stub it starts 6 px (0.5 em) farther right, and the stub runs from 1.5 px outside the mark to the box.",
+  "$comment": "Without the stub Alpha's box would start at x = 103 (mark radius 2, offset 1); with it the box starts 6 px (0.5 em) farther right, and the stub runs from 1.5 px outside the mark to (109, 100).",
   "problem": {
     "canvas": {
       "width": 240,
@@ -36,8 +36,8 @@
         "id": "b",
         "anchor": {
           "type": "point",
-          "x": 120,
-          "y": 118
+          "x": 100,
+          "y": 116
         },
         "label": {
           "type": "text",
@@ -80,6 +80,7 @@
     "stub": {
       "a": true
     },
+    "own_nearest": true,
     "box": {
       "a": {
         "x": 109,

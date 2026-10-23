@@ -1,7 +1,7 @@
 {
   "kind": "place",
-  "name": "a previous box with a stub keeps it",
-  "$comment": "The warm-start box stands 0.5 em farther out than an adjacent label and 3 px lower than the one of the case above, where no candidate of the item stands: it is kept as a slider-kind candidate with a stub (not as a distant label, whose leader would be shorter than leaders.min_length).",
+  "name": "no stub where the label would come nearer to another mark than to its own",
+  "$comment": "Beta's mark is 4 px below the middle of Alpha's label: 0.5 em farther right it would still be 4 px away, nearer than Alpha's own mark (7 px), so Alpha keeps its place against its mark, without a stub.",
   "problem": {
     "canvas": {
       "width": 240,
@@ -37,7 +37,7 @@
         "anchor": {
           "type": "point",
           "x": 120,
-          "y": 118
+          "y": 116
         },
         "label": {
           "type": "text",
@@ -58,25 +58,7 @@
         },
         "priority": 1
       }
-    ],
-    "warm_start": {
-      "placements": [
-        {
-          "id": "a",
-          "placed": true,
-          "anchor": [
-            100,
-            100
-          ],
-          "box": {
-            "x": 109,
-            "y": 93.028,
-            "w": 35.892,
-            "h": 19.944
-          }
-        }
-      ]
-    }
+    ]
   },
   "expect": {
     "hard_violations": 0,
@@ -84,19 +66,17 @@
     "priority_inversions": 0,
     "deterministic": true,
     "placed": 3,
-    "model": {
-      "a": "slider"
+    "anchor_side": {
+      "a": "right"
     },
     "has_leader": {
-      "a": true
+      "a": false
     },
-    "stub": {
-      "a": true
-    },
+    "own_nearest": true,
     "box": {
       "a": {
-        "x": 109,
-        "y": 93.028,
+        "x": 103,
+        "y": 90.028,
         "w": 35.892,
         "h": 19.944,
         "tol": 0.01

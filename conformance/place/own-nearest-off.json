@@ -1,0 +1,72 @@
+{
+  "kind": "place",
+  "name": "without own_nearest a label may come closer to another item's mark than to its own",
+  "problem": {
+    "canvas": {
+      "width": 200,
+      "height": 120
+    },
+    "degrade": [
+      "omit"
+    ],
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        },
+        "priority": 2,
+        "placement": {
+          "models": [
+            "adjacent"
+          ],
+          "position_order": [
+            "top"
+          ]
+        }
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 103.5,
+          "y": 59.5
+        },
+        "label": {
+          "type": "text",
+          "text": "Beta"
+        },
+        "priority": 1,
+        "placement": {
+          "models": [
+            "adjacent"
+          ],
+          "position_order": [
+            "right"
+          ]
+        }
+      }
+    ],
+    "placement": {
+      "own_nearest": false
+    }
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed_ids": [
+      "a"
+    ],
+    "anchor_side": {
+      "a": "top"
+    }
+  }
+}

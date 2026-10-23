@@ -71,6 +71,7 @@ OPTION_PATHS: Dict[str, str] = {
     "prune_factor": "placement.prune_factor",
     "boundary": "placement.boundary",
     "fan": "placement.fan",
+    "own_nearest": "placement.own_nearest",
     "stubs": "placement.stubs",
     "stub_length": "placement.stub_length",
     "stub_reach": "placement.stub_reach",

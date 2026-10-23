@@ -108,8 +108,8 @@ public final class Placement extends Spec {
     /** None (default). */
     OFF,
     /**
-     * A label that another item's mark comes near stands a little farther out, joined to its
-     * mark by a short straight leader.
+     * A label that another item's mark comes near stands a little farther out where that is
+     * feasible, joined to its mark by a short leader at a right angle to its side.
      */
     AUTO;
 
@@ -259,8 +259,17 @@ public final class Placement extends Spec {
   }
 
   /**
-   * Stubs: a label next to its mark that another item's mark comes near stands farther out,
-   * joined to its mark by a short leader (default {@link Stubs#OFF}).
+   * Whether a label next to its mark is never nearer to another item's mark than to its own
+   * (spec §4.4, default true).
+   */
+  public Placement ownNearest(boolean enabled) {
+    return with("own_nearest", enabled);
+  }
+
+  /**
+   * Stubs: a label next to its mark that another item's mark comes near stands farther out
+   * where that is feasible, joined to its mark by a short leader at a right angle to its side
+   * (default {@link Stubs#OFF}).
    */
   public Placement stubs(Stubs mode) {
     return with("stubs", mode);

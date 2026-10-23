@@ -425,36 +425,50 @@ CASES["font-class-shrink-floor"] = case(
     "min_scale 0.7): a, in a class of scale 1, gets it; b's class (0.9) keeps it at or above "
     "0.7 × 10 px, i.e. factors down to 0.7 / 0.9 = 0.778: 0.85 × 9 px is too wide.")
 
-# --- stubs -------------------------------------------------------------------------------
-# Alpha may only stand right of its point; Beta's point lies 6 px below that place, within
-# the stub reach (0.75 em = 9 px) of the box: Alpha stands 0.5 em farther right, with a stub.
-# Gamma's point has no other mark near: its label touches the mark, without a stub.
+# --- own mark nearest, stubs -------------------------------------------------------------
+# Beta's mark overlaps Alpha's, so the label margin does not keep it from Alpha's label; above
+# its mark (Alpha's only position) the label would be 0.5 px from Beta's mark but 1 px from
+# its own.
+NEAREST = {"canvas": {"width": 200, "height": 120}, "degrade": ["omit"],
+           "items": [pt("a", 100, 60, "Alpha", priority=2,
+                        placement={"models": ["adjacent"], "position_order": ["top"]}),
+                     pt("b", 103.5, 59.5, "Beta", priority=1,
+                        placement={"models": ["adjacent"], "position_order": ["right"]})]}
+CASES["own-nearest"] = case(
+    "a label comes no closer to another item's mark than to its own",
+    NEAREST,
+    {"placed_ids": ["b"], "unplaced_ids": ["a"], "reasons": {"a": "no_feasible_candidate"},
+     "own_nearest": True})
+CASES["own-nearest-off"] = case(
+    "without own_nearest a label may come closer to another item's mark than to its own",
+    {**NEAREST, "placement": {"own_nearest": False}},
+    {"placed_ids": ["a"], "anchor_side": {"a": "top"}})
+
+# Alpha may only stand right of its point; Beta's point, 16 px below it, comes within the
+# stub reach (0.75 em = 9 px) of that place: Alpha stands 0.5 em farther right, joined to its
+# mark by a horizontal stub to the middle of its left side, and Beta's mark is still farther
+# from it than Alpha's. Gamma's point has no other mark near: its label touches its mark.
 STUBS = {"canvas": {"width": 240, "height": 160}, "placement": {"stubs": "auto"},
          "items": [pt("a", 100, 100, "Alpha", priority=3,
                       placement={"models": ["adjacent"], "position_order": ["right"]}),
-                   pt("b", 120, 118, "Beta", priority=2), pt("g", 60, 40, "Gamma", priority=1)]}
-
+                   pt("b", 100, 116, "Beta", priority=2), pt("g", 60, 40, "Gamma", priority=1)]}
 CASES["stubs-near-other-marks"] = case(
     "a label that another mark comes near stands farther out with a stub; others touch their mark",
     STUBS,
     {"placed": 3, "anchor_side": {"a": "right"}, "model": {"a": "adjacent", "g": "adjacent"},
-     "has_leader": {"a": True, "g": False}, "stub": {"a": True},
+     "has_leader": {"a": True, "g": False}, "stub": {"a": True}, "own_nearest": True,
      "box": {"a": {"x": 109, "y": 90.028, "w": 35.892, "h": 19.944, "tol": 0.01}}},
-    "Without stubs Alpha's box would start at x = 103 (mark radius 2, offset 1); with its "
-    "stub it starts 6 px (0.5 em) farther right, and the stub runs from 1.5 px outside the "
-    "mark to the box.")
-
-CASES["stubs-warm-start"] = case(
-    "a previous box with a stub keeps it",
-    {**STUBS, "warm_start": {"placements": [
-        {"id": "a", "placed": True, "anchor": [100, 100],
-         "box": {"x": 109, "y": 93.028, "w": 35.892, "h": 19.944}}]}},
-    {"placed": 3, "model": {"a": "slider"}, "has_leader": {"a": True}, "stub": {"a": True},
-     "box": {"a": {"x": 109, "y": 93.028, "w": 35.892, "h": 19.944, "tol": 0.01}}},
-    "The warm-start box stands 0.5 em farther out than an adjacent label and 3 px lower "
-    "than the one of the case above, where no candidate of the item stands: it is kept as a "
-    "slider-kind candidate with a stub (not as a distant label, whose leader would be "
-    "shorter than leaders.min_length).")
+    "Without the stub Alpha's box would start at x = 103 (mark radius 2, offset 1); with it "
+    "the box starts 6 px (0.5 em) farther right, and the stub runs from 1.5 px outside the "
+    "mark to (109, 100).")
+CASES["stubs-not-nearer"] = case(
+    "no stub where the label would come nearer to another mark than to its own",
+    {**STUBS, "items": [STUBS["items"][0], pt("b", 120, 116, "Beta", priority=2), STUBS["items"][2]]},
+    {"placed": 3, "anchor_side": {"a": "right"}, "has_leader": {"a": False}, "own_nearest": True,
+     "box": {"a": {"x": 103, "y": 90.028, "w": 35.892, "h": 19.944, "tol": 0.01}}},
+    "Beta's mark is 4 px below the middle of Alpha's label: 0.5 em farther right it would "
+    "still be 4 px away, nearer than Alpha's own mark (7 px), so Alpha keeps its place "
+    "against its mark, without a stub.")
 
 # Small marks of every shape in a crowd (the concave L is pushed in, spec §4.5): the parity
 # fixture of this case holds every stub of the Rust core, which TypeScript must reproduce.
@@ -470,7 +484,7 @@ CASES["stubs-mark-shapes"] = case(
                   ["Ash", "Birch", "Cedar", "Elm", "Fir", "Hazel", "Oak", "Pine", "Yew"][k % 9],
                   priority=32 - k)
                for k in range(32)]},
-    {"placed_min": 12})
+    {"placed_min": 12, "own_nearest": True})
 for k, it in enumerate(CASES["stubs-mark-shapes"]["problem"]["items"]):
     it["anchor"]["mark"] = STUB_MARKS[k % 4]
 

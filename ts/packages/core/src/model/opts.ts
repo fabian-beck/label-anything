@@ -455,6 +455,8 @@ export class PlacementOpts {
     public fan: FanMode,
     /** `placement.stubs: auto` (spec §6.9). */
     public stubs: boolean,
+    /** `placement.own_nearest` (spec §4.4). */
+    public ownNearest: boolean,
   ) {}
 
   static from(o: Opts): PlacementOpts {
@@ -472,6 +474,7 @@ export class PlacementOpts {
       { sides: o.strings("placement.boundary.sides"), spread: o.string("placement.boundary.align") === "spread" },
       fanMode(o.string("placement.fan")),
       o.string("placement.stubs") === "auto",
+      o.bool("placement.own_nearest"),
     );
   }
 }

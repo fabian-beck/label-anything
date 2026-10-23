@@ -428,6 +428,53 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
             }
         }
     }
+    if exp.get("own_nearest") == Some(&Value::Bool(true)) {
+        // circle marks: no other item's mark is nearer to a label without a distant leader
+        // (adjacent or slider, with or without a stub) than its own mark
+        let default_mark = problem
+            .pointer("/defaults/mark")
+            .cloned()
+            .unwrap_or_else(|| la_core::options::default_of("defaults.mark", "rust"));
+        let circles: Vec<(String, f64, f64, f64)> = problem["items"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|it| {
+                let mark = it["anchor"].get("mark").unwrap_or(&default_mark);
+                (mark["shape"] == "circle").then(|| {
+                    (
+                        it["id"].as_str().unwrap_or("").to_string(),
+                        it["anchor"]["x"].as_f64().unwrap_or(0.0),
+                        it["anchor"]["y"].as_f64().unwrap_or(0.0),
+                        mark["r"].as_f64().unwrap_or(0.0),
+                    )
+                })
+            })
+            .collect();
+        for (id, ax, ay, ar) in &circles {
+            let Some(p) = placement(&r, id).filter(|p| {
+                (p["model"] == "adjacent" || p["model"] == "slider")
+                    && (p["leader"].is_null() || p["leader"]["stub"] == true)
+            }) else {
+                continue;
+            };
+            let Some(b) = box_of(p) else { continue };
+            let dist = |x: f64, y: f64, rr: f64| {
+                let dx = (b.x0 - x).max(x - b.x1).max(0.0);
+                let dy = (b.y0 - y).max(y - b.y1).max(0.0);
+                (dx * dx + dy * dy).sqrt() - rr
+            };
+            let own = dist(*ax, *ay, *ar);
+            for (jd, x, y, rr) in &circles {
+                let d = dist(*x, *y, *rr);
+                if jd != id && d < own - 1e-6 {
+                    f.push(format!(
+                        "own_nearest: {id} is {d} from {jd}, {own} from its mark"
+                    ));
+                }
+            }
+        }
+    }
     if exp.get("deterministic") == Some(&Value::Bool(true)) {
         let r2 = label_anything::place(problem).unwrap();
         if r["placements"] != r2["placements"] {

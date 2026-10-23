@@ -164,6 +164,28 @@ def check(problem: Dict[str, Any], exp: Dict[str, Any]) -> List[str]:
             d = math.hypot(dx, dy) - float(mark.get("r", 0.0)) - offset
             if d > gap_max + 1e-9 or d < -1e-6:
                 f.append(f"touch_gap_max: {it['id']} gap {d}")
+    if exp.get("own_nearest"):
+        # circle marks: no other item's mark is nearer to a label without a distant leader
+        # (adjacent or slider, with or without a stub) than its own mark
+        default = problem.get("defaults", {}).get("mark") or DEFAULT_MARK
+        circles = [(it.get("id", ""), it["anchor"]["x"], it["anchor"]["y"], float(m.get("r", 0.0)))
+                   for it in problem["items"] for m in [it["anchor"].get("mark") or default]
+                   if m.get("shape") == "circle"]
+        for i, ax, ay, ar in circles:
+            p = by_id.get(i)
+            if not p or p.get("model") not in ("adjacent", "slider") or not p.get("box"):
+                continue
+            if p.get("leader") and not p["leader"].get("stub"):
+                continue
+            b = la.BBox(**p["box"])
+
+            def dist(x: float, y: float, rr: float) -> float:
+                return math.hypot(max(b.x - x, x - b.x1, 0.0), max(b.y - y, y - b.y1, 0.0)) - rr
+
+            own = dist(ax, ay, ar)
+            for j, x, y, rr in circles:
+                if j != i and dist(x, y, rr) < own - 1e-6:
+                    f.append(f"own_nearest: {i} is {dist(x, y, rr)} from {j}, {own} from its mark")
     if exp.get("deterministic") and la.place_problem(problem).raw["placements"] != raw:
         f.append("deterministic: two runs differ")
     return f

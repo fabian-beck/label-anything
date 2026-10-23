@@ -2,8 +2,7 @@
 
 use super::{Reason, Solve};
 use crate::candidates::Cand;
-use crate::geom::seg_overlaps_rect;
-use crate::leaders::{cand_leaders_conflict, Spacing};
+use crate::leaders::{cand_leaders_conflict, leader_hits_label, Spacing};
 use crate::model::opts::{Omission, Step};
 use crate::obstacles::Dynamic;
 use std::cmp::Reverse;
@@ -17,12 +16,12 @@ pub fn pair_conflict(a: &Cand, b: &Cand, dy: &Dynamic, sp: Spacing) -> bool {
     }
     if dy.leader_labels.is_hard() {
         for l in &a.leaders {
-            if l.segments().any(|(p, q)| seg_overlaps_rect(p, q, &b.rect)) {
+            if leader_hits_label(l, &b.rect, sp.gap) {
                 return true;
             }
         }
         for l in &b.leaders {
-            if l.segments().any(|(p, q)| seg_overlaps_rect(p, q, &a.rect)) {
+            if leader_hits_label(l, &a.rect, sp.gap) {
                 return true;
             }
         }

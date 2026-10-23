@@ -115,7 +115,7 @@
           "description": "For style=curved: [start, control, end] of the quadratic Bezier (points holds its flattening)."
         },
         "member": { "type": "string", "description": "For fan leaders of a group: the member id this leader points to." },
-        "stub": { "type": "boolean", "description": "A stub (placement.stubs): the short straight leader of an adjacent or slider label near other marks, which hosts may draw more lightly." }
+        "stub": { "type": "boolean", "description": "A stub (placement.stubs): the short leader of an adjacent or slider label near other marks, at a right angle to the label's side, which hosts may draw more lightly." }
       }
     },
     "placement": {

@@ -33,12 +33,13 @@ pub fn leader_start(model: &Model, item: &Item, toward: P) -> P {
     }
 }
 
-/// Stubs (spec §6.9): what an adjacent or slider candidate needs to know about the other
-/// items' marks to decide whether it gets a stub.
+/// Stubs (spec §6.9): what an adjacent candidate needs to decide whether it stands farther
+/// out with a stub.
 pub struct Stubs<'a> {
     pub model: &'a Model,
     pub obs: &'a crate::obstacles::Obstacles,
     buf: std::cell::RefCell<Vec<u32>>,
+    ev: std::cell::RefCell<crate::cost::Evaluator<'a>>,
 }
 
 impl<'a> Stubs<'a> {
@@ -48,6 +49,11 @@ impl<'a> Stubs<'a> {
             model,
             obs,
             buf: std::cell::RefCell::new(Vec::new()),
+            ev: std::cell::RefCell::new(crate::cost::Evaluator::new(
+                model,
+                obs,
+                &crate::env::BasicEnv,
+            )),
         })
     }
     /// Whether the mark of another item (not of the item's group) comes closer than
@@ -69,31 +75,59 @@ impl<'a> Stubs<'a> {
                 && self.model.items[j].shape.dist_rect(r) < reach
         })
     }
-    /// The candidate `c` with its stub: straight from the mark toward the nearest point
-    /// of the box (its port), starting `anchor_gap` outside the boundary (or at the
-    /// tip), whatever `leaders.attach` and `leaders.style` say for other leaders.
-    pub fn attach(&self, item: &Item, mut c: Cand) -> Cand {
-        c.leaders.push(stub_leader(item, &c.rect));
-        c
+    /// The candidate `c` of variant `v` with its stub, when the stub meets a side of the
+    /// label squarely and the candidate is statically feasible (spec §6.9); `None`
+    /// otherwise.
+    pub fn stubbed(&self, item: &Item, v: &Variant, mut c: Cand) -> Option<Cand> {
+        c.leaders.push(stub_leader(item, &c.rect)?);
+        c.lshape = crate::candidates::label_shape(&c.rect, &v.shape);
+        self.ev.borrow_mut().eval(&mut c, v, None);
+        // evaluated again with the item's other candidates
+        c.evaluated = false;
+        c.feasible.then_some(c)
     }
 }
 
-/// The stub of an item's label box `r` (spec §6.9).
-pub fn stub_leader(item: &Item, r: &Rect) -> Leader {
+/// The stub of an item's label box `r` (spec §6.9): horizontal or vertical, from the mark
+/// (`anchor_gap` outside its boundary, or the tip of an icon mark) to the box side facing
+/// it, which it meets at a right angle within the side's middle half. `None` when the box
+/// is not beside, above or below the mark's reference point in that way.
+pub fn stub_leader(item: &Item, r: &Rect) -> Option<Leader> {
     let refp = item.shape.reference();
+    let m = r.center();
+    let beside = (refp.y - m.y).abs() <= 0.25 * r.h();
+    let over = (refp.x - m.x).abs() <= 0.25 * r.w();
+    let (port, d) = if beside && refp.x < r.x0 {
+        (P::new(r.x0, refp.y), P::new(1.0, 0.0))
+    } else if beside && refp.x > r.x1 {
+        (P::new(r.x1, refp.y), P::new(-1.0, 0.0))
+    } else if over && refp.y < r.y0 {
+        (P::new(refp.x, r.y0), P::new(0.0, 1.0))
+    } else if over && refp.y > r.y1 {
+        (P::new(refp.x, r.y1), P::new(0.0, -1.0))
+    } else {
+        return None;
+    };
     let start = if item.tip {
         refp
     } else {
-        let d = (r.closest_point(refp) - refp).norm();
-        if d.len2() == 0.0 {
-            refp
-        } else {
-            item.shape.boundary_point(d) + d * item.len.anchor_gap
-        }
+        item.shape.boundary_point(d) + d * item.len.anchor_gap
     };
-    let mut l = Leader::new(vec![start, r.closest_point(start)], LeaderStyle::Straight);
+    let mut l = Leader::new(vec![start, port], LeaderStyle::Straight);
     l.stub = true;
-    l
+    Some(l)
+}
+
+/// Whether leader `l` hits the label box `r`: passes through it, or, for a stub, comes
+/// closer than `gap` (the space two labels keep, spec §6.9).
+pub fn leader_hits_label(l: &Leader, r: &Rect, gap: f64) -> bool {
+    if l.stub && gap > crate::geom::EPS {
+        l.segments()
+            .any(|(a, b)| crate::geom::dist_seg_rect(a, b, r) < gap - crate::geom::EPS)
+    } else {
+        l.segments()
+            .any(|(a, b)| crate::geom::seg_overlaps_rect(a, b, r))
+    }
 }
 
 /// Place a label of half size (hw, hh) so that its port side faces direction `d` at `t`.

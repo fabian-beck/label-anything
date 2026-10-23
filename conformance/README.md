@@ -91,6 +91,8 @@ points at the offending property; for `required` at the missing property (e.g.
     "anchor_side": { "a": "top" }, "model": { "a": "adjacent" },
     "has_leader": { "b": true },
     "stub": { "a": true },             // the label's leader is a stub (placement.stubs)
+    "own_nearest": true,               // circle marks: no other item's mark is nearer to a
+                                       // label without a distant leader than its own
     "max_bends": 1,                    // every leader of every placed label bends at most so often
     "underline": { "b": true },        // baseline port: the underline starts at the leader's
                                        // end on a side edge, horizontal, in the box's lower half

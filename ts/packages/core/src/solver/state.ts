@@ -10,22 +10,18 @@
 import type { Cand } from "../candidates.js";
 import { EPS, P, Rect, segLenInRect, segOverlapsRectXY, segSegDistXY } from "../geom/index.js";
 import { Occupancy } from "../grid/occupancy.js";
-import { type Spacing, candLeadersConflict } from "../leaders.js";
+import { type Spacing, candLeadersConflict, leaderHitsLabel } from "../leaders.js";
 import { maxf, minf } from "../math.js";
 import type { Shape } from "../geom/shape.js";
 import { AvoidKind, type Dynamic, type Obstacles } from "../obstacles.js";
 import { DynIndex, IdList, StaticIndex } from "../spatial.js";
 
-/** Whether any segment of `c`'s leaders passes through the interior of `r`. */
-export function leadersOverlapRect(c: Cand, r: Rect): boolean {
-  for (const l of c.leaders) {
-    const n = l.segCount();
-    for (let k = 0; k < n; k++) {
-      const a = l.segA(k);
-      const b = l.segB(k);
-      if (segOverlapsRectXY(a.x, a.y, b.x, b.y, r.x0, r.y0, r.x1, r.y1)) return true;
-    }
-  }
+/**
+ * Whether a leader of `c` hits the label box `r`: passes through its interior, or, for a
+ * stub, comes closer than `gap` (spec §6.9).
+ */
+export function leadersHitLabel(c: Cand, r: Rect, gap: number): boolean {
+  for (const l of c.leaders) if (leaderHitsLabel(l, r, gap)) return true;
   return false;
 }
 
@@ -99,6 +95,8 @@ export class State {
   /** The margin of each item's label (`defaults.margin`) and the largest. */
   private margin: readonly number[];
   private marginMaxV: number;
+  /** How far stubs reach beyond a label's box (the largest margin with stubs, else 0). */
+  private stubGap = 0;
   private cosMin: number;
   private reach: number;
   /** Placed items already tested by a conflict query. */
@@ -226,6 +224,15 @@ export class State {
   }
 
   /** The largest label margin: how far label-label conflicts reach beyond a box. */
+  /**
+   * With stubs (spec §6.9), which keep the margin from other labels, conflict queries reach
+   * that far for them.
+   */
+  withStubs(stubs: boolean): State {
+    if (stubs) this.stubGap = this.marginMaxV;
+    return this;
+  }
+
   marginMax(): number {
     return this.marginMaxV;
   }
@@ -399,15 +406,16 @@ export class State {
       const pid = this.placed[j]!;
       if (pid < 0) continue;
       const p = cands[pid]!;
-      if (llHard && c.labelOverlapsGap(p, maxf(this.margin[c.item]!, this.margin[j]!))) {
+      const gap = maxf(this.margin[c.item]!, this.margin[j]!);
+      if (llHard && c.labelOverlapsGap(p, gap)) {
         out.push(j);
         continue;
       }
-      if (lbHard && leadersOverlapRect(c, p.rect)) out.push(j);
+      if (lbHard && leadersHitLabel(c, p.rect, gap)) out.push(j);
     }
-    // leaders near the candidate (placed leaders through the candidate label, leaders
-    // crossing or coming closer than the clearance)
-    const reach = c.leaders.length === 0 ? 0 : this.leaderReach(obs);
+    // leaders near the candidate (placed leaders through the candidate label or stubs
+    // closer than the margin, leaders crossing or coming closer than the clearance)
+    const reach = c.leaders.length === 0 ? this.stubGap : maxf(this.leaderReach(obs), this.stubGap);
     this.segIx.query(bb.inflate(EPS * 2 + reach), buf);
     const seen = this.seen;
     seen.length = 0;
@@ -449,12 +457,13 @@ export class State {
       const pid = this.placed[j]!;
       if (pid < 0) continue;
       const p = cands[pid]!;
-      if (llHard && c.labelOverlapsGap(p, maxf(this.margin[c.item]!, this.margin[j]!))) return j;
-      if (lbHard && leadersOverlapRect(c, p.rect)) return j;
+      const gap = maxf(this.margin[c.item]!, this.margin[j]!);
+      if (llHard && c.labelOverlapsGap(p, gap)) return j;
+      if (lbHard && leadersHitLabel(c, p.rect, gap)) return j;
     }
     if (this.hasSegs()) {
-      // segments near bb grown by 2 EPS and the leader reach
-      const reach = c.leaders.length === 0 ? 0 : this.leaderReach(obs);
+      // segments near bb grown by 2 EPS and the leader reach (and the stubs' margin)
+      const reach = c.leaders.length === 0 ? this.stubGap : maxf(this.leaderReach(obs), this.stubGap);
       const six = this.segIx;
       six.scanStart(bb, EPS * 2 + reach);
       const seen = this.seen;
@@ -475,11 +484,12 @@ export class State {
   }
 
   /**
-   * Whether the placed candidate `p` of item `j` has a leader through the label of `c`, or
-   * a leader that conflicts with a leader of `c`.
+   * Whether the placed candidate `p` of item `j` has a leader through the label of `c` (or a
+   * stub closer than the margin), or a leader that conflicts with a leader of `c`.
    */
   private leadersHit(c: Cand, p: Cand, dy: Dynamic, j: number): boolean {
-    if (dy.leaderLabels.kind === AvoidKind.Hard && leadersOverlapRect(p, c.rect)) return true;
+    const gap = maxf(this.margin[c.item]!, this.margin[j]!);
+    if (dy.leaderLabels.kind === AvoidKind.Hard && leadersHitLabel(p, c.rect, gap)) return true;
     return (
       dy.leaderLeaders.kind === AvoidKind.Hard &&
       c.leaders.length > 0 &&

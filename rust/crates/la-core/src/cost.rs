@@ -132,13 +132,26 @@ impl<'a> Evaluator<'a> {
         } else {
             item.len.margin
         };
+        // a label without a distant leader comes no closer to another item's mark than to
+        // its own (spec §4.4)
+        let near_rule = model.placement.own_nearest
+            && c.kind != Kind::Internal
+            && (c.leaders.is_empty() || c.has_stub());
+        let d_own = if near_rule {
+            item.shape.dist_rect(&r)
+        } else {
+            0.0
+        };
         let reach = maxf(
-            if item.len.buffer > gap_guess {
-                item.len.buffer
-            } else {
-                gap_guess
-            },
-            margin,
+            maxf(
+                if item.len.buffer > gap_guess {
+                    item.len.buffer
+                } else {
+                    gap_guess
+                },
+                margin,
+            ),
+            d_own,
         );
         self.buf.clear();
         obs.item_index.query(&r.inflate(reach), &mut self.buf);
@@ -185,13 +198,23 @@ impl<'a> Evaluator<'a> {
             }
             if c.label_overlaps_shape(sj) {
                 acc.violate(Block::Items, false, 0.0);
-            } else if margin > crate::geom::EPS {
-                // the margin (up to rounding), but never more than the mark keeps from the
-                // own mark's box
-                let d = sj.dist_rect(&r);
-                if d < margin - crate::geom::EPS && d < sj.dist_rect(&item.shape.bbox()) {
-                    acc.violate(Block::Items, false, 0.0);
-                }
+                continue;
+            }
+            let d = sj.dist_rect(&r);
+            // the margin (up to rounding), but never more than the mark keeps from the own
+            // mark's box
+            if margin > crate::geom::EPS
+                && d < margin - crate::geom::EPS
+                && d < sj.dist_rect(&item.shape.bbox())
+            {
+                acc.violate(Block::Items, false, 0.0);
+            }
+            // nearer to the label than its own mark (the marks of the item's group aside)
+            if near_rule
+                && d < d_own - crate::geom::EPS
+                && model.group_of.get(j).copied().flatten() != Some(i)
+            {
+                acc.violate(Block::Items, false, 0.0);
             }
         }
         if let AvoidW::Soft(wt) = dy.label_items {
@@ -443,16 +466,11 @@ impl<'a> Evaluator<'a> {
         // covers the leader's anchor, or a column leader's start: no leader avoids it); the
         // leader of a fan or boundary label must only not cross a mark closer than the
         // clearance to its start (it leaves a crowd of touching marks, in the order of its
-        // column); a stub, which lies between the mark and its label, keeps the label's
-        // margin
-        let clearance = if l.stub {
-            item.len.margin
-        } else {
-            item.len.clearance
-        };
-        let bb = l.bbox().inflate(clearance);
+        // column)
+        let bb = l.bbox().inflate(item.len.clearance);
         self.buf.clear();
         obs.item_index.query(&bb, &mut self.buf);
+        let clearance = item.len.clearance;
         let anchor = match l.member {
             Some(m) => model.items[m as usize].anchor,
             None => item.anchor,
@@ -480,10 +498,6 @@ impl<'a> Evaluator<'a> {
                 AvoidW::Hard => {
                     let lim = if column && sj.signed_distance(start) < clearance {
                         EPS
-                    } else if l.stub {
-                        // as the label's margin, never more than the mark keeps from the
-                        // own mark
-                        maxf(minf(clearance, sj.dist_rect(&item.shape.bbox())) - EPS, EPS)
                     } else {
                         clearance - EPS
                     };

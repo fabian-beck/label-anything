@@ -6,7 +6,8 @@
     "placement": {
       "stubs": "always",
       "stub_length": "0.5em",
-      "stub_reach": -1
+      "stub_reach": -1,
+      "own_nearest": "yes"
     }
   },
   "expect": {
@@ -19,6 +20,10 @@
       {
         "pointer": "/placement/stub_reach",
         "code": "range"
+      },
+      {
+        "pointer": "/placement/own_nearest",
+        "code": "type"
       }
     ],
     "warnings": [],

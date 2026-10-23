@@ -2,10 +2,10 @@
 
 use crate::candidates::Cand;
 use crate::geom::shape::Shape;
-use crate::geom::{seg_len_in_rect, seg_overlaps_rect, seg_seg_dist, Rect, EPS, P};
+use crate::geom::{seg_len_in_rect, seg_seg_dist, Rect, EPS, P};
 use crate::grid::occupancy::Occupancy;
 use crate::index::{DynIndex, StaticIndex};
-use crate::leaders::{cand_leaders_conflict, Spacing};
+use crate::leaders::{cand_leaders_conflict, leader_hits_label, Spacing};
 use crate::math::{maxf, minf};
 use crate::obstacles::{AvoidW, Obstacles};
 
@@ -62,6 +62,8 @@ pub struct State {
     /// The margin of each item's label (`defaults.margin`) and the largest.
     margin: Vec<f64>,
     margin_max: f64,
+    /// How far stubs reach beyond a label's box (the largest margin with stubs, else 0).
+    stub_gap: f64,
     cos_min: f64,
     reach: f64,
     /// Placed items already tested by a conflict query.
@@ -96,6 +98,7 @@ impl State {
         State {
             margin,
             margin_max,
+            stub_gap: 0.0,
             placed: vec![None; n_items],
             relaxed: vec![false; n_items],
             label_ix: DynIndex::new(extent, cell),
@@ -221,6 +224,15 @@ impl State {
     /// The largest label margin: how far label-label conflicts reach beyond a box.
     pub fn margin_max(&self) -> f64 {
         self.margin_max
+    }
+
+    /// With stubs (spec §6.9), which keep the margin from other labels, conflict queries
+    /// reach that far for them.
+    pub fn with_stubs(mut self, stubs: bool) -> State {
+        if stubs {
+            self.stub_gap = self.margin_max;
+        }
+        self
     }
 
     /// How far leader conflicts reach beyond a candidate's bounding box when leaders may
@@ -354,19 +366,17 @@ impl State {
                 continue;
             }
             if dy.leader_labels.is_hard()
-                && c.leaders
-                    .iter()
-                    .any(|l| l.segments().any(|(a, b)| seg_overlaps_rect(a, b, &p.rect)))
+                && c.leaders.iter().any(|l| leader_hits_label(l, &p.rect, gap))
             {
                 out.push(j);
             }
         }
-        // leaders near the candidate (placed leaders through the candidate label, leaders
-        // crossing or coming closer than the clearance)
+        // leaders near the candidate (placed leaders through the candidate label or stubs
+        // closer than the margin, leaders crossing or coming closer than the clearance)
         let reach = if c.leaders.is_empty() {
-            0.0
+            self.stub_gap
         } else {
-            self.leader_reach(obs)
+            maxf(self.leader_reach(obs), self.stub_gap)
         };
         self.seg_ix
             .query(&bb.inflate(EPS * 2.0 + reach), &mut self.buf);
@@ -387,13 +397,12 @@ impl State {
         out.dedup();
     }
 
-    /// Whether the placed candidate `p` of item `j` has a leader through the label of `c`,
-    /// or a leader that conflicts with a leader of `c`.
+    /// Whether the placed candidate `p` of item `j` has a leader through the label of `c`
+    /// (or a stub closer than the margin), or a leader that conflicts with a leader of `c`.
     fn leaders_hit(&self, c: &Cand, p: &Cand, dy: &crate::obstacles::Dynamic, j: usize) -> bool {
+        let gap = maxf(self.margin[c.item as usize], self.margin[j]);
         if dy.leader_labels.is_hard()
-            && p.leaders
-                .iter()
-                .any(|l| l.segments().any(|(a, b)| seg_overlaps_rect(a, b, &c.rect)))
+            && p.leaders.iter().any(|l| leader_hits_label(l, &c.rect, gap))
         {
             return true;
         }
@@ -441,18 +450,16 @@ impl State {
                 return Some(ju);
             }
             if dy.leader_labels.is_hard()
-                && c.leaders
-                    .iter()
-                    .any(|l| l.segments().any(|(a, b)| seg_overlaps_rect(a, b, &p.rect)))
+                && c.leaders.iter().any(|l| leader_hits_label(l, &p.rect, gap))
             {
                 return Some(ju);
             }
         }
         if self.segs.len() > self.free_segs.len() {
             let reach = if c.leaders.is_empty() {
-                0.0
+                self.stub_gap
             } else {
-                self.leader_reach(obs)
+                maxf(self.leader_reach(obs), self.stub_gap)
             };
             self.seg_ix
                 .query(&bb.inflate(EPS * 2.0 + reach), &mut self.buf);

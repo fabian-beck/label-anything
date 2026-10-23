@@ -5,8 +5,10 @@
  * @module
  */
 
-import { Cand, KEEP_BOX, type KeepFn, Kind, Leader, SIDE_DISTANT, dirOf } from "./candidates.js";
-import { EPS, P, Rect, distPointSeg, segIntersects } from "./geom/index.js";
+import { Cand, KEEP_BOX, type KeepFn, Kind, Leader, SIDE_DISTANT, dirOf, labelShape } from "./candidates.js";
+import { Evaluator } from "./cost.js";
+import { BasicEnv } from "./env.js";
+import { EPS, P, Rect, distPointSeg, distSegRect, segIntersects, segOverlapsRect } from "./geom/index.js";
 import type { Variant } from "./labels.js";
 import { clampf, cmpF64, len2d, maxf, minf, signEps } from "./math.js";
 import { Attach, type Item, LeaderStyle, type Model, Port, posDir } from "./model/index.js";
@@ -57,16 +59,19 @@ function leaderStartIn(model: Model, item: Item): boolean {
 }
 
 /**
- * Stubs (spec §6.9): what an adjacent or slider candidate needs to know about the other
- * items' marks to decide whether it gets a stub.
+ * Stubs (spec §6.9): what an adjacent or slider candidate needs to decide whether it stands
+ * farther out with a stub.
  */
 export class Stubs {
   private readonly buf = new IdList();
+  private readonly ev: Evaluator;
 
   constructor(
     readonly model: Model,
     readonly obs: Obstacles,
-  ) {}
+  ) {
+    this.ev = new Evaluator(model, obs, new BasicEnv());
+  }
 
   /** The stubs of a solve, when `placement.stubs` is `auto`. */
   static of(model: Model, obs: Obstacles): Stubs | null {
@@ -84,7 +89,6 @@ export class Stubs {
     if (reach <= 0 || maxf(b.w(), b.h()) > item.em()) return false;
     const i = item.index;
     const buf = this.buf;
-    buf.clear();
     this.obs.itemIndex.query(r.inflate(reach), buf);
     for (let q = 0; q < buf.len; q++) {
       const j = buf.get(q);
@@ -96,27 +100,67 @@ export class Stubs {
   }
 
   /**
-   * The candidate `c` with its stub: straight from the mark toward the nearest point of
-   * the box (its port), starting `anchor_gap` outside the boundary (or at the tip),
-   * whatever `leaders.attach` and `leaders.style` say for other leaders.
+   * The candidate `c` of variant `v` with its stub, when the stub meets a side of the label
+   * squarely and the candidate is statically feasible (spec §6.9); null otherwise.
    */
-  attach(item: Item, c: Cand): Cand {
-    c.leaders.push(stubLeader(item, c.rect));
-    return c;
+  stubbed(item: Item, v: Variant, c: Cand): Cand | null {
+    const l = stubLeader(item, c.rect);
+    if (l === null) return null;
+    c.leaders.push(l);
+    c.lshape = labelShape(c.rect, v.shape);
+    this.ev.eval(c, v, null);
+    // evaluated again with the item's other candidates
+    c.evaluated = false;
+    return c.feasible ? c : null;
   }
 }
 
-/** The stub of an item's label box `r` (spec §6.9). */
-export function stubLeader(item: Item, r: Rect): Leader {
+/**
+ * The stub of an item's label box `r` (spec §6.9): horizontal or vertical, from the mark
+ * (`anchor_gap` outside its boundary, or the tip of an icon mark) to the box side facing it,
+ * which it meets at a right angle within the side's middle half. Null when the box is not
+ * beside, above or below the mark's reference point in that way.
+ */
+export function stubLeader(item: Item, r: Rect): Leader | null {
   const refp = item.shape.reference();
-  let start = refp;
-  if (!item.tip) {
-    const d = r.closestPoint(refp).sub(refp).norm();
-    if (d.len2() !== 0) start = item.shape.boundaryPoint(d).add(d.mul(item.len.anchorGap));
+  const m = r.center();
+  const beside = Math.abs(refp.y - m.y) <= 0.25 * r.h();
+  const over = Math.abs(refp.x - m.x) <= 0.25 * r.w();
+  let port: P;
+  let d: P;
+  if (beside && refp.x < r.x0) {
+    port = new P(r.x0, refp.y);
+    d = new P(1, 0);
+  } else if (beside && refp.x > r.x1) {
+    port = new P(r.x1, refp.y);
+    d = new P(-1, 0);
+  } else if (over && refp.y < r.y0) {
+    port = new P(refp.x, r.y0);
+    d = new P(0, 1);
+  } else if (over && refp.y > r.y1) {
+    port = new P(refp.x, r.y1);
+    d = new P(0, -1);
+  } else {
+    return null;
   }
-  const l = new Leader([start, r.closestPoint(start)], LeaderStyle.Straight);
+  const start = item.tip ? refp : item.shape.boundaryPoint(d).add(d.mul(item.len.anchorGap));
+  const l = new Leader([start, port], LeaderStyle.Straight);
   l.stub = true;
   return l;
+}
+
+/**
+ * Whether leader `l` hits the label box `r`: passes through it, or, for a stub, comes closer
+ * than `gap` (the space two labels keep, spec §6.9).
+ */
+export function leaderHitsLabel(l: Leader, r: Rect, gap: number): boolean {
+  const n = l.segCount();
+  if (l.stub && gap > EPS) {
+    for (let k = 0; k < n; k++) if (distSegRect(l.segA(k), l.segB(k), r) < gap - EPS) return true;
+    return false;
+  }
+  for (let k = 0; k < n; k++) if (segOverlapsRect(l.segA(k), l.segB(k), r)) return true;
+  return false;
 }
 
 /** Output of {@link attachCenter}: the label center `[x, y]`. */

@@ -34,8 +34,8 @@
         "id": "b",
         "anchor": {
           "type": "point",
-          "x": 120,
-          "y": 118
+          "x": 100,
+          "y": 116
         },
         "label": {
           "type": "text",
@@ -124,14 +124,14 @@
         "id": "b",
         "placed": true,
         "box": {
-          "x": 105.384,
-          "y": 121.0,
-          "w": 29.231999999999985,
+          "x": 85.384,
+          "y": 119.0,
+          "w": 29.232,
           "h": 19.944000000000017
         },
         "anchor": [
-          120.0,
-          118.0
+          100.0,
+          116.0
         ],
         "anchor_side": "bottom",
         "model": "adjacent",
@@ -217,7 +217,7 @@
       "iterations": 1200,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 75,
+      "candidates": 72,
       "omission_order": [],
       "priority_inversions": 0,
       "total_cost": 0.48958333333333337,

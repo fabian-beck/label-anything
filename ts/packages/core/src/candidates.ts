@@ -358,26 +358,14 @@ export function pushIn(shape: Shape, o: number, c: P, hw: number, hh: number): P
  * candidate on the side its center points to when it touches the inflated mark (gap ≤
  * offset + 1 px), else a distant candidate with a straight leader (straight style,
  * within the leader length limits) or with the leader it came with (see
- * {@link warmLeader}). Null when neither applies. With `stubs` (spec §6.9), a box that
- * touches the mark and another mark comes near gets none, and a box up to `stub_length`
- * farther out is a slider-kind candidate with a stub.
+ * {@link warmLeader}). Null when neither applies.
  */
-export function warm(
-  model: Model,
-  item: Item,
-  vi: number,
-  v: Variant,
-  rect: Rect,
-  stubs: Stubs | null,
-): Cand | null {
+export function warm(model: Model, item: Item, vi: number, v: Variant, rect: Rect): Cand | null {
   const it = item.index;
   const gap = item.shape.distRect(rect);
   if (gap < -1e-6 || item.shape.overlapsRect(rect)) return null; // on the own mark: internal candidates cover that
   const refp = item.shape.reference();
-  const touch = gap <= item.len.offset + 1;
-  if (touch && stubs !== null && stubs.ambiguous(item, rect)) return null;
-  const stub = !touch && stubs !== null && gap <= item.len.offset + item.len.stubLength + 1;
-  if (touch || stub) {
+  if (gap <= item.len.offset + 1) {
     const d = rect.center().sub(refp);
     if (d.len2() === 0) return null;
     // nearest of the item's allowed positions by direction
@@ -395,8 +383,7 @@ export function warm(
       }
     }
     if (bestPos === null) return null;
-    const c = new Cand(it, vi, v.level, Kind.Slider, bestPos, bestRank + 0.25, rect);
-    return stub ? stubs!.attach(item, c) : c;
+    return new Cand(it, vi, v.level, Kind.Slider, bestPos, bestRank + 0.25, rect);
   }
   if (model.leaders.style !== LS.Straight) return warmLeader(model, item, vi, v, rect);
   const port0 = rect.closestPoint(refp);
@@ -510,8 +497,8 @@ function walkRun(run: readonly P[], seg: number, t: number, s: number): P | null
  * moved `steps` px (each step forwards, then backwards) along the slider paths of the
  * item's allowed gaps, as slider candidates (spec §6.7). For a box that a small change
  * blocked: a nudge instead of a jump. Empty when the box is not on a slider path (it does
- * not touch the mark, or the item has no slider model). With `stubs`, nudges that another
- * mark comes near are left out (spec §6.9). Returns `[step index, candidate]` pairs.
+ * not touch the mark, or the item has no slider model). Returns `[step index, candidate]`
+ * pairs.
  */
 export function warmNudges(
   item: Item,
@@ -520,7 +507,6 @@ export function warmNudges(
   rect: Rect,
   steps: readonly number[],
   models: Models,
-  stubs: Stubs | null,
 ): [number, Cand][] {
   if (!Models.has(models, Models.SLIDER)) return [];
   const hw = v.w * 0.5;
@@ -575,9 +561,7 @@ export function warmNudges(
         }
       }
       if (bestPos === null) continue;
-      const r = Rect.fromCenter(c, hw, hh);
-      if (stubs !== null && stubs.ambiguous(item, r)) continue;
-      out.push([si, new Cand(item.index, vi, v.level, Kind.Slider, bestPos, bestRank + 0.25, r)]);
+      out.push([si, new Cand(item.index, vi, v.level, Kind.Slider, bestPos, bestRank + 0.25, Rect.fromCenter(c, hw, hh))]);
     }
   }
   return out;
@@ -597,11 +581,11 @@ export type KeepFn = (vi: number) => boolean;
 export const KEEP_BOX = new Float64Array(4);
 
 /**
- * Adjacent and slider candidates of one variant. With `stubs`, a candidate whose box
- * another item's mark comes near is replaced by the same position `stub_length` farther
- * out, with a stub (spec §6.9). With `keep`, boxes it rejects are not created (Rust
- * filters the created candidates right afterwards, calling `keep` on the same boxes in
- * the same order).
+ * Adjacent and slider candidates of one variant. With `stubs`, a candidate that another
+ * item's mark comes near is replaced by the same position `stub_length` farther out, with a
+ * stub, where the stub meets a side of the label squarely and the candidate is statically
+ * feasible (spec §6.9). With `keep`, boxes it rejects are not created (Rust filters the
+ * created candidates right afterwards, calling `keep` on the same boxes in the same order).
  */
 export function adjacent(
   item: Item,
@@ -623,6 +607,15 @@ export function adjacent(
   const positions = item.positions;
   const it = item.index;
   const kb = KEEP_BOX;
+  // `keep` on the box of `c`; `c` itself when kept
+  const kept = (c: Cand): boolean => {
+    if (keep === null) return true;
+    kb[0] = c.rect.x0;
+    kb[1] = c.rect.y0;
+    kb[2] = c.rect.x1;
+    kb[3] = c.rect.y1;
+    return keep(vi);
+  };
   if (Models.has(models, Models.ADJACENT)) {
     for (let r = 0; r < positions.length; r++) {
       const p = positions[r]!;
@@ -637,32 +630,37 @@ export function adjacent(
         cx = c.x;
         cy = c.y;
       }
-      let stub = false;
-      if (stubs !== null && stubs.ambiguous(item, new Rect(cx - hw, cy - hh, cx + hw, cy + hh))) {
-        stub = true;
+      if (stubs === null) {
+        const x0 = cx - hw;
+        const y0 = cy - hh;
+        const x1 = cx + hw;
+        const y1 = cy + hh;
+        if (keep !== null) {
+          kb[0] = x0;
+          kb[1] = y0;
+          kb[2] = x1;
+          kb[3] = y1;
+          if (!keep(vi)) continue;
+        }
+        out.push(new Cand(it, vi, v.level, Kind.Adjacent, p, r, new Rect(x0, y0, x1, y1)));
+        continue;
+      }
+      const plain = new Cand(it, vi, v.level, Kind.Adjacent, p, r, Rect.fromCenter(new P(cx, cy), hw, hh));
+      let c = plain;
+      if (stubs.ambiguous(item, plain.rect)) {
         TC_ARGS[0] = os;
         touchCenterAt(shape, POS_DIRS[posAngularIndex(p)]!);
-        cx = TC[0]!;
-        cy = TC[1]!;
+        let fx = TC[0]!;
+        let fy = TC[1]!;
         if (push) {
-          const c = pushIn(shape, os, new P(cx, cy), hw, hh);
-          cx = c.x;
-          cy = c.y;
+          const f = pushIn(shape, os, new P(fx, fy), hw, hh);
+          fx = f.x;
+          fy = f.y;
         }
+        const twin = new Cand(it, vi, v.level, Kind.Adjacent, p, r, Rect.fromCenter(new P(fx, fy), hw, hh));
+        c = stubs.stubbed(item, v, twin) ?? plain;
       }
-      const x0 = cx - hw;
-      const y0 = cy - hh;
-      const x1 = cx + hw;
-      const y1 = cy + hh;
-      if (keep !== null) {
-        kb[0] = x0;
-        kb[1] = y0;
-        kb[2] = x1;
-        kb[3] = y1;
-        if (!keep(vi)) continue;
-      }
-      const c = new Cand(it, vi, v.level, Kind.Adjacent, p, r, new Rect(x0, y0, x1, y1));
-      out.push(stub ? stubs!.attach(item, c) : c);
+      if (kept(c)) out.push(c);
     }
   }
   if (!Models.has(models, Models.SLIDER) || sliderPerGap === 0) return;
@@ -677,68 +675,69 @@ export function adjacent(
     TC_ARGS[2] = hh;
     const n = cspacePathInto(shape, k);
     const m = samplePathInto(n, sliderPerGap, shape);
-    let xs: Float64Array = SP_X;
-    let ys: Float64Array = SP_Y;
-    // the boxes another mark comes near, and the samples of the path of labels with a
-    // stub (made only when needed)
-    let near: boolean[] | null = null;
+    const cand = (j: number, cx: number, cy: number): Cand => {
+      const t = (j + 1) / (sliderPerGap + 1);
+      const rank = ra + (rb - ra) * t + 0.25;
+      const side = t < 0.5 ? a : b;
+      return new Cand(it, vi, v.level, Kind.Slider, side, rank, new Rect(cx - hw, cy - hh, cx + hw, cy + hh));
+    };
+    if (stubs === null) {
+      for (let j = 0; j < m; j++) {
+        let cx = SP_X[j]!;
+        let cy = SP_Y[j]!;
+        if (push) {
+          const c = pushIn(shape, o, new P(cx, cy), hw, hh);
+          cx = c.x;
+          cy = c.y;
+        }
+        const x0 = cx - hw;
+        const y0 = cy - hh;
+        const x1 = cx + hw;
+        const y1 = cy + hh;
+        if (keep !== null) {
+          kb[0] = x0;
+          kb[1] = y0;
+          kb[2] = x1;
+          kb[3] = y1;
+          if (!keep(vi)) continue;
+        }
+        out.push(cand(j, cx, cy));
+      }
+      continue;
+    }
+    const xs = SP_X.slice(0, m);
+    const ys = SP_Y.slice(0, m);
+    if (push) {
+      for (let j = 0; j < m; j++) {
+        const c = pushIn(shape, o, new P(xs[j]!, ys[j]!), hw, hh);
+        xs[j] = c.x;
+        ys[j] = c.y;
+      }
+    }
+    // the boxes another mark comes near, and the samples of the path of labels with a stub
+    // (made only when needed)
+    const near: boolean[] = [];
+    for (let j = 0; j < m; j++) near.push(stubs.ambiguous(item, Rect.fromCenter(new P(xs[j]!, ys[j]!), hw, hh)));
+    let fm = 0;
     let fx: Float64Array | null = null;
     let fy: Float64Array | null = null;
-    let fm = 0;
-    if (stubs !== null) {
-      xs = SP_X.slice(0, m);
-      ys = SP_Y.slice(0, m);
+    if (near.includes(true)) {
+      TC_ARGS[0] = os;
+      fm = samplePathInto(cspacePathInto(shape, k), sliderPerGap, shape);
+      fx = SP_X.slice(0, fm);
+      fy = SP_Y.slice(0, fm);
       if (push) {
-        for (let j = 0; j < m; j++) {
-          const c = pushIn(shape, o, new P(xs[j]!, ys[j]!), hw, hh);
-          xs[j] = c.x;
-          ys[j] = c.y;
-        }
-      }
-      near = [];
-      for (let j = 0; j < m; j++) near.push(stubs.ambiguous(item, new Rect(xs[j]! - hw, ys[j]! - hh, xs[j]! + hw, ys[j]! + hh)));
-      if (near.includes(true)) {
-        TC_ARGS[0] = os;
-        fm = samplePathInto(cspacePathInto(shape, k), sliderPerGap, shape);
-        fx = SP_X.slice(0, fm);
-        fy = SP_Y.slice(0, fm);
-        if (push) {
-          for (let j = 0; j < fm; j++) {
-            const c = pushIn(shape, os, new P(fx[j]!, fy[j]!), hw, hh);
-            fx[j] = c.x;
-            fy[j] = c.y;
-          }
+        for (let j = 0; j < fm; j++) {
+          const c = pushIn(shape, os, new P(fx[j]!, fy[j]!), hw, hh);
+          fx[j] = c.x;
+          fy[j] = c.y;
         }
       }
     }
     for (let j = 0; j < m; j++) {
-      const t = (j + 1) / (sliderPerGap + 1);
-      const rank = ra + (rb - ra) * t + 0.25;
-      const side = t < 0.5 ? a : b;
-      let cx = xs[j]!;
-      let cy = ys[j]!;
-      const stub = near !== null && near[j]! && j < fm;
-      if (stub) {
-        cx = fx![j]!;
-        cy = fy![j]!;
-      } else if (push && near === null) {
-        const c = pushIn(shape, o, new P(cx, cy), hw, hh);
-        cx = c.x;
-        cy = c.y;
-      }
-      const x0 = cx - hw;
-      const y0 = cy - hh;
-      const x1 = cx + hw;
-      const y1 = cy + hh;
-      if (keep !== null) {
-        kb[0] = x0;
-        kb[1] = y0;
-        kb[2] = x1;
-        kb[3] = y1;
-        if (!keep(vi)) continue;
-      }
-      const c = new Cand(it, vi, v.level, Kind.Slider, side, rank, new Rect(x0, y0, x1, y1));
-      out.push(stub ? stubs!.attach(item, c) : c);
+      const stubbed = near[j]! && j < fm ? stubs.stubbed(item, v, cand(j, fx![j]!, fy![j]!)) : null;
+      const c = stubbed ?? cand(j, xs[j]!, ys[j]!);
+      if (kept(c)) out.push(c);
     }
   }
 }

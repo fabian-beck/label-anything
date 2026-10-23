@@ -218,6 +218,15 @@ label away from what is not its own, while it touches its own mark at `placement
   `m / 2` from another mark. A label stays where it is until its neighbours come closer
   than half the margin, but takes a new place only with the whole margin.
 
+**Own mark nearest** (`placement.own_nearest`, default `true`; ADR 0051). A label
+without a distant leader — an adjacent or slider label, with or without a stub (§6.9) —
+comes no closer to the mark of another item than to its own: it is infeasible when
+`dist(mark_j, box) < dist(mark_i, box) − EPS` for an item `j` (not a member of `i`'s group)
+whose mark the label may not cover (`items`, or `lower_items` for a less important `j`,
+hard). Internal labels lie on their own mark, and the leader of a distant label says whose
+it is: they are exempt. The margin above lets a mark that overlaps or touches the own mark
+come closer than the margin; this rule still keeps it no closer than the own mark.
+
 ### 4.5 SVG backgrounds
 
 Implemented identically by `label-anything-svg` and `@label-anything/svg` (ADR 0013) and
@@ -873,36 +882,44 @@ its font size.
 ### 6.9 Stubs
 
 In a crowd of points a label next to its point can be read as the label of a neighbour.
-With `placement.stubs: auto` (default `off`; ADR 0050) such labels get a **stub**: they
-stand a little farther out and a short straight leader joins them to their mark.
+With `placement.stubs: auto` (default `off`; ADR 0050) such a label may stand off its point
+a little, joined to it by a **stub**: a short straight leader at a right angle to the
+label's side.
 
 * **Ambiguous.** An adjacent or slider candidate (§6.1, §6.2) of item `i` is ambiguous
   when the mark of another item `j` (not a member of `i`'s group) comes closer to its box
   than `stub_reach` (`dist(S_j, box) < stub_reach`, the exact shape distance). Items whose
   mark is larger than their font size (the larger side of its bounding box `> em`) have no
   ambiguous candidates: a label against a large mark reads as attached to its outline.
-* **Replacement.** An ambiguous candidate is replaced by the same position with the offset
-  `o + stub_length` (`o` = `placement.offset`): the adjacent position of the same
-  direction on `S ⊕ (o + stub_length)`, or the slider sample of the same index on the path
-  of `S ⊕ (o + stub_length)` (§6.2; concave polygons pushed in to that offset); its model,
-  side and rank stay. When that path has no such sample, the candidate stays as it is. The
-  candidate filter of §6.7 then applies to the replacement.
-* **The stub** runs straight from the mark (at the tip of an icon mark, else on its true
-  boundary toward the box point nearest the reference point, `anchor_gap` outside) to the
-  box point nearest that start, whatever `leaders.style`, `leaders.port` and
-  `leaders.attach` say; `leaders.min_length` and `max_length` do not apply. It is reported
+* **Twin.** For an ambiguous candidate the same position is made with the offset
+  `o + stub_length` (`o` = `placement.offset`): the adjacent position of the same direction
+  on `S ⊕ (o + stub_length)`, or the slider sample of the same index on the path of
+  `S ⊕ (o + stub_length)` (§6.2; concave polygons pushed in to that offset), with the same
+  model, side and rank.
+* **The stub** of a box with center `c`, width `w` and height `h`, for the mark's
+  reference point `p`: horizontal when `|p.y − c.y| ≤ h / 4` and `p` lies left or right of
+  the box, from the mark's boundary point in direction `±x` (`anchor_gap` outside it, or
+  the tip of an icon mark) to `(x0, p.y)` or `(x1, p.y)` on the box; vertical when
+  `|p.x − c.x| ≤ w / 4` and `p` lies above or below the box, to `(p.x, y0)` or `(p.x, y1)`,
+  likewise. It meets the side of the label facing the mark at a right angle, within the
+  middle half of that side. A box diagonal to the mark has no stub. `leaders.style`,
+  `port`, `attach`, `min_length` and `max_length` do not apply; the result reports a stub
   as the label's `leader` with `stub: true`.
-* **Rules.** A stub is a leader for the rules of §7, except that it keeps the label's
-  margin (`defaults.margin`) from other marks instead of `leaders.clearance`, never more
-  than that mark keeps from the own mark's bounding box (as the label, §4.4), and it is
-  exempt from the diverging-leaders rule (which compares distant leaders). Its costs are
-  those of §8 for a leader, except that `w_leader_length · len / em` (term `stub`)
-  replaces `w_leader + w_leader_length · len / em + w_bends · bends`; the label keeps its
+* **Replacement.** The twin with its stub replaces the ambiguous candidate when it has a
+  stub and is statically feasible (§6.7, with the rules below); otherwise the candidate
+  stays as it is. The candidate filter of §6.7 then applies to the one kept.
+* **Rules.** A stub is a leader for the rules of §7: it crosses no other leader, passes
+  through no label and keeps `leaders.clearance` from the marks of other items; it is
+  exempt from the diverging-leaders rule, which compares distant leaders. With
+  `avoid.leader.labels` hard, other labels also keep from a stub the space two labels keep
+  (§4.4): a stub and the box of another label conflict when they come closer than the
+  larger margin of the two items, `m` (`dist < m − EPS`). The label itself follows §4.4 as
+  an adjacent label does, so with `own_nearest` no mark it may not cover is nearer to it
+  than its own mark, `o + stub_length` away. Its costs are those of §8 for a leader, except
+  that `w_leader_length · len / em` (term `stub`) replaces
+  `w_leader + w_leader_length · len / em + w_bends · bends`; the label keeps its
   `w_distance` term (its gap includes the stub) and has no ambiguity term. The uncross
   repair (§10.3) does not move labels with stubs.
-* **Warm starts** (§6.7): a warm-start box that touches the mark is not kept when it is
-  ambiguous, nor are its nudges; a box whose gap to the mark is above `offset + 1` px and
-  at most `offset + stub_length + 1` px is a slider-kind candidate with a stub.
 
 ---
 

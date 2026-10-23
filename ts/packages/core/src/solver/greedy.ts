@@ -14,7 +14,7 @@ import { AvoidKind, type Dynamic } from "../obstacles.js";
 import { keepWithSets } from "../priority.js";
 import { IdList } from "../spatial.js";
 import { Reason, type Solve } from "./index.js";
-import { leadersOverlapRect } from "./state.js";
+import { leadersHitLabel } from "./state.js";
 
 /**
  * Exact hard conflict between two candidates of different items; `sp`: the spacing rules
@@ -23,8 +23,8 @@ import { leadersOverlapRect } from "./state.js";
 export function pairConflict(a: Cand, b: Cand, dy: Dynamic, sp: Spacing): boolean {
   if (dy.labelLabels.kind === AvoidKind.Hard && a.labelOverlapsGap(b, sp.gap)) return true;
   if (dy.leaderLabels.kind === AvoidKind.Hard) {
-    if (leadersOverlapRect(a, b.rect)) return true;
-    if (leadersOverlapRect(b, a.rect)) return true;
+    if (leadersHitLabel(a, b.rect, sp.gap)) return true;
+    if (leadersHitLabel(b, a.rect, sp.gap)) return true;
   }
   return dy.leaderLeaders.kind === AvoidKind.Hard && candLeadersConflict(a, b, sp);
 }

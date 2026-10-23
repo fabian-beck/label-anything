@@ -64,6 +64,14 @@ The key `"*"` sets the value of every class the map does not list.
 `"hard"` (default: never cover it), `"ignore"`, or `"partial:0.3"` (cover at most 30 % of
 it). Internal labels are inside their mark by design and exempt.
 
+**Own mark nearest.** A reader takes a label for the label of the point nearest to it.
+With `placement.own_nearest` (default `true`), a label next to its mark — adjacent or
+slider, also with a [stub](../tutorials/leaders.md#stubs-for-labels-in-a-crowd) — is never
+nearer to another item's mark than to its own; the label margin alone allows that where
+marks overlap or touch. The rule protects the marks a label may not cover (hard `items`,
+or hard `lower_items`); internal labels and labels on leaders are exempt
+([ADR 0051](../adr/0051-own-mark-nearest.md)).
+
 **Marks of less important items.** `avoid.label.lower_items` is the policy between a label
 and the marks of items of *lower* priority key (default: that of `items`; 10 in the `map`
 preset and in the helpers given a priority); a weight lets the labels of important items

@@ -139,7 +139,7 @@ export class Solve {
             obs.indexCell,
           )
         : null,
-    );
+    ).withStubs(model.placement.stubs);
     this.reasons = new Array<Reason | null>(n).fill(null);
     this.stepsTried = [];
     for (let i = 0; i < n; i++) this.stepsTried.push([]);
@@ -479,7 +479,7 @@ export class Solve {
     const vi = vs.findIndex((v) => Math.abs(v.w - b.w()) <= 0.5 && Math.abs(v.h - b.h()) <= 0.5);
     if (vi < 0) return;
     const v = vs[vi]!;
-    const c = warm(this.model, item, vi, v, b, this.stubs);
+    const c = warm(this.model, item, vi, v, b);
     if (c === null) return;
     c.warm = true;
     c.level = 0;
@@ -590,7 +590,7 @@ export class Solve {
       const vi = vs.findIndex((v) => v.level === level && same(v));
       if (vi < 0) continue;
       const v = vs[vi]!;
-      const c = warm(this.model, item, vi, v, b, this.stubs);
+      const c = warm(this.model, item, vi, v, b);
       if (c === null) return null;
       c.warm = true;
       c.level = level;
@@ -622,7 +622,7 @@ export class Solve {
       const em = item.em();
       const steps = [0.05 * em, 0.1 * em, 0.2 * em, 0.4 * em, 0.8 * em];
       const v = this.variants[i]![vi]!;
-      for (const [si, c] of warmNudges(item, vi, v, rect, steps, this.models[i]!, this.stubs)) {
+      for (const [si, c] of warmNudges(item, vi, v, rect, steps, this.models[i]!)) {
         c.level = 0;
         c.warm = true;
         c.lshape = labelShape(c.rect, v.shape);

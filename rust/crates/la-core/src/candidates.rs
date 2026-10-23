@@ -375,16 +375,13 @@ fn push_in(shape: &Shape, o: f64, c: P, hw: f64, hh: f64) -> P {
 /// candidate on the side its center points to when it touches the inflated mark (gap
 /// ≤ offset + 1 px), else a distant candidate with a straight leader (straight style,
 /// within the leader length limits) or with the leader it came with (see
-/// [`warm_leader`]). `None` when neither applies. With `stubs` (spec §6.9), a box that
-/// touches the mark and another mark comes near gets none, and a box up to
-/// `stub_length` farther out is a slider-kind candidate with a stub.
+/// [`warm_leader`]). `None` when neither applies.
 pub fn warm(
     model: &crate::model::Model,
     item: &Item,
     vi: usize,
     v: &Variant,
     rect: Rect,
-    stubs: Option<&crate::leaders::Stubs>,
 ) -> Option<Cand> {
     let it = item.index as u32;
     let gap = item.shape.dist_rect(&rect);
@@ -392,12 +389,7 @@ pub fn warm(
         return None; // on the own mark: internal candidates cover that
     }
     let refp = item.shape.reference();
-    let touch = gap <= item.len.offset + 1.0;
-    if touch && stubs.is_some_and(|s| s.ambiguous(item, &rect)) {
-        return None;
-    }
-    let stub = !touch && stubs.is_some() && gap <= item.len.offset + item.len.stub_length + 1.0;
-    if touch || stub {
+    if gap <= item.len.offset + 1.0 {
         let d = rect.center() - refp;
         if d.len2() == 0.0 {
             return None;
@@ -412,7 +404,7 @@ pub fn warm(
             }
         }
         let (_, pos, rank) = best?;
-        let c = Cand::new(
+        return Some(Cand::new(
             it,
             vi as u16,
             v.level,
@@ -420,11 +412,7 @@ pub fn warm(
             Side::Pos(pos),
             rank + 0.25,
             rect,
-        );
-        return Some(match stubs {
-            Some(s) if stub => s.attach(item, c),
-            _ => c,
-        });
+        ));
     }
     if model.leaders.style != LeaderStyle::Straight {
         return warm_leader(model, item, vi, v, rect);
@@ -595,9 +583,8 @@ fn walk_run(run: &[P], seg: usize, t: f64, s: f64) -> Option<P> {
 /// moved `steps` px (each step forwards, then backwards) along the slider paths of the
 /// item's allowed gaps, as slider candidates (spec §6.7). For a box that a small change
 /// blocked: a nudge instead of a jump. Empty when the box is not on a slider path (it
-/// does not touch the mark, or the item has no slider model). With `stubs`, nudges that
-/// another mark comes near are left out (spec §6.9). Returns `(step index, candidate)`
-/// pairs.
+/// does not touch the mark, or the item has no slider model). Returns `(step index,
+/// candidate)` pairs.
 pub fn warm_nudges(
     item: &Item,
     vi: usize,
@@ -605,7 +592,6 @@ pub fn warm_nudges(
     rect: Rect,
     steps: &[f64],
     models: Models,
-    stubs: Option<&crate::leaders::Stubs>,
 ) -> Vec<(usize, Cand)> {
     if !models.has(Models::SLIDER) {
         return Vec::new();
@@ -662,10 +648,6 @@ pub fn warm_nudges(
             let Some((_, pos, rank)) = best else {
                 continue;
             };
-            let r = Rect::from_center(c, hw, hh);
-            if stubs.is_some_and(|s| s.ambiguous(item, &r)) {
-                continue;
-            }
             out.push((
                 si,
                 Cand::new(
@@ -675,7 +657,7 @@ pub fn warm_nudges(
                     Kind::Slider,
                     Side::Pos(pos),
                     rank + 0.25,
-                    r,
+                    Rect::from_center(c, hw, hh),
                 ),
             ));
         }
@@ -683,9 +665,10 @@ pub fn warm_nudges(
     out
 }
 
-/// Adjacent and slider candidates of one variant. With `stubs`, a candidate whose box
-/// another item's mark comes near is replaced by the same position `stub_length` farther
-/// out, with a stub (spec §6.9).
+/// Adjacent and slider candidates of one variant. With `stubs`, a candidate that another
+/// item's mark comes near is replaced by the same position `stub_length` farther out, with a
+/// stub, where the stub meets a side of the label squarely and the candidate is statically
+/// feasible (spec §6.9).
 pub fn adjacent(
     item: &Item,
     vi: usize,
@@ -713,7 +696,6 @@ pub fn adjacent(
             let a = p.angular_index();
             let c = touch_from_support(st.pos[a], pos_dirs()[a], hw, hh);
             let c = push_in(shape, o, c, hw, hh);
-            let rect = Rect::from_center(c, hw, hh);
             let cand = |rect| {
                 Cand::new(
                     it,
@@ -725,14 +707,16 @@ pub fn adjacent(
                     rect,
                 )
             };
-            match stubs.filter(|s| s.ambiguous(item, &rect)) {
-                Some(s) => {
+            let plain = cand(Rect::from_center(c, hw, hh));
+            let stubbed = match stubs {
+                Some(s) if s.ambiguous(item, &plain.rect) => {
                     let c = touch_center(shape, os, pos_dirs()[a], hw, hh);
                     let c = push_in(shape, os, c, hw, hh);
-                    out.push(s.attach(item, cand(Rect::from_center(c, hw, hh))));
+                    s.stubbed(item, v, cand(Rect::from_center(c, hw, hh)))
                 }
-                None => out.push(cand(rect)),
-            }
+                _ => None,
+            };
+            out.push(stubbed.unwrap_or(plain));
         }
     }
     if !models.has(Models::SLIDER) || slider_per_gap == 0 {
@@ -784,10 +768,11 @@ pub fn adjacent(
             });
         }
         for (j, &c) in samples.iter().enumerate() {
-            match far.get(j) {
-                Some(&cf) if near[j] => out.push(s.attach(item, cand(j, cf))),
-                _ => out.push(cand(j, c)),
-            }
+            let stubbed = match far.get(j) {
+                Some(&cf) if near[j] => s.stubbed(item, v, cand(j, cf)),
+                _ => None,
+            };
+            out.push(stubbed.unwrap_or_else(|| cand(j, c)));
         }
     }
 }

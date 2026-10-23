@@ -136,7 +136,7 @@ export interface Leader {
    */
   member?: string;
   /**
-   * A stub (placement.stubs): the short straight leader of an adjacent or slider label near other marks, which hosts may draw more lightly.
+   * A stub (placement.stubs): the short leader of an adjacent or slider label near other marks, at a right angle to the label's side, which hosts may draw more lightly.
    */
   stub?: boolean;
 }

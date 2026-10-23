@@ -578,7 +578,11 @@ export interface Placement {
    */
   fan?: "auto" | "always" | "off";
   /**
-   * Stubs: with auto, an adjacent or slider label that another item's mark comes within stub_reach of stands stub_length farther out, joined to its mark by a short straight leader.
+   * A label without a distant leader comes no closer to another item's mark than to its own (marks it may not cover).
+   */
+  own_nearest?: boolean;
+  /**
+   * Stubs: with auto, a label next to its mark that another item's mark comes within stub_reach of stands stub_length farther out, joined to its mark by a short leader at a right angle to its side, where that is feasible.
    */
   stubs?: "off" | "auto";
   /**
