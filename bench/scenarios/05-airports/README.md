@@ -2,7 +2,8 @@
 
 **What.** The world's served airports (OpenFlights; 3,221 airports with at least one
 route) labeled by IATA code (or by city name in the Europe view) over a world map rendered
-here from Natural Earth country outlines. City names are the place's usual English name
+here from Natural Earth country outlines (internationally recognized borders,
+`bench/common/borders.py`). City names are the place's usual English name
 (`airports.CITY_NAMES` corrects OpenFlights' "Milano" next to "Milan", "Minsk 2",
 "Kerkyra/corfu", "Villafranca" for Verona, …). Priority = traffic (number of route records
 touching the airport, log1p, min–max normalized); font classes: the top 5 % at

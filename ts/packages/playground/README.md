@@ -66,7 +66,7 @@ The build also makes `dist/hero.js`, the live header of the documentation's home
 
 | File | Source | License |
 |---|---|---|
-| `data/world.json` | Natural Earth 1:50m admin 0 countries, simplified (`tools/make_world.py`) | public domain |
+| `data/world.json` | Natural Earth 1:50m admin 0 countries with the internationally recognized borders, simplified (`tools/make_world.py`) | public domain |
 | `data/pictures/*.jpg` | scikit-image sample images: astronaut (NASA), rocket (SpaceX), retina (M. Häggström) (`tools/make_pictures.py`) | public domain, CC0 |
 | `data/pictures/pictures.json` | annotation polygons of `bench/scenarios/08-illustration/polygons.json`, scaled | CC0 1.0 |
 | `data/modules.json` (generated) | the import graph of the TypeScript packages of this repository | MIT |
