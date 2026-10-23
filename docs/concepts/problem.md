@@ -109,6 +109,7 @@ canvas edge, and the working area is the bounding box of everything plus a margi
 | `group` | items with the same group share one label with fan leaders (e.g. coincident points) |
 | `keep_with` | all-or-none: a set name shared by the members, or a list of item ids |
 | `svg_id` | the SVG element that draws the item (with `obstacles.svg.auto_mark_items`) |
+| `region` | the item's home on the [region map](regions.md), when it is not the region under its anchor |
 | `placement` | per-item `models`, `offset`, `internal`, `position_order` |
 
 Placements in the result come in input order.
@@ -230,9 +231,11 @@ Everything to avoid besides the items is in `obstacles`, sorted into **classes**
 
 * `vector`: layers of one class each, with `points` (radius `r`, 2), `circles`
   (`[x, y, r]`), `rects` (`[x, y, w, h]`), `polygons` (+ `fill_rule`), `polylines`
-  (stroke `width`, 1) and `shapes` (any [mark](../tutorials/shapes.md) with `x`, `y`).
+  (stroke `width`, 1) and `shapes` (any [mark](../tutorials/shapes.md) with `x`, `y`); a
+  layer's `region` puts its geometry on the [region map](regions.md).
 * `svg`: SVG markup (`source`) or a file (`path`), with class rules — see
-  [SVG backgrounds](../tutorials/svg-background.md).
+  [SVG backgrounds](../tutorials/svg-background.md) — and the picture's
+  [regions](regions.md) (`regions`: the countries of a map, which labels keep to).
 * `raster`: an image (`source`: path, `data:` URL or base64; or `rgba` pixels) in one of
   five modes — see [raster backgrounds](../tutorials/raster-backgrounds.md).
 

@@ -13,6 +13,7 @@ import {
   BLOCK_ITEMS,
   BLOCK_LABELS,
   BLOCK_LEADERS,
+  BLOCK_REGIONS,
   type Block,
   type Cand,
   type Leader,
@@ -99,6 +100,8 @@ export function blockName(s: Solve, b: Block): string {
       return "labels";
     case BLOCK_LEADERS:
       return "leaders";
+    case BLOCK_REGIONS:
+      return "regions";
     default:
       return s.obs.classes[b]!.name;
   }

@@ -191,7 +191,7 @@ function layout(
   });
   // Avoided marks are hard by default (as in Vega's label transform).
   const hard: Record<string, "hard"> = {};
-  for (const v of vectors) hard[v.class] = "hard";
+  for (const v of vectors) if (v.class !== undefined) hard[v.class] = "hard";
   if (!opts.avoid) opts.avoid = { label: hard };
   else opts.avoid = { ...opts.avoid, label: { ...hard, ...opts.avoid.label } };
 

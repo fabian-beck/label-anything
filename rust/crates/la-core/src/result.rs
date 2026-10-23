@@ -83,6 +83,7 @@ fn block_name(s: &Solve, b: Block) -> String {
         Block::Items => "items".into(),
         Block::Labels => "labels".into(),
         Block::Leaders => "leaders".into(),
+        Block::Regions => "regions".into(),
         Block::Class(k) => s.obs.classes[k as usize].name.clone(),
     }
 }

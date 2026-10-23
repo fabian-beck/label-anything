@@ -66,6 +66,8 @@ export const BLOCK_EDGE: Block = -1;
 export const BLOCK_ITEMS: Block = -2;
 export const BLOCK_LABELS: Block = -3;
 export const BLOCK_LEADERS: Block = -4;
+/** A label too much in other items' regions (`placement.max_foreign`). */
+export const BLOCK_REGIONS: Block = -5;
 
 /** A leader polyline from the item to the label's port. */
 export class Leader {

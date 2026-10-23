@@ -1,0 +1,132 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 120
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "region": "west",
+          "rects": [
+            [
+              0,
+              0,
+              140,
+              120
+            ]
+          ]
+        },
+        {
+          "region": "east",
+          "rects": [
+            [
+              160,
+              0,
+              140,
+              120
+            ]
+          ]
+        },
+        {
+          "region": "each",
+          "rects": [
+            [
+              140,
+              0,
+              20,
+              120
+            ]
+          ]
+        }
+      ]
+    },
+    "items": [
+      {
+        "id": "s",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              140,
+              0
+            ],
+            [
+              160,
+              0
+            ],
+            [
+              160,
+              120
+            ],
+            [
+              140,
+              120
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Stripland"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "s",
+        "placed": false,
+        "reason": "no_feasible_candidate",
+        "blocking": [
+          "regions",
+          "canvas_edge"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        },
+        "degrade_steps": [
+          "alternatives",
+          "wrap",
+          "distant",
+          "evict_lower",
+          "shrink:0.85",
+          "soft_overlap",
+          "omit"
+        ]
+      }
+    ],
+    "stats": {
+      "placed": 0,
+      "total": 1,
+      "placed_weighted": -0.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 272,
+      "omission_order": [
+        "s"
+      ],
+      "priority_inversions": 0,
+      "total_cost": 0.0,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 100,
+        "rows": 40,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

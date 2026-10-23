@@ -5,8 +5,19 @@
  * @module
  */
 
-import { BLOCK_EDGE, BLOCK_ITEMS, BLOCK_LABELS, type Block, type Cand, Kind, type Leader, WARM_MARGIN } from "./candidates.js";
+import {
+  BLOCK_EDGE,
+  BLOCK_ITEMS,
+  BLOCK_LABELS,
+  BLOCK_REGIONS,
+  type Block,
+  type Cand,
+  Kind,
+  type Leader,
+  WARM_MARGIN,
+} from "./candidates.js";
 import type { Env } from "./env.js";
+import type { SplitScratch } from "./grid/regions.js";
 import { EPS, P, Rect, segOverlapsRectXY } from "./geom/index.js";
 import type { Variant } from "./labels.js";
 import { clampf, maxf, minf } from "./math.js";
@@ -65,6 +76,8 @@ function finish(c: Cand, acc: Acc): void {
 export class Evaluator {
   private readonly buf = new IdList();
   private readonly buf2 = new IdList();
+  /** Per-region areas of a label box. */
+  private readonly split: SplitScratch = { ids: [], areas: [] };
 
   constructor(
     readonly model: Model,
@@ -202,6 +215,20 @@ export class Evaluator {
       const d = bd.deviation(r);
       acc.add("contrast", (w.contrast * ((4 * d * (cell * cell)) / 65025)) / em2);
     }
+    // 3c. regions: a label across a border, in a region other than its item's (none on a mark)
+    const rm = obs.regions;
+    if (rm !== null && !onMark) {
+      const sp = rm.split(r, obs.home[i]!, this.split);
+      // a label that names a region by where it lies (an area's, not inside it, or one on a
+      // leader) lies mostly at home or in open space
+      if (sp.foreign > model.placement.maxForeign * sp.area && c.kind !== Kind.Internal && (item.area !== null || c.leaders.length > 0)) {
+        acc.violate(BLOCK_REGIONS, false, 0);
+        return finish(c, acc);
+      }
+      const c2 = rm.grid.cell * rm.grid.cell;
+      acc.add("straddle", (w.straddle * (sp.straddle() * c2)) / em2);
+      acc.add("foreign", (w.foreign * (sp.foreign * c2)) / em2);
+    }
     // 4. leaders
     for (const l of c.leaders) this.leaderTerms(i, l, r, c.kind === Kind.Fan || c.kind === Kind.Boundary, acc);
     if (!acc.relaxed) return finish(c, acc);
@@ -289,6 +316,9 @@ export class Evaluator {
     const dy = obs.dynamic;
     const hw = model.leaders.width * 0.5;
     acc.add("leader", w.leader + (w.leaderLength * l.len) / em + w.bends * l.bends);
+    // region borders on the way
+    const rm = obs.regions;
+    if (rm !== null) acc.add("leader_borders", w.leaderBorders * rm.crossings(l.pts));
     // leaders stay on the canvas
     const ca = obs.leaderArea;
     if (ca !== null && !l.pts.every((p) => ca.containsPoint(p))) acc.violate(BLOCK_EDGE, false, 0);

@@ -1,0 +1,111 @@
+{
+  "kind": "svg",
+  "name": "regions",
+  "description": "Region fills (spec §4.8): a fill polygon belongs to the nearest element, itself or an ancestor, that a region selector matches, with the first selector matching that element. The rects inside g#b are no children of .land, so the group is the region; strokes (the .land group strokes everything) and text boxes are never fills; the <use> is the region of its instance's fill; #lake matches rules 2 and 4 and takes 2. Areas of the rectangles; c is a 40 × 30 rectangle with a 20 × 10 hole (even-odd). A selector syntax error is reported.",
+  "svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"200\" height=\"100\">",
+    "  <rect id=\"bg\" width=\"200\" height=\"100\" fill=\"#ccddee\"/>",
+    "  <g class=\"land\" stroke=\"#888888\" stroke-width=\"2\">",
+    "    <rect id=\"a\" x=\"10\" y=\"10\" width=\"40\" height=\"30\" fill=\"#eeddaa\"/>",
+    "    <g id=\"b\" class=\"country\">",
+    "      <rect x=\"60\" y=\"10\" width=\"20\" height=\"30\" fill=\"#aaddee\"/>",
+    "      <rect x=\"80\" y=\"10\" width=\"20\" height=\"30\" fill=\"#aaddee\"/>",
+    "    </g>",
+    "    <path id=\"c\" d=\"M110 10 h40 v30 h-40 z M120 20 h20 v10 h-20 z\" fill=\"#ddeeaa\" fill-rule=\"evenodd\"/>",
+    "    <text id=\"t\" x=\"10\" y=\"80\" font-size=\"10\">Text</text>",
+    "  </g>",
+    "  <rect id=\"lake\" class=\"water\" x=\"15\" y=\"15\" width=\"10\" height=\"10\" fill=\"#99bbdd\"/>",
+    "  <defs><rect id=\"tpl\" width=\"10\" height=\"10\" fill=\"#aaaaaa\"/></defs>",
+    "  <use id=\"u\" xlink:href=\"#tpl\" x=\"170\" y=\"10\"/>",
+    "</svg>"
+  ],
+  "default_class": "ignore",
+  "expect": {
+    "regions": [
+      {
+        "selectors": [
+          ".country",
+          ".land > rect, .land > path",
+          ".water",
+          "#u",
+          "rect.water, text",
+          "#bg"
+        ],
+        "count": 7,
+        "order": [
+          "bg",
+          "a",
+          "b",
+          "c",
+          "lake",
+          "u"
+        ],
+        "elements": {
+          "bg": {
+            "rule": 5,
+            "count": 1,
+            "polygons": 1,
+            "fill_area": 20000
+          },
+          "a": {
+            "rule": 1,
+            "count": 1,
+            "polygons": 1,
+            "fill_area": 1200,
+            "bbox": [
+              10,
+              10,
+              40,
+              30
+            ]
+          },
+          "b": {
+            "rule": 0,
+            "count": 2,
+            "polygons": 2,
+            "fill_area": 1200,
+            "bbox": [
+              60,
+              10,
+              40,
+              30
+            ]
+          },
+          "c": {
+            "rule": 1,
+            "count": 1,
+            "polygons": 1,
+            "fill_area": 1000
+          },
+          "lake": {
+            "rule": 2,
+            "count": 1,
+            "fill_area": 100
+          },
+          "u": {
+            "rule": 3,
+            "count": 1,
+            "fill_area": 100,
+            "bbox": [
+              170,
+              10,
+              10,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "selectors": [
+          "rect",
+          ".land > [a"
+        ],
+        "error": "pattern"
+      },
+      {
+        "selectors": [],
+        "count": 0
+      }
+    ]
+  }
+}

@@ -122,6 +122,7 @@ nav:
       - The problem format: concepts/problem.md
       - The result format: concepts/result.md
       - Avoidance classes and policy: concepts/avoidance.md
+      - Regions: concepts/regions.md
       - Candidates and the degradation ladder: concepts/candidates.md
       - Presets and defaults: concepts/presets-defaults.md
       - Time budget, determinism, cancellation: concepts/solver.md

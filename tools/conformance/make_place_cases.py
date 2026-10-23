@@ -526,6 +526,75 @@ CASES["contrast-canvas-background"] = case(
      "items": [pt("a", 100, 60, "Border")]},
     {"placed": 1, "anchor_side": {"a": "top"}})
 
+# --- regions (spec §4.8) ------------------------------------------------------------------
+# two regions side by side, open space below them
+WEST_EAST = {"vector": [{"region": "west", "rects": [[0, 0, 150, 80]]},
+                        {"region": "east", "rects": [[150, 0, 150, 80]]}]}
+
+CASES["regions-stay-home"] = case(
+    "a label next to a border stays in its item's region",
+    {"canvas": {"width": 300, "height": 120}, "obstacles": WEST_EAST, "items": [pt("a", 146, 40, "Border")]},
+    {"placed": 1, "anchor_side": {"a": "left"}, "inside_canvas": True},
+    "The point lies in the west, 4 px from the border. Top and bottom would straddle the border "
+    "(straddle cost), right lies in the east (foreign cost); left lies in the west only.")
+
+CASES["regions-off"] = case(
+    "without the region weights the label takes the first position across the border",
+    {"canvas": {"width": 300, "height": 120}, "obstacles": WEST_EAST,
+     "weights": {"straddle": 0, "foreign": 0, "leader_borders": 0}, "items": [pt("a", 146, 40, "Border")]},
+    {"placed": 1, "anchor_side": {"a": "top"}})
+
+CASES["regions-item-home"] = case(
+    "an item's home region by name: the label goes into it",
+    {"canvas": {"width": 300, "height": 120}, "obstacles": WEST_EAST,
+     "items": [pt("a", 146, 40, "Border", region="east")]},
+    {"placed": 1, "anchor_side": {"a": "right"}})
+
+CASES["regions-unknown-home"] = case(
+    "an item's home region that no region has: a warning, and the home is the region at its anchor",
+    {"canvas": {"width": 300, "height": 120}, "obstacles": WEST_EAST,
+     "items": [pt("a", 146, 40, "Border", region="north")]},
+    {"placed": 1, "anchor_side": {"a": "left"}},
+    "The result warns (unknown_region at /items/0/region); the label stays in the west, as in "
+    "regions-stay-home.")
+
+# a strip too narrow for its name between two regions, open space below (or none)
+STRIP = {"vector": [{"region": "west", "rects": [[0, 0, 140, 120]]},
+                    {"region": "east", "rects": [[160, 0, 140, 120]]},
+                    {"region": "each", "rects": [[140, 0, 20, 120]]}]}
+STRIP_ITEM = {"id": "s", "anchor": {"type": "area", "polygon": [[140, 0], [160, 0], [160, 120], [140, 120]]},
+              "label": {"type": "text", "text": "Stripland"}}
+
+CASES["regions-area-to-open"] = case(
+    "an area's name that fits only in other regions goes out on a leader into open space",
+    {"canvas": {"width": 300, "height": 200}, "obstacles": STRIP, "items": [STRIP_ITEM]},
+    {"placed": 1, "model": {"s": "distant"}, "has_leader": {"s": True}},
+    "Beside its dot the name would lie mostly in the west or the east (more than max_foreign); "
+    "the ladder's distant step finds open space below the regions.")
+
+CASES["regions-area-omitted"] = case(
+    "an area's name that fits only in other regions is left out rather than misplaced",
+    {"canvas": {"width": 300, "height": 120}, "obstacles": STRIP, "items": [STRIP_ITEM]},
+    {"placed": 0, "reasons": {"s": "no_feasible_candidate"}})
+
+CASES["regions-max-foreign-1"] = case(
+    "with max_foreign 1 an area's name may lie in another region",
+    {"canvas": {"width": 300, "height": 120}, "obstacles": STRIP, "placement": {"max_foreign": 1},
+     "items": [STRIP_ITEM]},
+    {"placed": 1})
+
+CASES["regions-svg"] = case(
+    "the paths of an SVG background are regions, the rest open space",
+    {"canvas": {"width": 300, "height": 120},
+     "obstacles": {"svg": {"source": '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="120">'
+                                     '<rect width="300" height="120" fill="#cde"/>'
+                                     '<path d="M0 0 H150 V80 H0 Z" fill="#eda"/>'
+                                     '<path d="M150 0 H300 V80 H150 Z" fill="#ade"/></svg>',
+                           "classes": [{"selector": "*", "class": "ignore"}], "regions": "path"}},
+     "items": [pt("a", 154, 40, "Border")]},
+    {"placed": 1, "anchor_side": {"a": "right"}, "inside_canvas": True},
+    "The point lies in the eastern path, 4 px from the western one: the label goes right.")
+
 CASES["y-up-transform"] = case(
     "y-up input coordinates",
     {"problem_file": "../problems/y-up-transform.json"},

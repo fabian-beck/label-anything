@@ -112,6 +112,21 @@ export interface ClassRule {
   class: string;
 }
 
+/** A fill of a region (spec §4.8): a polygon primitive and the rule that made it part of a region. */
+export interface RegionFill {
+  /** Index of the first selector that matches `element`. */
+  rule: number;
+  /**
+   * The element that selector matches: the primitive's element (the outermost `<use>` for
+   * instance geometry) or its nearest ancestor that a selector matches.
+   */
+  element: number;
+  /** Index into `scene.primitives`. */
+  index: number;
+  /** The primitive (always a polygon: fills only). */
+  primitive: Primitive;
+}
+
 /** A drawn primitive with its class. */
 export interface Classified {
   /** The class (never `"ignore"`). */

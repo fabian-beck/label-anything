@@ -40,6 +40,19 @@ pub enum Geom {
     Rect(Rect),
 }
 
+/// A fill of a region of an SVG background (spec §4.8), in canvas pixels.
+#[derive(Clone, Debug, PartialEq)]
+pub struct RegionGeom {
+    /// Index of the region rule that applies.
+    pub rule: usize,
+    /// The element that rule matched (an index in document order).
+    pub element: usize,
+    /// That element's `id`.
+    pub id: Option<String>,
+    pub rings: Vec<Vec<P>>,
+    pub even_odd: bool,
+}
+
 /// A parsed SVG document.
 pub trait SvgDoc {
     /// Viewport size in px (before mapping to the canvas).
@@ -57,6 +70,14 @@ pub trait SvgDoc {
     fn geometry_by_id(&self, id: &str) -> Option<Vec<Geom>>;
     /// Geometry of all elements matching `selector`.
     fn geometry_by_selector(&self, selector: &str) -> Result<Vec<Geom>, String>;
+    /// The fills of regions in paint order (spec §4.8): every fill polygon whose element or
+    /// nearest ancestor matches one of `selectors`, with the first selector matching that
+    /// element. Selector errors return `(rule index, message)`. A backend without regions
+    /// returns none.
+    fn regions(&self, selectors: &[String]) -> Result<Vec<RegionGeom>, (usize, String)> {
+        let _ = selectors;
+        Ok(Vec::new())
+    }
 }
 
 /// Parses SVG markup into an [`SvgDoc`] mapped onto the canvas.
@@ -167,6 +188,28 @@ impl SvgDoc for BuiltinDoc {
         la_svg::select(&self.scene, selector)
             .map(|ps| ps.into_iter().map(|p| geom_of(&p.geometry)).collect())
             .map_err(|e| e.message)
+    }
+    fn regions(&self, selectors: &[String]) -> Result<Vec<RegionGeom>, (usize, String)> {
+        // report the first rule whose selector does not parse
+        for (i, sel) in selectors.iter().enumerate() {
+            if let Err(e) = la_svg::Selector::parse(sel) {
+                return Err((i, e.message));
+            }
+        }
+        let fills = la_svg::regions(&self.scene, selectors).map_err(|e| (0, e.message))?;
+        Ok(fills
+            .into_iter()
+            .filter_map(|f| match geom_of(&f.primitive.geometry) {
+                Geom::Polygon { rings, even_odd } => Some(RegionGeom {
+                    rule: f.rule,
+                    element: f.element,
+                    id: self.scene.elements[f.element].id.clone(),
+                    rings,
+                    even_odd,
+                }),
+                _ => None,
+            })
+            .collect())
     }
 }
 

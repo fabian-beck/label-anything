@@ -64,7 +64,8 @@ Error codes (shared by all implementations):
 
 Warning codes: `unknown_class` (an `avoid` key that no source produces and that is not
 reserved), `unknown_attr` (a `priority.terms` attribute that no item has in its `attrs`),
-`ignored` (an option that has no effect in this context).
+`unknown_region` (an item's `region` that no region has), `ignored` (an option that has no
+effect in this context).
 
 Pointers are RFC 6901 JSON Pointers into the problem. For `unknown_property` the pointer
 points at the offending property; for `required` at the missing property (e.g.

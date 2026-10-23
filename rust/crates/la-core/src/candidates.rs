@@ -61,6 +61,8 @@ pub enum Block {
     Items,
     Labels,
     Leaders,
+    /// A label too much in other items' regions (`placement.max_foreign`).
+    Regions,
     /// A static obstacle class (index into `Obstacles::classes`).
     Class(u16),
 }

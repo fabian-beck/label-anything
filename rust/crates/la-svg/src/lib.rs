@@ -36,7 +36,8 @@
 //!   Primitives are ordered by paint order, which is also non-decreasing in `element`, so
 //!   the primitives of an element subtree form a contiguous slice.
 //! * [`classify`] assigns classes with the first matching [`ClassRule`];
-//!   [`element_geometry`], [`select`] and [`outline`] serve `from_svg` item marks.
+//!   [`element_geometry`], [`select`] and [`outline`] serve `from_svg` item marks;
+//!   [`regions`] finds the fills of the picture's regions (spec §4.8) as [`RegionFill`]s.
 //!
 //! Not modelled (documented in spec §4.5): clipping, masks, filters, markers, dashes,
 //! patterns/gradients (any valid paint server counts as opaque), `textLength`, per-glyph
@@ -65,7 +66,9 @@ mod transform;
 mod unit_tests;
 mod xml;
 
-pub use classify::{classify, element_geometry, outline, select, ClassRule, Classified, IGNORE};
+pub use classify::{
+    classify, element_geometry, outline, regions, select, ClassRule, Classified, RegionFill, IGNORE,
+};
 pub use error::{SvgError, SvgErrorCode};
 pub use render::parse;
 pub use selector::{Selector, BACKGROUND_FRACTION, SMALL_PX};

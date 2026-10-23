@@ -32,6 +32,20 @@ public final class VectorLayer extends Spec {
     return new VectorLayer(obj("class", className));
   }
 
+  /**
+   * An empty layer whose polygons, rects, circles and shapes are on the region map (spec
+   * §4.8) as {@code region} ({@code "each"}, {@code "open"}, {@code "none"} or a name), and
+   * no obstacles.
+   */
+  public static VectorLayer regionOf(String region) {
+    return new VectorLayer(obj("region", region));
+  }
+
+  /** This layer's geometry is also on the region map, as {@code region}. */
+  public VectorLayer region(String region) {
+    return with("region", region);
+  }
+
   private VectorLayer with(String key, Object value) {
     return new VectorLayer(Spec.with(json, key, value));
   }

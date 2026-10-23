@@ -296,6 +296,38 @@ problems["many-points"] = {
     "solver": {"strategy": "greedy", "seed": 7},
 }
 
+# regions (spec §4.8): the paths of an SVG map, a lake cut out of them as open space, an
+# island as a named vector region; area items for the countries, cities near the borders, a
+# port whose home is the island by name
+REGIONS_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">'
+               '<rect width="400" height="300" fill="#d3e3f1"/>'
+               '<g class="land" stroke="#8c8273">'
+               '<path id="A" d="M20 20 H180 V200 H20 Z" fill="#f1dfba"/>'
+               '<path id="B" d="M180 20 H300 V120 H180 Z" fill="#d8e6c3"/>'
+               '<path id="C" d="M180 120 H300 V200 H180 Z" fill="#f0cfc2"/></g>'
+               '<circle class="lake" cx="100" cy="110" r="25" fill="#d3e3f1"/></svg>')
+problems["regions-map"] = {
+    "canvas": {"width": 400, "height": 300},
+    "preset": "map",
+    "obstacles": {
+        "svg": {"source": REGIONS_SVG, "classes": [{"selector": "*", "class": "ignore"}],
+                "regions": [{"selector": ".lake", "region": "open"}, {"selector": ".land path"}]},
+        "vector": [{"region": "island", "polygons": [[[330, 220], [380, 220], [380, 270], [330, 270]]]}],
+    },
+    "items": [
+        {"id": "A", "anchor": {"type": "area", "polygon": [[20, 20], [180, 20], [180, 200], [20, 200]]},
+         "label": {"type": "text", "text": "Alphaland"}, "tier": 1},
+        {"id": "B", "anchor": {"type": "area", "polygon": [[180, 20], [300, 20], [300, 120], [180, 120]]},
+         "label": {"type": "text", "text": "Betastan"}, "tier": 1},
+        {"id": "C", "anchor": {"type": "area", "polygon": [[180, 120], [300, 120], [300, 200], [180, 200]]},
+         "label": {"type": "text", "text": "Gammaria del Sur"}, "tier": 1,
+         "placement": {"models": ["adjacent", "slider", "distant"]}},
+        pt("capital-A", 176, 60, "Alpha City"),
+        pt("capital-B", 250, 116, "Beta Town"),
+        pt("port", 334, 246, "Port Island", region="island"),
+    ],
+}
+
 problems["unbounded"] = {
     "items": [pt("n1", -50, -20, "Negative coords"), pt("n2", 5000, 3000, "Far away")],
     "output": {"debug_svg": True, "cost_breakdown": True},
@@ -331,6 +363,13 @@ invalid = {
     "duplicate-implicit-id": ({"items": [pt("1", 1, 1, "A"), {"anchor": {"type": "point", "x": 1, "y": 1}, "label": {"type": "text", "text": "B"}}]}, [("/items/1", "duplicate_id")], []),
     "version-const": ({"version": "2", "items": []}, [("/version", "const")], []),
     "raster-no-source": ({"items": [], "obstacles": {"raster": {"mode": "ink"}}}, [("/obstacles/raster", "exclusive")], []),
+    # a vector layer has a class, a region or both (spec §4.8)
+    "vector-layer-no-class": ({"items": [], "obstacles": {"vector": [{"polygons": [[[0, 0], [9, 0], [9, 9]]]}]}},
+                              [("/obstacles/vector/0/class", "required")], []),
+    "region-rule-unknown-property": ({"items": [], "obstacles": {"svg": {"source": "<svg/>",
+                                                                       "regions": [{"selector": "path", "kind": "each"}]}}},
+                                     [("/obstacles/svg/regions/0/kind", "unknown_property")], []),
+    "max-foreign-range": ({"items": [], "placement": {"max_foreign": 1.5}}, [("/placement/max_foreign", "range")], []),
     # a missing discriminator is one error, not the requirements of every variant
     "anchor-missing-type": ({"items": [{"anchor": {"x": 1, "y": 1}, "label": {"type": "text", "text": "A"}}]},
                             [("/items/0/anchor/type", "required")], [], True),

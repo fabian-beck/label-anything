@@ -57,6 +57,7 @@ are stale.
 | `placement.boundary.gap` | `2` | length ≥ 0 | Gap between stacked boundary labels. |
 | `placement.boundary.margin` | `4` | length ≥ 0 | Distance of boundary labels from the canvas (region) edge. |
 | `placement.fan` | `"auto"` | auto \| always \| off | Fan labels (spec §6.8): a crowd's labels stacked in a column beside it with fanning leaders. `auto`: crowds of items left without a label, when that places more labels; `always`: every crowd of two or more items. |
+| `placement.max_foreign` | `0.25` | 0–1 | On a region map (spec §4.8), the largest share of a label that names a region by where it lies — an area item's (internal ones aside), or one on a leader — that may lie in other items' regions: a name stays mostly in its own country or in open space, smaller, on a leader into the sea, or left out rather than misplaced. 1: no limit (`weights.foreign` decides). |
 | `leaders.style` | `"straight"` | enum | straight \| angles \| orthogonal \| elbow \| curved. |
 | `leaders.angles` | `[0,45,90,135,180,225,270,315]` | list of degrees | 0 = right, 90 = up. Used by `angles` and the first segment of `elbow`. |
 | `leaders.port` | `"nearest"` | nearest \| side-center \| baseline | Where the leader meets the label. |
@@ -106,12 +107,17 @@ are stale.
 | `weights.lookahead` | `0.3` | ≥ 0 | × Σ fraction of other unplaced items' candidates invalidated. |
 | `weights.starve` | `2.0` | ≥ 0 | × number of unplaced items whose last candidates would be invalidated. |
 | `weights.contrast` | `0.5` | ≥ 0 | × 4 · lightness variance of the raster backdrop under the label box, per em² (spec §8): a label half on black, half on white costs the weight per em² of its box. |
+| `weights.straddle` | `0.5` | ≥ 0 | × 4 · Σ a_r · a_s / A over the pairs of regions under the label box, per em² (spec §4.8, §8): a label half in one region, half in another (or in open space) costs the weight per em² of its box, as one half on black and half on white does (`contrast`). |
+| `weights.foreign` | `0.5` | ≥ 0 | × the area of the label box in regions other than its item's home, per em² (open space is free): a label in a neighbouring country costs the weight per em² of its box. |
+| `weights.leader_borders` | `1.0` | ≥ 0 | × the region borders a leader crosses (spec §7): each costs as much as having a leader. |
 | `weights.stability` | `1.0` | ≥ 0 | × displacement from `warm_start`: 1 per em up to 1 em, then 1/4 per em up to 5 em (at most 2 per label). |
 | `obstacles.vector.r` | `2` | ≥ 0 | Radius of vector points. |
 | `obstacles.vector.width` | `1` | ≥ 0 | Stroke width of vector polylines. |
+| `obstacles.vector.region` | `null` | region or null | The layer's polygons, rects, circles and shapes on the region map (spec §4.8): `each`, `open`, `none` or a region name. |
 | `obstacles.vector.fill_rule` | `"nonzero"` | nonzero \| evenodd | Fill rule of vector polygons. |
 | `obstacles.svg.default_class` | `"ink"` | class or ignore | Class of drawn SVG elements no rule matches. |
 | `obstacles.svg.auto_mark_items` | `false` | bool | Take item marks from SVG elements with the item's `svg_id`. |
+| `obstacles.svg.regions` | `null` | selector, rules or null | Regions of the picture (spec §4.8): every element a selector matches is a region; labels keep inside one region, leaders cross few borders. |
 | `obstacles.svg.tolerance` | `0.25` | > 0 | Curve flattening tolerance (px). |
 | `obstacles.raster.mode` | `"ink"` | enum | ink \| alpha \| cost \| classmap \| saliency. |
 | `obstacles.raster.class` | `"ink"` | class | Class produced by ink, alpha, cost and saliency modes. |

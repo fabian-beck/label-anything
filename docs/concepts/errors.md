@@ -57,8 +57,10 @@ Warnings never stop a solve; they are returned in `result.warnings` too.
 
 **Warnings:** `unknown_class` — an `avoid` key that no obstacle source produces and that
 is not a reserved class; `unknown_attr` — a priority term on an attribute that no item has
-in its `attrs` (the term is 0 for every item, so it ranks nothing); `ignored` — an option
-without effect in its context; `limit` — SVG content too deep to render, skipped.
+in its `attrs` (the term is 0 for every item, so it ranks nothing); `unknown_region` — an
+item's `region` that no [region](regions.md) has (its home is then the region under its
+anchor); `ignored` — an option without effect in its context; `limit` — SVG content too
+deep to render, skipped.
 
 ## Errors while preparing
 

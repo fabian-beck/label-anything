@@ -1,0 +1,126 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 120
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "region": "west",
+          "rects": [
+            [
+              0,
+              0,
+              150,
+              80
+            ]
+          ]
+        },
+        {
+          "region": "east",
+          "rects": [
+            [
+              150,
+              0,
+              150,
+              80
+            ]
+          ]
+        }
+      ]
+    },
+    "weights": {
+      "straddle": 0,
+      "foreign": 0,
+      "leader_borders": 0
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 146,
+          "y": 40
+        },
+        "label": {
+          "type": "text",
+          "text": "Border"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "a",
+        "placed": true,
+        "box": {
+          "x": 124.75999999999999,
+          "y": 17.055999999999997,
+          "w": 42.48000000000002,
+          "h": 19.944000000000003
+        },
+        "anchor": [
+          146.0,
+          40.0
+        ],
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Border"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            38.88
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.024999999999999998,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 1,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 40,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.024999999999999998,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 100,
+        "rows": 40,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

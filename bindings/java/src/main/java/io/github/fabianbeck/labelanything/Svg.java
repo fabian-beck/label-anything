@@ -55,6 +55,23 @@ public final class Svg extends Spec {
     return with("auto_mark_items", enabled);
   }
 
+  /**
+   * The fills of elements matching {@code selector} are regions (spec §4.8), each element one
+   * of its own, named by its id: a label keeps to its item's region or to open space.
+   */
+  public Svg regions(String selector) {
+    return region(selector, "each");
+  }
+
+  /**
+   * The fills of elements matching {@code selector} are {@code region}: {@code "each"} (every
+   * element a region of its own), {@code "open"} (open space), {@code "none"} (no region) or
+   * the region of that name. The first matching rule wins.
+   */
+  public Svg region(String selector, String region) {
+    return new Svg(Spec.append(json, "regions", obj("selector", selector, "region", region)));
+  }
+
   /** Curve flattening tolerance in px (default 0.25). */
   public Svg tolerance(double px) {
     return with("tolerance", px);

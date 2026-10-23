@@ -195,6 +195,32 @@ class BuilderJsonTest {
   }
 
   @Test
+  void regions() {
+    var problem = LabelProblem.builder()
+        .item(Item.point("port", 5, 5).label(Label.text("Port")).region("island"))
+        .vector(VectorLayer.regionOf("island").rect(0, 0, 10, 10))
+        .vector(VectorLayer.of("roads").polyline(0, 0, 10, 10).region("none"))
+        .background(Svg.markup("<svg/>").ignore("*").region(".lake", "open").regions(".land path"))
+        .weights(Weights.defaults().straddle(0.4).foreign(0.6).leaderBorders(2))
+        .placement(Placement.defaults().maxForeign(0.5))
+        .build();
+    assertSameJson("""
+        {
+          "items": [{"id": "port", "anchor": {"type": "point", "x": 5, "y": 5},
+                     "label": {"type": "text", "text": "Port"}, "region": "island"}],
+          "obstacles": {
+            "vector": [{"region": "island", "rects": [[0, 0, 10, 10]]},
+                       {"class": "roads", "polylines": [[[0, 0], [10, 10]]], "region": "none"}],
+            "svg": {"source": "<svg/>", "classes": [{"selector": "*", "class": "ignore"}],
+                    "regions": [{"selector": ".lake", "region": "open"},
+                                {"selector": ".land path", "region": "each"}]}
+          },
+          "weights": {"straddle": 0.4, "foreign": 0.6, "leader_borders": 2},
+          "placement": {"max_foreign": 0.5}
+        }""", problem.toJson());
+  }
+
+  @Test
   void priorityTiersCoverageSolverAndOutput() {
     var problem = LabelProblem.builder()
         .item("a", 1, 2, Label.text("A"))

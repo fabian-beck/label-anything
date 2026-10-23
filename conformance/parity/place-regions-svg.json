@@ -1,0 +1,107 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 120
+    },
+    "obstacles": {
+      "svg": {
+        "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"300\" height=\"120\"><rect width=\"300\" height=\"120\" fill=\"#cde\"/><path d=\"M0 0 H150 V80 H0 Z\" fill=\"#eda\"/><path d=\"M150 0 H300 V80 H150 Z\" fill=\"#ade\"/></svg>",
+        "classes": [
+          {
+            "selector": "*",
+            "class": "ignore"
+          }
+        ],
+        "regions": "path"
+      }
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 154,
+          "y": 40
+        },
+        "label": {
+          "type": "text",
+          "text": "Border"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "a",
+        "placed": true,
+        "box": {
+          "x": 157.0,
+          "y": 30.028,
+          "w": 42.48000000000002,
+          "h": 19.944000000000003
+        },
+        "anchor": [
+          154.0,
+          40.0
+        ],
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Border"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            38.88
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.09999999999999999,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 1,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 15,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.09999999999999999,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 100,
+        "rows": 40,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

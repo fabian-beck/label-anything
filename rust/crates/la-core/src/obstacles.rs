@@ -4,6 +4,7 @@
 use crate::geom::{dist_point_seg, dist_seg_rect, polygon, seg_overlaps_rect, Rect, EPS, P};
 use crate::grid::dt::{distance_transform, dt_maxima};
 use crate::grid::raster::MaskRaster;
+use crate::grid::regions::RegionMap;
 use crate::grid::{Backdrop, GridSpec, Sat};
 use crate::index::StaticIndex;
 use crate::math::{maxf, minf};
@@ -117,6 +118,10 @@ pub struct Obstacles {
     /// The luma behind labels, for the `contrast` cost term (`None` without rasters, with
     /// `weights.contrast` 0, or when the backdrop is uniform).
     pub backdrop: Option<Backdrop>,
+    /// The region map (`None` without regions, or when the region weights are all 0).
+    pub regions: Option<RegionMap>,
+    /// The home region of every item (0 = open; all 0 without a region map).
+    pub home: Vec<u32>,
     /// Free space, computed on first use (see [`Obstacles::free_space`]).
     free: std::sync::OnceLock<FreeSpace>,
     pub label_area: Option<Rect>,
@@ -240,6 +245,30 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         )
     } else {
         None
+    };
+    // the region map and the home of every item (spec §4.8)
+    let w = &model.weights;
+    let regions = if w.straddle > 0.0 || w.foreign > 0.0 || w.leader_borders > 0.0 {
+        RegionMap::new(grid, &model.region_fills)
+    } else {
+        None
+    };
+    let home: Vec<u32> = match &regions {
+        Some(rm) => model
+            .items
+            .iter()
+            .map(|it| {
+                match it
+                    .region
+                    .as_ref()
+                    .and_then(|name| model.region_ids.get(name))
+                {
+                    Some(&r) => r,
+                    None => rm.home(it.shape.reference(), &it.shape.bbox()),
+                }
+            })
+            .collect(),
+        None => vec![0; model.items.len()],
     };
     names.remove("ignore");
     names.remove("items");
@@ -411,6 +440,8 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         items_sat,
         own,
         backdrop,
+        regions,
+        home,
         free: std::sync::OnceLock::new(),
         label_area: model.label_area,
         leader_area: model.leader_area,
@@ -434,8 +465,10 @@ fn free_space(model: &Model, obs: &Obstacles) -> FreeSpace {
         .filter(|&i| classes[i].label.is_hard())
         .collect();
     let la = model.label_area;
+    // on a region map, the free space is the open space (spec §4.8): seeds lie in the sea
+    let regions = obs.regions.as_ref().map(|rm| &rm.ids);
     let dt = distance_transform(&grid, |i| {
-        if hard_cov[i] > 0 {
+        if hard_cov[i] > 0 || regions.is_some_and(|ids| ids[i] != 0) {
             return true;
         }
         let (c, r) = (i % grid.cols, i / grid.cols);

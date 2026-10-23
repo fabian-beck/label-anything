@@ -12,7 +12,8 @@ Between the two, every implementation runs the same pipeline:
 1. **Validate** the problem completely ([errors](errors.md)).
 2. **Merge options**: defaults ← preset ← problem ([presets and defaults](presets-defaults.md)).
 3. **Prepare obstacles**: vector layers, SVG and raster backgrounds become classed geometry
-   and coverage grids ([avoidance](avoidance.md)).
+   and coverage grids ([avoidance](avoidance.md)), and the picture's regions a region map
+   ([regions](regions.md)).
 4. **Measure labels** and build their variants (wrapped, alternative, truncated, shrunk).
 5. **Generate candidates** per item: adjacent, slider, internal, distant, boundary
    ([candidates](candidates.md)).
@@ -26,6 +27,7 @@ Between the two, every implementation runs the same pipeline:
 | [The problem format](problem.md) | every section of a problem, with examples |
 | [The result format](result.md) | placements, explanations, statistics |
 | [Avoidance classes and policy](avoidance.md) | obstacle classes; hard, soft and ignore; the four `avoid` maps |
+| [Regions](regions.md) | the parts of a picture a label belongs to: countries, bars, compartments |
 | [Candidates and the degradation ladder](candidates.md) | candidate models, the cost model, what happens when nothing fits |
 | [Presets and defaults](presets-defaults.md) | how options merge; what each preset does |
 | [Time budget, determinism and cancellation](solver.md) | strategies, the iteration budget, reproducibility |

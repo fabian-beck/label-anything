@@ -347,6 +347,9 @@ pub struct Weights {
     pub lookahead: f64,
     pub starve: f64,
     pub contrast: f64,
+    pub straddle: f64,
+    pub foreign: f64,
+    pub leader_borders: f64,
     pub stability: f64,
 }
 
@@ -364,6 +367,9 @@ impl Weights {
             lookahead: o.f64("weights.lookahead"),
             starve: o.f64("weights.starve"),
             contrast: o.f64("weights.contrast"),
+            straddle: o.f64("weights.straddle"),
+            foreign: o.f64("weights.foreign"),
+            leader_borders: o.f64("weights.leader_borders"),
             stability: o.f64("weights.stability"),
         }
     }
@@ -462,6 +468,10 @@ pub struct PlacementOpts {
     pub prune_factor: f64,
     pub boundary: BoundaryOpts,
     pub fan: FanMode,
+    /// `placement.max_foreign`: the largest share of the box of an area item's label (not
+    /// an internal one) or of a label on a leader that may lie in other items' regions
+    /// (spec §4.8).
+    pub max_foreign: f64,
 }
 
 impl PlacementOpts {
@@ -491,6 +501,7 @@ impl PlacementOpts {
                 "off" => FanMode::Off,
                 _ => FanMode::Auto,
             },
+            max_foreign: o.f64("placement.max_foreign"),
         }
     }
 }

@@ -1,0 +1,62 @@
+{
+  "kind": "place",
+  "name": "an item's home region that no region has: a warning, and the home is the region at its anchor",
+  "$comment": "The result warns (unknown_region at /items/0/region); the label stays in the west, as in regions-stay-home.",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 120
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "region": "west",
+          "rects": [
+            [
+              0,
+              0,
+              150,
+              80
+            ]
+          ]
+        },
+        {
+          "region": "east",
+          "rects": [
+            [
+              150,
+              0,
+              150,
+              80
+            ]
+          ]
+        }
+      ]
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 146,
+          "y": 40
+        },
+        "label": {
+          "type": "text",
+          "text": "Border"
+        },
+        "region": "north"
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "anchor_side": {
+      "a": "left"
+    }
+  }
+}

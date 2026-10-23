@@ -315,6 +315,11 @@ canvas in both dimensions), `:filled` and `:unfilled`. Anything else (sibling
 combinators, the `~=` and `|=` operators, attribute flags, other pseudo-classes and
 pseudo-elements) is a `pattern` error.
 
+**Regions.** `regions` (a selector, or rules `{selector, region}`) puts the fills of the
+matching elements on the region map (§4.8), whatever their class: `{"selector":
+".land path", "class": "ignore"}` with `"regions": ".land path"` makes every country of a
+map a region without making it an obstacle.
+
 `auto_mark_items: true`: items with `svg_id` take their mark geometry from that SVG
 element (as `from_svg`), and that element is removed from its class. A `from_svg` mark is
 the element's outline: per drawn shape its fill polygon, else its text boxes, else its
@@ -477,8 +482,88 @@ colours here: they do not change the backdrop.
 
 The exact Euclidean distance transform (Felzenszwalb–Huttenlocher) of the union of all
 **static hard** classes for labels (cells with coverage > 0, plus `canvas_edge` outside
-the label area) is computed on the grid in cell units and stored in px. It drives
+the label area) is computed on the grid in cell units and stored in px. With a region
+map (§4.8), every cell of a region (not open) belongs to the union too: free space is
+open space, and the seeds of distant labels lie in the sea, not on the land. It drives
 free-space seeds for distant candidates and early rejection.
+
+### 4.8 Regions
+
+Regions (ADR 0050) are the parts of a picture a label belongs to: the countries of a
+map, the bars of a chart, the compartments of a diagram. The rest of the canvas is
+**open** space — the sea, the plot's background — where any label may lie. A label
+reads as naming the region it lies in, so a label should lie inside one region, its
+item's own or open space, and a leader should cross few borders; three cost terms say
+how much that matters (§7, §8). Regions are not obstacles; their one hard rule keeps the
+labels that name a region by where they lie out of other regions (below).
+
+**Sources**, painted in this order (later ones on top):
+
+* SVG sources with `regions` (§4.5): a selector, or a list of rules
+  `{selector, region}`. A drawn fill polygon (never a stroke or a text box) belongs to the
+  nearest element, itself or an ancestor, that a rule's selector matches; the first rule
+  that matches that element decides. Fills whose element and ancestors match no rule are
+  not on the region map. The selectors are those of class rules; a syntax error is an
+  error (`pattern`, at the selector).
+* Vector layers with `region` (§4): their polygons (with the layer's fill rule), rects,
+  circles (their outline, §3.3) and shapes (their outline rings; polygons with their fill
+  rule), in that order; points and polylines never. A layer with a `region` and without
+  a `class` adds no obstacles.
+
+`region` (default `"each"` in SVG rules): `"each"` — every matched element (vector: every
+primitive) is a region of its own; an SVG element with an `id` is the region of that
+name. `"open"` — open space: it clears the regions below. `"none"` — not on the region
+map (a rule that keeps a later rule from matching). Any other string — the region of
+that name: all geometry with the same name, in every source, is one region. Regions are
+numbered `1, 2, …` in the order of their first fill; 0 is open space.
+
+**The region map.** One region number per grid cell (§4.1): every fill is painted in
+order onto the cells whose centre `(x0 + (col + ½)·c, y0 + (row + ½)·c)` it covers under
+its fill rule, as the rasterizer of §4.2 fills polygons at its sample rows (here one
+sample per cell: an active edge list per cell row; edges with `y0 ≤ y < y1`, crossings
+`x = x_top + (y − y_top) · slope` sorted by x then direction; a span `[xa, xb)` sets the
+cells whose centre x lies in it, `ceil((xa − x0)/c − ½) ≤ col < ceil((xb − x0)/c − ½)`).
+A cell takes the number of the last fill covering its centre; cells no fill covers are
+open. A cell is on a **border** when one of its 4 neighbours has another number.
+
+**Home.** The home of an item is the region named by `item.region` (a name no region has
+is a warning `unknown_region`, and the rule below applies); else the region of the cell
+containing its reference point (§11: point items' anchors, area items' poles); when that
+cell is open, the region with the most cells among those touched by the bounding box of
+the item's mark grown by one cell (ties: the lower number) — the dot of a coastal city may
+lie in the sea; else open space.
+
+**A label box on the map.** For a box `B`, its overlap with each cell (the cell-unit
+interval lengths `wx`, `wy` of the box clamped to the grid, `w = wx · wy`) is summed by
+the cell's region: rows in ascending order, columns in ascending order, `A = Σ w` and per
+region `a_r` (in the order the regions first occur). When no cell the box touches is on a
+border, the box lies in one region: `A = (u1 − u0) · (v1 − v0)` (the box in cell units,
+clamped), `a_r = A` for the region of its first cell. Then `Σ a_r²` is summed in the same
+order. The **straddle** of the box is `2 · (A² − Σ a_r²) / A` (0 when `A ≤ 0`, and never
+negative): `4 · Σ_{r<s} a_r · a_s / A`, the box's area for a box half in one region and
+half in another, `4 · p · (1 − p)` of it for a share `p` across a border, nothing in one
+region. Its **foreign** area is `Σ a_r` over the regions other than open space and the
+item's home. Both are in cells²; times `c²` they are px².
+
+**Foreign labels.** A label that names its item's region by where it lies — the label of
+an area item, internal ones aside, and any label with a leader — is infeasible when its
+foreign area exceeds `placement.max_foreign · A` (default 0.25): a country's name lies at
+home or in open space, at most a quarter of it in other countries, and a name with no such
+place is smaller, on a leader into open space, or omitted rather than misplaced. The hard
+class that rejects it is `regions` (`blocking`, §9.3); the ladder does not relax it. The
+internal labels of area items and the labels of point items without a leader may lie in
+other regions at the cost `w_foreign`: a capital near a border has its name next to its
+dot, wherever that is.
+
+**A leader on the map.** The polyline from the leader's start to its port (not an
+underline) is sampled at its first point and, along each segment `a → b`, at
+`a + (b − a) · k / n`, `k = 1 … n`, `n = max(1, ceil(|b − a| / c))`; the leader crosses
+as many **borders** as consecutive samples lie in different regions (a sample's region
+is that of its cell; outside the grid, open).
+
+The map is built only when one of `weights.straddle`, `weights.foreign` and
+`weights.leader_borders` is positive and a source has fills on it; without a map every
+home is open space and the terms are 0.
 
 ---
 
@@ -697,13 +782,14 @@ Positions on `distant_rings` rings with radii evenly spaced in
 the leader style (`straight`: `distant_directions` evenly spaced; `angles`/`elbow`: the
 listed angles; `orthogonal`: 8 octilinear directions), plus free-space seeds (local
 maxima of the distance transform within `max_distance` whose clearance ≥ label
-half-height). For each target the label is attached by its port side facing the anchor
-and the leader is built per style (§7). The `k_distant` cheapest (static cost) are kept.
-An item whose `position_order` lists fewer than the 8 fixed positions keeps its distant
-labels on those sides: only directions (and seeds, seen from the reference point) within
-22.5° of a listed position's direction are used (`u·v ≥ cos 22.5° · |u|·|v|` less 10⁻⁹,
-so that a direction between two octants belongs to both), e.g. `["right"]` keeps end
-labels of a line chart off the lines to the left.
+half-height; on a region map they lie in open space, §4.7). For each target the label is
+attached by its port side facing the anchor and the leader is built per style (§7). The
+`k_distant` cheapest (static cost) are kept. An item whose `position_order` lists fewer
+than the 8 fixed positions keeps its distant labels on those sides: only directions (and
+seeds, seen from the reference point) within 22.5° of a listed position's direction are
+used (`u·v ≥ cos 22.5° · |u|·|v|` less 10⁻⁹, so that a direction between two octants
+belongs to both), e.g. `["right"]` keeps end labels of a line chart off the lines to the
+left.
 
 ### 6.5 Area anchors
 
@@ -907,6 +993,9 @@ its font size.
   only not cross (it leaves a crowd of touching marks in the order of its column). With a soft weight `w`,
   every mark closer than `clearance` costs `w · (1 − d / clearance)`. The marks of less
   important items follow `avoid.leader.lower_items` where it is given (§4.4).
+* **Region borders** (§4.8): on a region map, every border a leader crosses costs
+  `weights.leader_borders` — a leader from a country to its name in the sea crosses one
+  (the coast), one that runs across a neighbouring country three.
 * **Spacing between leaders** (with `avoid.leader.leaders` hard): two leaders of
   different labels conflict when a segment of one intersects a segment of the other, or
   when a vertex of one (start, bends, port, underline ends) is closer than `clr` to a
@@ -932,7 +1021,9 @@ For candidate `k` of item `i` (all terms ≥ 0, summed in this order):
 cost = Σ_class w_label[class] · covered(label_k, class) / em²
      + Σ_class w_buffer[class] · covered(ring_k, class) / area(ring_k)
      + w_contrast · (4 · D(label_k) · C² / 65025) / em²
-     + [leader] (w_leader + w_leader_length · len/em + Σ_class w_leader[class] · covered_len/em + w_bends · bends)
+     + w_straddle · straddle(label_k) · c² / em² + w_foreign · foreign(label_k) · c² / em²
+     + [leader] (w_leader + w_leader_length · len/em + w_bends · bends
+                 + w_leader_borders · borders + Σ_class w_leader[class] · covered_len/em)
      + w_position · rank / n_positions
      + w_distance · gap(label_k, S_i) / em
      + w_shape · shape_penalty(variant)
@@ -961,6 +1052,13 @@ cost = Σ_class w_label[class] · covered(label_k, class) / em²
   integral of `(Y − Ȳ)²` over the box in px², `Y` the luma in `[0, 1]`: a label half on
   black and half on white costs `w_contrast` per em² of its box, a label on any uniform
   backdrop nothing. Internal labels of point items, which lie on their mark, have none.
+* `straddle(label_k)` and `foreign(label_k)` (§4.8, ADR 0050): how much of the box lies
+  across region borders, and in regions other than the item's home (open space is never
+  foreign), in cells² of the region map; `borders` is the number of region borders the
+  leader crosses (§4.8).
+  A label half in one region and half in another costs `w_straddle` per em² of its box,
+  one in a neighbouring country `w_foreign` per em² of its box. Internal labels of point
+  items, which lie on their mark, have neither; without a region map all three are 0.
 * `d` = the distance between the centers of the label box and the item's warm-start box
   (§6.7): 1 per em up to 1 em, then 1/4 per em up to 5 em, so that a label that has to
   move prefers a near place (ADR 0027); 0 without a warm-start box.

@@ -18,6 +18,8 @@ pub struct Evaluator<'a> {
     pub env: &'a dyn Env,
     buf: Vec<u32>,
     buf2: Vec<u32>,
+    /// Per-region areas of a label box.
+    split: Vec<(u32, f64)>,
 }
 
 struct Acc<'b> {
@@ -83,6 +85,7 @@ impl<'a> Evaluator<'a> {
             env,
             buf: Vec::new(),
             buf2: Vec::new(),
+            split: Vec::new(),
         }
     }
 
@@ -275,6 +278,25 @@ impl<'a> Evaluator<'a> {
                 );
             }
         }
+        // 3c. regions: a label across a border, in a region other than its item's (none on
+        // a mark)
+        if let Some(rm) = &obs.regions {
+            if !on_mark {
+                let sp = rm.split(&r, obs.home[i], &mut self.split);
+                // a label that names a region by where it lies (an area's, not inside it, or
+                // one on a leader) lies mostly at home or in open space
+                if sp.foreign > model.placement.max_foreign * sp.area
+                    && c.kind != Kind::Internal
+                    && (item.area.is_some() || !c.leaders.is_empty())
+                {
+                    acc.violate(Block::Regions, false, 0.0);
+                    return finish(c, acc);
+                }
+                let c2 = rm.grid.cell * rm.grid.cell;
+                acc.add("straddle", w.straddle * (sp.straddle() * c2) / em2);
+                acc.add("foreign", w.foreign * (sp.foreign * c2) / em2);
+            }
+        }
         // 4. leaders
         for l in &c.leaders {
             self.leader_terms(
@@ -408,6 +430,13 @@ impl<'a> Evaluator<'a> {
             "leader",
             w.leader + w.leader_length * l.len / em + w.bends * l.bends as f64,
         );
+        // region borders on the way
+        if let Some(rm) = &obs.regions {
+            acc.add(
+                "leader_borders",
+                w.leader_borders * f64::from(rm.crossings(&l.pts)),
+            );
+        }
         // leaders stay on the canvas
         if let Some(ca) = obs.leader_area {
             if !l.pts.iter().all(|p| ca.contains_point(*p)) {

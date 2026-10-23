@@ -1,0 +1,48 @@
+{
+  "kind": "place",
+  "name": "the paths of an SVG background are regions, the rest open space",
+  "$comment": "The point lies in the eastern path, 4 px from the western one: the label goes right.",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 120
+    },
+    "obstacles": {
+      "svg": {
+        "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"300\" height=\"120\"><rect width=\"300\" height=\"120\" fill=\"#cde\"/><path d=\"M0 0 H150 V80 H0 Z\" fill=\"#eda\"/><path d=\"M150 0 H300 V80 H150 Z\" fill=\"#ade\"/></svg>",
+        "classes": [
+          {
+            "selector": "*",
+            "class": "ignore"
+          }
+        ],
+        "regions": "path"
+      }
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 154,
+          "y": 40
+        },
+        "label": {
+          "type": "text",
+          "text": "Border"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "anchor_side": {
+      "a": "right"
+    },
+    "inside_canvas": true
+  }
+}

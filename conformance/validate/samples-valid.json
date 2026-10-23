@@ -18,6 +18,7 @@
     "../problems/priority-prefix.json",
     "../problems/raster-ink.json",
     "../problems/region.json",
+    "../problems/regions-map.json",
     "../problems/scatter-basic.json",
     "../problems/shapes-nodes.json",
     "../problems/strict-repair.json",

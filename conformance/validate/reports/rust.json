@@ -81,6 +81,11 @@
       "errors": [],
       "warnings": []
     },
+    "problems/regions-map.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
     "problems/scatter-basic.json": {
       "valid": true,
       "errors": [],
@@ -328,6 +333,17 @@
       ],
       "warnings": []
     },
+    "validate/max-foreign-range.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/placement/max_foreign",
+          "code": "range",
+          "message": "must be <= 1"
+        }
+      ],
+      "warnings": []
+    },
     "validate/missing-anchor-y.json": {
       "valid": false,
       "errors": [
@@ -357,6 +373,17 @@
           "pointer": "/obstacles/raster",
           "code": "exclusive",
           "message": "exactly one of source | rgba is required"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/region-rule-unknown-property.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/obstacles/svg/regions/0/kind",
+          "code": "unknown_property",
+          "message": "unknown property 'kind'"
         }
       ],
       "warnings": []
@@ -423,6 +450,17 @@
           "pointer": "/solverr",
           "code": "unknown_property",
           "message": "unknown property 'solverr' (did you mean 'solver'?)"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/vector-layer-no-class.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/obstacles/vector/0/class",
+          "code": "required",
+          "message": "one of class | region is required"
         }
       ],
       "warnings": []

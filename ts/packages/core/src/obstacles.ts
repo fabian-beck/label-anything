@@ -22,6 +22,7 @@ import * as polygon from "./geom/polygon.js";
 import { Backdrop, GridSpec, Sat } from "./grid/index.js";
 import { distanceTransform, dtMaxima, type Seed } from "./grid/dt.js";
 import { Occupancy } from "./grid/occupancy.js";
+import { RegionMap } from "./grid/regions.js";
 import { MaskRaster } from "./grid/raster.js";
 import { asF64, get } from "./json.js";
 import { clampf, cmpStr, maxf, minf, toIndex } from "./math.js";
@@ -165,6 +166,10 @@ export class Obstacles {
      * `weights.contrast` 0, or when the backdrop is uniform).
      */
     public backdrop: Backdrop | null,
+    /** The region map (`null` without regions, or when the region weights are all 0). */
+    public regions: RegionMap | null,
+    /** The home region of every item (0 = open; all 0 without a region map). */
+    public home: Uint32Array,
   ) {}
 
   private free: FreeSpace | null = null;
@@ -374,6 +379,16 @@ export function prepare(model: Model, minFont: number): Obstacles {
     const bgrid = { originX: bg.ox, originY: bg.oy, cell: bg.cell, cols: bg.cols, rows: bg.rows };
     backdrop = Backdrop.of(bg, backdropLuma(layers, model.background, bgrid));
   }
+  // the region map and the home of every item (spec §4.8)
+  const w = model.weights;
+  const regions = w.straddle > 0 || w.foreign > 0 || w.leaderBorders > 0 ? RegionMap.of(grid, model.regionFills) : null;
+  const home = new Uint32Array(model.items.length);
+  if (regions !== null) {
+    model.items.forEach((it, i) => {
+      const r = it.region === null ? undefined : model.regionIds.get(it.region);
+      home[i] = r !== undefined ? r : regions.home(it.shape.reference(), it.shape.bbox());
+    });
+  }
   for (const k of ["ignore", "items", "labels", "leaders", "canvas_edge"]) nameSet.delete(k);
   const names = Array.from(nameSet).sort(cmpStr);
   const pol = (map: Record<string, unknown>, k: string): AvoidW =>
@@ -481,7 +496,7 @@ export function prepare(model: Model, minFont: number): Obstacles {
   }
   // distance transform of static hard obstacles (incl. items and outside the label area),
   // computed on first use
-  const freeSource = (): FreeSpace => freeSpace(model, grid, classes, dynamic, indexCell);
+  const freeSource = (): FreeSpace => freeSpace(model, grid, classes, dynamic, indexCell, regions);
   return new Obstacles(
     grid,
     classes,
@@ -495,6 +510,8 @@ export function prepare(model: Model, minFont: number): Obstacles {
     model.leaderArea,
     indexCell,
     backdrop,
+    regions,
+    home,
   );
 }
 
@@ -505,7 +522,14 @@ interface FreeSpace {
   seedIndex: StaticIndex;
 }
 
-function freeSpace(model: Model, grid: GridSpec, classes: Class[], dynamic: Dynamic, indexCell: number): FreeSpace {
+function freeSpace(
+  model: Model,
+  grid: GridSpec,
+  classes: Class[],
+  dynamic: Dynamic,
+  indexCell: number,
+  regions: RegionMap | null,
+): FreeSpace {
   const hardMask = new MaskRaster(grid);
   if (dynamic.labelItems.isHard()) for (const it of model.items) hardMask.shape(it.shape);
   const hardCov = hardMask.intoCoverage();
@@ -513,8 +537,10 @@ function freeSpace(model: Model, grid: GridSpec, classes: Class[], dynamic: Dyna
   for (const c of classes) if (c.label.isHard() && c.sat !== null) hardSats.push(c.sat);
   const la = model.labelArea;
   const cols = grid.cols;
+  // on a region map, the free space is the open space (spec §4.8): seeds lie in the sea
+  const ids = regions !== null ? regions.ids : null;
   const dt = distanceTransform(grid, (i) => {
-    if (hardCov[i]! > 0) return true;
+    if (hardCov[i]! > 0 || (ids !== null && ids[i] !== 0)) return true;
     const c = i % cols;
     const r = Math.trunc(i / cols);
     for (let k = 0; k < hardSats.length; k++) if (hardSats[k]!.cell(c, r) > 0) return true;

@@ -331,6 +331,9 @@ export class Weights {
   lookahead = 0;
   starve = 0;
   contrast = 0;
+  straddle = 0;
+  foreign = 0;
+  leaderBorders = 0;
   stability = 0;
 
   static from(o: Opts): Weights {
@@ -346,6 +349,9 @@ export class Weights {
     w.lookahead = o.f64("weights.lookahead");
     w.starve = o.f64("weights.starve");
     w.contrast = o.f64("weights.contrast");
+    w.straddle = o.f64("weights.straddle");
+    w.foreign = o.f64("weights.foreign");
+    w.leaderBorders = o.f64("weights.leader_borders");
     w.stability = o.f64("weights.stability");
     return w;
   }
@@ -453,6 +459,11 @@ export class PlacementOpts {
     public pruneFactor: number,
     public boundary: BoundaryOpts,
     public fan: FanMode,
+    /**
+     * `placement.max_foreign`: the largest share of the box of an area item's label (not an
+     * internal one) or of a label on a leader that may lie in other items' regions (spec §4.8).
+     */
+    public maxForeign: number,
   ) {}
 
   static from(o: Opts): PlacementOpts {
@@ -469,6 +480,7 @@ export class PlacementOpts {
       maxf(prune, 1),
       { sides: o.strings("placement.boundary.sides"), spread: o.string("placement.boundary.align") === "spread" },
       fanMode(o.string("placement.fan")),
+      o.f64("placement.max_foreign"),
     );
   }
 }

@@ -1,0 +1,151 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 120
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "region": "west",
+          "rects": [
+            [
+              0,
+              0,
+              140,
+              120
+            ]
+          ]
+        },
+        {
+          "region": "east",
+          "rects": [
+            [
+              160,
+              0,
+              140,
+              120
+            ]
+          ]
+        },
+        {
+          "region": "each",
+          "rects": [
+            [
+              140,
+              0,
+              20,
+              120
+            ]
+          ]
+        }
+      ]
+    },
+    "placement": {
+      "max_foreign": 1
+    },
+    "items": [
+      {
+        "id": "s",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              140,
+              0
+            ],
+            [
+              160,
+              0
+            ],
+            [
+              160,
+              120
+            ],
+            [
+              140,
+              120
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Stripland"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "s",
+        "placed": true,
+        "box": {
+          "x": 153.0,
+          "y": 50.028,
+          "w": 54.57600000000002,
+          "h": 19.94400000000001
+        },
+        "anchor": [
+          150.0,
+          60.0
+        ],
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Stripland"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            14.628
+          ],
+          "line_widths": [
+            50.976
+          ],
+          "x_offset": 1.7999999999999998,
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 4.943170321899738,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 1,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 40,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 4.943170321899738,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 100,
+        "rows": 40,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

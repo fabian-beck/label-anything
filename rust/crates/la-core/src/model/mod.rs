@@ -9,6 +9,7 @@ use crate::env::{Env, FontSpec, Geom, RasterMode, RasterOpts, RgbaImage, SvgDoc}
 use crate::geom::path;
 use crate::geom::shape::Shape;
 use crate::geom::{polygon, Affine, Rect, P};
+use crate::grid::regions::RegionFill;
 use crate::options::{lookup, source_opt, Opts};
 use crate::units::Length;
 use crate::validate::Issue;
@@ -299,6 +300,8 @@ pub struct Item {
     pub group: Option<String>,
     pub keep_with: Option<KeepWith>,
     pub svg_id: Option<String>,
+    /// `region`: the name of the item's home region (spec §4.8), else found on the map.
+    pub region: Option<String>,
     /// The original item JSON (for callbacks).
     pub raw: Value,
     /// Pole of inaccessibility of a polygon mark (computed on first use).
@@ -413,6 +416,10 @@ pub struct Model {
     /// Vector obstacle primitives with their class (names shared between primitives).
     pub vector: Vec<(Arc<str>, Prim)>,
     pub rasters: Vec<RasterSrc>,
+    /// The fills of the region map in paint order (spec §4.8).
+    pub region_fills: Vec<RegionFill>,
+    /// The named regions: name → region number.
+    pub region_ids: BTreeMap<String, u32>,
     /// `canvas.background`: the backdrop where no raster lies.
     pub background: [u8; 3],
     pub avoid_label: serde_json::Map<String, Value>,
@@ -885,7 +892,11 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         .into_iter()
         .flatten()
     {
-        let class = intern(layer["class"].as_str().unwrap_or("ink"));
+        // a region layer without a class only paints the region map
+        let Some(class) = layer.get("class").and_then(|c| c.as_str()) else {
+            continue;
+        };
+        let class = intern(class);
         let r = source_opt(layer, "obstacles.vector", "r")
             .as_f64()
             .unwrap_or(2.0);
@@ -1057,6 +1068,141 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         }
     }
 
+    // --- regions (spec §4.8): the SVG sources, then the vector layers, in paint order ---
+    let mut regions = Regions::default();
+    for (si, (doc, src, ptr)) in svgs.iter().enumerate() {
+        let (rules, rule_ptr) = region_rules(src.get("regions"), ptr);
+        if rules.is_empty() {
+            continue;
+        }
+        let selectors: Vec<String> = rules.iter().map(|r| r.0.clone()).collect();
+        let fills = doc
+            .regions(&selectors)
+            .map_err(|(ri, m)| err(rule_ptr(ri), "pattern", m))?;
+        for f in fills {
+            let region = match &rules[f.rule].1 {
+                RegionKind::None => continue,
+                RegionKind::Open => 0,
+                RegionKind::Named(n) => regions.named(n),
+                RegionKind::Each => match &f.id {
+                    Some(id) => regions.named(id),
+                    None => regions.element(si, f.element),
+                },
+            };
+            regions.fills.push(RegionFill {
+                region,
+                rings: f.rings,
+                even_odd: f.even_odd,
+            });
+        }
+    }
+    for layer in lookup(problem, "obstacles.vector")
+        .and_then(|v| v.as_array())
+        .into_iter()
+        .flatten()
+    {
+        let kind = match layer.get("region").and_then(|r| r.as_str()) {
+            Some(r) => RegionKind::parse(r),
+            None => continue,
+        };
+        let even_odd =
+            source_opt(layer, "obstacles.vector", "fill_rule").as_str() == Some("evenodd");
+        let mut fills: Vec<(Vec<Vec<P>>, bool)> = Vec::new();
+        for pg in layer
+            .get("polygons")
+            .and_then(|v| v.as_array())
+            .into_iter()
+            .flatten()
+        {
+            let ring: Vec<P> = points_of(pg).into_iter().map(|p| to_px.apply(p)).collect();
+            fills.push((vec![ring], even_odd));
+        }
+        for rc in layer
+            .get("rects")
+            .and_then(|v| v.as_array())
+            .into_iter()
+            .flatten()
+        {
+            let v: Vec<f64> = rc
+                .as_array()
+                .into_iter()
+                .flatten()
+                .map(|x| x.as_f64().unwrap_or(0.0))
+                .collect();
+            if v.len() == 4 {
+                let ring: Vec<P> = [
+                    P::new(v[0], v[1]),
+                    P::new(v[0] + v[2], v[1]),
+                    P::new(v[0] + v[2], v[1] + v[3]),
+                    P::new(v[0], v[1] + v[3]),
+                ]
+                .iter()
+                .map(|p| to_px.apply(*p))
+                .collect();
+                fills.push((vec![ring], false));
+            }
+        }
+        for c in layer
+            .get("circles")
+            .and_then(|v| v.as_array())
+            .into_iter()
+            .flatten()
+        {
+            let at = to_px.apply(P::new(
+                c[0].as_f64().unwrap_or(0.0),
+                c[1].as_f64().unwrap_or(0.0),
+            ));
+            let shape = Shape::circle(at, c[2].as_f64().unwrap_or(0.0));
+            fills.push((shape.outline_rings(), false));
+        }
+        for sh in layer
+            .get("shapes")
+            .and_then(|v| v.as_array())
+            .into_iter()
+            .flatten()
+        {
+            let at = to_px.apply(P::new(
+                sh["x"].as_f64().unwrap_or(0.0),
+                sh["y"].as_f64().unwrap_or(0.0),
+            ));
+            // (its warnings were reported with the layer's obstacles, if it has a class)
+            let (shape, _) = mark_shape(sh, at, &to_px, &[], &mut Vec::new(), "/obstacles/vector")?;
+            let eo = matches!(&shape, Shape::Polygon(p) if p.even_odd);
+            fills.push((shape.outline_rings(), eo));
+        }
+        let named = match &kind {
+            RegionKind::Named(n) => Some(regions.named(n)),
+            _ => None,
+        };
+        for (rings, even_odd) in fills {
+            let region = match &kind {
+                RegionKind::None => continue,
+                RegionKind::Open => 0,
+                RegionKind::Named(_) => named.unwrap_or(0),
+                RegionKind::Each => regions.anonymous(),
+            };
+            regions.fills.push(RegionFill {
+                region,
+                rings,
+                even_odd,
+            });
+        }
+    }
+    // an item's home region by name must exist
+    for (i, it) in items.iter().enumerate() {
+        if let Some(name) = &it.region {
+            if !regions.ids.contains_key(name) {
+                warnings.push(Issue::new(
+                    format!("/items/{i}/region"),
+                    "unknown_region",
+                    format!(
+                        "no region is named '{name}': the item's home is the region at its anchor"
+                    ),
+                ));
+            }
+        }
+    }
+
     // --- extent ---
     let max_dist_global = o.length("placement.max_distance").px(default_em);
     let extent = match canvas {
@@ -1221,6 +1367,8 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         items,
         vector,
         rasters,
+        region_fills: regions.fills,
+        region_ids: regions.ids,
         background: parse_color(&o.string("canvas.background")).unwrap_or([255, 255, 255]),
         avoid_label: o.map("avoid.label"),
         avoid_leader: o.map("avoid.leader"),
@@ -1497,6 +1645,103 @@ pub fn mark_shape(
         }
         _ => (Shape::circle(at, f("r")), false),
     })
+}
+
+/// What a region rule or a region layer makes of its geometry (spec §4.8).
+#[derive(Clone, Debug, PartialEq)]
+enum RegionKind {
+    /// Every element (vector: every primitive) is a region of its own.
+    Each,
+    /// Open space: it erases the regions below.
+    Open,
+    /// Not part of the region map.
+    None,
+    /// The region of this name.
+    Named(String),
+}
+
+impl RegionKind {
+    fn parse(s: &str) -> RegionKind {
+        match s {
+            "each" => RegionKind::Each,
+            "open" => RegionKind::Open,
+            "none" => RegionKind::None,
+            n => RegionKind::Named(n.to_string()),
+        }
+    }
+}
+
+/// The JSON pointer of a region rule's selector, by the rule's index.
+type RulePointer<'p> = Box<dyn Fn(usize) -> String + 'p>;
+
+/// The region rules of an SVG source (`regions`: a selector, or a list of rules
+/// `{selector, region}`) and the pointer of rule `k`'s selector.
+fn region_rules<'p>(
+    v: Option<&Value>,
+    ptr: &'p str,
+) -> (Vec<(String, RegionKind)>, RulePointer<'p>) {
+    match v {
+        Some(Value::String(sel)) => (
+            vec![(sel.clone(), RegionKind::Each)],
+            Box::new(move |_| format!("{ptr}/regions")),
+        ),
+        Some(Value::Array(rules)) => (
+            rules
+                .iter()
+                .map(|r| {
+                    (
+                        r.get("selector")
+                            .and_then(|s| s.as_str())
+                            .unwrap_or("")
+                            .to_string(),
+                        RegionKind::parse(
+                            r.get("region").and_then(|s| s.as_str()).unwrap_or("each"),
+                        ),
+                    )
+                })
+                .collect(),
+            Box::new(move |k| format!("{ptr}/regions/{k}/selector")),
+        ),
+        _ => (Vec::new(), Box::new(move |_| format!("{ptr}/regions"))),
+    }
+}
+
+/// The regions being built: their numbers and fills, in paint order.
+#[derive(Default)]
+struct Regions {
+    /// The number of regions so far (they are numbered 1, 2, …).
+    count: u32,
+    /// Named regions: name → region.
+    ids: BTreeMap<String, u32>,
+    fills: Vec<RegionFill>,
+    /// Unnamed regions of SVG elements: (source, element) → region.
+    elements: BTreeMap<(usize, usize), u32>,
+}
+
+impl Regions {
+    /// The region of this name (new at its first use).
+    fn named(&mut self, name: &str) -> u32 {
+        if let Some(&r) = self.ids.get(name) {
+            return r;
+        }
+        let r = self.anonymous();
+        self.ids.insert(name.to_string(), r);
+        r
+    }
+    /// A new unnamed region.
+    fn anonymous(&mut self) -> u32 {
+        self.count += 1;
+        self.count
+    }
+    /// The unnamed region of element `e` of SVG source `si`.
+    fn element(&mut self, si: usize, e: usize) -> u32 {
+        if let Some(&r) = self.elements.get(&(si, e)) {
+            return r;
+        }
+        let r = self.anonymous();
+        self.elements.insert((si, e), r);
+        r
+    }
 }
 
 /// The problem-wide item options (spec §2.4), resolved once: every item falls back to
@@ -1831,6 +2076,10 @@ fn build_item(
         group: it.get("group").and_then(|v| v.as_str()).map(str::to_string),
         keep_with,
         svg_id,
+        region: it
+            .get("region")
+            .and_then(|v| v.as_str())
+            .map(str::to_string),
         raw: it.clone(),
         pole: std::sync::OnceLock::new(),
         supports: std::sync::OnceLock::new(),

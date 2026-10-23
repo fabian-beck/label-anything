@@ -209,6 +209,14 @@ public final class Placement extends Spec {
     return with("internal_circle_ratio", ratio);
   }
 
+  /**
+   * On a region map (spec §4.8), the largest share of an area's label (internal ones aside)
+   * or a leader's label that may lie in other items' regions (default 0.25; 1: no limit).
+   */
+  public Placement maxForeign(double share) {
+    return with("max_foreign", share);
+  }
+
   /** Drop candidates costing more than factor × the item's best + 1 (default 4). */
   public Placement pruneFactor(double factor) {
     return with("prune_factor", factor);

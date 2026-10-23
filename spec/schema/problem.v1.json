@@ -783,6 +783,11 @@
           "type": "string",
           "description": "Element id in the background SVG that draws this item (used by svg.auto_mark_items)."
         },
+        "region": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The name of the item's home region (spec §4.8). Default: the region at its anchor."
+        },
         "placement": {
           "$ref": "#/$defs/itemPlacement"
         }
@@ -791,12 +796,25 @@
     "vectorLayer": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "class"
+      "anyOf": [
+        {
+          "required": [
+            "class"
+          ]
+        },
+        {
+          "required": [
+            "region"
+          ]
+        }
       ],
       "properties": {
         "class": {
           "$ref": "#/$defs/className"
+        },
+        "region": {
+          "$ref": "#/$defs/regionName",
+          "description": "The layer's polygons, rects, circles and shapes on the region map (spec §4.8); a layer with a region and no class adds no obstacles."
         },
         "points": {
           "type": "array",
@@ -892,6 +910,29 @@
         }
       }
     },
+    "regionName": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What the matched geometry is on the region map (spec §4.8): \"each\" (every SVG element, or every vector polygon, rect, circle or shape, is a region of its own; SVG regions are named by the element's id), \"open\" (open space: it clears the regions below), \"none\" (not on the region map) or a region name (all matching geometry is that region)."
+    },
+    "svgRegionRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selector"
+      ],
+      "properties": {
+        "selector": {
+          "type": "string",
+          "minLength": 1,
+          "description": "CSS subset, as in class rules. A drawn fill belongs to the nearest element (itself or an ancestor) that a rule matches; the first rule matching that element decides."
+        },
+        "region": {
+          "$ref": "#/$defs/regionName",
+          "description": "Default \"each\"."
+        }
+      }
+    },
     "svgSource": {
       "type": "object",
       "additionalProperties": false,
@@ -918,6 +959,21 @@
             },
             {
               "const": "ignore"
+            }
+          ]
+        },
+        "regions": {
+          "description": "Regions of the picture (spec §4.8): a selector (every matching element is a region of its own), or region rules, first match wins. Labels keep inside one region; only fills count.",
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/svgRegionRule"
+              }
             }
           ]
         },
@@ -1322,6 +1378,12 @@
             "off"
           ],
           "description": "Fan labels: a crowd's labels stacked in a column beside it with fanning leaders. auto: crowds of items left without a label, when that places more labels; always: every crowd of two or more items."
+        },
+        "max_foreign": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "On a region map (spec §4.8): the largest share of the box of an area item's label (internal ones aside) or of a label on a leader that may lie in other items' regions; 1: no limit, the foreign weight decides."
         }
       }
     },
@@ -1710,6 +1772,18 @@
           "minimum": 0
         },
         "contrast": {
+          "type": "number",
+          "minimum": 0
+        },
+        "straddle": {
+          "type": "number",
+          "minimum": 0
+        },
+        "foreign": {
+          "type": "number",
+          "minimum": 0
+        },
+        "leader_borders": {
           "type": "number",
           "minimum": 0
         },
