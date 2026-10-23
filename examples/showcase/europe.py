@@ -1,13 +1,21 @@
 """A map: the countries and capitals of Europe.
 
-The countries of Natural Earth (public domain; the playground's ``world.json``) in a
-Lambert azimuthal equal-area projection centred on Europe, drawn as an SVG
-(``europe-map.svg``) with the seas named in it. The problem labels every country as an
-area (its name inside the country where it fits, wrapped or abbreviated where it is
-narrow, out on a leader where it is too small: Luxembourg, Malta) and every capital as a
-point (next to its dot, in the cartographic order of positions), the countries first and
-the larger set larger (font classes). The seas' names in the SVG are hard obstacles: no
-label covers them; the land, the borders and the graticule may be covered.
+The countries of Natural Earth (public domain; the playground's ``world.json``, with the
+internationally recognized borders) in a Lambert azimuthal equal-area projection centred on
+Europe, drawn as an SVG (``europe-map.svg``) with the seas named in it. The problem labels
+the country of every capital as an area and every capital as a point, the countries first
+and the most populous set larger (font classes), and tells the engine nothing but what the
+map shows:
+
+* the countries' paths are the **regions** of the map, the sea is open space: a label
+  keeps inside one region — its own country, or the sea — and a leader crosses as few
+  borders as it can (spec §4.8);
+* a country's name goes inside the country, wrapped into two lines if need be, or out on
+  a leader; a capital's name goes next to its dot (the `map` preset);
+* the seas' names are hard obstacles for labels and leaders.
+
+The names are Natural Earth's, written out and uppercase for countries; no name is
+shortened by hand.
 """
 
 from __future__ import annotations
@@ -62,8 +70,6 @@ CAPITALS = [
     ("Rabat", -6.84, 34.02, "MAR"), ("Algiers", 3.06, 36.75, "DZA"), ("Tunis", 10.18, 36.81, "TUN"),
     ("Tbilisi", 44.79, 41.72, "GEO"),
 ]
-# not labeled: too small for a name at this scale, or part of another's
-SKIP = {"AND", "MCO", "SMR", "LIE", "VAT", "ALD", "FRO", "GGY", "JEY", "IMN", "CYN", "-99"}
 
 
 def project(lon: float, lat: float) -> tuple[float, float]:
@@ -182,24 +188,21 @@ def map_svg(cs: list[dict], col: dict[str, str]) -> str:
 
 def problem(cs: list[dict]) -> dict:
     by_id = {c["id"]: c for c in cs}
-    labeled = [c for c in cs if c["main"] and c["id"] not in SKIP and (c["pop"] or 0) >= 100_000]
-    labeled.sort(key=lambda c: -(c["pop"] or 0))
+    # the countries of the capitals, the most populous first
+    states = {iso for *_, iso in CAPITALS}
+    labeled = sorted((c for c in cs if c["main"] and c["id"] in states), key=lambda c: -(c["pop"] or 0))
     items = []
     for c in labeled:
         rings = [[[round(x, 1), round(y, 1)] for x, y in r] for r in c["main"]]
-        name = c["name"].upper()
-        alts = [c["abbrev"].upper()] if c["abbrev"] and c["abbrev"].upper() != name else []
         items.append({
             "id": c["id"],
-            "anchor": {"type": "area", "polygon": rings[0], **({"holes": rings[1:]} if len(rings) > 1 else {}),
-                       "dot": {"shape": "circle", "r": 1}},
-            "label": {"type": "text", "text": name, "alternatives": alts,
-                      **({"wrap": {"max_lines": 2}} if " " in name else {})},
-            # countries before capitals
-            "priority": 1e9 + (c["pop"] or 0),
-            # inside (wrapped or abbreviated if need be), else out on a leader (the ladder's
-            # `distant` step): a name beside a small country would read as its neighbour's
-            "placement": {"models": ["internal"]},
+            "anchor": {"type": "area", "polygon": rings[0], **({"holes": rings[1:]} if len(rings) > 1 else {})},
+            "label": {"type": "text", "text": c["name"].upper()},
+            # countries before capitals, by population
+            "tier": 1,
+            "priority": c["pop"] or 0,
+            # a country's name may go out on a leader (into the sea, where the regions want it)
+            "placement": {"models": ["adjacent", "slider", "distant"]},
         })
     for name, lon, lat, iso in CAPITALS:
         x, y = project(lon, lat)
@@ -208,36 +211,26 @@ def problem(cs: list[dict]) -> dict:
         items.append({
             "id": f"capital-{iso}",
             "anchor": {"type": "point", "x": round(x, 1), "y": round(y, 1), "mark": {"shape": "circle", "r": 2.6}},
-            "label": {"type": "text", "text": name, "font": {"size": 10.5}},
+            "label": {"type": "text", "text": name, "font": {"size": 9.5}},
             "priority": (by_id[iso]["pop"] or 0) if iso in by_id else 0,
-            "placement": {"position_order": "cartographic"},
         })
-    n = len(labeled)
     return {
         "version": "1",
-        "canvas": {"width": W, "height": H, "padding": 4},
-        "defaults": {"font": {"size": 9.5}},
+        "preset": "map",
+        "canvas": {"width": W, "height": H},
+        "defaults": {"font": {"size": 8.5}, "wrap": {"max_lines": 2}},
         "obstacles": {
             "svg": {
                 "path": f"{NAME}-map.svg",
-                "classes": [
-                    {"selector": "#sea, .graticule, .coast *", "class": "ignore"},
-                    {"selector": ".land path", "class": "ignore"},
-                    {"selector": ".seas text", "class": "seas"},
-                ],
+                # nothing in the picture is an obstacle but the seas' names; the countries
+                # are the regions
+                "classes": [{"selector": ".seas text", "class": "seas"}, {"selector": "*", "class": "ignore"}],
+                "regions": ".land path",
             }
         },
         "items": items,
-        # a country's leader may pass a capital's dot (it starts at the country's centre, where
-        # the capital often is); labels keep off the dots
-        "avoid": {"label": {"seas": "hard"}, "leader": {"seas": "hard", "lower_items": 0.5}},
-        "placement": {"models": ["adjacent", "slider", "internal", "distant"], "max_distance": "5em",
-                      "inner_padding": 2},
-        "leaders": {"style": "straight", "max_length": "7em"},
-        "priority": {"font_classes": [{"first": 9, "scale": 1.3}, {"first": 24, "scale": 1.12},
-                                      {"first": n, "scale": 1.0}, {"scale": 1.0}]},
-        "degrade": ["wrap", "alternatives", "distant", "omit"],
-        "solver": {"seed": 1},
+        "avoid": {"label": {"seas": "hard"}, "leader": {"seas": "hard"}},
+        "priority": {"font_classes": [{"first": 9, "scale": 1.4}, {"first": 24, "scale": 1.2}]},
     }
 
 

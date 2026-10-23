@@ -53,7 +53,6 @@
     "type": "text",
     "text": "United States of America",
     "alternatives": [
-     "United States",
      "USA"
     ]
    },
@@ -169,7 +168,6 @@
     "type": "text",
     "text": "United Kingdom",
     "alternatives": [
-     "UK",
      "GBR"
     ]
    },
@@ -679,7 +677,6 @@
     "type": "text",
     "text": "United Arab Emirates",
     "alternatives": [
-     "UAE",
      "ARE"
     ]
    },
@@ -1438,7 +1435,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Dominican Rep.",
+    "text": "Dominican Republic",
     "alternatives": [
      "DOM"
     ]
@@ -1898,9 +1895,8 @@
    },
    "label": {
     "type": "text",
-    "text": "Dem. Rep. Congo",
+    "text": "Democratic Republic of the Congo",
     "alternatives": [
-     "DR Congo",
      "COD"
     ]
    },
@@ -2419,9 +2415,8 @@
    },
    "label": {
     "type": "text",
-    "text": "Bosnia and Herz.",
+    "text": "Bosnia and Herzegovina",
     "alternatives": [
-     "Bosnia",
      "BIH"
     ]
    },
@@ -2486,26 +2481,6 @@
     ]
    },
    "priority": 18173
-  },
-  {
-   "id": "SOL",
-   "anchor": {
-    "type": "point",
-    "x": 448.8,
-    "y": 338.16,
-    "mark": {
-     "shape": "circle",
-     "r": 2.0
-    }
-   },
-   "label": {
-    "type": "text",
-    "text": "Somaliland",
-    "alternatives": [
-     "SOL"
-    ]
-   },
-   "priority": 17836
   },
   {
    "id": "GEO",
@@ -2960,7 +2935,7 @@
    },
    "label": {
     "type": "text",
-    "text": "S. Sudan",
+    "text": "South Sudan",
     "alternatives": [
      "SDS"
     ]
@@ -3020,7 +2995,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Eq. Guinea",
+    "text": "Equatorial Guinea",
     "alternatives": [
      "GNQ"
     ]
@@ -3240,7 +3215,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Fr. Polynesia",
+    "text": "French Polynesia",
     "alternatives": [
      "PYF"
     ]
@@ -3400,7 +3375,7 @@
    },
    "label": {
     "type": "text",
-    "text": "U.S. Virgin Is.",
+    "text": "United States Virgin Islands",
     "alternatives": [
      "VIR"
     ]
@@ -3426,26 +3401,6 @@
     ]
    },
    "priority": 3697
-  },
-  {
-   "id": "CYN",
-   "anchor": {
-    "type": "point",
-    "x": 597.66,
-    "y": 477.04,
-    "mark": {
-     "shape": "circle",
-     "r": 2.0
-    }
-   },
-   "label": {
-    "type": "text",
-    "text": "N. Cyprus",
-    "alternatives": [
-     "CYN"
-    ]
-   },
-   "priority": 3600
   },
   {
    "id": "DJI",
@@ -3600,7 +3555,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Central African Rep.",
+    "text": "Central African Republic",
     "alternatives": [
      "CAF"
     ]
@@ -3740,7 +3695,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Solomon Is.",
+    "text": "Solomon Islands",
     "alternatives": [
      "SLB"
     ]
@@ -3840,7 +3795,7 @@
    },
    "label": {
     "type": "text",
-    "text": "W. Sahara",
+    "text": "Western Sahara",
     "alternatives": [
      "SAH"
     ]
@@ -3880,7 +3835,7 @@
    },
    "label": {
     "type": "text",
-    "text": "St. Vin. and Gren.",
+    "text": "Saint Vincent and the Grenadines",
     "alternatives": [
      "VCT"
     ]

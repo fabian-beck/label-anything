@@ -34,8 +34,6 @@ CONTINENTS = {
     "South America": "#d4a72c",
     "Oceania": "#b07aa1",
 }
-# shorter names before the ISO code, where the full name is long
-SHORT = {"USA": ["United States"], "COD": ["DR Congo"], "BIH": ["Bosnia"], "ARE": ["UAE"], "GBR": ["UK"]}
 TEXT = "#1f2328"
 MUTED = "#5f6670"
 
@@ -113,12 +111,11 @@ def chart(cs: list[dict]) -> str:
 def problem(cs: list[dict]) -> dict:
     items = []
     for c in cs:
-        alts = SHORT.get(c["id"], []) + [c["id"]]
         items.append({
             "id": c["id"],
             "anchor": {"type": "point", "x": round(c["x"], 2), "y": round(c["y"], 2),
                        "mark": {"shape": "circle", "r": round(c["r"], 2)}},
-            "label": {"type": "text", "text": c["name"], "alternatives": [a for a in alts if a != c["name"]]},
+            "label": {"type": "text", "text": c["name"], "alternatives": [c["id"]]},
             "priority": c["gdp"],
             # a label inside its bubble where it fits
             **({"placement": {"internal": "prefer"}} if c["r"] >= 15 else {}),

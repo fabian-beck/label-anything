@@ -41,9 +41,9 @@ for any chart, map or diagram, in three steps:
 </div>
 
 <figure markdown>
-[![The world's economies as a bubble chart, 150 of its 195 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
+[![The world's economies as a bubble chart, 145 of its 193 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
 <figcaption>The world's economies: every country a bubble, sized by its GDP (Natural Earth,
-2019). Label Anything labels 150 of the 195 in about a quarter of a second.</figcaption>
+2019). Label Anything labels 145 of the 193 in about a fifth of a second.</figcaption>
 </figure>
 
 One chart, the main features:
@@ -53,7 +53,7 @@ One chart, the main features:
 * **Leaders where it is crowded.** France, Italy and the United Kingdom overlap Germany's
   bubble: their labels go out on leaders, and no two leaders cross.
 * **Importance decides.** The larger the economy, the earlier its label is placed; the
-  eight largest are set larger and bold. 45 countries are left out: each would not fit even
+  eight largest are set larger and bold. 48 countries are left out: each would not fit even
   beside the larger economies' labels alone, and says which of them is in the way.
 * **Shortened before left out.** A name that does not fit falls back to its ISO code
   (CRI: Costa Rica).
@@ -134,11 +134,13 @@ it in full; the scripts and the problems are in
 
 <figure markdown>
 [![The countries and capitals of Europe, labeled](assets/figures/europe.svg)](assets/figures/europe.svg)
-<figcaption markdown>**A map.** The countries and capitals of Europe (Natural Earth): each
-name inside its country where it fits, abbreviated where the country is narrow (U.K.,
-AUST.), out on a leader where it is too small (Luxembourg, Malta, the Balkans); the capitals
-beside their dots, in the cartographer's order of positions; no label covers the name of a
-sea. All 91 labels placed.</figcaption>
+<figcaption markdown>**A map.** The countries and capitals of Europe (Natural Earth,
+internationally recognized borders). The countries are the picture's
+[regions](concepts/regions.md): each name inside its country where it fits, else out on a
+leader into the sea (the United Kingdom, Luxembourg, the Balkans), never in a neighbouring
+country; the capitals beside their dots, in the cartographer's order of positions; no label
+covers the name of a sea. 87 of the 90 labels placed: Montenegro's name, Bratislava and
+Podgorica find no room.</figcaption>
 </figure>
 
 <figure markdown>
