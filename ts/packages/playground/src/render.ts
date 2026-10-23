@@ -62,6 +62,14 @@ export function drawLabels(
     if (a <= 0) continue;
     ctx.globalAlpha = a;
     for (const l of leadersOf(p)) {
+      // a stub (placement.stubs) is drawn lighter, without the dot at its start
+      if (l.stub) {
+        ctx.globalAlpha = a * 0.7;
+        leaderPath(ctx, l);
+        ctx.stroke();
+        ctx.globalAlpha = a;
+        continue;
+      }
       leaderPath(ctx, l);
       ctx.stroke();
       const s = l.points[0];

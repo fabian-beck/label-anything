@@ -145,7 +145,9 @@ def problem(cs: list[dict]) -> dict:
             "label": {"grid": "ignore", "axes": "hard", "legend": "hard", "lower_items": 1.5},
             "leader": {"grid": "ignore", "axes": "hard", "legend": "hard", "lower_items": 0.5},
         },
-        "placement": {"models": ["adjacent", "slider", "internal", "distant"], "max_distance": "6em"},
+        # a label next to its bubble among other bubbles gets a stub that joins it to its own
+        "placement": {"models": ["adjacent", "slider", "internal", "distant"], "max_distance": "6em",
+                      "stubs": "auto"},
         "leaders": {"style": "straight", "max_length": "9em"},
         "priority": {
             "font_classes": [{"first": 8, "scale": 1.25, "weight": "bold"}, {"first": 30, "scale": 1.0},
@@ -169,6 +171,7 @@ def make(cli: str) -> str:
                         ".labels .inside text{stroke:none}",
                   label_class=lambda p: "inside" if inside(p) else "",
                   label_color=lambda p: "#ffffff" if inside(p) else TEXT,
-                  leaders=f'fill="none" stroke="{MUTED}" stroke-width="0.8"')
+                  leaders=f'fill="none" stroke="{MUTED}" stroke-width="0.8"',
+                  stubs=f'fill="none" stroke="{MUTED}" stroke-width="1" stroke-linecap="round"')
     (FIGURES / f"{NAME}.svg").write_text(svg, encoding="utf-8")
     return report(NAME, result)

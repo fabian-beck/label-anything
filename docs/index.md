@@ -41,9 +41,9 @@ for any chart, map or diagram, in three steps:
 </div>
 
 <figure markdown>
-[![The world's economies as a bubble chart, 150 of its 195 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
+[![The world's economies as a bubble chart, 149 of its 195 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
 <figcaption>The world's economies: every country a bubble, sized by its GDP (Natural Earth,
-2019). Label Anything labels 150 of the 195 in about a quarter of a second.</figcaption>
+2019). Label Anything labels 149 of the 195 in about a quarter of a second.</figcaption>
 </figure>
 
 One chart, the main features:
@@ -52,11 +52,14 @@ One chart, the main features:
   there is room; China's fits inside its bubble.
 * **Leaders where it is crowded.** France, Italy and the United Kingdom overlap Germany's
   bubble: their labels go out on leaders, and no two leaders cross.
+* **Stubs where a label could be a neighbour's.** Among the crowded small economies, a
+  label next to its point with other points close by stands off a little, joined to its
+  point by a short stub (Mali, Guinea, Zambia); labels with room around them have none.
 * **Importance decides.** The larger the economy, the earlier its label is placed; the
-  eight largest are set larger and bold. 45 countries are left out: each would not fit even
+  eight largest are set larger and bold. 46 countries are left out: each would not fit even
   beside the larger economies' labels alone, and says which of them is in the way.
 * **Shortened before left out.** A name that does not fit falls back to its ISO code
-  (CRI: Costa Rica).
+  (LBN: Lebanon).
 * **Graded avoidance over any background.** The chart is an SVG, handed over as it is and
   classified with CSS selectors: labels may cross the grid lines, never the axes, their
   text or the legend; large economies' labels may cover small economies' bubbles, at a

@@ -3989,7 +3989,8 @@
    "internal",
    "distant"
   ],
-  "max_distance": "6em"
+  "max_distance": "6em",
+  "stubs": "auto"
  },
  "leaders": {
   "style": "straight",

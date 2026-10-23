@@ -57,10 +57,11 @@ def _weight(t: dict) -> int:
 def compose(width: float, height: float, title: str, picture: str, result: dict, *,
             style: str = "", label_class: Callable[[dict], str] = lambda p: "",
             label_color: Callable[[dict], str] = lambda p: "#1f2328", leaders: str = "",
-            leaders_under: str = "", extra: str = "") -> str:
+            leaders_under: str = "", stubs: str | None = None, extra: str = "") -> str:
     """The picture (SVG markup, drawn first), the result's leaders (``leaders``: their
-    attributes; ``leaders_under``: those of a casing drawn below them) and labels, and
-    ``extra`` (markup drawn last), with the fonts the text needs."""
+    attributes; ``leaders_under``: those of a casing drawn below them; ``stubs``: those of
+    the stubs of labels near other marks, else as the leaders) and labels, and ``extra``
+    (markup drawn last), with the fonts the text needs."""
     placed = [p for p in result["placements"] if p.get("placed")]
     chars: dict[int, set[str]] = {}
     for p in placed:
@@ -78,11 +79,15 @@ def compose(width: float, height: float, title: str, picture: str, result: dict,
          f"<title>{title}</title>",
          f"<style>{faces}text{{font-family:'LA Noto Sans',sans-serif;white-space:pre}}{style}</style>",
          picture]
-    lines = ['<polyline points="' + " ".join(f"{f(x)},{f(y)}" for x, y in L["points"]) + '"/>'
-             for p in placed for L in ([p["leader"]] if p.get("leader") else []) + list(p.get("leaders") or [])]
+    drawn = [L for p in placed for L in ([p["leader"]] if p.get("leader") else []) + list(p.get("leaders") or [])]
+    line = lambda L: '<polyline points="' + " ".join(f"{f(x)},{f(y)}" for x, y in L["points"]) + '"/>'  # noqa: E731
+    lines = [line(L) for L in drawn if stubs is None or not L.get("stub")]
     if leaders_under:
         o += [f'<g class="leaders-under" {leaders_under}>', *lines, "</g>"]
     o += [f'<g class="leaders" {leaders}>', *lines, "</g>"]
+    short = [line(L) for L in drawn if stubs is not None and L.get("stub")]
+    if short:
+        o += [f'<g class="stubs" {stubs}>', *short, "</g>"]
     o.append('<g class="labels">')
     for p in placed:
         cls = label_class(p)
