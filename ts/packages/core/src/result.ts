@@ -50,6 +50,7 @@ export function leaderJson(l: Leader, s: Solve): Json {
   if (l.underline !== null) m.underline = [pt(l.underline[0]), pt(l.underline[1])];
   if (l.curve !== null) m.curve = [pt(l.curve[0]), pt(l.curve[1]), pt(l.curve[2])];
   if (l.member !== null) m.member = s.model.items[l.member]!.id;
+  if (l.stub) m.stub = true;
   return m;
 }
 

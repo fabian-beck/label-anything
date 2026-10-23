@@ -444,13 +444,14 @@ export function uncross(s: Solve): void {
     pairs: for (let i = 0; i < n; i++) {
       const ci = s.state.placed[i]!;
       if (ci < 0) continue;
-      if (s.cands[ci]!.leaders.length === 0) continue;
+      // (stubs stay with their marks)
+      if (s.cands[ci]!.leaders.length === 0 || s.cands[ci]!.hasStub()) continue;
       for (let j = i + 1; j < n; j++) {
         const cj = s.state.placed[j]!;
         if (cj < 0) continue;
         const a = s.cands[ci]!;
         const b = s.cands[cj]!;
-        if (b.leaders.length === 0 || !a.bbox().touches(b.bbox())) continue;
+        if (b.leaders.length === 0 || b.hasStub() || !a.bbox().touches(b.bbox())) continue;
         if (!leadersCross(a, b)) continue;
         // try: i at j's box center, j at i's box center (same variants)
         const lenBefore = a.leaders[0]!.len + b.leaders[0]!.len;

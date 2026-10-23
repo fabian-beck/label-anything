@@ -870,6 +870,40 @@ its font size.
 * **Work.** At most `max(20000, 20 × n_items)` label evaluations in all (one per label
   of each laid-out column).
 
+### 6.9 Stubs
+
+In a crowd of points a label next to its point can be read as the label of a neighbour.
+With `placement.stubs: auto` (default `off`; ADR 0050) such labels get a **stub**: they
+stand a little farther out and a short straight leader joins them to their mark.
+
+* **Ambiguous.** An adjacent or slider candidate (§6.1, §6.2) of item `i` is ambiguous
+  when the mark of another item `j` (not a member of `i`'s group) comes closer to its box
+  than `stub_reach` (`dist(S_j, box) < stub_reach`, the exact shape distance). Items whose
+  mark is larger than their font size (the larger side of its bounding box `> em`) have no
+  ambiguous candidates: a label against a large mark reads as attached to its outline.
+* **Replacement.** An ambiguous candidate is replaced by the same position with the offset
+  `o + stub_length` (`o` = `placement.offset`): the adjacent position of the same
+  direction on `S ⊕ (o + stub_length)`, or the slider sample of the same index on the path
+  of `S ⊕ (o + stub_length)` (§6.2; concave polygons pushed in to that offset); its model,
+  side and rank stay. When that path has no such sample, the candidate stays as it is. The
+  candidate filter of §6.7 then applies to the replacement.
+* **The stub** runs straight from the mark (at the tip of an icon mark, else on its true
+  boundary toward the box point nearest the reference point, `anchor_gap` outside) to the
+  box point nearest that start, whatever `leaders.style`, `leaders.port` and
+  `leaders.attach` say; `leaders.min_length` and `max_length` do not apply. It is reported
+  as the label's `leader` with `stub: true`.
+* **Rules.** A stub is a leader for the rules of §7, except that it keeps the label's
+  margin (`defaults.margin`) from other marks instead of `leaders.clearance`, never more
+  than that mark keeps from the own mark's bounding box (as the label, §4.4), and it is
+  exempt from the diverging-leaders rule (which compares distant leaders). Its costs are
+  those of §8 for a leader, except that `w_leader_length · len / em` (term `stub`)
+  replaces `w_leader + w_leader_length · len / em + w_bends · bends`; the label keeps its
+  `w_distance` term (its gap includes the stub) and has no ambiguity term. The uncross
+  repair (§10.3) does not move labels with stubs.
+* **Warm starts** (§6.7): a warm-start box that touches the mark is not kept when it is
+  ambiguous, nor are its nudges; a box whose gap to the mark is above `offset + 1` px and
+  at most `offset + stub_length + 1` px is a slider-kind candidate with a stub.
+
 ---
 
 ## 7. Leaders
@@ -968,7 +1002,10 @@ cost = Σ_class w_label[class] · covered(label_k, class) / em²
   class coverage of its cell × the sample spacing.
 * `ambiguity_k = clamp((d_own − d_other) / em + 0.5, 0, 1)` when another item's shape is
   closer to the label box (signed distance) than `d_own + 0.5 em`, else 0. For leaders
-  the port is used instead of the box.
+  the port is used instead of the box. A label with a stub (§6.9) has none: the stub says
+  whose it is; its stub costs `w_leader_length · len / em` instead of the `[leader]`
+  terms `w_leader`, `w_leader_length · len/em` and `w_bends · bends`, and the label keeps
+  its `w_distance` term.
 * Dynamic terms (other labels and leaders, only for soft settings) are added the same way
   using exact intersection areas/lengths: overlap area / em², a leader's length inside
   another label / em, a placed leader's stroke area inside the label / em² (em of the

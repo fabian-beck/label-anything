@@ -27,6 +27,11 @@ touches the mark inflated by `placement.offset` (1 px), in the direction of the 
 **`slider`** — `slider_per_quadrant` (4) positions between each pair of neighbouring fixed
 positions, sliding along the mark while touching it.
 
+With `placement.stubs: "auto"`, an adjacent or slider position that another item's mark
+comes near (closer than `stub_reach`, 0.75 em) stands `stub_length` (0.5 em) farther out
+instead, joined to its mark by a short **stub**, so that a label in a crowd of points
+cannot be read as a neighbour's ([leaders](../tutorials/leaders.md#stubs-for-labels-in-a-crowd)).
+
 **`internal`** — inside the mark or area, at the pole of inaccessibility and the reference
 point, when the label fits with `inner_padding` (0.2 em) to spare; `placement.internal`
 (`auto`, `prefer`, `allow`, `never`) decides when ([shapes](../tutorials/shapes.md#internal-labels)).

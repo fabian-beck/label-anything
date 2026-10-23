@@ -453,6 +453,8 @@ export class PlacementOpts {
     public pruneFactor: number,
     public boundary: BoundaryOpts,
     public fan: FanMode,
+    /** `placement.stubs: auto` (spec §6.9). */
+    public stubs: boolean,
   ) {}
 
   static from(o: Opts): PlacementOpts {
@@ -469,6 +471,7 @@ export class PlacementOpts {
       maxf(prune, 1),
       { sides: o.strings("placement.boundary.sides"), spread: o.string("placement.boundary.align") === "spread" },
       fanMode(o.string("placement.fan")),
+      o.string("placement.stubs") === "auto",
     );
   }
 }

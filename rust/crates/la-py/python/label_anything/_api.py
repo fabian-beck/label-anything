@@ -270,6 +270,9 @@ def place(
     prune_factor: Optional[float] = None,
     boundary: Any = None,
     fan: Optional[str] = None,
+    stubs: Optional[str] = None,
+    stub_length: Optional[Length] = None,
+    stub_reach: Optional[Length] = None,
     placement: Optional[Mapping[str, Any]] = None,
     # --- leaders ---
     leaders: Optional[LeadersLike] = None,

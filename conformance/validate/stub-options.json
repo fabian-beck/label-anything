@@ -1,0 +1,27 @@
+{
+  "kind": "validate",
+  "name": "stub-options",
+  "problem": {
+    "items": [],
+    "placement": {
+      "stubs": "always",
+      "stub_length": "0.5em",
+      "stub_reach": -1
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/placement/stubs",
+        "code": "enum"
+      },
+      {
+        "pointer": "/placement/stub_reach",
+        "code": "range"
+      }
+    ],
+    "warnings": [],
+    "exact": true
+  }
+}

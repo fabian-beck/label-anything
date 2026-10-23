@@ -515,7 +515,8 @@ pub fn uncross(s: &mut Solve) {
             let Some(ci) = s.state.placed[i] else {
                 continue;
             };
-            if s.cands[ci as usize].leaders.is_empty() {
+            // (stubs stay with their marks)
+            if s.cands[ci as usize].leaders.is_empty() || s.cands[ci as usize].has_stub() {
                 continue;
             }
             for j in (i + 1)..n {
@@ -523,7 +524,7 @@ pub fn uncross(s: &mut Solve) {
                     continue;
                 };
                 let (a, b) = (&s.cands[ci as usize], &s.cands[cj as usize]);
-                if b.leaders.is_empty() || !a.bbox().touches(&b.bbox()) {
+                if b.leaders.is_empty() || b.has_stub() || !a.bbox().touches(&b.bbox()) {
                     continue;
                 }
                 let cross = a.leaders.iter().any(|la| {

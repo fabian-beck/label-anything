@@ -462,6 +462,8 @@ pub struct PlacementOpts {
     pub prune_factor: f64,
     pub boundary: BoundaryOpts,
     pub fan: FanMode,
+    /// `placement.stubs: auto` (spec §6.9).
+    pub stubs: bool,
 }
 
 impl PlacementOpts {
@@ -491,6 +493,7 @@ impl PlacementOpts {
                 "off" => FanMode::Off,
                 _ => FanMode::Auto,
             },
+            stubs: o.string("placement.stubs") == "auto",
         }
     }
 }

@@ -1322,6 +1322,21 @@
             "off"
           ],
           "description": "Fan labels: a crowd's labels stacked in a column beside it with fanning leaders. auto: crowds of items left without a label, when that places more labels; always: every crowd of two or more items."
+        },
+        "stubs": {
+          "enum": [
+            "off",
+            "auto"
+          ],
+          "description": "Stubs: with auto, an adjacent or slider label that another item's mark comes within stub_reach of stands stub_length farther out, joined to its mark by a short straight leader."
+        },
+        "stub_length": {
+          "$ref": "#/$defs/nonNegLength",
+          "description": "How much farther out a label with a stub stands than an adjacent one."
+        },
+        "stub_reach": {
+          "$ref": "#/$defs/nonNegLength",
+          "description": "A label is ambiguous where another item's mark comes closer than this to its adjacent box."
         }
       }
     },

@@ -146,12 +146,14 @@ export function problem(seed: number): Record<string, unknown> {
   const style = ["straight", "angles", "orthogonal", "elbow", "curved"][r.below(5)]!;
   const omission = ["strict", "strict", "prefix", "weighted"][r.below(4)]!;
   const strategy = ["greedy", "local", "auto"][r.below(3)]!;
+  // drawn last, so that the problems are otherwise those of the seeds before
+  const stubs = r.below(3) === 0 ? "auto" : "off";
   return {
     canvas: { width: w, height: h, padding: 2 },
     items,
     obstacles: { vector },
     avoid: { label: { walls: "hard", points: 0.3, lines: 1.0 } },
-    placement: { models },
+    placement: { models, stubs },
     leaders: { style },
     priority: { omission },
     solver: { strategy, time_budget_ms: 200, max_iterations: 3000 },

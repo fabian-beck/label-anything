@@ -11,7 +11,7 @@ type Box = NonNullable<Placement["box"]>;
 export interface RenderOptions {
   /** The font the labels were measured with. */
   font: CssFont;
-  /** CSS class prefix (default `la`): `la-labels`, `la-label`, `la-leader`. */
+  /** CSS class prefix (default `la`): `la-labels`, `la-label`, `la-leader`, `la-stub`. */
   className?: string;
   /** Text colour (default `currentColor`). */
   fill?: string;
@@ -114,7 +114,9 @@ export function renderLabels(group: SVGGElement | Element, result: LabelResult, 
     const op = options.opacity?.get(p.id);
     const lop = options.leaderOpacity?.get(p.id) ?? op;
     for (const leader of p.leaders ?? (p.leader ? [p.leader] : [])) {
-      const path = el(doc, "path", { class: `${cls}-leader`, d: leaderPath(leader), "data-id": leader.member ?? p.id });
+      // a stub (placement.stubs) also gets the class `la-stub`, to be drawn more lightly
+      const kind = leader.stub ? `${cls}-leader ${cls}-stub` : `${cls}-leader`;
+      const path = el(doc, "path", { class: kind, d: leaderPath(leader), "data-id": leader.member ?? p.id });
       if (lop !== undefined && lop < 1) path.setAttribute("opacity", String(r3(lop)));
       leaders.appendChild(path);
     }

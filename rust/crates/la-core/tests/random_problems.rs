@@ -100,12 +100,14 @@ fn problem(seed: u64) -> Value {
     let style = ["straight", "angles", "orthogonal", "elbow", "curved"][r.below(5) as usize];
     let omission = ["strict", "strict", "prefix", "weighted"][r.below(4) as usize];
     let strategy = ["greedy", "local", "auto"][r.below(3) as usize];
+    // drawn last, so that the problems are otherwise those of the seeds before
+    let stubs = ["off", "auto"][(r.below(3) == 0) as usize];
     json!({
         "canvas": {"width": w, "height": h, "padding": 2},
         "items": items,
         "obstacles": obstacles,
         "avoid": {"label": {"walls": "hard", "points": 0.3, "lines": 1.0}},
-        "placement": {"models": models},
+        "placement": {"models": models, "stubs": stubs},
         "leaders": {"style": style},
         "priority": {"omission": omission},
         "solver": {"strategy": strategy, "time_budget_ms": 200, "max_iterations": 3000}

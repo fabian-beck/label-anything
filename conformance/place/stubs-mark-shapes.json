@@ -1,0 +1,795 @@
+{
+  "kind": "place",
+  "name": "stubs from marks of every shape in a crowd keep the guarantees",
+  "problem": {
+    "canvas": {
+      "width": 320,
+      "height": 240
+    },
+    "placement": {
+      "stubs": "auto",
+      "models": [
+        "adjacent",
+        "slider",
+        "distant"
+      ]
+    },
+    "items": [
+      {
+        "id": "m0",
+        "anchor": {
+          "type": "point",
+          "x": 160.0,
+          "y": 120.0,
+          "mark": {
+            "shape": "polygon",
+            "points": [
+              [
+                -5,
+                -5
+              ],
+              [
+                5,
+                -5
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                5
+              ],
+              [
+                -5,
+                5
+              ]
+            ]
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Ash"
+        },
+        "priority": 32
+      },
+      {
+        "id": "m1",
+        "anchor": {
+          "type": "point",
+          "x": 168.36,
+          "y": 112.83,
+          "mark": {
+            "shape": "rect",
+            "w": 8,
+            "h": 6
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Birch"
+        },
+        "priority": 31
+      },
+      {
+        "id": "m2",
+        "anchor": {
+          "type": "point",
+          "x": 142.57,
+          "y": 121.2,
+          "mark": {
+            "shape": "ellipse",
+            "rx": 5,
+            "ry": 3,
+            "rotation": 30
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Cedar"
+        },
+        "priority": 30
+      },
+      {
+        "id": "m3",
+        "anchor": {
+          "type": "point",
+          "x": 177.01,
+          "y": 130.24,
+          "mark": {
+            "shape": "circle",
+            "r": 3
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Elm"
+        },
+        "priority": 29
+      },
+      {
+        "id": "m4",
+        "anchor": {
+          "type": "point",
+          "x": 155.69,
+          "y": 100.85,
+          "mark": {
+            "shape": "polygon",
+            "points": [
+              [
+                -5,
+                -5
+              ],
+              [
+                5,
+                -5
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                5
+              ],
+              [
+                -5,
+                5
+              ]
+            ]
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Fir"
+        },
+        "priority": 28
+      },
+      {
+        "id": "m5",
+        "anchor": {
+          "type": "point",
+          "x": 145.15,
+          "y": 138.35,
+          "mark": {
+            "shape": "rect",
+            "w": 8,
+            "h": 6
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Hazel"
+        },
+        "priority": 27
+      },
+      {
+        "id": "m6",
+        "anchor": {
+          "type": "point",
+          "x": 189.27,
+          "y": 113.81,
+          "mark": {
+            "shape": "ellipse",
+            "rx": 5,
+            "ry": 3,
+            "rotation": 30
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Oak"
+        },
+        "priority": 26
+      },
+      {
+        "id": "m7",
+        "anchor": {
+          "type": "point",
+          "x": 130.94,
+          "y": 108.15,
+          "mark": {
+            "shape": "circle",
+            "r": 3
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Pine"
+        },
+        "priority": 25
+      },
+      {
+        "id": "m8",
+        "anchor": {
+          "type": "point",
+          "x": 172.02,
+          "y": 145.83,
+          "mark": {
+            "shape": "polygon",
+            "points": [
+              [
+                -5,
+                -5
+              ],
+              [
+                5,
+                -5
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                5
+              ],
+              [
+                -5,
+                5
+              ]
+            ]
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Yew"
+        },
+        "priority": 24
+      },
+      {
+        "id": "m9",
+        "anchor": {
+          "type": "point",
+          "x": 174.15,
+          "y": 93.03,
+          "mark": {
+            "shape": "rect",
+            "w": 8,
+            "h": 6
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Ash"
+        },
+        "priority": 23
+      },
+      {
+        "id": "m10",
+        "anchor": {
+          "type": "point",
+          "x": 124.56,
+          "y": 133.04,
+          "mark": {
+            "shape": "ellipse",
+            "rx": 5,
+            "ry": 3,
+            "rotation": 30
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Birch"
+        },
+        "priority": 22
+      },
+      {
+        "id": "m11",
+        "anchor": {
+          "type": "point",
+          "x": 199.16,
+          "y": 129.64,
+          "mark": {
+            "shape": "circle",
+            "r": 3
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Cedar"
+        },
+        "priority": 21
+      },
+      {
+        "id": "m12",
+        "anchor": {
+          "type": "point",
+          "x": 138.49,
+          "y": 90.87,
+          "mark": {
+            "shape": "polygon",
+            "points": [
+              [
+                -5,
+                -5
+              ],
+              [
+                5,
+                -5
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                5
+              ],
+              [
+                -5,
+                5
+              ]
+            ]
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Elm"
+        },
+        "priority": 20
+      },
+      {
+        "id": "m13",
+        "anchor": {
+          "type": "point",
+          "x": 150.44,
+          "y": 154.24,
+          "mark": {
+            "shape": "rect",
+            "w": 8,
+            "h": 6
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Fir"
+        },
+        "priority": 19
+      },
+      {
+        "id": "m14",
+        "anchor": {
+          "type": "point",
+          "x": 197.86,
+          "y": 99.06,
+          "mark": {
+            "shape": "ellipse",
+            "rx": 5,
+            "ry": 3,
+            "rotation": 30
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Hazel"
+        },
+        "priority": 18
+      },
+      {
+        "id": "m15",
+        "anchor": {
+          "type": "point",
+          "x": 112.47,
+          "y": 115.18,
+          "mark": {
+            "shape": "circle",
+            "r": 3
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Oak"
+        },
+        "priority": 17
+      },
+      {
+        "id": "m16",
+        "anchor": {
+          "type": "point",
+          "x": 191.92,
+          "y": 149.72,
+          "mark": {
+            "shape": "polygon",
+            "points": [
+              [
+                -5,
+                -5
+              ],
+              [
+                5,
+                -5
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                5
+              ],
+              [
+                -5,
+                5
+              ]
+            ]
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Pine"
+        },
+        "priority": 16
+      },
+      {
+        "id": "m17",
+        "anchor": {
+          "type": "point",
+          "x": 162.08,
+          "y": 79.95,
+          "mark": {
+            "shape": "rect",
+            "w": 8,
+            "h": 6
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Yew"
+        },
+        "priority": 15
+      },
+      {
+        "id": "m18",
+        "anchor": {
+          "type": "point",
+          "x": 122.99,
+          "y": 149.26,
+          "mark": {
+            "shape": "ellipse",
+            "rx": 5,
+            "ry": 3,
+            "rotation": 30
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Ash"
+        },
+        "priority": 14
+      },
+      {
+        "id": "m19",
+        "anchor": {
+          "type": "point",
+          "x": 213.88,
+          "y": 118.01,
+          "mark": {
+            "shape": "circle",
+            "r": 3
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Birch"
+        },
+        "priority": 13
+      },
+      {
+        "id": "m20",
+        "anchor": {
+          "type": "point",
+          "x": 117.48,
+          "y": 92.17,
+          "mark": {
+            "shape": "polygon",
+            "points": [
+              [
+                -5,
+                -5
+              ],
+              [
+                5,
+                -5
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                5
+              ],
+              [
+                -5,
+                5
+              ]
+            ]
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Cedar"
+        },
+        "priority": 12
+      },
+      {
+        "id": "m21",
+        "anchor": {
+          "type": "point",
+          "x": 167.61,
+          "y": 164.15,
+          "mark": {
+            "shape": "rect",
+            "w": 8,
+            "h": 6
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Elm"
+        },
+        "priority": 11
+      },
+      {
+        "id": "m22",
+        "anchor": {
+          "type": "point",
+          "x": 193.11,
+          "y": 82.54,
+          "mark": {
+            "shape": "ellipse",
+            "rx": 5,
+            "ry": 3,
+            "rotation": 30
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Fir"
+        },
+        "priority": 10
+      },
+      {
+        "id": "m23",
+        "anchor": {
+          "type": "point",
+          "x": 102.11,
+          "y": 130.27,
+          "mark": {
+            "shape": "circle",
+            "r": 3
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Hazel"
+        },
+        "priority": 9
+      },
+      {
+        "id": "m24",
+        "anchor": {
+          "type": "point",
+          "x": 212.62,
+          "y": 143.64,
+          "mark": {
+            "shape": "polygon",
+            "points": [
+              [
+                -5,
+                -5
+              ],
+              [
+                5,
+                -5
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                5
+              ],
+              [
+                -5,
+                5
+              ]
+            ]
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Oak"
+        },
+        "priority": 8
+      },
+      {
+        "id": "m25",
+        "anchor": {
+          "type": "point",
+          "x": 141.14,
+          "y": 73.7,
+          "mark": {
+            "shape": "rect",
+            "w": 8,
+            "h": 6
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Pine"
+        },
+        "priority": 7
+      },
+      {
+        "id": "m26",
+        "anchor": {
+          "type": "point",
+          "x": 133.59,
+          "y": 165.02,
+          "mark": {
+            "shape": "ellipse",
+            "rx": 5,
+            "ry": 3,
+            "rotation": 30
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Yew"
+        },
+        "priority": 6
+      },
+      {
+        "id": "m27",
+        "anchor": {
+          "type": "point",
+          "x": 219.29,
+          "y": 100.45,
+          "mark": {
+            "shape": "circle",
+            "r": 3
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Ash"
+        },
+        "priority": 5
+      },
+      {
+        "id": "m28",
+        "anchor": {
+          "type": "point",
+          "x": 98.36,
+          "y": 102.64,
+          "mark": {
+            "shape": "polygon",
+            "points": [
+              [
+                -5,
+                -5
+              ],
+              [
+                5,
+                -5
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                5
+              ],
+              [
+                -5,
+                5
+              ]
+            ]
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Birch"
+        },
+        "priority": 4
+      },
+      {
+        "id": "m29",
+        "anchor": {
+          "type": "point",
+          "x": 191.06,
+          "y": 166.32,
+          "mark": {
+            "shape": "rect",
+            "w": 8,
+            "h": 6
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Cedar"
+        },
+        "priority": 3
+      },
+      {
+        "id": "m30",
+        "anchor": {
+          "type": "point",
+          "x": 177.2,
+          "y": 68.49,
+          "mark": {
+            "shape": "ellipse",
+            "rx": 5,
+            "ry": 3,
+            "rotation": 30
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Elm"
+        },
+        "priority": 2
+      },
+      {
+        "id": "m31",
+        "anchor": {
+          "type": "point",
+          "x": 102.09,
+          "y": 149.33,
+          "mark": {
+            "shape": "circle",
+            "r": 3
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Fir"
+        },
+        "priority": 1
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed_min": 12
+  }
+}

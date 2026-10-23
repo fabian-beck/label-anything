@@ -7,6 +7,7 @@ solution. Usage: python3 tools/conformance/make_place_cases.py [--check]
 """
 import base64
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -423,6 +424,55 @@ CASES["font-class-shrink-floor"] = case(
     "The text fits the canvas only at 0.7225 of 10 px (0.85², the last shrink factor above "
     "min_scale 0.7): a, in a class of scale 1, gets it; b's class (0.9) keeps it at or above "
     "0.7 × 10 px, i.e. factors down to 0.7 / 0.9 = 0.778: 0.85 × 9 px is too wide.")
+
+# --- stubs -------------------------------------------------------------------------------
+# Alpha may only stand right of its point; Beta's point lies 6 px below that place, within
+# the stub reach (0.75 em = 9 px) of the box: Alpha stands 0.5 em farther right, with a stub.
+# Gamma's point has no other mark near: its label touches the mark, without a stub.
+STUBS = {"canvas": {"width": 240, "height": 160}, "placement": {"stubs": "auto"},
+         "items": [pt("a", 100, 100, "Alpha", priority=3,
+                      placement={"models": ["adjacent"], "position_order": ["right"]}),
+                   pt("b", 120, 118, "Beta", priority=2), pt("g", 60, 40, "Gamma", priority=1)]}
+
+CASES["stubs-near-other-marks"] = case(
+    "a label that another mark comes near stands farther out with a stub; others touch their mark",
+    STUBS,
+    {"placed": 3, "anchor_side": {"a": "right"}, "model": {"a": "adjacent", "g": "adjacent"},
+     "has_leader": {"a": True, "g": False}, "stub": {"a": True},
+     "box": {"a": {"x": 109, "y": 90.028, "w": 35.892, "h": 19.944, "tol": 0.01}}},
+    "Without stubs Alpha's box would start at x = 103 (mark radius 2, offset 1); with its "
+    "stub it starts 6 px (0.5 em) farther right, and the stub runs from 1.5 px outside the "
+    "mark to the box.")
+
+CASES["stubs-warm-start"] = case(
+    "a previous box with a stub keeps it",
+    {**STUBS, "warm_start": {"placements": [
+        {"id": "a", "placed": True, "anchor": [100, 100],
+         "box": {"x": 109, "y": 93.028, "w": 35.892, "h": 19.944}}]}},
+    {"placed": 3, "model": {"a": "slider"}, "has_leader": {"a": True}, "stub": {"a": True},
+     "box": {"a": {"x": 109, "y": 93.028, "w": 35.892, "h": 19.944, "tol": 0.01}}},
+    "The warm-start box stands 0.5 em farther out than an adjacent label and 3 px lower "
+    "than the one of the case above, where no candidate of the item stands: it is kept as a "
+    "slider-kind candidate with a stub (not as a distant label, whose leader would be "
+    "shorter than leaders.min_length).")
+
+# Small marks of every shape in a crowd (the concave L is pushed in, spec §4.5): the parity
+# fixture of this case holds every stub of the Rust core, which TypeScript must reproduce.
+STUB_MARKS = [{"shape": "polygon", "points": [[-5, -5], [5, -5], [5, 0], [0, 0], [0, 5], [-5, 5]]},
+              {"shape": "rect", "w": 8, "h": 6}, {"shape": "ellipse", "rx": 5, "ry": 3, "rotation": 30},
+              {"shape": "circle", "r": 3}]
+CASES["stubs-mark-shapes"] = case(
+    "stubs from marks of every shape in a crowd keep the guarantees",
+    {"canvas": {"width": 320, "height": 240},
+     "placement": {"stubs": "auto", "models": ["adjacent", "slider", "distant"]},
+     "items": [pt(f"m{k}", round(160 + 70 * math.sin(2.4 * k) * (k / 32) ** 0.5, 2),
+                  round(120 + 55 * math.cos(2.4 * k) * (k / 32) ** 0.5, 2),
+                  ["Ash", "Birch", "Cedar", "Elm", "Fir", "Hazel", "Oak", "Pine", "Yew"][k % 9],
+                  priority=32 - k)
+               for k in range(32)]},
+    {"placed_min": 12})
+for k, it in enumerate(CASES["stubs-mark-shapes"]["problem"]["items"]):
+    it["anchor"]["mark"] = STUB_MARKS[k % 4]
 
 # --- warm starts -------------------------------------------------------------------------
 CASES["warm-start-follows-anchor"] = case(

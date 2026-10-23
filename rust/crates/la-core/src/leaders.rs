@@ -33,6 +33,69 @@ pub fn leader_start(model: &Model, item: &Item, toward: P) -> P {
     }
 }
 
+/// Stubs (spec §6.9): what an adjacent or slider candidate needs to know about the other
+/// items' marks to decide whether it gets a stub.
+pub struct Stubs<'a> {
+    pub model: &'a Model,
+    pub obs: &'a crate::obstacles::Obstacles,
+    buf: std::cell::RefCell<Vec<u32>>,
+}
+
+impl<'a> Stubs<'a> {
+    /// The stubs of a solve, when `placement.stubs` is `auto`.
+    pub fn of(model: &'a Model, obs: &'a crate::obstacles::Obstacles) -> Option<Stubs<'a>> {
+        model.placement.stubs.then(|| Stubs {
+            model,
+            obs,
+            buf: std::cell::RefCell::new(Vec::new()),
+        })
+    }
+    /// Whether the mark of another item (not of the item's group) comes closer than
+    /// `stub_reach` to the label box `r`: the label could be read as that item's.
+    pub fn ambiguous(&self, item: &Item, r: &Rect) -> bool {
+        let reach = item.len.stub_reach;
+        // a label against a mark larger than its font size reads as attached to it
+        let b = item.shape.bbox();
+        if reach <= 0.0 || maxf(b.w(), b.h()) > item.em() {
+            return false;
+        }
+        let i = item.index;
+        let mut buf = self.buf.borrow_mut();
+        self.obs.item_index.query(&r.inflate(reach), &mut buf);
+        buf.iter().any(|&j| {
+            let j = j as usize;
+            j != i
+                && self.model.group_of.get(j).copied().flatten() != Some(i)
+                && self.model.items[j].shape.dist_rect(r) < reach
+        })
+    }
+    /// The candidate `c` with its stub: straight from the mark toward the nearest point
+    /// of the box (its port), starting `anchor_gap` outside the boundary (or at the
+    /// tip), whatever `leaders.attach` and `leaders.style` say for other leaders.
+    pub fn attach(&self, item: &Item, mut c: Cand) -> Cand {
+        c.leaders.push(stub_leader(item, &c.rect));
+        c
+    }
+}
+
+/// The stub of an item's label box `r` (spec §6.9).
+pub fn stub_leader(item: &Item, r: &Rect) -> Leader {
+    let refp = item.shape.reference();
+    let start = if item.tip {
+        refp
+    } else {
+        let d = (r.closest_point(refp) - refp).norm();
+        if d.len2() == 0.0 {
+            refp
+        } else {
+            item.shape.boundary_point(d) + d * item.len.anchor_gap
+        }
+    };
+    let mut l = Leader::new(vec![start, r.closest_point(start)], LeaderStyle::Straight);
+    l.stub = true;
+    l
+}
+
 /// Place a label of half size (hw, hh) so that its port side faces direction `d` at `t`.
 fn attach_label(t: P, d: P, hw: f64, hh: f64, port: Port) -> (Rect, P) {
     let sx = crate::math::sign_eps(d.x, 1e-9);

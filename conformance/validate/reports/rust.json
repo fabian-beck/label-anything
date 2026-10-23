@@ -361,6 +361,22 @@
       ],
       "warnings": []
     },
+    "validate/stub-options.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/placement/stub_reach",
+          "code": "range",
+          "message": "must be >= 0"
+        },
+        {
+          "pointer": "/placement/stubs",
+          "code": "enum",
+          "message": "must be one of \"off\", \"auto\""
+        }
+      ],
+      "warnings": []
+    },
     "validate/svg-source-and-path.json": {
       "valid": false,
       "errors": [

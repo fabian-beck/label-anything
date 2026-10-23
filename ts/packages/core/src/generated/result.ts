@@ -135,6 +135,10 @@ export interface Leader {
    * For fan leaders of a group: the member id this leader points to.
    */
   member?: string;
+  /**
+   * A stub (placement.stubs): the short straight leader of an adjacent or slider label near other marks, which hosts may draw more lightly.
+   */
+  stub?: boolean;
 }
 export interface PriorityInfo {
   required?: boolean;

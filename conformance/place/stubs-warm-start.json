@@ -1,0 +1,106 @@
+{
+  "kind": "place",
+  "name": "a previous box with a stub keeps it",
+  "$comment": "The warm-start box stands 0.5 em farther out than an adjacent label and 3 px lower than the one of the case above, where no candidate of the item stands: it is kept as a slider-kind candidate with a stub (not as a distant label, whose leader would be shorter than leaders.min_length).",
+  "problem": {
+    "canvas": {
+      "width": 240,
+      "height": 160
+    },
+    "placement": {
+      "stubs": "auto"
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        },
+        "priority": 3,
+        "placement": {
+          "models": [
+            "adjacent"
+          ],
+          "position_order": [
+            "right"
+          ]
+        }
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 120,
+          "y": 118
+        },
+        "label": {
+          "type": "text",
+          "text": "Beta"
+        },
+        "priority": 2
+      },
+      {
+        "id": "g",
+        "anchor": {
+          "type": "point",
+          "x": 60,
+          "y": 40
+        },
+        "label": {
+          "type": "text",
+          "text": "Gamma"
+        },
+        "priority": 1
+      }
+    ],
+    "warm_start": {
+      "placements": [
+        {
+          "id": "a",
+          "placed": true,
+          "anchor": [
+            100,
+            100
+          ],
+          "box": {
+            "x": 109,
+            "y": 93.028,
+            "w": 35.892,
+            "h": 19.944
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 3,
+    "model": {
+      "a": "slider"
+    },
+    "has_leader": {
+      "a": true
+    },
+    "stub": {
+      "a": true
+    },
+    "box": {
+      "a": {
+        "x": 109,
+        "y": 93.028,
+        "w": 35.892,
+        "h": 19.944,
+        "tol": 0.01
+      }
+    }
+  }
+}

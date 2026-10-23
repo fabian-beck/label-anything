@@ -229,6 +229,14 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
       if (got !== hl[id]) f.push(`has_leader.${id}: expected ${show(hl[id])}, got ${got}`);
     }
   }
+  const sb = get(exp, "stub");
+  if (isObj(sb)) {
+    for (const id of Object.keys(sb)) {
+      const p = placementOf(r, id);
+      const got = p !== undefined && isObj(p.leader) && p.leader.stub === true;
+      if (got !== sb[id]) f.push(`stub.${id}: expected ${show(sb[id])}, got ${got}`);
+    }
+  }
   const mb = get(exp, "max_bends");
   if (typeof mb === "number") {
     for (const p of r.placements as unknown[]) {
@@ -360,7 +368,8 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
     for (const it of Array.isArray(items) ? items : []) {
       const id = typeof get(it, "id") === "string" ? (get(it, "id") as string) : "";
       const p = placementOf(r, id);
-      if (p === undefined || p.model !== "adjacent") continue;
+      // (a label with a stub stands farther out)
+      if (p === undefined || p.model !== "adjacent" || (isObj(p.leader) && p.leader.stub === true)) continue;
       const b = boxOf(p);
       if (b === null) continue;
       const anchor = get(it, "anchor");

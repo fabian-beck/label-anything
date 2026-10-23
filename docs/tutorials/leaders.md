@@ -113,6 +113,33 @@ What leaders may cross is a separate map, `avoid.leader`: by default other leade
 hard, everything else costs 0.2 per em of leader length over it (ink 0.05).
 [Avoidance](../concepts/avoidance.md) has the details.
 
+## Stubs for labels in a crowd
+
+In a dense scatterplot a label right next to its point can still be read as the label
+of a neighbouring point. With `placement.stubs: "auto"` such labels get a **stub**: the
+label stands a little farther out and a short straight leader joins it to its mark. Only
+labels that need one get it: a label is ambiguous when the mark of another item comes
+closer than `stub_reach` (0.75 em) to the place where it would touch its own mark; it then
+stands `stub_length` (0.5 em) farther out, in the same direction. Labels of marks larger
+than their font size (a big bubble, a country) get none: they read as attached to the
+outline.
+
+```json
+{ "placement": { "stubs": "auto" } }
+```
+
+The [economies chart](../index.md) of the home page uses them: around the crowded
+African and Asian economies, labels such as Mali, Guinea and Zambia have stubs, the
+isolated ones and the large bubbles none. The result reports a stub as the label's
+`leader` with `"stub": true` (model `adjacent` or `slider`), so that a host can draw it
+more lightly than the leaders of distant labels — the chart draws stubs in the leaders'
+grey at 1 px with round caps; `@label-anything/extras` gives their paths the class
+`la-stub` as well as `la-leader`. A stub keeps the label's margin from other marks
+rather than `leaders.clearance`, ignores `min_length`, and costs its length but not the
+fixed cost of a leader, so that the solver still prefers a free position that needs no
+stub. Stubs take room: on the economies chart one label fewer fits, on very dense random
+point clouds 10–20 % fewer (ADR 0050).
+
 ## Boundary labels
 
 Technical illustrations and some charts put the labels into the margins and connect them

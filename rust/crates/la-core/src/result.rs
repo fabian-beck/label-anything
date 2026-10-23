@@ -31,6 +31,9 @@ fn leader_json(l: &Leader, s: &Solve) -> Value {
     if let Some(mem) = l.member {
         m.insert("member".into(), json!(s.model.items[mem as usize].id));
     }
+    if l.stub {
+        m.insert("stub".into(), json!(true));
+    }
     Value::Object(m)
 }
 

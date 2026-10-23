@@ -209,7 +209,9 @@ export class Evaluator {
     acc.add("position", (w.position * c.rank) / 8);
     // 6. distance from own shape
     const gap = c.kind === Kind.Internal ? 0 : item.shape.distRect(r);
-    if (c.leaders.length === 0) acc.add("distance", (w.distance * gap) / em);
+    // (a stub is part of the distance, not a leader to a distant label)
+    const stub = c.hasStub();
+    if (c.leaders.length === 0 || stub) acc.add("distance", (w.distance * gap) / em);
     // 7. shape penalty
     acc.add("shape", w.shape * v.penalty);
     // 8. edge proximity
@@ -217,8 +219,9 @@ export class Evaluator {
       const d = minf(minf(r.x0 - la.x0, la.x1 - r.x1), minf(r.y0 - la.y0, la.y1 - r.y1));
       acc.add("edge", w.edge * maxf(0, 1 - maxf(d, 0) / em));
     }
-    // 9. ambiguity (the item query above covers the reach of adjacent labels)
-    if (w.ambiguity > 0 && c.kind !== Kind.Internal) {
+    // 9. ambiguity (the item query above covers the reach of adjacent labels); a stub
+    // resolves it
+    if (w.ambiguity > 0 && c.kind !== Kind.Internal && !stub) {
       let amb: number;
       if (c.leaders.length > 0) amb = 0.5 * this.ambiguityPoint(i, c.leaders[0]!.port, em);
       else if (gap <= gapGuess) amb = this.ambiguityRectCached(i, r, gap, em);
@@ -288,7 +291,9 @@ export class Evaluator {
     const w = model.weights;
     const dy = obs.dynamic;
     const hw = model.leaders.width * 0.5;
-    acc.add("leader", w.leader + (w.leaderLength * l.len) / em + w.bends * l.bends);
+    // a stub (spec §6.9) costs its length, not a leader
+    if (l.stub) acc.add("stub", (w.leaderLength * l.len) / em);
+    else acc.add("leader", w.leader + (w.leaderLength * l.len) / em + w.bends * l.bends);
     // leaders stay on the canvas
     const ca = obs.leaderArea;
     if (ca !== null && !l.pts.every((p) => ca.containsPoint(p))) acc.violate(BLOCK_EDGE, false, 0);
@@ -312,8 +317,8 @@ export class Evaluator {
     // covers the leader's anchor, or a column leader's start: no leader avoids it); the
     // leader of a fan or boundary label must only not cross a mark closer than the
     // clearance to its start (it leaves a crowd of touching marks, in the order of its
-    // column)
-    const clearance = item.len.clearance;
+    // column); a stub, which lies between the mark and its label, keeps the label's margin
+    const clearance = l.stub ? item.len.margin : item.len.clearance;
     const buf = this.buf;
     obs.itemIndex.query(l.bbox().inflate(clearance), buf);
     const lowerRule = !dy.leaderLower.equals(dy.leaderItems);
@@ -333,7 +338,13 @@ export class Evaluator {
         dmin = minf(dmin, sj.distSegmentXY(a.x, a.y, b.x, b.y));
       }
       if (li.kind === AvoidKind.Hard) {
-        const lim = column && sj.signedDistance(start) < clearance ? EPS : clearance - EPS;
+        // a stub as the label's margin, never more than the mark keeps from the own mark
+        const lim =
+          column && sj.signedDistance(start) < clearance
+            ? EPS
+            : l.stub
+              ? maxf(minf(clearance, sj.distRect(item.shape.bbox())) - EPS, EPS)
+              : clearance - EPS;
         if (dmin < lim) acc.violate(BLOCK_ITEMS, false, 0);
       } else if (dmin < clearance) {
         const f = clearance > 0 ? 1 - dmin / clearance : 1;

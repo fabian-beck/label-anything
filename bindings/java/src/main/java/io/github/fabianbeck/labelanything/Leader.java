@@ -11,6 +11,7 @@ import java.util.List;
  * @param underline for {@code baseline} ports: the underline below the first text line (else empty)
  * @param curve for curved leaders: {@code [start, control, end]} of the quadratic Bezier (else empty)
  * @param member for fan leaders of a group label: the member id this leader points to (else null)
+ * @param stub whether this is the stub of a label next to its mark among other marks (spec §6.9)
  */
 public record Leader(
     List<Point> points,
@@ -18,7 +19,8 @@ public record Leader(
     Point port,
     List<Point> underline,
     List<Point> curve,
-    String member) {
+    String member,
+    boolean stub) {
   public Leader {
     points = List.copyOf(points);
     underline = List.copyOf(underline);
@@ -45,6 +47,7 @@ public record Leader(
         Parse.point(m.get("port")),
         Parse.points(m.get("underline")),
         Parse.points(m.get("curve")),
-        Parse.str(m.get("member")));
+        Parse.str(m.get("member")),
+        Boolean.TRUE.equals(m.get("stub")));
   }
 }

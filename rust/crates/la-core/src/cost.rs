@@ -296,7 +296,9 @@ impl<'a> Evaluator<'a> {
         } else {
             item.shape.dist_rect(&r)
         };
-        if c.leaders.is_empty() {
+        // (a stub is part of the distance, not a leader to a distant label)
+        let stub = c.has_stub();
+        if c.leaders.is_empty() || stub {
             acc.add("distance", w.distance * gap / em);
         }
         // 7. shape penalty
@@ -309,8 +311,9 @@ impl<'a> Evaluator<'a> {
             );
             acc.add("edge", w.edge * maxf(0.0, 1.0 - maxf(d, 0.0) / em));
         }
-        // 9. ambiguity (the item query above covers the reach of adjacent labels)
-        if w.ambiguity > 0.0 && c.kind != Kind::Internal {
+        // 9. ambiguity (the item query above covers the reach of adjacent labels); a stub
+        // resolves it
+        if w.ambiguity > 0.0 && c.kind != Kind::Internal && !stub {
             let amb = if let Some(l) = c.leaders.first() {
                 0.5 * self.ambiguity_point(i, l.port, em)
             } else if gap <= gap_guess {
@@ -404,10 +407,15 @@ impl<'a> Evaluator<'a> {
         let w = &model.weights;
         let dy = &obs.dynamic;
         let hw = model.leaders.width * 0.5;
-        acc.add(
-            "leader",
-            w.leader + w.leader_length * l.len / em + w.bends * l.bends as f64,
-        );
+        if l.stub {
+            // a stub (spec §6.9) costs its length, not a leader
+            acc.add("stub", w.leader_length * l.len / em);
+        } else {
+            acc.add(
+                "leader",
+                w.leader + w.leader_length * l.len / em + w.bends * l.bends as f64,
+            );
+        }
         // leaders stay on the canvas
         if let Some(ca) = obs.leader_area {
             if !l.pts.iter().all(|p| ca.contains_point(*p)) {
@@ -435,11 +443,16 @@ impl<'a> Evaluator<'a> {
         // covers the leader's anchor, or a column leader's start: no leader avoids it); the
         // leader of a fan or boundary label must only not cross a mark closer than the
         // clearance to its start (it leaves a crowd of touching marks, in the order of its
-        // column)
-        let bb = l.bbox().inflate(item.len.clearance);
+        // column); a stub, which lies between the mark and its label, keeps the label's
+        // margin
+        let clearance = if l.stub {
+            item.len.margin
+        } else {
+            item.len.clearance
+        };
+        let bb = l.bbox().inflate(clearance);
         self.buf.clear();
         obs.item_index.query(&bb, &mut self.buf);
-        let clearance = item.len.clearance;
         let anchor = match l.member {
             Some(m) => model.items[m as usize].anchor,
             None => item.anchor,
@@ -467,6 +480,10 @@ impl<'a> Evaluator<'a> {
                 AvoidW::Hard => {
                     let lim = if column && sj.signed_distance(start) < clearance {
                         EPS
+                    } else if l.stub {
+                        // as the label's margin, never more than the mark keeps from the
+                        // own mark
+                        maxf(minf(clearance, sj.dist_rect(&item.shape.bbox())) - EPS, EPS)
                     } else {
                         clearance - EPS
                     };

@@ -226,6 +226,14 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
             }
         }
     }
+    if let Some(Value::Object(m)) = exp.get("stub") {
+        for (id, want) in m {
+            let got = placement(&r, id).is_some_and(|p| p["leader"]["stub"] == true);
+            if Some(got) != want.as_bool() {
+                f.push(format!("stub.{id}: expected {want}, got {got}"));
+            }
+        }
+    }
     if let Some(max) = exp.get("max_bends").and_then(|v| v.as_u64()) {
         for p in r["placements"].as_array().into_iter().flatten() {
             for n in leader_point_counts(p) {
@@ -391,7 +399,10 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
             });
         for it in problem["items"].as_array().into_iter().flatten() {
             let id = it["id"].as_str().unwrap_or("");
-            let Some(p) = placement(&r, id).filter(|p| p["model"] == "adjacent") else {
+            // (a label with a stub stands farther out)
+            let Some(p) = placement(&r, id)
+                .filter(|p| p["model"] == "adjacent" && p["leader"]["stub"] != true)
+            else {
                 continue;
             };
             let Some(b) = box_of(p) else { continue };

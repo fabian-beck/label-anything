@@ -90,13 +90,14 @@ points at the offending property; for `required` at the missing property (e.g.
     "omission_order": ["z", "y"],
     "anchor_side": { "a": "top" }, "model": { "a": "adjacent" },
     "has_leader": { "b": true },
+    "stub": { "a": true },             // the label's leader is a stub (placement.stubs)
     "max_bends": 1,                    // every leader of every placed label bends at most so often
     "underline": { "b": true },        // baseline port: the underline starts at the leader's
                                        // end on a side edge, horizontal, in the box's lower half
     "inside_canvas": true,             // every box inside canvas minus padding
     "prefix": true,                    // placed set is a prefix of the priority order
     "deterministic": true,             // two runs give identical placements
-    "touch_gap_max": 0.5,              // adjacent labels touch their inflated mark
+    "touch_gap_max": 0.5,              // adjacent labels (without a stub) touch their inflated mark
     "text_lines": { "a": ["org.example.", "Foo"] },
     "font": { "a": { "size": 15, "weight": 700, "class": 0 } },  // text.font_size (± 1e-6),
                                        // text.font_weight, priority.font_class (null: none)

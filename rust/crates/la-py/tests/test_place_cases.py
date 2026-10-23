@@ -98,6 +98,10 @@ def check(problem: Dict[str, Any], exp: Dict[str, Any]) -> List[str]:
         got = bool(segments(by_id[i])) if i in by_id else False
         if got != want:
             f.append(f"has_leader.{i}: expected {want}, got {got}")
+    for i, want in exp.get("stub", {}).items():
+        got = bool(((by_id.get(i) or {}).get("leader") or {}).get("stub"))
+        if got != want:
+            f.append(f"stub.{i}: expected {want}, got {got}")
     for i, want in exp.get("underline", {}).items():
         got = underline_at_port(by_id[i]) if i in by_id else False
         if got != want:
@@ -147,7 +151,8 @@ def check(problem: Dict[str, Any], exp: Dict[str, Any]) -> List[str]:
         offset = px(problem.get("placement", {}).get("offset", DEFAULT_OFFSET), em)
         for it in problem["items"]:
             p = by_id.get(it.get("id", ""))
-            if not p or p.get("model") != "adjacent" or not p.get("box"):
+            # (a label with a stub stands farther out)
+            if not p or p.get("model") != "adjacent" or not p.get("box") or (p.get("leader") or {}).get("stub"):
                 continue
             mark = it["anchor"].get("mark") or problem.get("defaults", {}).get("mark") or DEFAULT_MARK
             if mark.get("shape") != "circle":

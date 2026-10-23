@@ -43,6 +43,8 @@ class Leader:
     curve: Optional[Tuple[Point, ...]] = None
     #: For the fan leaders of a group label: the member this leader points to.
     member: Optional[str] = None
+    #: The stub of a label next to its mark among other marks (``placement.stubs``).
+    stub: bool = False
 
     @classmethod
     def from_dict(cls, d: Mapping[str, Any]) -> Leader:
@@ -53,6 +55,7 @@ class Leader:
             underline=_pts(d.get("underline")),
             curve=_pts(d.get("curve")),
             member=d.get("member"),
+            stub=bool(d.get("stub", False)),
         )
 
     @property

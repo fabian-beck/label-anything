@@ -103,6 +103,22 @@ public final class Placement extends Spec {
     }
   }
 
+  /** When labels next to their mark among other marks get stubs (spec §6.9). */
+  public enum Stubs implements JsonName {
+    /** None (default). */
+    OFF,
+    /**
+     * A label that another item's mark comes near stands a little farther out, joined to its
+     * mark by a short straight leader.
+     */
+    AUTO;
+
+    @Override
+    public String jsonName() {
+      return JsonName.lower(this);
+    }
+  }
+
   /** No settings (defaults: adjacent, slider, distant). */
   public static Placement defaults() {
     return new Placement(Map.of());
@@ -240,5 +256,33 @@ public final class Placement extends Spec {
    */
   public Placement fan(Fan mode) {
     return with("fan", mode);
+  }
+
+  /**
+   * Stubs: a label next to its mark that another item's mark comes near stands farther out,
+   * joined to its mark by a short leader (default {@link Stubs#OFF}).
+   */
+  public Placement stubs(Stubs mode) {
+    return with("stubs", mode);
+  }
+
+  /** How much farther out a label with a stub stands, in px (default 0.5 em). */
+  public Placement stubLength(double px) {
+    return with("stub_length", len(px));
+  }
+
+  /** How much farther out a label with a stub stands, e.g. {@code "0.5em"}. */
+  public Placement stubLength(String length) {
+    return with("stub_length", len(length));
+  }
+
+  /** How near another mark makes a label ambiguous, in px (default 0.75 em). */
+  public Placement stubReach(double px) {
+    return with("stub_reach", len(px));
+  }
+
+  /** How near another mark makes a label ambiguous, e.g. {@code "0.75em"}. */
+  public Placement stubReach(String length) {
+    return with("stub_reach", len(length));
   }
 }

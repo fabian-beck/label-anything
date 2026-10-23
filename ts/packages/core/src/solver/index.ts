@@ -23,7 +23,7 @@ import { Evaluator } from "../cost.js";
 import { type Env, envCancelled, envNow } from "../env.js";
 import { type P, Rect } from "../geom/index.js";
 import { type Measurer, type Variant, ladderVariants } from "../labels.js";
-import { distant, distantDirs } from "../leaders.js";
+import { Stubs, distant, distantDirs } from "../leaders.js";
 import { cosDeg } from "../detmath.js";
 import { cmpF64, minf } from "../math.js";
 import { type Model, Models } from "../model/index.js";
@@ -90,6 +90,8 @@ export class Solve {
   warmNudge: ([number, number][] | null)[];
   /** Directions of distant candidates (see `distantDirs`). */
   distantDirs: [number, P][];
+  /** Stubs (spec §6.9), when `placement.stubs` is `auto`. */
+  readonly stubs: Stubs | null;
   /**
    * Statically feasible candidates of unplaced items that the placed-label filter had
    * dropped (see {@link feasibleUnfiltered}); explanations only.
@@ -149,6 +151,7 @@ export class Solve {
     this.warmNudge = new Array<[number, number][] | null>(n).fill(null);
     this.staticDropped = new Array<number>(n).fill(0);
     this.distantDirs = distantDirs(model);
+    this.stubs = Stubs.of(model, obs);
     this.blockedFeasible = [];
     for (let i = 0; i < n; i++) this.blockedFeasible.push([]);
     this.evaluator = new Evaluator(model, obs, env);
@@ -197,9 +200,9 @@ export class Solve {
       if (item.area !== null) {
         const rank = internalRank(item, v, m, circleRatio);
         if (rank !== null) internal(item, vi, v, rank, fresh);
-        adjacent(item, vi, v, sliderPerGap, m, fresh, adjKeep);
+        adjacent(item, vi, v, sliderPerGap, m, this.stubs, fresh, adjKeep);
       } else {
-        adjacent(item, vi, v, sliderPerGap, m, fresh, adjKeep);
+        adjacent(item, vi, v, sliderPerGap, m, this.stubs, fresh, adjKeep);
         const rank = internalRank(item, v, m, circleRatio);
         if (rank !== null) internal(item, vi, v, rank, fresh);
       }
@@ -245,9 +248,9 @@ export class Solve {
       if (item.area !== null) {
         const rank = internalRank(item, v, models, circleRatio);
         if (rank !== null) internal(item, vi, v, rank, fresh);
-        adjacent(item, vi, v, sliderPerGap, models, fresh, adjKeep);
+        adjacent(item, vi, v, sliderPerGap, models, this.stubs, fresh, adjKeep);
       } else {
-        adjacent(item, vi, v, sliderPerGap, models, fresh, adjKeep);
+        adjacent(item, vi, v, sliderPerGap, models, this.stubs, fresh, adjKeep);
         const rank = internalRank(item, v, models, circleRatio);
         if (rank !== null) internal(item, vi, v, rank, fresh);
       }
@@ -339,9 +342,9 @@ export class Solve {
         // area anchors: internal candidates first; external ones around the dot
         const rank = internalRank(item, v, models, circleRatio);
         if (rank !== null) internal(item, vi, v, rank, fresh);
-        adjacent(item, vi, v, sliderPerGap, models, fresh, adjKeep);
+        adjacent(item, vi, v, sliderPerGap, models, this.stubs, fresh, adjKeep);
       } else {
-        adjacent(item, vi, v, sliderPerGap, models, fresh, adjKeep);
+        adjacent(item, vi, v, sliderPerGap, models, this.stubs, fresh, adjKeep);
         const rank = internalRank(item, v, models, circleRatio);
         if (rank !== null) internal(item, vi, v, rank, fresh);
       }
@@ -476,7 +479,7 @@ export class Solve {
     const vi = vs.findIndex((v) => Math.abs(v.w - b.w()) <= 0.5 && Math.abs(v.h - b.h()) <= 0.5);
     if (vi < 0) return;
     const v = vs[vi]!;
-    const c = warm(this.model, item, vi, v, b);
+    const c = warm(this.model, item, vi, v, b, this.stubs);
     if (c === null) return;
     c.warm = true;
     c.level = 0;
@@ -587,7 +590,7 @@ export class Solve {
       const vi = vs.findIndex((v) => v.level === level && same(v));
       if (vi < 0) continue;
       const v = vs[vi]!;
-      const c = warm(this.model, item, vi, v, b);
+      const c = warm(this.model, item, vi, v, b, this.stubs);
       if (c === null) return null;
       c.warm = true;
       c.level = level;
@@ -619,7 +622,7 @@ export class Solve {
       const em = item.em();
       const steps = [0.05 * em, 0.1 * em, 0.2 * em, 0.4 * em, 0.8 * em];
       const v = this.variants[i]![vi]!;
-      for (const [si, c] of warmNudges(item, vi, v, rect, steps, this.models[i]!)) {
+      for (const [si, c] of warmNudges(item, vi, v, rect, steps, this.models[i]!, this.stubs)) {
         c.level = 0;
         c.warm = true;
         c.lshape = labelShape(c.rect, v.shape);

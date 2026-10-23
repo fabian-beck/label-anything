@@ -178,6 +178,9 @@ export interface ItemLengths {
   clearance: number;
   boundaryGap: number;
   boundaryMargin: number;
+  /** `placement.stub_length` and `placement.stub_reach` (spec §6.9). */
+  stubLength: number;
+  stubReach: number;
 }
 
 /** Per-item lengths before resolution against the item's font size. */
@@ -195,6 +198,8 @@ export interface ItemLengthSpec {
   clearance: Length;
   boundaryGap: Length;
   boundaryMargin: Length;
+  stubLength: Length;
+  stubReach: Length;
 }
 
 /** `ItemLengthSpec::resolve`: the lengths in px for a font size of `em` px. */
@@ -213,6 +218,8 @@ export function resolveLengths(l: ItemLengthSpec, em: number): ItemLengths {
     clearance: l.clearance.px(em),
     boundaryGap: l.boundaryGap.px(em),
     boundaryMargin: l.boundaryMargin.px(em),
+    stubLength: l.stubLength.px(em),
+    stubReach: l.stubReach.px(em),
   };
 }
 
@@ -1334,6 +1341,8 @@ function itemDefaults(o: Opts): ItemDefaults {
       clearance: o.length("leaders.clearance"),
       boundaryGap: o.length("placement.boundary.gap"),
       boundaryMargin: o.length("placement.boundary.margin"),
+      stubLength: o.length("placement.stub_length"),
+      stubReach: o.length("placement.stub_reach"),
     },
     mark: o.get("defaults.mark"),
     wrap: o.get("defaults.wrap"),

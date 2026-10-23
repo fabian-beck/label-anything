@@ -567,7 +567,8 @@ impl<'a> Solve<'a> {
             };
             let item = &self.model.items[i];
             let v = &self.variants[i][vi];
-            let mut c = candidates::warm(self.model, item, vi, v, b)?;
+            let stubs = crate::leaders::Stubs::of(self.model, self.obs);
+            let mut c = candidates::warm(self.model, item, vi, v, b, stubs.as_ref())?;
             c.warm = true;
             c.level = level;
             c.lshape = candidates::label_shape(&c.rect, &v.shape);
@@ -597,7 +598,10 @@ impl<'a> Solve<'a> {
             let em = item.em();
             let steps = [0.05 * em, 0.1 * em, 0.2 * em, 0.4 * em, 0.8 * em];
             let v = &self.variants[i][vi];
-            for (si, mut c) in candidates::warm_nudges(item, vi, v, rect, &steps, self.models[i]) {
+            let stubs = crate::leaders::Stubs::of(self.model, self.obs);
+            let nudges =
+                candidates::warm_nudges(item, vi, v, rect, &steps, self.models[i], stubs.as_ref());
+            for (si, mut c) in nudges {
                 c.level = 0;
                 c.warm = true;
                 c.lshape = candidates::label_shape(&c.rect, &v.shape);
@@ -674,6 +678,7 @@ fn raw_candidates(
         }
         !placed.is_some_and(|occ| w.is_some_and(|w| occ.blocked_in(&w)))
     };
+    let stubs = crate::leaders::Stubs::of(model, obs);
     let mut fresh: Vec<Cand> = Vec::new();
     for &vi in vis {
         let v = &variants[vi];
@@ -691,6 +696,7 @@ fn raw_candidates(
                 v,
                 model.placement.slider_per_gap,
                 models,
+                stubs.as_ref(),
                 &mut fresh,
             );
         } else {
@@ -700,6 +706,7 @@ fn raw_candidates(
                 v,
                 model.placement.slider_per_gap,
                 models,
+                stubs.as_ref(),
                 &mut fresh,
             );
             if let Some(rank) = internal_rank {
@@ -820,7 +827,8 @@ fn warm_candidate(
         .iter()
         .position(|v| (v.w - b.w()).abs() <= 0.5 && (v.h - b.h()).abs() <= 0.5)?;
     let v = &variants[vi];
-    let mut c = candidates::warm(model, item, vi, v, *b)?;
+    let stubs = crate::leaders::Stubs::of(model, obs);
+    let mut c = candidates::warm(model, item, vi, v, *b, stubs.as_ref())?;
     c.warm = true;
     c.level = 0;
     c.lshape = candidates::label_shape(&c.rect, &v.shape);

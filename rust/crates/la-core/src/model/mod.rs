@@ -176,6 +176,9 @@ pub struct ItemLengths {
     pub clearance: f64,
     pub boundary_gap: f64,
     pub boundary_margin: f64,
+    /// `placement.stub_length` and `placement.stub_reach` (spec §6.9).
+    pub stub_length: f64,
+    pub stub_reach: f64,
 }
 
 /// Per-item lengths before resolution against the item's font size.
@@ -194,6 +197,8 @@ pub struct ItemLengthSpec {
     pub clearance: Length,
     pub boundary_gap: Length,
     pub boundary_margin: Length,
+    pub stub_length: Length,
+    pub stub_reach: Length,
 }
 
 impl ItemLengthSpec {
@@ -213,6 +218,8 @@ impl ItemLengthSpec {
             clearance: self.clearance.px(em),
             boundary_gap: self.boundary_gap.px(em),
             boundary_margin: self.boundary_margin.px(em),
+            stub_length: self.stub_length.px(em),
+            stub_reach: self.stub_reach.px(em),
         }
     }
 }
@@ -1527,6 +1534,8 @@ impl ItemDefaults {
                 clearance: o.length("leaders.clearance"),
                 boundary_gap: o.length("placement.boundary.gap"),
                 boundary_margin: o.length("placement.boundary.margin"),
+                stub_length: o.length("placement.stub_length"),
+                stub_reach: o.length("placement.stub_reach"),
             },
             mark: o.get("defaults.mark"),
             wrap: o.get("defaults.wrap"),

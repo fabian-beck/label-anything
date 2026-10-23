@@ -71,7 +71,7 @@ log-scaled, weighs against outlierness and label size).
 | `canvas=(w, h)` or dict | `canvas` | `canvas_padding`, `allow_outside`, `region`, `device_pixel_ratio`, `canvas_background` | `canvas.*` |
 | `y_axis`, `transform`, `preset` | same | `font` (`la.Font`), `font_family`, `font_size`, `font_weight`, `font_style`, `line_height`, `font_file` | `defaults.font.*` |
 | `padding`, `buffer`, `margin`, `mark`, `wrap`, `truncate` | `defaults.*` | `shaping` | `text.shaping` |
-| `models`, `position_order`, `offset`, `min_distance`, `max_distance`, `slider_per_quadrant`, `k_distant`, `distant_rings`, `distant_directions`, `free_space_seeds`, `internal`, `inner_padding`, `internal_circle_ratio`, `prune_factor`, `boundary`, `fan` | `placement.*` | `leaders` | `leaders` |
+| `models`, `position_order`, `offset`, `min_distance`, `max_distance`, `slider_per_quadrant`, `k_distant`, `distant_rings`, `distant_directions`, `free_space_seeds`, `internal`, `inner_padding`, `internal_circle_ratio`, `prune_factor`, `boundary`, `fan`, `stubs`, `stub_length`, `stub_reach` | `placement.*` | `leaders` | `leaders` |
 | `avoid`, `avoid_leader`, `avoid_buffer`, `relaxable` | `avoid.*` | `priority`, `tiers`, `omission`, `coverage`, `ties`, `band`, `focus`, `font_classes` | `priority.*` |
 | `max_labels`, `max_ink_fraction` | `priority.budget.*` | `strategy`, `time_budget_ms`, `max_iterations`, `seed`, `grid_cell` | `solver.*` |
 | `degrade` | `degrade` | `min_scale`, `wrap_max_lines`, `soft_overlap_weight` | `degrade_options.*` |
@@ -118,7 +118,7 @@ Invalid problems raise `la.ValidationError` (a `ValueError`); `e.errors` lists
 `Result.placements` holds one frozen `Placement` per item in input order: `id`, `placed`,
 `box` (`BBox(x, y, w, h)` in canvas px, y down), `anchor` (the item's point; passed back
 as `warm_start`, the boxes move with it), `anchor_side`, `model`, `leader`
-(`Leader(points, style, port, underline, curve, member)`), `lines`, `baselines`,
+(`Leader(points, style, port, underline, curve, member, stub)`), `lines`, `baselines`,
 `reason` (why it was omitted), `priority` (`{tier, score, rank}`), `degrade_steps`,
 `blocking`, `blocked_by`, `members`/`leaders` (group labels), `parts` (composite labels)
 and `raw`. `Result` also has `placed`, `unplaced`, `omission_order`, `stats`, `warnings`,

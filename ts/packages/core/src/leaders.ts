@@ -56,6 +56,69 @@ function leaderStartIn(model: Model, item: Item): boolean {
   return true;
 }
 
+/**
+ * Stubs (spec §6.9): what an adjacent or slider candidate needs to know about the other
+ * items' marks to decide whether it gets a stub.
+ */
+export class Stubs {
+  private readonly buf = new IdList();
+
+  constructor(
+    readonly model: Model,
+    readonly obs: Obstacles,
+  ) {}
+
+  /** The stubs of a solve, when `placement.stubs` is `auto`. */
+  static of(model: Model, obs: Obstacles): Stubs | null {
+    return model.placement.stubs ? new Stubs(model, obs) : null;
+  }
+
+  /**
+   * Whether the mark of another item (not of the item's group) comes closer than
+   * `stub_reach` to the label box `r`: the label could be read as that item's.
+   */
+  ambiguous(item: Item, r: Rect): boolean {
+    const reach = item.len.stubReach;
+    // a label against a mark larger than its font size reads as attached to it
+    const b = item.shape.bbox();
+    if (reach <= 0 || maxf(b.w(), b.h()) > item.em()) return false;
+    const i = item.index;
+    const buf = this.buf;
+    buf.clear();
+    this.obs.itemIndex.query(r.inflate(reach), buf);
+    for (let q = 0; q < buf.len; q++) {
+      const j = buf.get(q);
+      if (j !== i && (this.model.groupOf[j] ?? null) !== i && this.model.items[j]!.shape.distRect(r) < reach) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * The candidate `c` with its stub: straight from the mark toward the nearest point of
+   * the box (its port), starting `anchor_gap` outside the boundary (or at the tip),
+   * whatever `leaders.attach` and `leaders.style` say for other leaders.
+   */
+  attach(item: Item, c: Cand): Cand {
+    c.leaders.push(stubLeader(item, c.rect));
+    return c;
+  }
+}
+
+/** The stub of an item's label box `r` (spec §6.9). */
+export function stubLeader(item: Item, r: Rect): Leader {
+  const refp = item.shape.reference();
+  let start = refp;
+  if (!item.tip) {
+    const d = r.closestPoint(refp).sub(refp).norm();
+    if (d.len2() !== 0) start = item.shape.boundaryPoint(d).add(d.mul(item.len.anchorGap));
+  }
+  const l = new Leader([start, r.closestPoint(start)], LeaderStyle.Straight);
+  l.stub = true;
+  return l;
+}
+
 /** Output of {@link attachCenter}: the label center `[x, y]`. */
 const AC = new Float64Array(2);
 

@@ -577,6 +577,18 @@ export interface Placement {
    * Fan labels: a crowd's labels stacked in a column beside it with fanning leaders. auto: crowds of items left without a label, when that places more labels; always: every crowd of two or more items.
    */
   fan?: "auto" | "always" | "off";
+  /**
+   * Stubs: with auto, an adjacent or slider label that another item's mark comes within stub_reach of stands stub_length farther out, joined to its mark by a short straight leader.
+   */
+  stubs?: "off" | "auto";
+  /**
+   * A non-negative length: number of pixels, or a string with unit px | pt | em.
+   */
+  stub_length?: number | string;
+  /**
+   * A non-negative length: number of pixels, or a string with unit px | pt | em.
+   */
+  stub_reach?: number | string;
 }
 export interface Leaders {
   style?: "straight" | "angles" | "orthogonal" | "elbow" | "curved";
