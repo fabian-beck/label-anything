@@ -94,7 +94,7 @@ that the few labels with a clearly better place move there. `frame()` returns th
 placements as drawn at that moment, with the opacities of fading labels; `renderLabels`
 draws them, or any renderer can. The Leaflet, MapLibre and sigma.js helpers do this
 themselves (option `transition`, in ms; 0 draws each result unchanged;
-[ADR motion/label-motion](../adr/motion/label-motion.md)). The [playground](../try.md) has
+[ADR motion/label-motion](../adr/motion/label-motion.md)). The [playground](https://fabian-beck.github.io/label-anything/playground/) has
 these options in its Motion section.
 
 ## Leaflet

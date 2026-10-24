@@ -133,13 +133,14 @@ def on_files(files: Files, config) -> Files:
     return files
 
 
-def _adr_index() -> str:
+def _adr_index(src_uri: str) -> str:
+    here = posixpath.dirname(src_uri) or "."
     out = []
     for area in AREAS:
         rows = [a for a in _adrs if a.area == area]
         if rows:
             out += [f"## {area.capitalize()}", ""]
-            out += [f"* [{a.title}](../adr/{a.id}.md) — {a.summary}" for a in rows]
+            out += [f"* [{a.title}]({posixpath.relpath(f'adr/{a.id}.md', here)}) — {a.summary}" for a in rows]
             out.append("")
     return "\n".join(out)
 
@@ -166,7 +167,7 @@ GH_LINK = re.compile(r"\]\(gh:([^)\s]*)\)")
 
 def on_page_markdown(markdown: str, page, config, files) -> str:
     if "<!-- la:adr-index -->" in markdown:
-        markdown = markdown.replace("<!-- la:adr-index -->", _adr_index())
+        markdown = markdown.replace("<!-- la:adr-index -->", _adr_index(page.file.src_uri))
     markdown = _link_adrs(markdown, page.file.src_uri)
     ref = _ref()
     return GH_LINK.sub(lambda m: f"]({REPO}/blob/{ref}/{m.group(1)})", markdown)

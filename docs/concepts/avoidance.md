@@ -74,7 +74,7 @@ leaders ([priority](../tutorials/priority.md#important-labels-over-minor-marks))
 ## Merging
 
 The maps are merged **key by key**: the defaults above, then the
-[preset](presets-defaults.md)'s keys, then yours. `{"avoid": {"label": {"ink": 2}}}`
+[preset](../reference/presets.md)'s keys, then yours. `{"avoid": {"label": {"ink": 2}}}`
 changes only `ink`; the rest of the map keeps its defaults. The presets set:
 
 | Preset | `avoid.label` | `avoid.leader` |

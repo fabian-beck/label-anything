@@ -211,6 +211,9 @@ problems.
 
 * **Not on the registries yet.** Build the packages from this repository for now
   ([getting started](getting-started/index.md)).
+* **Open source.** MIT License; the bundled font, Noto Sans, is under the SIL Open Font
+  License 1.1. In research, please cite the methods it builds on
+  ([`CITATION.cff`](gh:CITATION.cff)).
 * **Labels for points and areas.** Labels go to points and areas of any shape; lines such
   as roads or rivers are obstacles, not labeled features.
 * **Not for labeling data.** Despite its name, Label Anything is not a data-labeling tool,

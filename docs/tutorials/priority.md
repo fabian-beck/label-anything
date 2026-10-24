@@ -207,7 +207,7 @@ lengths in px, icons and boxes keep their size. Each placement reports its class
 (`priority.font_class`) and the size and weight to draw (`text.font_size`,
 `text.font_weight`).
 
-## The same in JSON
+## In JSON
 
 ```json
 --8<-- "examples/tutorials/problems/priority-cities.json:1:13"

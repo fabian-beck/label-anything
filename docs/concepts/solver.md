@@ -25,7 +25,7 @@ The solver picks one of each item's [candidates](candidates.md), or none, in pha
    ([ADR priority/repair](../adr/priority/repair.md)).
 5. **Verification** re-checks every hard constraint exactly.
 
-The [explainer](../try.md#how-it-works-step-by-step) steps through these phases on a real
+The [explainer](https://fabian-beck.github.io/label-anything/playground/explain.html) steps through these phases on a real
 solve; the [specification](../reference/spec.md#10-solver) defines them. `solver.strategy`
 sets how far a solve goes:
 

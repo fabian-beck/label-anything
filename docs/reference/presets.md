@@ -1,14 +1,29 @@
 # Presets
 
-A preset is a JSON file: its `options` merge between the [defaults](defaults.md) and the
-problem, its `svg_classes` are the class rules for SVG sources without `classes`, and
-`auto` also holds the rule of its adaptive model choice.
-[Presets and defaults](../concepts/presets-defaults.md) explains the merge; the files are
-published with this site under `presets/`.
+A preset is a named set of option values for one kind of graphic. The options that apply
+are the [defaults](defaults.md), then the preset's, then the problem's own:
+
+> effective options = defaults ← preset ← problem
+
+Objects merge recursively, while arrays and scalars replace; the class maps of `avoid`
+merge key by key. So `{"preset": "map", "avoid": {"label": {"roads": "hard"}}}` keeps
+everything the `map` preset sets and adds one class.
+
+| Preset | For |
+|---|---|
+| [`auto`](#auto) (default) | anything, without configuration |
+| [`scatter`](#scatter) | scatter plots: point marks over dense unlabeled points, trend lines, axes |
+| [`map`](#map) | point features over map backgrounds |
+| [`graph`](#graph) | node-link diagrams |
+| [`illustration`](#illustration) | technical and anatomical illustrations, labeled in the margins |
+| [`none`](#none) | full control: the defaults alone |
+
+Each preset is a JSON file: its `description` says what it sets, its `options` merge as
+above, and its `svg_classes` are the class rules for SVG sources without `classes` of their
+own. `auto` also holds the rule of its adaptive model choice. The files are published with
+this site under `presets/`.
 
 ## auto
-
-The default, for any kind of graphic, without configuration.
 
 ```json
 --8<-- "spec/presets/auto.json"
