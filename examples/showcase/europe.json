@@ -1238,7 +1238,7 @@
     "type": "text",
     "text": "RUSSIA",
     "font": {
-     "size": 14.0
+     "size": 18.0
     }
    },
    "tier": 1,
@@ -1618,7 +1618,7 @@
     "type": "text",
     "text": "TURKEY",
     "font": {
-     "size": 13.68
+     "size": 17.35
     }
    },
    "tier": 1,
@@ -2194,7 +2194,7 @@
     "type": "text",
     "text": "GERMANY",
     "font": {
-     "size": 12.65
+     "size": 15.31
     }
    },
    "tier": 1,
@@ -2846,7 +2846,7 @@
     "type": "text",
     "text": "FRANCE",
     "font": {
-     "size": 13.41
+     "size": 16.82
     }
    },
    "tier": 1,
@@ -3510,7 +3510,7 @@
     "type": "text",
     "text": "UNITED KINGDOM",
     "font": {
-     "size": 12.14
+     "size": 14.28
     }
    },
    "tier": 1,
@@ -4058,7 +4058,7 @@
     "type": "text",
     "text": "ITALY",
     "font": {
-     "size": 12.43
+     "size": 14.87
     }
    },
    "tier": 1,
@@ -4518,7 +4518,7 @@
     "type": "text",
     "text": "SPAIN",
     "font": {
-     "size": 13.11
+     "size": 16.23
     }
    },
    "tier": 1,
@@ -5278,7 +5278,7 @@
     "type": "text",
     "text": "UKRAINE",
     "font": {
-     "size": 13.33
+     "size": 16.66
     }
    },
    "tier": 1,
@@ -5426,7 +5426,7 @@
     "type": "text",
     "text": "ALGERIA",
     "font": {
-     "size": 14.0
+     "size": 18.0
     }
    },
    "tier": 1,
@@ -5778,7 +5778,7 @@
     "type": "text",
     "text": "POLAND",
     "font": {
-     "size": 12.48
+     "size": 14.97
     }
    },
    "tier": 1,
@@ -5882,7 +5882,7 @@
     "type": "text",
     "text": "MOROCCO",
     "font": {
-     "size": 13.3
+     "size": 16.59
     }
    },
    "tier": 1,
@@ -6134,7 +6134,7 @@
     "type": "text",
     "text": "ROMANIA",
     "font": {
-     "size": 12.12
+     "size": 14.23
     }
    },
    "tier": 1,
@@ -6326,7 +6326,7 @@
     "type": "text",
     "text": "NETHERLANDS",
     "font": {
-     "size": 9.71
+     "size": 9.42
     }
    },
    "tier": 1,
@@ -6454,7 +6454,7 @@
     "type": "text",
     "text": "TUNISIA",
     "font": {
-     "size": 11.58
+     "size": 13.17
     }
    },
    "tier": 1,
@@ -6650,7 +6650,7 @@
     "type": "text",
     "text": "BELGIUM",
     "font": {
-     "size": 9.46
+     "size": 8.92
     }
    },
    "tier": 1,
@@ -7118,7 +7118,7 @@
     "type": "text",
     "text": "GREECE",
     "font": {
-     "size": 11.34
+     "size": 12.69
     }
    },
    "tier": 1,
@@ -7338,7 +7338,7 @@
     "type": "text",
     "text": "CZECHIA",
     "font": {
-     "size": 10.68
+     "size": 11.37
     }
    },
    "tier": 1,
@@ -8050,7 +8050,7 @@
     "type": "text",
     "text": "SWEDEN",
     "font": {
-     "size": 12.94
+     "size": 15.88
     }
    },
    "tier": 1,
@@ -8314,7 +8314,7 @@
     "type": "text",
     "text": "PORTUGAL",
     "font": {
-     "size": 10.87
+     "size": 11.75
     }
    },
    "tier": 1,
@@ -8526,7 +8526,7 @@
     "type": "text",
     "text": "HUNGARY",
     "font": {
-     "size": 10.9
+     "size": 11.81
     }
    },
    "tier": 1,
@@ -8870,7 +8870,7 @@
     "type": "text",
     "text": "BELARUS",
     "font": {
-     "size": 11.95
+     "size": 13.89
     }
    },
    "tier": 1,
@@ -9130,7 +9130,7 @@
     "type": "text",
     "text": "AUSTRIA",
     "font": {
-     "size": 10.77
+     "size": 11.54
     }
    },
    "tier": 1,
@@ -9366,7 +9366,7 @@
     "type": "text",
     "text": "SWITZERLAND",
     "font": {
-     "size": 9.84
+     "size": 9.69
     }
    },
    "tier": 1,
@@ -9570,7 +9570,7 @@
     "type": "text",
     "text": "BULGARIA",
     "font": {
-     "size": 11.15
+     "size": 12.31
     }
    },
    "tier": 1,
@@ -9806,7 +9806,7 @@
     "type": "text",
     "text": "SERBIA",
     "font": {
-     "size": 10.67
+     "size": 11.34
     }
    },
    "tier": 1,
@@ -10002,7 +10002,7 @@
     "type": "text",
     "text": "DENMARK",
     "font": {
-     "size": 9.88
+     "size": 9.77
     }
    },
    "tier": 1,
@@ -10538,7 +10538,7 @@
     "type": "text",
     "text": "FINLAND",
     "font": {
-     "size": 12.56
+     "size": 15.11
     }
    },
    "tier": 1,
@@ -10702,7 +10702,7 @@
     "type": "text",
     "text": "SLOVAKIA",
     "font": {
-     "size": 10.05
+     "size": 10.11
     }
    },
    "tier": 1,
@@ -12098,7 +12098,7 @@
     "type": "text",
     "text": "NORWAY",
     "font": {
-     "size": 12.75
+     "size": 15.51
     }
    },
    "tier": 1,
@@ -12490,7 +12490,7 @@
     "type": "text",
     "text": "IRELAND",
     "font": {
-     "size": 10.51
+     "size": 11.02
     }
    },
    "tier": 1,
@@ -12774,7 +12774,7 @@
     "type": "text",
     "text": "CROATIA",
     "font": {
-     "size": 10.21
+     "size": 10.41
     }
    },
    "tier": 1,
@@ -12938,7 +12938,7 @@
     "type": "text",
     "text": "BOSNIA AND HERZEGOVINA",
     "font": {
-     "size": 10.14
+     "size": 10.28
     }
    },
    "tier": 1,
@@ -13078,7 +13078,7 @@
     "type": "text",
     "text": "ALBANIA",
     "font": {
-     "size": 9.36
+     "size": 8.71
     }
    },
    "tier": 1,
@@ -13266,7 +13266,7 @@
     "type": "text",
     "text": "LITHUANIA",
     "font": {
-     "size": 10.43
+     "size": 10.86
     }
    },
    "tier": 1,
@@ -13434,7 +13434,7 @@
     "type": "text",
     "text": "MOLDOVA",
     "font": {
-     "size": 9.56
+     "size": 9.12
     }
    },
    "tier": 1,
@@ -13578,7 +13578,7 @@
     "type": "text",
     "text": "SLOVENIA",
     "font": {
-     "size": 8.92
+     "size": 7.83
     }
    },
    "tier": 1,
@@ -13678,7 +13678,7 @@
     "type": "text",
     "text": "NORTH MACEDONIA",
     "font": {
-     "size": 9.21
+     "size": 8.43
     }
    },
    "tier": 1,
@@ -13854,7 +13854,7 @@
     "type": "text",
     "text": "LATVIA",
     "font": {
-     "size": 10.42
+     "size": 10.85
     }
    },
    "tier": 1,
@@ -13954,7 +13954,7 @@
     "type": "text",
     "text": "KOSOVO",
     "font": {
-     "size": 8.11
+     "size": 6.23
     }
    },
    "tier": 1,
@@ -14110,7 +14110,7 @@
     "type": "text",
     "text": "ESTONIA",
     "font": {
-     "size": 9.97
+     "size": 9.95
     }
    },
    "tier": 1,
@@ -14190,7 +14190,7 @@
     "type": "text",
     "text": "CYPRUS",
     "font": {
-     "size": 8.0
+     "size": 6.0
     }
    },
    "tier": 1,
@@ -14306,7 +14306,7 @@
     "type": "text",
     "text": "MONTENEGRO",
     "font": {
-     "size": 8.41
+     "size": 6.81
     }
    },
    "tier": 1,
@@ -14370,7 +14370,7 @@
     "type": "text",
     "text": "LUXEMBOURG",
     "font": {
-     "size": 8.0
+     "size": 6.0
     }
    },
    "tier": 1,
@@ -14406,7 +14406,7 @@
     "type": "text",
     "text": "MALTA",
     "font": {
-     "size": 8.0
+     "size": 6.0
     }
    },
    "tier": 1,
@@ -14914,7 +14914,7 @@
     "type": "text",
     "text": "ICELAND",
     "font": {
-     "size": 11.02
+     "size": 12.03
     }
    },
    "tier": 1,

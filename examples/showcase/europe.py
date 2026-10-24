@@ -12,7 +12,7 @@ the country of every capital as an area and every capital as a point, the countr
 * a country's name goes inside the country, wrapped into two lines if need be, or out on
   a leader; a capital's name goes next to its dot (the `map` preset);
 * a country's name is the larger the larger the country: its type size grows with the
-  logarithm of the area, from 8 px (10,000 km² and less) to 14 px (1,000,000 km² and
+  logarithm of the area, from 6 px (10,000 km² and less) to 18 px (1,000,000 km² and
   more); capitals' names are 9.5 px;
 * the seas' names are hard obstacles for labels and leaders.
 
@@ -189,9 +189,9 @@ def map_svg(cs: list[dict], col: dict[str, str]) -> str:
 
 
 def type_size(km2: float) -> float:
-    """A country name's type size in px: 8 up to 10,000 km², 14 from 1,000,000 km², the
+    """A country name's type size in px: 6 up to 10,000 km², 18 from 1,000,000 km², the
     logarithm of the area in between."""
-    return round(min(14.0, max(8.0, 8.0 + 3.0 * math.log10(km2 / 10_000))), 2)
+    return round(min(18.0, max(6.0, 6.0 + 6.0 * math.log10(km2 / 10_000))), 2)
 
 
 def problem(cs: list[dict]) -> dict:
