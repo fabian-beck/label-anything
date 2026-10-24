@@ -9,9 +9,9 @@ hide:
 
 ## What it does
 
-A label belongs next to the thing it names, and it must not hide other labels or what
-the picture shows. Placing hundreds of them by hand is tedious; Label Anything does it
-for any chart, map or diagram, in three steps:
+A label belongs next to what it names and must not hide other labels or the picture.
+Placing hundreds by hand is tedious; Label Anything does it for any chart, map or diagram,
+in three steps:
 
 <div class="grid cards la-steps" markdown>
 
@@ -19,46 +19,45 @@ for any chart, map or diagram, in three steps:
 
     ---
 
-    The items to label — points, circles, rectangles, polygons, areas — with their labels
-    (text, icons, any box) and what must stay visible: other marks, lines, an SVG or a
-    raster image of the chart.
+    The items to label — points, shapes, areas — with their labels (text, icons, any
+    box), and what must stay visible: other marks, lines, the chart as SVG or image.
 
 -   :material-numeric-2-circle:{ .lg .middle } **It places**
 
     ---
 
-    Every label goes next to its item, or out on a leader line: no two labels overlap,
-    nothing protected is covered and no leaders cross. What does not fit is left out,
-    least important first, and the result says why.
+    Each label goes next to its item or on a leader line. No labels overlap, nothing
+    protected is covered, no leaders cross. What does not fit is left out, least
+    important first, with the reason.
 
 -   :material-numeric-3-circle:{ .lg .middle } **You draw**
 
     ---
 
-    You get a box per label, its leader and its text lines, as plain coordinates: draw
-    them with matplotlib, D3, Canvas, SVG or anything else.
+    You get each label's box, leader and text lines as plain coordinates, to draw with
+    matplotlib, D3, Canvas, SVG or anything else.
 
 </div>
 
 <figure markdown>
 [![The world's economies as a bubble chart, 150 of its 195 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
-<figcaption>The world's economies: every country a bubble, sized by its GDP (Natural Earth,
-2019). Label Anything labels 150 of the 195 in about a quarter of a second.</figcaption>
+<figcaption>The world's economies: each country a bubble sized by its GDP (Natural Earth,
+2019). Label Anything labels 150 of 195 in about a quarter of a second.</figcaption>
 </figure>
 
-One chart, the main features:
+In this chart:
 
-* **On the true shape.** Each label touches its bubble's outline, slid along it to where
-  there is room; China's fits inside its bubble.
+* **On the true shape.** Each label touches its bubble's outline where there is room;
+  China's sits inside its bubble.
 * **Leaders where it is crowded.** France, Italy and the United Kingdom overlap Germany's
-  bubble: their labels go out on leaders, and no two leaders cross.
-* **Importance decides.** The larger the economy, the earlier its label is placed; the
-  eight largest are set larger and bold. 45 countries are left out, each because the labels
-  of larger economies leave it no room; the result names the labels in its way.
+  bubble, so their labels sit on leaders that do not cross.
+* **Importance decides.** Larger economies are labeled first, the eight largest in larger
+  bold type. The 45 countries left out have no room beside the larger economies' labels;
+  the result names the labels in each one's way.
 * **Shortened before left out.** A name that does not fit falls back to its ISO code
   (CRI: Costa Rica).
-* **Graded avoidance over any background.** The chart is an SVG, handed over as it is and
-  classified with CSS selectors: labels may cross the grid lines, never the axes, their
+* **Graded avoidance over any background.** The chart is an SVG, passed unchanged and
+  classified with CSS selectors: labels may cross grid lines but never the axes, their
   text or the legend; large economies' labels may cover small economies' bubbles, at a
   cost.
 
@@ -82,9 +81,9 @@ problem format for any chart, map or diagram, any label with a size and every la
 
     ---
 
-    When not everything fits, your priority decides what is dropped — data attributes,
-    outlierness, tiers, coverage per category, or a callback — and every omitted label
-    says why and who is in its way. [Priority](tutorials/priority.md)
+    When not everything fits, your priority decides what is dropped: data attributes,
+    outlierness, tiers, coverage per category or a callback. Each omitted label reports
+    why and what is in its way. [Priority](tutorials/priority.md)
 
 -   :material-shape-outline:{ .lg .middle } **Shape-aware**
 
@@ -106,9 +105,9 @@ problem format for any chart, map or diagram, any label with a size and every la
 
     ---
 
-    The same input and seed give the same result on every machine: the time budget is
-    turned into an iteration budget, and floating-point work is specified operation by
-    operation. [Solver](concepts/solver.md)
+    The same input and seed give the same result on every machine: the time budget is an
+    iteration count, and floating-point work is specified operation by operation.
+    [Solver](concepts/solver.md)
 
 -   :material-code-braces:{ .lg .middle } **Every language**
 
@@ -120,43 +119,42 @@ problem format for any chart, map or diagram, any label with a size and every la
 
 </div>
 
-Hundreds of labels take milliseconds, thousands a few hundred milliseconds. Moving
-things — a dragged node, a panned map — are labeled again from the previous result, so
+Hundreds of labels take milliseconds, thousands a few hundred milliseconds. When things
+move — a dragged node, a panned map — each solve starts from the previous result, so
 labels stay put ([interactive maps](tutorials/interactive-maps.md)).
 
 ## Gallery
 
-Pictures from open data as a host would draw them, labeled by the engine (click one to see
-it in full; the scripts and the problems are in
-[`examples/showcase/`](gh:examples/showcase/make_showcase.py)).
+Open data drawn as a host would draw it, labeled by the engine. Click a picture to see it
+in full; the scripts are in [`examples/showcase/`](gh:examples/showcase/make_showcase.py).
 
 <figure markdown>
 [![The countries and capitals of Europe, labeled](assets/figures/europe.svg)](assets/figures/europe.svg)
-<figcaption markdown>**A map.** The countries and capitals of Europe (Natural Earth): names
-inside their country where they fit, abbreviated where it is narrow (U.K., AUST.), on a
-leader where it is too small (Luxembourg, Malta); capitals beside their dots; no label
-covers the name of a sea. All 91 labels placed.</figcaption>
+<figcaption markdown>**A map.** Europe's countries and capitals (Natural Earth). Country
+names sit inside the country, abbreviated where it is narrow (U.K., AUST.) and on a leader
+where it is too small (Luxembourg, Malta); no label covers a sea's name. All 91 labels
+placed.</figcaption>
 </figure>
 
 <figure markdown>
 [![A fundus photograph with its parts labeled in the margins](assets/figures/retina.svg)](assets/figures/retina.svg)
-<figcaption markdown>**A photograph.** The back of an eye (fundus photograph: M. Häggström,
-CC0), labeled as an anatomy atlas would: the names in columns in the margins, a leader from
-each to its part.</figcaption>
+<figcaption markdown>**A photograph.** The back of an eye (fundus photograph by
+M. Häggström, CC0), labeled like an anatomy atlas: names in the margins, each with a leader
+to its part.</figcaption>
 </figure>
 
 <figure markdown>
 [![The module graph of the library's TypeScript packages, labeled](assets/figures/modules.svg)](assets/figures/modules.svg)
 <figcaption markdown>**A diagram.** This library's own TypeScript modules: 112 nodes, 412
-imports. The most imported come first and in bold; labels may cross edges at a cost, never
-nodes. 111 of 112 placed.</figcaption>
+imports. The most imported are labeled first, in bold; labels may cross edges at a cost,
+never nodes. 111 of 112 placed.</figcaption>
 </figure>
 
 ## Five lines
 
 The outliers of a scatter plot, labeled from every language. The chart is an image
-(`scatter.png`), `outliers.csv` lists the points to label; labels avoid the drawn dots, the
-axes and the trend line, and each other ([the tutorial](tutorials/outliers.md)).
+(`scatter.png`); `outliers.csv` lists the points to label. Labels avoid each other, the
+drawn dots, the axes and the trend line ([the tutorial](tutorials/outliers.md)).
 
 === "Python"
 
@@ -199,12 +197,12 @@ and the TypeScript port reproduces the Rust core bit for bit.
 
 ## Benchmark
 
-The [real-world benchmark](project/benchmark.md) scores Label Anything and nine other
-labelers — among them adjustText, ggrepel, vega-label and textalloc — on twelve scenarios
-built from open data, with one evaluator. [The results](project/benchmark.md#what-the-results-show):
-no overlaps and no crossing leaders anywhere, and the most usable labels on every problem
-of the quick suite and on 60 of the 62 of the full suite, though often by a few percent. It
-still falls short on dense data, moving labels and the speed of the largest problems.
+The [real-world benchmark](project/benchmark.md) compares Label Anything with nine other
+labelers, among them adjustText, ggrepel, vega-label and textalloc, on twelve scenarios
+from open data. [The results](project/benchmark.md#what-the-results-show): no overlaps and
+no crossing leaders anywhere, and the most usable labels on every problem of the quick suite
+and on 60 of the 62 of the full suite, often by only a few percent. Label Anything falls
+short on dense data, moving labels and the speed of the largest problems.
 
 ## Good to know
 
@@ -217,13 +215,13 @@ still falls short on dense data, moving labels and the speed of the largest prob
     and the placements themselves can change without deprecation. Try it and report what
     you find.
 
-* **Not on the registries yet.** The packages are built from this repository for now
+* **Not on the registries yet.** Build the packages from this repository for now
   ([getting started](getting-started/index.md)).
 * **Labels for points and areas.** Labels go to points and areas of any shape; lines such
   as roads or rivers are obstacles, not labeled features.
-* **Labels in graphics, not labeled data.** Label Anything places labels in pictures: it
-  is not a tool for labeling data, and it is unrelated to the few-shot segmentation model
-  of the same name (ECAI 2025).
+* **Labels in graphics, not labeled data.** Label Anything places labels in pictures. It
+  is not a data-labeling tool, and it is unrelated to the few-shot segmentation model of
+  the same name (ECAI 2025).
 
 ## Where next
 

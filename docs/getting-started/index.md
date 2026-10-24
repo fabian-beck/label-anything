@@ -1,7 +1,7 @@
 # Getting started
 
-Every implementation solves the same problem format (`problem.v1`, a JSON Schema) and
-returns the same result format (`result.v1`). Pick the package for your environment:
+All implementations read the same problem format (`problem.v1`, a JSON Schema) and
+return the same result format (`result.v1`). Pick the package for your environment:
 
 | Environment | Package | Engine | Page |
 |---|---|---|---|
@@ -16,22 +16,21 @@ returns the same result format (`result.v1`). Pick the package for your environm
 
 !!! note "Not in the package registries yet"
 
-    The packages are not published to PyPI, npm, Maven Central or crates.io yet. Until
-    they are, each page says how to build its package in a clone of the repository:
+    The packages are not yet on PyPI, npm, Maven Central or crates.io. Until they are,
+    each page shows how to build its package from a clone of the repository:
 
     ```sh
     git clone https://github.com/fabian-beck/label-anything
     ```
 
-    Everything but the pure TypeScript packages, which need only Node ≥ 18, needs Rust
-    ≥ 1.88 ([rustup](https://rustup.rs)).
+    Building needs Rust ≥ 1.88 ([rustup](https://rustup.rs)), except for the pure
+    TypeScript packages, which need only Node ≥ 18.
 
 ## The smallest problem
 
-A problem needs only `items`: each has an `anchor` (where the labeled feature is) and a
-`label` (what to place). Everything else has a default (the
-[defaults table](../reference/defaults.md)); without a `canvas`, the canvas is taken from
-a background image or left unbounded.
+A problem needs only `items`, each with an `anchor` (where the labeled feature is) and a
+`label` (what to place). Everything else has a [default](../reference/defaults.md);
+without a `canvas`, the canvas is the size of the background image, or unbounded.
 
 ```json
 {
@@ -43,12 +42,11 @@ a background image or left unbounded.
 }
 ```
 
-The result has one placement per item, in input order: the label `box` in canvas pixels
-(origin top-left, y down), where it sits relative to its anchor (`anchor_side`), the
-candidate `model` (`adjacent`, `slider`, `internal`, `distant`, `boundary`), a `leader`
-when it has one, and for omitted labels a `reason`. `stats` summarizes the solve; its
-`hard_violations` and `leader_crossings` come from an independent verification pass and
-are 0.
+The result has one placement per item, in input order: the label's `box` in canvas pixels
+(origin top-left, y down), its side of the anchor (`anchor_side`), the candidate `model`
+(`adjacent`, `slider`, `internal`, `distant`, `boundary`), its `leader` if any, and for an
+omitted label the `reason`. `stats` summarizes the solve; `hard_violations` and
+`leader_crossings`, counted by an independent check, are 0.
 
 Next: the [tutorials](../tutorials/index.md) solve typical tasks step by step; the
 [concepts](../concepts/index.md) explain the format section by section.
