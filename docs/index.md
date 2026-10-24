@@ -69,8 +69,8 @@ One chart, the main features:
   bubbles of Austria, Norway and Hong Kong lie so close among others that no place beside
   them would be clearly theirs.
 * **Full names, one style.** Every label is the country's name in full, a long one on two
-  lines (the United States of America): a name that does not fit is left out rather than
-  shortened to an abbreviation or a code.
+  centered lines (the United States of America): a name that does not fit is left out
+  rather than shortened to an abbreviation or a code.
 * **Graded avoidance over any background.** The chart is an SVG, handed over as it is and
   classified with CSS selectors: labels may cross the grid lines, never the axes, their
   text or the legend.
