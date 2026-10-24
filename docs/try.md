@@ -43,7 +43,8 @@ solve. The scenes are 50 European countries in three priority bands, a scatterpl
 crowded line ends, and areas with a river and a legend to avoid.
 
 Source: [`ts/packages/playground`](gh:ts/packages/playground/README.md) (ADR
-project/playground, ADR project/solve-traces). Data: countries [made with Natural Earth](https://www.naturalearthdata.com/) (public
-domain); photographs from scikit-image's sample data (NASA, SpaceX: public domain; the
-fundus photograph by M. Häggström: CC0) with annotation polygons by the Label Anything
-contributors (CC0); the network is the project's own code.
+project/playground, ADR project/solve-traces). Data: countries
+[made with Natural Earth](https://www.naturalearthdata.com/) (public domain); photographs
+from scikit-image's sample data (NASA, SpaceX: public domain; the fundus photograph by
+M. Häggström: CC0) with annotation polygons by the Label Anything contributors (CC0); the
+network is the project's own code.

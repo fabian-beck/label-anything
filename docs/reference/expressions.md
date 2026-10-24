@@ -22,9 +22,8 @@ Variables: `attrs` (the item's attributes), `id`, `index`, `text` (the label tex
 * In terms, numbers count as they are and booleans as 1 or 0; anything else counts as
   missing.
 
-Every implementation parses this grammar with a hand-written recursive-descent parser and
-passes the same test cases (`conformance/expr`); `log`, `log1p` and `round` use the shared
-deterministic math, so results agree bit for bit.
+Every implementation passes the same test cases
+([`conformance/expr`](gh:conformance/expr)), and results agree bit for bit.
 
 ## Grammar and semantics
 

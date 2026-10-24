@@ -9,8 +9,7 @@ and TypeScript implementations of Label Anything and nine baselines — `naive`,
 [ggrepel](https://github.com/slowkow/ggrepel), the label layouts of
 [d3fc](https://github.com/d3fc/d3fc/tree/master/packages/d3fc-label-layout) and
 [Apache ECharts](https://echarts.apache.org/), and the simulated annealing of
-[D3-Labeler](https://github.com/tinker10/D3-Labeler). It depends only on the JSON formats,
-never on an engine's internals.
+[D3-Labeler](https://github.com/tinker10/D3-Labeler).
 
 | # | Scenario | Data |
 |---|---|---|
@@ -75,13 +74,12 @@ parentheses where that is more ("n/a": the tool cannot run the problem; commit 2
   compare labels only with each other, lose a fifth to a half.
 * **No free spot left behind**: where another tool labels an item that Label Anything
   omits, that label does not fit into Label Anything's result; on six problems, all but one
-  such label would break a hard rule there. The other tools label different items, not more
-  of the free space.
+  such label would break a hard rule there.
 
 **Where it falls short:**
 
 * **Dense data loses labels.** Of 1,000 airports on the world map, about 520 get a label;
-  of 2,000 random points, 872. Each omitted label says why. The margin between labels
+  of 2,000 random points, 872. The margin between labels
   ([ADR placement/margin](../adr/placement/margin.md)) costs 1–4 % of the labels in typical
   scenes. Where hubs crowd, a big airport's label may cover a smaller hub's dot, which then
   stays unlabeled.
@@ -112,12 +110,11 @@ bench/.venv/bin/python -m bench.scenarios build        # build the problems (~12
 rust/target/release/label-anything bench --suite quick --baselines --perf -o bench-report
 ```
 
-`bench-report/index.html` shows a summary per solver, the performance targets, runtime
-against problem size, the parity of the implementations, the changes since a previous run
-and, per scenario, the metrics with every solver's rendering side by side;
-`python -m bench.gallery` adds the gallery. CI runs the quick suite on every pull request
-and the full suite on release tags. A release needs 0 hard violations, no metric regression
-above 2 % against the previous release unless an ADR accepts it, and the performance
-targets met ([release gates](gh:bench/README.md#release-gates)). The
+`bench-report/index.html` is the report: metrics and renderings per scenario and solver,
+performance and parity; `python -m bench.gallery` adds the gallery. CI runs the quick
+suite on every pull request and the full suite on release tags. A release needs 0 hard
+violations, no metric regression above 2 % against the previous release unless an ADR
+accepts it, and the performance targets met
+([release gates](gh:bench/README.md#release-gates)). The
 [latest report](https://fabian-beck.github.io/label-anything/benchmark-report/) is
 published with this site.

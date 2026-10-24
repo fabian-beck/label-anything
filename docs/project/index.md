@@ -2,7 +2,7 @@
 
 Label Anything is open source under the MIT License
 ([repository](https://github.com/fabian-beck/label-anything)); the bundled font, Noto Sans,
-is under the SIL Open Font License 1.1. It is under active development (0.x).
+is under the SIL Open Font License 1.1.
 
 * [Benchmark](benchmark.md) — how Label Anything compares with nine other labelers on
   real-world data, and where it still falls short.
