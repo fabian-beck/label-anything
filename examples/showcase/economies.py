@@ -5,10 +5,10 @@ Every country of Natural Earth (public domain, 2019 estimates; the playground's
 up, the bubble's area its GDP, its colour its continent. The chart is an SVG
 (``economies-chart.svg``) that the problem hands the engine as its background, classified
 with CSS selectors: grid lines may be covered, axes, their text and the legend may not.
-Every country has a label, in the order of its GDP: the largest set larger and bold (font
-classes) and inside their bubble where they fit, the others on their bubble's outline or
-out on a leader, long names shortened to their ISO code, and what does not fit left out
-(strict priority). No label covers another bubble or comes nearer to one than to its own (the
+Every country has a label, its full name, in the order of its GDP: the largest set larger and
+bold (font classes) and inside their bubble where they fit, the others on their bubble's
+outline or out on a leader, and what does not fit left out rather than shortened (strict
+priority). No label covers another bubble or comes nearer to one than to its own (the
 defaults); where other bubbles are close, a label may stand off its bubble with a short stub.
 """
 
@@ -35,8 +35,15 @@ CONTINENTS = {
     "South America": "#d4a72c",
     "Oceania": "#b07aa1",
 }
-# shorter names before the ISO code, where the full name is long
-SHORT = {"USA": ["United States"], "COD": ["DR Congo"], "BIH": ["Bosnia"], "ARE": ["UAE"], "GBR": ["UK"]}
+# every label is the country's name in full: Natural Earth's abbreviations spelled out, and
+# the Republic of the Congo told apart from the Democratic Republic
+FULL = {
+    "BIH": "Bosnia and Herzegovina", "CAF": "Central African Republic",
+    "COD": "Democratic Republic of the Congo", "COG": "Republic of the Congo", "CYN": "Northern Cyprus",
+    "DOM": "Dominican Republic", "GNQ": "Equatorial Guinea", "PYF": "French Polynesia", "SAH": "Western Sahara",
+    "SDS": "South Sudan", "SLB": "Solomon Islands", "SWZ": "Eswatini", "VCT": "Saint Vincent and the Grenadines",
+    "VIR": "United States Virgin Islands",
+}
 TEXT = "#1f2328"
 MUTED = "#5f6670"
 
@@ -56,6 +63,7 @@ def countries() -> list[dict]:
     out = [c for c in data if c["continent"] in CONTINENTS and (c["pop"] or 0) >= 100_000 and (c["gdp"] or 0) > 0]
     gmax = max(c["gdp"] for c in out)
     for c in out:
+        c["name"] = FULL.get(c["id"], c["name"])
         c["x"] = sx(c["gdp"] * 1e6 / c["pop"])
         c["y"] = sy(c["pop"])
         c["r"] = max(2.0, R_MAX * math.sqrt(c["gdp"] / gmax))
@@ -114,12 +122,11 @@ def chart(cs: list[dict]) -> str:
 def problem(cs: list[dict]) -> dict:
     items = []
     for c in cs:
-        alts = SHORT.get(c["id"], []) + [c["id"]]
         items.append({
             "id": c["id"],
             "anchor": {"type": "point", "x": round(c["x"], 2), "y": round(c["y"], 2),
                        "mark": {"shape": "circle", "r": round(c["r"], 2)}},
-            "label": {"type": "text", "text": c["name"], "alternatives": [a for a in alts if a != c["name"]]},
+            "label": {"type": "text", "text": c["name"]},
             "priority": c["gdp"],
             # a label inside its bubble where it fits
             **({"placement": {"internal": "prefer"}} if c["r"] >= 15 else {}),
@@ -154,7 +161,7 @@ def problem(cs: list[dict]) -> dict:
             "font_classes": [{"first": 8, "scale": 1.25, "weight": "bold"}, {"first": 30, "scale": 1.0},
                              {"scale": 0.85}],
         },
-        "degrade": ["alternatives", "distant", "omit"],
+        "degrade": ["distant", "omit"],
         "solver": {"seed": 1},
     }
 

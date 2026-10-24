@@ -16197,14 +16197,14 @@
     "y": 373.0,
     "mark": {
      "shape": "circle",
-     "r": 5.44
+     "r": 5.49
     }
    },
    "label": {
     "type": "text",
     "text": "labels"
    },
-   "priority": 9.00712
+   "priority": 9.00738
   },
   {
    "id": "core/leaders",
@@ -16418,14 +16418,14 @@
     "y": 404.5,
     "mark": {
      "shape": "circle",
-     "r": 4.96
+     "r": 4.98
     }
    },
    "label": {
     "type": "text",
     "text": "fan"
    },
-   "priority": 2.005
+   "priority": 2.00508
   },
   {
    "id": "core/solver/greedy",
@@ -16452,14 +16452,14 @@
     "y": 336.4,
     "mark": {
      "shape": "circle",
-     "r": 5.33
+     "r": 5.37
     }
    },
    "label": {
     "type": "text",
     "text": "solver"
    },
-   "priority": 9.00662
+   "priority": 9.00682
   },
   {
    "id": "core/solver/local",
@@ -16486,14 +16486,14 @@
     "y": 372.3,
     "mark": {
      "shape": "circle",
-     "r": 5.7
+     "r": 5.74
     }
    },
    "label": {
     "type": "text",
     "text": "repair"
    },
-   "priority": 3.00844
+   "priority": 3.0087
   },
   {
    "id": "core/solver/state",
