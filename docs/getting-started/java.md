@@ -112,11 +112,15 @@ in input order, `omissionOrder()` and `stats()`.
 --8<-- "examples/tutorials/java/GettingStarted.java:results"
 ```
 
-A `LabelPlacement` has the fields of the [result format](../concepts/result.md): `id`,
-`placed`, `box`, `anchor`, `anchorSide`, `model`, `leader` (with its polyline `points()`),
-`fanLeaders`, `lines`, `priority`, `degradeSteps`; for omitted items `reason`, `blocking`
-and `blockedBy`; `members` of group labels; and the JSON object as `raw()`. `LabelResult`
-also has `warnings()`, `debugSvg()` and `json()` (the result text);
+A `LabelPlacement` has the fields of the [result format](../concepts/result.md):
+
+* `id`, `placed`, `box`, `anchor`, `anchorSide`, `model`, `leader` (with its polyline
+  `points()`), `fanLeaders`, `lines`, `priority`, `degradeSteps`;
+* for omitted items: `reason`, `blocking`, `blockedBy`;
+* for group labels: `members`;
+* the JSON object: `raw()`.
+
+`LabelResult` also has `warnings()`, `debugSvg()` and `json()` (the result text);
 `LabelResult.parse(json)` reads a result written elsewhere, e.g. by the CLI.
 
 ## Errors

@@ -1,7 +1,7 @@
 # Reference
 
-The normative definitions. These pages are built from the repository files listed here,
-so they are always those of the version you are reading:
+The normative definitions, built from the repository files listed here, so they always
+match the version you are reading:
 
 | Page | Source |
 |---|---|

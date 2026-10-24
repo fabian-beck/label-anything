@@ -55,7 +55,7 @@ speed or load ([ADR solver/time-budget](../adr/solver/time-budget.md)).
 A wall-clock **guard** protects against very slow machines and very large problems. Local
 search stops 3 × the budget after the solve started. The greedy pass stops running the
 degradation ladder 10 × the budget after it started (checked between priority bands and
-every 64 items), so that a slow preparation, such as a host `measure` callback for many
+every 64 items), so a slow preparation, such as a host `measure` callback for many
 labels, still leaves the most important labels their turn. Items not reached by then still
 get their best free normal position, in priority order and without the ladder, for up to
 another 10 × the budget; the rest are `budget_exhausted`
@@ -93,10 +93,10 @@ A host can stop a solve early:
 
 The solver polls the request at every priority band and every 64 items of the greedy pass,
 every 256 local-search moves and every 4,096 exact-search nodes. Once cancelled, it stops
-improving — the greedy pass places no more items (`budget_exhausted`), the searches keep
-their best state — but still repairs and verifies, so the result is valid, with
-`stats.cancelled` set ([ADR solver/time-budget](../adr/solver/time-budget.md)). `place` is
-synchronous, so in JavaScript, cancel from a callback or solve in a worker
+improving: the greedy pass places no more items (`budget_exhausted`), and the searches keep
+their best state. It still repairs and verifies, so the result is valid; `stats.cancelled`
+is set ([ADR solver/time-budget](../adr/solver/time-budget.md)). `place` is synchronous, so
+in JavaScript, cancel from a callback or solve in a worker
 ([WebAssembly](../getting-started/javascript.md#webassembly)).
 
 Progress is reported as `(phase, fraction)` when a phase starts (`greedy`, `local`,

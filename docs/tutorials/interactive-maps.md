@@ -1,16 +1,16 @@
 # Interactive maps and stability
 
 A map is labeled again after every pan and zoom. Besides a good layout in each frame, two
-things matter: labels should not **jump** to the other side of their point while the view
-moves, and zooming in should keep the labels already shown — the set of labels should
+things matter. Labels should not **jump** to the other side of their point while the view
+moves. And zooming in should keep the labels already shown: the set of labels should
 **nest**, growing as space appears.
 
 ## Warm starts
 
 Pass the previous result as `warm_start`. Each label then keeps its place, moving with its
 point, while the place is free. A label whose place is taken first slides a little along
-its mark; only then does it move on, to a nearby place rather than to the other side of its
-point, because the `weights.stability` cost grows with the distance
+its mark. Only if that fails does it move on, and then to a nearby place rather than to the
+other side of its point: the `weights.stability` cost grows with the distance
 ([ADR motion/warm-starts](../adr/motion/warm-starts.md) has the rules).
 
 A camera moving over the 40 cities of the [priority tutorial](priority.md), first panning,

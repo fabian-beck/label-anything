@@ -89,14 +89,18 @@ looks one up (ids are strings: `res[101]` looks up `"101"`).
 --8<-- "examples/tutorials/python/basics.py:result"
 ```
 
-A `Placement` has the fields of the [result format](../concepts/result.md): `id`,
-`placed`, `box` (a `BBox` with `x, y, w, h` in canvas px, y down, and `x1, y1, cx, cy`),
-`anchor`, `anchor_side`, `model`, `leader` (`points`, `style`, `port`, `underline`,
-`curve`), `lines`, `baselines`, `priority`, `degrade_steps`; for omitted items `reason`,
-`blocking` and `blocked_by`; `members` and `leaders` of group labels; `parts` of composite
-labels; and the JSON object as `raw`. `Result` also has `placed`, `unplaced`,
-`omission_order`, `stats`, `warnings`, `to_dict()` and `to_svg(path=None)`, which draws the
-debug overlay (with heatmaps if solved with `debug_svg=True`).
+A `Placement` has the fields of the [result format](../concepts/result.md):
+
+* `id`, `placed`, `box` (a `BBox` with `x, y, w, h` in canvas px, y down, and
+  `x1, y1, cx, cy`), `anchor`, `anchor_side`, `model`, `leader` (`points`, `style`,
+  `port`, `underline`, `curve`), `lines`, `baselines`, `priority`, `degrade_steps`;
+* for omitted items: `reason`, `blocking`, `blocked_by`;
+* for group labels: `members`, `leaders`; for composite labels: `parts`;
+* the JSON object: `raw`.
+
+`Result` also has `placed`, `unplaced`, `omission_order`, `stats`, `warnings`, `to_dict()`
+and `to_svg(path=None)`, which draws the debug overlay (with heatmaps if solved with
+`debug_svg=True`).
 
 ## Errors
 

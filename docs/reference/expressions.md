@@ -14,11 +14,13 @@ expressions in a small, safe, side-effect-free language, evaluated per item. Exa
 | `attrs.region` | a coverage group |
 
 Variables: `attrs` (the item's attributes), `id`, `index`, `text` (the label text),
-`priority`, `tier` (explicit values or `null`), `x`, `y` (anchor in canvas px).
-Comparisons do not chain; arithmetic works on numbers only (booleans are not coerced);
-division by zero and other undefined results are `null`; evaluation never fails — only
-parsing can, with the codes `expr_syntax`, `expr_unknown_identifier` and `expr_arity`.
-In terms, numbers are used as they are, booleans as 1/0, anything else counts as missing.
+`priority` and `tier` (explicit values, or `null`), `x` and `y` (the anchor in canvas px).
+
+* Comparisons do not chain; arithmetic works on numbers only (booleans are not coerced).
+* Division by zero and other undefined results are `null`. Evaluation never fails; only
+  parsing can, with the codes `expr_syntax`, `expr_unknown_identifier` and `expr_arity`.
+* In terms, numbers count as they are and booleans as 1 or 0; anything else counts as
+  missing.
 
 Every implementation parses this grammar with a hand-written recursive-descent parser and
 passes the same test cases (`conformance/expr`); `log`, `log1p` and `round` use the shared

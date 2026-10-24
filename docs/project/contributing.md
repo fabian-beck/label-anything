@@ -4,9 +4,11 @@
 
 This site is built with [MkDocs](https://www.mkdocs.org/) and
 [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) from `docs/` and
-`mkdocs.yml`; code shown on its pages is included from `examples/tutorials/`, which CI
-runs. It is written for the people who use Label Anything:
+`mkdocs.yml`; the code on its pages is included from `examples/tutorials/`, which CI runs.
+It is written for the people who use Label Anything:
 
+* **Short, exact sentences**: one statement each, no filler, and the precise term (an item
+  is *omitted*, not "left without a label").
 * **One place per topic**, linked rather than repeated. Each language has one page; the
   concepts pages explain the formats and the engine; the specification and the defaults
   table hold the exact rules and constants.
@@ -44,5 +46,5 @@ python3 examples/showcase/make_showcase.py --cli rust/target/release/label-anyth
   `ts/packages/playground/dist/` to `site/playground/` after `mkdocs build` and serve
   `site/` ([ADR project/playground](../adr/project/playground.md)).
 
-The site is deployed to GitHub Pages from release tags (`v*`) and on demand
-(`.github/workflows/pages.yml`).
+The site is deployed to GitHub Pages after the CI run of a release tag (`v*`), after the
+weekly CI run of `main`, and on demand (`.github/workflows/pages.yml`).

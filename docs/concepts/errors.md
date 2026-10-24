@@ -55,10 +55,14 @@ Warnings never stop a solve; the result repeats them in `result.warnings`.
 | `invalid_value` | semantically invalid: non-finite numbers, degenerate shapes, and the preparation errors below |
 | `limit` | a size limit: grids over 16 million cells, SVGs nested too deeply or with too many elements |
 
-**Warnings:** `unknown_class` — an `avoid` key that is neither produced by an obstacle
-source nor a reserved class; `unknown_attr` — a priority term on an attribute that no item
-has (the term is 0 for every item, so it ranks nothing); `ignored` — an option without
-effect in its context; `limit` — SVG content too deep to render, skipped.
+## Warning codes
+
+| Code | Meaning |
+|---|---|
+| `unknown_class` | an `avoid` key that is neither produced by an obstacle source nor a reserved class |
+| `unknown_attr` | a priority term on an attribute that no item has: the term is 0 for every item, so it ranks nothing |
+| `ignored` | an option without effect in its context |
+| `limit` | SVG content too deep to render, skipped |
 
 ## Errors while preparing
 

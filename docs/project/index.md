@@ -10,13 +10,14 @@ is under the SIL Open Font License 1.1. It is under active development (0.x).
   they are.
 * [Contributing](contributing.md) — ground rules, development commands, these docs.
 
-Material for working on the engine itself lives in the repository, next to what it is
-about: [`bench/README.md`](gh:bench/README.md) (running the benchmark, the release gates
-and procedure, where the performance targets stand),
-[`ts/packages/core/PORTING.md`](gh:ts/packages/core/PORTING.md) (how the TypeScript
-engine mirrors the Rust core) and
-[`docs/project/literature/`](gh:docs/project/literature/README.md) (what the research
-literature suggests for the engine, and where its building blocks come from).
+Notes for working on the engine live in the repository, next to what they cover:
+
+* [`bench/README.md`](gh:bench/README.md) — running the benchmark, the release procedure,
+  the state of the performance targets;
+* [`ts/packages/core/PORTING.md`](gh:ts/packages/core/PORTING.md) — how the TypeScript
+  engine mirrors the Rust core;
+* [`docs/project/literature/`](gh:docs/project/literature/README.md) — what the research
+  literature suggests, and where the engine's building blocks come from.
 
 ## Repository layout
 

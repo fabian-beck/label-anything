@@ -197,9 +197,9 @@ The result reports the box of each part (`parts`), so you can draw the icon and 
   nearest available weight is used.
 * `buffer` is a soft ring around each label that keeps other items' marks and leaders at
   a distance, so the label is not read as theirs.
-* `margin` (0.2 em) is the space a label keeps from other labels and other items' marks,
-  as a hard rule; its own mark it touches at `placement.offset` (1 px), so each label sits
-  clearly closer to its own mark than to anything else
+* `margin` (0.2 em) is the space a label keeps from other labels and from other items'
+  marks, as a hard rule. It touches its own mark at `placement.offset` (1 px), so each label
+  sits clearly closer to its own mark than to anything else
   ([ADR placement/margin](../adr/placement/margin.md)).
 * `text.shaping`: `simple` (kerning only; identical in every implementation), `full`
   (HarfBuzz-compatible shaping in the Rust core, for complex scripts) or `auto` (full for

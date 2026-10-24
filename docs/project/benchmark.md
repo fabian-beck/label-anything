@@ -46,9 +46,9 @@ The evaluator re-checks every result with exact geometry. Its main measures:
 
 ## What the results show
 
-The **usable labels** of each tool on the quick suite, and in parentheses the labels it
-placed, where that is more ("n/a": the tool cannot run the problem; commit 25b543f,
-2026-10-18, Label Anything at commit 4e6684e):
+The **usable labels** of each tool on the quick suite, with the labels it placed in
+parentheses where that is more ("n/a": the tool cannot run the problem; commit 25b543f,
+2026-10-18; Label Anything at commit 4e6684e):
 
 | Problem | Label Anything | greedy | textalloc | adjustText | vega-label | ggrepel | ECharts | d3fc | D3-Labeler |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -61,44 +61,44 @@ placed, where that is more ("n/a": the tool cannot run the problem; commit 25b54
 
 **Where Label Anything is ahead:**
 
-* **The most usable labels**, on every problem above — by 3 % on the random points, 9–10 %
-  on the maps, 45 % among the Gapminder bubbles — and on all 55 problems of the full suite
-  with `strict` or `weighted` omission, from 10 outliers to 20,000 stress anchors, against
-  the six other tools fast enough to run it. With
-  `prefix` omission it leads on five of seven problems, ties on one, and loses one to
-  textalloc's longer leaders. Every other tool runs with soft obstacles both avoided and
-  ignored, whichever serves it better.
+* **The most usable labels** on every problem above: 3 % more than the next tool on the
+  random points, 9–10 % on the maps, 45 % among the Gapminder bubbles. The same holds on
+  all 55 problems of the full suite with `strict` or `weighted` omission, from 10 outliers
+  to 20,000 stress anchors, against the six other tools fast enough to run it. With
+  `prefix` omission, it leads on five of seven problems, ties on one and loses one to
+  textalloc's longer leaders. Each other tool runs with soft obstacles both avoided and
+  ignored, and keeps the better result.
 * **Guarantees that hold**: 0 hard violations and 0 leader crossings in every result,
-  every animation frame included, and identical placements from the Rust, WebAssembly and
-  TypeScript implementations — all its labels are usable. As drawn, adjustText and
-  D3-Labeler lose 40–65 % of their labels to conflicts in dense scenes, ECharts and d3fc,
-  which compare labels only with each other, a fifth to a half.
+  including every animation frame, and identical placements from the Rust, WebAssembly and
+  TypeScript implementations, so all its labels are usable. In dense scenes, adjustText and
+  D3-Labeler lose 40–65 % of their labels to conflicts as drawn; ECharts and d3fc, which
+  compare labels only with each other, lose a fifth to a half.
 * **No free spot left behind**: where another tool labels an item that Label Anything
-  omits, that label would not fit into Label Anything's result — on six problems, all but
-  one such label would break a hard rule there. The others label other items, not more of
-  the free space.
+  omits, that label does not fit into Label Anything's result; on six problems, all but one
+  such label would break a hard rule there. The other tools label different items, not more
+  of the free space.
 
 **Where it falls short:**
 
-* **Dense data loses labels.** Of 1,000 airports on the world map about 520 get a label,
-  of 2,000 random points 872; each omitted label says why. The margin between labels
+* **Dense data loses labels.** Of 1,000 airports on the world map, about 520 get a label;
+  of 2,000 random points, 872. Each omitted label says why. The margin between labels
   ([ADR placement/margin](../adr/placement/margin.md)) costs 1–4 % of the labels in typical
-  scenes. Where hubs crowd, a big airport's label may take a smaller hub's dot, which then
+  scenes. Where hubs crowd, a big airport's label may cover a smaller hub's dot, which then
   stays unlabeled.
 * **More labels cover more.** Label Anything covers more of what it may cover — 2.1
   background points per label on the airport map, textalloc 1.7. Raise
   `avoid.label.points` where hidden data points matter more.
 * **Crowds need leaders.** 14 of the 32 Gapminder labels and 58 of 149 in the Cora network
-  sit on leaders, up to 8–11 em long; at the crowded ends of the life-expectancy chart, 35 of
-  62 lines get a label in a column.
+  sit on leaders, up to 8–11 em long. At the crowded ends of the life-expectancy chart, 35
+  of 62 lines get a label, in a column.
 * **Moving labels jump sides.** Re-solved frame by frame from the previous result, labels
   move 2.5–3.5 px per frame, nearly all of it from the 5 % that switch to another side when
   a neighbour takes their place. Other tools move as much or more, or keep fewer labels.
 * **Speed misses its targets for large problems.** Hundreds of labels take milliseconds;
   2,000 labels over 100,000 points take about 300 ms natively on one core (2.3–2.6 times
   the target) and 0.8 s in TypeScript
-  ([where the time goes](gh:bench/README.md#where-they-stand)). Memory follows the
-  candidates: 97 MB at most for 2,000 labels, 580 MB for 20,000.
+  ([where the time goes](gh:bench/README.md#where-they-stand)). Memory grows with the
+  number of candidates: at most 97 MB for 2,000 labels, 580 MB for 20,000.
 
 The [gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/) shows
 the renderings of all labelers side by side, and what the defaults still do badly.
@@ -112,12 +112,12 @@ bench/.venv/bin/python -m bench.scenarios build        # build the problems (~12
 rust/target/release/label-anything bench --suite quick --baselines --perf -o bench-report
 ```
 
-`bench-report/index.html` shows the summary per solver, the performance targets, runtime
-against problem size, the parity of the implementations, the changes against a previous
-run, and per scenario the metric tables with every solver's rendering side by side;
+`bench-report/index.html` shows a summary per solver, the performance targets, runtime
+against problem size, the parity of the implementations, the changes since a previous run
+and, per scenario, the metrics with every solver's rendering side by side;
 `python -m bench.gallery` adds the gallery. CI runs the quick suite on every pull request
-and the full suite on release tags. A release needs 0 hard violations everywhere, no metric
-regression above 2 % against the previous release unless an ADR accepts it, and the
-performance targets met ([release gates](gh:bench/README.md#release-gates)). The latest
-report is published with this site:
-[benchmark report](https://fabian-beck.github.io/label-anything/benchmark-report/).
+and the full suite on release tags. A release needs 0 hard violations, no metric regression
+above 2 % against the previous release unless an ADR accepts it, and the performance
+targets met ([release gates](gh:bench/README.md#release-gates)). The
+[latest report](https://fabian-beck.github.io/label-anything/benchmark-report/) is
+published with this site.

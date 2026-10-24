@@ -76,9 +76,9 @@ All examples label the same dense cluster of twelve asteroids among 60 unlabeled
     ![Curved leaders](../assets/gallery/leaders-curved.svg)
 
 A red cross marks an omitted label. In a cluster this dense, a leader from an inner
-asteroid would pass too close to its neighbours, so up to three asteroids find no place:
-none with curved leaders, which bend around them, and the most with orthogonal ones, which
-leave in four directions only. With straight and elbow leaders, the labels on the
+asteroid would pass too close to its neighbours, so up to three asteroids find no place.
+Curved leaders, which bend around the neighbours, lose none; orthogonal leaders, which
+leave in only four directions, lose the most. With straight and elbow leaders, the labels on the
 cluster's right form a column of [fan labels](../concepts/candidates.md#fan-labels), which
 a crowd gets when that places more labels. Each omitted placement says why
 ([reading the explanations](priority.md#reading-the-explanations)).

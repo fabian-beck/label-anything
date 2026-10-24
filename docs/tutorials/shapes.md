@@ -30,7 +30,7 @@ path coordinates are.
 
 **Touching the true shape.** The eight adjacent positions put the label's corner (diagonal
 positions) or side midpoint (top, right, bottom, left) onto the outermost point of the mark
-in that direction: for a circle, the top-right label touches the circle at 45°, not the
+in that direction. For a circle, the top-right label touches the circle at 45°, not at the
 corner of its bounding box. Concave shapes use their convex hull for this, and their true
 outline for every overlap test. Sliding positions move the label along the mark between
 two fixed positions.

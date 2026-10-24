@@ -1,13 +1,14 @@
 # Presets
 
-A preset is data: `options` merge between the [defaults](defaults.md) and the problem,
-`svg_classes` are the class rules of SVG sources without `classes`, and `auto` has the
-rules of its adaptive model choice. [Presets and defaults](../concepts/presets-defaults.md)
-explains the merge. The files are published with this site under `presets/`.
+A preset is a JSON file: its `options` merge between the [defaults](defaults.md) and the
+problem, its `svg_classes` are the class rules for SVG sources without `classes`, and
+`auto` also holds the rule of its adaptive model choice.
+[Presets and defaults](../concepts/presets-defaults.md) explains the merge; the files are
+published with this site under `presets/`.
 
 ## auto
 
-The default: zero configuration for any kind of graphic.
+The default, for any kind of graphic, without configuration.
 
 ```json
 --8<-- "spec/presets/auto.json"

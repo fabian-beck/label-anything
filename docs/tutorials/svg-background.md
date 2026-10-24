@@ -50,9 +50,9 @@ descendant (space) and child (`>`) combinators, comma lists, and four pseudo-cla
 
 ## Marks taken from the SVG
 
-The outliers are drawn in the SVG too. `svg_id` names the element that draws an item, and
-`auto_mark_items: true` makes that element the item's **mark** — the shape its label
-touches and other labels avoid — and removes it from its obstacle class, so a label pays
+The outliers are drawn in the SVG too. `svg_id` names the element that draws an item.
+With `auto_mark_items: true`, that element becomes the item's **mark** — the shape its
+label touches and other labels avoid — and leaves its obstacle class, so a label pays
 nothing for covering its own point. Without `auto_mark_items`, a mark names its element
 itself: `{"shape": "from_svg", "svg_id": "o3"}` or
 `{"shape": "from_svg", "selector": "circle#o3"}`.
@@ -77,7 +77,7 @@ that this call builds the same problem as the JSON file, with the same boxes.
 
 ## Checking what the rules matched
 
-A typo in a class name is easy to make and hard to notice: the class simply never occurs.
+A typo in a class name is easy to make and hard to notice: the class never occurs.
 Validation therefore warns (`unknown_class`) about every class in `avoid` that no source
 produces:
 
