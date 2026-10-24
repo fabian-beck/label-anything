@@ -324,6 +324,18 @@ CASES["boundary-column"] = case(
     "padding) − 4 (boundary margin) − 48.24 (Gamma, the widest label) = 263.76; its leaders leave "
     "the crowd past the neighbouring marks, which they only must not cross.")
 
+CASES["boundary-column-full-size"] = case(
+    "a label the search shrank takes its full size in a boundary column",
+    {"canvas": {"width": 320, "height": 240},
+     "placement": {"models": ["adjacent", "boundary"], "position_order": ["right"], "fan": "off",
+                   "boundary": {"sides": ["right"]}},
+     "items": [pt(n.lower(), 150, 100 + 4 * k, n) for k, n in enumerate(_GREEK)]},
+    {"placed": 10, "model": {n.lower(): "boundary" for n in _GREEK},
+     "font": {n.lower(): {"size": 12} for n in _GREEK}},
+    "The ends of `boundary-column` 4 px apart: the search labels iota beside its end, shrunk "
+    "to 0.7225 (8.67 px; the ends 8 px away keep the label margin from so low a box). The "
+    "column takes it with the others at its full size, 12 px (spec §6.6).")
+
 # --- backgrounds and coordinates ------------------------------------------------------
 CASES["svg-background"] = case(
     "SVG background geometry is avoided",
@@ -396,6 +408,17 @@ CASES["fan-max-labels"] = case(
     "no leader leaves the crowd with its clearance); the column, which keeps to the budget, "
     "gives labels to the four most important ends (alpha to delta, in input order) and leaves "
     "the others out.")
+
+CASES["fan-full-size"] = case(
+    "labels the search shrank take their full size in a fan column",
+    {"canvas": {"width": 320, "height": 200}, "placement": {"position_order": ["right"]},
+     "items": [pt(n.lower(), 150, 88 + 4 * k, n)
+               for k, n in enumerate(["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"])]},
+    {"placed": 6, "model": {k: "fan" for k in ("alpha", "beta", "gamma", "delta", "epsilon", "zeta")},
+     "font": {k: {"size": 12} for k in ("alpha", "beta", "gamma", "delta", "epsilon", "zeta")}},
+    "The ends of `fan-line-ends` 4 px apart: the search labels beta and zeta beside their ends, "
+    "shrunk to 0.7225 (8.67 px), and no other. The crowd's column takes all six, the two "
+    "shrunk labels at their full size, 12 px, like the others (spec §6.8).")
 
 CASES["font-classes"] = case(
     "font classes scale labels by priority",

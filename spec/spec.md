@@ -751,38 +751,42 @@ candidates stand at its anchor's height (left and right; its x for top and botto
 two and three label heights (widths) above and below it. After the search and the fans
 (§6.8), the labels on each side form a **column** (ADR 0030):
 
-* **Layout.** The members, ordered by their anchors along the side (then index), keep their
-  placed variant (else the first, at level 0 with the `boundary` model, else at the level
-  of the ladder's `boundary` step) and are stacked by 1-D isotonic packing around their
-  anchors' coordinates (`stack`) or evenly spread (`spread`), with gaps of the larger of
-  `placement.boundary.gap` and the two labels' margin (§4.4). The labels align on the
-  column's line facing the picture, `margin + depth` from the edge (`depth` the widest
-  label on the left and right sides, the tallest on the top and bottom), where every
-  leader ends. With `straight` and `angles` leaders the items are assigned to the slots by
-  minimum total leader length (min-cost bipartite matching to the ports on that line),
-  which keeps the leaders from crossing; with the other styles they keep their order.
-  Labels the search placed keep their rank and level; others get rank 9.
+* **Layout.** The members, ordered by their anchors along the side (then index), keep
+  their placed variant (else the first, at level 0 with the `boundary` model, else at the
+  level of the ladder's `boundary` step); a column at **full size** takes, for a placed
+  variant that the ladder's `shrink` step made, the first variant at scale 1 with the same
+  text (lines, origin, truncation) instead. The labels are stacked by 1-D isotonic packing
+  around their anchors' coordinates (`stack`) or evenly spread (`spread`), with gaps of
+  the larger of `placement.boundary.gap` and the two labels' margin (§4.4). The labels
+  align on the column's line facing the picture, `margin + depth` from the edge (`depth`
+  the widest label on the left and right sides, the tallest on the top and bottom), where
+  every leader ends. With `straight` and `angles` leaders the items are assigned to the
+  slots by minimum total leader length (min-cost bipartite matching to the ports on that
+  line), which keeps the leaders from crossing; with the other styles they keep their
+  order. Labels the search placed keep their rank and level; others get rank 9.
 * **Re-stacking.** The labels the search placed on a side (at least two) are laid out as
-  one column; it replaces them when every label stays feasible and free and their total
-  cost drops.
+  one column at full size; it replaces them when every label stays feasible and free and
+  their total cost drops. When it does not and a member's label is shrunk, the column is
+  laid out again with the placed variants and replaces them on the same terms.
 * **Filling.** Then, side by side in the order of `sides`, items without a label that may
   take a boundary label (with `boundary` among their models, from the model or the ladder
   step; not `keep_with` members and grouped items; reason `omitted_by_priority`,
   `no_feasible_candidate` or none) join the side's column one at a time, in total order:
-  the column with the item is laid out and its labels are tested, in column order, against
-  everything placed, the members' own labels lifted; a member fails for a reason of its own
-  (statically infeasible) or because of the first placed label in conflict, the one in its
-  way. While the column fails, the first label in the way of a failing member (in column
-  order) whose item may take a boundary label, and whose label is not internal and stands
-  on the column's side of its anchor (center x < the anchor's for the left side, ≥ for the
-  right, y likewise for top and bottom), brings its item into the column, which is laid
-  out again; when no such label is left, the item stays without a label. A column without
-  failures replaces its members' labels, unless it
-  inverts priorities (the priority rule of §6.8) or takes the label area past
-  `priority.budget.max_ink_fraction` (the item stays without a label); the fill stops when
-  the labels reach `max_labels`. Not with `prefix` omission, after a cancellation or after
-  the time guard; at most `max(20000, 20 × n_items)` label evaluations (one per label of
-  each laid-out column).
+  the column with the item is laid out at full size and its labels are tested, in column
+  order, against everything placed, the members' own labels lifted; a member fails for a
+  reason of its own (statically infeasible) or because of the first placed label in
+  conflict, the one in its way. When a member fails and a member's label is shrunk, the
+  column is laid out and tested again with the placed variants, and the failures are those
+  of that layout. While the column fails, the first label in the way of a failing member
+  (in column order) whose item may take a boundary label, and whose label is not internal
+  and stands on the column's side of its anchor (center x < the anchor's for the left
+  side, ≥ for the right, y likewise for top and bottom), brings its item into the column,
+  which is laid out again; when no such label is left, the item stays without a label. A
+  column without failures replaces its members' labels, unless it inverts priorities (the
+  priority rule of §6.8) or takes the label area past `priority.budget.max_ink_fraction`
+  (the item stays without a label); the fill stops when the labels reach `max_labels`. Not
+  with `prefix` omission, after a cancellation or after the time guard; at most
+  `max(20000, 20 × n_items)` label evaluations (one per label of each laid-out column).
 * **Leaders** run from the anchor to the port (§7) and keep no `leaders.max_length`. Like
   fan leaders they leave a crowd of touching marks: a mark closer than the clearance to
   the leader's start they must only not cross (§7).
@@ -864,21 +868,25 @@ its font size.
   the left), except one that fails in a column of its own for a reason of its own
   (below).
 * **Layout.** Members ordered by anchor y, x, index keep their placed variant (else the
-  first). Their slots are stacked like boundary labels (`stack`, gaps
+  first); at full size, a placed variant that the ladder's `shrink` step made is replaced
+  by the first variant at scale 1 with the same text (lines, origin, truncation), as in
+  boundary columns (§6.6). Each layout is made at full size first; when a member fails and
+  a member's label is shrunk, it is made again with the placed variants, whose failures
+  count. Their slots are stacked like boundary labels (`stack`, gaps
   `(h_a + h_b) / 2 + max(boundary.gap, m)` with `m` the larger margin of the two labels,
-  within the label area) around the anchors' heights.
-  The labels' near side is at `edge ± run`: `edge` the outermost side of the members'
-  mark boxes, `run = max(min(rise, room), 1.5 em)` (`rise` the largest vertical distance
-  between a member's anchor height and its slot, so that leaders are at most 45° steep;
-  `room` what the label area leaves beyond `edge` and the widest label). Members take
-  the slots in their order, unless (equal heights, `straight` leaders) the min-cost
-  matching of anchors to the ports' points by distance is shorter by more than
-  `10⁻⁶ · (1 + total)`. The leader is built like a boundary leader (§7) to the middle of
-  the label's near side; a leader longer than `leaders.max_length` makes the label
-  infeasible. The labels (rank 8) are evaluated (§8) and tested in column order against
-  everything placed, the members' own labels lifted and the members tested before
-  counting as placed: a member fails for a reason of its own (statically infeasible) or
-  because of the first placed label in conflict (in query order), the one in its way.
+  within the label area) around the anchors' heights. The labels' near side is at
+  `edge ± run`: `edge` the outermost side of the members' mark boxes,
+  `run = max(min(rise, room), 1.5 em)` (`rise` the largest vertical distance between a
+  member's anchor height and its slot, so that leaders are at most 45° steep; `room` what
+  the label area leaves beyond `edge` and the widest label). Members take the slots in
+  their order, unless (equal heights, `straight` leaders) the min-cost matching of anchors
+  to the ports' points by distance is shorter by more than `10⁻⁶ · (1 + total)`. The
+  leader is built like a boundary leader (§7) to the middle of the label's near side; a
+  leader longer than `leaders.max_length` makes the label infeasible. The labels (rank 8)
+  are evaluated (§8) and tested in column order against everything placed, the members'
+  own labels lifted and the members tested before counting as placed: a member fails for a
+  reason of its own (statically infeasible) or because of the first placed label in
+  conflict (in query order), the one in its way.
 * **Repair.** While the column fails: the first label in the way of a failing member
   whose item is placed, takes part, is not fixed, is labeled on that side and has a
   mark box within the crowd's horizontal extent ± `em` joins the column; else the first

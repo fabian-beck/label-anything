@@ -163,6 +163,27 @@ impl<'a> Solve<'a> {
         }
     }
 
+    /// The variant of placed item `j` in a column (fan or boundary, spec §6.6, §6.8): its
+    /// placed one, at full size with `full` when the ladder shrank it.
+    pub fn column_variant(&self, j: usize, c: u32, full: bool) -> usize {
+        let v = self.cands[c as usize].variant as usize;
+        if full {
+            labels::full_size(&self.variants[j], v)
+        } else {
+            v
+        }
+    }
+
+    /// Whether a placed label among `members` is shrunk: a column takes them at full size
+    /// first, and with their placed sizes only when that column fails (spec §6.6, §6.8).
+    pub fn any_shrunk(&self, members: &[usize]) -> bool {
+        members.iter().any(|&j| {
+            self.state.placed[j].is_some_and(|c| {
+                self.column_variant(j, c, true) != self.column_variant(j, c, false)
+            })
+        })
+    }
+
     /// Generate and evaluate candidates for `variants[vi_range]` of item `i` with `models`.
     pub fn generate(&mut self, i: usize, vis: &[usize], models: Models, level: u8) -> Vec<u32> {
         if matches!(self.model.group_of.get(i), Some(Some(r)) if *r != i) {

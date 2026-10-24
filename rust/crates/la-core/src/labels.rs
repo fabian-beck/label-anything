@@ -245,6 +245,25 @@ impl Variant {
     }
 }
 
+/// The variant that shrunk variant `vi` was made from by the ladder's `shrink` step: the
+/// first at scale 1 with the same text (lines, origin and truncation), or the first at
+/// scale 1 of a label without text; `vi` itself when it is not shrunk (spec §6.6, §6.8).
+pub fn full_size(variants: &[Variant], vi: usize) -> usize {
+    let v = &variants[vi];
+    if v.scale >= 1.0 {
+        return vi;
+    }
+    let same_text = |e: &Variant| match (&e.text, &v.text) {
+        (Some(a), Some(b)) => a.lines == b.lines && a.used == b.used && a.truncated == b.truncated,
+        (None, None) => true,
+        _ => false,
+    };
+    variants
+        .iter()
+        .position(|e| e.scale == 1.0 && same_text(e))
+        .unwrap_or(vi)
+}
+
 /// Build a text variant from lines.
 fn text_variant(
     m: &Measurer,

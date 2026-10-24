@@ -117,6 +117,9 @@ its own leader fanning out of the crowd (`model: "fan"` in the result):
   move into it, labels that cannot stay where they are. `"always"` gives every crowd of
   two or more items a column; `"off"` none. Columns keep to the label budgets
   (`priority.budget`): the least important items stay without a label first.
+* A label the search shrank to fit beside its mark moves into the column at its full
+  size, like the others, unless only the shrunk size fits there; boundary columns do the
+  same ([ADR 0053](../adr/0053-columns-restore-full-size.md)).
 * Fan leaders follow the leader style (straight, `orthogonal` or `elbow`) and keep every
   hard rule, except that they may pass close to the marks of their own crowd (they must
   not cross them); they are at most `leaders.max_length` long. The `angles` style, whose

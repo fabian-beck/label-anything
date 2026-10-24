@@ -10,12 +10,14 @@
  * those labeled on that side): ordered by anchor height, stacked around it like boundary
  * labels, matched to the slots by total leader length when that is shorter than keeping
  * the order, at a distance from the crowd that keeps the leaders at most 45° steep (as far
- * as the canvas allows). A placed label in its way whose item stands in the crowd's strip
- * joins the column; a placed member that cannot move into it keeps its label; a member
- * without a label that fails leaves it (lowest priority first). The column is applied when
- * it places more labels (`always`: at least as many, in a column of two or more), within
- * the label budgets (`priority.budget`), and unless it inverts priorities: an omitted item
- * that would become placeable once less important labels were removed.
+ * as the canvas allows). A placed member takes its label's text at full size when the
+ * ladder shrank it, unless only the shrunk size fits. A placed label in its way whose item
+ * stands in the crowd's strip joins the column; a placed member that cannot move into it
+ * keeps its label; a member without a label that fails leaves it (lowest priority first).
+ * The column is applied when it places more labels (`always`: at least as many, in a
+ * column of two or more), within the label budgets (`priority.budget`), and unless it
+ * inverts priorities: an omitted item that would become placeable once less important
+ * labels were removed.
  *
  * Fan leaders are built like boundary leaders (straight, or per the `orthogonal`, `elbow`
  * style) and keep to `leaders.max_length`; the `angles` style, whose leaders run along the
@@ -234,7 +236,7 @@ function column(s: Solve, pass: Pass, area: Rect, crowd: readonly number[], righ
       continue;
     }
     pass.work = Math.max(0, pass.work - 1);
-    const r = layout(s, area, [j], right);
+    const r = layout(s, area, [j], right, true);
     if (!Array.isArray(r.fails) || r.fails[0]![1] >= 0) members.push(j);
   }
   // the crowd's strip: labels in the way join the column only for items standing in it
@@ -260,7 +262,12 @@ function column(s: Solve, pass: Pass, area: Rect, crowd: readonly number[], righ
       continue;
     }
     pass.work = Math.max(0, pass.work - members.length);
-    const r = layout(s, area, members, right);
+    // the members' labels at full size first, at their placed sizes when that fails
+    let r = layout(s, area, members, right, true);
+    if (r.fails !== null && s.anyShrunk(members)) {
+      pass.work = Math.max(0, pass.work - members.length);
+      r = layout(s, area, members, right, false);
+    }
     const fails = r.fails;
     if (fails === null) {
       const f = s.model.maxInkFraction;
@@ -331,15 +338,16 @@ function dropLowestUnlabeled(s: Solve, members: number[]): boolean {
 }
 
 /**
- * Stack `members` in one column and test it against everything else placed: the
- * candidates (`fails` null), or the members that fail, each with the placed item in its
- * way (-1: a reason of its own).
+ * Stack `members` in one column and test it against everything else placed; with `full`,
+ * labels the ladder shrank take their full size. The candidates (`fails` null), or the
+ * members that fail, each with the placed item in its way (-1: a reason of its own).
  */
 function layout(
   s: Solve,
   area: Rect,
   members: readonly number[],
   right: boolean,
+  full: boolean,
 ): { cands: [number, Cand][]; fails: Fail[] | null } {
   const model = s.model;
   const items = model.items;
@@ -348,10 +356,10 @@ function layout(
     (a, b) =>
       cmpF64(items[a]!.anchor.y, items[b]!.anchor.y) || cmpF64(items[a]!.anchor.x, items[b]!.anchor.x) || a - b,
   );
-  // the variant of each member: its placed one, else its first
+  // the variant of each member: its placed one (with `full` unshrunk), else its first
   const vis = order.map((j) => {
     const c = s.state.placed[j]!;
-    return c >= 0 ? s.cands[c]!.variant : 0;
+    return c >= 0 ? s.columnVariant(j, c, full) : 0;
   });
   const hs = order.map((j, k) => s.variants[j]![vis[k]!]!.h);
   const gap = items[order[0]!]!.len.boundaryGap;

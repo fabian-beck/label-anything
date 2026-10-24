@@ -132,10 +132,17 @@ function totalCost(s: Solve, items: readonly number[]): number {
  * The labels of a boundary column along `side` (spec §6.6): `members` ordered by their
  * anchors along the side, stacked (`stack`, or evenly spread), matched to the slots by
  * total leader length (straight and `angles` leaders; else in order) and aligned on the
- * column's line facing the picture; each keeps its placed variant (else its first), its
- * rank and its level, and is evaluated. In the members' order along the side.
+ * column's line facing the picture; each keeps its placed variant (with `full` at full size
+ * when the ladder shrank it; else its first), its rank and its level, and is evaluated. In
+ * the members' order along the side.
  */
-function columnCands(s: Solve, area: Rect, side: number, members: readonly number[]): [number, Cand][] {
+function columnCands(
+  s: Solve,
+  area: Rect,
+  side: number,
+  members: readonly number[],
+  full: boolean,
+): [number, Cand][] {
   const model = s.model;
   const items = model.items;
   const horizontalSide = side <= 1;
@@ -149,7 +156,10 @@ function columnCands(s: Solve, area: Rect, side: number, members: readonly numbe
     const c = s.state.placed[j]!;
     return c >= 0 ? s.cands[c]! : null;
   });
-  const vis = placed.map((c) => (c === null ? 0 : c.variant));
+  const vis = order.map((j) => {
+    const c = s.state.placed[j]!;
+    return c >= 0 ? s.columnVariant(j, c, full) : 0;
+  });
   const along: number[] = [];
   const across: number[] = [];
   for (let k = 0; k < order.length; k++) {
@@ -205,7 +215,8 @@ function columnCands(s: Solve, area: Rect, side: number, members: readonly numbe
 
 /**
  * Re-stack the boundary labels of each side jointly; keep the result when every label
- * stays feasible and the total cost drops.
+ * stays feasible and the total cost drops. Labels the ladder shrank take their full size,
+ * or their placed size when only that column is kept.
  */
 export function boundaryPass(s: Solve): void {
   const area = slotArea(s.model, s.obs);
@@ -218,35 +229,44 @@ export function boundaryPass(s: Solve): void {
       if (c >= 0 && s.cands[c]!.kind === Kind.Boundary && s.cands[c]!.bside === side) members.push(i);
     }
     if (members.length < 2) continue;
-    const fresh = columnCands(s, area, side, members);
-    if (fresh.some(([, c]) => !c.feasible)) continue;
-    const order = fresh.map(([i]) => i);
-    const old: [number, number][] = order.map((i) => [i, s.state.placed[i]!]);
-    const before = totalCost(s, order);
-    for (const i of order) s.state.unplace(i, s.cands);
-    let ok = true;
-    const placedNow: number[] = [];
-    for (const [i, c] of fresh) {
-      const id = s.cands.length;
-      s.cands.push(c);
-      s.byItem[i]!.push(id);
-      if (!s.state.isFree(s.cands[id]!, s.cands, s.obs, i)) {
-        ok = false;
-        break;
-      }
-      s.state.place(i, id, s.cands, false);
-      placedNow.push(i);
-    }
-    if (ok) {
-      const after = totalCost(s, order);
-      if (after < before - 1e-9) {
-        if (s.trace !== null) s.trace.pass("boundary", "boundary", order);
-        continue;
-      }
-    }
-    for (const i of placedNow) s.state.unplace(i, s.cands);
-    for (const [i, c] of old) s.state.place(i, c, s.cands, !s.cands[c]!.feasible);
+    if (!restack(s, area, side, members, true) && s.anyShrunk(members)) restack(s, area, side, members, false);
   }
+}
+
+/**
+ * Lay out the boundary column of `members` on `side` (`full`: shrunk labels at full size)
+ * and keep it when every label stays feasible and free and the total cost drops.
+ */
+function restack(s: Solve, area: Rect, side: number, members: readonly number[], full: boolean): boolean {
+  const fresh = columnCands(s, area, side, members, full);
+  if (fresh.some(([, c]) => !c.feasible)) return false;
+  const order = fresh.map(([i]) => i);
+  const old: [number, number][] = order.map((i) => [i, s.state.placed[i]!]);
+  const before = totalCost(s, order);
+  for (const i of order) s.state.unplace(i, s.cands);
+  let ok = true;
+  const placedNow: number[] = [];
+  for (const [i, c] of fresh) {
+    const id = s.cands.length;
+    s.cands.push(c);
+    s.byItem[i]!.push(id);
+    if (!s.state.isFree(s.cands[id]!, s.cands, s.obs, i)) {
+      ok = false;
+      break;
+    }
+    s.state.place(i, id, s.cands, false);
+    placedNow.push(i);
+  }
+  if (ok) {
+    const after = totalCost(s, order);
+    if (after < before - 1e-9) {
+      if (s.trace !== null) s.trace.pass("boundary", "boundary", order);
+      return true;
+    }
+  }
+  for (const i of placedNow) s.state.unplace(i, s.cands);
+  for (const [i, c] of old) s.state.place(i, c, s.cands, !s.cands[c]!.feasible);
+  return false;
 }
 
 /** Label evaluations of the boundary fill: at least this many, or this many per item. */
@@ -326,7 +346,12 @@ export function boundaryFill(s: Solve): void {
       for (;;) {
         if (work === 0 || s.pollCancel()) return;
         work = Math.max(0, work - trial.length);
-        const res = sideLayout(s, area, side, trial);
+        // the members' labels at full size first, at their placed sizes when that fails
+        let res = sideLayout(s, area, side, trial, true);
+        if (res.fails !== null && s.anyShrunk(trial)) {
+          work = Math.max(0, work - trial.length);
+          res = sideLayout(s, area, side, trial, false);
+        }
         if (res.fails === null) {
           if (!withinInk(s, res.cands)) break;
           let cost = 0;
@@ -370,17 +395,18 @@ function withinInk(s: Solve, cands: readonly [number, Cand][]): boolean {
 }
 
 /**
- * Lay out a boundary column of `members` ({@link columnCands}) and test it against
- * everything else placed, the members' own labels lifted meanwhile. `fails`: the members
- * that fail, each with the placed item in its way (-1: a reason of its own).
+ * Lay out a boundary column of `members` ({@link columnCands}, `full` as there) and test it
+ * against everything else placed, the members' own labels lifted meanwhile. `fails`: the
+ * members that fail, each with the placed item in its way (-1: a reason of its own).
  */
 function sideLayout(
   s: Solve,
   area: Rect,
   side: number,
   members: readonly number[],
+  full: boolean,
 ): { cands: [number, Cand][]; fails: Fail[] | null } {
-  const fresh = columnCands(s, area, side, members);
+  const fresh = columnCands(s, area, side, members, full);
   const saved: [number, number][] = [];
   for (const [j] of fresh) {
     const c = s.state.placed[j]!;

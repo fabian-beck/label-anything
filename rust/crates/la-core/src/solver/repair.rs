@@ -144,9 +144,16 @@ fn total_cost(s: &mut Solve, items: &[usize]) -> f64 {
 /// The labels of a boundary column along `side` (spec §6.6): `members` ordered by their
 /// anchors along the side, stacked (`stack`, or evenly spread), matched to the slots by
 /// total leader length (straight and `angles` leaders; else in order) and aligned on the
-/// column's line facing the picture; each keeps its placed variant (else its first), its
-/// rank and its level, and is evaluated. In the members' order along the side.
-fn column_cands(s: &Solve, area: &Rect, side: u8, members: &[usize]) -> Vec<(usize, Cand)> {
+/// column's line facing the picture; each keeps its placed variant (with `full` at full
+/// size when the ladder shrank it; else its first), its rank and its level, and is
+/// evaluated. In the members' order along the side.
+fn column_cands(
+    s: &Solve,
+    area: &Rect,
+    side: u8,
+    members: &[usize],
+    full: bool,
+) -> Vec<(usize, Cand)> {
     let model = s.model;
     let items = &model.items;
     let horizontal_side = side <= 1;
@@ -172,9 +179,9 @@ fn column_cands(s: &Solve, area: &Rect, side: u8, members: &[usize]) -> Vec<(usi
         .iter()
         .map(|&j| s.state.placed[j].map(|c| &s.cands[c as usize]))
         .collect();
-    let vis: Vec<usize> = placed
+    let vis: Vec<usize> = order
         .iter()
-        .map(|c| c.map_or(0, |c| c.variant as usize))
+        .map(|&j| s.state.placed[j].map_or(0, |c| s.column_variant(j, c, full)))
         .collect();
     let (along, across): (Vec<f64>, Vec<f64>) = order
         .iter()
@@ -266,7 +273,8 @@ fn column_cands(s: &Solve, area: &Rect, side: u8, members: &[usize]) -> Vec<(usi
 }
 
 /// Re-stack the boundary labels of each side jointly; keep the result when every label
-/// stays feasible and the total cost drops.
+/// stays feasible and the total cost drops. Labels the ladder shrank take their full size,
+/// or their placed size when only that column is kept.
 pub fn boundary_pass(s: &mut Solve) {
     let Some(area) = slot_area(s.model, s.obs) else {
         return;
@@ -286,48 +294,57 @@ pub fn boundary_pass(s: &mut Solve) {
         if members.len() < 2 {
             continue;
         }
-        let fresh = column_cands(s, &area, side, &members);
-        if fresh.iter().any(|(_, c)| !c.feasible) {
-            continue;
-        }
-        let order: Vec<usize> = fresh.iter().map(|&(i, _)| i).collect();
-        let old: Vec<(usize, u32)> = order
-            .iter()
-            .map(|&i| (i, s.state.placed[i].unwrap()))
-            .collect();
-        let before = total_cost(s, &order);
-        for &i in &order {
-            s.state.unplace(i, &s.cands);
-        }
-        let mut ok = true;
-        let mut placed_now: Vec<usize> = Vec::new();
-        for (i, c) in fresh {
-            let id = s.cands.len() as u32;
-            s.cands.push(c);
-            s.by_item[i].push(id);
-            let cand = &s.cands[id as usize];
-            let mut scratch = Vec::new();
-            if !s.state.is_free(cand, &s.cands, s.obs, i, &mut scratch) {
-                ok = false;
-                break;
-            }
-            s.state.place(i, id, &s.cands, false);
-            placed_now.push(i);
-        }
-        if ok {
-            let after = total_cost(s, &order);
-            if after < before - 1e-9 {
-                continue;
-            }
-        }
-        for &i in &placed_now {
-            s.state.unplace(i, &s.cands);
-        }
-        for (i, c) in old {
-            let relaxed = !s.cands[c as usize].feasible;
-            s.state.place(i, c, &s.cands, relaxed);
+        if !restack(s, &area, side, &members, true) && s.any_shrunk(&members) {
+            restack(s, &area, side, &members, false);
         }
     }
+}
+
+/// Lay out the boundary column of `members` on `side` (`full`: shrunk labels at full size)
+/// and keep it when every label stays feasible and free and the total cost drops.
+fn restack(s: &mut Solve, area: &Rect, side: u8, members: &[usize], full: bool) -> bool {
+    let fresh = column_cands(s, area, side, members, full);
+    if fresh.iter().any(|(_, c)| !c.feasible) {
+        return false;
+    }
+    let order: Vec<usize> = fresh.iter().map(|&(i, _)| i).collect();
+    let old: Vec<(usize, u32)> = order
+        .iter()
+        .map(|&i| (i, s.state.placed[i].unwrap()))
+        .collect();
+    let before = total_cost(s, &order);
+    for &i in &order {
+        s.state.unplace(i, &s.cands);
+    }
+    let mut ok = true;
+    let mut placed_now: Vec<usize> = Vec::new();
+    for (i, c) in fresh {
+        let id = s.cands.len() as u32;
+        s.cands.push(c);
+        s.by_item[i].push(id);
+        let cand = &s.cands[id as usize];
+        let mut scratch = Vec::new();
+        if !s.state.is_free(cand, &s.cands, s.obs, i, &mut scratch) {
+            ok = false;
+            break;
+        }
+        s.state.place(i, id, &s.cands, false);
+        placed_now.push(i);
+    }
+    if ok {
+        let after = total_cost(s, &order);
+        if after < before - 1e-9 {
+            return true;
+        }
+    }
+    for &i in &placed_now {
+        s.state.unplace(i, &s.cands);
+    }
+    for (i, c) in old {
+        let relaxed = !s.cands[c as usize].feasible;
+        s.state.place(i, c, &s.cands, relaxed);
+    }
+    false
 }
 
 /// Label evaluations of the boundary fill: at least this many, or this many per item.
@@ -405,7 +422,14 @@ pub fn boundary_fill(s: &mut Solve) {
                     return;
                 }
                 work = work.saturating_sub(trial.len());
-                match side_layout(s, &area, side, &trial) {
+                // the members' labels at full size first, at their placed sizes when that
+                // fails
+                let mut laid = side_layout(s, &area, side, &trial, true);
+                if laid.is_err() && s.any_shrunk(&trial) {
+                    work = work.saturating_sub(trial.len());
+                    laid = side_layout(s, &area, side, &trial, false);
+                }
+                match laid {
                     Ok(cands) => {
                         if !within_ink(s, &cands) {
                             break;
@@ -451,17 +475,18 @@ fn within_ink(s: &Solve, cands: &[(usize, Cand)]) -> bool {
     ink / canvas.area().max(1e-9) <= f
 }
 
-/// Lay out a boundary column of `members` (`column_cands`) and test it against everything
-/// else placed, the members' own labels lifted meanwhile. `Err`: the members that fail, each
-/// with the placed item in its way (none: a reason of its own).
+/// Lay out a boundary column of `members` (`column_cands`, `full` as there) and test it
+/// against everything else placed, the members' own labels lifted meanwhile. `Err`: the
+/// members that fail, each with the placed item in its way (none: a reason of its own).
 #[allow(clippy::type_complexity)]
 fn side_layout(
     s: &mut Solve,
     area: &Rect,
     side: u8,
     members: &[usize],
+    full: bool,
 ) -> Result<Vec<(usize, Cand)>, Vec<(usize, Option<usize>)>> {
-    let fresh = column_cands(s, area, side, members);
+    let fresh = column_cands(s, area, side, members, full);
     let saved: Vec<(usize, u32)> = fresh
         .iter()
         .filter_map(|&(j, _)| s.state.placed[j].map(|c| (j, c)))

@@ -22,7 +22,7 @@ import {
 import { Evaluator } from "../cost.js";
 import { type Env, envCancelled, envNow } from "../env.js";
 import { type P, Rect } from "../geom/index.js";
-import { type Measurer, type Variant, ladderVariants } from "../labels.js";
+import { type Measurer, type Variant, fullSize, ladderVariants } from "../labels.js";
 import { Stubs, distant, distantDirs } from "../leaders.js";
 import { cosDeg } from "../detmath.js";
 import { cmpF64, minf } from "../math.js";
@@ -155,6 +155,26 @@ export class Solve {
     this.blockedFeasible = [];
     for (let i = 0; i < n; i++) this.blockedFeasible.push([]);
     this.evaluator = new Evaluator(model, obs, env);
+  }
+
+  /**
+   * The variant of placed item `j` (candidate `c`) in a column (fan or boundary, spec §6.6,
+   * §6.8): its placed one, at full size with `full` when the ladder shrank it.
+   */
+  columnVariant(j: number, c: number, full: boolean): number {
+    const v = this.cands[c]!.variant;
+    return full ? fullSize(this.variants[j]!, v) : v;
+  }
+
+  /**
+   * Whether a placed label among `members` is shrunk: a column takes them at full size
+   * first, and with their placed sizes only when that column fails (spec §6.6, §6.8).
+   */
+  anyShrunk(members: readonly number[]): boolean {
+    return members.some((j) => {
+      const c = this.state.placed[j]!;
+      return c >= 0 && this.columnVariant(j, c, true) !== this.columnVariant(j, c, false);
+    });
   }
 
   /** Generate and evaluate candidates for `variants[vis]` of item `i` with `models`. */

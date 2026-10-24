@@ -278,6 +278,32 @@ export class Variant {
   }
 }
 
+/**
+ * The variant that shrunk variant `vi` was made from by the ladder's `shrink` step: the
+ * first at scale 1 with the same text (lines, origin and truncation), or the first at scale
+ * 1 of a label without text; `vi` itself when it is not shrunk (spec §6.6, §6.8).
+ */
+export function fullSize(variants: readonly Variant[], vi: number): number {
+  const v = variants[vi]!;
+  if (v.scale >= 1) return vi;
+  const sameText = (e: Variant): boolean => {
+    const a = e.text;
+    const b = v.text;
+    if (a === null || b === null) return a === b;
+    return (
+      a.used === b.used &&
+      a.truncated === b.truncated &&
+      a.lines.length === b.lines.length &&
+      a.lines.every((l, k) => l === b.lines[k])
+    );
+  };
+  for (let k = 0; k < variants.length; k++) {
+    const e = variants[k]!;
+    if (e.scale === 1 && sameText(e)) return k;
+  }
+  return vi;
+}
+
 const RECT_SHAPE: LabelShape = { kind: "rect" };
 
 /** Build a text variant from lines. */
