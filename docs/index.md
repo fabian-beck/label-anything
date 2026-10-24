@@ -53,8 +53,8 @@ One chart, the main features:
 * **Leaders where it is crowded.** France, Italy and the United Kingdom overlap Germany's
   bubble: their labels go out on leaders, and no two leaders cross.
 * **Importance decides.** The larger the economy, the earlier its label is placed; the
-  eight largest are set larger and bold. 45 countries are left out: each would not fit even
-  beside the larger economies' labels alone, and says which of them is in the way.
+  eight largest are set larger and bold. 45 countries are left out, each because the labels
+  of larger economies leave it no room; the result names the labels in its way.
 * **Shortened before left out.** A name that does not fit falls back to its ISO code
   (CRI: Costa Rica).
 * **Graded avoidance over any background.** The chart is an SVG, handed over as it is and
@@ -62,11 +62,11 @@ One chart, the main features:
   text or the legend; large economies' labels may cover small economies' bubbles, at a
   cost.
 
+## Why Label Anything
+
 The *anything* is the host and the label: adjustText (matplotlib), ggrepel (ggplot2) and
 vega-label (Vega) each serve one plotting library; Label Anything is one engine and one
 problem format for any chart, map or diagram, any label with a size and every language.
-
-## Why Label Anything
 
 <div class="grid cards" markdown>
 
@@ -122,9 +122,7 @@ problem format for any chart, map or diagram, any label with a size and every la
 
 Hundreds of labels take milliseconds, thousands a few hundred milliseconds. Moving
 things — a dragged node, a panned map — are labeled again from the previous result, so
-labels stay put ([interactive maps](tutorials/interactive-maps.md)). The
-[playground](try.md) runs the engine live on a world map, a network, charts, moving
-objects and photographs, with every option in reach.
+labels stay put ([interactive maps](tutorials/interactive-maps.md)).
 
 ## Gallery
 
@@ -134,27 +132,24 @@ it in full; the scripts and the problems are in
 
 <figure markdown>
 [![The countries and capitals of Europe, labeled](assets/figures/europe.svg)](assets/figures/europe.svg)
-<figcaption markdown>**A map.** The countries and capitals of Europe (Natural Earth): each
-name inside its country where it fits, abbreviated where the country is narrow (U.K.,
-AUST.), out on a leader where it is too small (Luxembourg, Malta, the Balkans); the capitals
-beside their dots, in the cartographer's order of positions; no label covers the name of a
-sea. All 91 labels placed.</figcaption>
+<figcaption markdown>**A map.** The countries and capitals of Europe (Natural Earth): names
+inside their country where they fit, abbreviated where it is narrow (U.K., AUST.), on a
+leader where it is too small (Luxembourg, Malta); capitals beside their dots; no label
+covers the name of a sea. All 91 labels placed.</figcaption>
 </figure>
 
 <figure markdown>
 [![A fundus photograph with its parts labeled in the margins](assets/figures/retina.svg)](assets/figures/retina.svg)
 <figcaption markdown>**A photograph.** The back of an eye (fundus photograph: M. Häggström,
-CC0), labeled as an anatomy atlas would: the names stacked in columns in the margins
-(boundary labels), a leader from each to a dot on its part, over the photograph as a raster
-background.</figcaption>
+CC0), labeled as an anatomy atlas would: the names in columns in the margins, a leader from
+each to its part.</figcaption>
 </figure>
 
 <figure markdown>
 [![The module graph of the library's TypeScript packages, labeled](assets/figures/modules.svg)](assets/figures/modules.svg)
 <figcaption markdown>**A diagram.** This library's own TypeScript modules: 112 nodes, 412
-imports. The most imported modules come first and are set in bold; a label may cross an
-edge at a cost, never a node; in the crowded core a few labels go out on leaders. 111 of
-112 placed.</figcaption>
+imports. The most imported come first and in bold; labels may cross edges at a cost, never
+nodes. 111 of 112 placed.</figcaption>
 </figure>
 
 ## Five lines
@@ -204,17 +199,12 @@ and the TypeScript port reproduces the Rust core bit for bit.
 
 ## Benchmark
 
-The [real-world benchmark](project/benchmark.md) scores Label Anything and nine baselines
-(naive, greedy, textalloc, adjustText, vega-label, ggrepel, ECharts, d3fc, D3-Labeler) on
-twelve scenarios built from open data — software metrics, volcano plots, embeddings,
-airports on a world map, city POIs on map tiles, node-link diagrams, illustrations, line
-charts, stress sizes, interactive zooming and priority — with one
-implementation-independent evaluator.
-[What the results show](project/benchmark.md#what-the-results-show): no overlaps and no
-crossing leaders anywhere, the most usable labels on every problem of the quick suite and
-on 60 of the 62 of the full suite,
-though often by a few percent — and where it still falls short: dense data, moving labels,
-the largest problems' speed.
+The [real-world benchmark](project/benchmark.md) scores Label Anything and nine other
+labelers — among them adjustText, ggrepel, vega-label and textalloc — on twelve scenarios
+built from open data, with one evaluator. [The results](project/benchmark.md#what-the-results-show):
+no overlaps and no crossing leaders anywhere, and the most usable labels on every problem
+of the quick suite and on 60 of the 62 of the full suite, though often by a few percent. It
+still falls short on dense data, moving labels and the speed of the largest problems.
 
 ## Good to know
 
