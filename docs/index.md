@@ -139,9 +139,9 @@ internationally recognized borders). The countries are the picture's
 [regions](concepts/regions.md): each name inside its country where it fits, else out on a
 leader into the sea (the United Kingdom, Switzerland, the Balkans), never in a neighbouring
 country, its type size growing with the country's area; the capitals beside their dots, in
-the cartographer's order of positions; no label covers the name of a sea. 86 of the 90
-labels placed: the name LUXEMBOURG (its capital is labeled), Ljubljana, Podgorica and
-Pristina find no room.</figcaption>
+the cartographer's order of positions, all in one size; no label covers the name of a sea.
+88 of the 90 labels placed: the name LUXEMBOURG (its capital is labeled) and Podgorica find
+no room.</figcaption>
 </figure>
 
 <figure markdown>

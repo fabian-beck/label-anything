@@ -13,7 +13,7 @@ the country of every capital as an area and every capital as a point, the countr
   a leader; a capital's name goes next to its dot (the `map` preset);
 * a country's name is the larger the larger the country: its type size grows with the
   logarithm of the area, from 6 px (10,000 km² and less) to 18 px (1,000,000 km² and
-  more); capitals' names are 9.5 px;
+  more); every capital's name is 8 px; no label is shrunk to fit (the sizes are the map's);
 * the seas' names are hard obstacles for labels and leaders.
 
 The names are Natural Earth's, written out and uppercase for countries; no name is
@@ -219,7 +219,7 @@ def problem(cs: list[dict]) -> dict:
         items.append({
             "id": f"capital-{iso}",
             "anchor": {"type": "point", "x": round(x, 1), "y": round(y, 1), "mark": {"shape": "circle", "r": 2.6}},
-            "label": {"type": "text", "text": name, "font": {"size": 9.5}},
+            "label": {"type": "text", "text": name, "font": {"size": 8}},
             "priority": (by_id[iso]["pop"] or 0) if iso in by_id else 0,
         })
     return {
@@ -227,6 +227,8 @@ def problem(cs: list[dict]) -> dict:
         "preset": "map",
         "canvas": {"width": W, "height": H},
         "defaults": {"wrap": {"max_lines": 2}},
+        # every label keeps its size: the ladder's shrink step stops at the full size
+        "degrade_options": {"min_scale": 1},
         "obstacles": {
             "svg": {
                 "path": f"{NAME}-map.svg",
