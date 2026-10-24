@@ -13,9 +13,9 @@ npm install -g @label-anything/cli           # label-anything-ts
 `cargo build` leaves the binary in `rust/target/release/label-anything`; `cargo install`
 puts it on your `PATH`, as the examples below assume.
 
-The npm package is not published yet: pack it with its siblings as described in
-[install from this repository](index.md#install-from-this-repository) (add
-`-w @label-anything/cli`) and `npm install -g` the tarballs.
+The npm package is not published yet: pack it with its siblings as described for
+[JavaScript](javascript.md#install) (add `-w @label-anything/cli`) and `npm install -g`
+the tarballs.
 
 ## Place, render, validate
 

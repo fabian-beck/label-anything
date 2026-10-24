@@ -77,7 +77,7 @@ improving — the greedy pass places no further items (`budget_exhausted`), the 
 their best state — and still repairs and verifies, so the result is valid; `stats.cancelled`
 is `true` ([ADR solver/time-budget](../adr/solver/time-budget.md)). `place` is synchronous: in
 JavaScript, cancel from a callback or run the solve in a worker
-([WebAssembly limitations](../bindings/wasm.md#limitations)).
+([WebAssembly](../getting-started/javascript.md#webassembly)).
 
 Progress is reported when a phase starts (`greedy`, `local`, `exact`), per greedy band and
 every 256 local-search moves, as `(phase, fraction)`.

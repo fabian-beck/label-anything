@@ -182,4 +182,4 @@ obstacle classes named after the layers.
   result; for large maps, pass a Web Worker engine (`createWorkerEngine`) so the page
   stays responsive ([JavaScript](../getting-started/javascript.md#web-workers)).
 * `@label-anything/wasm` runs the Rust core in the page, the same API as the TypeScript
-  engine ([WebAssembly](../bindings/wasm.md)).
+  engine ([WebAssembly](../getting-started/javascript.md#webassembly)).

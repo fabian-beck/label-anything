@@ -159,7 +159,7 @@ the engine without a detour through JSON:
 ```
 
 Other languages pass pixels the same way: `PlaceOptions.raster` in
-[JavaScript](../getting-started/javascript.md#raster-pixels),
+[JavaScript](../getting-started/javascript.md#raster-pixels-and-files),
 `backgroundPixels(...)` in [Java](../getting-started/java.md#raster-pixels-without-copies),
 the `rgba` pointer of `la_place_json` in [C](../getting-started/c-go.md#c).
 

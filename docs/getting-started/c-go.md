@@ -3,7 +3,7 @@
 `liblabelanything` exposes the Rust engine through a small C ABI: JSON text in, JSON text
 out, plus an entry point that takes raster pixels by pointer. Every language with a C
 foreign function interface can use it; this page shows C and Go (cgo). The header is
-[`label_anything.h`](../reference/c-api.md).
+[`label_anything.h`](#the-header).
 
 | Function | |
 |---|---|
@@ -19,7 +19,7 @@ a font `file`) resolve against the process's working directory.
 
 ## Build
 
-From the root of the repository ([install from this repository](index.md#install-from-this-repository)):
+In a clone of the repository (Rust ≥ 1.88), from its root:
 
 ```sh
 cargo build --release --manifest-path rust/Cargo.toml -p label-anything-capi
@@ -129,6 +129,17 @@ LD_LIBRARY_PATH=$LA/rust/target/release ./myapp
 
 To pass pixels from a `[]byte`, give `la_place_json` `(*C.uint8_t)(unsafe.Pointer(&pix[0]))`:
 C may read Go memory that holds no Go pointers for the duration of the call.
+
+## The header
+
+Built with the cargo feature `jni`, the same library also contains the JNI entry points of
+the [Java binding](java.md), which uses this C ABI on Java 22+.
+
+??? abstract "`rust/crates/la-capi/include/label_anything.h`"
+
+    ```c
+    --8<-- "rust/crates/la-capi/include/label_anything.h"
+    ```
 
 All programs on this page are in [`examples/tutorials/c`](gh:examples/tutorials/c) and
 [`examples/tutorials/go`](gh:examples/tutorials/go) and run in CI.

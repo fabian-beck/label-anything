@@ -45,4 +45,4 @@ the font size): the engine solves again and you stay at the same point of the ph
 | Areas & obstacles | internal candidates of areas, a river that costs (soft) and a legend box no label may cover (hard) |
 
 The source is [`ts/packages/playground/src/explain`](gh:ts/packages/playground/README.md);
-the trace is `placeTraced` of [`@label-anything/core`](reference/javascript-api.md).
+the trace is `placeTraced` of [`@label-anything/core`](getting-started/javascript.md#api).
