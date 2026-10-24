@@ -134,7 +134,7 @@ position that only lower-priority labels hold (those labels are tried again), so
 label is missing in favour of a less important one; an item kept out by one more
 important label may also move that label to another of its positions, when at most one
 less important label gives way ([ADR priority/repair](../adr/priority/repair.md)). Finally, a verification pass
-re-checks every hard constraint exactly. The [explainer](../explainer.md) steps through
+re-checks every hard constraint exactly. The [explainer](../try.md#how-it-works-step-by-step) steps through
 these phases on a real solve.
 [The solver](solver.md) describes budgets and determinism; the
 [specification](../reference/spec.md#10-solver) the algorithms.

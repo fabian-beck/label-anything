@@ -1,67 +1,62 @@
 ---
 title: Playground
-description: The Label Anything engine running in your browser — maps, networks, charts, moving objects and pictures, with every option in reach.
+description: The Label Anything engine running in your browser — maps, networks, charts, moving objects and pictures with every option in reach, and a step-by-step replay of how a solve decides.
 ---
 
 # Playground
 
+Two pages run the engine in your browser — the Rust core compiled to WebAssembly, or its
+TypeScript port. The playground lets you try every option on real scenes; the explainer
+steps through a solve, decision by decision.
+
+## The playground
+
 [Open the playground](https://fabian-beck.github.io/label-anything/playground/){ .md-button .md-button--primary }
-[How it works, step by step](explainer.md){ .md-button }
 
-The playground runs the engine in your browser — the Rust core compiled to WebAssembly,
-or its TypeScript port — on six scenes. Change any option and the labels are placed
-again at once; drag things around, zoom, or let them move, and the labels follow.
-Everything it solves is an ordinary problem: the Code tab shows it, and the same JSON
-gives the same layout in Python, Java, the CLI or your own JavaScript.
+Change any option and the labels are placed again at once; drag things around, zoom, or
+let them move, and the labels follow. Everything the playground solves is an ordinary
+problem: its Code tab shows the JSON, which gives the same layout in Python, Java, the CLI
+or your own JavaScript.
 
-## Scenes
+| Scene | What it shows |
+|---|---|
+| World map | country names inside their country where they fit, beside it or on a leader where not, abbreviated where narrow, set larger the more important; pan and zoom, while flights cross the map |
+| Network | the import graph of the engine's own TypeScript modules under a force layout; drag a node and the labels follow |
+| Scatterplot | countries by population, wealth, area and density, or up to 5,000 generated points |
+| Line chart | labels at the ends of moving lines, fanned out into a column where they crowd, or in the margin |
+| Swarm | up to 600 moving points labeled many times per second, each solve starting from the last |
+| Picture | a photograph as a background the labels avoid, its parts labeled from the margins; drop an image of your own |
 
-| Scene | What it shows | Try |
-|---|---|---|
-| World map | Labels inside countries where they fit (area anchors, the `internal` model), beside them or on leaders where not; Natural Earth's abbreviations as shorter alternatives; type size by importance (font classes); every pan and zoom solved again from the previous labels, so they stay put and the label set only grows as you zoom in | drag, scroll, pinch; flights cross the map as moving labeled points |
-| Network | The import graph of Label Anything's own TypeScript modules under a force-directed layout: labels never cover nodes, avoid edges at a cost, and get leaders where nodes crowd | drag a node; turn packages on and off |
-| Scatterplot | The countries by population, wealth, area and density, or up to 5,000 generated points; abbreviations, wrapping and leaders where it is crowded; points without a label are soft obstacles | Play moves every point to new axes |
-| Line chart | Labels at the ends of moving lines: crowded ends fan out into a column (fan labels), or all labels stand in a column in the margin (boundary labels) | switch *End labels*; more series |
-| Swarm | Up to 600 moving points labeled many times per second, each solve warm-started from the last | turn off *Warm start* (Motion) to see labels jump |
-| Picture | A photograph as a raster obstacle (the engine reads its pixels), annotated parts labeled from the margins with elbow leaders (the `illustration` preset) | click to add a label; drop an image of your own |
+The panel beside the drawing has four parts:
 
-## The panel
-
-* **Options.** Each control changes one field of the [problem](concepts/problem.md),
-  whose path it shows (`leaders.style`, `placement.models`, `defaults.margin`, …); a dot
-  marks what you changed, *reset* restores the scene's value. *Problem JSON* merges any
-  other field, and the engine's validator reports what it rejects. *Compare with naive
-  labels* splits the drawing: left of the divider every label sits at its top-right, as
-  plotting libraries draw them.
-* **Inspect.** Hover over a label or a mark: the candidate model, side, cost and priority
-  of its label — or, for an item without a label, why, and which labels are in its way.
-  Below: the last solve's counts and verification (overlaps, crossings, priority
-  inversions), its phases, the time and label movement per solve, and *Solve with both
-  engines*, which checks that WebAssembly and TypeScript give identical placements.
-* **Code.** The problem of the latest solve as JSON (or only its options), and how to
-  solve it in JavaScript, Python or the CLI.
+* **Options** — each control changes one field of the [problem](concepts/problem.md) and
+  shows its path (`leaders.style`, `placement.models`, …); *Problem JSON* sets any other
+  field, and *Compare with naive labels* shows how a plotting library would place them.
+* **Inspect** — hover a label to see why it sits there, or an item without a label to see
+  why not and what is in its way.
+* **Code** — the problem as JSON, and how to solve it in JavaScript, Python or the CLI.
 * **Copy link** puts the scene and every changed option into the address.
 
-## How it works
+## How it works, step by step
 
-The engines run in Web Workers, so the drawing never waits for a solve. While things
-move, each solve starts from the previous result (`warm_start`) with a short time budget,
-and the labels are drawn calmly ([smooth transitions](tutorials/interactive-maps.md#smooth-transitions)):
-a label the solver moved waits half a second before it follows, one that left stays as
-long, a new one waits a quarter of a second, short moves glide and long ones fade. Once
-the motion stops, one more solve with the full budget and a lower stability weight lets
-the labels that a better place awaits move there. Between two solves the labels follow
-their anchors; where two meet, the less important makes way. At rest the verified result
-shows. The buttons and boxes on the drawing are obstacles of the
-class `overlay`, so labels keep clear of them.
+[Open the explainer](https://fabian-beck.github.io/label-anything/playground/explain.html){ .md-button .md-button--primary }
 
-Time budgets are those of the Rust core (100 search moves per ms); the TypeScript engine
-gets 2.5 times the budget, which is the same number of moves, so both engines make the
-same decisions — the TypeScript one takes longer. Labels are measured with the bundled
-Noto Sans and drawn with the same font, so every box fits its text. The decisions are in
-[ADR project/playground](adr/project/playground.md); the source is
-[`ts/packages/playground`](gh:ts/packages/playground/README.md).
+The explainer runs the engine on a small scene and replays what it did. Nothing is animated
+from a description: the TypeScript engine records its own decisions while it solves
+(`placeTraced`), and the page checks after every solve that the WebAssembly build of the
+Rust core places the labels the same way.
 
+A timeline has one segment per [phase of the solve](concepts/index.md#how-a-solve-works):
+the candidates of each item and their costs, the greedy pass in priority order with its
+degradation ladder, every move of the local search, the repairs and the final check. Drag
+it, play it, or step with the arrow keys; the panel says what was decided and why, with
+the numbers. Hover a candidate for the terms of its cost, click a mark to follow its item
+through the whole solve, or drag a mark or change an option to solve again. The scenes
+are 50 European countries in three priority bands, a scatterplot, crowded line ends, and
+areas with a river and a legend to avoid.
+
+The source is [`ts/packages/playground`](gh:ts/packages/playground/README.md), the
+decisions behind both pages are ADR project/playground and ADR project/solve-traces.
 Data: countries [made with Natural Earth](https://www.naturalearthdata.com/) (public
 domain); photographs from scikit-image's sample data (NASA, SpaceX: public domain; the
 fundus photograph by M. Häggström: CC0), with annotation polygons by the Label Anything

@@ -99,7 +99,6 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Playground: try.md
-  - How it works: explainer.md
   - Getting started:
       - getting-started/index.md
       - Python: getting-started/python.md

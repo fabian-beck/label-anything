@@ -225,7 +225,7 @@ and `cost` callbacks cannot cross the thread boundary.
 `@label-anything/core` adds `placeWith(env, problem)` and `placeValidated(env, problem,
 report)` for custom environments (clock, files, callbacks; see its
 [README](gh:ts/packages/core/README.md)), and `placeTraced(env, problem)`, which also returns
-a trace of the solver's decisions, as the [explainer](../explainer.md) replays it.
+a trace of the solver's decisions, as the [explainer](../try.md#how-it-works-step-by-step) replays it.
 
 ??? abstract "The definition: `ts/packages/core/src/api.ts`"
 
