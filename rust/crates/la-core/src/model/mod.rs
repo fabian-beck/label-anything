@@ -164,8 +164,11 @@ pub struct Area {
 pub struct ItemLengths {
     pub padding: f64,
     pub buffer: f64,
-    /// `defaults.margin`: the space the label keeps from other labels and other marks.
+    /// `defaults.margin`: the space the label keeps from other items' marks.
     pub margin: f64,
+    /// `defaults.spacing`: the space the label keeps from other labels, twice `margin`
+    /// unless set (at least `margin`, see [`ItemLengths::label_gap`]).
+    pub spacing: f64,
     pub offset: f64,
     pub inner_padding: f64,
     pub max_distance: f64,
@@ -181,12 +184,22 @@ pub struct ItemLengths {
     pub stub_reach: f64,
 }
 
+impl ItemLengths {
+    /// The space the label keeps from other labels (spec §4.4): its spacing, at least its
+    /// margin.
+    pub fn label_gap(&self) -> f64 {
+        crate::math::maxf(self.spacing, self.margin)
+    }
+}
+
 /// Per-item lengths before resolution against the item's font size.
 #[derive(Clone, Debug)]
 pub struct ItemLengthSpec {
     pub padding: Length,
     pub buffer: Length,
     pub margin: Length,
+    /// `None`: twice the margin.
+    pub spacing: Option<Length>,
     pub offset: Length,
     pub inner_padding: Length,
     pub max_distance: Length,
@@ -204,10 +217,15 @@ pub struct ItemLengthSpec {
 impl ItemLengthSpec {
     /// The lengths in px for a font size of `em` px.
     pub fn resolve(&self, em: f64) -> ItemLengths {
+        let margin = self.margin.px(em);
         ItemLengths {
             padding: self.padding.px(em),
             buffer: self.buffer.px(em),
-            margin: self.margin.px(em),
+            margin,
+            spacing: match self.spacing {
+                Some(l) => l.px(em),
+                None => 2.0 * margin,
+            },
             offset: self.offset.px(em),
             inner_padding: self.inner_padding.px(em),
             max_distance: self.max_distance.px(em),
@@ -1524,6 +1542,7 @@ impl ItemDefaults {
                 padding: o.length("defaults.padding"),
                 buffer: o.length("defaults.buffer"),
                 margin: o.length("defaults.margin"),
+                spacing: Length::from_value(&o.get("defaults.spacing")),
                 offset: o.length("placement.offset"),
                 inner_padding: o.length("placement.inner_padding"),
                 max_distance: o.length("placement.max_distance"),

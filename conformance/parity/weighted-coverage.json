@@ -98,8 +98,8 @@
         "id": "w2",
         "placed": true,
         "box": {
-          "x": 133.2,
-          "y": 296.838,
+          "x": 133.1999999999988,
+          "y": 294.83484542240484,
           "w": 34.71600000000001,
           "h": 15.323999999999955
         },
@@ -108,7 +108,7 @@
           304.5
         ],
         "anchor_side": "right",
-        "model": "adjacent",
+        "model": "slider",
         "text": {
           "lines": [
             "City 2"
@@ -128,7 +128,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.10000000000000005,
+        "cost": 0.16761112932560943,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -323,8 +323,8 @@
         "id": "w7",
         "placed": true,
         "box": {
-          "x": 116.542,
-          "y": 333.5,
+          "x": 112.59964542240482,
+          "y": 333.499999999999,
           "w": 34.71600000000001,
           "h": 15.323999999999955
         },
@@ -333,7 +333,7 @@
           330.5
         ],
         "anchor_side": "bottom",
-        "model": "adjacent",
+        "model": "slider",
         "text": {
           "lines": [
             "City 7"
@@ -353,7 +353,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.2048333333333337,
+        "cost": 0.2687499999999744,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -685,8 +685,8 @@
         "id": "w15",
         "placed": true,
         "box": {
-          "x": 206.5200000000024,
-          "y": 193.2443091551904,
+          "x": 206.5200000000036,
+          "y": 195.24746373278558,
           "w": 41.579999999999984,
           "h": 15.324000000000012
         },
@@ -694,7 +694,7 @@
           251.1,
           196.9
         ],
-        "anchor_side": "left",
+        "anchor_side": "bottom-left",
         "model": "slider",
         "text": {
           "lines": [
@@ -715,7 +715,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.6078851410421937,
+        "cost": 0.6191336131153808,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1453,8 +1453,8 @@
         "id": "w32",
         "placed": true,
         "box": {
-          "x": 389.60999999999996,
-          "y": 151.2,
+          "x": 365.81999999999994,
+          "y": 140.53799999999998,
           "w": 41.58000000000004,
           "h": 15.324000000000012
         },
@@ -1462,7 +1462,7 @@
           410.4,
           148.2
         ],
-        "anchor_side": "bottom",
+        "anchor_side": "left",
         "model": "adjacent",
         "text": {
           "lines": [
@@ -1483,7 +1483,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.175,
+        "cost": 0.24999999999999997,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1826,7 +1826,7 @@
       "candidates": 1310,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 4.4824603411230415,
+      "total_cost": 4.700236609188479,
       "degraded": {},
       "grid": {
         "cell": 3.0,

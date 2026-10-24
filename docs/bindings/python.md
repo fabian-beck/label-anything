@@ -70,7 +70,7 @@ log-scaled, weighs against outlierness and label size).
 |---|---|---|---|
 | `canvas=(w, h)` or dict | `canvas` | `canvas_padding`, `allow_outside`, `region`, `device_pixel_ratio`, `canvas_background` | `canvas.*` |
 | `y_axis`, `transform`, `preset` | same | `font` (`la.Font`), `font_family`, `font_size`, `font_weight`, `font_style`, `line_height`, `font_file` | `defaults.font.*` |
-| `padding`, `buffer`, `margin`, `mark`, `wrap`, `truncate` | `defaults.*` | `shaping` | `text.shaping` |
+| `padding`, `buffer`, `margin`, `spacing`, `mark`, `wrap`, `truncate` | `defaults.*` | `shaping` | `text.shaping` |
 | `models`, `position_order`, `offset`, `min_distance`, `max_distance`, `slider_per_quadrant`, `k_distant`, `distant_rings`, `distant_directions`, `free_space_seeds`, `internal`, `inner_padding`, `internal_circle_ratio`, `prune_factor`, `boundary`, `fan`, `own_nearest`, `stubs`, `stub_length`, `stub_reach` | `placement.*` | `leaders` | `leaders` |
 | `avoid`, `avoid_leader`, `avoid_buffer`, `relaxable` | `avoid.*` | `priority`, `tiers`, `omission`, `coverage`, `ties`, `band`, `focus`, `font_classes` | `priority.*` |
 | `max_labels`, `max_ink_fraction` | `priority.budget.*` | `strategy`, `time_budget_ms`, `max_iterations`, `seed`, `grid_cell` | `solver.*` |

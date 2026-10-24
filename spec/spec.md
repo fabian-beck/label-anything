@@ -201,31 +201,43 @@ covered mark thus stays unlabeled, never wrongly attributed, and the labels of t
 important items may claim the space of the marks around them — a hub keeps its label
 in a dense region instead of losing it to the marks of minor items nearby.
 
-**Label margin** (`defaults.margin`, 0.2 em; ADR 0028). Hard `labels` and `items` keep a
-label away from what is not its own, while it touches its own mark at `placement.offset`:
+**Label margin and spacing** (`defaults.margin`, 0.2 em, ADR 0028; `defaults.spacing`,
+twice the margin unless set, ADR 0054). Hard `labels` and `items` keep a label away from
+what is not its own, while it touches its own mark at `placement.offset`. An item's
+**label gap** `g` is its spacing, at least its margin: `g = max(spacing, margin)`, with
+`spacing = 2m` when `defaults.spacing` is `null` (the default: 0.4 em).
 
 * With `avoid.label.labels` hard, two labels conflict when their boxes come closer than
-  the larger margin of their items, `m`: `dist(box_a, box_b) < m − EPS` (boxes `m` apart
-  up to rounding, as in stacked columns, do not). With `m ≤ EPS`, their interiors must
-  not overlap (exact shapes).
+  the larger label gap of their items, `g`: `dist(box_a, box_b) < g − EPS` (boxes `g`
+  apart up to rounding, as in stacked columns, do not). With `g ≤ EPS`, their interiors
+  must not overlap (exact shapes). With the default padding (0.15 em) the letters of two
+  labels stand at least 0.7 em apart, farther than the lines of one label (§5.2: a line
+  pitch of 1.2 em less the ink of the lines).
 * With `avoid.label.items` hard, a label (not internal) overlaps no other item's mark and
   keeps its item's margin `m` from it: it is infeasible when `dist(mark_j, box) < m − EPS`
   and `dist(mark_j, box) < dist(mark_j, bbox(mark_i))` — never more than the other mark
   keeps from the bounding box of its own mark, so that items on top of or right next to
   each other can still be labeled.
 * Warm-start candidates (§6.7: an item's warm-start box at any size, and its nudges)
-  keep half the margin: two of them conflict below `m / 2`, and one is infeasible below
-  `m / 2` from another mark. A label stays where it is until its neighbours come closer
-  than half the margin, but takes a new place only with the whole margin.
+  keep half the gap and the margin: two of them conflict below `g / 2`, and one is
+  infeasible below `m / 2` from another mark. A label stays where it is until its
+  neighbours come closer than half that, but takes a new place only with the whole of it.
 
-**Own mark nearest** (`placement.own_nearest`, default `true`; ADR 0051). A label
+**Own mark nearest** (`placement.own_nearest`, default `true`; ADR 0051, 0054). A label
 without a distant leader — an adjacent or slider label, with or without a stub (§6.9) —
-comes no closer to the mark of another item than to its own: it is infeasible when
-`dist(mark_j, box) < dist(mark_i, box) − EPS` for an item `j` (not a member of `i`'s group)
-whose mark the label may not cover (`items`, or `lower_items` for a less important `j`,
-hard). Internal labels lie on their own mark, and the leader of a distant label says whose
-it is: they are exempt. The margin above lets a mark that overlaps or touches the own mark
-come closer than the margin; this rule still keeps it no closer than the own mark.
+comes no closer to the mark of another item than to its own, and without a stub it is
+nearer to its own by its margin: it is infeasible when
+`dist(mark_j, box) < dist(mark_i, box) + s − EPS` for an item `j` (not a member of `i`'s
+group) whose mark the label may not cover (`items`, or `lower_items` for a less important
+`j`, hard), where `s = min(m, |p_j − p_i|)` for a label without a stub (`m` its margin, at
+half for warm-start candidates; `p` the marks' reference points) and `s = 0` for one with a
+stub. A reader takes a label for the label of the mark nearest to it; one about as near to
+another mark could be that one's, unless a stub says whose it is. Marks closer together
+than the margin need only the distance between them: a label of one of two coincident
+marks may stand anywhere, one of two marks 1 px apart on the side away from the other.
+Internal labels lie on their own mark, and the leader of a distant label says whose it is:
+they are exempt. The margin above lets a mark that overlaps or touches the own mark come
+closer than the margin; this rule still keeps it farther than the own mark.
 
 ### 4.5 SVG backgrounds
 
@@ -757,7 +769,7 @@ two and three label heights (widths) above and below it. After the search and th
   variant that the ladder's `shrink` step made, the first variant at scale 1 with the same
   text (lines, origin, truncation) instead. The labels are stacked by 1-D isotonic packing
   around their anchors' coordinates (`stack`) or evenly spread (`spread`), with gaps of
-  the larger of `placement.boundary.gap` and the two labels' margin (§4.4). The labels
+  the larger of `placement.boundary.gap` and the two labels' label gap (§4.4). The labels
   align on the column's line facing the picture, `margin + depth` from the edge (`depth`
   the widest label on the left and right sides, the tallest on the top and bottom), where
   every leader ends. With `straight` and `angles` leaders the items are assigned to the
@@ -836,7 +848,7 @@ Filtering while generating (ADR 0015), always exact:
   only statically feasible ones count. They are made when §10.1 asks for them (ADR
   0027).
 * Warm-start candidates (the warm-start box, at any size, and its nudges) keep half the
-  label margin (§4.4, ADR 0028).
+  label gap and margin (§4.4, ADR 0028).
 
 ### 6.8 Fan labels
 
@@ -873,7 +885,7 @@ its font size.
   boundary columns (§6.6). Each layout is made at full size first; when a member fails and
   a member's label is shrunk, it is made again with the placed variants, whose failures
   count. Their slots are stacked like boundary labels (`stack`, gaps
-  `(h_a + h_b) / 2 + max(boundary.gap, m)` with `m` the larger margin of the two labels,
+  `(h_a + h_b) / 2 + max(boundary.gap, g)` with `g` the larger label gap of the two labels,
   within the label area) around the anchors' heights. The labels' near side is at
   `edge ± run`: `edge` the outermost side of the members' mark boxes,
   `run = max(min(rise, room), 1.5 em)` (`rise` the largest vertical distance between a
@@ -920,16 +932,18 @@ label's side.
   ambiguous candidates: a label against a large mark reads as attached to its outline.
 * **Twin.** For an ambiguous candidate the same position is made with the offset
   `o + stub_length` (`o` = `placement.offset`): the adjacent position of the same direction
-  on `S ⊕ (o + stub_length)`, or the slider sample of the same index on the path of
-  `S ⊕ (o + stub_length)` (§6.2; concave polygons pushed in to that offset), with the same
-  model, side and rank.
+  on `S ⊕ (o + stub_length)` — for `left` and `right` centered vertically on the mark's
+  reference point (center `(x, p.y)` with `x` that of the adjacent position) — or the
+  slider sample of the same index on the path of `S ⊕ (o + stub_length)` (§6.2; concave
+  polygons pushed in to that offset), with the same model, side and rank.
 * **The stub** of a box with center `c`, width `w` and height `h`, for the mark's
-  reference point `p`: horizontal when `|p.y − c.y| ≤ h / 4` and `p` lies left or right of
+  reference point `p`: horizontal when `|p.y − c.y| ≤ EPS` and `p` lies left or right of
   the box, from the mark's boundary point in direction `±x` (`anchor_gap` outside it, or
   the tip of an icon mark) to `(x0, p.y)` or `(x1, p.y)` on the box; vertical when
   `|p.x − c.x| ≤ w / 4` and `p` lies above or below the box, to `(p.x, y0)` or `(p.x, y1)`,
-  likewise. It meets the side of the label facing the mark at a right angle, within the
-  middle half of that side. A box diagonal to the mark has no stub. `leaders.style`,
+  likewise. It meets the side of the label facing the mark at a right angle: a left or
+  right side in its middle (ADR 0054), a top or bottom side within its middle half. A box
+  diagonal to the mark, or beside it but off its middle, has no stub. `leaders.style`,
   `port`, `attach`, `min_length` and `max_length` do not apply; the result reports a stub
   as the label's `leader` with `stub: true`.
 * **Replacement.** The twin with its stub replaces the ambiguous candidate when it has a
@@ -940,13 +954,18 @@ label's side.
   exempt from the diverging-leaders rule, which compares distant leaders. With
   `avoid.leader.labels` hard, other labels also keep from a stub the space two labels keep
   (§4.4): a stub and the box of another label conflict when they come closer than the
-  larger margin of the two items, `m` (`dist < m − EPS`). The label itself follows §4.4 as
+  larger label gap of the two items, `g` (`dist < g − EPS`). The label itself follows §4.4 as
   an adjacent label does, so with `own_nearest` no mark it may not cover is nearer to it
-  than its own mark, `o + stub_length` away. Its costs are those of §8 for a leader, except
+  than its own mark, `o + stub_length` away (as near is allowed: the stub says whose the
+  label is). Its costs are those of §8 for a leader, except
   that `w_leader_length · len / em` (term `stub`) replaces
   `w_leader + w_leader_length · len / em + w_bends · bends`; the label keeps its
   `w_distance` term (its gap includes the stub) and has no ambiguity term. The uncross
   repair (§10.3) does not move labels with stubs.
+* **Crowd.** An adjacent or slider candidate without a stub whose box is ambiguous (the
+  rule above) costs `w_leader` more (term `crowd`, §8): a label in a crowd stands plain
+  only where no stub, no clear position and no leader of about its cost is free (ADR
+  0054).
 
 ---
 
@@ -1016,6 +1035,7 @@ cost = Σ_class w_label[class] · covered(label_k, class) / em²
      + w_shape · shape_penalty(variant)
      + w_edge · max(0, 1 − dist_to_label_area_edge / em)
      + w_ambiguity · ambiguity_k
+     + [stubs, crowded] w_leader
      + w_stability · (min(1, d/em) + min(1, max(0, d/em − 1) / 4))
 ```
 
@@ -1050,6 +1070,9 @@ cost = Σ_class w_label[class] · covered(label_k, class) / em²
   whose it is; its stub costs `w_leader_length · len / em` instead of the `[leader]`
   terms `w_leader`, `w_leader_length · len/em` and `w_bends · bends`, and the label keeps
   its `w_distance` term.
+* `[stubs, crowded]` (term `crowd`): with `placement.stubs: auto`, an adjacent or slider
+  candidate without a stub whose box another item's mark comes within `stub_reach` of
+  (the ambiguity rule of §6.9) costs as much as a leader.
 * Dynamic terms (other labels and leaders, only for soft settings) are added the same way
   using exact intersection areas/lengths: overlap area / em², a leader's length inside
   another label / em, a placed leader's stroke area inside the label / em² (em of the

@@ -24,8 +24,8 @@ import { atan2Deg } from "./detmath.js";
 import type { P } from "./geom/index.js";
 import type { Shape } from "./geom/shape.js";
 import { type TextLayout, type Variant, partKindName } from "./labels.js";
-import { cmpF64, cmpStr } from "./math.js";
-import { leaderStyleName, stepName } from "./model/index.js";
+import { cmpF64, cmpStr, maxf } from "./math.js";
+import { labelGap, leaderStyleName, stepName } from "./model/index.js";
 import { EXPLAIN_CANDIDATES } from "./solver/greedy.js";
 import { Reason, type Solve, reasonName } from "./solver/index.js";
 import type { Verification } from "./solver/verify.js";
@@ -282,7 +282,9 @@ export function build(s: Solve, ver: Verification, phases: readonly [string, num
         s.state.conflicts(c, s.cands, s.obs, i, buf);
         for (const j of buf) {
           const jc = s.cands[s.state.placed[j]!]!;
-          add(jc.rect.overlaps(c.rect) ? "labels" : "leaders", 1);
+          // the label itself, or one closer than the label gap (spec §4.4)
+          const gap = maxf(labelGap(item.len), labelGap(model.items[j]!.len));
+          add(c.labelOverlapsGap(jc, gap) ? "labels" : "leaders", 1);
           if (!blockers.includes(j)) blockers.push(j);
         }
       }

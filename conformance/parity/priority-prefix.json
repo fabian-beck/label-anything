@@ -49,14 +49,11 @@
       {
         "id": "t1",
         "placed": false,
-        "reason": "omitted_by_priority",
+        "reason": "no_feasible_candidate",
         "blocking": [
-          "items",
-          "labels"
+          "items"
         ],
-        "blocked_by": [
-          "t0"
-        ],
+        "blocked_by": [],
         "priority": {
           "tier": 0,
           "score": 99.0,
@@ -119,12 +116,9 @@
         "placed": false,
         "reason": "omitted_by_priority",
         "blocking": [
-          "items",
-          "labels"
+          "items"
         ],
-        "blocked_by": [
-          "t0"
-        ],
+        "blocked_by": [],
         "priority": {
           "tier": 0,
           "score": 95.0,
@@ -340,7 +334,7 @@
       "iterations": 8000,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 498,
+      "candidates": 484,
       "omission_order": [
         "t19",
         "t18",

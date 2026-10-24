@@ -1,6 +1,6 @@
 # 0051 — A label's own mark is the nearest
 
-* Status: accepted (new option `placement.own_nearest`, default `true`, spec §4.4; Rust `la-core`, TypeScript `@label-anything/core`; the economies chart of the home page)
+* Status: accepted (new option `placement.own_nearest`, default `true`, spec §4.4; Rust `la-core`, TypeScript `@label-anything/core`; the economies chart of the home page); ties amended by ADR 0054: without a stub a label must be nearer to its own mark by its margin
 * Date: 2026-10-23
 
 ## Context

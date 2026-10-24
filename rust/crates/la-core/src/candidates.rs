@@ -710,7 +710,11 @@ pub fn adjacent(
             let plain = cand(Rect::from_center(c, hw, hh));
             let stubbed = match stubs {
                 Some(s) if s.ambiguous(item, &plain.rect) => {
-                    let c = touch_center(shape, os, pos_dirs()[a], hw, hh);
+                    let mut c = touch_center(shape, os, pos_dirs()[a], hw, hh);
+                    if matches!(p, Pos::Left | Pos::Right) {
+                        // the stub meets the middle of the label's side
+                        c.y = shape.reference().y;
+                    }
                     let c = push_in(shape, os, c, hw, hh);
                     s.stubbed(item, v, cand(Rect::from_center(c, hw, hh)))
                 }

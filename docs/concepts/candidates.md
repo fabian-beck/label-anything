@@ -32,7 +32,8 @@ comes near (closer than `stub_reach`, 0.75 em) stands `stub_length` (0.5 em) far
 instead, where that is feasible, joined to its mark by a short **stub** at a right angle to
 its side, so that a label in a crowd of points cannot be read as a neighbour's
 ([leaders](../tutorials/leaders.md#stubs-for-labels-in-a-crowd)). Adjacent and slider labels
-are never nearer to another item's mark than to their own (`placement.own_nearest`,
+are never nearer to another item's mark than to their own, and without a stub they are
+nearer to their own by the label margin (`placement.own_nearest`,
 [avoidance](avoidance.md#the-four-maps)).
 
 **`internal`** — inside the mark or area, at the pole of inaccessibility and the reference

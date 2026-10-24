@@ -126,7 +126,7 @@ impl<'a> Solve<'a> {
                 pri.prio.iter().map(|p| p.key).collect(),
                 model.items.iter().map(|it| it.len.clearance).collect(),
                 model.items.iter().map(|it| it.em()).collect(),
-                model.items.iter().map(|it| it.len.margin).collect(),
+                model.items.iter().map(|it| it.len.label_gap()).collect(),
                 if model.leaders.min_angle_between > 0.0 {
                     la_expr::det_math::cos_deg(model.leaders.min_angle_between)
                 } else {

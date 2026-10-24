@@ -315,8 +315,8 @@ CASES["boundary-column"] = case(
     {"placed": 10, "inside_canvas": True,
      "model": {n.lower(): "boundary" for n in _GREEK},
      "has_leader": {n.lower(): True for n in _GREEK},
-     "box": {"alpha": {"x": 263.76, "y": 35.567, "w": 35.892, "h": 15.6, "tol": 0.01},
-             "kappa": {"x": 263.76, "y": 175.607, "w": 39.252, "h": 15.048, "tol": 0.01}}},
+     "box": {"alpha": {"x": 263.76, "y": 24.767, "w": 35.892, "h": 15.6, "tol": 0.01},
+             "kappa": {"x": 263.76, "y": 186.407, "w": 39.252, "h": 15.048, "tol": 0.01}}},
     "Ten ends 3 px apart that allow only `right`; no fans. Next to the ends a label would come "
     "closer to the other ends' marks than the label margin, even shrunk, and boundary labels at "
     "their ends' heights leave no room for each other. The right side's column takes all ten (spec §6.6): stacked around the ends' heights, "
@@ -387,13 +387,13 @@ CASES["fan-always"] = case(
     {"canvas": {"width": 240, "height": 140}, "placement": {"fan": "always"},
      "items": [pt("a", 100, 70, "Alpha"), pt("b", 104, 76, "Beta")]},
     {"placed": 2, "model": {"a": "fan", "b": "fan"}, "has_leader": {"a": True, "b": True},
-     "box": {"a": {"x": 124.0, "y": 57.028, "w": 35.892, "h": 15.6, "tol": 0.01},
-             "b": {"x": 124.0, "y": 75.028, "w": 29.232, "h": 12.288, "tol": 0.01}}},
+     "box": {"a": {"x": 124.0, "y": 55.828, "w": 35.892, "h": 15.6, "tol": 0.01},
+             "b": {"x": 124.0, "y": 76.228, "w": 29.232, "h": 12.288, "tol": 0.01}}},
     "Both points get adjacent labels (top and bottom; their centers count as right of the "
     "anchors). With `always` the crowd's column takes them: right of the marks' boxes "
     "(x1 = 106) by the least run of 1.5 em (18 px), stacked around the anchors' heights with "
-    "the labels' margin (0.2 em = 2.4 px, more than the boundary gap of 2 px): centers 64.828 "
-    "and 81.172.")
+    "the labels' spacing (0.4 em = 4.8 px, more than the boundary gap of 2 px): centers 63.628 "
+    "and 82.372.")
 
 CASES["fan-max-labels"] = case(
     "fan labels keep to the label budget",
@@ -472,6 +472,31 @@ CASES["own-nearest-off"] = case(
     {**NEAREST, "placement": {"own_nearest": False}},
     {"placed_ids": ["a"], "anchor_side": {"a": "top"}})
 
+# Beta's mark lies 5 px right of Alpha's (1 px between them). Above its mark, Alpha's label
+# would be as near to Beta's mark as to its own (1 px): a reader could take it for Beta's.
+CLEAR = {"canvas": {"width": 200, "height": 120}, "degrade": ["omit"],
+         "placement": {"models": ["adjacent"]},
+         "items": [pt("a", 100, 60, "Alpha", priority=2, placement={"position_order": ["top", "left"]}),
+                   pt("b", 105, 60, "Beta", priority=1, placement={"position_order": ["right"]})]}
+CASES["own-nearest-clear"] = case(
+    "without a stub a label is nearer to its own mark than to any other by its margin",
+    CLEAR,
+    {"placed": 2, "anchor_side": {"a": "left", "b": "right"}, "has_leader": {"a": False}, "own_nearest": True},
+    "Above its mark Alpha's label is 1 px from its own mark and from Beta's, not the margin "
+    "(0.2 em = 2.4 px) farther from Beta's (spec §4.4): it stands left of its mark, where "
+    "Beta's mark is 6 px away.")
+CASES["own-nearest-clear-stub"] = case(
+    "with a stub a label may come as near to another mark as to its own",
+    {**CLEAR, "placement": {"models": ["adjacent"], "stubs": "auto"},
+     "items": [pt("a", 100, 60, "Alpha", priority=2, placement={"position_order": ["top"]}),
+               pt("b", 106, 60, "Beta", priority=1, placement={"position_order": ["bottom"]})]},
+    {"placed": 2, "anchor_side": {"a": "top", "b": "bottom"}, "stub": {"a": True, "b": True},
+     "own_nearest": True},
+    "Alpha may only stand above its mark and Beta below its own, where without a stub each "
+    "label would be 1 px from both marks. With a stub, 0.5 em farther out, each is 7 px from "
+    "both marks, and its stub, which keeps the leader clearance (0.4 em) from the other mark, "
+    "says whose it is.")
+
 # Alpha may only stand right of its point; Beta's point, 16 px below it, comes within the
 # stub reach (0.75 em = 9 px) of that place: Alpha stands 0.5 em farther right, joined to its
 # mark by a horizontal stub to the middle of its left side, and Beta's mark is still farther
@@ -497,6 +522,51 @@ CASES["stubs-not-nearer"] = case(
     "Beta's mark is 6.2 px below the middle of Alpha's label: 0.5 em farther right it would "
     "still be 6.2 px away, nearer than Alpha's own mark (7 px), so Alpha keeps its place "
     "against its mark, without a stub.")
+
+# Alpha may stand right of its point or above it; Beta's point, 17 px below and 4 px right of
+# Alpha's, comes within the stub reach (0.75 em = 9 px) of the right position but is no
+# nearer to it than 0.5 em more than Alpha's own mark (no ambiguity cost).
+CROWD = {"canvas": {"width": 240, "height": 160}, "placement": {"stubs": "auto"},
+         "items": [pt("a", 100, 100, "Alpha", priority=2,
+                      placement={"models": ["adjacent"], "position_order": ["right", "top"]}),
+                   pt("b", 104, 117, "Beta", priority=1, placement={"position_order": ["bottom"]})]}
+CASES["stubs-crowd"] = case(
+    "with stubs, a crowded label without a stub costs as much as a leader",
+    CROWD,
+    {"anchor_side": {"a": "top"}, "has_leader": {"a": False}},
+    "Right of its point Alpha's label would be crowded: plain it costs the distance term "
+    "(0.025) and `w_leader` (1), with a stub (centered on its left side, 0.5 em farther out) "
+    "0.29. Above its point, clear of Beta's mark, it costs 0.1 (the second position): it "
+    "goes there (spec §6.9).")
+CASES["stubs-crowd-off"] = case(
+    "without stubs, a crowded position costs nothing extra",
+    {**CROWD, "placement": {"stubs": "off"}},
+    {"anchor_side": {"a": "right"}, "has_leader": {"a": False}},
+    "The problem of `stubs-crowd` without stubs: the right position (0.025) is cheaper "
+    "than the top one (0.1).")
+
+# --- label spacing -----------------------------------------------------------------------
+# Two labels right of points 16 px apart: their boxes, 12.288 px high, are 3.712 px apart,
+# more than the margin (0.2 em = 2.4 px) but less than the spacing (0.4 em = 4.8 px).
+SPACED = {"canvas": {"width": 240, "height": 160}, "degrade": ["omit"],
+          "placement": {"models": ["adjacent"], "position_order": ["right"]},
+          "items": [pt("a", 100, 100, "Ham", priority=2), pt("b", 100, 116, "Ham", priority=1)]}
+CASES["label-spacing"] = case(
+    "labels keep their spacing from each other, more than their margin from other marks",
+    SPACED,
+    {"placed_ids": ["a"], "unplaced_ids": ["b"], "reasons": {"b": "omitted_by_priority"}},
+    "b's only position is 3.712 px from a's label: less than the spacing of 0.4 em "
+    "(spec §4.4), so b goes without a label.")
+CASES["label-spacing-margin"] = case(
+    "with the spacing at the margin, labels may come as close to each other as to other marks",
+    {**SPACED, "defaults": {"spacing": "0.2em"}},
+    {"placed": 2, "box": {"b": {"x": 103, "y": 109.856, "w": 30.444, "h": 12.288, "tol": 0.01}}})
+CASES["label-spacing-twice-margin"] = case(
+    "unless it is set, the spacing is twice the margin",
+    {**SPACED, "defaults": {"margin": "0.1em"}},
+    {"placed": 2},
+    "With a margin of 0.1 em the spacing is 0.2 em (2.4 px): b's label, 3.712 px from a's, "
+    "keeps it.")
 
 # Small marks of every shape in a crowd (the concave L is pushed in, spec §4.5): the parity
 # fixture of this case holds every stub of the Rust core, which TypeScript must reproduce.

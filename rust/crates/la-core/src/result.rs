@@ -313,7 +313,12 @@ pub fn build(
                     s.state.conflicts(&c, &s.cands, s.obs, i, &mut buf);
                     for &j in &buf {
                         let jc = &s.cands[s.state.placed[j as usize].unwrap() as usize];
-                        let key = if jc.rect.overlaps(&c.rect) {
+                        // the label itself, or one closer than the label gap (spec §4.4)
+                        let gap = crate::math::maxf(
+                            item.len.label_gap(),
+                            model.items[j as usize].len.label_gap(),
+                        );
+                        let key = if c.label_overlaps_gap(jc, gap) {
                             "labels"
                         } else {
                             "leaders"

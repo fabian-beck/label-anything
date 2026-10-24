@@ -26,7 +26,7 @@ import { type Measurer, type Variant, fullSize, ladderVariants } from "../labels
 import { Stubs, distant, distantDirs } from "../leaders.js";
 import { cosDeg } from "../detmath.js";
 import { cmpF64, minf } from "../math.js";
-import { type Model, Models } from "../model/index.js";
+import { type Model, Models, labelGap } from "../model/index.js";
 import type { Obstacles } from "../obstacles.js";
 import type { Priorities } from "../priority.js";
 import { StaticIndex } from "../spatial.js";
@@ -129,7 +129,7 @@ export class Solve {
       pri.prio.map((p) => p.key),
       model.items.map((it) => it.len.clearance),
       model.items.map((it) => it.em()),
-      model.items.map((it) => it.len.margin),
+      model.items.map((it) => labelGap(it.len)),
       model.leaders.minAngleBetween > 0 ? cosDeg(model.leaders.minAngleBetween) : 1,
       obs.dynamic.lowerCover
         ? new LowerMarks(

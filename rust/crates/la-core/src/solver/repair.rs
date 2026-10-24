@@ -209,10 +209,13 @@ fn column_cands(
             .collect()
     } else {
         let desired: Vec<f64> = order.iter().map(|&i| key(i)).collect();
-        // at least the larger margin of the two labels apart
+        // at least the larger label gap of the two labels apart
         let gaps: Vec<f64> = (1..order.len())
             .map(|j| {
-                let m = maxf(items[order[j - 1]].len.margin, items[order[j]].len.margin);
+                let m = maxf(
+                    items[order[j - 1]].len.label_gap(),
+                    items[order[j]].len.label_gap(),
+                );
                 (along[j - 1] + along[j]) * 0.5 + maxf(gap, m)
             })
             .collect();

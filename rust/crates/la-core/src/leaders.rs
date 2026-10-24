@@ -56,24 +56,9 @@ impl<'a> Stubs<'a> {
             )),
         })
     }
-    /// Whether the mark of another item (not of the item's group) comes closer than
-    /// `stub_reach` to the label box `r`: the label could be read as that item's.
+    /// Whether the label box `r` of `item` is ambiguous ([`crate::cost::crowded`]).
     pub fn ambiguous(&self, item: &Item, r: &Rect) -> bool {
-        let reach = item.len.stub_reach;
-        // a label against a mark larger than its font size reads as attached to it
-        let b = item.shape.bbox();
-        if reach <= 0.0 || maxf(b.w(), b.h()) > item.em() {
-            return false;
-        }
-        let i = item.index;
-        let mut buf = self.buf.borrow_mut();
-        self.obs.item_index.query(&r.inflate(reach), &mut buf);
-        buf.iter().any(|&j| {
-            let j = j as usize;
-            j != i
-                && self.model.group_of.get(j).copied().flatten() != Some(i)
-                && self.model.items[j].shape.dist_rect(r) < reach
-        })
+        crate::cost::crowded(self.model, self.obs, item, r, &mut self.buf.borrow_mut())
     }
     /// The candidate `c` of variant `v` with its stub, when the stub meets a side of the
     /// label squarely and the candidate is statically feasible (spec §6.9); `None`
@@ -90,12 +75,14 @@ impl<'a> Stubs<'a> {
 
 /// The stub of an item's label box `r` (spec §6.9): horizontal or vertical, from the mark
 /// (`anchor_gap` outside its boundary, or the tip of an icon mark) to the box side facing
-/// it, which it meets at a right angle within the side's middle half. `None` when the box
-/// is not beside, above or below the mark's reference point in that way.
+/// it, which it meets at a right angle: a left or right side in its middle (the box
+/// centered on the mark's reference point vertically), a top or bottom side within its
+/// middle half. `None` when the box is not beside, above or below the mark's reference
+/// point in that way.
 pub fn stub_leader(item: &Item, r: &Rect) -> Option<Leader> {
     let refp = item.shape.reference();
     let m = r.center();
-    let beside = (refp.y - m.y).abs() <= 0.25 * r.h();
+    let beside = (refp.y - m.y).abs() <= crate::geom::EPS;
     let over = (refp.x - m.x).abs() <= 0.25 * r.w();
     let (port, d) = if beside && refp.x < r.x0 {
         (P::new(r.x0, refp.y), P::new(1.0, 0.0))
@@ -507,7 +494,8 @@ pub struct Spacing {
     pub near: f64,
     /// Cosine of `leaders.min_angle_between`; 1 turns the angle rule off.
     pub cos_min: f64,
-    /// The space two labels keep: the larger of the two items' `defaults.margin`.
+    /// The space two labels keep: the larger of the two items' label gaps (spacing, at
+    /// least margin).
     pub gap: f64,
 }
 

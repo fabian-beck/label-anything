@@ -32,7 +32,7 @@ import { boundaryLeader, slotArea } from "../boundary.js";
 import { Cand, Kind, SIDE_FAN, labelShape } from "../candidates.js";
 import { EPS, P, Rect } from "../geom/index.js";
 import { cmpF64, maxf, minf } from "../math.js";
-import { FanMode, LeaderStyle, Models, Omission, Pos } from "../model/index.js";
+import { FanMode, LeaderStyle, Models, Omission, Pos, labelGap } from "../model/index.js";
 import { hungarian, stack } from "./repair.js";
 import { Reason, type Solve } from "./index.js";
 import { inverted } from "./verify.js";
@@ -364,10 +364,10 @@ function layout(
   const hs = order.map((j, k) => s.variants[j]![vis[k]!]!.h);
   const gap = items[order[0]!]!.len.boundaryGap;
   const desired = order.map((j) => items[j]!.anchor.y);
-  // at least the larger margin of the two labels apart (spec §6.8)
+  // at least the larger label gap of the two labels apart (spec §6.8)
   const gaps: number[] = [];
   for (let k = 1; k < order.length; k++) {
-    const m = maxf(items[order[k - 1]!]!.len.margin, items[order[k]!]!.len.margin);
+    const m = maxf(labelGap(items[order[k - 1]!]!.len), labelGap(items[order[k]!]!.len));
     gaps.push((hs[k - 1]! + hs[k]!) * 0.5 + maxf(gap, m));
   }
   const ys = stack(desired, gaps, area.y0 + hs[0]! * 0.5, area.y1 - hs[hs.length - 1]! * 0.5);

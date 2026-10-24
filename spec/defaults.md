@@ -33,7 +33,8 @@ are stale.
 | `defaults.font.line_height` | `1.2` | > 0 | Line pitch in em for wrapped text. |
 | `defaults.padding` | `"0.15em"` | length ≥ 0 | Label box inflation (part of the reported box). |
 | `defaults.buffer` | `"0.3em"` | length ≥ 0 | Soft ambiguity buffer ring around each label (Mumtaz et al. 2019). |
-| `defaults.margin` | `"0.2em"` | length ≥ 0 | Space a label keeps from other labels (the larger of the two margins) and from other items' marks while `avoid.label` has them hard (spec §4.4): not from its own mark (`placement.offset`), never more than another mark keeps from the own mark's box, half for warm-start candidates. |
+| `defaults.margin` | `"0.2em"` | length ≥ 0 | Space a label keeps from other items' marks while `avoid.label.items` is hard (spec §4.4): not from its own mark (`placement.offset`), never more than another mark keeps from the own mark's box, half for warm-start candidates; also the least space from other labels. |
+| `defaults.spacing` | `null` | length ≥ 0 or null | Space a label keeps from other labels and their stubs while `avoid.label.labels` is hard (the larger of the two labels' spacings, each at least its margin; spec §4.4); `null`: twice the margin (0.4 em), so that with the padding their letters stand farther apart than the lines of one label. Half for warm-start candidates. |
 | `defaults.mark` | `{"shape":"circle","r":2}` | mark | Mark of point anchors without `anchor.mark`. |
 | `defaults.wrap` | `null` | wrap or null | No wrap settings: single line; the `wrap` ladder step may still try 2–3 lines. |
 | `defaults.truncate` | `"none"` | none \| end \| middle | Truncation when wrapped text exceeds `max_lines`. |
@@ -57,8 +58,8 @@ are stale.
 | `placement.boundary.gap` | `2` | length ≥ 0 | Gap between stacked boundary labels. |
 | `placement.boundary.margin` | `4` | length ≥ 0 | Distance of boundary labels from the canvas (region) edge. |
 | `placement.fan` | `"auto"` | auto \| always \| off | Fan labels (spec §6.8): a crowd's labels stacked in a column beside it with fanning leaders. `auto`: crowds of items left without a label, when that places more labels; `always`: every crowd of two or more items. |
-| `placement.own_nearest` | `true` | bool | A label without a distant leader comes no closer to another item's mark than to its own (marks it may not cover; spec §4.4). |
-| `placement.stubs` | `"off"` | off \| auto | Stubs (spec §6.9): with `auto`, a label next to its mark that another item's mark comes within `stub_reach` of stands `stub_length` farther out, joined to its mark by a short leader at a right angle to its side (`leader.stub`), where that is feasible. |
+| `placement.own_nearest` | `true` | bool | A label without a distant leader comes no closer to another item's mark than to its own, and without a stub it is nearer to its own by its margin (at most by the distance between the two marks; marks it may not cover; spec §4.4). |
+| `placement.stubs` | `"off"` | off \| auto | Stubs (spec §6.9): with `auto`, a label next to its mark that another item's mark comes within `stub_reach` of stands `stub_length` farther out, joined to its mark by a short leader at a right angle to its side (`leader.stub`; in the middle of a left or right side), where that is feasible; such a crowded label without a stub costs as much as a leader (`w_leader`). |
 | `placement.stub_length` | `"0.5em"` | length ≥ 0 | How much farther out a label with a stub stands than an adjacent one. |
 | `placement.stub_reach` | `"0.75em"` | length ≥ 0 | A label is ambiguous where another item's mark comes closer than this to its adjacent box. |
 | `leaders.style` | `"straight"` | enum | straight \| angles \| orthogonal \| elbow \| curved. |

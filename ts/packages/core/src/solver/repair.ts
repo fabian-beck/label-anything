@@ -11,7 +11,7 @@ import { Cand, Kind, Leader, labelShape } from "../candidates.js";
 import { EPS, P, Rect, segSegDistXY } from "../geom/index.js";
 import { leaderStart } from "../leaders.js";
 import { clampf, cmpF64, maxf } from "../math.js";
-import { LeaderStyle, Models, Omission } from "../model/index.js";
+import { LeaderStyle, Models, Omission, labelGap } from "../model/index.js";
 import { applyUnlessInverting } from "./fan.js";
 import { explain, pairConflict } from "./greedy.js";
 import { Reason, type Solve } from "./index.js";
@@ -178,10 +178,10 @@ function columnCands(
     positions = order.map((_, j) => lo + ((hi - lo) * (j + 0.5)) / k);
   } else {
     const desired = order.map((i) => key(i));
-    // at least the larger margin of the two labels apart
+    // at least the larger label gap of the two labels apart
     const gaps: number[] = [];
     for (let j = 1; j < order.length; j++) {
-      const m = maxf(items[order[j - 1]!]!.len.margin, items[order[j]!]!.len.margin);
+      const m = maxf(labelGap(items[order[j - 1]!]!.len), labelGap(items[order[j]!]!.len));
       gaps.push((along[j - 1]! + along[j]!) * 0.5 + maxf(gap, m));
     }
     positions = stack(desired, gaps, lo + along[0]! * 0.5, hi - along[along.length - 1]! * 0.5);

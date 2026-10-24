@@ -5,7 +5,7 @@ use crate::env::Env;
 use crate::geom::{Rect, EPS, P};
 use crate::labels::Variant;
 use crate::math::{clampf, maxf, minf};
-use crate::model::Model;
+use crate::model::{Item, Model};
 use crate::obstacles::{AvoidW, Obstacles, OwnMark};
 
 /// Named cost terms (for `cost_breakdown`).
@@ -64,6 +64,26 @@ impl Acc<'_> {
             self.relaxed = false;
         }
     }
+}
+
+/// Whether the mark of another item (not of the item's group) comes closer than
+/// `stub_reach` to the label box `r` of `item`: the label could be read as that item's
+/// (spec §6.9). `buf` is scratch space for the item query.
+pub fn crowded(model: &Model, obs: &Obstacles, item: &Item, r: &Rect, buf: &mut Vec<u32>) -> bool {
+    let reach = item.len.stub_reach;
+    // a label against a mark larger than its font size reads as attached to it
+    let b = item.shape.bbox();
+    if reach <= 0.0 || maxf(b.w(), b.h()) > item.em() {
+        return false;
+    }
+    let i = item.index;
+    obs.item_index.query(&r.inflate(reach), buf);
+    buf.iter().any(|&j| {
+        let j = j as usize;
+        j != i
+            && model.group_of.get(j).copied().flatten() != Some(i)
+            && model.items[j].shape.dist_rect(r) < reach
+    })
 }
 
 fn finish(c: &mut Cand, acc: Acc) {
@@ -133,12 +153,17 @@ impl<'a> Evaluator<'a> {
             item.len.margin
         };
         // a label without a distant leader comes no closer to another item's mark than to
-        // its own (spec §4.4)
+        // its own, and without a stub it is nearer to its own by its margin (spec §4.4)
         let near_rule = model.placement.own_nearest
             && c.kind != Kind::Internal
             && (c.leaders.is_empty() || c.has_stub());
         let d_own = if near_rule {
             item.shape.dist_rect(&r)
+        } else {
+            0.0
+        };
+        let clear = if near_rule && !c.has_stub() {
+            margin
         } else {
             0.0
         };
@@ -151,7 +176,7 @@ impl<'a> Evaluator<'a> {
                 },
                 margin,
             ),
-            d_own,
+            d_own + clear,
         );
         self.buf.clear();
         obs.item_index.query(&r.inflate(reach), &mut self.buf);
@@ -209,9 +234,16 @@ impl<'a> Evaluator<'a> {
             {
                 acc.violate(Block::Items, false, 0.0);
             }
-            // nearer to the label than its own mark (the marks of the item's group aside)
+            // nearer to the label than its own mark, or, without a stub, not a margin farther
+            // (at most as far as the two marks' reference points lie apart; the marks of the
+            // item's group aside)
+            let sep = if clear > 0.0 {
+                minf(clear, sj.reference().dist(item.shape.reference()))
+            } else {
+                0.0
+            };
             if near_rule
-                && d < d_own - crate::geom::EPS
+                && d < d_own + sep - crate::geom::EPS
                 && model.group_of.get(j).copied().flatten() != Some(i)
             {
                 acc.violate(Block::Items, false, 0.0);
@@ -346,7 +378,16 @@ impl<'a> Evaluator<'a> {
             };
             acc.add("ambiguity", w.ambiguity * amb);
         }
-        // 10. stability
+        // 10. crowd: with stubs, a label beside its mark that another item's mark comes
+        // near, and that has no stub, costs as much as a leader (spec §6.9)
+        if model.placement.stubs
+            && !stub
+            && matches!(c.kind, Kind::Adjacent | Kind::Slider)
+            && crowded(model, self.obs, item, &r, &mut self.buf)
+        {
+            acc.add("crowd", w.leader);
+        }
+        // 11. stability
         if w.stability > 0.0 {
             if let Some(Some(b)) = model.warm.get(&item.id) {
                 let d = b.center().dist(r.center());
@@ -356,7 +397,7 @@ impl<'a> Evaluator<'a> {
                 acc.add("stability", w.stability * (minf(1.0, d / em) + tail));
             }
         }
-        // 11. host cost
+        // 12. host cost
         if self.env.has_cost_callback() {
             acc.add(
                 "user",

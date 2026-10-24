@@ -80,7 +80,7 @@ with a unit (`"0.5em"`, `"3px"`, `"2pt"`).
 | Builder | Problem JSON |
 |---|---|
 | `canvas(w, h)`, `canvasPadding`, `allowOutside`, `region`, `canvasBackground`, `devicePixelRatio`, `yAxisUp()`, `transform(a..f)`, `preset(Preset)` | `canvas`, `y_axis`, `transform`, `preset` |
-| `fontSize`, `font(Font.of("default").size(14).bold().lineHeight(1.3))`, `labelPadding`, `buffer`, `margin`, `defaultMark(Mark)`, `wrap(Wrap)`, `truncate(Truncate)`, `textShaping` | `defaults.*`, `text.shaping` |
+| `fontSize`, `font(Font.of("default").size(14).bold().lineHeight(1.3))`, `labelPadding`, `buffer`, `margin`, `spacing`, `defaultMark(Mark)`, `wrap(Wrap)`, `truncate(Truncate)`, `textShaping` | `defaults.*`, `text.shaping` |
 | `item(id, x, y, label)`, `item(id, x, y, label, it -> it.mark(..).attr(..))`, `item(Item.point(..)...)`, `area(id, polygon, label)`, `items(...)` | `items` |
 | `backgroundRaster(Path, RasterMode)`, `backgroundRaster(byte[] png, mode)`, `backgroundPixels(w, h, ByteBuffer/byte[], mode)`, `background(Raster...)`, `backgroundSvg(String/Path)`, `background(Svg...)`, `vector(VectorLayer)` | `obstacles.*` |
 | `avoid(Avoid.label().hard(..).weight(..), Avoid.leader()..., Avoid.buffer()..., Avoid.relaxable(..))` | `avoid.*` (merged key by key) |

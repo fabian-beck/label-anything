@@ -130,22 +130,31 @@ Only labels that need one get it, and only where it is clear:
   (0.75 em) to the place where it would touch its own mark. Labels of marks larger than
   their font size (a big bubble, a country) never are: they read as attached to the outline.
 * The label then stands `stub_length` (0.5 em) farther out in the same direction, when the
-  stub there is horizontal or vertical and meets the middle half of the label's side
-  facing the point — beside, above or below the point, not diagonal to it.
+  stub there is horizontal or vertical and meets the label's side facing the point at a
+  right angle: a left or right side in its middle (the label centered on the point), a top
+  or bottom side within its middle half — beside, above or below the point, not diagonal
+  to it.
 * It does so only where that is feasible: no other point may be nearer to the label than
   its own ([own mark nearest](../concepts/avoidance.md#the-four-maps), on by default), the
   stub keeps `leaders.clearance` from other points as every leader does, and other labels
-  keep the label margin from it. Otherwise the label keeps its place against its point.
+  keep the label spacing from it. Otherwise the label keeps its place against its point.
+* Without a stub a label must be *clearly* nearer to its own point than to any other, by
+  the label margin; with one, as near is enough, since the stub says whose it is. Beside
+  a neighbouring point a stub is often the only way to label a point at all.
+* An ambiguous label left without a stub costs as much as a leader, so that a stub, a clear
+  position or a leader is taken where one is free.
 
 In a tight crowd a label can rarely stand off its point without coming nearer to another
 one, so stubs appear at its edges: on the [economies chart](../index.md) of the home page
-Honduras, Cyprus and French Polynesia have them. The result reports a
-stub as the label's `leader` with `"stub": true` (model `adjacent` or `slider`), so that a
-host can draw it more lightly than the leaders of distant labels — the chart draws stubs
-in the leaders' grey at 1 px with round caps; `@label-anything/extras` gives their paths
-the class `la-stub` as well as `la-leader`. A stub ignores `min_length` and the leader
-style, and costs its length but not the fixed cost of a leader, so that a free position
-that needs no stub stays preferred ([ADR 0050](../adr/0050-stubs-for-labels-in-a-crowd.md)).
+Myanmar, Uganda, Botswana, Mozambique, Haiti, French Polynesia and Bhutan have them. The
+result reports a stub as the label's `leader` with `"stub": true` (model `adjacent` or
+`slider`), so that a host can draw it more lightly than the leaders of distant labels — the
+chart draws stubs in the leaders' grey at 1 px with round caps; `@label-anything/extras`
+gives their paths the class `la-stub` as well as `la-leader`. A stub ignores `min_length`
+and the leader style, and costs its length but not the fixed cost of a leader, so that a
+free position that needs no stub stays preferred
+([ADR 0050](../adr/0050-stubs-for-labels-in-a-crowd.md),
+[ADR 0054](../adr/0054-clear-labels-in-crowds.md)).
 
 ## Boundary labels
 

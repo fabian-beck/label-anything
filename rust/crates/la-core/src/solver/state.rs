@@ -59,10 +59,12 @@ pub struct State {
     /// `leaders.min_angle_between`, and how far they reach beyond a candidate's box.
     clr: Vec<f64>,
     em: Vec<f64>,
-    /// The margin of each item's label (`defaults.margin`) and the largest.
+    /// The space each item's label keeps from other labels and stubs (its spacing, at least
+    /// its margin, spec §4.4) and the largest.
     margin: Vec<f64>,
     margin_max: f64,
-    /// How far stubs reach beyond a label's box (the largest margin with stubs, else 0).
+    /// How far stubs reach beyond a label's box (the largest such space with stubs, else
+    /// 0).
     stub_gap: f64,
     cos_min: f64,
     reach: f64,
@@ -75,8 +77,9 @@ pub struct State {
 
 impl State {
     /// `keys`: the priority key level of every item (smaller = more important); `clr`
-    /// and `em`: the leader clearance and font size of every item; `margin`: the label
-    /// margin of every item; `cos_min`: the cosine of `leaders.min_angle_between`.
+    /// and `em`: the leader clearance and font size of every item; `margin`: the space the
+    /// label of every item keeps from other labels; `cos_min`: the cosine of
+    /// `leaders.min_angle_between`.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         n_items: usize,

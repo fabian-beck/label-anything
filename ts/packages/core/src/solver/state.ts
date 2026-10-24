@@ -92,10 +92,13 @@ export class State {
    */
   private clr: readonly number[];
   private em: readonly number[];
-  /** The margin of each item's label (`defaults.margin`) and the largest. */
+  /**
+   * The space each item's label keeps from other labels and stubs (its spacing, at least its
+   * margin, spec §4.4) and the largest.
+   */
   private margin: readonly number[];
   private marginMaxV: number;
-  /** How far stubs reach beyond a label's box (the largest margin with stubs, else 0). */
+  /** How far stubs reach beyond a label's box (the largest such space with stubs, else 0). */
   private stubGap = 0;
   private cosMin: number;
   private reach: number;
@@ -107,8 +110,8 @@ export class State {
 
   /**
    * `keys`: the priority key level of every item (smaller = more important); `clr` and
-   * `em`: the leader clearance and font size of every item; `margin`: the label margin of
-   * every item; `cosMin`: the cosine of `leaders.min_angle_between`.
+   * `em`: the leader clearance and font size of every item; `margin`: the space the label of
+   * every item keeps from other labels; `cosMin`: the cosine of `leaders.min_angle_between`.
    */
   constructor(
     nItems: number,

@@ -117,7 +117,7 @@
       "iterations": 800,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 241,
+      "candidates": 236,
       "omission_order": [
         "low"
       ],

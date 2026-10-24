@@ -370,7 +370,18 @@
         },
         "margin": {
           "$ref": "#/$defs/nonNegLength",
-          "description": "Space a label keeps from other labels (the larger of the two margins) and from other items' marks while avoid.label has them hard (spec §4.4): not from its own mark (placement.offset), never more than another mark keeps from the own mark's box, half for warm-start candidates."
+          "description": "Space a label keeps from other items' marks while avoid.label.items is hard (spec §4.4): not from its own mark (placement.offset), never more than another mark keeps from the own mark's box, half for warm-start candidates; also the least space from other labels."
+        },
+        "spacing": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/nonNegLength"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Space a label keeps from other labels and their stubs while avoid.label.labels is hard (the larger of the two labels' spacings, each at least its margin; spec §4.4); null: twice the margin. Half for warm-start candidates."
         },
         "mark": {
           "$ref": "#/$defs/mark",
@@ -1325,14 +1336,14 @@
         },
         "own_nearest": {
           "type": "boolean",
-          "description": "A label without a distant leader comes no closer to another item's mark than to its own (marks it may not cover)."
+          "description": "A label without a distant leader comes no closer to another item's mark than to its own, and without a stub it is nearer to its own by its margin (at most by the distance between the two marks; marks it may not cover)."
         },
         "stubs": {
           "enum": [
             "off",
             "auto"
           ],
-          "description": "Stubs: with auto, a label next to its mark that another item's mark comes within stub_reach of stands stub_length farther out, joined to its mark by a short leader at a right angle to its side, where that is feasible."
+          "description": "Stubs: with auto, a label next to its mark that another item's mark comes within stub_reach of stands stub_length farther out, joined to its mark by a short leader at a right angle to its side (in the middle of a left or right side), where that is feasible; such a crowded label without a stub costs as much as a leader."
         },
         "stub_length": {
           "$ref": "#/$defs/nonNegLength",

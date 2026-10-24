@@ -403,10 +403,13 @@ fn layout(
         .collect();
     let gap = items[order[0]].len.boundary_gap;
     let desired: Vec<f64> = order.iter().map(|&j| items[j].anchor.y).collect();
-    // at least the larger margin of the two labels apart (spec §6.8)
+    // at least the larger label gap of the two labels apart (spec §6.8)
     let gaps: Vec<f64> = (1..order.len())
         .map(|k| {
-            let m = maxf(items[order[k - 1]].len.margin, items[order[k]].len.margin);
+            let m = maxf(
+                items[order[k - 1]].len.label_gap(),
+                items[order[k]].len.label_gap(),
+            );
             (hs[k - 1] + hs[k]) * 0.5 + maxf(gap, m)
         })
         .collect();

@@ -17,7 +17,7 @@ import {
   type LeaderStyle,
   type Model,
   Models,
-  type Pos,
+  Pos,
   LeaderStyle as LS,
   Port,
   posAngularIndex,
@@ -651,7 +651,8 @@ export function adjacent(
         TC_ARGS[0] = os;
         touchCenterAt(shape, POS_DIRS[posAngularIndex(p)]!);
         let fx = TC[0]!;
-        let fy = TC[1]!;
+        // left and right: the stub meets the middle of the label's side
+        let fy = p === Pos.Left || p === Pos.Right ? shape.reference().y : TC[1]!;
         if (push) {
           const f = pushIn(shape, os, new P(fx, fy), hw, hh);
           fx = f.x;

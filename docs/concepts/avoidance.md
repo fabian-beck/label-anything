@@ -53,7 +53,7 @@ The key `"*"` sets the value of every class the map does not list.
 
 | Map | Default | |
 |---|---|---|
-| `avoid.label` | `labels`, `items`, `text`, `canvas_edge`, `own_mark`: hard · `ink`: 0.1 · `*`: 1.0 | label box vs. class; hard `labels` and `items` keep the label margin (`defaults.margin`, 0.2 em) from other labels and other items' marks |
+| `avoid.label` | `labels`, `items`, `text`, `canvas_edge`, `own_mark`: hard · `ink`: 0.1 · `*`: 1.0 | label box vs. class; hard `labels` keep the label spacing (`defaults.spacing`, twice the margin: 0.4 em) from other labels, hard `items` the label margin (`defaults.margin`, 0.2 em) from other items' marks |
 | `avoid.leader` | `leaders`, `labels`, `items`: hard · `ink`: 0.05 · `*`: 0.2 | leader vs. class; `leaders` = crossings and leaders closer than `leaders.clearance`, `labels` = passing through other labels, `items` = passing other items' marks closer than `leaders.clearance` |
 | `avoid.buffer` | `items`: 1.0 · `leaders`: 0.5 | soft weights of the ring around each label (width `defaults.buffer`, 0.3 em): keeps labels from sitting so close to another item that they look like its label |
 | `avoid.relaxable` | `["points", "ink", "lines"]` | hard classes the `soft_overlap` ladder step may turn into a weight (`degrade_options.soft_overlap_weight`, 10) |
@@ -68,9 +68,13 @@ it). Internal labels are inside their mark by design and exempt.
 With `placement.own_nearest` (default `true`), a label next to its mark — adjacent or
 slider, also with a [stub](../tutorials/leaders.md#stubs-for-labels-in-a-crowd) — is never
 nearer to another item's mark than to its own; the label margin alone allows that where
-marks overlap or touch. The rule protects the marks a label may not cover (hard `items`,
-or hard `lower_items`); internal labels and labels on leaders are exempt
-([ADR 0051](../adr/0051-own-mark-nearest.md)).
+marks overlap or touch. Without a stub it must be *clearly* nearer: by its margin
+(0.2 em), or, for marks closer together than that, by the distance between them. A label
+below two touching points thus stands on the side away from the other point, takes a stub
+or a leader, or is left out — it is never as near to a neighbour's point as to its own.
+The rule protects the marks a label may not cover (hard `items`, or hard `lower_items`);
+internal labels and labels on leaders are exempt
+([ADR 0051](../adr/0051-own-mark-nearest.md), [ADR 0054](../adr/0054-clear-labels-in-crowds.md)).
 
 **Marks of less important items.** `avoid.label.lower_items` is the policy between a label
 and the marks of items of *lower* priority key (default: that of `items`; 10 in the `map`

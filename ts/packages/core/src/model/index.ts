@@ -166,8 +166,13 @@ export interface Area {
 export interface ItemLengths {
   padding: number;
   buffer: number;
-  /** `defaults.margin`: the space the label keeps from other labels and other marks. */
+  /** `defaults.margin`: the space the label keeps from other items' marks. */
   margin: number;
+  /**
+   * `defaults.spacing`: the space the label keeps from other labels, twice `margin` unless
+   * set (at least `margin`, see {@link labelGap}).
+   */
+  spacing: number;
   offset: number;
   innerPadding: number;
   maxDistance: number;
@@ -183,11 +188,21 @@ export interface ItemLengths {
   stubReach: number;
 }
 
+/**
+ * `ItemLengths::label_gap`: the space the label keeps from other labels (spec §4.4), its
+ * spacing, at least its margin.
+ */
+export function labelGap(l: ItemLengths): number {
+  return maxf(l.spacing, l.margin);
+}
+
 /** Per-item lengths before resolution against the item's font size. */
 export interface ItemLengthSpec {
   padding: Length;
   buffer: Length;
   margin: Length;
+  /** `null`: twice the margin. */
+  spacing: Length | null;
   offset: Length;
   innerPadding: Length;
   maxDistance: Length;
@@ -204,10 +219,12 @@ export interface ItemLengthSpec {
 
 /** `ItemLengthSpec::resolve`: the lengths in px for a font size of `em` px. */
 export function resolveLengths(l: ItemLengthSpec, em: number): ItemLengths {
+  const margin = l.margin.px(em);
   return {
     padding: l.padding.px(em),
     buffer: l.buffer.px(em),
-    margin: l.margin.px(em),
+    margin,
+    spacing: l.spacing === null ? 2 * margin : l.spacing.px(em),
     offset: l.offset.px(em),
     innerPadding: l.innerPadding.px(em),
     maxDistance: l.maxDistance.px(em),
@@ -1331,6 +1348,7 @@ function itemDefaults(o: Opts): ItemDefaults {
       padding: o.length("defaults.padding"),
       buffer: o.length("defaults.buffer"),
       margin: o.length("defaults.margin"),
+      spacing: Length.fromValue(o.get("defaults.spacing")),
       offset: o.length("placement.offset"),
       innerPadding: o.length("placement.inner_padding"),
       maxDistance: o.length("placement.max_distance"),

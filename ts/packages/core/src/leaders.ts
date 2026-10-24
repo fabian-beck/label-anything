@@ -6,7 +6,7 @@
  */
 
 import { Cand, KEEP_BOX, type KeepFn, Kind, Leader, SIDE_DISTANT, dirOf, labelShape } from "./candidates.js";
-import { Evaluator } from "./cost.js";
+import { Evaluator, crowded } from "./cost.js";
 import { BasicEnv } from "./env.js";
 import { EPS, P, Rect, distPointSeg, distSegRect, segIntersects, segOverlapsRect } from "./geom/index.js";
 import type { Variant } from "./labels.js";
@@ -78,25 +78,9 @@ export class Stubs {
     return model.placement.stubs ? new Stubs(model, obs) : null;
   }
 
-  /**
-   * Whether the mark of another item (not of the item's group) comes closer than
-   * `stub_reach` to the label box `r`: the label could be read as that item's.
-   */
+  /** Whether the label box `r` of `item` is ambiguous ({@link crowded}). */
   ambiguous(item: Item, r: Rect): boolean {
-    const reach = item.len.stubReach;
-    // a label against a mark larger than its font size reads as attached to it
-    const b = item.shape.bbox();
-    if (reach <= 0 || maxf(b.w(), b.h()) > item.em()) return false;
-    const i = item.index;
-    const buf = this.buf;
-    this.obs.itemIndex.query(r.inflate(reach), buf);
-    for (let q = 0; q < buf.len; q++) {
-      const j = buf.get(q);
-      if (j !== i && (this.model.groupOf[j] ?? null) !== i && this.model.items[j]!.shape.distRect(r) < reach) {
-        return true;
-      }
-    }
-    return false;
+    return crowded(this.model, this.obs, item, r, this.buf);
   }
 
   /**
@@ -118,13 +102,14 @@ export class Stubs {
 /**
  * The stub of an item's label box `r` (spec §6.9): horizontal or vertical, from the mark
  * (`anchor_gap` outside its boundary, or the tip of an icon mark) to the box side facing it,
- * which it meets at a right angle within the side's middle half. Null when the box is not
- * beside, above or below the mark's reference point in that way.
+ * which it meets at a right angle: a left or right side in its middle (the box centered on
+ * the mark's reference point vertically), a top or bottom side within its middle half. Null
+ * when the box is not beside, above or below the mark's reference point in that way.
  */
 export function stubLeader(item: Item, r: Rect): Leader | null {
   const refp = item.shape.reference();
   const m = r.center();
-  const beside = Math.abs(refp.y - m.y) <= 0.25 * r.h();
+  const beside = Math.abs(refp.y - m.y) <= EPS;
   const over = Math.abs(refp.x - m.x) <= 0.25 * r.w();
   let port: P;
   let d: P;
@@ -615,7 +600,7 @@ export interface Spacing {
   near: number;
   /** Cosine of `leaders.min_angle_between`; 1 turns the angle rule off. */
   cosMin: number;
-  /** The space two labels keep: the larger of the two items' `defaults.margin`. */
+  /** The space two labels keep: the larger of the two items' label gaps (spacing, at least margin). */
   gap: number;
 }
 
