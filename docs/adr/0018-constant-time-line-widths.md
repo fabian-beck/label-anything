@@ -1,7 +1,9 @@
-# 0018 — Wrapping measures candidate lines in constant time from prepared texts
+# 0018 — Constant-time line widths from prepared texts
 
-* Status: accepted (performance; spec §5.2–5.3, no behaviour change)
+* Status: accepted
 * Date: 2026-10-16
+* Area: Text
+* Affects: spec §5.2–5.3; performance, no behaviour change
 
 ## Context
 Profiling benchmark scenario 12 (`metrics-attr-strict`: 1,206 long Java class names at

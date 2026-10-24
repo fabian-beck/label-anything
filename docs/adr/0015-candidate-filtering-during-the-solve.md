@@ -1,7 +1,9 @@
-# 0015 — Candidates are filtered against placed labels and item marks while they are generated
+# 0015 — Candidates are filtered while they are generated
 
-* Status: accepted (performance; spec §6.7)
+* Status: accepted
 * Date: 2026-10-16
+* Area: Solver
+* Affects: spec §6.7; performance
 
 ## Context
 Profiling the 2,000-label / 100k-point scenario and benchmark scenario 12 (1,206 long

@@ -1,7 +1,13 @@
 # 0040 — Labels may cover the marks of less important items
 
-* Status: accepted (spec §4.4 `lower_items`, §9.2; Rust `la-core`, TypeScript `@label-anything/core`, benchmark evaluator)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Priority
+* Affects: spec §4.4 `lower_items`, §9.2; Rust `la-core`, TypeScript
+  `@label-anything/core`, benchmark evaluator
+* Amends: [ADR 0033](0033-gallery-vector-images-data-colors-hubs-first.md) (the hub maps)
+* Amended by: [ADR 0045](0045-important-labels-win-by-default.md) (on by default on maps
+  and in the helpers)
 
 ## Context
 With `avoid.label.items` hard, every mark blocks every label, whatever the two items' priorities.

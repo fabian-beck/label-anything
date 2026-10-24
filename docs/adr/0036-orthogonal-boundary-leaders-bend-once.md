@@ -1,7 +1,9 @@
 # 0036 — Orthogonal leaders to boundary and fan labels bend once
 
-* Status: accepted (specification corrected to the implementation; spec §7)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Candidates, leaders and costs
+* Affects: spec §7, corrected to the implementation
 
 ## Context
 Spec §7 said that the `orthogonal` style draws `opo` leaders (two bends) to boundary labels,
@@ -21,7 +23,8 @@ and the conformance case `orthogonal-boundary-one-bend` checks it in both implem
 with a new expectation, `max_bends` (every leader of every placed label bends at most that
 often).
 
-Considered and rejected:
+## Alternatives considered
+
 * *`opo` leaders as the spec described*: a second bend per leader, for a shape the study
   does not recommend.
 * *Removing the `orthogonal` style*: it is the `po` shape the study recommends.

@@ -1,7 +1,10 @@
 # 0046 — Solve traces and an explainer of the algorithm
 
-* Status: accepted (TypeScript `@label-anything/core` `placeTraced`, `ts/packages/playground` `explain.html`)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Documentation site
+* Affects: TypeScript `@label-anything/core` `placeTraced`, `ts/packages/playground`
+  `explain.html`
 
 ## Context
 The documentation describes the algorithm in prose (candidates and their costs, the
@@ -48,12 +51,13 @@ a simplified algorithm, not the one that runs, and would drift from it.
   band, most constrained first), line ends (fan labels), areas with a soft and a hard
   obstacle.
 
-Considered and rejected: *precomputed traces* (no option the reader picks, and they
-would age with the solver); *instrumenting the Rust core* as well (a second
-implementation of a debugging aid, and a wire format for it in every binding, for no
-reader the TypeScript trace does not serve); *recording every state change* of the
-solver (local search places and removes labels for every tentative move; the net
-change per event is what a reader can follow).
+## Alternatives considered
+
+*Precomputed traces* (no option the reader picks, and they would age with the solver);
+*instrumenting the Rust core* as well (a second implementation of a debugging aid, and a
+wire format for it in every binding, for no reader the TypeScript trace does not serve);
+*recording every state change* of the solver (local search places and removes labels for
+every tentative move; the net change per event is what a reader can follow).
 
 ## Consequences
 The explainer needs no data of its own beyond the playground's: its scenes are a few

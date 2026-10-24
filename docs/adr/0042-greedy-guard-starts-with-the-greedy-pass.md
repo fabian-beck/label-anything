@@ -1,7 +1,11 @@
 # 0042 — The greedy guard starts with the greedy pass
 
-* Status: accepted (amends ADR 0007; Rust `la-core`, TypeScript `@label-anything/core`)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Solver
+* Affects: Rust `la-core`, TypeScript `@label-anything/core`
+* Amends: [ADR 0007](0007-determinism-and-time-budget.md) (the greedy guard)
+* Amended by: [ADR 0048](0048-level-0-pass-after-the-greedy-guard.md)
 
 ## Context
 ADR 0007's wall-clock guard stopped the greedy pass from opening new priority bands

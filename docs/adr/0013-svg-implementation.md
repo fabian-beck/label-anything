@@ -1,7 +1,10 @@
 # 0013 — SVG backgrounds: own mirrored implementation, no usvg
 
-* Status: accepted (refines the `la-svg` bullet of ADR 0012)
+* Status: accepted
 * Date: 2026-10-16
+* Area: Obstacles and backgrounds
+* Amends: [ADR 0012](0012-crate-structure.md) (the `la-svg` bullet)
+* Amended by: [ADR 0020](0020-svg-text-boxes-font-metrics.md) (the height of text boxes)
 
 ## Context
 §4.5 turns SVG backgrounds into classified obstacle geometry. ADR 0012 sketched `la-svg`

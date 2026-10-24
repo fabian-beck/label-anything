@@ -2,7 +2,8 @@
 
 `ts/packages/core` (`@label-anything/core`) is a line-by-line port of
 `rust/crates/la-core`. Rust is the reference: an algorithm is written and tested in
-Rust first and ported right afterwards (ADR 0001). The port uses the same algorithms in
+Rust first and ported right afterwards (ground rule 2 of
+[Contributing](../project/contributing.md)). The port uses the same algorithms in
 the same order with the same arithmetic, so that, for the same iteration counts, both
 implementations make the same decisions. Results may still differ when the time budget
 cuts a search at different points (the budgets and move rates differ, ADR 0007), but the

@@ -2,6 +2,7 @@
 
 * Status: accepted
 * Date: 2026-10-16
+* Area: Obstacles and backgrounds
 
 ## Context
 Hard constraints must never be violated, and the evaluator re-checks them with exact

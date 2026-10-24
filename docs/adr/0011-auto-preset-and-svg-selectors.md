@@ -2,6 +2,7 @@
 
 * Status: accepted
 * Date: 2026-10-16
+* Area: Obstacles and backgrounds
 
 ## Context
 §6.6: with an SVG, `auto` maps `circle,ellipse,rect[small]`→points,

@@ -1,8 +1,12 @@
-# 0019 — Leaders keep clear of marks and of each other; no margin labels by default; coverage costs count what is hidden
+# 0019 — Leaders keep clear; no margin labels by default; coverage per em²
 
-* Status: accepted (behaviour change; spec §4.4, §7, §8, defaults.md); the `illustration`
-  preset's label ink weight is 1.0 since ADR 0029
+* Status: accepted
 * Date: 2026-10-17
+* Area: Candidates, leaders and costs
+* Affects: spec §4.4, §7, §8, `defaults.md`; behaviour change
+* Amended by: [ADR 0022](0022-fan-labels.md) (clearances near a leader's start),
+  [ADR 0029](0029-illustration-callouts-in-margins.md) (the `illustration` preset's ink
+  weight), [ADR 0030](0030-boundary-columns.md) (boundary leaders near their start)
 
 ## Context
 Renderings of the benchmark (the gallery) showed clutter that broke no hard constraint:
@@ -67,7 +71,8 @@ The TypeScript core mirrors every rule bit for bit (`leadersConflict`, `leadersP
 `candLeadersConflict`; the parity fixtures are regenerated). The evaluator checks the new
 hard rules (`leader_near`, `leader_angle`, `leader_item` with the clearance).
 
-Considered and rejected:
+## Alternatives considered
+
 * *A relaxable leader–mark rule* (`soft_overlap` lets a leader pass a mark before the
   label is omitted): +119 labels (+0.9 %) over the suite, but 11,170 leader–mark touches
   and 40 near crossings came back.

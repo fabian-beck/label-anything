@@ -1,8 +1,10 @@
 # 0031 — Keep the name "Label Anything"; say "label placement" first
 
-* Status: accepted (README, documentation home, site and package descriptions,
-  `CITATION.cff`; no engine change; keeps the names of ADR 0002)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Project
+* Affects: README, documentation home, site and package descriptions, `CITATION.cff`; no
+  engine change
 
 ## Context
 ADR 0002 chose "Label Anything" after a registry check and noted that an unrelated
@@ -62,7 +64,8 @@ Keep "Label Anything" and every package name of ADR 0002. Position it as label p
   `map-labeling`, `point-feature-labeling`, `external-labeling`, `leader-lines`,
   `data-visualization`, `cartography`, not the bare `labeling` (data annotation).
 
-Considered and rejected:
+## Alternatives considered
+
 * Renaming before the first publish (to "Label Etiquette", "Label Anywhere", "Overpost",
   "Cartellino" or "Wide Berth", all free on PyPI, npm and crates.io on 2026-10-18): the
   name is memorable and says what the engine does, and "anything" carries its main

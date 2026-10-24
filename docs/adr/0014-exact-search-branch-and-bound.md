@@ -1,7 +1,9 @@
 # 0014 — Exact search: deterministic branch and bound instead of a MILP solver
 
-* Status: accepted (deviation from brief §5.6 "exact")
+* Status: accepted
 * Date: 2026-10-16
+* Area: Solver
+* Affects: deviates from brief §5.6 ("exact")
 
 ## Context
 The brief suggests the optional exact strategy as a MILP (one binary per candidate, at

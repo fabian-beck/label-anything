@@ -1,7 +1,10 @@
 # 0030 — Boundary labels form one column per side, filled after the search
 
-* Status: accepted (spec §6.6, §7, §10.3)
+* Status: accepted
 * Date: 2026-10-17
+* Area: Candidates, leaders and costs
+* Affects: spec §6.6, §7, §10.3
+* Amends: [ADR 0019](0019-visual-quality-defaults.md) (boundary leaders near their start)
 
 ## Context
 Boundary labels (spec §6.6) are meant to stack along a side, as in technical illustrations
@@ -40,10 +43,12 @@ the marks next to their start.
   but leaders touched marks 662 times instead of 41, as in the relaxable rule ADR 0019
   rejected.
 
-Considered and rejected: *right-aligned columns* (labels flush with the canvas edge, as
-before, matched by the length of the leaders to their ragged ports): with the fill, 28
-instead of 35 labels on the life-expectancy chart and 8 instead of 10 in the conformance
-case, as leaders to ragged ports come too close to each other.
+## Alternatives considered
+
+*Right-aligned columns* (labels flush with the canvas edge, as before, matched by the
+length of the leaders to their ragged ports): with the fill, 28 instead of 35 labels on
+the life-expectancy chart and 8 instead of 10 in the conformance case, as leaders to
+ragged ports come too close to each other.
 
 ## Consequences
 In the 55 static problems of the benchmark only the three with boundary labels change; the

@@ -2,6 +2,7 @@
 
 * Status: accepted
 * Date: 2026-10-16
+* Area: Obstacles and backgrounds
 
 ## Context
 §5.2 asks for per-class cost grids with SATs (O(1) rectangle cost) within a memory budget

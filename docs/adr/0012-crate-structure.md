@@ -2,6 +2,14 @@
 
 * Status: accepted
 * Date: 2026-10-16
+* Area: Packages and formats
+* Amended by: [ADR 0013](0013-svg-implementation.md) (`la-svg`)
+
+## Context
+One core serves very different hosts: Rust programs, the command line, WebAssembly,
+Python and a C ABI, and a TypeScript port that mirrors it. Not every host needs image
+decoding or full text shaping, and the core has to build for `wasm32-unknown-unknown` and
+be testable without I/O.
 
 ## Decision
 * `la-core` depends only on `serde`, `serde_json`, `la-text`, `la-expr`, `la-svg` and

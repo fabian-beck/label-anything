@@ -1,7 +1,8 @@
-# 0035 — (1,2)-swaps in the local search: measured, not adopted
+# 0035 — (1,2)-swaps in the local search
 
-* Status: rejected (optimization)
+* Status: rejected
 * Date: 2026-10-18
+* Area: Solver
 
 ## Context
 The local search adds little over the greedy pass with its ladder (+0.7 % priority-weighted

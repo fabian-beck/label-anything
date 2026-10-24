@@ -1,7 +1,10 @@
 # 0020 — SVG text boxes span the bundled font's ascender and descender
 
-* Status: accepted (behaviour change; spec §4.5 text boxes; amends ADR 0013)
+* Status: accepted
 * Date: 2026-10-17
+* Area: Obstacles and backgrounds
+* Affects: spec §4.5 (text boxes); behaviour change
+* Amends: [ADR 0013](0013-svg-implementation.md) (text boxes)
 
 ## Context
 The engine read an SVG `<text>` as a box from 0.8 em above to 0.2 em below the baseline,

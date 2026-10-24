@@ -1,7 +1,13 @@
 # 0028 — Labels touch their own mark and keep a margin from everything else
 
-* Status: accepted (spec §4.4, §6.6, §6.7, §6.8; `defaults.margin`, `placement.offset`)
+* Status: accepted
 * Date: 2026-10-17
+* Area: Candidates, leaders and costs
+* Affects: spec §4.4, §6.6, §6.7, §6.8; `defaults.margin`, `placement.offset`
+* Amends: [ADR 0016](0016-warm-start-and-stability.md),
+  [ADR 0025](0025-warm-starts-follow-anchors.md),
+  [ADR 0027](0027-nudges-kept-leaders-near-moves.md) (warm-start candidates need half the
+  margin)
 
 ## Context
 An adjacent label sat 2 px (`placement.offset`) from its own mark, but nothing kept it
@@ -38,8 +44,10 @@ graph 6 → 10 %): where space is short, a cost trades against other costs.
   four drags, with the font classes of the demo) the margin raised the mean displacement
   from 2.56 to 2.82 px and the jumps from 5.0 to 5.4 % of the labels per solve.
 
-Considered and rejected (the six scenes; placed labels, share within 0.25 em of another
-label, share of ambiguous adjacent labels):
+## Alternatives considered
+
+Measured on the six scenes (placed labels, share within 0.25 em of another label, share of
+ambiguous adjacent labels):
 
 | margin, offset | placed | within 0.25 em | ambiguous |
 |---|---|---|---|

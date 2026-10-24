@@ -1,7 +1,9 @@
 # 0037 — Labels avoid contrast borders of raster backgrounds
 
-* Status: accepted (spec §2.3, §4.6, §8; `weights.contrast`, `canvas.background`)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Obstacles and backgrounds
+* Affects: spec §2.3, §4.6, §8; `weights.contrast`, `canvas.background`
 
 ## Context
 A label that lies partly on a light and partly on a dark backdrop is hard to read and looks
@@ -33,7 +35,7 @@ astronaut had the same problem at the photo's edges (3 and 2 labels).
   binary64 arithmetic, identical in Rust and TypeScript (`conformance/raster` `backdrop`
   runs, the `contrast-*` place cases and their parity fixtures).
 
-Considered and rejected:
+## Alternatives considered
 
 * *Area averaging of every raster pixel* (like coverage): even with luma and a reference
   colour whose pixels add nothing, it added 11 ms to preparing the 2048² performance raster

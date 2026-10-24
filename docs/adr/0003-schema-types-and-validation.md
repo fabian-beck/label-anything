@@ -2,6 +2,7 @@
 
 * Status: accepted
 * Date: 2026-10-16
+* Area: Packages and formats
 
 ## Context
 The JSON Schema (2020-12) is the single source of truth. The brief suggests generating

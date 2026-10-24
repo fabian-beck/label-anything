@@ -1,8 +1,11 @@
 # 0026 — Smooth label transitions in the JavaScript helpers
 
-* Status: accepted (`@label-anything/extras`; no change to the engine); amended by ADR 0038
-  (labels hold before they move or go, wait before they appear, make way when they meet)
+* Status: accepted
 * Date: 2026-10-17
+* Area: Warm starts and transitions
+* Affects: `@label-anything/extras`; no change to the engine
+* Amended by: [ADR 0038](0038-calm-label-transitions.md) (labels hold before they move or
+  go, wait before they appear, make way when they meet)
 
 ## Context
 Warm starts keep most labels in place between solves (ADR 0016, ADR 0025), but every
@@ -31,7 +34,8 @@ and the helpers drew every result as it came.
   `requestAnimationFrame`, at once). The static helpers (d3, Plot, Vega, Cytoscape) are
   unchanged.
 
-Considered and rejected:
+## Alternatives considered
+
 * *Eased tweens restarted at each solve*: the velocity drops to zero at every retarget,
   which stutters when solves come faster than the transition (every 130 ms on the force
   layout).

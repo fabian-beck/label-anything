@@ -1,7 +1,10 @@
-# 0047 — Findings from solve traces: a lookahead bound, a true-cost restore, explanations from evaluated candidates
+# 0047 — Solver fixes found in solve traces
 
-* Status: accepted (spec §10.1, §10.2; Rust `la-core` and TypeScript `@label-anything/core`; conformance case `search-restore-true-total`)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Solver
+* Affects: spec §10.1, §10.2; Rust `la-core` and TypeScript `@label-anything/core`;
+  conformance case `search-restore-true-total`
 
 ## Context
 The solve traces of ADR 0046 show every decision of the solver with its numbers. Read over
@@ -59,6 +62,8 @@ problems, they showed five things:
 * The spec states the lookahead bound, how `T₀` is taken (the median *increase* of the
   static cost over 50 random relocation probes, not the median |Δ|), what `Δ` covers and
   the restore rule.
+
+## Alternatives considered
 
 Not adopted, for a decision on the benchmark: the exact lookahead minimum (4), which is
 as often worse as better; draws without idle iterations (5), a trade of time for quality

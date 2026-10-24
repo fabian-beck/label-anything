@@ -1,7 +1,12 @@
 # 0033 — Gallery: vector images, data colors, one weight, hubs first
 
-* Status: accepted (benchmark scenarios, renderer and gallery; not an engine change)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Benchmark
+* Affects: benchmark scenarios, renderer and gallery; not an engine change
+* Amends: [ADR 0023](0023-font-classes.md) (the benchmark's font classes)
+* Amended by: [ADR 0040](0040-labels-may-cover-marks-of-less-important-items.md) (the hub
+  maps use `lower_items`)
 
 ## Context
 The gallery (`bench/gallery.py`) is where most people see what the engine does, and a
@@ -62,12 +67,14 @@ review of it found problems that had little to do with label placement:
    figures of the build; every figure lists its omitted labels by reason and the settings of
    its problem.
 
-Considered for the airports: soft `items` with the hub marks as a hard class (hubs then
-covered other labeled airports' dots, FRA over GVA); more distant candidates, longer
-leaders, fans, `required` hubs (no change: LGW's dot lies half under Heathrow's at 6 px per
-degree); hub-only world maps (BRU and DUS still lost). The general fix — a label may cover
-the marks of less important items, which then lose their own label — is an engine change
-for a later decision (taken in ADR 0040: `avoid.label.lower_items`).
+## Alternatives considered
+
+For the airports: soft `items` with the hub marks as a hard class (hubs then covered other
+labeled airports' dots, FRA over GVA); more distant candidates, longer leaders, fans,
+`required` hubs (no change: LGW's dot lies half under Heathrow's at 6 px per degree);
+hub-only world maps (BRU and DUS still lost). The general fix — a label may cover the
+marks of less important items, which then lose their own label — is an engine change for a
+later decision (taken in ADR 0040: `avoid.label.lower_items`).
 
 ## Consequences
 Europe's 30 busiest airports and the next 70 are all labeled, the five London airports next

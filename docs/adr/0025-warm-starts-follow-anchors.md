@@ -1,8 +1,13 @@
 # 0025 — Warm starts follow their anchors; degraded labels keep their box
 
-* Status: accepted (spec §6.7, §10.1, §11); the stability cost growing beyond 1 em,
-  rejected below, was adopted in another form by ADR 0027
+* Status: accepted
 * Date: 2026-10-17
+* Area: Warm starts and transitions
+* Affects: spec §6.7, §10.1, §11
+* Amends: [ADR 0016](0016-warm-start-and-stability.md)
+* Amended by: [ADR 0027](0027-nudges-kept-leaders-near-moves.md) (adopts, in another form,
+  the stability cost rejected here), [ADR 0028](0028-label-margin.md) (half the label
+  margin)
 
 ## Context
 Warm starts (ADR 0016) were measured on pan and zoom only. Points that move on their own
@@ -41,8 +46,10 @@ Two weaknesses showed up:
   statically feasible and free the item takes it, before the ladder runs. Level 0 keeps
   precedence: a label that fits at full size again grows back.
 
-Measured and rejected (the sequences above; jumps = labels whose offset from their anchor
-changed by more than 1 em, churn = labels added and removed per frame):
+## Alternatives considered
+
+Measured on the sequences above (jumps = labels whose offset from their anchor changed by
+more than 1 em, churn = labels added and removed per frame):
 
 * *Charging the lookahead for the warm candidates a candidate kills* (`w_stability` per
   item): neutral (jumps: force +0.5 points, drag −0.3, zoom/pan −0.1 to −0.3).

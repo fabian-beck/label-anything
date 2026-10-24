@@ -1,8 +1,13 @@
 # 0027 — Warm starts nudge blocked boxes, keep leaders, and prefer near moves
 
-* Status: accepted (spec §6.7, §8, §10.1; amends the stability term of ADR 0016); warm-start
-  candidates keep half the label margin (ADR 0028)
+* Status: accepted
 * Date: 2026-10-17
+* Area: Warm starts and transitions
+* Affects: spec §6.7, §8, §10.1
+* Amends: [ADR 0016](0016-warm-start-and-stability.md) (the stability term),
+  [ADR 0025](0025-warm-starts-follow-anchors.md) (the stability cost it rejected)
+* Amended by: [ADR 0028](0028-label-margin.md) (warm-start candidates keep half the label
+  margin)
 
 ## Context
 With warm starts (ADR 0016, ADR 0025) and smooth transitions (ADR 0026), labels of a
@@ -46,7 +51,8 @@ blocked the label's previous box:
   jumps in the solves in which the median node moves less than 1 px (force 0.66 → 0.39,
   drag 1.20 → 0.70 per solve), the moves this decision is about.
 
-Considered and rejected:
+## Alternatives considered
+
 * *A higher `weights.stability` (2 or 4)*: fewer jumps late in the force layout (0.34 and
   0.29 per solve) but every small move costs as much more, and labels that once needed a
   leader keep it (3.6 leadered labels on average became 4.2 and 10.0).

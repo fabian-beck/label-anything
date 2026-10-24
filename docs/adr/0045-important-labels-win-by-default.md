@@ -1,8 +1,10 @@
 # 0045 — Important labels win by default on maps and in the helpers
 
-* Status: accepted (amends ADR 0040's opt-in; `spec/presets/map.json`, the Python and
-  JavaScript helpers)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Priority
+* Affects: `spec/presets/map.json`, the Python and JavaScript helpers
+* Amends: [ADR 0040](0040-labels-may-cover-marks-of-less-important-items.md) (the opt-in)
 
 ## Context
 ADR 0040 added `lower_items`: a label may cover the marks of less important items, which
@@ -32,6 +34,7 @@ know about the option to find it.
 The Leaflet map labels Essen, Duisburg, Düsseldorf, Bochum, Wuppertal, Cologne and
 Dortmund, and the small towns around them make way. The seaborn chart (gapminder 2007,
 `max_labels` 15 by population) labels ranks 0–9, 12, 14, 16, 18 and 19; with
-`"lower_items": "hard"` rank 5 is missing and ranks 21, 25 and 33 take its place. A less important point whose dot a more important label covers goes unlabeled even
-where it would have had room — the price ADR 0040 describes. The parity fixture of the
+`"lower_items": "hard"` rank 5 is missing and ranks 21, 25 and 33 take its place. A less
+important point whose dot a more important label covers goes unlabeled even where it
+would have had room — the price ADR 0040 describes. The parity fixture of the
 `presets-map` sample counts 15 more candidates; its placements are unchanged.

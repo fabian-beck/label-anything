@@ -27,7 +27,7 @@ node ts/packages/playground/test/server.mjs 8000  # http://127.0.0.1:8000/ (expl
 The build also makes `dist/hero.js`, the live header of the documentation's home page
 (`docs/_overrides/home.html`): the logo, with the name on its label, among random things
 (a rubber duck, coffee, the moon, …), solved with `engine-ts.js`. The home page loads it from the playground's directory
-([ADR 0049](../../../docs/adr/0049-home-page-header-labeled-live.md)).
+([ADR 0050](../../../docs/adr/0050-home-page-header-labeled-live.md)).
 
 ## Tests
 

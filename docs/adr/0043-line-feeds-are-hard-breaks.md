@@ -1,7 +1,9 @@
 # 0043 — Line feeds are hard breaks
 
-* Status: accepted (spec §5.3; Rust `la-core`, TypeScript `@label-anything/core`)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Text
+* Affects: spec §5.3; Rust `la-core`, TypeScript `@label-anything/core`
 
 ## Context
 A line feed in a label's text was ordinary white space: `"Paris\n2.1M"` got a one-line

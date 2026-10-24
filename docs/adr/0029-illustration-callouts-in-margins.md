@@ -1,7 +1,11 @@
 # 0029 — Illustrations: covering the picture costs as much as a leader
 
-* Status: accepted (`spec/presets/illustration.json`: `avoid.label.ink` 0.15 → 1.0)
+* Status: accepted
 * Date: 2026-10-17
+* Area: Candidates, leaders and costs
+* Affects: `spec/presets/illustration.json` (`avoid.label.ink` 0.15 → 1.0)
+* Amends: [ADR 0019](0019-visual-quality-defaults.md) (the `illustration` preset's ink
+  weight)
 
 ## Context
 The `illustration` preset is meant for callouts in the margins: boundary and distant
@@ -20,7 +24,9 @@ label costs as much as having a leader. Leaders over the picture stay cheap (0.0
 em). The default and the other presets keep 0.1: in charts and maps ink is everywhere
 and labels must be near their marks.
 
-Considered, on the two illustrations (labels entirely outside the photo's rectangle; the
+## Alternatives considered
+
+Measured on the two illustrations (labels entirely outside the photo's rectangle; the
 photo's area under labels; median and longest leader):
 
 | `avoid.label.ink` | portrait (12 labels) | fundus photograph (10 labels) |

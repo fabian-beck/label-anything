@@ -1,7 +1,9 @@
 # 0039 — Balanced wraps end lines at break opportunities
 
-* Status: accepted (spec §5.3 `balanced`; Rust `la-text`, TypeScript `@label-anything/text`)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Text
+* Affects: spec §5.3 `balanced`; Rust `la-text`, TypeScript `@label-anything/text`
 
 ## Context
 `balanced(N, M)` takes the narrowest candidate width at which the greedy wrap needs at most

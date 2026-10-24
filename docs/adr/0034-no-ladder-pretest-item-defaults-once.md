@@ -1,7 +1,9 @@
-# 0034 — No pretest before the degradation ladder; item option defaults resolved once
+# 0034 — No ladder pretest; item option defaults resolved once
 
-* Status: accepted (performance; no behaviour change)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Solver
+* Affects: performance; no behaviour change
 
 ## Context
 The 2,000-label performance problem (`bench/out/perf/scatter-2000.json`) misses its target
@@ -33,7 +35,8 @@ through string-keyed maps and parsed their lengths anew.
 * The problem-wide item option defaults are resolved once per problem (`ItemDefaults` in
   `model/mod.rs`, `itemDefaults` in `model/index.ts`); items fall back to them as before.
 
-Considered and rejected:
+## Alternatives considered
+
 * *A whole-item or per-family fit test* on the occupancy grids (summed-area or bit-parallel
   window search over the reach of the smallest variant): measured ceiling above, while the
   test itself costs a window search per item and variant.

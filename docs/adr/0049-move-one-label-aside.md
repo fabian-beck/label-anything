@@ -1,7 +1,10 @@
 # 0049 — The priority repair moves one label aside
 
-* Status: accepted (amends the priority repair of spec §10.3; Rust `la-core`, TypeScript `@label-anything/core`)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Priority
+* Affects: spec §10.3 (the priority repair); Rust `la-core`, TypeScript
+  `@label-anything/core`
 
 ## Context
 On the airport maps of the benchmark, large hubs lose their labels to slightly larger
@@ -17,19 +20,6 @@ its dot, so nothing later could move it out of the way: the local search moves a
 only to a free candidate it already has, and the priority repair only removes labels of
 lower key. On the four airport and POI maps, 40–60 % of the omitted items have a mark
 that a more important label covers.
-
-Measured on the full suite without the clock (61 problems):
-
-* Counting the `lower_items` exclusion fully in the lookahead (all candidates of the item
-  whose mark the label covers, as a commit counts them) left Amsterdam unlabeled and
-  traded hubs for others on the 3,000-airport priority maps.
-* Keeping the cheapest candidate of every side through the pruning lowered the number of
-  labels (526 → 519 on the 1,000-airport map).
-* A repair that lets an omitted item move one more important label to another of its
-  positions, removing any number of less important labels in the way, gives Amsterdam and
-  Munich their labels, but removes 45 labels in all (635 → 616 on one priority map).
-* With at most one label removed per move, the suite gains 73 labels. With labels in the
-  way also moved aside instead of removed, it gains 79, for a deeper search.
 
 ## Decision
 The priority repair of strict omission gets a second option for an item that has no
@@ -56,6 +46,21 @@ inversion. The freed position may be one the pruning dropped for the earlier ite
 important item, which the evaluator then reported as an inversion. In that pass an item
 near the old place of a moved label therefore also tries its dropped level-0 candidates
 by the same rule.
+
+## Alternatives considered
+
+Measured on the full suite without the clock (61 problems):
+
+* Counting the `lower_items` exclusion fully in the lookahead (all candidates of the item
+  whose mark the label covers, as a commit counts them) left Amsterdam unlabeled and
+  traded hubs for others on the 3,000-airport priority maps.
+* Keeping the cheapest candidate of every side through the pruning lowered the number of
+  labels (526 → 519 on the 1,000-airport map).
+* A repair that lets an omitted item move one more important label to another of its
+  positions, removing any number of less important labels in the way, gives Amsterdam and
+  Munich their labels, but removes 45 labels in all (635 → 616 on one priority map).
+* With at most one label removed per move, the suite gains 73 labels. With labels in the
+  way also moved aside instead of removed, it gains 79, for a deeper search.
 
 ## Consequences
 * Full suite, no clock: 14,463 → 14,534 labels (+0.5 %). On every one of the 20 problems

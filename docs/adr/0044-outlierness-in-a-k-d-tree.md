@@ -1,7 +1,9 @@
 # 0044 — Outlierness in a k-d tree
 
-* Status: accepted (Rust `la-core`, TypeScript `@label-anything/core`; no change to results)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Priority
+* Affects: Rust `la-core`, TypeScript `@label-anything/core`; no change to results
 
 ## Context
 The `outlierness`, `isolation` and `crowding` priority terms need every item's k-th

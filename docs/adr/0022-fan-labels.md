@@ -1,7 +1,10 @@
 # 0022 — Fan labels: a crowd's labels in a column with fanning leaders
 
-* Status: accepted (new behaviour, on by default; spec §6.8, §7, §10.3)
+* Status: accepted
 * Date: 2026-10-17
+* Area: Candidates, leaders and costs
+* Affects: spec §6.8, §7, §10.3; new behaviour, on by default
+* Amends: [ADR 0019](0019-visual-quality-defaults.md) (clearances near a leader's start)
 
 ## Context
 Where anchors crowd, adjacent positions run out and the ladder's distant labels have few
@@ -45,7 +48,8 @@ A post-search pass (`placement.fan`, default `auto`; spec §6.8) builds columns 
   members, area anchors, grouped items, and not with the `angles` leader style.
 * **Budget:** `max(20 000, 20 × n)` label evaluations.
 
-Considered and rejected:
+## Alternatives considered
+
 * *Fan candidates in the search*: a column is a joint decision; per-label candidates
   cannot express that one label's slot depends on the others.
 * *A global "crowded" mode switch*: crowds are local (one bundle of line ends in an

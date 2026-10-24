@@ -1,7 +1,10 @@
-# 0049 — The home page's header: the logo, labeled live
+# 0050 — Home page: the logo, labeled live; examples below
 
-* Status: accepted (docs/_overrides/home.html, ts/packages/playground/src/hero.ts; not an engine change)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Documentation site
+* Affects: `docs/_overrides/home.html`, `ts/packages/playground/src/hero.ts`; not an
+  engine change
 
 ## Context
 The home page opened with a warning, two dense paragraphs and a static figure. It said
@@ -11,6 +14,8 @@ The playground's logo — a label, its leader and a dot — was used nowhere els
 had Material's default book icon, the README none.
 
 ## Decision
+
+### The logo and the header
 * **The logo everywhere.** The site's header icon (`docs/_overrides/.icons/la/logo.svg`,
   drawn in the header's colour) and favicon (`docs/assets/logo.svg`) are the playground's
   logo. The README opens with the logo carrying the name (`docs/assets/logo-lockup*.svg`,
@@ -78,14 +83,6 @@ had Material's default book icon, the README none.
   counts the labels placed and left out, not the time, which depends on the reader's
   device more than on the engine.
 
-Considered and rejected: *a recording or an animation* would not show that the labels are
-placed live, nor react; *the name as the page's text with only small labels around* would
-leave the logo out; *the WebAssembly engine* would add the module's download to the home
-page; *a leader style per scene* is not in the problem format (one `leaders.style` per
-problem), so the reader switches it for all; *small scenes of a map, a network and a chart*
-(the first version) made the header look like a geographic library, and nobody moves a
-lake; *a gentle idle motion* would make the labels move while being read.
-
 ### The examples below the header
 The figures below the header are pictures a reader recognizes, from open data, drawn as a
 host would draw them and labeled by the engine, not the tutorials' renderings in debugging
@@ -108,6 +105,16 @@ picture, its problem and the figure (solved by the CLI, the text in embedded Not
 
 They replace the scatter plot of outliers (still the subject of "Five lines" and its
 tutorial) and the grid of tutorial renderings.
+
+## Alternatives considered
+
+For the header: *a recording or an animation* would not show that the labels are placed
+live, nor react; *the name as the page's text with only small labels around* would leave
+the logo out; *the WebAssembly engine* would add the module's download to the home page;
+*a leader style per scene* is not in the problem format (one `leaders.style` per problem),
+so the reader switches it for all; *small scenes of a map, a network and a chart* (the
+first version) made the header look like a geographic library, and nobody moves a lake;
+*a gentle idle motion* would make the labels move while being read.
 
 ## Consequences
 The home page leads with what the project does, shown and then told; the experimental

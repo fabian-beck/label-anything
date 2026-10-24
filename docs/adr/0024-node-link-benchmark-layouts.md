@@ -1,7 +1,9 @@
 # 0024 — Node-link benchmark layouts: ForceAtlas2 without node overlaps
 
-* Status: accepted (benchmark scenario 07; not an engine change)
+* Status: accepted
 * Date: 2026-10-17
+* Area: Benchmark
+* Affects: benchmark scenario 07; not an engine change
 
 ## Context
 Scenario `07-node-link` drew its graphs with networkx `spring_layout`. Cora (2 485 papers)
@@ -18,10 +20,12 @@ canvas, then freed of node overlaps: overlapping node boxes move apart along the
 the smaller overlap until 2 px separate them (Les Mis: the larger node of its two
 configs).
 
-Considered: more spring iterations (Cora 90 of 150), plain ForceAtlas2 (103), LinLog
-ForceAtlas2 (136: tight clusters, long edges across the canvas), ForceAtlas2 with node sizes
-for Cora (147, but the layout is looser); Kamada–Kawai for Les Mis (all labels, but
-long edges to the outer characters).
+## Alternatives considered
+
+More spring iterations (Cora 90 of 150), plain ForceAtlas2 (103), LinLog ForceAtlas2 (136:
+tight clusters, long edges across the canvas), ForceAtlas2 with node sizes for Cora (147,
+but the layout is looser); Kamada–Kawai for Les Mis (all labels, but long edges to the
+outer characters).
 
 ## Consequences
 Placed (deterministic solves): `lesmis-circles` 73 → 77 of 77, `lesmis-shapes` 68 → 77 of 77,

@@ -2,6 +2,9 @@
 
 * Status: accepted
 * Date: 2026-10-16
+* Area: Project
+* Amended by: [ADR 0051](0051-adr-format-metadata-and-scope.md) (format, metadata and
+  scope)
 
 ## Context
 The design brief leaves many decisions open and asks that each one is recorded instead

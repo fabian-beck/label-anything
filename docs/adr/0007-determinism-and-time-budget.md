@@ -1,7 +1,10 @@
 # 0007 — Determinism and the time budget
 
-* Status: accepted; the greedy guard amended by ADR 0042
+* Status: accepted
 * Date: 2026-10-16
+* Area: Solver
+* Amended by: [ADR 0042](0042-greedy-guard-starts-with-the-greedy-pass.md) and
+  [ADR 0048](0048-level-0-pass-after-the-greedy-guard.md) (the greedy guard)
 
 ## Context
 Solves must be deterministic for the same input and seed, *and* anytime/bounded by

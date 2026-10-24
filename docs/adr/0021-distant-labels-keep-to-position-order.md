@@ -1,7 +1,9 @@
 # 0021 — Distant labels keep to the sides of an explicit position order
 
-* Status: accepted (behaviour change; spec §6.4)
+* Status: accepted
 * Date: 2026-10-17
+* Area: Candidates, leaders and costs
+* Affects: spec §6.4; behaviour change
 
 ## Context
 The line charts of the benchmark allow only positions to the right of the series ends
@@ -20,7 +22,8 @@ reference point, within 22.5° of a listed position's direction are generated
 (`u·v ≥ cos 22.5° · |u|·|v|` less 10⁻⁹, so that a ray between two octants belongs to both).
 The default orders (`perceptual`, `cartographic`) list all 8 positions and change nothing.
 
-Considered and rejected:
+## Alternatives considered
+
 * *A soft cost for distant labels on unlisted sides*: soft costs never prevent a placement
   (the objective is lexicographic, ADR 0019); a label whose only room is on the left would
   still go there.

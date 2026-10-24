@@ -2,6 +2,7 @@
 
 * Status: accepted
 * Date: 2026-10-16
+* Area: Candidates, leaders and costs
 
 ## Context
 §4.5 requires adjacent and slider candidates around the *true* shape (circle tangents,

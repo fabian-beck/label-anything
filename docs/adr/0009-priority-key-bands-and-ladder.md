@@ -2,6 +2,7 @@
 
 * Status: accepted
 * Date: 2026-10-16
+* Area: Priority
 
 ## Context
 §4.4 defines the key `(required, tier, score, tie)` and strict/prefix/weighted omission.

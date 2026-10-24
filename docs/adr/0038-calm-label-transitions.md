@@ -1,7 +1,11 @@
 # 0038 — Calm label transitions: labels hold, wait and make way
 
-* Status: accepted (`@label-anything/extras`; amends ADR 0026; no change to the engine)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Warm starts and transitions
+* Affects: `@label-anything/extras`, the playground; no change to the engine
+* Amends: [ADR 0026](0026-smooth-label-transitions.md), [ADR 0032](0032-playground.md)
+  (the playground's motion and scenes)
 
 ## Context
 With the transitions of ADR 0026, labels glide and fade between solves. In the playground
@@ -67,7 +71,7 @@ country outline once per zoom band instead of after every pan, runs the swarm at
 real time, slows the scatterplot's transitions (2.4 s) and reheats the graph less while a
 node is dragged.
 
-Considered and rejected:
+## Alternatives considered
 
 * *Gliding every move* (`jump: Infinity`, as in ADR 0026): fewer discrete changes (0.78
   against 0.95 per label and second in the swarm) but two to three times the label motion

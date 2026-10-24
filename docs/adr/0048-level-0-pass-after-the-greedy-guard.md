@@ -1,7 +1,11 @@
 # 0048 — A level-0 pass after the greedy guard
 
-* Status: accepted (amends ADR 0007 and ADR 0042; Rust `la-core`, TypeScript `@label-anything/core`)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Solver
+* Affects: Rust `la-core`, TypeScript `@label-anything/core`
+* Amends: [ADR 0007](0007-determinism-and-time-budget.md) and
+  [ADR 0042](0042-greedy-guard-starts-with-the-greedy-pass.md) (the greedy guard)
 
 ## Context
 The greedy pass stops 10 × `time_budget_ms` after it began (ADR 0042), and every item it
@@ -31,7 +35,8 @@ from its start (checked every 64 items); every item still undecided after it is
 `budget_exhausted`. With `prefix` omission the first item without a free level-0
 candidate ends the prefix, so the placed labels stay a prefix of the total order.
 
-Considered and rejected:
+## Alternatives considered
+
 * *Switching to level 0 earlier* (at 5 × the budget, keeping the 10 × total): it moves
   problems whose greedy pass takes 5–10 × the budget — today deterministic on a fast
   machine — into the timing-dependent regime.

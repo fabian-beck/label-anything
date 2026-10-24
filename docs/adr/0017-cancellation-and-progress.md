@@ -1,7 +1,9 @@
 # 0017 — Cancellation and progress
 
-* Status: accepted (spec §10.3a)
+* Status: accepted
 * Date: 2026-10-16
+* Area: Solver
+* Affects: spec §10.3a
 
 ## Context
 Brief §6.4 asks for `progress(phase, fraction)` and cancellation tokens (an

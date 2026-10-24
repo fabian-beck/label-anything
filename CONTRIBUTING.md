@@ -21,7 +21,10 @@ implementations (Rust and TypeScript) that follow one language-neutral spec.
    `node tools/check-licenses.mjs` enforces this.
 7. **Benchmark first, optimize second.** Performance changes need an ADR with a profile
    note.
-8. Decisions the brief leaves open are recorded as ADRs in `docs/adr/`.
+8. **Decisions get an ADR** in `docs/adr/`: open points and deviations from the brief,
+   changes of results, formats, options or public APIs, performance changes and accepted
+   metric regressions. ADR 0051 has the template and the full list; the documentation
+   build checks every ADR's number and metadata.
 
 ## Development
 

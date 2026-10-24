@@ -1,7 +1,11 @@
-# 0016 — Warm starts: the previous box as a candidate, kept first when still free
+# 0016 — Warm starts keep the previous box while it is free
 
-* Status: accepted; the stability term amended by ADR 0027
+* Status: accepted
 * Date: 2026-10-16
+* Area: Warm starts and transitions
+* Amended by: [ADR 0025](0025-warm-starts-follow-anchors.md) (boxes follow their anchors;
+  degraded labels), [ADR 0027](0027-nudges-kept-leaders-near-moves.md) (the stability
+  term), [ADR 0028](0028-label-margin.md) (half the label margin)
 
 ## Context
 Interactive hosts (maps re-labelled on pan and zoom, js-extras layers) pass the previous

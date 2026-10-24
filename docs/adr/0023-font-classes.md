@@ -1,7 +1,11 @@
 # 0023 — Font classes: type size by importance
 
-* Status: accepted (new option, off by default; spec §9.4)
+* Status: accepted
 * Date: 2026-10-17
+* Area: Priority
+* Affects: spec §9.4; new option, off by default
+* Amended by: [ADR 0033](0033-gallery-vector-images-data-colors-hubs-first.md) (the
+  benchmark's classes set sizes only)
 
 ## Context
 The priority function (§9) decides which labels are shown, but every shown label looks
@@ -34,7 +38,8 @@ priority function.
   text smaller, the ladder must not make it smaller than it could without them.
 * `placements[].priority.font_class` reports the class.
 
-Considered and rejected:
+## Alternatives considered
+
 * *Sizes set by the host*: two solves, or a second implementation of the priority function.
 * *Sizes continuous in the score* (word-cloud style): no visible hierarchy, label sizes
   that are hard to predict; a host can still set per-item sizes for that.

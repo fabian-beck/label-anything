@@ -2,6 +2,7 @@
 
 * Status: accepted
 * Date: 2026-10-16
+* Area: Project
 
 ## Context
 The brief prescribes the layout (`spec/`, `conformance/`, `rust/`, `ts/`, `bindings/`,

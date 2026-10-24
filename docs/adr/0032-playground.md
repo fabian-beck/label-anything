@@ -1,7 +1,10 @@
-# 0032 — A playground on the documentation site, with both engines in the browser
+# 0032 — A playground with both engines in the browser
 
-* Status: accepted (ts/packages/playground, the `wasm` job of CI, the Pages workflow)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Documentation site
+* Affects: `ts/packages/playground`, the `wasm` job of CI, the Pages workflow
+* Amended by: [ADR 0038](0038-calm-label-transitions.md) (motion options and scenes)
 
 ## Context
 The documentation shows what the engine does with static figures, the gallery and the
@@ -48,10 +51,11 @@ start do has to install a binding first.
   of pixels wide on a zoomed map made each solve take 100–350 ms in WebAssembly and placed
   almost nothing within the moving budget's guard; clipped, a solve takes 10–60 ms.
 
-Considered and rejected: *precomputed frames* (the earlier recording) cannot show an
-option the reader picks; *solving on the main thread* stalls the animation for the length
-of each solve; *embedding the app in a documentation page* leaves it a column of the
-page's width.
+## Alternatives considered
+
+*Precomputed frames* (the earlier recording) cannot show an option the reader picks;
+*solving on the main thread* stalls the animation for the length of each solve;
+*embedding the app in a documentation page* leaves it a column of the page's width.
 
 ## Consequences
 The `wasm` CI job gains a type check, a build and Playwright tests of the playground (every

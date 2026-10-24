@@ -2,6 +2,7 @@
 
 * Status: accepted
 * Date: 2026-10-16
+* Area: Text
 
 ## Context
 Text widths must be identical (±0.01 px) between Rust and TS in simple-shaping mode

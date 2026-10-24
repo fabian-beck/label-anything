@@ -1,7 +1,9 @@
-# 0041 — The wrap step strands no short lines
+# 0041 — The wrap step leaves no short line on its own
 
-* Status: accepted (spec §5.3; Rust `la-core`, TypeScript `@label-anything/core`)
+* Status: accepted
 * Date: 2026-10-18
+* Area: Text
+* Affects: spec §5.3; Rust `la-core`, TypeScript `@label-anything/core`
 
 ## Context
 The `wrap` ladder step offers the balanced wraps of a label into 2 … `wrap_max_lines`
