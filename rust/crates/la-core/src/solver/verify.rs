@@ -1,7 +1,8 @@
 //! Independent verification of the final placement (spec §10.3).
 
 use super::{Reason, Solve};
-use crate::geom::seg_intersects;
+use crate::candidates::Cand;
+use crate::geom::{seg_intersects, Rect};
 use crate::model::opts::{Omission, Step};
 
 #[derive(Clone, Debug, Default)]
@@ -70,16 +71,19 @@ pub fn verify(s: &mut Solve) -> Verification {
             None => break,
         }
     }
-    // leader crossings (any policy)
-    let placed: Vec<usize> = (0..n).filter(|&i| s.state.placed[i].is_some()).collect();
-    for (a, &i) in placed.iter().enumerate() {
-        let ci = &s.cands[s.state.placed[i].unwrap() as usize];
-        if ci.leaders.is_empty() {
-            continue;
-        }
-        for &j in &placed[a + 1..] {
-            let cj = &s.cands[s.state.placed[j].unwrap() as usize];
-            if cj.leaders.is_empty() || !ci.bbox().touches(&cj.bbox()) {
+    // leader crossings (any policy): placed labels with leaders, and their boxes
+    let led: Vec<(&Cand, Rect)> = s
+        .state
+        .placed
+        .iter()
+        .flatten()
+        .map(|&c| &s.cands[c as usize])
+        .filter(|c| !c.leaders.is_empty())
+        .map(|c| (c, c.bbox()))
+        .collect();
+    for (a, &(ci, bi)) in led.iter().enumerate() {
+        for &(cj, bj) in &led[a + 1..] {
+            if !bi.touches(&bj) {
                 continue;
             }
             let crosses = ci.leaders.iter().any(|la| {

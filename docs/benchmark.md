@@ -111,6 +111,13 @@ a fifth of it in the distant candidates — and the ladder's candidates stay ali
 explanations, so they reach the old generation and cost full collections (46 ms each). Storing
 the candidates as arrays of numbers instead of objects would remove most of it.
 
+The label changes of ADR 0050–0055 (ink boxes, stubs, the label spacing) made some solves
+slower: those with ellipse marks by far, line-end labels and dense maps in the local search.
+[ADR 0057](adr/0057-solve-times-after-the-label-changes.md) took most of it back without
+changing a placement. Single-threaded, the 97 benchmark, sample, tutorial, showcase and
+playground problems that stay within the time guards now take 5.5 % less time in all than
+before those changes; the 2,000-label problem takes 11 % more, as it places 14 % more labels.
+
 ## Milestone acceptance
 
 `python -m bench.milestones` checks two acceptance criteria of the design brief on a run of

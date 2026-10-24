@@ -333,7 +333,7 @@ function textVariant(
   const ink = (l: string | undefined): [number, number] | null =>
     l === undefined || host ? null : m.ink(spec.font, scale, l);
   const first = ink(lines[0]);
-  const last = ink(lines[lines.length - 1]);
+  const last = lines.length > 1 ? ink(lines[lines.length - 1]) : first;
   const top = first !== null ? first[0] : asc;
   const bottom = last !== null ? last[1] : desc;
   const size = spec.font.size * scale;

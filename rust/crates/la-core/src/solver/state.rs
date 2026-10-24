@@ -35,6 +35,9 @@ impl LowerMarks {
     }
 }
 
+/// No pending placement (`State::pend_at`).
+const NONE: u32 = u32::MAX;
+
 /// The set of placed labels with spatial indexes.
 pub struct State {
     /// Placed candidate per item.
@@ -51,6 +54,15 @@ pub struct State {
     pub label_area_sum: f64,
     buf: Vec<u32>,
     occ: Occupancy,
+    /// Label boxes placed (`true`) or removed (`false`) since `occ` was last brought up to
+    /// date: only candidate generation reads the grid, so local search, exact search and
+    /// repair, which place and remove labels all the time, never pay for marking it. A box
+    /// placed and removed again before that cancels out (`None`; `pend_at`: the index of
+    /// each item's pending placement, `NONE` for none). The grid counts boxes per cell, so
+    /// applying the remaining changes later (in order) gives the same grid.
+    pend: Vec<Option<(Rect, bool)>>,
+    pend_item: Vec<u32>,
+    pend_at: Vec<u32>,
     /// Priority key level per item, and the number of placed labels per key level.
     keys: Vec<usize>,
     key_count: Vec<u32>,
@@ -113,6 +125,9 @@ impl State {
             label_area_sum: 0.0,
             buf: Vec::new(),
             occ: Occupancy::new(extent),
+            pend: Vec::new(),
+            pend_item: Vec::new(),
+            pend_at: vec![NONE; n_items],
             keys,
             key_count: vec![0; n_keys],
             max_key: None,
@@ -266,13 +281,30 @@ impl State {
 
     /// Quick, exact rejection: the box `r` of a rectangular label overlaps a placed
     /// rectangular label (`false` means "unknown", not "free").
-    pub fn quick_blocked(&self, r: &Rect) -> bool {
-        self.n_placed > 0 && self.occ.blocked(r)
+    pub fn quick_blocked(&mut self, r: &Rect) -> bool {
+        self.n_placed > 0 && self.occupancy().blocked(r)
     }
 
     /// The placed-label occupancy grid (its windows serve grids with the same cells).
-    pub fn occupancy(&self) -> &Occupancy {
+    pub fn occupancy(&mut self) -> &Occupancy {
+        for (e, &item) in self.pend.iter().zip(&self.pend_item) {
+            if let Some((r, add)) = e {
+                self.occ.mark(r, *add);
+            }
+            self.pend_at[item as usize] = NONE;
+        }
+        self.pend.clear();
+        self.pend_item.clear();
         &self.occ
+    }
+
+    /// Log a change of the occupancy grid (see `pend`); a long log is applied now and then.
+    fn pend_mark(&mut self, item: usize, r: Rect, add: bool) {
+        self.pend.push(Some((r, add)));
+        self.pend_item.push(item as u32);
+        if self.pend.len() > 4 * self.pend_at.len() + 1024 {
+            self.occupancy();
+        }
     }
 
     pub fn place(&mut self, item: usize, cid: u32, cands: &[Cand], relaxed: bool) {
@@ -282,7 +314,8 @@ impl State {
         self.relaxed[item] = relaxed;
         self.label_ix.insert(item as u32, c.rect);
         if c.lshape.is_none() {
-            self.occ.mark(&c.rect, true);
+            self.pend_at[item] = self.pend.len() as u32;
+            self.pend_mark(item, c.rect, true);
         }
         if let Some(&k) = self.keys.get(item) {
             self.key_count[k] += 1;
@@ -320,7 +353,20 @@ impl State {
         let Some(cid) = self.placed[item] else { return };
         let c = &cands[cid as usize];
         if c.lshape.is_none() {
-            self.occ.mark(&c.rect, false);
+            let at = self.pend_at[item];
+            if at != NONE {
+                // placed since the last update: nothing to undo in the grid
+                debug_assert!(self.pend[at as usize] == Some((c.rect, true)));
+                self.pend[at as usize] = None;
+                self.pend_at[item] = NONE;
+                // (searches undo in LIFO order: drop cancelled entries at the end)
+                while let Some(None) = self.pend.last() {
+                    self.pend.pop();
+                    self.pend_item.pop();
+                }
+            } else {
+                self.pend_mark(item, c.rect, false);
+            }
         }
         if let Some(&k) = self.keys.get(item) {
             self.key_count[k] -= 1;

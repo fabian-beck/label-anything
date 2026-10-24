@@ -153,10 +153,10 @@ export class State {
   /**
    * Conflicts of `c` by the `lower_items` rule (in this order): placed items of lower key
    * whose mark the label of `c` covers, then placed items of higher key whose label covers
-   * the mark of `c`'s item; only items with key at most `keyLimit`. With `first`, stops at
-   * the first one.
+   * the mark of `c`'s item; only items with key at most `keyLimit`, other than `skip` and
+   * `other`. With `first`, stops at the first one.
    */
-  private lowerConflicts(c: Cand, cands: readonly Cand[], skip: number, keyLimit: number, first: boolean, out: number[]): void {
+  private lowerConflicts(c: Cand, cands: readonly Cand[], skip: number, keyLimit: number, first: boolean, out: number[], other = -1): void {
     const lw = this.lower;
     if (lw === null) return;
     const i = c.item;
@@ -165,7 +165,7 @@ export class State {
     lw.index.query(c.rect, buf);
     for (let q = 0; q < buf.len; q++) {
       const j = buf.get(q);
-      if (j === i || j === skip || this.placed[j]! < 0 || keys[j]! <= keys[i]! || (lw.groupOf[j] ?? null) === i || !(keys[j]! <= keyLimit)) continue;
+      if (j === i || j === skip || j === other || this.placed[j]! < 0 || keys[j]! <= keys[i]! || (lw.groupOf[j] ?? null) === i || !(keys[j]! <= keyLimit)) continue;
       if (c.labelOverlapsShape(lw.marks[j]!)) {
         out.push(j);
         if (first) return;
@@ -175,7 +175,7 @@ export class State {
     this.labelIx.query(mark.bbox(), buf);
     for (let q = 0; q < buf.len; q++) {
       const j = buf.get(q);
-      if (j === i || j === skip || keys[j]! >= keys[i]! || (lw.groupOf[i] ?? null) === j || !(keys[j]! <= keyLimit)) continue;
+      if (j === i || j === skip || j === other || keys[j]! >= keys[i]! || (lw.groupOf[i] ?? null) === j || !(keys[j]! <= keyLimit)) continue;
       const pid = this.placed[j]!;
       if (pid < 0) continue;
       if (cands[pid]!.labelOverlapsShape(mark)) {
@@ -443,10 +443,10 @@ export class State {
   }
 
   /**
-   * The first placed item (in index-query order) that conflicts with `c` and whose key is
-   * at most `keyLimit` (`Infinity`: any), or -1.
+   * The first placed item (in index-query order) other than `skip` and `other` that
+   * conflicts with `c` and whose key is at most `keyLimit` (`Infinity`: any), or -1.
    */
-  firstConflict(c: Cand, cands: readonly Cand[], obs: Obstacles, skip: number, keyLimit: number): number {
+  firstConflict(c: Cand, cands: readonly Cand[], obs: Obstacles, skip: number, keyLimit: number, other = -1): number {
     const dy = obs.dynamic;
     const llHard = dy.labelLabels.kind === AvoidKind.Hard;
     const lbHard = dy.leaderLabels.kind === AvoidKind.Hard;
@@ -456,7 +456,7 @@ export class State {
     const lix = this.labelIx;
     lix.scanStart(bb, this.marginMaxV);
     for (let j = lix.scanNext(); j >= 0; j = lix.scanNext()) {
-      if (j === skip || !(keys[j]! <= keyLimit)) continue;
+      if (j === skip || j === other || !(keys[j]! <= keyLimit)) continue;
       const pid = this.placed[j]!;
       if (pid < 0) continue;
       const p = cands[pid]!;
@@ -473,14 +473,14 @@ export class State {
       seen.length = 0;
       for (let s = six.scanNext(); s >= 0; s = six.scanNext()) {
         const j = this.segItem[s]!;
-        if (j === skip || !(keys[j]! <= keyLimit) || seen.includes(j)) continue;
+        if (j === skip || j === other || !(keys[j]! <= keyLimit) || seen.includes(j)) continue;
         seen.push(j);
         if (this.leadersHit(c, cands[this.placed[j]!]!, dy, j)) return j;
       }
     }
     if (this.lower !== null) {
       const hit: number[] = [];
-      this.lowerConflicts(c, cands, skip, keyLimit, true, hit);
+      this.lowerConflicts(c, cands, skip, keyLimit, true, hit, other);
       if (hit.length > 0) return hit[0]!;
     }
     return -1;

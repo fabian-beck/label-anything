@@ -292,8 +292,14 @@ fn text_variant(
             m.ink(&spec.font, scale, l)
         }
     };
-    let top = lines.first().and_then(ink).map_or(asc, |ink| ink.0);
-    let bottom = lines.last().and_then(ink).map_or(desc, |ink| ink.1);
+    let first = lines.first().and_then(ink);
+    let last = if lines.len() > 1 {
+        lines.last().and_then(ink)
+    } else {
+        first
+    };
+    let top = first.map_or(asc, |ink| ink.0);
+    let bottom = last.map_or(desc, |ink| ink.1);
     let size = spec.font.size * scale;
     let pitch = spec.font.line_height * size;
     let widths: Vec<f64> = lines

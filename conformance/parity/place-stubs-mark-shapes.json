@@ -1006,7 +1006,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 1.5495744946959134,
+        "cost": 1.5495744946959136,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1069,7 +1069,7 @@
           ],
           "stub": true
         },
-        "cost": 0.5233817546513877,
+        "cost": 0.5233817546513878,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1453,7 +1453,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.28948515603942665,
+        "cost": 0.28948515603942654,
         "degrade_steps": [],
         "priority": {
           "tier": 0,

@@ -345,9 +345,11 @@ impl<'a> Evaluator<'a> {
         }
         // 5. position
         acc.add("position", w.position * c.rank / 8.0);
-        // 6. distance from own shape
+        // 6. distance from own shape (the rule of step 2 measured it already)
         let gap = if c.kind == Kind::Internal {
             0.0
+        } else if near_rule {
+            d_own
         } else {
             item.shape.dist_rect(&r)
         };

@@ -259,14 +259,32 @@ export abstract class ShapeBase {
         return maxf(convexPolyRectDistance(s.inner, 4, r) - s.r, 0);
       case "ellipse": {
         if (this.overlapsRect(r)) return 0;
-        // The signed distance to a convex set is convex along a segment, so a ternary
-        // search per rectangle edge finds the exact minimum.
         const { x0, y0, x1, y1 } = r;
         let m = Infinity;
-        m = minf(m, minDistOnSegment(this, x0, y0, x1, y0));
-        m = minf(m, minDistOnSegment(this, x1, y0, x1, y1));
-        m = minf(m, minDistOnSegment(this, x1, y1, x0, y1));
-        m = minf(m, minDistOnSegment(this, x0, y1, x0, y0));
+        if (s.rx <= 0 || s.ry <= 0) {
+          // a degenerate ellipse is a disc to `signedDistance`: a ternary search per
+          // rectangle edge (the distance is convex along a segment)
+          m = minf(m, minDistOnSegment(this, x0, y0, x1, y0));
+          m = minf(m, minDistOnSegment(this, x1, y0, x1, y1));
+          m = minf(m, minDistOnSegment(this, x1, y1, x0, y1));
+          m = minf(m, minDistOnSegment(this, x0, y1, x0, y0));
+          return maxf(m, 0);
+        }
+        // The nearest point of the rectangle to a disjoint convex shape is a corner, or lies
+        // inside an edge, straight across from the shape's extreme point in that edge's
+        // normal direction (a closed form for an ellipse).
+        m = minf(m, this.signedDistanceXY(x0, y0));
+        m = minf(m, this.signedDistanceXY(x1, y0));
+        m = minf(m, this.signedDistanceXY(x1, y1));
+        m = minf(m, this.signedDistanceXY(x0, y1));
+        const top = this.support(new P(0, -1));
+        if (top.y >= y1 && top.x >= x0 && top.x <= x1) m = minf(m, top.y - y1);
+        const bottom = this.support(new P(0, 1));
+        if (bottom.y <= y0 && bottom.x >= x0 && bottom.x <= x1) m = minf(m, y0 - bottom.y);
+        const left = this.support(new P(-1, 0));
+        if (left.x >= x1 && left.y >= y0 && left.y <= y1) m = minf(m, left.x - x1);
+        const right = this.support(new P(1, 0));
+        if (right.x <= x0 && right.y >= y0 && right.y <= y1) m = minf(m, x0 - right.x);
         return maxf(m, 0);
       }
     }

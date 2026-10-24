@@ -1,6 +1,6 @@
 # 0054 — Clear labels in crowds: centered stubs, the crowd cost, a clear margin, label spacing
 
-* Status: accepted (new option `defaults.spacing`; `placement.own_nearest` and `placement.stubs` extended; spec §4.4, §6.6–§6.9, §8; Rust `la-core`, TypeScript `@label-anything/core`; the economies chart of the home page). Amends ADR 0051 for labels without a stub.
+* Status: accepted (new option `defaults.spacing`; `placement.own_nearest` and `placement.stubs` extended; spec §4.4, §6.6–§6.9, §8; Rust `la-core`, TypeScript `@label-anything/core`; the economies chart of the home page). Amends ADR 0051 for labels without a stub. Its solve times amended by ADR 0057.
 * Date: 2026-10-24
 
 ## Context

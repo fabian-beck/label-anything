@@ -50,6 +50,9 @@ function usable(s: Solve, c: number, softOk: boolean): boolean {
 /** Candidates an insertion tries (the cheapest usable ones, from a random offset). */
 const INSERT_TRIES = 12;
 
+/** Candidates a relocation chain tries to free by relocating their single blocker. */
+const CHAIN_TRIES = 16;
+
 /**
  * The number of candidates {@link tryInsert} tries for item `u` (it draws its random
  * offset below this number).
@@ -466,8 +469,16 @@ function relocateChain(s: Solve, j: number, old: number, depth: number, softOk: 
   const list = s.byItem[j]!.slice();
   let bestCost = 0;
   let bestK = -1;
-  for (const k of list) {
-    if (k === old || !usable(s, k, softOk) || !isFree(s, j, k)) continue;
+  // the first blocker of each of the first CHAIN_TRIES candidates (-1: none)
+  const blocker = new Int32Array(Math.min(list.length, CHAIN_TRIES)).fill(-1);
+  for (let q = 0; q < list.length; q++) {
+    const k = list[q]!;
+    if (k === old || !usable(s, k, softOk)) continue;
+    const b = s.state.firstConflict(s.cands[k]!, s.cands, s.obs, j, Infinity);
+    if (b >= 0) {
+      if (q < CHAIN_TRIES) blocker[q] = b;
+      continue;
+    }
     const c = itemCost(s, j, k);
     if (bestK < 0 || c < bestCost) {
       bestCost = c;
@@ -479,13 +490,13 @@ function relocateChain(s: Solve, j: number, old: number, depth: number, softOk: 
     return true;
   }
   if (depth === 0) return false;
-  const scratch: number[] = [];
-  for (let q = 0; q < list.length && q < 16; q++) {
+  // Every branch below restores the placement it changes, so the blockers found above
+  // stay valid: a candidate has a single blocker when nothing else conflicts with it.
+  for (let q = 0; q < blocker.length; q++) {
+    const b = blocker[q]!;
+    if (b < 0) continue;
     const k = list[q]!;
-    if (k === old || !usable(s, k, softOk)) continue;
-    s.state.conflicts(s.cands[k]!, s.cands, s.obs, j, scratch);
-    if (scratch.length !== 1) continue;
-    const b = scratch[0]!;
+    if (s.state.firstConflict(s.cands[k]!, s.cands, s.obs, j, Infinity, b) >= 0) continue;
     const bc = s.state.placed[b]!;
     tx.unplace(s, b);
     tx.place(s, j, k);

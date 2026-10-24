@@ -16,6 +16,9 @@ pub const MOVES_PER_MS: f64 = 100.0;
 /// Candidates an insertion tries (the cheapest usable ones, from a random offset).
 const INSERT_TRIES: usize = 12;
 
+/// Candidates a relocation chain tries to free by relocating their single blocker.
+const CHAIN_TRIES: usize = 16;
+
 pub struct LocalStats {
     pub iterations: u64,
     pub accepted: u64,
@@ -522,8 +525,17 @@ fn relocate_chain(
 ) -> bool {
     let list = s.by_item[j].clone();
     let mut best: Option<(f64, u32)> = None;
-    for &k in &list {
-        if k == old || !usable(s, k, soft_ok) || !is_free(s, j, k) {
+    // the first blocker of each of the first `CHAIN_TRIES` candidates
+    let mut blocker = [None; CHAIN_TRIES];
+    for (q, &k) in list.iter().enumerate() {
+        if k == old || !usable(s, k, soft_ok) {
+            continue;
+        }
+        let cand = &s.cands[k as usize];
+        if let Some(b) = s.state.first_conflict(cand, &s.cands, s.obs, j, |_| true) {
+            if q < CHAIN_TRIES {
+                blocker[q] = Some(b);
+            }
             continue;
         }
         let c = item_cost(s, j, k);
@@ -538,17 +550,17 @@ fn relocate_chain(
     if depth == 0 {
         return false;
     }
-    let mut scratch = Vec::new();
-    for &k in list.iter().take(16) {
-        if k == old || !usable(s, k, soft_ok) {
-            continue;
-        }
+    // Every branch below restores the placement it changes, so the blockers found above
+    // stay valid: a candidate has a single blocker when nothing else conflicts with it.
+    for (q, &k) in list.iter().enumerate().take(CHAIN_TRIES) {
+        let Some(b) = blocker[q] else { continue };
         let cand = &s.cands[k as usize];
-        s.state.conflicts(cand, &s.cands, s.obs, j, &mut scratch);
-        if scratch.len() != 1 {
+        if s.state
+            .first_conflict(cand, &s.cands, s.obs, j, |x| x != b)
+            .is_some()
+        {
             continue;
         }
-        let b = scratch[0] as usize;
         let bc = s.state.placed[b].unwrap();
         tx.unplace(s, b);
         tx.place(s, j, k);

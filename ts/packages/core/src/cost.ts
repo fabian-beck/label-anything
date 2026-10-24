@@ -237,8 +237,8 @@ export class Evaluator {
     if (!acc.relaxed) return finish(c, acc);
     // 5. position
     acc.add("position", (w.position * c.rank) / 8);
-    // 6. distance from own shape
-    const gap = c.kind === Kind.Internal ? 0 : item.shape.distRect(r);
+    // 6. distance from own shape (the rule of step 2 measured it already)
+    const gap = c.kind === Kind.Internal ? 0 : nearRule ? dOwn : item.shape.distRect(r);
     // (a stub is part of the distance, not a leader to a distant label)
     const stub = c.hasStub();
     if (c.leaders.length === 0 || stub) acc.add("distance", (w.distance * gap) / em);
