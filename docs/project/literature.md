@@ -23,7 +23,7 @@ targeted these weaknesses:
 | W1 | dense data loses labels | 501 of 1,000 airports, 872 of 2,000 random points |
 | W2 | the local search adds little | +0.7 % priority-weighted placement over greedy with the ladder; 20 times the iterations at most +1.7 % (M4) |
 | W3 | many and long leaders in crowds | 14 of 32 Gapminder labels, up to 8–11 em, some across large marks |
-| W4 | labels move and flip in animations | 2.3–3.4 px per frame; on the zoom-and-pan sequences 11.6–15.5 % of the labels change side per frame (ADR 0025), and the gallery flags more than 10 % per zoom step |
+| W4 | labels move and flip in animations | 2.3–3.4 px per frame; on the zoom-and-pan sequences 11.6–15.5 % of the labels change side per frame (ADR motion/warm-starts), and the gallery flags more than 10 % per zoom step |
 | W5 | large problems are slow | 2,000 labels over 100k points: ~300 ms natively (target 120 ms); two thirds in the greedy pass, mostly the ladder of labels omitted in the end |
 | W6 | crowded line ends | a fan column grows only as far as its leaders stay within `leaders.max_length` |
 
@@ -50,11 +50,11 @@ stacked by isotonic regression. Three gaps stand out:
    problem goes into ladder variants of labels that are omitted anyway. A conservative
    "does the smallest variant fit anywhere within reach" test on the occupancy grid
    looked like a way to detect them before any candidate is built; measured, it is not
-   (S1, ADR 0034).
+   (S1, ADR placement/ladder).
 3. **Animations are solved frame by frame** (W4). The dynamic-labeling literature gets
    consistency from zoom-aware selection (active ranges, Been et al. 2006, 2010) and from
    preferring a label's previous side (as MapLibre does) — both possible without the
-   engine-side hysteresis that ADR 0026 rejected, because they change which candidate a
+   engine-side hysteresis that ADR motion/label-motion rejected, because they change which candidate a
    label takes, not whether it is shown.
 
 Learning-based placement (Bobák et al. 2024, Qu et al. 2025) is not a candidate for the
@@ -111,11 +111,11 @@ port).
   (Strijk et al. 2000; Verweij & Aardal 1999).
 * *Order by fewest remaining candidates* within equal priority.
 
-ADR 0014 should also say that the exact objective is the static cost only
+ADR solver/search should also say that the exact objective is the static cost only
 (`exact.rs:212`).
 
-**O4 — Neighbourhoods that change the number of labels.** *Measured on 2026-10-18 (ADR
-0035): not adopted.* With the default priorities every item has its own key, so in
+**O4 — Neighbourhoods that change the number of labels.** *Measured on 2026-10-18
+(ADR solver/search): not adopted.* With the default priorities every item has its own key, so in
 `strict` mode trading one label for two of lower priority makes the objective worse, and
 the useful case — inserting a more important label — is already the eviction move. Where
 weights add up or keys tie, a prototype added up to 1 % labels (one to three accepted
@@ -155,7 +155,7 @@ in the ladder.
 
 ### Speed (W5)
 
-**S1 — Detect labels without room before the ladder.** *Measured on 2026-10-18 (ADR 0034):
+**S1 — Detect labels without room before the ladder.** *Measured on 2026-10-18 (ADR placement/ladder):
 not adopted.* On the 2,000-label problem, 1,128 items run the ladder and are omitted; only
 18 of them have every candidate box rejected by the occupancy grids — the others fail on
 discrete positions, the label margin and overlaps thinner than a cell, which only the
@@ -170,7 +170,7 @@ by labels of equal or higher key, build a summed-area table of them, and look fo
 window of that size; a second table answers "any fit in this rectangle" in constant time
 per item. When nothing fits, the item skips the steps that only generate candidates
 (keeping `evict_lower` when labels of lower key lie within reach, and `soft_overlap`). The
-occupancy grid and its summed-area table exist already (`grid/occupancy.rs`, ADR 0015);
+occupancy grid and its summed-area table exist already (`grid/occupancy.rs`, ADR placement/ladder);
 the approach follows the occupancy bitmaps of Kittivorawong et al. (2020) and Pavlovec &
 Čmolík (2022) and the conflict particles of Luboschik et al. (2008); exact
 largest-empty-rectangle algorithms (Naamad et al. 1984; Chazelle et al. 1986) are
@@ -212,7 +212,7 @@ uses too; members that do not fit are evicted and the column is laid out again. 
 one-dimensional dynamic program over the sorted anchors can select members by priority and
 place them in one pass, with each member's window given by `max_length` and the column's
 distance; trying a few distances gives the best column (dynamic programs for boundary
-labeling with length and bend costs: Bekos et al. 2007; Benkert et al. 2009). ADR 0022
+labeling with length and bend costs: Bekos et al. 2007; Benkert et al. 2009). ADR placement/columns
 already notes that a column is a joint decision; this makes it an optimal one.
 
 **L2 — More than one column.** When a column is full within `max_length`, a second column
@@ -235,7 +235,7 @@ types restores feasibility in boundary labeling (Bekos et al. 2010).
 **L5 — One bend, not two, in orthogonal columns.** The readability study of Barth et al.
 (2019) recommends `po` leaders (one bend) as the best compromise between task performance
 and preference and does not recommend `opo` (from the abstract). *Corrected on
-2026-10-18 (ADR 0036):* spec §7 said that the `orthogonal` style draws `opo` leaders to
+2026-10-18 (ADR placement/leaders):* spec §7 said that the `orthogonal` style draws `opo` leaders to
 boundary labels, which is what this note first took over; both implementations draw `po`
 leaders. The spec and the leaders tutorial now say so, and a conformance case checks it.
 
@@ -261,14 +261,15 @@ candidates on the label's previous side before all others, and charge a side cha
 explicitly; MapLibre runs such a pass ("prefer placement using same anchor, if it's still
 available"). Today the stability term counts distance only and is capped, so a flip to the
 other side costs about as much as any move of 5 em. This changes which candidate a label
-takes, not whether it is shown, so strict priority is unaffected — the objection of ADR
-0026 to hysteresis. ADR 0025 measured a stability term that keeps growing and found more
+takes, not whether it is shown, so strict priority is unaffected — the objection of
+ADR motion/label-motion to hysteresis. ADR motion/warm-starts measured a stability term
+that keeps growing and found more
 labels added and removed; this pass must be measured on the same sequences.
 
 **D3 — Transitions planned by the engine.** The result could say per changed label whether
 it should slide or fade: slide only when the interpolated boxes stay clear of the others,
 else fade (transition models with overlap bounds: Depian et al. 2023; 300 ms fades in map
-renderers). `LabelMotion` (ADR 0026) would follow the plan instead of always gliding.
+renderers). `LabelMotion` (ADR motion/label-motion) would follow the plan instead of always gliding.
 
 **D4 — A speed limit.** A soft limit on how far a label's offset may change per solve, with
 farther moves allowed only as fade-out and fade-in at a higher cost (the speed–overlap
@@ -312,7 +313,7 @@ as in the bibliography.
 
 | Building block | Code | Source | Status | Matches? |
 |---|---|---|---|---|
-| summed-area tables | `grid/mod.rs`, `grid/occupancy.rs`, ADR 0005 | Crow 1984 | VERIFIED-SEARCH | yes; ADR 0005 does not cite it |
+| summed-area tables | `grid/mod.rs`, `grid/occupancy.rs`, ADR obstacles/coverage-grids | Crow 1984 | VERIFIED-SEARCH | yes; ADR obstacles/coverage-grids does not cite it |
 | exact Euclidean distance transform | `grid/dt.rs` | Felzenszwalb & Huttenlocher 2012; Meijster et al. 2000 | VERIFIED-SEARCH; PARTIAL | a hybrid: Meijster's column pass, Felzenszwalb–Huttenlocher's row pass; spec §4.7 cites only the latter |
 | pole of inaccessibility | `geom/polygon.rs:205` | Garcia-Castellanos & Lombardo 2007; Agafonkin 2016 (polylabel) | VERIFIED-SEARCH | follows polylabel, with iteration caps and deterministic ties; largest inscribed circle, not box (S3) |
 | PCG32 | `la-expr/src/det_math/pcg.rs` | O'Neill 2014 | VERIFIED-SEARCH | PCG-XSH-RR 64/32; `next_below` is Lemire's (2019) multiply-shift without its rejection step, so slightly biased (at most n/2³²), undocumented |
@@ -330,7 +331,7 @@ as in the bibliography.
 | position orders | `model/opts.rs` | perceptual: Bobák et al. (cited); cartographic: Imhof 1975 | PARTIAL | the exact cartographic order could not be traced to Imhof's text |
 | ambiguity term | `cost.rs`, spec §8 | criteria in van Dijk et al. 2002, Rylov & Reimer 2014 | not compared | a linear ramp on the difference of distances |
 
-Small fixes this suggests: cite the sources in ADR 0005, `dt.rs`, `polygon.rs`, `pcg.rs`,
+Small fixes this suggests: cite the sources in ADR obstacles/coverage-grids, `dt.rs`, `polygon.rs`, `pcg.rs`,
 `local.rs` and `flatten.rs`; correct spec §4.7 (no early rejection by the distance
 transform) and §10.2 (positive deltas); document the bias of `next_below` (removing it
 changes every seeded result, so it needs a version note); add arXiv:2407.11996 to the
@@ -340,10 +341,10 @@ Bobák et al. entry of `CITATION.cff` once the CVM record is confirmed.
 
 1. Measurement: O1's upper bound and literature instances, D7's benchmark additions.
    Both are cheap and decide how much O2–O4 can gain.
-2. S2: safe reductions of the candidates (S1 was measured and dropped, ADR 0034).
-3. O3, then O2 on top of it (O4 was measured and dropped, ADR 0035).
+2. S2: safe reductions of the candidates (S1 was measured and dropped, ADR placement/ladder).
+3. O3, then O2 on top of it (O4 was measured and dropped, ADR solver/search).
 4. D2 (small, measurable on scenario 11), then D1 for zooming hosts.
-5. L1 for columns (L5 holds already, ADR 0036); L2–L4 as the gallery shows need.
+5. L1 for columns (L5 holds already, ADR placement/leaders); L2–L4 as the gallery shows need.
 
 ## Provenance of these notes
 

@@ -61,8 +61,8 @@ export function placeWith(env: Env, problem: unknown, profile: BudgetProfile = "
 }
 
 /**
- * Solve a problem and record what the solver decided, step by step (ADR 0046; TypeScript
- * only): candidate generation, the greedy pass, every local-search move and the passes
+ * Solve a problem and record what the solver decided, step by step (ADR project/solve-traces;
+ * TypeScript only): candidate generation, the greedy pass, every local-search move and the passes
  * after the search, each event with the placement changes it made. The result is the one
  * {@link placeWith} gives: tracing never changes a decision. Throws `PlaceError` if the
  * problem is invalid.

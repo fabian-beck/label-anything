@@ -137,7 +137,7 @@ Callbacks are host extensions, not schema fields; they are passed to `place`,
   the bundled font). `measure("", font)` asks for the vertical metrics. Results are
   cached per `(text, font)` during a solve. Wrapping then calls it for every distinct
   candidate line; without a callback the fonts measure candidate lines in constant time
-  (ADR 0018).
+  (ADR text/measurement).
 * `cost(candidate: la.Candidate) -> float ≥ 0`: an extra cost term per candidate
   (`candidate.id`, `.box`, `.leader`), evaluated once per candidate.
 * `progress(phase, fraction)`: `"greedy"`, `"local"`, `"exact"` as they start, then

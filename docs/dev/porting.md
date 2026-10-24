@@ -2,10 +2,11 @@
 
 `ts/packages/core` (`@label-anything/core`) is a line-by-line port of
 `rust/crates/la-core`. Rust is the reference: an algorithm is written and tested in
-Rust first and ported right afterwards (ADR 0001). The port uses the same algorithms in
+Rust first and ported right afterwards (ground rule 2 of
+[Contributing](../project/contributing.md)). The port uses the same algorithms in
 the same order with the same arithmetic, so that, for the same iteration counts, both
 implementations make the same decisions. Results may still differ when the time budget
-cuts a search at different points (the budgets and move rates differ, ADR 0007), but the
+cuts a search at different points (the budgets and move rates differ, ADR solver/time-budget), but the
 hard-constraint guarantees never do.
 
 ## Files
@@ -38,18 +39,18 @@ Wrapping and truncation take a `la_text::Measure`: `Measure::Font { font, size }
 `Measurer::wrap_measure` (`Measurer.wrapMeasure`) picks the font measure when the host
 cannot measure text (`Env::has_measure_callback()` / `Env.hasMeasureCallback()` is `false`:
 `BasicEnv`, the CLIs, `place` without a `measure` option) and, in Rust, shaping is `simple`,
-or `auto` for a text without complex scripts (ADR 0018). TypeScript has no full shaping, so
+or `auto` for a text without complex scripts (ADR text/measurement). TypeScript has no full shaping, so
 there the host measurement alone decides; both measures give identical results.
 
 ### Deliberate differences
 
 * **Per-implementation constants.** `solver.time_budget_ms` defaults to 250 in
   TypeScript (Rust: 100) and local search runs 40 moves per ms of budget (Rust: 100),
-  ADR 0007. `placeWith(…, "rust")` (`BudgetProfile`) uses the Rust values, so that the
+  ADR solver/time-budget. `placeWith(…, "rust")` (`BudgetProfile`) uses the Rust values, so that the
   parity tests run the same iteration counts.
 * **Candidate filter before construction.** Rust builds the adjacent, slider, distant
   and boundary candidates of a variant and then drops those that `keep` rejects
-  (occupancy pre-filter, ADR 0015). The port calls the same `keep` on the same boxes in
+  (occupancy pre-filter, ADR placement/ladder). The port calls the same `keep` on the same boxes in
   the same order, but before it builds the candidate (`KeepFn`, box in `KEEP_BOX`), so
   rejected boxes cost no allocation.
 * **Lazy obstacle structures.** The exact primitive list and index (queried only for
@@ -67,7 +68,7 @@ there the host measurement alone decides; both measures give identical results.
   per item, not once per variant. Frozen occupancy grids scan their bitset for small
   windows (cheaper than the summed-area table's cache misses in V8).
 * `Cand.bbox()` is cached; the measurer caches fonts; `FontBook.resolve` is memoized.
-* **Solve traces** (`trace.ts`, ADR 0046) exist only here: `Solve.trace` is null unless
+* **Solve traces** (`trace.ts`, ADR project/solve-traces) exist only here: `Solve.trace` is null unless
   `placeTraced` attaches a `Tracer`, and the calls to it (in `solver/`, `place.ts`) are
   guarded by that null check. They only read the state; a port of a solver change keeps
   them at the decisions they report.

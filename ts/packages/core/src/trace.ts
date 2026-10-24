@@ -1,6 +1,6 @@
 /**
  * Solve traces: what the solver decided, step by step, for the explainer of the
- * playground (ADR 0046). TypeScript only; the Rust core has no counterpart.
+ * playground (ADR project/solve-traces). TypeScript only; the Rust core has no counterpart.
  *
  * A {@link Tracer} attached to a solve (`placeTraced` in `index.ts`) is called at the
  * solver's decisions: candidate generation, the greedy pass (bands, the item taken next,

@@ -22,7 +22,7 @@ touches the mark inflated by `placement.offset` (1 px), in the direction of the 
   bottom-left, right, left, top, bottom;
 * a list of position names: only those positions, in that order. Distant labels then keep
   to the same sides: only directions within 22.5° of a listed position (`["right"]` keeps
-  the end labels of a line chart off the lines, ADR 0021).
+  the end labels of a line chart off the lines, ADR placement/leaders).
 
 **`slider`** — `slider_per_quadrant` (4) positions between each pair of neighbouring fixed
 positions, sliding along the mark while touching it.
@@ -117,7 +117,7 @@ its own leader fanning out of the crowd (`model: "fan"` in the result):
 
 Columns work best at the crowded ends of line charts and in tight point clusters; in a
 two-dimensional crowd surrounded by other marks, the leaders would cross those marks and
-no column forms (ADR 0022). (A group's label is different: one label with a leader to
+no column forms (ADR placement/columns). (A group's label is different: one label with a leader to
 each member of the group.)
 
 ## How the solver chooses
@@ -133,7 +133,7 @@ With `strict` omission, a priority repair then gives every omitted item a
 position that only lower-priority labels hold (those labels are tried again), so no
 label is missing in favour of a less important one; an item kept out by one more
 important label may also move that label to another of its positions, when at most one
-less important label gives way ([ADR 0049](../adr/0049-move-one-label-aside.md)). Finally, a verification pass
+less important label gives way ([ADR priority/repair](../adr/priority/repair.md)). Finally, a verification pass
 re-checks every hard constraint exactly. The [explainer](../explainer.md) steps through
 these phases on a real solve.
 [The solver](solver.md) describes budgets and determinism; the

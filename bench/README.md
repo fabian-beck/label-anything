@@ -389,7 +389,7 @@ fails unless, for the Label Anything solvers, every problem was solved with **0 
 **no metric regressed by more than 2 %** against `--previous` (skipped, not failed, without it),
 and the **performance targets** were measured and met. Accepted regressions are listed in
 `bench/gates-allow.json` (`metric`, `scenario`, optional `config` / `solver` patterns, `adr`,
-`reason`); an entry counts only if `docs/adr/<adr>-*.md` exists. The summary is printed and
+`reason`); an entry counts only if the record `docs/adr/<adr>.md` exists. The summary is printed and
 stored in `results.json` (`gate`). Release procedure: `docs/benchmark.md`.
 
 ## Milestone acceptance (M3, M4)

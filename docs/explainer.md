@@ -9,7 +9,7 @@ description: Step through a real solve of the Label Anything engine — candidat
 
 The explainer runs the engine on a small scene and lets you walk through what it did,
 decision by decision. Nothing is animated from a description: the TypeScript engine
-records its own decisions while it solves (`placeTraced`, ADR 0046), and the page replays
+records its own decisions while it solves (`placeTraced`, ADR project/solve-traces), and the page replays
 them. The same problem solved by the WebAssembly build of the Rust core gives the same
 placements, which the page checks after every solve.
 

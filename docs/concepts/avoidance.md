@@ -85,7 +85,7 @@ example:
 | `scatter` | points 0.3, lines 1.0, ink 0.1, axes hard | points 0.2, lines 0.5, axes 1.0 |
 | `map` | lines 0.8, ink 0.1, areas ignore, text hard | lines 0.3, areas ignore |
 | `graph` | lines 1.0, ink 0.1 | lines 0.5 |
-| `illustration` | ink 1.0 ([ADR 0029](../adr/0029-illustration-callouts-in-margins.md)) | ink 0.025 |
+| `illustration` | ink 1.0 ([ADR placement/costs](../adr/placement/costs.md)) | ink 0.025 |
 
 ## Choosing values
 

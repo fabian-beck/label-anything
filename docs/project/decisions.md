@@ -1,7 +1,7 @@
 # Architecture decisions
 
-Decisions that the design brief leaves open, deviations from it and performance changes
-are recorded as lightweight ADRs (context, decision, consequences) in
-[`docs/adr/`](gh:docs/adr). Superseded ADRs stay, marked as such.
+Why the engine and the project around it are the way they are. Each record covers one
+topic and is kept current: the decision, the problem it solves, what it costs and what was
+tried instead. ADR project/decision-records describes how they are written.
 
 <!-- la:adr-index -->

@@ -4,7 +4,7 @@
 // not match the version of @playwright/test.
 // The explainer's tests, and those of the home page's header, run after the playground's:
 // the playground compares the two engines, which agree only while no wall-clock guard
-// fires (ADR 0042), and solves running beside them would take the CPU they need.
+// fires (ADR solver/time-budget), and solves running beside them would take the CPU they need.
 import { defineConfig } from "@playwright/test";
 
 const executablePath = process.env.CHROMIUM_PATH || undefined;

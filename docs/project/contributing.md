@@ -22,13 +22,15 @@ python3 examples/showcase/make_showcase.py --cli rust/target/release/label-anyth
   committed files are current (`--check`).
 * The specification, defaults, presets, expression grammar and API definitions are
   included from their source files: change them there.
-* New ADRs in `docs/adr/` appear in the navigation and the [index](decisions.md)
-  automatically.
+* Architecture decisions are `docs/adr/<area>/<name>.md`
+  ([ADR project/decision-records](../adr/project/decision-records.md)) and appear in the
+  navigation and the [index](decisions.md) by area. The build fails on a record without
+  its sections and on a citation of a record that does not exist.
 * The home page's header (`docs/_overrides/home.html`) is live only with the playground
   next to the site, as on GitHub Pages: `mkdocs serve` shows its static logo. To see it
   live, build the playground (`npm run build -w @label-anything/playground`), copy
   `ts/packages/playground/dist/` to `site/playground/` after `mkdocs build` and serve
-  `site/` ([ADR 0049](../adr/0049-home-page-header-labeled-live.md)).
+  `site/` ([ADR project/playground](../adr/project/playground.md)).
 
 The site is deployed to GitHub Pages from release tags (`v*`) and on demand
 (`.github/workflows/pages.yml`).

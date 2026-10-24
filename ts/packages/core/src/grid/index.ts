@@ -1,5 +1,6 @@
 /**
- * Per-class coverage grids with summed-area tables (spec §4.1, ADR 0005); port of
+ * Per-class coverage grids with summed-area tables (spec §4.1, ADR obstacles/coverage-grids); port
+ * of
  * `rust/crates/la-core/src/grid/mod.rs`.
  *
  * @module

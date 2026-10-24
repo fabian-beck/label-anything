@@ -46,7 +46,7 @@ The full list is in [`bench/README.md`](gh:bench/README.md).
 
 From the quick suite with every baseline (commit 25b543f, 2026-10-18, on a 4-core cloud VM;
 Label Anything's numbers at commit 4e6684e, with the priority repair of
-[ADR 0049](../adr/0049-move-one-label-aside.md)):
+[ADR priority/repair](../adr/priority/repair.md)):
 the **usable labels** of each tool — those left when every label in a conflict (an
 overlap with another label, a mark or a hard obstacle, a crossing leader, …) is dropped in
 priority order — and in parentheses the labels it placed, where that is more. "n/a": the
@@ -97,7 +97,7 @@ D3-Labeler's annealing hours).
   1,000) stays unlabeled. The pruning had left Heathrow positions on that side only, so
   nothing after the greedy pass could make room. The priority repair now moves one label
   aside where at most one less important label gives way
-  ([ADR 0049](../adr/0049-move-one-label-aside.md)): 71 more labels on the full suite
+  ([ADR priority/repair](../adr/priority/repair.md)): 71 more labels on the full suite
   (+0.5 %), on 20 problems, each with a higher priority-weighted placement and none with
   fewer labels — Xiamen, Detroit and Faro on the 300-airport map, Munich and Toronto on the
   3,221-airport one. Amsterdam is not among them: making room for it would cost Gatwick and
@@ -118,15 +118,15 @@ D3-Labeler's annealing hours).
 * **Dense data loses labels.** A label that would overlap is left out, with the reason
   and the labels in its way in the result: of 1,000 airports on the world map about 520
   get a label, of 2,000 random points (the performance problem) 872. The label margin of
-  [ADR 0028](../adr/0028-label-margin.md) trades labels for space between them: 1–4 % of
+  [ADR placement/margin](../adr/placement/margin.md) trades labels for space between them: 1–4 % of
   the labels in typical scenes, 10 % of the 2,000 points. On very large inputs the greedy
   pass reaches its time guard; the items it has not reached then still get their normal
-  positions, in priority order ([ADR 0048](../adr/0048-level-0-pass-after-the-greedy-guard.md)):
+  positions, in priority order ([ADR solver/time-budget](../adr/solver/time-budget.md)):
   914 labels for 20,000 anchors, where only the first 279 got one before.
 * **Leaders where it is crowded.** In crowded scenes many labels need leaders (14 of the
   32 Gapminder labels, 58 of 149 in the Cora network), up to 8 and 11 em long, some
   across large marks; crowded line ends get a column in the margin
-  ([ADR 0030](../adr/0030-boundary-columns.md)), 35 of the 62 life-expectancy lines. What
+  ([ADR placement/columns](../adr/placement/columns.md)), 35 of the 62 life-expectancy lines. What
   stops the column there is the clearance between leaders (0.4 em): without it 53 lines get
   a label, but their leaders merge into one wedge at the line ends, where no reader can
   tell them apart.

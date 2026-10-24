@@ -627,8 +627,8 @@ pub fn priority_repair(s: &mut Solve) {
 }
 
 /// One pass of the priority repair over the omitted items in total order. With
-/// `relocate`, an item may move one label aside (ADR 0049), whose old place joins `freed`;
-/// without, an item near a place in `freed` also tries its pruned level-0 candidates.
+/// `relocate`, an item may move one label aside (ADR priority/repair), whose old place joins
+/// `freed`; without, an item near a place in `freed` also tries its pruned level-0 candidates.
 fn priority_pass(s: &mut Solve, relocate: bool, freed: &mut Vec<crate::geom::Rect>) {
     let soft_ok = s.model.ladder.contains(&Step::SoftOverlap);
     let keys: Vec<usize> = s.pri.prio.iter().map(|p| p.key).collect();
@@ -899,7 +899,7 @@ fn relaxed_cost(c: &Cand) -> f64 {
     c.cost + if c.feasible { 0.0 } else { c.relax_cost }
 }
 
-/// Move one label aside (spec §10.3, ADR 0049): omitted item `h` takes one of its usable
+/// Move one label aside (spec §10.3, ADR priority/repair): omitted item `h` takes one of its usable
 /// candidates whose conflicts are one label `b` of a key not lower than its own (or a
 /// required one) and at most one removable label (strictly lower key, not required); `b`
 /// moves to one of its usable candidates, or of its level-0 candidates the pruning

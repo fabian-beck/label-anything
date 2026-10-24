@@ -48,12 +48,13 @@ the Label Anything solvers (`rust`, `wasm`, `ts`):
    Rust / WASM / TS, as the engine's own median timing (`stats.runtime_ms`,
    `stats.phases_ms.prepare`) in steady state, on one thread.
 
-A deliberate regression (a trade-off accepted for a better result elsewhere) needs an ADR in
-`docs/adr/` and an entry in `bench/gates-allow.json`:
+A deliberate regression (a trade-off accepted for a better result elsewhere) is explained in
+the ADR of the decision behind it (`docs/adr/<area>/<name>.md`) and listed in
+`bench/gates-allow.json`:
 
 ```json
 {"allow": [{"metric": "placed_rate", "scenario": "05-airports", "config": "*", "solver": "rust",
-            "adr": "00NN", "reason": "labels near the antimeridian now omitted instead of clipped"}]}
+            "adr": "placement/leaders", "reason": "labels near the antimeridian now omitted instead of clipped"}]}
 ```
 
 Entries naming an ADR that does not exist are ignored and reported.
@@ -96,11 +97,11 @@ same, would save 5.5 % there and 0.6 % on the stress problem. No function takes 
 allocations, filtering boxes before their candidates are built, other inlining and link-time
 optimization changed the time by less than the noise. What would help is less work per
 omitted label — fewer ladder variants, no distant candidates for shrunk ones — and each such
-change places fewer labels. The label margin of [ADR 0028](adr/0028-label-margin.md) costs time here too:
+change places fewer labels. The label margin of [ADR placement/margin](adr/placement/margin.md) costs time here too:
 without it (`defaults.margin: 0`, `placement.offset: 2`) the problem places 972 labels instead
 of 872, and solves about 10 % faster, as fewer labels go through the ladder.
 
-The same profile at commit fad9db0 (after the lookahead bound of ADR 0047, which made the greedy
+The same profile at commit fad9db0 (after the lookahead bound of spec §10.1, which made the greedy
 pass about 10 % faster): 1.38 G instructions in the solve; the CLI spends another 0.5 G outside the
 timed solve, parsing the 1.8 MB problem, validating it against the schema and writing the
 result, which a fresh process's wall time includes. The TypeScript engine has one cost of its own:
@@ -146,8 +147,8 @@ leaders closer than 4 px without crossing), parallel leaders of neighbouring mar
 leaders passing other marks and data primitives, and the points and line length hidden
 by labels (`bench/README.md`, *Evaluator metrics*; columns *near cross.*, *leader–mark*,
 *far leaders*, *leader p90 em*, *points hidden* and *lines hidden em* of the report).
-They motivated the leader spacing rules, the default ladder without margin labels and the
-coverage costs per em² of [ADR 0019](adr/0019-visual-quality-defaults.md). Full suite,
+They motivated the leader spacing rules (ADR placement/leaders), the default ladder without
+margin labels (ADR placement/ladder) and the coverage costs per em² (ADR placement/costs). Full suite,
 deterministic solves (`--no-clock`, default budgets), before → after that change:
 
 | | before | after |
