@@ -1,10 +1,9 @@
 # Raster backgrounds
 
 When the background is an image — a chart exported as PNG, a map tile, a photo, a canvas —
-Label Anything turns its pixels into obstacle coverage. A **mode** gives every pixel a
-value between 0 and 1; the values are averaged into the coverage grid (cells of about a
-quarter of the font size) of an obstacle class, which `avoid` then weighs like any other
-class.
+Label Anything turns its pixels into obstacle coverage. A **mode** gives each pixel a
+value between 0 and 1; the values are averaged into the coverage grid of an obstacle class
+(cells of about a quarter of the font size), which `avoid` weighs like any other class.
 
 | Mode | A pixel counts by | Typical image |
 |---|---|---|
@@ -14,22 +13,22 @@ class.
 | `classmap` | its palette colour, one class per colour | flat-coloured maps: water, parks, roads |
 | `saliency` | local detail (gradient magnitude and contrast) | photos, illustrations |
 
-A raster source is `obstacles.raster` (one object or a list) with the image as `source` (a
-file path, a `data:` URL or base64 PNG/JPEG/WebP) or as raw pixels (`rgba`, or passed by
-the host: NumPy, `ImageData`, a `ByteBuffer`, a C pointer). `scale` is raster pixels per
-canvas pixel (2 for a HiDPI screenshot of a 1× canvas), `offset` the canvas position of
-the image's top-left corner, `class` the obstacle class (default `ink`). Without a
-`canvas`, the canvas is the image size divided by `scale`.
+Raster sources go in `obstacles.raster` (one object or a list), with the image as
+`source` (a file path, a `data:` URL, or base64 PNG, JPEG or WebP) or as raw pixels
+(`rgba`, or passed by the host: a NumPy array, `ImageData`, a `ByteBuffer`, a C pointer).
+`scale` is raster pixels per canvas pixel (2 for a HiDPI screenshot of a 1× canvas),
+`offset` the canvas position of the image's top-left corner, and `class` the obstacle class
+(default `ink`). Without a `canvas`, the canvas is the image size divided by `scale`.
 
-Each section below shows the head of a problem of
+Each section below shows the start of a problem from
 [`examples/tutorials/problems`](gh:examples/tutorials/problems) and the labels as a host
 would draw them.
 
 ## ink
 
 The chart of the [outliers tutorial](outliers.md), with ink made **hard**: labels may not
-touch a single drawn pixel. Where no free spot exists next to a point, the label moves
-away with a leader (soft ink cost 0.5 for leaders).
+touch a single drawn pixel. Where a point has no free place beside it, its label moves away
+on a leader (leaders cross ink at a cost of 0.5).
 
 ```json
 --8<-- "examples/tutorials/problems/raster-ink.json:1:10"
@@ -54,8 +53,8 @@ whose opacity exceeds `alpha.threshold` (0.1) count, whatever their colour.
 
 ![alpha mode: labels next to the route, off the callout](../assets/figures/raster-alpha.svg)
 
-The class is named `route` and costs 5: labels stay off the route and the callout box
-unless nothing else is possible.
+The class `route` costs 5: labels stay off the route and the callout box unless there is
+no other place.
 
 ## cost
 
@@ -68,9 +67,9 @@ scatter plot, scaled to 480 × 320: labels drift towards the sparse areas.
 
 ![cost mode: labels avoid the dense centre](../assets/figures/raster-cost.svg)
 
-A pixel's value is 1 − luma (Rec. 709) of the pixel composited over white, or its luma
-with `"cost": {"invert": true}`. Cost maps are soft by nature: give the class a weight,
-not `"hard"` (any non-white pixel would block).
+A pixel's value is 1 − its luma (Rec. 709) over white, or its luma with
+`"cost": {"invert": true}`. Give the class a weight, not `"hard"`: with `"hard"`, any
+non-white pixel would block.
 
 ## classmap
 
@@ -83,11 +82,11 @@ with its own weights: labels never sit on water, rarely on roads, and do not min
 
 ![classmap mode: labels on land, off the roads where possible](../assets/figures/raster-classmap.svg)
 
-A pixel goes to the nearest palette colour within `classmap_tolerance` (OKLab, 0.08).
-Background pixels (as in `ink`) are skipped; other unmatched pixels go to `ink`, or
-nowhere with `"unmatched": "ignore"`. A palette entry may map to `"ignore"`. Anti-aliased
-edges blend two palette colours and may fall between them: render classmaps without
-anti-aliasing, or raise the tolerance.
+A pixel belongs to the nearest palette colour within `classmap_tolerance` (an OKLab
+distance, 0.08). Background pixels (as in `ink`) are skipped; other unmatched pixels go to
+`ink`, or nowhere with `"unmatched": "ignore"`. A palette entry may map to `"ignore"`.
+Anti-aliased edges blend two palette colours and may match neither: render classmaps
+without anti-aliasing, or raise the tolerance.
 
 ## saliency
 
@@ -102,12 +101,11 @@ edges and contrast. Smooth sky is cheap, windows and edges are expensive.
 
 ## Contrast borders
 
-Whatever the mode, labels also avoid lying across a border between a light and a dark
-backdrop: partly on the white page and partly on a dark photo, or half on a black road
-and half on a light field. Here the night sky is the raster's own background colour, so
-`ink` sees only the stars and the moon, and the white page around the picture is no raster
-at all: nothing else would stop the labels of Vega, Mizar and Deneb from straddling the
-picture's edge.
+In any mode, labels also avoid straddling a border between a light and a dark backdrop:
+half on the white page and half on a dark photo, or half on a black road and half on a
+light field. Here `ink` sees only the stars and the moon, since the night sky is the
+raster's background colour, and the white page around the picture is no raster at all.
+Only the contrast cost keeps the labels of Vega, Mizar and Deneb off the picture's edge.
 
 ```json
 --8<-- "examples/tutorials/problems/raster-contrast.json:1:7"
@@ -120,11 +118,11 @@ edge:
 
 ![without the contrast term: three labels half on the page, half on the sky](../assets/figures/raster-contrast-off.svg)
 
-The engine looks at the lightness of what lies behind each label — the raster sources
-over `canvas.background` (white unless you set the colour the host draws on) — and
-`weights.contrast` weighs how much it varies under the label. A label on any uniform
-backdrop, dark or light, costs nothing. The backdrop is averaged over about half an em, so
-thin lines and fine texture hardly count: they are what the modes above are for.
+The cost (`weights.contrast`) grows with how much the lightness behind a label varies.
+The backdrop is the raster sources over `canvas.background`, which is white unless you set
+the colour the host draws on. A label on a uniform backdrop, dark or light, costs nothing.
+The backdrop is averaged over about half an em, so thin lines and fine texture hardly
+count; the modes above handle those.
 
 ## In Python
 
@@ -141,7 +139,7 @@ the engine without a detour through JSON:
 --8<-- "examples/tutorials/python/raster_backgrounds.py:numpy"
 ```
 
-`la.capabilities()` tells which image formats this build decodes:
+`la.capabilities()` lists the image formats this build decodes:
 
 ```python
 --8<-- "examples/tutorials/python/raster_backgrounds.py:capabilities"

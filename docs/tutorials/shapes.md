@@ -1,9 +1,9 @@
 # Shapes
 
-A label belongs next to its feature — next to the *feature's outline*, not to a bounding
-box around it. Every item has a **mark**, the true geometry of the labeled feature:
-adjacent labels touch the mark (at `placement.offset`, 1 px), other labels keep a margin from it,
-and a mark that is large enough holds its label inside.
+A label belongs next to its feature's *outline*, not next to a bounding box around it.
+Every item has a **mark**, the true geometry of the labeled feature: adjacent labels touch
+it (at `placement.offset`, 1 px), other labels keep a margin from it, and a mark large
+enough holds its label inside.
 
 ```json
 --8<-- "examples/tutorials/problems/shapes.json"
@@ -25,8 +25,8 @@ and a mark that is large enough holds its label inside.
 | `icon` | a `w` × `h` box whose `tip` (default bottom center `[w/2, h]`) sits on the anchor; optional `silhouette` | the tip |
 | `from_svg` | the outline of an SVG element (`svg_id` or `selector`) | the anchor as given |
 
-Sizes and offsets are pixels and are never transformed by `transform`; absolute polygon
-and path coordinates are.
+Sizes and offsets are in pixels and never transformed by `transform`; absolute polygon and
+path coordinates are.
 
 **Touching the true shape.** The eight adjacent positions put the label's corner (diagonal
 positions) or side midpoint (top, right, bottom, left) onto the outermost point of the mark
@@ -48,10 +48,10 @@ two fixed positions.
 
 An internal label must fit inside the mark with `inner_padding` (0.2 em) to spare; its
 candidates are the pole of inaccessibility (the point farthest from the outline) and the
-reference point. In the example, the large circle uses `"placement": {"internal": "prefer"}`
-on its item (it would otherwise be *allowed* only, after the outside positions); the
-ellipse, the card and the path take their labels inside, the triangle is too narrow at its
-pole and gets an outside label.
+reference point. In the example, the large circle's item sets
+`"placement": {"internal": "prefer"}`; otherwise an inside label would only be *allowed*,
+after the outside positions. The ellipse, the card and the path take their labels inside;
+the triangle is too narrow at its pole and gets an outside label.
 
 Per item, `placement` overrides `models`, `offset`, `internal` and `position_order`.
 
@@ -62,11 +62,11 @@ anchor, labels avoid the whole box, and leaders start at the tip.
 
 ## Area anchors
 
-An item with an `area` anchor labels a region: the label goes inside the polygon — at the
-pole of inaccessibility or at other interior points, ordered by clearance — when it fits.
-When it does not ("Tiny region"), the item falls back to a point at the pole with a small
-dot mark (`anchor.dot`, default circle r = 2) and gets an external label, with a leader if
-needed. Areas are not obstacles of other labels.
+An item with an `area` anchor labels a region: its label goes inside the polygon if it
+fits, at the pole of inaccessibility or another interior point, ordered by clearance. If it
+does not fit ("Tiny region"), the item becomes a point at the pole with a small dot mark
+(`anchor.dot`, by default a circle of radius 2) and gets an outside label, on a leader if
+needed. Areas are not obstacles for other labels.
 
 ## Covering one's own mark
 
@@ -89,10 +89,10 @@ pixels, e.g. to draw the marks exactly where the engine saw them:
 
 ## Shapes without labels
 
-Unlabeled shapes go into `obstacles.vector` layers of a class: `points` with a radius
-`r`, `circles` (`[x, y, r]`), `rects` (`[x, y, w, h]`), `polygons`, `polylines` with a
-stroke `width`, and `shapes` — any mark with a position (`{"shape": "ellipse", "x": …,
-"y": …, "rx": …, "ry": …}`). See [the problem format](../concepts/problem.md#obstacles).
+Unlabeled shapes go into `obstacles.vector` layers, one class per layer: `points` with a
+radius `r`, `circles` (`[x, y, r]`), `rects` (`[x, y, w, h]`), `polygons`, `polylines`
+with a stroke `width`, and `shapes`, any mark with a position (`{"shape": "ellipse",
+"x": …, "y": …, "rx": …, "ry": …}`); see [the problem format](../concepts/problem.md#obstacles).
 
 Labels have shapes too: besides text, a label can be an `icon` or `box` of fixed size
 (`shape`: `rect`, `rounded:r`, `circle` or a `polygon` silhouette) or a `composite` of
