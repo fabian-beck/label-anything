@@ -79,11 +79,10 @@ Every label sits next to its point, touching the point's mark (a circle of radiu
 default) at a 1 px offset, and keeps 0.2 em from the other labels and the other points
 (`defaults.margin`). In detail:
 
-* **The background.** `scatter.png` became a raster obstacle in `ink` mode: the most
-  frequent border colour (white) is the background, every pixel that differs from it by
-  more than an OKLab distance of 0.12 is *ink*, and the ink is averaged into a coverage
-  grid of 3 px cells (a quarter of the 12 px font size). The light grid lines are close
-  enough to white not to count. Without a `canvas`, the canvas is the image size.
+* **The background.** `scatter.png` became a raster obstacle in `ink` mode: every pixel
+  that differs clearly from the background colour (white) is *ink*, averaged into a
+  coverage grid of 3 px cells. The light grid lines are close enough to white not to
+  count. Without a `canvas`, the canvas is the image size.
 * **The preset.** `scatter` makes covering ink cost 0.1 per em² of covered area: labels
   prefer empty space but may touch a dot when nothing better exists. Labels never overlap
   other labels, other items' marks or their own mark (`hard` by default) and stay 4 px

@@ -83,8 +83,10 @@ labels by rank, so that placing the top of the order counts more than placing it
 
 Instead of numbers, describe the priority by **terms** the engine evaluates per item: an
 attribute, a built-in measure, or an [expression](../reference/expressions.md). Each raw
-value is transformed (`log1p`, `sqrt`, `neg`, `abs`), normalized over all items (`rank`
-by default, or `minmax`, `none`) and weighted; the score is the sum.
+value is transformed (`log1p`, `sqrt`, `neg`, `abs`), normalized over all items and
+weighted; the score is the sum. The default normalization, `rank`, keeps only the order of
+a term's values, so a transform such as `log1p` changes nothing unless you normalize with
+`minmax` or `none`, as below.
 
 ```python
 --8<-- "examples/tutorials/python/priority.py:terms"
@@ -176,56 +178,37 @@ weighted placed 25  inversions 0  placed_weighted 0.711
 
 ## Important labels over minor marks
 
-Without further settings every item's mark keeps every other label away, whatever the
-priorities: in a crowd, the dots of minor items can leave an important item no position.
-With `avoid.label.lower_items` set to a weight, a label may cover the marks of items of
-lower priority — and the item whose mark it covers then goes without a label, so that no
-label sits on a mark it does not belong to (`avoid.leader.lower_items` lets leaders pass
-such marks). On a world map of the 1,000 busiest airports this brings back the labels of
-ATL, ORD, LHR, CDG and FRA, which the dots of smaller airports nearby had blocked
-([ADR priority/lower-items](../adr/priority/lower-items.md)).
+By default every item's mark keeps every other label away, whatever the priorities: in a
+crowd, the dots of minor items can leave an important item no position. With
+`avoid.label.lower_items` set to a weight, a label may cover the marks of less important
+items — which then go without a label, so that no label sits on a mark it does not belong
+to (`avoid.leader.lower_items` lets leaders pass such marks). On a world map of the 1,000
+busiest airports this brings back the labels of ATL, ORD, LHR, CDG and FRA, which the
+dots of smaller airports nearby had blocked.
 
 ```json
 {"avoid": {"label": {"lower_items": 10}, "leader": {"lower_items": 2.5}}}
 ```
 
-The `map` preset sets these values, and so do the plotting and map helpers (Python and
-JavaScript) whenever you give them a priority
-([ADR priority/lower-items](../adr/priority/lower-items.md)); `"lower_items": "hard"`
-keeps every mark clear again.
+The `map` preset sets these values, and so do the plotting and map helpers whenever you
+give them a priority; `"lower_items": "hard"` keeps every mark clear again
+([ADR priority/lower-items](../adr/priority/lower-items.md)).
 
 ## Type size by importance
 
 The priority can also set the type size, as on a map where the capital is set larger than
-the villages: `font_classes` (`priority.font_classes`) gives classes of labels larger or
-bolder text. The classes take consecutive stretches of the priority order: each ends at its
-`first` — a number of items or a share like `"25%"`, counted from the top — and the last
-may take the rest; items after the last class keep their size.
+the villages: `font_classes` gives the most important labels larger or bolder text. Each
+class takes the next stretch of the priority order, up to its `first` — a number of items,
+or a share like `"25%"` counted from the top; the last class may take the rest.
 
 ```python
 --8<-- "examples/tutorials/python/priority.py:font-classes"
 ```
 
-The scale applies to the label's text (and to host-measured text sizes and wrap widths, so
-that lines break as at the nominal size); lengths in em, such as the offset and the
-padding, follow the scaled size, while lengths in px, icons and boxes keep theirs. The
-priorities themselves are computed with the nominal sizes. Each placement reports its class
-(`priority.font_class`) and the size and weight drawn (`text.font_size`,
-`text.font_weight`). The ladder's `shrink` step starts from the class size but never goes
-below `degrade_options.min_scale` of the size before a smaller class. In the benchmark,
-the top 5 % bold at 1.25 × and the rest at 0.9 × keep about as many labels as one size
-(911 instead of 920 of 3 000 airports on a world map) and shrink fewer of them (13 instead
-of 22 %).
-
-```json
-{
-  "priority": {
-    "terms": [{"attr": "pop"}],
-    "font_classes": [{"first": 4, "scale": 1.4, "weight": "bold"},
-                     {"first": "25%", "scale": 1.15}, {"scale": 0.85}]
-  }
-}
-```
+The scale applies to the label's text and to lengths in em, such as the offset and the
+padding; lengths in px, icons and boxes keep their size. Each placement reports its class
+(`priority.font_class`) and the size and weight to draw (`text.font_size`,
+`text.font_weight`).
 
 ## The same in JSON
 

@@ -29,11 +29,11 @@ Sizes and offsets are pixels and are never transformed by `transform`; absolute 
 and path coordinates are.
 
 **Touching the true shape.** The eight adjacent positions put the label's corner (diagonal
-positions) or side midpoint (top, right, bottom, left) onto the extreme point of the
-inflated mark in that direction: for a circle, the top-right label touches the circle at
-45°, not the corner of its bounding box. Concave shapes use their convex hull for this
-(hull vertices are points of the outline), and their true outline for every overlap test.
-Sliding positions move the label along the mark between two fixed positions.
+positions) or side midpoint (top, right, bottom, left) onto the outermost point of the mark
+in that direction: for a circle, the top-right label touches the circle at 45°, not the
+corner of its bounding box. Concave shapes use their convex hull for this, and their true
+outline for every overlap test. Sliding positions move the label along the mark between
+two fixed positions.
 
 ## Internal labels
 

@@ -2,10 +2,10 @@
 
 When the space next to a feature is taken, a label can sit at a distance and point back
 with a **leader**. Label Anything generates such *distant* candidates on rings around the
-feature, draws the leader in one of five styles, and guarantees that leaders never cross
-each other, never pass through labels and keep clear of other marks and other leaders —
-a leader that grazes a dot seems to point at it, and two leaders closer than a few pixels
-read as a crossing. With *boundary* labels, the labels line up in the margins instead.
+feature and draws the leader in one of five styles. Leaders never cross each other, never
+pass through labels, and keep clear of other marks and other leaders: a leader that grazes
+a dot seems to point at it, and two leaders very close together read as a crossing. With
+*boundary* labels, the labels line up in the margins instead.
 
 All examples label the same dense cluster of twelve asteroids among 60 unlabeled dots
 (`points`, soft obstacles). Only the `leaders` line differs between the problems:
@@ -75,19 +75,14 @@ All examples label the same dense cluster of twelve asteroids among 60 unlabeled
 
     ![Curved leaders](../assets/gallery/leaders-curved.svg)
 
-A red cross marks a label that was omitted. In a cluster this dense, a leader leaving
-an inner asteroid passes close to its neighbours; such leaders are not generated, so up
-to three asteroids find no candidate free of the other labels, marks and leaders — none
-with curved leaders, which bend around them, the most with orthogonal ones, whose first
-segments run in four directions only. With straight and elbow leaders, the labels on the
-cluster's right stand in a column: after the search, a crowd with labels left over gets
-a column of [fan labels](../concepts/candidates.md#fan-labels) beside it, in the crowd's
-order, when that places more labels (`placement.fan`; not with `angles`, whose leaders
-keep to their rays). Each omitted placement says why —
-`reason: "omitted_by_priority"` (all items have the same priority here, so it lost to
-items processed before it) or `"no_feasible_candidate"`, `blocking` lists the classes
-that rejected its candidates and `blocked_by` the labels in its way. See
-[priority and omission](priority.md).
+A red cross marks an omitted label. In a cluster this dense, a leader from an inner
+asteroid would pass too close to its neighbours, so up to three asteroids find no place —
+none with curved leaders, which bend around them, the most with orthogonal ones, whose
+first segments run in four directions only. With straight and elbow leaders, the labels
+on the cluster's right stand in a column: a crowd with labels left over gets a column of
+[fan labels](../concepts/candidates.md#fan-labels) beside it when that places more labels.
+Each omitted placement says why ([reading the
+explanations](priority.md#reading-the-explanations)).
 
 ## Leader options
 
@@ -116,14 +111,10 @@ hard, everything else costs 0.2 per em of leader length over it (ink 0.05).
 ## Boundary labels
 
 Technical illustrations and some charts put the labels into the margins and connect them
-with leaders. The `boundary` model stacks them along the chosen sides, as close to their
-anchors' heights as possible (`align: "stack"`) or evenly spread (`"spread"`), and assigns
-items to slots so that the total leader length is minimal — which also keeps straight
-leaders from crossing. The labels of a side form one column, aligned on its side facing
-the picture, where every leader ends. After the search, items left without a label join
-their side's column while it stays feasible (a label in the way moves into the column
-too), so that crowded line ends get a whole column
-([ADR placement/columns](../adr/placement/columns.md)).
+with leaders. The `boundary` model stacks them in a column along each chosen side, as
+close to their anchors' heights as possible (`align: "stack"`) or evenly spread
+(`"spread"`), and orders them so that the leaders are as short as possible — which also
+keeps straight leaders from crossing.
 
 ```json
 --8<-- "examples/tutorials/problems/leaders-boundary.json:1:5"
@@ -131,12 +122,12 @@ too), so that crowded line ends get a whole column
 
 ![Boundary labels on both sides](../assets/gallery/leaders-boundary.svg)
 
-`placement.boundary` also has `gap` (between stacked labels, 2 px) and `margin` (distance
-from the canvas edge, 4 px). The `illustration` preset combines boundary and distant labels
-with elbow leaders ([presets](../reference/presets.md)). Boundary is also a step of the
-degradation ladder that you can add to `degrade`; it is not in the default ladder, because
-a label that fits nowhere else would get a leader across the picture
-([candidates](../concepts/candidates.md#the-degradation-ladder)).
+`placement.boundary` also sets the `gap` between stacked labels and the `margin` from the
+canvas edge. The `illustration` preset combines boundary and distant labels with elbow
+leaders ([presets](../reference/presets.md)). Boundary is also a step of the
+[degradation ladder](../concepts/candidates.md#the-degradation-ladder) that you can add to
+`degrade`; it is not in the default ladder, because a label that fits nowhere else would
+get a leader across the picture.
 
 ## In Python
 

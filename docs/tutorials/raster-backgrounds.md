@@ -37,16 +37,11 @@ away with a leader (soft ink cost 0.5 for leaders).
 
 ![ink mode: labels avoid every dot, line and axis](../assets/figures/raster-ink.svg)
 
-* `ink.background`: `"auto"` takes the most frequent colour of the image's border pixels;
-  or give `"#rrggbb"`.
-* `ink.threshold`: the OKLab distance from the background above which a pixel is ink
-  (0.12: the light grey grid lines, 0.07 from white, do not count; the grey dots, 0.28,
-  do).
-* `ink.dilate`: grows the ink by this many grid cells (1), a safety margin.
-
-A hard raster class is tested on its grid: a label touches it when it overlaps a cell
-with any coverage, so hard raster obstacles are exact up to one cell and never
-optimistic.
+* `ink.background`: the background colour, `"#rrggbb"`, or `"auto"` (default): the most
+  frequent colour of the image's border.
+* `ink.threshold`: how different from the background a pixel must be to count as ink. The
+  default, 0.12, ignores the light grey grid lines and counts the grey dots.
+* `ink.dilate`: grows the ink by a safety margin of grid cells (default 1).
 
 ## alpha
 
@@ -96,9 +91,8 @@ anti-aliasing, or raise the tolerance.
 
 ## saliency
 
-For photos, where nothing is "background": saliency combines the Sobel gradient magnitude
-of the luma with the local contrast (luma against its 5 × 5 mean), each normalized by its
-maximum over the image. Smooth sky is cheap, windows and edges are expensive.
+For photos, where nothing is "background": saliency rates each pixel by its local detail,
+edges and contrast. Smooth sky is cheap, windows and edges are expensive.
 
 ```json
 --8<-- "examples/tutorials/problems/raster-saliency.json:1:6"
@@ -126,16 +120,11 @@ edge:
 
 ![without the contrast term: three labels half on the page, half on the sky](../assets/figures/raster-contrast-off.svg)
 
-* The engine samples the luma of what lies behind the labels (Rec. 709, as in `cost`): the
-  raster sources in order, transparent pixels letting what lies below show through, over
-  `canvas.background` (default `"#ffffff"`; set it when the host draws on another colour).
-* `weights.contrast` (0.5) weighs how much that luma varies under a label: a label half on
-  black and half on white costs 0.5 per em² of its box, as much as hiding half of it under
-  ink of weight 1; a label on any uniform backdrop, dark or light, costs
-  nothing. `output.cost_breakdown` reports it as `contrast`.
-* The backdrop is averaged over about half an em, so thin lines and fine texture hardly
-  count: they are what the modes above are for. SVG backgrounds and vector layers do not
-  change it.
+The engine looks at the lightness of what lies behind each label — the raster sources
+over `canvas.background` (white unless you set the colour the host draws on) — and
+`weights.contrast` weighs how much it varies under the label. A label on any uniform
+backdrop, dark or light, costs nothing. The backdrop is averaged over about half an em, so
+thin lines and fine texture hardly count: they are what the modes above are for.
 
 ## In Python
 
@@ -165,8 +154,7 @@ the `rgba` pointer of `la_place_json` in [C](../getting-started/c-go.md#c).
 
 ## Exactness
 
-Decoding (PNG and raw RGBA), every mode, the area averaging and the quantization are
-specified to the operation ([spec §4.6](../reference/spec.md#46-raster-backgrounds)) and
-identical in the Rust and TypeScript implementations, so the same image gives the same
-coverage everywhere. JPEG and WebP are decoded by the platform's decoder and may differ by
-a few pixel values between implementations.
+The same PNG or raw pixels give the same coverage in every implementation: decoding and
+every mode are specified to the operation
+([spec §4.6](../reference/spec.md#46-raster-backgrounds)). JPEG and WebP are decoded by
+the platform and may differ by a few pixel values.
