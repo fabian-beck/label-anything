@@ -74,7 +74,13 @@
           "description": "Baseline y of each line, relative to box.y."
         },
         "line_widths": { "type": "array", "items": { "type": "number" } },
-        "x_offset": { "type": "number", "description": "Text start x relative to box.x (the padding)." },
+        "x_offset": { "type": "number", "description": "Left edge of the text block relative to box.x (the padding)." },
+        "x_offsets": {
+          "type": "array",
+          "items": { "type": "number" },
+          "description": "Start x of each line relative to box.x: the lines aligned per align within the widest line."
+        },
+        "align": { "enum": ["start", "center", "end"], "description": "How the lines align in the box." },
         "font_size": { "type": "number" },
         "font_family": { "type": "string" },
         "font_weight": { "type": "integer" },

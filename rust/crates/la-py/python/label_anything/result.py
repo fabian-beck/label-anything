@@ -99,7 +99,8 @@ class Placement:
     blocking: Tuple[str, ...] = ()
     #: Placed items of higher or equal priority in the way (unplaced items).
     blocked_by: Tuple[str, ...] = ()
-    #: Text layout: ``baseline_offsets``, ``x_offset``, ``font_size``, ``line_widths``, ...
+    #: Text layout: ``baseline_offsets``, ``x_offsets`` (each line's start, aligned per
+    #: ``align``), ``font_size``, ``line_widths``, ...
     text: Optional[JSONDict] = None
     #: Parts of a composite label (each ``{type, box, text?}``).
     parts: Tuple[JSONDict, ...] = ()
@@ -144,6 +145,17 @@ class Placement:
         if self.box is None or not self.text:
             return ()
         return tuple(self.box.y + float(o) for o in self.text.get("baseline_offsets", ()))
+
+    @property
+    def line_starts(self) -> Tuple[float, ...]:
+        """Canvas x where each text line starts: the lines aligned per ``text["align"]``
+        (centered by default)."""
+        if self.box is None or not self.text:
+            return ()
+        xs = self.text.get("x_offsets")
+        if xs is None:  # a result without them: every line at the text block's left edge
+            xs = [self.text.get("x_offset", 0.0)] * len(self.text.get("lines", ()))
+        return tuple(self.box.x + float(x) for x in xs)
 
 
 class Result:

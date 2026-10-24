@@ -89,6 +89,18 @@ function truncateParse(s: string): Truncate {
   return s === "end" ? "end" : s === "middle" ? "middle" : "none";
 }
 
+/** How the lines of a text label align within its box (`label.align`, `defaults.align`; spec §5.1). */
+export type TextAlign = "start" | "center" | "end";
+
+function textAlignParse(s: string): TextAlign {
+  return s === "start" ? "start" : s === "end" ? "end" : "center";
+}
+
+/** `TextAlign::factor`: the share of the space left of a line, by which it stands in from the left edge. */
+export function textAlignFactor(a: TextAlign): number {
+  return a === "start" ? 0 : a === "end" ? 1 : 0.5;
+}
+
 /** Resolved font of a label. */
 export class FontSel {
   constructor(
@@ -123,7 +135,7 @@ export interface TextSpec {
   truncate: Truncate;
   /** Host-measured `(width, height, lines)`. */
   explicit: [number, number, string[]] | null;
-  align: string;
+  align: TextAlign;
   font: FontSel;
 }
 
@@ -1338,6 +1350,7 @@ interface ItemDefaults {
   mark: unknown;
   wrap: unknown;
   truncate: string;
+  align: string;
   internal: string;
   positionOrder: unknown;
 }
@@ -1365,6 +1378,7 @@ function itemDefaults(o: Opts): ItemDefaults {
     mark: o.get("defaults.mark"),
     wrap: o.get("defaults.wrap"),
     truncate: o.string("defaults.truncate"),
+    align: o.string("defaults.align"),
     internal: o.string("placement.internal"),
     positionOrder: o.get("placement.position_order"),
   };
@@ -1454,7 +1468,7 @@ function buildItem(
       wrap,
       truncate: truncateParse(asStr(get(v, "truncate")) ?? defs.truncate),
       explicit,
-      align: asStr(get(v, "align")) ?? "start",
+      align: textAlignParse(asStr(get(v, "align")) ?? defs.align),
       font: f.clone(),
     };
   };

@@ -101,6 +101,9 @@ points at the offending property; for `required` at the missing property (e.g.
     "deterministic": true,             // two runs give identical placements
     "touch_gap_max": 0.5,              // adjacent labels (without a stub) touch their inflated mark
     "text_lines": { "a": ["org.example.", "Foo"] },
+    "text_align": { "a": "center" },   // text.align, and every line starts where that puts it:
+                                       // centered in the box, or flush with the text block's
+                                       // left (start) or right (end) edge (± 1e-6)
     "font": { "a": { "size": 15, "weight": 700, "class": 0 } },  // text.font_size (± 1e-6),
                                        // text.font_weight, priority.font_class (null: none)
     "box": { "a": { "x": 10, "y": 20, "w": 30, "h": 16, "tol": 0.01 } }

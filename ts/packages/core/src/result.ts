@@ -62,6 +62,8 @@ export function textJson(t: TextLayout, family: string, weight: number): Json {
     baseline_offsets: t.baselines.map(num),
     line_widths: t.widths.map(num),
     x_offset: num(t.xOffset),
+    x_offsets: t.xOffsets.map(num),
+    align: t.align,
     font_size: num(t.fontSize),
     font_family: family,
     font_weight: weight,
@@ -84,6 +86,7 @@ function partsJson(v: Variant, c: Cand, family: string, weight: number): Json[] 
       // part baselines are relative to the label box; report them relative to the part
       tj.baseline_offsets = p.text.baselines.map((b) => num(b - p.rect.y0));
       tj.x_offset = 0;
+      tj.x_offsets = [0];
       m.text = tj;
     }
     return m;

@@ -56,6 +56,40 @@ impl Truncate {
     }
 }
 
+/// How the lines of a text label align within its box (`label.align`, `defaults.align`;
+/// spec §5.1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TextAlign {
+    Start,
+    Center,
+    End,
+}
+
+impl TextAlign {
+    fn parse(s: &str) -> TextAlign {
+        match s {
+            "start" => TextAlign::Start,
+            "end" => TextAlign::End,
+            _ => TextAlign::Center,
+        }
+    }
+    pub fn name(self) -> &'static str {
+        match self {
+            TextAlign::Start => "start",
+            TextAlign::Center => "center",
+            TextAlign::End => "end",
+        }
+    }
+    /// The share of the space left of a line, by which it stands in from the left edge.
+    pub fn factor(self) -> f64 {
+        match self {
+            TextAlign::Start => 0.0,
+            TextAlign::Center => 0.5,
+            TextAlign::End => 1.0,
+        }
+    }
+}
+
 /// Resolved font of a label.
 #[derive(Clone, Debug, PartialEq)]
 pub struct FontSel {
@@ -94,7 +128,7 @@ pub struct TextSpec {
     pub truncate: Truncate,
     /// Host-measured `(width, height, lines)`.
     pub explicit: Option<(f64, f64, Vec<String>)>,
-    pub align: String,
+    pub align: TextAlign,
     pub font: FontSel,
 }
 
@@ -1531,6 +1565,7 @@ struct ItemDefaults {
     mark: Value,
     wrap: Value,
     truncate: String,
+    align: String,
     internal: String,
     position_order: Value,
 }
@@ -1559,6 +1594,7 @@ impl ItemDefaults {
             mark: o.get("defaults.mark"),
             wrap: o.get("defaults.wrap"),
             truncate: o.string("defaults.truncate"),
+            align: o.string("defaults.align"),
             internal: o.string("placement.internal"),
             position_order: o.get("placement.position_order"),
         }
@@ -1745,11 +1781,11 @@ fn build_item(
                     .unwrap_or(&defs.truncate),
             ),
             explicit,
-            align: v
-                .get("align")
-                .and_then(|a| a.as_str())
-                .unwrap_or("start")
-                .to_string(),
+            align: TextAlign::parse(
+                v.get("align")
+                    .and_then(|a| a.as_str())
+                    .unwrap_or(&defs.align),
+            ),
             font: f.clone(),
         }
     };

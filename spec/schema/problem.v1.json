@@ -399,6 +399,14 @@
         },
         "truncate": {
           "$ref": "#/$defs/truncate"
+        },
+        "align": {
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ],
+          "description": "How the lines of a text label align in its box: centered (default), flush left (start) or flush right (end)."
         }
       }
     },
@@ -583,7 +591,7 @@
             "center",
             "end"
           ],
-          "description": "Alignment of wrapped lines inside the box (reported only)."
+          "description": "How the lines of the label align in its box: centered, flush left (start) or flush right (end); default defaults.align (center)."
         }
       },
       "dependentRequired": {

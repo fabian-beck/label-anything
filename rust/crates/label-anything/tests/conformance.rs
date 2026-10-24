@@ -265,6 +265,44 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
             }
         }
     }
+    if let Some(Value::Object(m)) = exp.get("text_align") {
+        // every line starts where the alignment puts it (spec §5.1): centered in the box, or
+        // flush with the text block's left (`start`) or right (`end`) edge
+        for (id, want) in m {
+            let p = placement(&r, id).cloned().unwrap_or(Value::Null);
+            let t = &p["text"];
+            if &t["align"] != want {
+                f.push(format!(
+                    "text_align.{id}: expected {want}, got {}",
+                    t["align"]
+                ));
+                continue;
+            }
+            let w = p["box"]["w"].as_f64().unwrap_or(f64::NAN);
+            let pad = t["x_offset"].as_f64().unwrap_or(f64::NAN);
+            let xs = t["x_offsets"].as_array().cloned().unwrap_or_default();
+            let ws = t["line_widths"].as_array().cloned().unwrap_or_default();
+            if xs.len() != ws.len() || xs.is_empty() {
+                f.push(format!(
+                    "text_align.{id}: {} x_offsets for {} lines",
+                    xs.len(),
+                    ws.len()
+                ));
+            }
+            for (k, (x, lw)) in xs.iter().zip(&ws).enumerate() {
+                let x = x.as_f64().unwrap_or(f64::NAN);
+                let lw = lw.as_f64().unwrap_or(f64::NAN);
+                let off = match want.as_str() {
+                    Some("start") => x - pad,
+                    Some("end") => x + lw - (w - pad),
+                    _ => x + lw / 2.0 - w / 2.0,
+                };
+                if off.is_nan() || off.abs() > 1e-6 {
+                    f.push(format!("text_align.{id}: line {k} is {off} px off"));
+                }
+            }
+        }
+    }
     if let Some(Value::Object(m)) = exp.get("font") {
         for (id, want) in m {
             let p = placement(&r, id).cloned().unwrap_or(Value::Null);

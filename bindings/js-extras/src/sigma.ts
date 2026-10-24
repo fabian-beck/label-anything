@@ -17,6 +17,7 @@ import { LatestRunner, resolveEngine } from "./engine.js";
 import { cssFont, numericWeight } from "./measure.js";
 import { LabelMotion } from "./motion.js";
 import { buildProblem, labelOf, placeOptionsOf, resolveFont, type LabelOptions } from "./options.js";
+import { lineStart } from "./render.js";
 import { LabelMemory } from "./stable.js";
 
 type P = { x: number; y: number };
@@ -157,7 +158,7 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
       ctx.font = cssFont({ ...font, size: t.font_size });
       ctx.textAlign = "left";
       ctx.textBaseline = "alphabetic";
-      t.lines.forEach((line, i) => ctx.fillText(line, p.box!.x + (t.x_offset ?? 0) + dx, p.box!.y + (t.baseline_offsets[i] ?? 0) + dy));
+      t.lines.forEach((line, i) => ctx.fillText(line, p.box!.x + lineStart(t, i) + dx, p.box!.y + (t.baseline_offsets[i] ?? 0) + dy));
     }
     ctx.restore();
   };

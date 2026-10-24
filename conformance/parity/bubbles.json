@@ -32,6 +32,10 @@
             32.244
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -77,6 +81,10 @@
             28.692
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -122,6 +130,10 @@
             23.028
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -167,6 +179,10 @@
             55.884
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -212,6 +228,10 @@
             31.08
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -257,6 +277,10 @@
             41.22
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -302,6 +326,10 @@
             31.776
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -347,6 +375,10 @@
             27.96
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,

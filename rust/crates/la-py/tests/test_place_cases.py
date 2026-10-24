@@ -110,6 +110,23 @@ def check(problem: Dict[str, Any], exp: Dict[str, Any]) -> List[str]:
         got = by_id.get(i, {}).get("text", {}).get("lines")
         if got != want:
             f.append(f"text_lines.{i}: expected {want}, got {got}")
+    for i, want in exp.get("text_align", {}).items():
+        # every line starts where the alignment puts it (spec §5.1): centered in the box, or
+        # flush with the text block's left (start) or right (end) edge
+        p = by_id.get(i, {})
+        t = p.get("text") or {}
+        if t.get("align") != want:
+            f.append(f"text_align.{i}: expected {want}, got {t.get('align')}")
+            continue
+        w = (p.get("box") or {}).get("w", float("nan"))
+        pad = t.get("x_offset", float("nan"))
+        xs, ws = t.get("x_offsets") or [], t.get("line_widths") or []
+        if len(xs) != len(ws) or not xs:
+            f.append(f"text_align.{i}: {len(xs)} x_offsets for {len(ws)} lines")
+        for k, (x, lw) in enumerate(zip(xs, ws)):
+            off = x - pad if want == "start" else x + lw - (w - pad) if want == "end" else x + lw / 2 - w / 2
+            if not abs(off) <= 1e-6:
+                f.append(f"text_align.{i}: line {k} is {off} px off")
     for i, want in exp.get("box", {}).items():
         tol = want.get("tol", 0.01)
         got = by_id.get(i, {}).get("box") or {}

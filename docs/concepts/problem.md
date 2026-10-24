@@ -12,7 +12,7 @@ builder, plain objects in JavaScript.
 | [`canvas`](#canvas) | size, padding, label region; optional |
 | [`y_axis`, `transform`](#coordinates) | how input coordinates map to canvas pixels |
 | [`preset`](presets-defaults.md) | `auto` (default), `scatter`, `map`, `graph`, `illustration`, `none` |
-| [`defaults`](#label-defaults-and-fonts), `text` | label defaults: font, padding, buffer, mark, wrap, truncate; text shaping |
+| [`defaults`](#label-defaults-and-fonts), `text` | label defaults: font, padding, buffer, mark, wrap, truncate, align; text shaping |
 | [`items`](#items) | what to label: anchor, label, attributes, priority |
 | [`obstacles`](#obstacles) | what to avoid besides the items: vector layers, SVG, raster images |
 | [`avoid`](avoidance.md) | how hard to avoid each obstacle class, for labels and leaders |
@@ -146,7 +146,9 @@ supply; the label box is the text block grown by `padding` (0.15 em) on every si
   (`org…Name`) or `none` (keep it all).
 * `width`, `height`, `lines`: measured by the host (e.g. in a browser); the engine then
   does not measure this label.
-* `align`: `start`, `center`, `end` of wrapped lines (reported only; you draw the text).
+* `align`: how the lines of a label of several lines align: `center` (the default, from
+  `defaults.align`), `start` (flush left) or `end` (flush right). The result reports where
+  each line starts (`text.x_offsets`), so that you draw them aligned.
 
 **Icons and boxes** have a fixed `width` × `height` and a `shape` for the collision test:
 `rect`, `rounded:4`, `circle`, or `polygon` with a `polygon` silhouette.
@@ -185,7 +187,8 @@ The result reports the box of each part (`parts`), so you can draw the icon and 
     "buffer": "0.3em",
     "mark": { "shape": "circle", "r": 2 },
     "wrap": null,
-    "truncate": "none"
+    "truncate": "none",
+    "align": "center"
   },
   "text": { "shaping": "auto" }
 }

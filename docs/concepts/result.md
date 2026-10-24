@@ -38,6 +38,7 @@ The result (numbers rounded, `b` shortened):
       "text": {
         "lines": ["Alpha"], "used": "original", "truncated": false,
         "baseline_offsets": [10.92], "line_widths": [32.292], "x_offset": 1.8,
+        "x_offsets": [1.8], "align": "center",
         "font_size": 12, "font_family": "default", "font_weight": 400, "scale": 1
       },
       "cost": 0.418, "degrade_steps": [],
@@ -78,7 +79,7 @@ The result (numbers rounded, `b` shortened):
 | `anchor` | `[x, y]`: the item's anchor in canvas px (area items: the pole of the polygon); a result passed back as `warm_start` moves each box with its anchor ([interactive maps](../tutorials/interactive-maps.md#warm-starts)) |
 | `anchor_side` | `top`, `right`, `bottom`, `left`, `top-right`, `bottom-right`, `top-left`, `bottom-left`; `internal`, `distant`, `boundary` or `fan` |
 | `model` | the candidate model: `adjacent`, `slider`, `internal`, `distant`, `boundary`, or `fan` for a label in a crowd's column ([fan labels](candidates.md#fan-labels)) |
-| `text` | the text as placed: `lines` (wrapped, truncated or an alternative), `used` (`original`, `alternative:i`, `truncated`, `group`), `baseline_offsets` (y of each baseline relative to `box.y`), `x_offset` (the text starts at `box.x + x_offset`), `line_widths`, `font_size`, `font_family`, `font_weight`, `scale` (< 1 when shrunk) |
+| `text` | the text as placed: `lines` (wrapped, truncated or an alternative), `used` (`original`, `alternative:i`, `truncated`, `group`), `baseline_offsets` (y of each baseline relative to `box.y`), `x_offsets` (x where each line starts relative to `box.x`: the lines aligned per `align`, centered by default), `align` (`center`, `start` or `end`), `x_offset` (the text block's left edge: the padding), `line_widths`, `font_size`, `font_family`, `font_weight`, `scale` (< 1 when shrunk) |
 | `parts` | for composite labels: each part's `type`, `box` and `text` |
 | `leader` | `null`, or `points` (from the item to the label), `style`, `port` (where it meets the label), `underline` (for `port: baseline`), `curve` (Bézier control points for `curved`), `stub: true` for the short leader of an adjacent or slider label in a crowd, at a right angle to its side ([stubs](../tutorials/leaders.md#stubs-for-labels-in-a-crowd)) |
 | `leaders`, `members` | for group labels: one fan leader per member, and the member ids |
@@ -90,9 +91,11 @@ The result (numbers rounded, `b` shortened):
 | `item_shape` | with `output.item_shape`: the resolved mark geometry |
 
 To draw a text label: for each line `i`, draw `text.lines[i]` at
-`(box.x + text.x_offset, box.y + text.baseline_offsets[i])` in the label's font at
-`text.font_size` (left-aligned on the baseline), and the leader as a polyline through
-`leader.points`. Take the baselines from the result: the box fits the letters, so a
+`(box.x + text.x_offsets[i], box.y + text.baseline_offsets[i])` in the label's font at
+`text.font_size` (left-aligned on the baseline: the offsets already align the lines,
+centered unless `label.align` or `defaults.align` says otherwise), and the leader as a
+polyline through `leader.points`. Equivalently, draw every line at the box's center x
+with centered text when `text.align` is `center`. Take the baselines from the result: the box fits the letters, so a
 baseline at the font's ascent below the box top would be too low. The `box` is the
 collision box; drawing it is optional (a halo or a background behind the text usually
 looks better).

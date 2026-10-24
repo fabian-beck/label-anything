@@ -217,6 +217,22 @@ CASES["hard-line-breaks"] = case(
      "items": [pt("p", 100, 100, "Paris\n2.1M"), pt("c", 300, 100, "Line one\r\nLine two")]},
     {"placed": 2, "text_lines": {"p": ["Paris", "2.1M"], "c": ["Line one", "Line two"]}})
 
+# Lines of different widths: centered on each other by default, flush left or right when the
+# label or the defaults say so (`text_align` re-checks every line's start against the box)
+ALIGNED = {"canvas": {"width": 400, "height": 200},
+           "items": [pt("p", 100, 100, "Rome\n2.8 million"), pt("s", 300, 100, "x", label={
+               "type": "text", "text": "Saint Vincent and the Grenadines", "align": "start",
+               "wrap": {"max_width": "8em", "max_lines": 2}})]}
+CASES["text-align"] = case(
+    "the lines of a label are centered on each other unless the label says otherwise",
+    ALIGNED,
+    {"placed": 2, "text_lines": {"s": ["Saint Vincent and", "the Grenadines"]},
+     "text_align": {"p": "center", "s": "start"}})
+CASES["text-align-defaults"] = case(
+    "defaults.align sets the alignment of every label that does not set its own",
+    {**ALIGNED, "defaults": {"align": "end"}},
+    {"placed": 2, "text_align": {"p": "end", "s": "start"}})
+
 CASES["wrap-no-short-lines"] = case(
     "the wrap step never strands a line narrower than 1.5 em (France / 3)",
     {"canvas": {"width": 50, "height": 200}, "degrade": ["wrap", "omit"],

@@ -521,8 +521,13 @@ free-space seeds for distant candidates and early rejection.
   row or column.
 
 The **label box** is the content box grown by `padding` on every side. It is the
-collision box and the reported `box`. Text is drawn at `x_offset = padding` and the
-reported baselines.
+collision box and the reported `box`. Line `i` of a text label, of width `w_i`, starts at
+`x_offsets[i] = padding + (W − w_i) · f` from the box's left edge and stands on the
+reported baseline, where `W` is the widest line and `f` = ½ for `align: center`, 0 for
+`start` and 1 for `end` (`label.align`, else `defaults.align`, default `center`; ADR
+0055): the lines of a label are centered on each other unless it says otherwise.
+Host-measured lines (`width`, `height`) all start at `padding`. `x_offset` is the
+padding, the left edge of the text block.
 
 ### 5.2 Text measurement
 

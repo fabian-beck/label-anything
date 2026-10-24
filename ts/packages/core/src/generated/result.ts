@@ -98,9 +98,17 @@ export interface TextInfo {
   baseline_offsets: number[];
   line_widths?: number[];
   /**
-   * Text start x relative to box.x (the padding).
+   * Left edge of the text block relative to box.x (the padding).
    */
   x_offset?: number;
+  /**
+   * Start x of each line relative to box.x: the lines aligned per align within the widest line.
+   */
+  x_offsets?: number[];
+  /**
+   * How the lines align in the box.
+   */
+  align?: "start" | "center" | "end";
   font_size: number;
   font_family?: string;
   font_weight?: number;

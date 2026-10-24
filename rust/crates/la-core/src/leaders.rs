@@ -233,7 +233,7 @@ pub fn distant(
         }
         if let (true, Some(t)) = (underline, &v.text) {
             let p = l.port;
-            let x0 = rect.x0 + t.x_offset;
+            let x0 = rect.x0 + t.x_offsets[0];
             let far = if p.x <= rect.center().x {
                 x0 + t.widths[0]
             } else {

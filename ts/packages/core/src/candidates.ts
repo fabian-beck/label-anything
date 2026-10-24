@@ -424,7 +424,7 @@ function warmLeader(model: Model, item: Item, vi: number, v: Variant, rect: Rect
   // the `baseline` port's underline, for this variant's text (as `leaders.distant`)
   const t = v.text;
   if (model.leaders.port === Port.Baseline && style !== LS.Orthogonal && t !== null) {
-    const x0 = rect.x0 + t.xOffset;
+    const x0 = rect.x0 + t.xOffsets[0]!;
     const far = port.x <= rect.center().x ? x0 + t.widths[0]! : x0;
     l.underline = [port, new P(far, port.y)];
   }

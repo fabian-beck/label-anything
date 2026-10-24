@@ -234,6 +234,7 @@ def place(
     mark: Any = None,
     wrap: Optional[WrapLike] = None,
     truncate: Optional[str] = None,
+    align: Optional[str] = None,
     shaping: Optional[str] = None,
     defaults: Optional[Mapping[str, Any]] = None,
     text: Optional[Mapping[str, Any]] = None,

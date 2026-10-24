@@ -116,6 +116,10 @@
             27.448199999999996
           ],
           "x_offset": 1.5299999999999998,
+          "x_offsets": [
+            1.5299999999999998
+          ],
+          "align": "center",
           "font_size": 10.2,
           "font_family": "default",
           "font_weight": 400,

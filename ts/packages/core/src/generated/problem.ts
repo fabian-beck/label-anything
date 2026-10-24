@@ -60,7 +60,7 @@ export type TextLabel = TextLabel1 & {
    */
   lines?: string[];
   /**
-   * Alignment of wrapped lines inside the box (reported only).
+   * How the lines of the label align in its box: centered, flush left (start) or flush right (end); default defaults.align (center).
    */
   align?: "start" | "center" | "end";
 };
@@ -357,6 +357,10 @@ export interface ItemDefaults {
   mark?: Mark;
   wrap?: Wrap | null;
   truncate?: Truncate;
+  /**
+   * How the lines of a text label align in its box: centered (default), flush left (start) or flush right (end).
+   */
+  align?: "start" | "center" | "end";
 }
 export interface Font {
   /**

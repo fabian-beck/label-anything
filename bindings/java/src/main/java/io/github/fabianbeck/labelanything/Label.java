@@ -20,10 +20,13 @@ public abstract sealed class Label extends Spec {
     super(json);
   }
 
-  /** Alignment of wrapped lines or composite parts. */
+  /** Alignment of the lines of a text label or the parts of a composite label. */
   public enum Align implements JsonName {
+    /** Flush left (lines), or the start of the cross axis (parts). */
     START,
+    /** Centered (the default). */
     CENTER,
+    /** Flush right (lines), or the end of the cross axis (parts). */
     END;
 
     @Override
@@ -146,7 +149,7 @@ public abstract sealed class Label extends Spec {
       return with("lines", Arrays.asList(lines));
     }
 
-    /** Alignment of wrapped lines inside the box (reported only). */
+    /** How the lines align inside the box (default {@code defaults.align}: centered). */
     public Text align(Align align) {
       return with("align", align);
     }

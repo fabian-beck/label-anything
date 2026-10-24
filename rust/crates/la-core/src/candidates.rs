@@ -485,7 +485,7 @@ fn warm_leader(
     if model.leaders.port == crate::model::opts::Port::Baseline && style != LeaderStyle::Orthogonal
     {
         if let Some(t) = &v.text {
-            let x0 = rect.x0 + t.x_offset;
+            let x0 = rect.x0 + t.x_offsets[0];
             let far = if port.x <= rect.center().x {
                 x0 + t.widths[0]
             } else {

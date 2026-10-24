@@ -32,6 +32,10 @@
             81.71
           ],
           "x_offset": 1.0,
+          "x_offsets": [
+            1.0
+          ],
+          "align": "center",
           "font_size": 10.0,
           "font_family": "default",
           "font_weight": 400,
@@ -74,6 +78,10 @@
             68.656
           ],
           "x_offset": 2.6666666666666665,
+          "x_offsets": [
+            2.6666666666666665
+          ],
+          "align": "center",
           "font_size": 14.0,
           "font_family": "default",
           "font_weight": 700,

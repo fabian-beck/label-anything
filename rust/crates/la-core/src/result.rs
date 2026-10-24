@@ -45,6 +45,8 @@ fn text_json(t: &TextLayout, family: &str, weight: u16) -> Value {
         "baseline_offsets": t.baselines,
         "line_widths": t.widths,
         "x_offset": t.x_offset,
+        "x_offsets": t.x_offsets,
+        "align": t.align.name(),
         "font_size": t.font_size,
         "font_family": family,
         "font_weight": weight,
@@ -71,6 +73,7 @@ fn parts_json(v: &Variant, c: &Cand, family: &str, weight: u16) -> Value {
                         let rel: Vec<f64> = t.baselines.iter().map(|b| b - p.rect.y0).collect();
                         o.insert("baseline_offsets".into(), json!(rel));
                         o.insert("x_offset".into(), json!(0.0));
+                        o.insert("x_offsets".into(), json!([0.0]));
                     }
                     m.insert("text".into(), tj);
                 }

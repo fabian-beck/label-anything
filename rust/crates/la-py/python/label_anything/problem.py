@@ -54,6 +54,7 @@ OPTION_PATHS: Dict[str, str] = {
     "spacing": "defaults.spacing",
     "mark": "defaults.mark",
     "truncate": "defaults.truncate",
+    "align": "defaults.align",
     "shaping": "text.shaping",
     # placement
     "models": "placement.models",

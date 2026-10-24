@@ -35,6 +35,11 @@
             82.973
           ],
           "x_offset": 1.65,
+          "x_offsets": [
+            1.65,
+            6.297500000000001
+          ],
+          "align": "center",
           "font_size": 11.0,
           "font_family": "default",
           "font_weight": 400,
@@ -85,6 +90,12 @@
             103.51
           ],
           "x_offset": 1.65,
+          "x_offsets": [
+            22.836000000000002,
+            10.411500000000006,
+            1.65
+          ],
+          "align": "center",
           "font_size": 11.0,
           "font_family": "default",
           "font_weight": 400,
@@ -136,6 +147,12 @@
             64.911
           ],
           "x_offset": 1.65,
+          "x_offsets": [
+            1.65,
+            22.005500000000005,
+            32.3455
+          ],
+          "align": "center",
           "font_size": 11.0,
           "font_family": "default",
           "font_weight": 400,
@@ -180,6 +197,10 @@
             296.131
           ],
           "x_offset": 1.65,
+          "x_offsets": [
+            1.65
+          ],
+          "align": "center",
           "font_size": 11.0,
           "font_family": "default",
           "font_weight": 400,

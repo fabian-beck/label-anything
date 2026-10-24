@@ -33,8 +33,10 @@ import {
   type Model,
   type PartSpec,
   type Step,
+  type TextAlign,
   type TextSpec,
   dataUrlBytes,
+  textAlignFactor,
 } from "./model/index.js";
 
 let BUNDLED: FontBook | null = null;
@@ -210,7 +212,14 @@ export interface TextLayout {
   widths: number[];
   /** Baseline of each line relative to the box top. */
   baselines: number[];
+  /** The left edge of the text block relative to the box's left edge (the padding). */
   xOffset: number;
+  /**
+   * Where each line starts relative to the box's left edge: aligned per `align` within the
+   * widest line (spec §5.1).
+   */
+  xOffsets: number[];
+  align: TextAlign;
   fontSize: number;
   scale: number;
   /** "original", "alternative:N", "truncated", "group" */
@@ -225,6 +234,8 @@ export function textLayoutEq(a: TextLayout, b: TextLayout): boolean {
     arrEq(a.widths, b.widths) &&
     arrEq(a.baselines, b.baselines) &&
     a.xOffset === b.xOffset &&
+    arrEq(a.xOffsets, b.xOffsets) &&
+    a.align === b.align &&
     a.fontSize === b.fontSize &&
     a.scale === b.scale &&
     a.used === b.used &&
@@ -335,17 +346,27 @@ function textVariant(
   const p = pad * scale;
   const baselines: number[] = [];
   for (let i = 0; i < n; i++) baselines.push(p + top + i * pitch);
+  const xOffsets = lineOffsets(widths, wmax, p, spec.align);
   return new Variant(
     wmax + 2 * p,
     contentH + 2 * p,
     0,
     0,
-    { lines, widths, baselines, xOffset: p, fontSize: size, scale, used, truncated },
+    { lines, widths, baselines, xOffset: p, xOffsets, align: spec.align, fontSize: size, scale, used, truncated },
     [],
     RECT_SHAPE,
     [],
     scale,
   );
+}
+
+/**
+ * `line_offsets`: where lines of `widths` start in a box with padding `p`, aligned per `align`
+ * within the widest line, `wmax` (spec §5.1).
+ */
+function lineOffsets(widths: readonly number[], wmax: number, p: number, align: TextAlign): number[] {
+  const f = textAlignFactor(align);
+  return widths.map((w) => p + (wmax - w) * f);
 }
 
 function toWrapOpts(spec: TextSpec, scale: number): WrapOptions | null {
@@ -388,6 +409,9 @@ function textVariants(m: Measurer, spec: TextSpec, text: string, pad: number, sc
           widths: new Array<number>(nl).fill(w * scale),
           baselines,
           xOffset: p,
+          // host-measured lines all have the box's width
+          xOffsets: new Array<number>(nl).fill(p),
+          align: spec.align,
           fontSize: spec.font.size * scale,
           scale,
           used,
@@ -571,6 +595,8 @@ function compositeVariant(
             widths: [w],
             baselines: [y + t[1]],
             xOffset: x,
+            xOffsets: [x],
+            align: t[0].align,
             fontSize: t[0].font.size * scale,
             scale,
             used: "original",

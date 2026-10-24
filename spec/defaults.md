@@ -38,6 +38,7 @@ are stale.
 | `defaults.mark` | `{"shape":"circle","r":2}` | mark | Mark of point anchors without `anchor.mark`. |
 | `defaults.wrap` | `null` | wrap or null | No wrap settings: single line; the `wrap` ladder step may still try 2–3 lines. |
 | `defaults.truncate` | `"none"` | none \| end \| middle | Truncation when wrapped text exceeds `max_lines`. |
+| `defaults.align` | `"center"` | start \| center \| end | How the lines of a text label align in its box (spec §5.1): centered, flush left (`start`) or flush right (`end`); `label.align` sets it per label. |
 | `text.shaping` | `"auto"` | auto \| simple \| full | `simple` is identical in every implementation. |
 | `placement.models` | `["adjacent","slider","distant"]` | list | Candidate models. Preset `auto` adds `distant` only when crowded. |
 | `placement.position_order` | `"perceptual"` | enum or list | perceptual = top, right, bottom, left, top-right, bottom-right, top-left, bottom-left. A list also keeps distant labels on its sides (spec §6.4). |

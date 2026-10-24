@@ -220,11 +220,14 @@ export function debugSvg(model: Model | null, result: unknown, debug: DebugData 
     const fw = get(t, "font_weight");
     const weight = typeof fw === "number" && Number.isInteger(fw) ? fw : 400;
     const xo = num(get(t, "x_offset"), 0);
+    // each line where it starts (aligned, spec §5.1), else at the block's edge
+    const xs = itemsOf(get(t, "x_offsets"));
     const lines = itemsOf(get(t, "lines"));
     const bases = itemsOf(get(t, "baseline_offsets"));
     let out = "";
     for (let k = 0; k < lines.length && k < bases.length; k++) {
-      out += `<text x="${f(ox + xo)}" y="${f(oy + num(bases[k], 0))}" font-size="${f(size)}" font-weight="${weight}" fill="#000000">${esc(str(lines[k]))}</text>`;
+      const x = k < xs.length ? num(xs[k], xo) : xo;
+      out += `<text x="${f(ox + x)}" y="${f(oy + num(bases[k], 0))}" font-size="${f(size)}" font-weight="${weight}" fill="#000000">${esc(str(lines[k]))}</text>`;
     }
     return out;
   };

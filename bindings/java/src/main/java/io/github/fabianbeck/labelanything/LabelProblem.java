@@ -328,6 +328,11 @@ public final class LabelProblem {
       return put("defaults.truncate", truncate);
     }
 
+    /** Default alignment of the lines of text labels (centered unless set). */
+    public Builder align(Label.Align align) {
+      return put("defaults.align", align);
+    }
+
     /** Text shaping mode. */
     public Builder textShaping(Shaping shaping) {
       return put("text.shaping", shaping);

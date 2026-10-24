@@ -814,9 +814,8 @@ export class Hero {
       el.dataset.lines = key;
     }
     el.style.fontSize = `${px(info.font_size)}px`;
-    const x0 = box.x + (info.x_offset ?? 0);
     [...el.children].forEach((span, i) => {
-      span.setAttribute("x", px(x0));
+      span.setAttribute("x", px(box.x + (info.x_offsets?.[i] ?? info.x_offset ?? 0)));
       span.setAttribute("y", px(box.y + (info.baseline_offsets[i] ?? 0)));
     });
   }

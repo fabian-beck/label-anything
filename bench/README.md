@@ -241,7 +241,7 @@ variant (`balanced(L_min)` under wrap settings).
 `bench/render.py` draws, identically for every solver: background (embedded raster, SVG
 embedded as image in SVG output, `<config>.bg.png` for PNG output), vector obstacles
 (only without a background image), item marks with their true shapes (area anchors
-dashed), label boxes, text at the reported `baseline_offsets` and `x_offset` with Noto Sans
+dashed), label boxes, text at the reported `baseline_offsets` and `x_offsets` with Noto Sans
 from `fonts/` (PNG: glyphs positioned with the same GPOS kerning as the measurement),
 composite icon parts, leaders and underlines, and unplaced items as red ×. PNG output uses
 Pillow (2× supersampling); no LGPL rasterizer is involved.

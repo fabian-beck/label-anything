@@ -320,16 +320,23 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
                 let size = t["font_size"].as_f64().unwrap_or(12.0);
                 let weight = t["font_weight"].as_i64().unwrap_or(400);
                 let xo = t["x_offset"].as_f64().unwrap_or(0.0);
-                for (line, base) in t["lines"]
+                // each line where it starts (aligned, spec §5.1), else at the block's edge
+                let xs = t["x_offsets"].as_array();
+                for (k, (line, base)) in t["lines"]
                     .as_array()
                     .into_iter()
                     .flatten()
                     .zip(t["baseline_offsets"].as_array().into_iter().flatten())
+                    .enumerate()
                 {
+                    let x = xs
+                        .and_then(|a| a.get(k))
+                        .and_then(|v| v.as_f64())
+                        .unwrap_or(xo);
                     let _ = write!(
                         out,
                         r##"<text x="{}" y="{}" font-size="{}" font-weight="{}" fill="#000000">{}</text>"##,
-                        f(ox + xo),
+                        f(ox + x),
                         f(oy + base.as_f64().unwrap_or(0.0)),
                         f(size),
                         weight,

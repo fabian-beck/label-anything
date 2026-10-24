@@ -262,6 +262,32 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
       if (!jsonEq(got, tl[id])) f.push(`text_lines.${id}: expected ${show(tl[id])}, got ${show(got)}`);
     }
   }
+  const ta = get(exp, "text_align");
+  if (isObj(ta)) {
+    // every line starts where the alignment puts it (spec §5.1): centered in the box, or
+    // flush with the text block's left (`start`) or right (`end`) edge
+    for (const id of Object.keys(ta)) {
+      const p = placementOf(r, id);
+      const t = get(p, "text");
+      const want = ta[id];
+      if (get(t, "align") !== want) {
+        f.push(`text_align.${id}: expected ${show(want)}, got ${show(get(t, "align") ?? null)}`);
+        continue;
+      }
+      const nums = (v: unknown): number[] => (Array.isArray(v) ? v.map((x) => f64(x) ?? NaN) : []);
+      const w = f64(get(get(p, "box"), "w")) ?? NaN;
+      const pad = f64(get(t, "x_offset")) ?? NaN;
+      const xs = nums(get(t, "x_offsets"));
+      const ws = nums(get(t, "line_widths"));
+      if (xs.length !== ws.length || xs.length === 0) f.push(`text_align.${id}: ${xs.length} x_offsets for ${ws.length} lines`);
+      for (let k = 0; k < xs.length && k < ws.length; k++) {
+        const x = xs[k]!;
+        const lw = ws[k]!;
+        const off = want === "start" ? x - pad : want === "end" ? x + lw - (w - pad) : x + lw / 2 - w / 2;
+        if (!(Math.abs(off) <= 1e-6)) f.push(`text_align.${id}: line ${k} is ${off} px off`);
+      }
+    }
+  }
   const fo = get(exp, "font");
   if (isObj(fo)) {
     for (const id of Object.keys(fo)) {

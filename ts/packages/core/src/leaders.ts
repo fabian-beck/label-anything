@@ -275,7 +275,7 @@ export function distant(
     const t = v.text;
     if (underline && t !== null) {
       const p = l.port;
-      const x0 = rect.x0 + t.xOffset;
+      const x0 = rect.x0 + t.xOffsets[0]!;
       const far = p.x <= rect.center().x ? x0 + t.widths[0]! : x0;
       l.underline = [p, new P(far, p.y)];
     }

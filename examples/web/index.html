@@ -96,7 +96,7 @@
       }
       const t = p.text;
       t.lines.forEach((line, i) => {
-        el("text", { x: p.box.x + t.x_offset, y: p.box.y + t.baseline_offsets[i] }, svg).textContent = line;
+        el("text", { x: p.box.x + t.x_offsets[i], y: p.box.y + t.baseline_offsets[i] }, svg).textContent = line;
       });
     }
     const s = result.stats;

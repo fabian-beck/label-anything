@@ -3,7 +3,9 @@
 use crate::env::{Env, FontSpec};
 use crate::geom::Rect;
 use crate::math::maxf;
-use crate::model::{FixedKind, FontSel, Item, LabelShape, LabelSpec, PartSpec, TextSpec, Truncate};
+use crate::model::{
+    FixedKind, FontSel, Item, LabelShape, LabelSpec, PartSpec, TextAlign, TextSpec, Truncate,
+};
 use la_text::{FontBook, WrapOptions};
 use std::sync::OnceLock;
 
@@ -188,7 +190,12 @@ pub struct TextLayout {
     pub widths: Vec<f64>,
     /// Baseline of each line relative to the box top.
     pub baselines: Vec<f64>,
+    /// The left edge of the text block relative to the box's left edge (the padding).
     pub x_offset: f64,
+    /// Where each line starts relative to the box's left edge: aligned per `align` within
+    /// the widest line (spec §5.1).
+    pub x_offsets: Vec<f64>,
+    pub align: TextAlign,
     pub font_size: f64,
     pub scale: f64,
     /// "original", "alternative:N", "truncated", "group"
@@ -301,6 +308,7 @@ fn text_variant(
     let content_h = top + bottom + (n as f64 - 1.0) * pitch;
     let p = pad * scale;
     let baselines = (0..n).map(|i| p + top + i as f64 * pitch).collect();
+    let x_offsets = line_offsets(&widths, wmax, p, spec.align);
     Variant {
         w: wmax + 2.0 * p,
         h: content_h + 2.0 * p,
@@ -311,6 +319,8 @@ fn text_variant(
             widths,
             baselines,
             x_offset: p,
+            x_offsets,
+            align: spec.align,
             font_size: size,
             scale,
             used: used.to_string(),
@@ -321,6 +331,13 @@ fn text_variant(
         steps: vec![],
         scale,
     }
+}
+
+/// Where lines of `widths` start in a box with padding `p`: aligned per `align` within the
+/// widest line, `wmax` (spec §5.1).
+fn line_offsets(widths: &[f64], wmax: f64, p: f64, align: TextAlign) -> Vec<f64> {
+    let f = align.factor();
+    widths.iter().map(|&w| p + (wmax - w) * f).collect()
 }
 
 fn to_wrap_opts(spec: &TextSpec, scale: f64) -> Option<WrapOptions> {
@@ -375,6 +392,9 @@ fn text_variants(
                 widths: vec![w * scale; lines.len().max(1)],
                 baselines,
                 x_offset: p,
+                // host-measured lines all have the box's width
+                x_offsets: vec![p; lines.len().max(1)],
+                align: spec.align,
                 font_size: spec.font.size * scale,
                 scale,
                 used: used.to_string(),
@@ -610,6 +630,8 @@ fn composite_variant(
             widths: vec![*w],
             baselines: vec![y + asc],
             x_offset: x,
+            x_offsets: vec![x],
+            align: ts.align,
             font_size: ts.font.size * scale,
             scale,
             used: "original".into(),
