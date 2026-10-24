@@ -75,9 +75,11 @@ C, Go and the CLI read the problem as JSON. It is what the other languages build
 
 ![The 20 outliers labeled over the chart](../assets/figures/outliers.svg)
 
-Every label sits next to its point, touching the point's mark (a circle of radius 2 by
-default) at a 1 px offset, and keeps 0.2 em from the other labels and the other points
-(`defaults.margin`). In detail:
+Every label but one sits next to its point, touching the point's mark (a circle of radius
+2 by default) at a 1 px offset, and keeps 0.2 em from the other points (`defaults.margin`)
+and twice that from the other labels (`defaults.spacing`). LayoutBuilder's point lies
+between those of IndexView and EventClient: beside it, its label would be about as near to
+their points as to its own, so it goes out on a short leader. In detail:
 
 * **The background.** `scatter.png` became a raster obstacle in `ink` mode: the most
   frequent border colour (white) is the background, every pixel that differs from it by
@@ -95,7 +97,7 @@ default) at a 1 px offset, and keeps 0.2 em from the other labels and the other 
   finally omits the label ([candidates](../concepts/candidates.md)).
 * **The result.** One placement per item, in input order: `box` (x, y, w, h in canvas
   px), `anchor_side` (`right`, `top-left`, …), `model` (`adjacent`, `slider`, …), `leader`
-  (`null` here) and the text layout (`lines`, `baseline_offsets`). `stats` says
+  (`null` for a label next to its point) and the text layout (`lines`, `baseline_offsets`). `stats` says
   `placed: 20, hard_violations: 0, leader_crossings: 0` — the last two come from an
   independent verification pass. [The result format](../concepts/result.md) lists every
   field.

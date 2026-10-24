@@ -33,16 +33,23 @@ takes the place of a higher-priority one.
 ```
 
 ```text
-Rosmun omitted_by_priority ('items', 'labels') ('Stedau', 'Hofkel', 'Munham') {'tier': 0, 'score': 41105.0, 'rank': 20}
-Linsted omitted_by_priority ('items', 'labels') ('Kelsted', 'Berau', 'Roslin') {'tier': 0, 'score': 9409.0, 'rank': 35}
+Aukel no_feasible_candidate ('items',) () {'tier': 0, 'score': 436375.0, 'rank': 2}
+Linsted omitted_by_priority ('items', 'labels') ('Kelsted', 'Dorsted', 'Berau', 'Roslin') {'tier': 0, 'score': 9409.0, 'rank': 35}
+Aufel omitted_by_priority ('items', 'labels') ('Kelau', 'Dorsted', 'Heimlin') {'tier': 0, 'score': 29356.0, 'rank': 26}
 Talheim no_feasible_candidate ('items',) () {'tier': 0, 'score': 36245.0, 'rank': 22}
-['Linsted', 'Talheim', 'Rosmun']
+Achheim no_feasible_candidate ('items',) () {'tier': 0, 'score': 11523.0, 'rank': 31}
+Munham no_feasible_candidate ('items',) () {'tier': 0, 'score': 50147.0, 'rank': 18}
+['Linsted', 'Achheim', 'Aufel', 'Talheim', 'Munham', 'Aukel']
 0
 ```
 
-Rosmun and Linsted give way to more important labels; Talheim has no place at all: next
-to it a label would come closer to another city's mark than the label margin
-(`defaults.margin`, 0.2 em).
+Linsted and Aufel give way to more important labels. Aukel, Talheim, Achheim and Munham
+have no place at all, however important: next to each of them a label would come closer
+to another city's mark than the label margin (`defaults.margin`, 0.2 em), or would not be
+nearer to its own mark than to another one by that margin, so that a reader could take it
+for the other city's ([own mark nearest](../concepts/avoidance.md#the-four-maps)). Aukel,
+the third largest city, lies between Talkel and Linheim. A leader (the `distant` model) or
+a stub (`placement.stubs`) would label them.
 
 Every unplaced item reports:
 
@@ -166,10 +173,13 @@ decides between equal keys (`input_order`, `id`, `anchor_x`, `random`).
 ```
 
 ```text
-strict   placed 25  inversions 0  placed_weighted 0.732
-prefix   placed 22  inversions 0  placed_weighted 0.675
-weighted placed 25  inversions 0  placed_weighted 0.731
+strict   placed 25  inversions 0  placed_weighted 0.701
+prefix   placed  2  inversions 0  placed_weighted 0.147
+weighted placed 25  inversions 0  placed_weighted 0.700
 ```
+
+`prefix` stops at Aukel, the third city in the order, which has no place (above): the two
+cities before it keep their labels, every one after it goes without.
 
 ## Important labels over minor marks
 
@@ -235,7 +245,7 @@ of 22 %).
 
 ![Crowded cities: the omitted ones are crossed](../assets/gallery/priority-cities.svg)
 
-The red crosses are the three omitted cities. The Python equivalent:
+The red crosses are the six omitted cities. The Python equivalent:
 
 ```python
 --8<-- "examples/tutorials/python/priority.py:full"

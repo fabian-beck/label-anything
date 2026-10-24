@@ -30,20 +30,21 @@ then zooming in:
 ```
 
 ```text
-zoom 1.0: <Result placed=35/40 hard_violations=0 omitted=5> None
-zoom 1.0: <Result placed=35/40 hard_violations=0 omitted=5> {'moved': 7, 'added': 0, 'removed': 0, 'mean_displacement': 13.5}
-zoom 1.3: <Result placed=39/40 hard_violations=0 omitted=1> {'moved': 14, 'added': 4, 'removed': 0, 'mean_displacement': 16.9}
-zoom 1.7: <Result placed=36/36 hard_violations=0 omitted=0> {'moved': 15, 'added': 1, 'removed': 0, 'mean_displacement': 12.3}
-zoom 2.2: <Result placed=25/25 hard_violations=0 omitted=0> {'moved': 7, 'added': 0, 'removed': 0, 'mean_displacement': 8.4}
+zoom 1.0: <Result placed=37/40 hard_violations=0 omitted=3> None
+zoom 1.0: <Result placed=37/40 hard_violations=0 omitted=3> {'moved': 0, 'added': 0, 'removed': 0, 'mean_displacement': 0.0}
+zoom 1.3: <Result placed=40/40 hard_violations=0 omitted=0> {'moved': 12, 'added': 3, 'removed': 0, 'mean_displacement': 12.9}
+zoom 1.7: <Result placed=36/36 hard_violations=0 omitted=0> {'moved': 9, 'added': 0, 'removed': 0, 'mean_displacement': 5.2}
+zoom 2.2: <Result placed=25/25 hard_violations=0 omitted=0> {'moved': 4, 'added': 0, 'removed': 0, 'mean_displacement': 2.6}
 ```
 
 Measured as the change of each label's offset from its point between frames, the labels
-move 13.1 px per frame with warm starts against 21.1 px without (the program computes
+move 5.4 px per frame with warm starts against 14.2 px without (the program computes
 both). The remaining moves are labels whose old place collides with a label that appeared,
-or that gain a better position as space opens up — here mostly the few that need a leader
-at the first zoom levels: 40 cities at 14 px leave little room once labels keep their
-margin (`defaults.margin`, 0.2 em). A smaller margin trades spacing for steadier labels
-(0.1 em: 6.9 px warm-started; 0: 4.5 px).
+or that gain a better position as space opens up — here mostly at the first zoom step,
+where three more labels fit: 40 cities at 14 px leave little room once labels keep their
+margin (`defaults.margin`, 0.2 em) from other cities and twice that from each other. A
+smaller margin trades spacing for steadier labels (0.1 em: 3.1 px warm-started; 0:
+1.8 px).
 
 ## Nesting
 

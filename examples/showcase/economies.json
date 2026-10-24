@@ -51,7 +51,11 @@
    },
    "label": {
     "type": "text",
-    "text": "United States of America"
+    "text": "United States of America",
+    "wrap": {
+     "max_width": "7.44em",
+     "max_lines": 2
+    }
    },
    "priority": 21433226,
    "placement": {
@@ -585,7 +589,11 @@
    },
    "label": {
     "type": "text",
-    "text": "United Arab Emirates"
+    "text": "United Arab Emirates",
+    "wrap": {
+     "max_width": "5.99em",
+     "max_lines": 2
+    }
    },
    "priority": 421142
   },
@@ -1231,7 +1239,11 @@
    },
    "label": {
     "type": "text",
-    "text": "Dominican Republic"
+    "text": "Dominican Republic",
+    "wrap": {
+     "max_width": "5.61em",
+     "max_lines": 2
+    }
    },
    "priority": 88941
   },
@@ -1622,7 +1634,11 @@
    },
    "label": {
     "type": "text",
-    "text": "Democratic Republic of the Congo"
+    "text": "Democratic Republic of the Congo",
+    "wrap": {
+     "max_width": "9.60em",
+     "max_lines": 2
+    }
    },
    "priority": 50400
   },
@@ -1962,7 +1978,11 @@
    },
    "label": {
     "type": "text",
-    "text": "Trinidad and Tobago"
+    "text": "Trinidad and Tobago",
+    "wrap": {
+     "max_width": "5.79em",
+     "max_lines": 2
+    }
    },
    "priority": 24269
   },
@@ -2064,7 +2084,11 @@
    },
    "label": {
     "type": "text",
-    "text": "Bosnia and Herzegovina"
+    "text": "Bosnia and Herzegovina",
+    "wrap": {
+     "max_width": "6.83em",
+     "max_lines": 2
+    }
    },
    "priority": 20164
   },
@@ -2506,7 +2530,11 @@
    },
    "label": {
     "type": "text",
-    "text": "Republic of the Congo"
+    "text": "Republic of the Congo",
+    "wrap": {
+     "max_width": "6.23em",
+     "max_lines": 2
+    }
    },
    "priority": 12267
   },
@@ -2897,7 +2925,11 @@
    },
    "label": {
     "type": "text",
-    "text": "United States Virgin Islands"
+    "text": "United States Virgin Islands",
+    "wrap": {
+     "max_width": "7.74em",
+     "max_lines": 2
+    }
    },
    "priority": 3855
   },
@@ -3067,7 +3099,11 @@
    },
    "label": {
     "type": "text",
-    "text": "Central African Republic"
+    "text": "Central African Republic",
+    "wrap": {
+     "max_width": "6.75em",
+     "max_lines": 2
+    }
    },
    "priority": 2220
   },
@@ -3305,7 +3341,11 @@
    },
    "label": {
     "type": "text",
-    "text": "Saint Vincent and the Grenadines"
+    "text": "Saint Vincent and the Grenadines",
+    "wrap": {
+     "max_width": "9.37em",
+     "max_lines": 2
+    }
    },
    "priority": 824
   },
@@ -3339,7 +3379,11 @@
    },
    "label": {
     "type": "text",
-    "text": "São Tomé and Principe"
+    "text": "São Tomé and Principe",
+    "wrap": {
+     "max_width": "6.41em",
+     "max_lines": 2
+    }
    },
    "priority": 418
   },

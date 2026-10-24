@@ -18,7 +18,7 @@ common = dict(ids=names, attrs=attrs, canvas=(480, 320), font_size=14,
 
 # --8<-- [start:explicit]
 res = la.place(anchors, names, priority=[a["pop"] for a in attrs], **common)   # one number per item
-print(res)                                 # <Result placed=37/40 hard_violations=0 omitted=3>
+print(res)                                 # <Result placed=34/40 hard_violations=0 omitted=6>
 # --8<-- [end:explicit]
 pop = {n: a["pop"] for n, a in zip(names, attrs)}
 assert res.stats["placed"] < len(cities) and res.stats["priority_inversions"] == 0, res
@@ -26,14 +26,14 @@ assert res.stats["placed"] < len(cities) and res.stats["priority_inversions"] ==
 # --8<-- [start:explain]
 for p in res.unplaced:
     print(p.id, p.reason, p.blocking, p.blocked_by, p.priority)
-# Linsted omitted_by_priority ('items', 'labels') ('Kelsted', 'Berau', 'Roslin') {'tier': 0, 'score': 9409.0, 'rank': 35}
+# Linsted omitted_by_priority ('items', 'labels') ('Kelsted', 'Dorsted', 'Berau', 'Roslin') {'tier': 0, 'score': 9409.0, 'rank': 35}
 print(res.omission_order)                  # omitted ids, lowest priority first
 print(res.stats["priority_inversions"])    # 0: no omitted label would fit next to the more important ones
 # --8<-- [end:explain]
 for p in res.unplaced:   # blocked by more important labels, or too close to other cities everywhere
     assert (p.reason == "omitted_by_priority" and p.blocked_by
             or p.reason == "no_feasible_candidate" and p.blocking == ("items",)), p
-assert res["Linsted"].blocked_by == ("Kelsted", "Berau", "Roslin"), res["Linsted"]
+assert res["Linsted"].blocked_by == ("Kelsted", "Dorsted", "Berau", "Roslin"), res["Linsted"]
 assert res.omission_order == sorted((p.id for p in res.unplaced), key=lambda i: pop[i])
 
 # --8<-- [start:terms]

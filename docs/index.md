@@ -41,30 +41,36 @@ for any chart, map or diagram, in three steps:
 </div>
 
 <figure markdown>
-[![The world's economies as a bubble chart, 156 of its 195 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
+[![The world's economies as a bubble chart, 149 of its 195 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
 <figcaption>The world's economies: every country a bubble, sized by its GDP (Natural Earth,
-2019). Label Anything labels 156 of the 195 in a fraction of a second.</figcaption>
+2019). Label Anything labels 149 of the 195 in a fraction of a second.</figcaption>
 </figure>
 
 One chart, the main features:
 
 * **On the true shape.** Each label touches its bubble's outline, slid along it to where
   there is room; China's fits inside its bubble.
-* **Tight to its letters.** A label's box fits the ink of its text, not the font's whole
-  line height: above or below its bubble a label stands as close to it as beside it.
+* **Tight to its letters, apart from each other.** A label's box fits the ink of its text,
+  not the font's whole line height: above or below its bubble a label stands as close to it
+  as beside it. Labels keep twice as much space from each other as from other bubbles, so
+  that two of them never read as one.
 * **Never on another point, never nearer to one.** No label covers another country's
-  bubble, and every label is nearer to its own bubble than to any other.
+  bubble, and every label is clearly nearer to its own bubble than to any other — by a
+  margin, unless a stub joins it to its bubble.
 * **Leaders where it is crowded.** France and the United Kingdom overlap Germany's bubble:
   their labels go out on leaders, and no two leaders cross.
 * **Stubs where they say whose a label is.** Where a label with other points close by can
-  stand off its point a little without coming nearer to another one, a short stub at a
-  right angle to its side joins it to its point (Honduras, Cyprus, French Polynesia).
+  stand off its point a little without coming nearer to another one, a short stub joins it
+  to its point, at a right angle to its side and, beside the point, to the side's middle
+  (Myanmar, Mozambique, Bhutan).
 * **Importance decides.** The larger the economy, the earlier its label is placed; the
-  eight largest are set larger and bold. 39 countries are left out: 38 would not fit even
-  beside the larger economies' labels alone and say which of them is in the way; Austria's
-  bubble lies among larger ones that its label may not cover.
-* **Full names, one style.** Every label is the country's name in full, on one line: a name
-  that does not fit is left out rather than shortened to an abbreviation or a code.
+  eight largest are set larger and bold. 46 countries are left out: 43 would not fit even
+  beside the larger economies' labels alone and say which of them is in the way; the
+  bubbles of Austria, Norway and Hong Kong lie so close among others that no place beside
+  them would be clearly theirs.
+* **Full names, one style.** Every label is the country's name in full, a long one on two
+  lines (the United States of America): a name that does not fit is left out rather than
+  shortened to an abbreviation or a code.
 * **Graded avoidance over any background.** The chart is an SVG, handed over as it is and
   classified with CSS selectors: labels may cross the grid lines, never the axes, their
   text or the legend.
@@ -158,10 +164,10 @@ background.</figcaption>
 
 <figure markdown>
 [![The module graph of the library's TypeScript packages, labeled](assets/figures/modules.svg)](assets/figures/modules.svg)
-<figcaption markdown>**A diagram.** This library's own TypeScript modules: 112 nodes, 412
+<figcaption markdown>**A diagram.** This library's own TypeScript modules: 112 nodes, 414
 imports. The most imported modules come first and are set in bold; a label may cross an
-edge at a cost, never a node; in the crowded core a few labels go out on leaders. 111 of
-112 placed.</figcaption>
+edge at a cost, never a node; where a label would stand as near to another node as to its
+own, it goes out on a leader. All 112 labels placed.</figcaption>
 </figure>
 
 ## Five lines

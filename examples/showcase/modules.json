@@ -15830,7 +15830,7 @@
     "type": "text",
     "text": "candidates"
    },
-   "priority": 10.00972
+   "priority": 10.00973
   },
   {
    "id": "core/cost",
@@ -15840,14 +15840,14 @@
     "y": 242.7,
     "mark": {
      "shape": "circle",
-     "r": 4.7
+     "r": 4.79
     }
    },
    "label": {
     "type": "text",
     "text": "cost"
    },
-   "priority": 4.00401
+   "priority": 4.00434
   },
   {
    "id": "core/detmath",
@@ -16214,14 +16214,14 @@
     "y": 232.4,
     "mark": {
      "shape": "circle",
-     "r": 5.39
+     "r": 5.35
     }
    },
    "label": {
     "type": "text",
     "text": "leaders"
    },
-   "priority": 6.00688
+   "priority": 6.00673
   },
   {
    "id": "core/math",
@@ -16248,14 +16248,14 @@
     "y": 315.0,
     "mark": {
      "shape": "circle",
-     "r": 6.78
+     "r": 6.8
     }
    },
    "label": {
     "type": "text",
     "text": "model"
    },
-   "priority": 18.01511
+   "priority": 18.01529
   },
   {
    "id": "core/model/opts",
@@ -16384,14 +16384,14 @@
     "y": 395.1,
     "mark": {
      "shape": "circle",
-     "r": 4.7
+     "r": 4.71
     }
    },
    "label": {
     "type": "text",
     "text": "result"
    },
-   "priority": 2.00401
+   "priority": 2.00403
   },
   {
    "id": "core/solver/exact",
@@ -16510,7 +16510,7 @@
     "type": "text",
     "text": "state"
    },
-   "priority": 2.00592
+   "priority": 2.00595
   },
   {
    "id": "core/solver/verify",

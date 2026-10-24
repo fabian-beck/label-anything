@@ -18,7 +18,7 @@ import json
 import math
 from xml.sax.saxutils import escape
 
-from common import FIGURES, HERE, PLAYGROUND_DATA, compose, f, report, solve, write_problem
+from common import FIGURES, HERE, PLAYGROUND_DATA, compose, f, report, solve, textmod, write_problem
 
 NAME = "economies"
 W, H = 960, 600
@@ -44,6 +44,12 @@ FULL = {
     "SDS": "South Sudan", "SLB": "Solomon Islands", "SWZ": "Eswatini", "VCT": "Saint Vincent and the Grenadines",
     "VIR": "United States Virgin Islands",
 }
+# names wider than this (in em of their font) break into two balanced lines
+LONG_EM = 9.0
+FONT_SIZE = 11.5
+# the font classes: the eight largest economies set larger and bold, the next 22 at the
+# nominal size, the rest smaller
+CLASSES = [{"first": 8, "scale": 1.25, "weight": "bold"}, {"first": 30, "scale": 1.0}, {"scale": 0.85}]
 TEXT = "#1f2328"
 MUTED = "#5f6670"
 
@@ -119,14 +125,26 @@ def chart(cs: list[dict]) -> str:
     return "\n".join(o) + "\n"
 
 
+def label(name: str, rank: int) -> dict:
+    """The label of the country of GDP rank `rank`: a long name breaks into two balanced
+    lines, the engine choosing the break (a line width below which it needs two)."""
+    k = next(i for i, c in enumerate(CLASSES) if "first" not in c or rank < c["first"])
+    size = FONT_SIZE * CLASSES[k]["scale"]
+    weight = 700 if CLASSES[k].get("weight") == "bold" else 400
+    width_em = textmod.measure_fn(size, weight)(name) / size
+    if width_em <= LONG_EM:
+        return {"type": "text", "text": name}
+    return {"type": "text", "text": name, "wrap": {"max_width": f"{0.6 * width_em:.2f}em", "max_lines": 2}}
+
+
 def problem(cs: list[dict]) -> dict:
     items = []
-    for c in cs:
+    for rank, c in enumerate(cs):
         items.append({
             "id": c["id"],
             "anchor": {"type": "point", "x": round(c["x"], 2), "y": round(c["y"], 2),
                        "mark": {"shape": "circle", "r": round(c["r"], 2)}},
-            "label": {"type": "text", "text": c["name"]},
+            "label": label(c["name"], rank),
             "priority": c["gdp"],
             # a label inside its bubble where it fits
             **({"placement": {"internal": "prefer"}} if c["r"] >= 15 else {}),
@@ -134,7 +152,7 @@ def problem(cs: list[dict]) -> dict:
     return {
         "version": "1",
         "canvas": {"width": W, "height": H, "padding": 2},
-        "defaults": {"font": {"size": 11.5}},
+        "defaults": {"font": {"size": FONT_SIZE}},
         "obstacles": {
             "svg": {
                 "path": f"{NAME}-chart.svg",
@@ -157,10 +175,7 @@ def problem(cs: list[dict]) -> dict:
         "placement": {"models": ["adjacent", "slider", "internal", "distant"], "max_distance": "6em",
                       "stubs": "auto"},
         "leaders": {"style": "straight", "max_length": "9em"},
-        "priority": {
-            "font_classes": [{"first": 8, "scale": 1.25, "weight": "bold"}, {"first": 30, "scale": 1.0},
-                             {"scale": 0.85}],
-        },
+        "priority": {"font_classes": CLASSES},
         "degrade": ["distant", "omit"],
         "solver": {"seed": 1},
     }
