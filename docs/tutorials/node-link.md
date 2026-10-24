@@ -1,9 +1,7 @@
 # Node-link diagrams
 
 In a node-link diagram, labels compete with nodes of very different sizes and with edges
-running everywhere. The approach: each node is an item whose mark is its true shape, large
-nodes hold their labels inside, small ones get them beside, and edges are soft obstacles
-that labels avoid where they can.
+running everywhere.
 
 ```json
 --8<-- "examples/tutorials/problems/graph.json:1:12"
@@ -33,8 +31,6 @@ For labels that must move away, the `graph` preset draws `angles` leaders at mul
 ```python
 --8<-- "examples/tutorials/python/node_link.py:graph"
 ```
-
-The program checks that this builds the same problem as `graph.json`.
 
 ## Cytoscape.js
 
@@ -70,6 +66,6 @@ cross them, and expect more leaders and omissions.
 ## Layouts that move
 
 While a force-directed layout runs or the user drags a node, solve every few ticks with
-the previous result as `warm_start`: each label follows its node and moves on only when its
-place is taken. [Moving points](interactive-maps.md#moving-points) shows this with
-d3-force, and `LabelMotion` drawing the changes calmly.
+the previous result as `warm_start`
+([moving points](interactive-maps.md#moving-points)), and let `LabelMotion` draw the
+changes calmly ([smooth transitions](interactive-maps.md#smooth-transitions)).

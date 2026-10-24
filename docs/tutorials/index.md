@@ -1,10 +1,8 @@
 # Tutorials
 
 Each tutorial solves one task. Its code comes from
-[`examples/tutorials/`](gh:examples/tutorials), where CI runs every program and checks its
-result against the tutorial (`examples/tutorials/run.py`): what you read is what runs.
-`examples/tutorials/data/make_data.py` generates the data: a scatter chart as PNG and SVG,
-its outliers, a map, a skyline photo.
+[`examples/tutorials/`](gh:examples/tutorials), and CI runs every program: what you read is
+what runs.
 
 | Tutorial | You learn | Code |
 |---|---|---|

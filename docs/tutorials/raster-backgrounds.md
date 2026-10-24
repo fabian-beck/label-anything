@@ -15,14 +15,13 @@ value between 0 and 1; the values are averaged into the coverage grid of an obst
 
 Raster sources go in `obstacles.raster` (one object or a list), with the image as
 `source` (a file path, a `data:` URL, or base64 PNG, JPEG or WebP) or as raw pixels
-(`rgba`, or passed by the host: a NumPy array, `ImageData`, a `ByteBuffer`, a C pointer).
-`scale` is raster pixels per canvas pixel (2 for a HiDPI screenshot of a 1× canvas),
-`offset` the canvas position of the image's top-left corner, and `class` the obstacle class
-(default `ink`). Without a `canvas`, the canvas is the image size divided by `scale`.
+(`rgba`, or [from memory](#in-python) in each language). `scale` is raster pixels per
+canvas pixel (2 for a HiDPI screenshot of a 1× canvas), `offset` the canvas position of the
+image's top-left corner, and `class` the obstacle class (default `ink`). Without a
+`canvas`, the canvas is the image size divided by `scale`.
 
 Each section below shows the start of a problem from
-[`examples/tutorials/problems`](gh:examples/tutorials/problems) and the labels as a host
-would draw them.
+[`examples/tutorials/problems`](gh:examples/tutorials/problems) and its result.
 
 ## ink
 
@@ -58,8 +57,8 @@ no other place.
 
 ## cost
 
-A grayscale cost map: dark is expensive. This one is the density of the 300 points of the
-scatter plot, scaled to 480 × 320: labels drift towards the sparse areas.
+A grayscale cost map: dark is expensive. This one is the density of the scatter plot's
+300 points, so labels drift towards the sparse areas.
 
 ```json
 --8<-- "examples/tutorials/problems/raster-cost.json:1:7"
@@ -67,9 +66,8 @@ scatter plot, scaled to 480 × 320: labels drift towards the sparse areas.
 
 ![cost mode: labels avoid the dense centre](../assets/figures/raster-cost.svg)
 
-A pixel's value is 1 − its luma (Rec. 709) over white, or its luma with
-`"cost": {"invert": true}`. Give the class a weight, not `"hard"`: with `"hard"`, any
-non-white pixel would block.
+Give the class a weight, not `"hard"`: with `"hard"`, any pixel that is not white would
+block.
 
 ## classmap
 
@@ -90,8 +88,8 @@ without anti-aliasing, or raise the tolerance.
 
 ## saliency
 
-For photos, where nothing is "background": saliency rates each pixel by its local detail,
-edges and contrast. Smooth sky is cheap, windows and edges are expensive.
+For photos, where nothing is "background": smooth sky is cheap, windows and edges are
+expensive.
 
 ```json
 --8<-- "examples/tutorials/problems/raster-saliency.json:1:6"
@@ -101,11 +99,11 @@ edges and contrast. Smooth sky is cheap, windows and edges are expensive.
 
 ## Contrast borders
 
-In any mode, labels also avoid straddling a border between a light and a dark backdrop:
-half on the white page and half on a dark photo, or half on a black road and half on a
-light field. Here `ink` sees only the stars and the moon, since the night sky is the
-raster's background colour, and the white page around the picture is no raster at all.
-Only the contrast cost keeps the labels of Vega, Mizar and Deneb off the picture's edge.
+In any mode, labels also avoid straddling a border between light and dark: half on the
+white page and half on a dark photo, or half on a black road and half on a light field.
+Here `ink` sees only the stars and the moon, since the night sky is the raster's background
+colour, and the white page around the picture is no raster at all. Only the contrast cost
+keeps the labels of Vega, Mizar and Deneb off the picture's edge.
 
 ```json
 --8<-- "examples/tutorials/problems/raster-contrast.json:1:7"
@@ -119,10 +117,9 @@ edge:
 ![without the contrast term: three labels half on the page, half on the sky](../assets/figures/raster-contrast-off.svg)
 
 The cost (`weights.contrast`) grows with how much the lightness behind a label varies.
-The backdrop is the raster sources over `canvas.background`, which is white unless you set
-the colour the host draws on. A label on a uniform backdrop, dark or light, costs nothing.
-The backdrop is averaged over about half an em, so thin lines and fine texture hardly
-count; the modes above handle those.
+The backdrop is the raster sources over `canvas.background`, white unless you set the
+colour the host draws on. It is averaged over about half an em, so thin lines and fine
+texture hardly count; the modes above handle those.
 
 ## In Python
 
@@ -152,7 +149,6 @@ the `rgba` pointer of `la_place_json` in [C](../getting-started/c-go.md#c).
 
 ## Exactness
 
-The same PNG or raw pixels give the same coverage in every implementation: decoding and
-every mode are specified to the operation
+PNG and raw pixels give the same coverage in every implementation
 ([spec §4.6](../reference/spec.md#46-raster-backgrounds)). JPEG and WebP are decoded by
 the platform and may differ by a few pixel values.

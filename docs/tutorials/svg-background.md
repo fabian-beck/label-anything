@@ -30,9 +30,7 @@ the **first matching rule** decides its class. Elements no rule matches get
 }
 ```
 
-* `#background` would otherwise be one obstacle covering everything. (The presets use the
-  pseudo-class `:background`, an element covering ≥ 90 % of the canvas, for the same
-  purpose.)
+* `#background` would otherwise be one obstacle covering everything.
 * `.legend *` comes before `text`, so the legend's texts are `legend`, not `text`. The
   `<rect>` of the legend is matched too: labels avoid the whole legend box.
 * `.grid line` is ignored: labels and leaders may cross grid lines freely.
@@ -43,10 +41,10 @@ the **first matching rule** decides its class. Elements no rule matches get
 Selectors are a CSS subset: type, `.class`, `#id`, `[attr]`, `[attr=value]` and the
 prefix, suffix and substring forms `[attr^=value]`, `[attr$=value]`, `[attr*=value]`, `*`,
 descendant (space) and child (`>`) combinators, comma lists, and four pseudo-classes:
-`:small` (bounding box ≤ 16 px in both directions), `:background`, `:filled` and
-`:unfilled`. Anything else is a validation error (`pattern`). The full rules — viewports,
-`<use>`, styles, what is not modelled (clipping, masks, filters, markers, dashes) — are in
-[spec §4.5](../reference/spec.md#45-svg-backgrounds).
+`:small` (bounding box ≤ 16 px in both directions), `:background` (covering ≥ 90 % of the
+canvas), `:filled` and `:unfilled`. Anything else is a validation error (`pattern`). The
+full rules — viewports, `<use>`, styles, what is not modelled (clipping, masks, filters,
+markers, dashes) — are in [spec §4.5](../reference/spec.md#45-svg-backgrounds).
 
 ## Marks taken from the SVG
 
@@ -62,18 +60,13 @@ itself: `{"shape": "from_svg", "svg_id": "o3"}` or
 ![The SVG chart with the outliers labeled](../assets/gallery/svg-background.svg)
 
 The rendering shows the SVG's geometry in grey: dots, lines and the boxes of the texts.
-All 20 labels avoid the title, the tick labels and the legend (hard), stay off the trend
-line where they can (weight 1.5) and pay little for covering dots (0.3).
+All 20 labels are placed, clear of every text and the legend.
 
 ## The same in Python
 
 ```python
 --8<-- "examples/tutorials/python/svg_background.py:place"
 ```
-
-`background=` takes a path or SVG markup (`str` or `bytes`); `svg_classes=` takes
-`(selector, class)` pairs, a `{selector: class}` dict or rule objects. The program checks
-that this call builds the same problem as the JSON file, with the same boxes.
 
 ## Checking what the rules matched
 

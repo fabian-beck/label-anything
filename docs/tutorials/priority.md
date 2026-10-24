@@ -22,9 +22,8 @@ important.
 --8<-- "examples/tutorials/python/priority.py:explicit"
 ```
 
-With the default omission mode, `strict`, the guarantee is: **an omitted label would not
-fit even if only the more important labels were placed.** No lower-priority label ever
-takes the place of a higher-priority one.
+With the default [omission mode](#omission-modes), `strict`, no less important label ever
+takes the place of a more important one.
 
 ## Reading the explanations
 
@@ -73,11 +72,10 @@ What to do when a label you need is missing, by what blocks it:
 | `canvas_edge` | `canvas.padding: 0`, a larger canvas, or `canvas.allow_outside: true` |
 | an obstacle class (`ink`, `lines`, `text`, …) | make it soft: a weight instead of `"hard"` in `avoid.label` |
 
-`stats.omission_order` lists the omitted ids from the lowest priority up, the order in
-which they gave way. `stats.priority_inversions` counts omitted items that would have fit
-beside the more important labels; the engine checks it after every solve, and in `strict`
-and `prefix` mode it is 0. `stats.placed_weighted` (0–1) weighs the placed labels by rank,
-so the top of the order counts more than its tail.
+`stats.omission_order` lists the omitted ids from the lowest priority up.
+`stats.priority_inversions` counts omitted items that would have fit beside the more
+important labels; in `strict` and `prefix` mode it is 0. `stats.placed_weighted` (0–1)
+weighs the placed labels by rank, so the top of the order counts more than its tail.
 
 ## Priority terms
 
@@ -154,11 +152,10 @@ can compute each item's priority, a score or `(tier, score)`, once before the so
 
 ## Omission modes
 
-* `strict` (default) — no omitted item would fit beside the items of higher or equal
-  priority alone; within that, as many labels as possible.
-* `prefix` — the placed labels are a prefix of the priority order: everything after the
-  first omitted item is omitted too (`omitted_by_priority`). Readers can trust that every
-  label more important than a shown one is shown.
+* `strict` (default) — an omitted label would not fit even if only the labels of higher
+  or equal priority were placed; within that, as many labels as possible.
+* `prefix` — the placed labels are a prefix of the priority order: every label more
+  important than a shown one is shown.
 * `weighted` — maximize the sum of the (non-negative) scores, tiers strictly first;
   inversions are allowed and reported.
 
@@ -181,7 +178,7 @@ weighted placed 25  inversions 0  placed_weighted 0.711
 By default every mark keeps every other item's label away, whatever the priorities: in a
 crowd, the dots of minor items can leave an important item no place. With
 `avoid.label.lower_items` set to a weight, a label may cover the marks of less important
-items, which are then omitted, so that no label sits on a mark it does not belong to
+items, which then stay unlabeled: a mark is labeled or covered, never both
 (`avoid.leader.lower_items` lets leaders pass such marks). On a world map of the 1,000
 busiest airports, this brings back the labels of ATL, ORD, LHR, CDG and FRA, which the
 dots of smaller airports nearby had blocked.

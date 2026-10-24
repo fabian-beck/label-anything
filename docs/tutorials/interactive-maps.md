@@ -54,9 +54,7 @@ map helpers below do that whenever you give them a priority.
 ## Moving points
 
 The same works when the points move: a running force-directed layout, a node the user
-drags, animated data. Solve every few frames with the previous result as `warm_start`;
-each label follows its point and moves on only when its place is taken, it leaves the
-canvas, or a clearly better place opens. A d3-force layout, labeled every 4th tick:
+drags, animated data. A d3-force layout, labeled every 4th tick:
 
 ```js
 --8<-- "examples/tutorials/js/force.mjs:force"
@@ -102,8 +100,8 @@ these options in its Motion section.
 ## Leaflet
 
 `labelLayer` from `@label-anything/extras/leaflet` is a Leaflet layer. It collects the
-visible points in container pixels, solves, and draws the labels in an SVG pane; after each
-move, it solves again from the previous result, with smooth transitions.
+visible points in container pixels, solves, and draws the labels in an SVG pane, again
+after each move.
 
 ```js
 --8<-- "examples/tutorials/js/browser/leaflet.mjs:leaflet"
@@ -115,7 +113,7 @@ labels avoid the whole pin. Pass the geometry of other layers as `obstacles`.
 ## MapLibre GL and Mapbox GL
 
 `labelMapLibre` draws labels in an SVG overlay that follows the map while it moves and
-solves again on `moveend`, with the same transitions. `avoidLayers` turns the rendered
+solves again on `moveend`. `avoidLayers` turns the rendered
 features of style layers into obstacle classes named after the layers.
 
 ```js

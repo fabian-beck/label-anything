@@ -75,16 +75,15 @@ C, Go and the CLI read the problem as JSON, the same problem the other languages
 
 ![The 20 outliers labeled over the chart](../assets/figures/outliers.svg)
 
-Each label touches its point's mark (by default a circle of radius 2) at a 1 px offset,
-and keeps 0.2 em from other labels and points (`defaults.margin`). In detail:
+Each label touches its point's mark (by default a circle of radius 2), keeps 0.2 em from
+other labels and marks (`defaults.margin`) and stays 4 px inside the canvas. In detail:
 
 * **The background.** `scatter.png` became a raster obstacle in `ink` mode: every pixel
-  that differs clearly from the background colour (white) is *ink*, averaged into a
-  coverage grid of 3 px cells. The light grid lines are close enough to white not to
-  count. Without a `canvas`, the canvas is the image size.
+  that differs clearly from the background colour (white) is *ink*; the light grid lines
+  are close enough to white not to count. Without a `canvas`, the canvas is the image
+  size.
 * **The preset.** With `scatter`, covering ink costs 0.1 per em²: labels prefer empty
-  space but may touch a dot when nothing better is free. They never overlap other labels or
-  marks, their own included (`hard` by default), and stay 4 px inside the canvas
+  space but may touch a dot when nothing better is free
   ([avoidance](../concepts/avoidance.md)).
 * **The candidates.** Each label is tried at 8 positions around its mark (top first), at 4
   sliding positions between neighbouring ones and, with the `scatter` preset, at a distance
@@ -95,10 +94,9 @@ and keeps 0.2 em from other labels and points (`defaults.margin`). In detail:
   px), `anchor_side` (`right`, `top-left`, …), `model` (`adjacent`, `slider`, …), `leader`
   (`null` here) and the text layout (`lines`, `baseline_offsets`). `stats` reports
   `placed: 20, hard_violations: 0, leader_crossings: 0`, the last two counted by an
-  independent check. [The result format](../concepts/result.md) lists every field.
+  independent check ([the result format](../concepts/result.md)).
 
-All six programs build the same problem and get the same boxes: the Rust core is
-deterministic, and the TypeScript engine reproduces its decisions.
+All six programs get the same boxes.
 
 ## Variations
 

@@ -1,11 +1,9 @@
 # Leaders and leader styles
 
 When the space next to a feature is taken, a label can sit at a distance and point back
-with a **leader**. Label Anything generates such *distant* candidates on rings around the
-feature and draws leaders in one of five styles. Leaders never cross each other or pass
+with a **leader**, drawn in one of five styles. Leaders never cross each other or pass
 through labels, and they keep a distance from other marks and leaders: a leader that
 grazes a dot seems to point at it, and two leaders very close together read as a crossing.
-*Boundary* labels line up in the margins instead.
 
 All examples label the same dense cluster of twelve asteroids among 60 unlabeled dots
 (`points`, soft obstacles). Only the `leaders` line differs between the problems:
@@ -15,9 +13,8 @@ All examples label the same dense cluster of twelve asteroids among 60 unlabeled
       ...
 ```
 
-`placement.models` enables the candidate models `adjacent` (next to the mark) and
-`distant` (away from it, on a leader); `max_distance` limits how far away (here 9 em,
-108 px at the default 12 px font).
+`placement.models` lets labels sit next to the mark (`adjacent`) or away from it on a
+leader (`distant`), at most `max_distance` away.
 
 ## The five styles
 
@@ -37,8 +34,7 @@ All examples label the same dense cluster of twelve asteroids among 60 unlabeled
     --8<-- "examples/tutorials/problems/leaders-angles.json:5:5"
     ```
 
-    Straight, but only in the listed directions (degrees, 0 = right, 90 = up): distant
-    candidates are generated along these rays.
+    Straight, but only in the listed directions (degrees, 0 = right, 90 = up).
 
     ![Leaders at multiples of 45°](../assets/gallery/leaders-angles.svg)
 
@@ -70,17 +66,16 @@ All examples label the same dense cluster of twelve asteroids among 60 unlabeled
     --8<-- "examples/tutorials/problems/leaders-curved.json:5:5"
     ```
 
-    A quadratic Bézier curve; the result reports its control points in `leader.curve`
-    and a flattened polyline in `leader.points` (used for the collision tests).
+    A quadratic Bézier curve.
 
     ![Curved leaders](../assets/gallery/leaders-curved.svg)
 
 A red cross marks an omitted label. In a cluster this dense, a leader from an inner
 asteroid would pass too close to its neighbours, so up to three asteroids find no place.
 Curved leaders, which bend around the neighbours, lose none; orthogonal leaders, which
-leave in only four directions, lose the most. With straight and elbow leaders, the labels on the
-cluster's right form a column of [fan labels](../concepts/candidates.md#fan-labels), which
-a crowd gets when that places more labels. Each omitted placement says why
+leave in only four directions, lose the most. With straight and elbow leaders, the labels
+on the cluster's right form a column of [fan labels](../concepts/candidates.md#fan-labels).
+Each omitted placement says why
 ([reading the explanations](priority.md#reading-the-explanations)).
 
 ## Leader options
@@ -102,10 +97,9 @@ a crowd gets when that places more labels. Each omitted placement says why
 `free_space_seeds` (also try the centres of empty regions) and `k_distant` (candidates
 kept per item, 24).
 
-What leaders may cross has its own map, `avoid.leader`. By default, other leaders
-(crossings and approaches closer than `clearance`), labels and other items' marks are
-hard; everything else costs 0.2 per em of leader over it (ink 0.05)
-([avoidance](../concepts/avoidance.md)).
+The rules for what leaders may cross are the defaults of `avoid.leader`
+([avoidance](../concepts/avoidance.md)): other leaders, labels and other items' marks are
+hard; everything else costs 0.2 per em of leader over it (ink 0.05).
 
 ## Boundary labels
 
@@ -138,10 +132,9 @@ across the picture.
 ```
 
 Each placement's `leader` has the polyline from the feature to the label (`points`), its
-`style`, the `port` on the label, and for curved leaders the Bézier control points:
+`style`, the `port` on the label, and for curved leaders the Bézier control points
+(`curve`):
 
 ```python
 --8<-- "examples/tutorials/python/leaders.py:read"
 ```
-
-The program checks that each Python call gives the same placements as its JSON problem.

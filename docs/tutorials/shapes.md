@@ -22,7 +22,7 @@ enough holds its label inside.
 | `rect` | `w`, `h`, `corner_radius`, `rotation` | the center |
 | `polygon` | `points` (+ `holes`), absolute coordinates or px offsets with `relative: true` | the anchor as given |
 | `path` | SVG path data `d`, flattened to polygons (0.25 px), absolute or `relative` | the anchor as given |
-| `icon` | a `w` × `h` box whose `tip` (default bottom center `[w/2, h]`) sits on the anchor; optional `silhouette` | the tip |
+| `icon` | a `w` × `h` box whose `tip` (default bottom center `[w/2, h]`, like a map pin's point) sits on the anchor; optional `silhouette` | the tip |
 | `from_svg` | the outline of an SVG element (`svg_id` or `selector`) | the anchor as given |
 
 Sizes and offsets are in pixels and never transformed by `transform`; absolute polygon and
@@ -49,22 +49,16 @@ two fixed positions.
 An internal label must fit inside the mark with `inner_padding` (0.2 em) to spare; its
 candidates are the pole of inaccessibility (the point farthest from the outline) and the
 reference point. In the example, the large circle's item sets
-`"placement": {"internal": "prefer"}`; otherwise an inside label would only be *allowed*,
-after the outside positions. The ellipse, the card and the path take their labels inside;
-the triangle is too narrow at its pole and gets an outside label.
+`"placement": {"internal": "prefer"}`. The ellipse, the card and the path take their labels
+inside; the triangle is too narrow at its pole and gets an outside label.
 
 Per item, `placement` overrides `models`, `offset`, `internal` and `position_order`.
-
-## Icons with a tip
-
-A map pin's point is at its bottom: with `tip: [11, 32]` the icon's box hangs above the
-anchor, labels avoid the whole box, and leaders start at the tip.
 
 ## Area anchors
 
 An item with an `area` anchor labels a region: its label goes inside the polygon if it
-fits, at the pole of inaccessibility or another interior point, ordered by clearance. If it
-does not fit ("Tiny region"), the item becomes a point at the pole with a small dot mark
+fits, preferably at the pole of inaccessibility. If it does not fit ("Tiny region" in the
+example), the item becomes a point at the pole with a small dot mark
 (`anchor.dot`, by default a circle of radius 2) and gets an outside label, on a leader if
 needed. Areas are not obstacles for other labels.
 
