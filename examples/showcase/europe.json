@@ -6,9 +6,6 @@
   "height": 891
  },
  "defaults": {
-  "font": {
-   "size": 8.5
-  },
   "wrap": {
    "max_lines": 2
   }
@@ -1239,7 +1236,10 @@
    },
    "label": {
     "type": "text",
-    "text": "RUSSIA"
+    "text": "RUSSIA",
+    "font": {
+     "size": 14.0
+    }
    },
    "tier": 1,
    "priority": 144373535,
@@ -1616,7 +1616,10 @@
    },
    "label": {
     "type": "text",
-    "text": "TURKEY"
+    "text": "TURKEY",
+    "font": {
+     "size": 13.68
+    }
    },
    "tier": 1,
    "priority": 83429615,
@@ -2189,7 +2192,10 @@
    },
    "label": {
     "type": "text",
-    "text": "GERMANY"
+    "text": "GERMANY",
+    "font": {
+     "size": 12.65
+    }
    },
    "tier": 1,
    "priority": 83132799,
@@ -2838,7 +2844,10 @@
    },
    "label": {
     "type": "text",
-    "text": "FRANCE"
+    "text": "FRANCE",
+    "font": {
+     "size": 13.41
+    }
    },
    "tier": 1,
    "priority": 67059887,
@@ -3499,7 +3508,10 @@
    },
    "label": {
     "type": "text",
-    "text": "UNITED KINGDOM"
+    "text": "UNITED KINGDOM",
+    "font": {
+     "size": 12.14
+    }
    },
    "tier": 1,
    "priority": 66834405,
@@ -4044,7 +4056,10 @@
    },
    "label": {
     "type": "text",
-    "text": "ITALY"
+    "text": "ITALY",
+    "font": {
+     "size": 12.43
+    }
    },
    "tier": 1,
    "priority": 60297396,
@@ -4501,7 +4516,10 @@
    },
    "label": {
     "type": "text",
-    "text": "SPAIN"
+    "text": "SPAIN",
+    "font": {
+     "size": 13.11
+    }
    },
    "tier": 1,
    "priority": 47076781,
@@ -5258,7 +5276,10 @@
    },
    "label": {
     "type": "text",
-    "text": "UKRAINE"
+    "text": "UKRAINE",
+    "font": {
+     "size": 13.33
+    }
    },
    "tier": 1,
    "priority": 44385155,
@@ -5403,7 +5424,10 @@
    },
    "label": {
     "type": "text",
-    "text": "ALGERIA"
+    "text": "ALGERIA",
+    "font": {
+     "size": 14.0
+    }
    },
    "tier": 1,
    "priority": 43053054,
@@ -5752,7 +5776,10 @@
    },
    "label": {
     "type": "text",
-    "text": "POLAND"
+    "text": "POLAND",
+    "font": {
+     "size": 12.48
+    }
    },
    "tier": 1,
    "priority": 37970874,
@@ -5853,7 +5880,10 @@
    },
    "label": {
     "type": "text",
-    "text": "MOROCCO"
+    "text": "MOROCCO",
+    "font": {
+     "size": 13.3
+    }
    },
    "tier": 1,
    "priority": 36471769,
@@ -6102,7 +6132,10 @@
    },
    "label": {
     "type": "text",
-    "text": "ROMANIA"
+    "text": "ROMANIA",
+    "font": {
+     "size": 12.12
+    }
    },
    "tier": 1,
    "priority": 19356544,
@@ -6291,7 +6324,10 @@
    },
    "label": {
     "type": "text",
-    "text": "NETHERLANDS"
+    "text": "NETHERLANDS",
+    "font": {
+     "size": 9.71
+    }
    },
    "tier": 1,
    "priority": 17332850,
@@ -6416,7 +6452,10 @@
    },
    "label": {
     "type": "text",
-    "text": "TUNISIA"
+    "text": "TUNISIA",
+    "font": {
+     "size": 11.58
+    }
    },
    "tier": 1,
    "priority": 11694719,
@@ -6609,7 +6648,10 @@
    },
    "label": {
     "type": "text",
-    "text": "BELGIUM"
+    "text": "BELGIUM",
+    "font": {
+     "size": 9.46
+    }
    },
    "tier": 1,
    "priority": 11484055,
@@ -7074,7 +7116,10 @@
    },
    "label": {
     "type": "text",
-    "text": "GREECE"
+    "text": "GREECE",
+    "font": {
+     "size": 11.34
+    }
    },
    "tier": 1,
    "priority": 10716322,
@@ -7291,7 +7336,10 @@
    },
    "label": {
     "type": "text",
-    "text": "CZECHIA"
+    "text": "CZECHIA",
+    "font": {
+     "size": 10.68
+    }
    },
    "tier": 1,
    "priority": 10669709,
@@ -8000,7 +8048,10 @@
    },
    "label": {
     "type": "text",
-    "text": "SWEDEN"
+    "text": "SWEDEN",
+    "font": {
+     "size": 12.94
+    }
    },
    "tier": 1,
    "priority": 10285453,
@@ -8261,7 +8312,10 @@
    },
    "label": {
     "type": "text",
-    "text": "PORTUGAL"
+    "text": "PORTUGAL",
+    "font": {
+     "size": 10.87
+    }
    },
    "tier": 1,
    "priority": 10269417,
@@ -8470,7 +8524,10 @@
    },
    "label": {
     "type": "text",
-    "text": "HUNGARY"
+    "text": "HUNGARY",
+    "font": {
+     "size": 10.9
+    }
    },
    "tier": 1,
    "priority": 9769949,
@@ -8811,7 +8868,10 @@
    },
    "label": {
     "type": "text",
-    "text": "BELARUS"
+    "text": "BELARUS",
+    "font": {
+     "size": 11.95
+    }
    },
    "tier": 1,
    "priority": 9466856,
@@ -9068,7 +9128,10 @@
    },
    "label": {
     "type": "text",
-    "text": "AUSTRIA"
+    "text": "AUSTRIA",
+    "font": {
+     "size": 10.77
+    }
    },
    "tier": 1,
    "priority": 8877067,
@@ -9301,7 +9364,10 @@
    },
    "label": {
     "type": "text",
-    "text": "SWITZERLAND"
+    "text": "SWITZERLAND",
+    "font": {
+     "size": 9.84
+    }
    },
    "tier": 1,
    "priority": 8574832,
@@ -9502,7 +9568,10 @@
    },
    "label": {
     "type": "text",
-    "text": "BULGARIA"
+    "text": "BULGARIA",
+    "font": {
+     "size": 11.15
+    }
    },
    "tier": 1,
    "priority": 6975761,
@@ -9735,7 +9804,10 @@
    },
    "label": {
     "type": "text",
-    "text": "SERBIA"
+    "text": "SERBIA",
+    "font": {
+     "size": 10.67
+    }
    },
    "tier": 1,
    "priority": 6944975,
@@ -9928,7 +10000,10 @@
    },
    "label": {
     "type": "text",
-    "text": "DENMARK"
+    "text": "DENMARK",
+    "font": {
+     "size": 9.88
+    }
    },
    "tier": 1,
    "priority": 5818553,
@@ -10461,7 +10536,10 @@
    },
    "label": {
     "type": "text",
-    "text": "FINLAND"
+    "text": "FINLAND",
+    "font": {
+     "size": 12.56
+    }
    },
    "tier": 1,
    "priority": 5520314,
@@ -10622,7 +10700,10 @@
    },
    "label": {
     "type": "text",
-    "text": "SLOVAKIA"
+    "text": "SLOVAKIA",
+    "font": {
+     "size": 10.05
+    }
    },
    "tier": 1,
    "priority": 5454073,
@@ -12015,7 +12096,10 @@
    },
    "label": {
     "type": "text",
-    "text": "NORWAY"
+    "text": "NORWAY",
+    "font": {
+     "size": 12.75
+    }
    },
    "tier": 1,
    "priority": 5347896,
@@ -12404,7 +12488,10 @@
    },
    "label": {
     "type": "text",
-    "text": "IRELAND"
+    "text": "IRELAND",
+    "font": {
+     "size": 10.51
+    }
    },
    "tier": 1,
    "priority": 4941444,
@@ -12685,7 +12772,10 @@
    },
    "label": {
     "type": "text",
-    "text": "CROATIA"
+    "text": "CROATIA",
+    "font": {
+     "size": 10.21
+    }
    },
    "tier": 1,
    "priority": 4067500,
@@ -12846,7 +12936,10 @@
    },
    "label": {
     "type": "text",
-    "text": "BOSNIA AND HERZEGOVINA"
+    "text": "BOSNIA AND HERZEGOVINA",
+    "font": {
+     "size": 10.14
+    }
    },
    "tier": 1,
    "priority": 3301000,
@@ -12983,7 +13076,10 @@
    },
    "label": {
     "type": "text",
-    "text": "ALBANIA"
+    "text": "ALBANIA",
+    "font": {
+     "size": 9.36
+    }
    },
    "tier": 1,
    "priority": 2854191,
@@ -13168,7 +13264,10 @@
    },
    "label": {
     "type": "text",
-    "text": "LITHUANIA"
+    "text": "LITHUANIA",
+    "font": {
+     "size": 10.43
+    }
    },
    "tier": 1,
    "priority": 2786844,
@@ -13333,7 +13432,10 @@
    },
    "label": {
     "type": "text",
-    "text": "MOLDOVA"
+    "text": "MOLDOVA",
+    "font": {
+     "size": 9.56
+    }
    },
    "tier": 1,
    "priority": 2657637,
@@ -13474,7 +13576,10 @@
    },
    "label": {
     "type": "text",
-    "text": "SLOVENIA"
+    "text": "SLOVENIA",
+    "font": {
+     "size": 8.92
+    }
    },
    "tier": 1,
    "priority": 2087946,
@@ -13571,7 +13676,10 @@
    },
    "label": {
     "type": "text",
-    "text": "NORTH MACEDONIA"
+    "text": "NORTH MACEDONIA",
+    "font": {
+     "size": 9.21
+    }
    },
    "tier": 1,
    "priority": 2083459,
@@ -13744,7 +13852,10 @@
    },
    "label": {
     "type": "text",
-    "text": "LATVIA"
+    "text": "LATVIA",
+    "font": {
+     "size": 10.42
+    }
    },
    "tier": 1,
    "priority": 1912789,
@@ -13841,7 +13952,10 @@
    },
    "label": {
     "type": "text",
-    "text": "KOSOVO"
+    "text": "KOSOVO",
+    "font": {
+     "size": 8.11
+    }
    },
    "tier": 1,
    "priority": 1794248,
@@ -13994,7 +14108,10 @@
    },
    "label": {
     "type": "text",
-    "text": "ESTONIA"
+    "text": "ESTONIA",
+    "font": {
+     "size": 9.97
+    }
    },
    "tier": 1,
    "priority": 1326590,
@@ -14071,7 +14188,10 @@
    },
    "label": {
     "type": "text",
-    "text": "CYPRUS"
+    "text": "CYPRUS",
+    "font": {
+     "size": 8.0
+    }
    },
    "tier": 1,
    "priority": 1198575,
@@ -14184,7 +14304,10 @@
    },
    "label": {
     "type": "text",
-    "text": "MONTENEGRO"
+    "text": "MONTENEGRO",
+    "font": {
+     "size": 8.41
+    }
    },
    "tier": 1,
    "priority": 622137,
@@ -14245,7 +14368,10 @@
    },
    "label": {
     "type": "text",
-    "text": "LUXEMBOURG"
+    "text": "LUXEMBOURG",
+    "font": {
+     "size": 8.0
+    }
    },
    "tier": 1,
    "priority": 619896,
@@ -14278,7 +14404,10 @@
    },
    "label": {
     "type": "text",
-    "text": "MALTA"
+    "text": "MALTA",
+    "font": {
+     "size": 8.0
+    }
    },
    "tier": 1,
    "priority": 502653,
@@ -14783,7 +14912,10 @@
    },
    "label": {
     "type": "text",
-    "text": "ICELAND"
+    "text": "ICELAND",
+    "font": {
+     "size": 11.02
+    }
    },
    "tier": 1,
    "priority": 361313,
@@ -15703,17 +15835,5 @@
   "leader": {
    "seas": "hard"
   }
- },
- "priority": {
-  "font_classes": [
-   {
-    "first": 9,
-    "scale": 1.4
-   },
-   {
-    "first": 24,
-    "scale": 1.2
-   }
-  ]
  }
 }

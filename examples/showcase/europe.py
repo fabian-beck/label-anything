@@ -4,14 +4,16 @@ The countries of Natural Earth (public domain; the playground's ``world.json``, 
 internationally recognized borders) in a Lambert azimuthal equal-area projection centred on
 Europe, drawn as an SVG (``europe-map.svg``) with the seas named in it. The problem labels
 the country of every capital as an area and every capital as a point, the countries first
-and the most populous set larger (font classes), and tells the engine nothing but what the
-map shows:
+(each group by population), and tells the engine nothing but what the map shows:
 
 * the countries' paths are the **regions** of the map, the sea is open space: a label
   keeps inside one region — its own country, or the sea — and a leader crosses as few
   borders as it can (spec §4.8);
 * a country's name goes inside the country, wrapped into two lines if need be, or out on
   a leader; a capital's name goes next to its dot (the `map` preset);
+* a country's name is the larger the larger the country: its type size grows with the
+  logarithm of the area, from 8 px (10,000 km² and less) to 14 px (1,000,000 km² and
+  more); capitals' names are 9.5 px;
 * the seas' names are hard obstacles for labels and leaders.
 
 The names are Natural Earth's, written out and uppercase for countries; no name is
@@ -186,6 +188,12 @@ def map_svg(cs: list[dict], col: dict[str, str]) -> str:
     return "\n".join(o) + "\n"
 
 
+def type_size(km2: float) -> float:
+    """A country name's type size in px: 8 up to 10,000 km², 14 from 1,000,000 km², the
+    logarithm of the area in between."""
+    return round(min(14.0, max(8.0, 8.0 + 3.0 * math.log10(km2 / 10_000))), 2)
+
+
 def problem(cs: list[dict]) -> dict:
     by_id = {c["id"]: c for c in cs}
     # the countries of the capitals, the most populous first
@@ -197,7 +205,7 @@ def problem(cs: list[dict]) -> dict:
         items.append({
             "id": c["id"],
             "anchor": {"type": "area", "polygon": rings[0], **({"holes": rings[1:]} if len(rings) > 1 else {})},
-            "label": {"type": "text", "text": c["name"].upper()},
+            "label": {"type": "text", "text": c["name"].upper(), "font": {"size": type_size(c["area"])}},
             # countries before capitals, by population
             "tier": 1,
             "priority": c["pop"] or 0,
@@ -218,7 +226,7 @@ def problem(cs: list[dict]) -> dict:
         "version": "1",
         "preset": "map",
         "canvas": {"width": W, "height": H},
-        "defaults": {"font": {"size": 8.5}, "wrap": {"max_lines": 2}},
+        "defaults": {"wrap": {"max_lines": 2}},
         "obstacles": {
             "svg": {
                 "path": f"{NAME}-map.svg",
@@ -230,7 +238,6 @@ def problem(cs: list[dict]) -> dict:
         },
         "items": items,
         "avoid": {"label": {"seas": "hard"}, "leader": {"seas": "hard"}},
-        "priority": {"font_classes": [{"first": 9, "scale": 1.4}, {"first": 24, "scale": 1.2}]},
     }
 
 
@@ -241,11 +248,10 @@ def make(cli: str) -> str:
     prob = problem(cs)
     result = solve(cli, write_problem(NAME, prob))
     city = lambda p: p["id"].startswith("capital-")  # noqa: E731
-    # a capital without its name is not drawn
-    named = {p["id"] for p in result["placements"] if p.get("placed")}
+    # every capital's dot, labeled or not
     dots = "".join(
         f'<circle cx="{f(it["anchor"]["x"])}" cy="{f(it["anchor"]["y"])}" r="2.6"/>'
-        for it in prob["items"] if it["id"].startswith("capital-") and it["id"] in named)
+        for it in prob["items"] if it["id"].startswith("capital-"))
     svg = compose(W, H, "The countries and capitals of Europe, labeled by Label Anything",
                   picture.split(">", 1)[1].rsplit("</svg>", 1)[0], result,
                   style=".labels text{stroke:#ffffff;stroke-opacity:0.75;stroke-width:2.4px;stroke-linejoin:round;"

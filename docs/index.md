@@ -137,10 +137,11 @@ it in full; the scripts and the problems are in
 <figcaption markdown>**A map.** The countries and capitals of Europe (Natural Earth,
 internationally recognized borders). The countries are the picture's
 [regions](concepts/regions.md): each name inside its country where it fits, else out on a
-leader into the sea (the United Kingdom, Luxembourg, the Balkans), never in a neighbouring
-country; the capitals beside their dots, in the cartographer's order of positions; no label
-covers the name of a sea. 87 of the 90 labels placed: Montenegro's name, Bratislava and
-Podgorica find no room.</figcaption>
+leader into the sea (the United Kingdom, Switzerland, the Balkans), never in a neighbouring
+country, its type size growing with the country's area; the capitals beside their dots, in
+the cartographer's order of positions; no label covers the name of a sea. 87 of the 90
+labels placed: the name LUXEMBOURG (its capital is labeled), Ljubljana and Podgorica find
+no room.</figcaption>
 </figure>
 
 <figure markdown>
