@@ -6,7 +6,8 @@
 
 `io.github.fabian-beck:label-anything`: the Java binding of the Label Anything label
 placement engine. FFM on Java 22+, JNI on Java 17–21 (one multi-release JAR), no runtime
-dependencies. Guide: [`docs/bindings/java.md`](../../docs/bindings/java.md).
+dependencies. Guide: [Java](https://fabian-beck.github.io/label-anything/getting-started/java/) on the
+documentation site ([source](../../docs/getting-started/java.md)).
 
 ```java
 var problem = LabelProblem.builder()

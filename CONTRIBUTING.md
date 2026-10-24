@@ -8,8 +8,8 @@ implementations (Rust and TypeScript) that follow one language-neutral spec.
 1. **Spec first.** Behaviour is defined in `spec/` (JSON Schemas, `defaults.md`,
    presets, `expr.peg`, `spec.md`). Change the spec in the same pull request as the code.
 2. **Both implementations, one behaviour.** Implement in Rust first, port to TypeScript in
-   the same pull request, and add a conformance case (`conformance/`). The two must never
-   drift for more than one milestone.
+   the same pull request (`ts/packages/core/PORTING.md`), and add a conformance case
+   (`conformance/`). The two must never drift for more than one milestone.
 3. **Every public option** needs documentation, a default (`spec/defaults.md`), a
    validation rule (both validators) and at least one conformance case.
 4. **Generated files are never edited by hand.** Run `node tools/codegen.mjs` after

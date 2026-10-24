@@ -1,12 +1,12 @@
 # The result format
 
-A result (`result.v1`, schema: [`result.v1.json`](../reference/schemas.md)) has one
+A result (`result.v1`, schema [`result.v1.json`](../reference/schemas.md)) has one
 placement per item, in input order, and statistics of the solve. All coordinates are
 canvas pixels, origin top-left, y down.
 
-This problem has two close points, one label that must move away from a hard obstacle
-(the `legend` rectangle on the right) and one that cannot be placed at all — its item
-only allows adjacent positions, and the ladder only tries alternatives:
+This problem has two close points, a label that must move away from a hard obstacle (the
+`legend` rectangle on the right) and one that cannot be placed at all: its item allows only
+adjacent positions, and the ladder only tries alternatives:
 
 ```json
 {
@@ -83,7 +83,7 @@ The result (numbers rounded, `b` shortened):
 | `leader` | `null`, or `points` (from the item to the label), `style`, `port` (where it meets the label), `underline` (for `port: baseline`), `curve` (Bézier control points for `curved`) |
 | `leaders`, `members` | for group labels: one fan leader per member, and the member ids |
 | `cost`, `cost_breakdown` | the label's final cost; per term with `output.cost_breakdown` |
-| `degrade_steps` | the ladder steps that were tried for it ([candidates](candidates.md#the-degradation-ladder)) |
+| `degrade_steps` | the ladder steps tried for it ([candidates](candidates.md#the-degradation-ladder)) |
 | `priority` | `tier`, `score`, `rank` (0 = first in the priority order), `required`, `reserved` (lifted by coverage), `terms`, `font_class` (the item's [font class](../tutorials/priority.md#type-size-by-importance)) |
 | `reason`, `blocking`, `blocked_by` | for omitted items: why, which hard classes rejected the candidates, which placed labels are in the way ([priority](../tutorials/priority.md#reading-the-explanations)) |
 | `displacement` | with `warm_start`: the distance moved from the previous box |
@@ -92,17 +92,17 @@ The result (numbers rounded, `b` shortened):
 To draw a text label: for each line `i`, draw `text.lines[i]` at
 `(box.x + text.x_offset, box.y + text.baseline_offsets[i])` in the label's font at
 `text.font_size` (left-aligned on the baseline), and the leader as a polyline through
-`leader.points`. The `box` is the collision box; drawing it is optional (a halo or a
-background behind the text usually looks better).
+`leader.points`. Drawing the `box` is optional; a halo or a background behind the text
+usually looks better.
 
 ## Statistics
 
 | Field | |
 |---|---|
-| `placed`, `total` | labels placed, items |
+| `placed`, `total` | labels placed; items |
 | `placed_weighted` | placed fraction weighted by rank (1 = everything; the top of the order counts more) |
 | `required_placed` | every `required` item is placed |
-| `hard_violations`, `leader_crossings` | from an independent verification pass; 0 (leaders cross only if you made crossings soft) |
+| `hard_violations`, `leader_crossings` | counted by an independent check; 0 (leaders cross only if you make crossings soft) |
 | `priority_inversions` | omitted items that would fit next to the more important labels; 0 in `strict` and `prefix` mode |
 | `omission_order` | omitted ids, lowest priority first |
 | `runtime_ms`, `phases_ms` | wall-clock time, per phase (`prepare`, `candidates`, `greedy`, `local`, `exact`, `verify`) |

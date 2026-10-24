@@ -30,7 +30,7 @@ test = ["pytest>=7", "matplotlib>=3.5", "numpy>=1.21", "plotly>=5", "seaborn>=0.
 
 [project.urls]
 Homepage = "https://github.com/fabian-beck/label-anything"
-Documentation = "https://github.com/fabian-beck/label-anything/blob/main/docs/bindings/python.md"
+Documentation = "https://fabian-beck.github.io/label-anything/getting-started/python/#plotting-helpers"
 
 [tool.setuptools.packages.find]
 where = ["src"]

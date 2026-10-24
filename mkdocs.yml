@@ -15,7 +15,7 @@ copyright: Label Anything contributors · MIT License · bundled font Noto Sans 
 
 docs_dir: docs
 strict: true
-exclude_docs: |
+exclude_docs: | # infrastructure, and the literature notes (for contributors, read on GitHub)
   /requirements.txt
   /_hooks/
   /_overrides/
@@ -99,7 +99,6 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Playground: try.md
-  - How it works: explainer.md
   - Getting started:
       - getting-started/index.md
       - Python: getting-started/python.md
@@ -124,7 +123,7 @@ nav:
       - Avoidance classes and policy: concepts/avoidance.md
       - Candidates and the degradation ladder: concepts/candidates.md
       - Presets and defaults: concepts/presets-defaults.md
-      - Time budget, determinism, cancellation: concepts/solver.md
+      - The solver: concepts/solver.md
       - The debug overlay: concepts/debug-overlay.md
       - Errors and validation: concepts/errors.md
   - Reference:
@@ -134,18 +133,9 @@ nav:
       - Presets: reference/presets.md
       - Expression language: reference/expressions.md
       - JSON Schemas: reference/schemas.md
-      - Python API: bindings/python.md
-      - Java API: bindings/java.md
-      - JavaScript API: reference/javascript-api.md
-      - WebAssembly package: bindings/wasm.md
-      - C API: reference/c-api.md
   - Project:
       - project/index.md
-      - Benchmark:
-          - project/benchmark.md
-          - Release procedure and gates: benchmark.md
+      - Benchmark: project/benchmark.md
       - Architecture decisions:
-          - project/decisions.md
-      - Literature and improvement notes: project/literature.md
+          - All decisions: project/decisions.md
       - Contributing: project/contributing.md
-      - Porting the core to TypeScript: dev/porting.md

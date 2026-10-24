@@ -22,8 +22,7 @@
  * decoders made WebP decoding 1.5x slower, "z" for the JSON, SVG and text crates the
  * SVG-background and large-JSON problems 8-12 % slower. "s" everywhere is 9-16 % slower
  * (and raster backgrounds 2.3x slower with the raster crate at "s"). wasm-opt is not used:
- * it does not reduce the gzip size of this module. docs/bindings/wasm.md lists the
- * variants.
+ * it does not reduce the gzip size of this module. README.md lists the variants.
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";

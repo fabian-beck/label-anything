@@ -318,7 +318,7 @@ def place(
     polygons or anchor dicts; ``labels`` are strings, :class:`Text`, :class:`Icon`,
     :class:`Box`, :class:`Composite` or label dicts. ``attrs`` values may be dates
     (ISO 8601 strings in the problem) and durations (seconds).
-    Every other keyword maps 1:1 to a schema field (see ``docs/bindings/python.md``);
+    Every other keyword maps 1:1 to a schema field (see ``docs/getting-started/python.md``);
     ``None`` leaves the spec default.
 
     * ``background``: a raster/SVG path, bytes, SVG markup, a NumPy RGBA/RGB array or a

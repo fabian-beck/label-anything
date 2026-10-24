@@ -1,29 +1,31 @@
 # Presets and defaults
 
-Every option has a default; a **preset** is a named bundle of option values for a kind of
+Every option has a default; a **preset** is a named set of option values for one kind of
 graphic; the problem's own values come last:
 
 > effective options = [defaults](../reference/defaults.md) ← preset ← problem
 
-Objects merge recursively, arrays and scalars replace; the class maps of `avoid` merge key
-by key. So `{"preset": "map", "avoid": {"label": {"roads": "hard"}}}` keeps everything the
-`map` preset sets and adds one class.
+Objects merge recursively, while arrays and scalars replace; the class maps of `avoid`
+merge key by key. So `{"preset": "map", "avoid": {"label": {"roads": "hard"}}}` keeps
+everything the `map` preset sets and adds one class.
 
 ## The presets
 
 | Preset | For | What it sets |
 |---|---|---|
-| `auto` (default) | anything; zero configuration | adjacent and slider positions, distant labels with leaders only when more than 30 % of the items have no free adjacent position; unlabeled points cost 0.3, lines 1.0, ink 0.1 per em² |
-| `scatter` | scatter plots: point marks over dense unlabeled points, trend lines, axes | distant labels with straight leaders; points 0.3, lines 1.0, ink 0.1 per em², `axes` hard |
-| `map` | point features over map backgrounds | cartographic position order (top-right first), adjacent and slider only, map text hard, lines (roads, rivers) soft, filled areas ignored |
+| `auto` (default) | anything, without configuration | adjacent and slider positions, plus distant labels with leaders if more than 30 % of the items have no free position (unless the problem sets `placement.models`); unlabeled points, lines and ink soft |
+| `scatter` | scatter plots: point marks over dense unlabeled points, trend lines, axes | distant labels with straight leaders; unlabeled points, lines and ink soft, `axes` hard |
+| `map` | point features over map backgrounds | cartographic position order (top-right first), adjacent and slider only; map text hard, lines (roads, rivers) soft, filled areas ignored; important labels may cover the dots of less important places |
 | `graph` | node-link diagrams | internal labels first (for large nodes), leaders at multiples of 45°, edges (`lines`) soft |
-| `illustration` | technical and anatomical illustrations | labels in the left and right margins (boundary) or distant, elbow leaders into the label's side, ink costly (1.0 per em², as much as a leader) |
+| `illustration` | technical and anatomical illustrations | labels in the left and right margins (boundary) or distant, elbow leaders into the label's side; covering the picture is costly |
 | `none` | full control | nothing beyond the defaults |
 
-Each preset also has **SVG class rules** used when an SVG source has no `classes` of its
-own; e.g. `scatter` and `auto` ignore background rectangles (`:background`), make `text`
-the class `text`, circles and small shapes `points`, paths and lines `lines`, and
-everything else `ink`. The complete presets are on the [presets page](../reference/presets.md).
+The weights each preset gives the obstacle classes are on the
+[avoidance](avoidance.md#merging) page. Each preset also has **SVG class rules** for SVG
+sources without `classes` of their own: `scatter` and `auto`, for example, ignore background
+rectangles (`:background`) and put text into `text`, circles and small shapes into
+`points`, paths and lines into `lines`, and everything else into `ink`. The
+[presets page](../reference/presets.md) has the complete presets.
 
 ## Selected defaults
 
@@ -41,14 +43,4 @@ everything else `ink`. The complete presets are on the [presets page](../referen
 | Solver | 100 ms (Rust) / 250 ms (TypeScript) budget as a fixed iteration count, seed 0 |
 
 [The defaults table](../reference/defaults.md) lists every option with its default,
-validation rule and meaning. It is the source of the constants of both implementations:
-the Rust and TypeScript code is generated from it, so documentation and engines cannot
-disagree.
-
-## The `auto` preset's adaptive rule
-
-`auto` starts with adjacent and slider candidates only. If more than 30 % of the items
-have no statically free adjacent or slider candidate (`auto.crowded_fraction`), it
-switches to `[adjacent, slider, distant]` — unless the problem sets `placement.models`
-itself. Independent of that, the ladder's `distant` step still gives a leader to an
-individual label that fits nowhere else.
+validation rule and meaning; the engines generate their constants from it.

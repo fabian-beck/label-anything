@@ -327,6 +327,39 @@ bench/.venv/bin/python -m bench.perf --solver 'ts=node ts/packages/cli/dist/main
 bench/.venv/bin/python -m bench.perf generate bench/out/perf      # the problems only
 ```
 
+### Where they stand
+
+`python -m bench.perf --engine rust/target/release/label-anything --ts --wasm --runs 7` at
+commit a0a4eab (2026-10-17) on a 4-core cloud VM (Intel Xeon @ 2.1 GHz, Linux, Node 22),
+median engine time in ms (target in parentheses):
+
+| problem | Rust | WASM | TS |
+|---|---:|---:|---:|
+| 200 labels + 10k points | 23.3 (15) | **26.2** (30) | **59.1** (60) |
+| 2,000 labels + 100k points, greedy | 313.5 (120) | 385.0 (250) | 825.4 (600) |
+| 2048² raster preparation | 27.9 (25) | **36.8** (60) | **113.3** (150) |
+
+Four of the nine targets are met on this VM (runs vary by about ±10 %); on the
+GitHub-hosted runner of the CI benchmark the native engine took 18.1, 272.4 and 20.8 ms.
+The brief sets the targets for a 2023 laptop; the gate checks them as measured, on whatever
+machine runs the benchmark.
+
+Where the time of the 2,000-label problem goes (native engine, instruction counts of one
+solve): two thirds in the greedy pass. 1,509 of the 2,000 labels find no room at level 0
+and run the degradation ladder; 1,128 of them are omitted in the end. Their wrapped and
+shrunk variants get about a hundred candidate boxes each, a million in all, each tested
+against the other items' marks and the placed labels: 57 % of the greedy pass. The
+on-demand distant candidates at level 0 take 18 %, explaining the omitted labels (`reason`,
+`blocked_by`) 13 %; preparing the 100k obstacle points takes 13 % of the solve, building
+the model and the result about 10 %. No function takes more than 5 %. What would help is
+less work per omitted label — fewer ladder variants, no distant candidates for shrunk ones
+— and each such change places fewer labels. The label margin (ADR placement/margin) costs
+about 10 % here: without it (`defaults.margin: 0`, `placement.offset: 2`) the problem places
+972 labels instead of 872. The TypeScript engine spends another 11 % in garbage collection:
+a solve allocates about 355 MB of short-lived candidate objects, and the ladder's
+candidates stay alive for the explanations; storing candidates as arrays of numbers
+instead of objects would remove most of it.
+
 ## Report
 
 `bench-report/index.html` (static, no external scripts) and `results.json` contain:
@@ -354,6 +387,14 @@ bench/.venv/bin/python -m bench.perf generate bench/out/perf      # the problems
 the analyses and `index.html` of an existing run without solving anything again. Comparisons
 happen at the precision `results.json` stores (6 decimals), so a stored run and a fresh one
 with identical results show no change.
+
+Reading it: Label Anything rows must show 0 hard violations; baselines usually do not
+(adjustText and D3-Labeler never omit a label, ggrepel's repulsion is not guaranteed to
+separate everything, d3fc and ECharts compare labels with labels only, `naive` ignores
+collisions). *Usable* labels are the fair number to compare across tools. Any non-zero
+parity delta between `rust`, `wasm` and `ts` is a bug or an ADR-documented difference.
+Compare timings from the same machine only. The baselines are reference points configured
+from the problem with tool defaults elsewhere, not tuned competitors.
 
 ## Gallery
 
@@ -390,7 +431,28 @@ fails unless, for the Label Anything solvers, every problem was solved with **0 
 and the **performance targets** were measured and met. Accepted regressions are listed in
 `bench/gates-allow.json` (`metric`, `scenario`, optional `config` / `solver` patterns, `adr`,
 `reason`); an entry counts only if the record `docs/adr/<adr>.md` exists. The summary is printed and
-stored in `results.json` (`gate`). Release procedure: `docs/benchmark.md`.
+stored in `results.json` (`gate`). An accepted regression is a trade-off for a better result
+elsewhere, explained in the record of the decision behind it:
+
+```json
+{"allow": [{"metric": "placed_rate", "scenario": "05-airports", "config": "*", "solver": "rust",
+            "adr": "placement/leaders", "reason": "labels near the antimeridian now omitted instead of clipped"}]}
+```
+
+**Before tagging a release**, run the full suite with every implementation and baseline
+against the results of the previous release, and keep this run's `bench-report/results.json`
+with the release: it is the `--previous` of the next one.
+
+```sh
+cargo build --release --manifest-path rust/Cargo.toml -p label-anything-cli
+npm ci && npm run build && npm run build:wasm -w @label-anything/wasm
+bench/.venv/bin/python bench/run.py --suite full --runs 7 \
+    --engine rust/target/release/label-anything --ts --wasm \
+    --baselines --gate --previous path/to/previous-release/results.json
+```
+
+The `baselines` CI job checks the gates on the quick suite of each tag; this full run is the
+release run.
 
 ## Milestone acceptance (M3, M4)
 
@@ -411,6 +473,17 @@ python bench/run.py --suite full --engine $E --runs 1 --warmup 0 --no-render --o
 python -m bench.milestones /tmp/milestones/results.json
 python -m bench.milestones /tmp/milestones/results.json --baseline ladder
 ```
+
+At commit d80414b (2026-10-16): **M3 passed**, with 0 leader crossings on all 345 solves.
+**M4 passed against the greedy pass alone**: on the 36 dense problems the full solve's
+`placed_weighted` is 57.6 % above that of the greedy pass without the ladder on average
+(median 28.2 %; 5 % needed), with no new priority inversions. **Against the greedy pass with
+the ladder, M4 is not met**: the local search alone adds +0.7 % on average (median +0.1 %),
+and 20 times the iterations add at most 1.7 %. With strict priorities the greedy pass and
+the ladder already secure the high-priority labels that dominate `placed_weighted`; the
+local search mostly lowers costs. Eight problems were not compared because a solve hit the
+time guard (the three largest stress problems and five large priority problems), so their
+results depend on the machine.
 
 ## Docker and CI
 

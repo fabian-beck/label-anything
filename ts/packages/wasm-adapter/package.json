@@ -18,7 +18,7 @@
   "files": ["dist", "src", "wasm"],
   "sideEffects": false,
   "repository": { "type": "git", "url": "https://github.com/fabian-beck/label-anything", "directory": "ts/packages/wasm-adapter" },
-  "homepage": "https://github.com/fabian-beck/label-anything/blob/main/docs/bindings/wasm.md",
+  "homepage": "https://fabian-beck.github.io/label-anything/getting-started/javascript/#webassembly",
   "keywords": ["label placement", "labeling", "visualization", "leader lines", "webassembly", "wasm"],
   "scripts": {
     "build": "npm run build:wasm && tsc -b",

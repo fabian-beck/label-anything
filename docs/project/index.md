@@ -2,17 +2,22 @@
 
 Label Anything is open source under the MIT License
 ([repository](https://github.com/fabian-beck/label-anything)); the bundled font, Noto Sans,
-is under the SIL Open Font License 1.1. It is under active development (0.x).
+is under the SIL Open Font License 1.1.
 
-* [Benchmark](benchmark.md) — the real-world benchmark, its scenarios, metrics and report;
-  [release procedure and gates](../benchmark.md).
-* [Architecture decisions](decisions.md) — why things are the way they are.
-* [Literature and improvement notes](literature.md) — what the research literature
-  suggests for the engine, and where its building blocks come from.
-* [Contributing](contributing.md) — ground rules (spec first, both implementations, one
-  behaviour), development commands, these docs.
-* [Porting the core to TypeScript](../dev/porting.md) — how the TypeScript engine mirrors
-  the Rust core.
+* [Benchmark](benchmark.md) — how Label Anything compares with nine other labelers on
+  real-world data, and where it still falls short.
+* [Architecture decisions](decisions.md) — why the engine and the project are the way
+  they are.
+* [Contributing](contributing.md) — ground rules, development commands, these docs.
+
+Notes for working on the engine live in the repository, next to what they cover:
+
+* [`bench/README.md`](gh:bench/README.md) — running the benchmark, the release procedure,
+  the state of the performance targets;
+* [`ts/packages/core/PORTING.md`](gh:ts/packages/core/PORTING.md) — how the TypeScript
+  engine mirrors the Rust core;
+* [`docs/project/literature/`](gh:docs/project/literature/README.md) — what the research
+  literature suggests, and where the engine's building blocks come from.
 
 ## Repository layout
 
@@ -26,7 +31,7 @@ ts/            pure TypeScript implementation (@label-anything/core, text, svg, 
                and the WebAssembly package (@label-anything/wasm)
 bindings/      Java (FFM/JNI), Python extras (matplotlib, Plotly, seaborn), JS extras
 bench/         real-world benchmark: scenarios, evaluator, baselines, report, gates
-docs/          this site, the binding guides and the ADRs
+docs/          this site and the architecture decision records
 examples/      runnable examples per language, the tutorials of this site
 tools/         code generation and maintenance scripts
 ```

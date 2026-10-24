@@ -11,7 +11,7 @@ besides the sibling packages `@label-anything/text` (font metrics and line break
 backgrounds). It runs in browsers, workers, Node, Deno and Bun.
 
 The solver is a line-by-line port of the Rust core (`rust/crates/la-core`, see
-`docs/dev/porting.md`): for the same iteration counts it makes the same decisions, and
+[`PORTING.md`](PORTING.md)): for the same iteration counts it makes the same decisions, and
 its results reproduce the Rust results bit for bit (`conformance/parity`).
 
 ```ts
@@ -111,5 +111,5 @@ average about 6):
 | 2,000 labels + 100k points, 1920×1080, greedy | ≤ 600 ms | 642 / 831 ms | 385 ms |
 
 About a fifth of the TypeScript time is garbage collection: a 2,000-label solve allocates
-about 260 MB, mostly candidates with their boxes and leaders. `docs/dev/porting.md`
+about 260 MB, mostly candidates with their boxes and leaders. [`PORTING.md`](PORTING.md)
 (Performance) describes the techniques of the hot paths.

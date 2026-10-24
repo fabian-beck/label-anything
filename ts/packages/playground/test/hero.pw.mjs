@@ -51,8 +51,8 @@ const PAGE = `<!doctype html>
     </h1>
     <p data-la-avoid="text">Put a label on anything.</p>
     <p data-la-avoid="text">A label placement engine for charts, maps and diagrams. Hand it your points and shapes,
-      their labels and what must stay visible: it finds a place for every label, with no overlaps and leader
-      lines where needed, and says why a label had to go.</p>
+      their labels and what must stay visible: it places the labels without overlaps, with leader lines where
+      needed, and says why any label had to go.</p>
     <ul data-la-avoid="children"><li>Python</li><li>JavaScript</li><li>Java</li><li>Rust</li></ul>
     <div data-la-avoid="children"><a href="#">Try the playground</a> <a href="#">Get started</a></div>
     <p data-la-hero-hint data-la-avoid>Live <span data-la-hero-styles>Leaders

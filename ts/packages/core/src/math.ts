@@ -4,7 +4,7 @@
  * All float code in the engine uses only `+ − × ÷`, `Math.sqrt` and the functions in
  * this module, so that the Rust and TypeScript implementations agree bit for bit
  * (ADR solver/determinism). The transcendental functions come from `detmath.ts`. The helpers below
- * the Rust ones are the conversions of `docs/dev/porting.md`.
+ * the Rust ones are the conversions of `PORTING.md`.
  *
  * @module
  */
