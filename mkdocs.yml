@@ -137,5 +137,5 @@ nav:
       - project/index.md
       - Benchmark: project/benchmark.md
       - Architecture decisions:
-          - project/decisions.md
+          - All decisions: project/decisions.md
       - Contributing: project/contributing.md
