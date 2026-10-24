@@ -83,7 +83,7 @@ better place opens up. A d3-force layout, re-solved every 4th tick:
 30 frames; labels move 0.7 px per frame warm-started, 5.0 px from scratch
 ```
 
-The [benchmark](../benchmark.md)'s stability sequences (scenario 11) measure this on
+The [benchmark](../project/benchmark.md)'s stability sequences (scenario 11) measure this on
 larger cases: the Les Misérables graph (77 nodes) under a force simulation from its start
 and with one node dragged through the settled layout, and a camera path over 1,000
 airports. Jumps are labels whose offset from their point changes by more than 1 em

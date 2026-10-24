@@ -2,7 +2,7 @@
  * @label-anything/core — pure TypeScript implementation of Label Anything.
  *
  * `place`, `validate` and `renderDebugSvg` follow the API in `api.ts`; the solver is a
- * line-by-line port of the Rust core (docs/dev/porting.md) and makes the same decisions
+ * line-by-line port of the Rust core (PORTING.md) and makes the same decisions
  * for the same iteration counts. `placeWith(env, problem)` solves with a custom
  * {@link Env} (clock, files, callbacks, SVG backend).
  */

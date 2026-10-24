@@ -15,7 +15,7 @@ copyright: Label Anything contributors · MIT License · bundled font Noto Sans 
 
 docs_dir: docs
 strict: true
-exclude_docs: |
+exclude_docs: | # infrastructure, and the literature notes (for contributors, read on GitHub)
   /requirements.txt
   /_hooks/
   /_overrides/
@@ -141,11 +141,7 @@ nav:
       - C API: reference/c-api.md
   - Project:
       - project/index.md
-      - Benchmark:
-          - project/benchmark.md
-          - Release procedure and gates: benchmark.md
+      - Benchmark: project/benchmark.md
       - Architecture decisions:
           - project/decisions.md
-      - Literature and improvement notes: project/literature.md
       - Contributing: project/contributing.md
-      - Porting the core to TypeScript: dev/porting.md

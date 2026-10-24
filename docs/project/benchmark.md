@@ -143,7 +143,7 @@ D3-Labeler's annealing hours).
 * **Not as fast as the brief asks.** Hundreds of labels take milliseconds; 2,000 labels
   over 100,000 points take about 300 ms natively on one core (2.3 to 2.6 times the
   target) and 0.8 s in TypeScript (1.4 times its target)
-  ([where the time goes](../benchmark.md#where-the-performance-targets-stand)). Up to
+  ([where the time goes](gh:bench/README.md#where-they-stand)). Up to
   2,000 labels the runtime grows about as n^1.4 on the stress scenario, as more labels
   run the degradation ladder where it is denser. Memory follows the candidates, about
   0.7 KB each in the native CLI: 97 MB at its peak for 2,000 labels, 580 MB for 20,000.
@@ -185,4 +185,4 @@ release gates on tags. Both upload the report as a workflow artifact.
 
 A release needs 0 hard violations everywhere, no metric regression above 2 % against the
 previous release (unless an ADR accepts it) and the performance targets met — see
-[release procedure and gates](../benchmark.md).
+[the release procedure](gh:bench/README.md#release-gates).
