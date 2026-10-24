@@ -1,10 +1,10 @@
 # The problem format
 
-A problem is one JSON object (`problem.v1`, schema:
+A problem is one JSON object (`problem.v1`, schema
 [`problem.v1.json`](../reference/schemas.md)). Only `items` is required; every option has
-a default ([defaults](../reference/defaults.md)), and a [preset](presets-defaults.md)
-changes several at once. The bindings build the same object — Python keywords, the Java
-builder, plain objects in JavaScript.
+a [default](../reference/defaults.md), and a [preset](presets-defaults.md) sets several at
+once. The bindings build the same object from Python keywords, the Java builder or plain
+JavaScript objects.
 
 | Key | What it holds |
 |---|---|
@@ -27,10 +27,10 @@ builder, plain objects in JavaScript.
 
 ## Lengths
 
-A length is a number (pixels) or a string with a unit: `"3px"`, `"9pt"` (4/3 px each),
-`"0.5em"` (the font size of the label the length belongs to; for lengths that belong to no
-label, such as `canvas.padding`, the default font size). Invalid unit strings are
-validation errors (`unit`).
+A length is a number of pixels or a string with a unit: `"3px"`, `"9pt"` (1 pt = 4/3 px)
+or `"0.5em"` (relative to the font size of the label it belongs to, or to the default font
+size for lengths outside a label, such as `canvas.padding`). An invalid unit is a
+validation error (`unit`).
 
 ## Coordinates
 
@@ -75,9 +75,9 @@ Mark rotations are degrees **clockwise** on screen (as in SVG); leader angles ar
 * `region` `[x, y, w, h]`: labels must stay inside this sub-rectangle, e.g. a chart's plot
   area.
 * `allow_outside: true` drops the `canvas_edge` class.
-* `background` (`"#rrggbb"`, white): the colour of the canvas where no raster lies. Labels
-  avoid lying across the edge between it and a raster of another lightness (the
-  [`contrast` cost](../tutorials/raster-backgrounds.md#contrast-borders)).
+* `background` (`"#rrggbb"`, default white): the colour of the canvas where no raster
+  lies. Labels avoid straddling the edge between it and a raster of another lightness
+  ([the contrast cost](../tutorials/raster-backgrounds.md#contrast-borders)).
 
 Without `canvas`, the canvas is the first raster background's size (divided by its
 `scale`), else the first SVG's viewport, else the problem is **unbounded**: there is no
@@ -115,8 +115,8 @@ Placements in the result come in input order.
 
 ## Labels
 
-**Text.** Measured with the bundled Noto Sans (Latin, Greek, Cyrillic) or a font you
-supply; the label box is the text block grown by `padding` (0.15 em) on every side.
+**Text** is measured with the bundled Noto Sans (Latin, Greek, Cyrillic) or a font you
+supply; the label box is the text block plus `padding` (0.15 em) on every side.
 
 ```json
 {
@@ -136,17 +136,18 @@ supply; the label box is the text block grown by `padding` (0.15 em) on every si
 }
 ```
 
-* `text`: a line feed (`"Paris\n2.1M"`) breaks the line; such a label keeps exactly its
-  lines and is never rewrapped or truncated.
+* `text`: a line feed (`"Paris\n2.1M"`) breaks the line, and such a label keeps its lines:
+  it is never rewrapped or truncated.
 * `alternatives`: shorter fallbacks, tried in order by the `alternatives` ladder step.
-* `wrap`: `max_width` (a length) and `max_lines`; line breaks at spaces, after
-  punctuation (`/ \ . _ - , ; : |`), at camelCase and acronym boundaries and between CJK
-  characters; `balance` (default true) makes the lines similar in length.
-* `truncate`: when the text needs more than `max_lines`: `end` (`org.exa…`), `middle`
+* `wrap`: `max_width` (a length) and `max_lines`. Lines break at spaces, after punctuation
+  (`/ \ . _ - , ; : |`), at camelCase and acronym boundaries and between CJK characters;
+  `balance` (default true) evens out the line lengths.
+* `truncate`, for text that needs more than `max_lines`: `end` (`org.exa…`), `middle`
   (`org…Name`) or `none` (keep it all).
-* `width`, `height`, `lines`: measured by the host (e.g. in a browser); the engine then
-  does not measure this label.
-* `align`: `start`, `center`, `end` of wrapped lines (reported only; you draw the text).
+* `width`, `height`, `lines`: the host's measurement (e.g. in a browser), which the engine
+  then uses instead of its own.
+* `align`: `start`, `center` or `end` for wrapped lines (only reported: you draw the
+  text).
 
 **Icons and boxes** have a fixed `width` × `height` and a `shape` for the collision test:
 `rect`, `rounded:4`, `circle`, or `polygon` with a `polygon` silhouette.
@@ -175,7 +176,7 @@ The result reports the box of each part (`parts`), so you can draw the icon and 
 
 ## Label defaults and fonts
 
-`defaults` applies to every label that does not say otherwise:
+`defaults` applies to every label that does not set its own values:
 
 ```json
 {
@@ -195,7 +196,7 @@ The result reports the box of each part (`parts`), so you can draw the icon and 
   back to upright). Other fonts: `font.file` with a TTF/OTF path or `data:` URL; the
   nearest available weight is used.
 * `buffer` is a soft ring around each label that keeps other items' marks and leaders at
-  a distance (ambiguity).
+  a distance, so the label is not read as theirs.
 * `margin` (0.2 em) is the space a label keeps from other labels and other items' marks,
   as a hard rule; its own mark it touches at `placement.offset` (1 px), so each label sits
   clearly closer to its own mark than to anything else
@@ -228,14 +229,14 @@ Everything to avoid besides the items is in `obstacles`, sorted into **classes**
 * `vector`: layers of one class each, with `points` (radius `r`, 2), `circles`
   (`[x, y, r]`), `rects` (`[x, y, w, h]`), `polygons` (+ `fill_rule`), `polylines`
   (stroke `width`, 1) and `shapes` (any [mark](../tutorials/shapes.md) with `x`, `y`).
-* `svg`: SVG markup (`source`) or a file (`path`), with class rules — see
-  [SVG backgrounds](../tutorials/svg-background.md).
+* `svg`: SVG markup (`source`) or a file (`path`), with class rules
+  ([SVG backgrounds](../tutorials/svg-background.md)).
 * `raster`: an image (`source`: path, `data:` URL or base64; or `rgba` pixels) in one of
-  five modes — see [raster backgrounds](../tutorials/raster-backgrounds.md).
+  five modes ([raster backgrounds](../tutorials/raster-backgrounds.md)).
 
-`svg` and `raster` also take a list of sources. File paths are read by the host: relative
-to the problem file for the CLI, the working directory for C and Java, through
-`readFile` in JavaScript.
+`svg` and `raster` also take a list of sources. The host reads the files: relative paths
+resolve against the problem file in the CLI and the working directory in C and Java;
+JavaScript reads them through `readFile`.
 
 ## Output
 
@@ -249,9 +250,9 @@ to the problem file for the CLI, the working directory for C and Java, through
   `result.debug_svg`.
 * `cost_breakdown`: each placed label's cost per term (`cost_breakdown`).
 * `candidates`: every generated candidate (box, model, cost, feasibility) in
-  `result.candidates` — large.
+  `result.candidates` (large).
 * `item_shape`: each item's resolved geometry in canvas pixels (`item_shape`).
 
-The remaining sections each have a page: [avoidance](avoidance.md),
+The other sections have pages of their own: [avoidance](avoidance.md),
 [candidates and the ladder](candidates.md), [priority](../tutorials/priority.md),
 [leaders](../tutorials/leaders.md), [the solver](solver.md).

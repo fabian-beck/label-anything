@@ -1,7 +1,7 @@
 # Errors and validation
 
 Every implementation validates a problem completely before solving it and reports **all**
-problems at once, each as an issue:
+errors at once, each as an issue:
 
 ```json
 {
@@ -16,9 +16,9 @@ problems at once, each as an issue:
 }
 ```
 
-`pointer` is a JSON Pointer (RFC 6901) into the problem; `code` is stable and shared by
-all implementations (the validators are cross-checked against the JSON Schema and each
-other in CI); `message` is for humans and may change.
+`pointer` is a JSON Pointer (RFC 6901) into the problem; `code` is stable and the same in
+every implementation (CI checks the validators against the JSON Schema and each other);
+`message` is for humans and may change.
 
 ## Validating
 
@@ -31,7 +31,7 @@ other in CI); `message` is for humans and may change.
 | CLI | `label-anything validate p.json` (`--json` for the report) | exit code 1, issues on stderr |
 | HTTP | `POST /validate` → the report | `POST /place` → HTTP 422, `{"errors": [...]}` |
 
-Warnings never stop a solve; they are returned in `result.warnings` too.
+Warnings never stop a solve; the result repeats them in `result.warnings`.
 
 ## Error codes
 
@@ -55,30 +55,30 @@ Warnings never stop a solve; they are returned in `result.warnings` too.
 | `invalid_value` | semantically invalid: non-finite numbers, degenerate shapes, and the preparation errors below |
 | `limit` | a size limit: grids over 16 million cells, SVGs nested too deeply or with too many elements |
 
-**Warnings:** `unknown_class` — an `avoid` key that no obstacle source produces and that
-is not a reserved class; `unknown_attr` — a priority term on an attribute that no item has
-in its `attrs` (the term is 0 for every item, so it ranks nothing); `ignored` — an option
-without effect in its context; `limit` — SVG content too deep to render, skipped.
+**Warnings:** `unknown_class` — an `avoid` key that is neither produced by an obstacle
+source nor a reserved class; `unknown_attr` — a priority term on an attribute that no item
+has (the term is 0 for every item, so it ranks nothing); `ignored` — an option without
+effect in its context; `limit` — SVG content too deep to render, skipped.
 
 ## Errors while preparing
 
-Some problems are only found while the engine reads the backgrounds: a file that cannot be
-read, an image that does not decode, an SVG that is not well-formed. They are reported
-like validation errors, with code `invalid_value` at the offending field and the specific
-cause in the message — `invalid_base64`, `invalid_data_url`, `unsupported_format`,
-`corrupt_image`, `invalid_dimensions`, `limit_exceeded`, `unsupported` (no decoder in this
-build) for images, `parse` and `limit` for SVG:
+Some problems show only when the engine reads the backgrounds: a file that cannot be read,
+an image that does not decode, an SVG that is not well-formed. They are reported like
+validation errors, with code `invalid_value` at the offending field and the cause in the
+message: `invalid_base64`, `invalid_data_url`, `unsupported_format`, `corrupt_image`,
+`invalid_dimensions`, `limit_exceeded` or `unsupported` (no decoder in this build) for
+images, `parse` or `limit` for SVG:
 
 ```text
 label-anything: /obstacles/raster/source invalid_value: not a PNG, JPEG or WebP image (unsupported_format)
 label-anything: /obstacles/svg/path invalid_value: cannot read missing.svg: No such file or directory (os error 2)
 ```
 
-The CLI exits with code 2 for these (1 is reserved for problems that fail validation).
+The CLI exits with code 2 for these; 1 is for problems that fail validation.
 
 ## Panics and other failures
 
 Malformed input never crashes the engine: the parsers, the raster decoders and the solver
-are fuzzed continuously. Internal errors (which are bugs — please report them) are
+are fuzzed continuously. An internal error is a bug — please report it. It surfaces as
 `LA_ERROR` in C, `code()` `ERROR` in Java, an `Error` starting with
 `label-anything: internal error` in the WebAssembly package, and exit code 2 in the CLI.
