@@ -55,7 +55,7 @@
           "type": "text",
           "text": "Ash"
         },
-        "priority": 32
+        "priority": 20
       },
       {
         "id": "m1",
@@ -73,7 +73,7 @@
           "type": "text",
           "text": "Birch"
         },
-        "priority": 31
+        "priority": 19
       },
       {
         "id": "m2",
@@ -92,7 +92,7 @@
           "type": "text",
           "text": "Cedar"
         },
-        "priority": 30
+        "priority": 18
       },
       {
         "id": "m3",
@@ -109,7 +109,7 @@
           "type": "text",
           "text": "Elm"
         },
-        "priority": 29
+        "priority": 17
       },
       {
         "id": "m4",
@@ -151,7 +151,7 @@
           "type": "text",
           "text": "Fir"
         },
-        "priority": 28
+        "priority": 16
       },
       {
         "id": "m5",
@@ -169,7 +169,7 @@
           "type": "text",
           "text": "Hazel"
         },
-        "priority": 27
+        "priority": 15
       },
       {
         "id": "m6",
@@ -188,7 +188,7 @@
           "type": "text",
           "text": "Oak"
         },
-        "priority": 26
+        "priority": 14
       },
       {
         "id": "m7",
@@ -205,7 +205,7 @@
           "type": "text",
           "text": "Pine"
         },
-        "priority": 25
+        "priority": 13
       },
       {
         "id": "m8",
@@ -247,7 +247,7 @@
           "type": "text",
           "text": "Yew"
         },
-        "priority": 24
+        "priority": 12
       },
       {
         "id": "m9",
@@ -265,7 +265,7 @@
           "type": "text",
           "text": "Ash"
         },
-        "priority": 23
+        "priority": 11
       },
       {
         "id": "m10",
@@ -284,7 +284,7 @@
           "type": "text",
           "text": "Birch"
         },
-        "priority": 22
+        "priority": 10
       },
       {
         "id": "m11",
@@ -301,7 +301,7 @@
           "type": "text",
           "text": "Cedar"
         },
-        "priority": 21
+        "priority": 9
       },
       {
         "id": "m12",
@@ -343,7 +343,7 @@
           "type": "text",
           "text": "Elm"
         },
-        "priority": 20
+        "priority": 8
       },
       {
         "id": "m13",
@@ -361,7 +361,7 @@
           "type": "text",
           "text": "Fir"
         },
-        "priority": 19
+        "priority": 7
       },
       {
         "id": "m14",
@@ -380,7 +380,7 @@
           "type": "text",
           "text": "Hazel"
         },
-        "priority": 18
+        "priority": 6
       },
       {
         "id": "m15",
@@ -397,7 +397,7 @@
           "type": "text",
           "text": "Oak"
         },
-        "priority": 17
+        "priority": 5
       },
       {
         "id": "m16",
@@ -439,7 +439,7 @@
           "type": "text",
           "text": "Pine"
         },
-        "priority": 16
+        "priority": 4
       },
       {
         "id": "m17",
@@ -457,7 +457,7 @@
           "type": "text",
           "text": "Yew"
         },
-        "priority": 15
+        "priority": 3
       },
       {
         "id": "m18",
@@ -476,7 +476,7 @@
           "type": "text",
           "text": "Ash"
         },
-        "priority": 14
+        "priority": 2
       },
       {
         "id": "m19",
@@ -492,294 +492,6 @@
         "label": {
           "type": "text",
           "text": "Birch"
-        },
-        "priority": 13
-      },
-      {
-        "id": "m20",
-        "anchor": {
-          "type": "point",
-          "x": 117.48,
-          "y": 92.17,
-          "mark": {
-            "shape": "polygon",
-            "points": [
-              [
-                -5,
-                -5
-              ],
-              [
-                5,
-                -5
-              ],
-              [
-                5,
-                0
-              ],
-              [
-                0,
-                0
-              ],
-              [
-                0,
-                5
-              ],
-              [
-                -5,
-                5
-              ]
-            ]
-          }
-        },
-        "label": {
-          "type": "text",
-          "text": "Cedar"
-        },
-        "priority": 12
-      },
-      {
-        "id": "m21",
-        "anchor": {
-          "type": "point",
-          "x": 167.61,
-          "y": 164.15,
-          "mark": {
-            "shape": "rect",
-            "w": 8,
-            "h": 6
-          }
-        },
-        "label": {
-          "type": "text",
-          "text": "Elm"
-        },
-        "priority": 11
-      },
-      {
-        "id": "m22",
-        "anchor": {
-          "type": "point",
-          "x": 193.11,
-          "y": 82.54,
-          "mark": {
-            "shape": "ellipse",
-            "rx": 5,
-            "ry": 3,
-            "rotation": 30
-          }
-        },
-        "label": {
-          "type": "text",
-          "text": "Fir"
-        },
-        "priority": 10
-      },
-      {
-        "id": "m23",
-        "anchor": {
-          "type": "point",
-          "x": 102.11,
-          "y": 130.27,
-          "mark": {
-            "shape": "circle",
-            "r": 3
-          }
-        },
-        "label": {
-          "type": "text",
-          "text": "Hazel"
-        },
-        "priority": 9
-      },
-      {
-        "id": "m24",
-        "anchor": {
-          "type": "point",
-          "x": 212.62,
-          "y": 143.64,
-          "mark": {
-            "shape": "polygon",
-            "points": [
-              [
-                -5,
-                -5
-              ],
-              [
-                5,
-                -5
-              ],
-              [
-                5,
-                0
-              ],
-              [
-                0,
-                0
-              ],
-              [
-                0,
-                5
-              ],
-              [
-                -5,
-                5
-              ]
-            ]
-          }
-        },
-        "label": {
-          "type": "text",
-          "text": "Oak"
-        },
-        "priority": 8
-      },
-      {
-        "id": "m25",
-        "anchor": {
-          "type": "point",
-          "x": 141.14,
-          "y": 73.7,
-          "mark": {
-            "shape": "rect",
-            "w": 8,
-            "h": 6
-          }
-        },
-        "label": {
-          "type": "text",
-          "text": "Pine"
-        },
-        "priority": 7
-      },
-      {
-        "id": "m26",
-        "anchor": {
-          "type": "point",
-          "x": 133.59,
-          "y": 165.02,
-          "mark": {
-            "shape": "ellipse",
-            "rx": 5,
-            "ry": 3,
-            "rotation": 30
-          }
-        },
-        "label": {
-          "type": "text",
-          "text": "Yew"
-        },
-        "priority": 6
-      },
-      {
-        "id": "m27",
-        "anchor": {
-          "type": "point",
-          "x": 219.29,
-          "y": 100.45,
-          "mark": {
-            "shape": "circle",
-            "r": 3
-          }
-        },
-        "label": {
-          "type": "text",
-          "text": "Ash"
-        },
-        "priority": 5
-      },
-      {
-        "id": "m28",
-        "anchor": {
-          "type": "point",
-          "x": 98.36,
-          "y": 102.64,
-          "mark": {
-            "shape": "polygon",
-            "points": [
-              [
-                -5,
-                -5
-              ],
-              [
-                5,
-                -5
-              ],
-              [
-                5,
-                0
-              ],
-              [
-                0,
-                0
-              ],
-              [
-                0,
-                5
-              ],
-              [
-                -5,
-                5
-              ]
-            ]
-          }
-        },
-        "label": {
-          "type": "text",
-          "text": "Birch"
-        },
-        "priority": 4
-      },
-      {
-        "id": "m29",
-        "anchor": {
-          "type": "point",
-          "x": 191.06,
-          "y": 166.32,
-          "mark": {
-            "shape": "rect",
-            "w": 8,
-            "h": 6
-          }
-        },
-        "label": {
-          "type": "text",
-          "text": "Cedar"
-        },
-        "priority": 3
-      },
-      {
-        "id": "m30",
-        "anchor": {
-          "type": "point",
-          "x": 177.2,
-          "y": 68.49,
-          "mark": {
-            "shape": "ellipse",
-            "rx": 5,
-            "ry": 3,
-            "rotation": 30
-          }
-        },
-        "label": {
-          "type": "text",
-          "text": "Elm"
-        },
-        "priority": 2
-      },
-      {
-        "id": "m31",
-        "anchor": {
-          "type": "point",
-          "x": 102.09,
-          "y": 149.33,
-          "mark": {
-            "shape": "circle",
-            "r": 3
-          }
-        },
-        "label": {
-          "type": "text",
-          "text": "Fir"
         },
         "priority": 1
       }

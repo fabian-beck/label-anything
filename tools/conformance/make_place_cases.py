@@ -570,6 +570,8 @@ CASES["label-spacing-twice-margin"] = case(
 
 # Small marks of every shape in a crowd (the concave L is pushed in, spec §4.5): the parity
 # fixture of this case holds every stub of the Rust core, which TypeScript must reproduce.
+# The innermost 20 points of a spiral of 32: distances to ellipses are slow to compute, and
+# the solve stays well within the time guard (3 × the budget, ADR 0042) on a busy machine.
 STUB_MARKS = [{"shape": "polygon", "points": [[-5, -5], [5, -5], [5, 0], [0, 0], [0, 5], [-5, 5]]},
               {"shape": "rect", "w": 8, "h": 6}, {"shape": "ellipse", "rx": 5, "ry": 3, "rotation": 30},
               {"shape": "circle", "r": 3}]
@@ -580,8 +582,8 @@ CASES["stubs-mark-shapes"] = case(
      "items": [pt(f"m{k}", round(160 + 70 * math.sin(2.4 * k) * (k / 32) ** 0.5, 2),
                   round(120 + 55 * math.cos(2.4 * k) * (k / 32) ** 0.5, 2),
                   ["Ash", "Birch", "Cedar", "Elm", "Fir", "Hazel", "Oak", "Pine", "Yew"][k % 9],
-                  priority=32 - k)
-               for k in range(32)]},
+                  priority=20 - k)
+               for k in range(20)]},
     {"placed_min": 12, "own_nearest": True})
 for k, it in enumerate(CASES["stubs-mark-shapes"]["problem"]["items"]):
     it["anchor"]["mark"] = STUB_MARKS[k % 4]

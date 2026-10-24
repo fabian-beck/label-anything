@@ -71,9 +71,12 @@ whose they were, and the labels stood close together:
 * The solves take longer: 496 ms over the 49 problems (443 before, 424 on the main
   branch), mostly because more labels need leaders, whose candidates are generated on
   demand, and the local search has more conflicts to resolve with the wider spacing. The
-  playground's map takes 95 ms (79; main 67), in TypeScript 237 ms (main 177). Crowds with
-  stubs pay most: `stubs-mark-shapes`, 32 small marks of every shape, takes 220 ms
-  (100 ms without stubs).
+  playground's map takes 95 ms (79; main 67), in TypeScript 237 ms (main 177). Crowds of
+  ellipse marks pay most: the distance of an ellipse to a box is a ternary search along
+  each side of the box, and the rules ask for more such distances. 32 small ellipses in a
+  crowd take 620 ms (310 on the main branch), 980 ms with stubs; circles take 8 ms. The
+  place case `stubs-mark-shapes` now holds 20 marks of every shape instead of 32 (70 ms
+  instead of 240 ms), well within the time guard on a busy machine.
 * The WebAssembly module grows to 997,757 bytes gzipped (995,894 before), 2.2 KB under the
   budget of 1,000,000.
 * Parity fixtures, golden images, figures and the outputs quoted in the tutorials were
