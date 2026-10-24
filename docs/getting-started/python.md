@@ -1,7 +1,7 @@
 # Python
 
-`label-anything` is the Python binding of the Rust engine: one typed wheel (abi3) for
-CPython ≥ 3.9, without dependencies. The optional package `label-anything-extras` adds
+`label-anything` is the Python binding of the Rust engine: one typed wheel for CPython
+≥ 3.9, without dependencies. The optional package `label-anything-extras` adds
 plotting helpers for matplotlib, Plotly and seaborn.
 
 ## Install
@@ -72,9 +72,8 @@ makes the JSON self-contained, e.g. for the CLI.
 
 ## Raw JSON
 
-`la.place_problem` solves a problem from elsewhere — a file, another tool, the
-[problem format](../concepts/problem.md) written by hand — given as a dict, JSON text, a
-`pathlib.Path` or a `Problem`.
+`la.place_problem` solves a problem written in the [problem format](../concepts/problem.md),
+by another tool or by hand:
 
 ```python
 --8<-- "examples/tutorials/python/basics.py:raw"
@@ -104,9 +103,8 @@ and `to_svg(path=None)`, which draws the debug overlay (with heatmaps if solved 
 
 ## Errors
 
-An invalid problem raises `la.ValidationError` (a `ValueError`) with one
-`{pointer, code, message}` per error; `pointer` is a JSON Pointer into the problem.
-[Errors and validation](../concepts/errors.md) lists the codes.
+An invalid problem raises `la.ValidationError` (a `ValueError`) listing every error
+([codes](../concepts/errors.md)):
 
 ```python
 --8<-- "examples/tutorials/python/basics.py:errors"
@@ -133,8 +131,7 @@ Options: `background_mode` (`ink`, `alpha`, `cost`, `classmap`, `saliency`),
 `background_class`, `background_scale`, `background_offset`, `background_options` (merged
 into the source, e.g. `{"ink": {"threshold": 0.2}}`), `svg_classes` (`(selector, class)`
 pairs, a `{selector: class}` dict or rule objects), `svg_default_class` and
-`auto_mark_items`. Without a `canvas`, the canvas is the raster's size divided by its scale,
-or the SVG's viewport. `la.capabilities()` lists the image formats this build decodes. See
+`auto_mark_items`; `la.capabilities()` lists the image formats this build decodes. See
 the tutorials on [raster](../tutorials/raster-backgrounds.md) and
 [SVG](../tutorials/svg-background.md) backgrounds.
 
@@ -188,8 +185,8 @@ savefig dpi works, but changing the axes' size or scale afterwards moves the poi
 from their labels.
 
 With a `priority`, an important label may cover the markers of less important points,
-which then stay unlabeled, so that important labels survive in a crowd
-([important labels over minor marks](../tutorials/priority.md#important-labels-over-minor-marks));
+which then stay unlabeled
+([why](../tutorials/priority.md#important-labels-over-minor-marks));
 `avoid={"lower_items": "hard"}` keeps every marker clear.
 
 The helper's own options (all others go to `la.place`):
@@ -241,7 +238,7 @@ column.
 * The matplotlib helper draws text labels and the text parts of composites; you draw icons
   and boxes from the result.
 
-The programs on this page are in [`examples/tutorials/python`](gh:examples/tutorials/python)
-and run in CI. They read their data (`points.csv`, …) from the working directory: run them
-in [`examples/tutorials/data`](gh:examples/tutorials/data), or all at once with
+The programs on this page are in [`examples/tutorials/python`](gh:examples/tutorials/python).
+They read their data (`points.csv`, …) from the working directory: run them in
+[`examples/tutorials/data`](gh:examples/tutorials/data), or all at once with
 `python3 examples/tutorials/run.py python`.

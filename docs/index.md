@@ -9,10 +9,6 @@ hide:
 
 ## What it does
 
-A label belongs next to what it names and must not hide other labels or the picture.
-Placing hundreds by hand is tedious; Label Anything does it for any chart, map or diagram,
-in three steps:
-
 <div class="grid cards la-steps" markdown>
 
 -   :material-numeric-1-circle:{ .lg .middle } **You describe**
@@ -20,21 +16,20 @@ in three steps:
     ---
 
     The items to label — points, shapes, areas — with their labels (text, icons, any
-    box), and what must stay visible: other marks, lines, the chart as SVG or image.
+    box), and what must stay visible: marks, lines, or the whole chart as SVG or image.
 
 -   :material-numeric-2-circle:{ .lg .middle } **It places**
 
     ---
 
-    Each label goes next to its item or on a leader line. No labels overlap, nothing
-    protected is covered, no leaders cross. What does not fit is left out, least
-    important first, with the reason.
+    Each label goes beside its item or on a leader line, without overlaps or crossing
+    leaders. What does not fit is left out, least important first, with the reason.
 
 -   :material-numeric-3-circle:{ .lg .middle } **You draw**
 
     ---
 
-    You get each label's box, leader and text lines as plain coordinates, to draw with
+    Boxes, leaders and text lines come back as plain coordinates, to draw with
     matplotlib, D3, Canvas, SVG or anything else.
 
 </div>
@@ -52,8 +47,8 @@ In this chart:
 * **Leaders where it is crowded.** France, Italy and the United Kingdom overlap Germany's
   bubble, so their labels sit on leaders that do not cross.
 * **Importance decides.** Larger economies are labeled first, the eight largest in larger
-  bold type. The 45 countries left out have no room beside the larger economies' labels;
-  the result names the labels in each one's way.
+  bold type. The 45 countries left out have no room beside the larger economies' labels,
+  and the result names the labels in the way.
 * **Shortened before left out.** A name that does not fit falls back to its ISO code
   (CRI: Costa Rica).
 * **Graded avoidance over any background.** The chart is an SVG, passed unchanged and
@@ -73,49 +68,49 @@ problem format for any chart, map or diagram, any label with a size and every la
 
     ---
 
-    Per obstacle class, labels and leaders get `"hard"`, `"ignore"` or a weight. "Never
-    cover outliers, covering other points costs a little, never cross a leader" is one
-    line of configuration. [Avoidance](concepts/avoidance.md)
+    Each obstacle class is `"hard"`, `"ignore"` or a weight, for labels and leaders
+    separately: "never cover outliers, cover other points at a small cost, never cross a
+    leader" is one line. [Avoidance](concepts/avoidance.md)
 
 -   :material-sort-variant:{ .lg .middle } **You decide what goes**
 
     ---
 
-    When not everything fits, your priority decides what is dropped: data attributes,
-    outlierness, tiers, coverage per category or a callback. Each omitted label reports
-    why and what is in its way. [Priority](tutorials/priority.md)
+    Priority from data attributes, outlierness, tiers, coverage per category or your own
+    function; an omission mode states what the order guarantees.
+    [Priority](tutorials/priority.md)
 
 -   :material-shape-outline:{ .lg .middle } **Shape-aware**
 
     ---
 
-    Circles, ellipses, rotated rectangles, polygons, paths, icons with a tip, areas.
-    Labels touch the true outline; large shapes get internal labels, small ones external
-    labels or leaders. [Shapes](tutorials/shapes.md)
+    Circles, ellipses, rotated rectangles, polygons, paths, pins, areas. Large shapes hold
+    their labels inside, small ones get them outside or on leaders.
+    [Shapes](tutorials/shapes.md)
 
 -   :material-layers-outline:{ .lg .middle } **Any background**
 
     ---
 
-    Nothing, vector shapes, an SVG classified with CSS selectors, or a raster image in
-    one of five modes (ink, alpha, cost, classmap, saliency).
+    Vector shapes, an SVG classified with CSS selectors, or an image read in one of five
+    modes (ink, alpha, cost, classmap, saliency).
     [SVG](tutorials/svg-background.md) · [raster](tutorials/raster-backgrounds.md)
 
 -   :material-equal-box:{ .lg .middle } **Deterministic**
 
     ---
 
-    The same input and seed give the same result on every machine: the time budget is an
-    iteration count, and floating-point work is specified operation by operation.
-    [Solver](concepts/solver.md)
+    The same input and seed give the same result on every machine and in every language:
+    the time budget is an iteration count, and floating-point work is specified operation
+    by operation. [Solver](concepts/solver.md)
 
 -   :material-code-braces:{ .lg .middle } **Every language**
 
     ---
 
-    A Rust core with Python, Java, C/Go and WebAssembly bindings, a pure TypeScript
-    port that reproduces its results, a CLI and an HTTP server — all on one versioned
-    JSON format. [Getting started](getting-started/index.md)
+    A Rust core with Python, Java, C/Go and WebAssembly bindings, a pure TypeScript port,
+    a CLI and an HTTP server, all reading one versioned JSON format.
+    [Getting started](getting-started/index.md)
 
 </div>
 
@@ -125,8 +120,8 @@ labels stay put ([interactive maps](tutorials/interactive-maps.md)).
 
 ## Gallery
 
-Open data drawn as a host would draw it, labeled by the engine. Click a picture to see it
-in full; the scripts are in [`examples/showcase/`](gh:examples/showcase/make_showcase.py).
+Open data, labeled by the engine
+([scripts](gh:examples/showcase/make_showcase.py)); click a picture to enlarge it.
 
 <figure markdown>
 [![The countries and capitals of Europe, labeled](assets/figures/europe.svg)](assets/figures/europe.svg)
@@ -192,17 +187,16 @@ drawn dots, the axes and the trend line ([the tutorial](tutorials/outliers.md)).
     --8<-- "examples/tutorials/cli/outliers.sh:five"
     ```
 
-All six build the same problem and get the same result: the engines are deterministic,
-and the TypeScript port reproduces the Rust core bit for bit.
+All six build the same problem and get the same boxes.
 
 ## Benchmark
 
 The [real-world benchmark](project/benchmark.md) compares Label Anything with nine other
-labelers, among them adjustText, ggrepel, vega-label and textalloc, on twelve scenarios
-from open data. [The results](project/benchmark.md#what-the-results-show): no overlaps and
-no crossing leaders anywhere, and the most usable labels on every problem of the quick suite
-and on 60 of the 62 of the full suite, often by only a few percent. Label Anything falls
-short on dense data, moving labels and the speed of the largest problems.
+labelers, among them adjustText, ggrepel, vega-label and textalloc, on 62 problems from
+open data. [The results](project/benchmark.md#what-the-results-show): no overlaps and no
+crossing leaders anywhere, and the most usable labels on 60 of the 62, often by only a few
+percent. It falls short on dense data, moving labels and the speed of the largest
+problems.
 
 ## Good to know
 
@@ -219,16 +213,14 @@ short on dense data, moving labels and the speed of the largest problems.
   ([getting started](getting-started/index.md)).
 * **Labels for points and areas.** Labels go to points and areas of any shape; lines such
   as roads or rivers are obstacles, not labeled features.
-* **Labels in graphics, not labeled data.** Label Anything places labels in pictures. It
-  is not a data-labeling tool, and it is unrelated to the few-shot segmentation model of
-  the same name (ECAI 2025).
+* **Not for labeling data.** Despite its name, Label Anything is not a data-labeling tool,
+  and it is unrelated to the few-shot segmentation model of the same name (ECAI 2025).
 
 ## Where next
 
 * [Getting started](getting-started/index.md) in Python, JavaScript/TypeScript, Java, C,
   Go or on the command line.
-* [Tutorials](tutorials/index.md): one task each, with code that runs in CI and a figure of
-  its result.
+* [Tutorials](tutorials/index.md): one task each, with code and a figure of its result.
 * [The benchmark's gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/):
   charts, maps, photos, embeddings and networks from the benchmark, next to other labelers.
 * [Concepts](concepts/index.md): the problem and result formats, avoidance, candidates,

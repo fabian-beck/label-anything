@@ -3,8 +3,8 @@
 `io.github.fabian-beck:label-anything` is the Java binding of the Rust engine, without
 runtime dependencies: a builder writes the problem JSON, the native library
 `liblabelanything` solves it, and the result is parsed into records. Java 22+ calls the
-library through the Foreign Function & Memory API (FFM), Java 17–21 through JNI. One
-multi-release JAR holds both paths, which give identical results.
+library through the Foreign Function & Memory API (FFM), Java 17–21 through JNI; one
+multi-release JAR holds both.
 
 ## Install
 
@@ -19,9 +19,8 @@ cargo build --release --manifest-path rust/Cargo.toml -p label-anything-capi --f
 mvn -f bindings/java/pom.xml install
 ```
 
-`install` runs the unit tests, then the integration tests against the packaged JAR with
-FFM and with JNI; `-DskipITs` skips the integration tests, `-DskipTests` all tests. Your
-Maven projects can then depend on it:
+`install` also runs the tests (`-DskipTests` skips them). Your Maven projects can then
+depend on the JAR:
 
 ```xml
 <dependency>
@@ -52,10 +51,9 @@ mvn install:install-file -Dfile=bindings/java/target/label-anything-0.1.0-jni.ja
 
 ## The builder
 
-Every builder method sets a field of the [problem](../concepts/problem.md); options you do
-not set keep their [defaults](../reference/defaults.md). Option objects (`Label`, `Mark`,
-`Leaders`, `Avoid`, …) are immutable: each call returns a new object. Lengths are a number
-(px) or a string with a unit (`"0.5em"`, `"3px"`, `"2pt"`).
+Every builder method sets a field of the [problem](../concepts/problem.md). Option
+objects (`Label`, `Mark`, `Leaders`, `Avoid`, …) are immutable: each call returns a new
+object. Lengths are a number (px) or a string with a unit (`"0.5em"`, `"3px"`, `"2pt"`).
 
 ```java
 --8<-- "examples/tutorials/java/GettingStarted.java:builder"
@@ -140,8 +138,7 @@ such as a missing library or an internal error, have `code()` `ERROR`.
 
 ## Raw JSON
 
-A problem from elsewhere goes in as JSON text; `validate` reports an invalid problem
-without throwing.
+A problem from elsewhere goes in as JSON text:
 
 ```java
 --8<-- "examples/tutorials/java/GettingStarted.java:raw"
@@ -189,7 +186,6 @@ The Maven build bundles the library of the platform it runs on (property
   `font.file`) resolve against the process's working directory; the builder sends absolute
   paths.
 
-The [outliers tutorial](../tutorials/outliers.md) has a complete program that reads a CSV
-file and an image. The programs on this page are in
-[`examples/tutorials/java`](gh:examples/tutorials/java) and run in CI on JDK 25 (FFM) and
-JDK 17 (JNI).
+The programs on this page are in [`examples/tutorials/java`](gh:examples/tutorials/java);
+the [outliers tutorial](../tutorials/outliers.md) has a complete one that reads a CSV file
+and an image.

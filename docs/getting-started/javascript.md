@@ -1,10 +1,10 @@
 # JavaScript and TypeScript
 
-Two packages implement the same API; switching between them changes only the import:
+Two packages implement the same API and give the same results; switching between them
+changes only the import:
 
 * **`@label-anything/core`** — the engine in pure TypeScript, without native code,
-  WebAssembly or dependencies. It runs in browsers, workers, Node, Deno and Bun, and makes
-  the same decisions as the Rust core.
+  WebAssembly or dependencies. It runs in browsers, workers, Node, Deno and Bun.
 * **`@label-anything/wasm`** — the Rust core compiled to WebAssembly (about 980 KB gzip),
   with full text shaping and image decoders ([below](#webassembly)).
 
@@ -39,13 +39,13 @@ cd ../my-project && npm install ../la-packages/*.tgz
 --8<-- "examples/tutorials/js/basics.mjs:place"
 ```
 
-`place` is synchronous and returns the result (`result.v1`). It also accepts the problem
-as JSON text; a problem object must be JSON-serializable and is never modified.
+`place` is synchronous. A problem object must be JSON-serializable; `place` never
+modifies it.
 
 ## Validate, errors
 
-`validate` never throws; `place` throws a `PlaceError` whose `errors` are
-`{pointer, code, message}` objects ([codes](../concepts/errors.md)).
+`validate` reports errors without throwing; `place` throws a `PlaceError`
+([codes](../concepts/errors.md)):
 
 ```js
 --8<-- "examples/tutorials/js/basics.mjs:validate"
@@ -87,12 +87,11 @@ read through `readFile`, which returns a `Uint8Array` (or a string of UTF-8 text
 
 ## Debug overlay
 
+`renderDebugSvg` draws [the debug overlay](../concepts/debug-overlay.md) of a result:
+
 ```js
 --8<-- "examples/tutorials/js/basics.mjs:debug"
 ```
-
-The overlay draws the item shapes, obstacles, label boxes and leaders, and the omitted
-items with their reasons ([the debug overlay](../concepts/debug-overlay.md)).
 
 ## Types
 
@@ -120,12 +119,6 @@ const placed: LabelPlacement[] = place({ canvas: { width: 800, height: 600 }, it
 
 ```js
 --8<-- "examples/tutorials/js/wasm.mjs:wasm"
-```
-
-Both packages give the same boxes for the same problem:
-
-```js
---8<-- "examples/tutorials/js/wasm.mjs:switch"
 ```
 
 * **Loading.** `init()` fetches `label_anything_bg.wasm` from next to the glue code; serve
@@ -217,9 +210,8 @@ and `cost` callbacks cannot cross into the worker.
 
 ## API
 
-Both packages export the functions of `LabelAnythingApi`: `place`, `validate`,
-`renderDebugSvg`, `VERSION` and `PlaceError`. `@label-anything/wasm` adds `init`, `initSync`, `isInitialized` and
-`features`. `@label-anything/core` adds `placeWith(env, problem)` and
+Besides the functions above, `@label-anything/wasm` exports `isInitialized`, and
+`@label-anything/core` exports `placeWith(env, problem)` and
 `placeValidated(env, problem, report)` for custom environments (clock, files, callbacks;
 see its [README](gh:ts/packages/core/README.md)), and `placeTraced(env, problem)`, which
 also returns the trace of the solver's decisions that the
@@ -231,6 +223,4 @@ also returns the trace of the solver's decisions that the
     --8<-- "ts/packages/core/src/api.ts"
     ```
 
-The programs on this page are in [`examples/tutorials/js`](gh:examples/tutorials/js). CI
-runs the Node programs, and the browser snippets under jsdom with the real d3, Observable
-Plot, Vega, Leaflet and Cytoscape; MapLibre, sigma and the worker run against stand-ins.
+The programs on this page are in [`examples/tutorials/js`](gh:examples/tutorials/js).

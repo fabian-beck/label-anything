@@ -10,7 +10,7 @@ use it; this page shows C and Go (cgo). The header is [`label_anything.h`](#the-
 | `la_validate_json(problem, &report)` | validates: `{valid, errors, warnings}` |
 | `la_render_svg(problem, result, &svg)` | draws the [debug overlay](../concepts/debug-overlay.md) |
 | `la_version()` | a static string, e.g. `"0.1.0"` |
-| `la_free(s)` | releases a string returned through an out parameter (`NULL` is a no-op) |
+| `la_free(s)` | releases a string returned through an out parameter, exactly once (`NULL` is a no-op) |
 
 Return codes: `LA_OK` (0), `LA_INVALID` (1: the problem is invalid), `LA_ERROR` (2: any
 other failure). Relative file paths in the JSON (`obstacles.svg.path`, a raster `source`,
@@ -42,12 +42,10 @@ cargo rustc --release --manifest-path rust/Cargo.toml -p label-anything-capi \
 
 ## Threads
 
-All functions can be called from several threads at once, without locking: calls share
-no mutable state. The process shares only read-only data loaded once (the bundled fonts,
-the schema, the defaults, …) and the worker pool (rayon) of each solve's data-parallel
-phases, whose size `RAYON_NUM_THREADS` sets. Results depend neither on other calls nor on
-the number of threads, unless the wall-clock guard stops a solve (`stats.time_guard_hit`).
-A returned string may be released on any thread.
+All functions can be called from several threads at once, without locking, and a
+returned string may be released on any thread. Each solve runs its data-parallel phases on
+a worker pool whose size `RAYON_NUM_THREADS` sets; results do not depend on it, unless the
+wall-clock guard stops a solve (`stats.time_guard_hit`).
 
 ## C
 
@@ -59,21 +57,15 @@ A returned string may be released on any thread.
 --8<-- "examples/tutorials/c/basics.c:render"
 ```
 
-Every string returned through an out parameter belongs to the library: release it once,
-with `la_free`.
-
 ```c
 --8<-- "examples/tutorials/c/basics.c:validate"
 ```
 
-Raster pixels (row-major RGBA8, straight alpha, `width × height × 4` bytes) go in by
-pointer, with no PNG or base64 encoding. They replace the image of the problem's first
+Raster pixels (`width × height × 4` bytes) replace the image of the problem's first
 `obstacles.raster` entry, whose options (`mode`, `scale`, `class`, …) still apply. That
-entry needs a `source` to be valid, but the source is not read while pixels are passed:
-any string will do (`"host"` below; with `rgba` `NULL`, it is read as a file path).
-Without an `obstacles.raster` entry the pixels get the default options; without a
-`canvas`, the canvas is the image size. The library copies the pixels during the call and
-keeps no pointer to them.
+entry needs a `source` to be valid, but with pixels passed it is not read (with `rgba`
+`NULL`, it is read as a file path). Without such an entry, the pixels get the default
+options; without a `canvas`, the canvas is the image size.
 
 ```c
 --8<-- "examples/tutorials/c/basics.c:pixels"
@@ -105,8 +97,7 @@ An omitted label has `placed: false`, a `reason` and no `box`:
 --8<-- "examples/tutorials/go/basics/main.go:invalid"
 ```
 
-Build and run (cgo needs a C compiler; the library is linked dynamically, so the loader
-must find it at startup):
+Build and run (cgo needs a C compiler):
 
 ```sh
 cd examples/tutorials/go
@@ -140,4 +131,4 @@ Built with the cargo feature `jni`, the library also contains the JNI entry poin
     ```
 
 The programs on this page are in [`examples/tutorials/c`](gh:examples/tutorials/c) and
-[`examples/tutorials/go`](gh:examples/tutorials/go) and run in CI.
+[`examples/tutorials/go`](gh:examples/tutorials/go).

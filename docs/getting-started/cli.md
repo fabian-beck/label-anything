@@ -47,10 +47,9 @@ belong to it: one placement per item, in order.
 invalid; `--json` prints the report instead. Only `place` reads the files a problem names
 (backgrounds, fonts).
 
-JSON and CSV files may start with a UTF-8 byte order mark. Exit codes: 0 for success; 1
-for invalid input (a problem that fails validation or is not JSON, an invalid CSV, the
-result of another problem); 2 for any other error (unreadable files, backgrounds or fonts
-that cannot be loaded).
+Exit codes: 0 for success; 1 for invalid input (a problem that fails validation or is not
+JSON, an invalid CSV, the result of another problem); 2 for any other error (unreadable
+files, backgrounds or fonts that cannot be loaded).
 
 ```sh
 --8<-- "examples/tutorials/cli/basics.sh:pipes"
@@ -97,7 +96,7 @@ exit code 1
   otherwise read files of the machine. Relative paths resolve against its working
   directory.
 * Requests are solved side by side, one per worker (`--workers`, default: the number of
-  CPUs), so a long solve does not hold up the others.
+  CPUs).
 
 ```sh
 --8<-- "examples/tutorials/cli/serve.sh:serve"
@@ -105,9 +104,8 @@ exit code 1
 
 ## The TypeScript CLI
 
-`label-anything-ts` runs the TypeScript engine with the `place`, `validate` and `render`
-commands of `label-anything` — the same options, input handling and exit codes, but no CSV
-input, PNG output or server.
+`label-anything-ts` takes the same options as `label-anything` and returns the same exit
+codes, but has no CSV input, PNG output or server:
 
 ```sh
 --8<-- "examples/tutorials/cli/ts-cli.sh:ts"
@@ -119,5 +117,4 @@ input, PNG output or server.
 (`bench/run.py`) with this binary as the `rust` solver; options: `--suite quick|full`,
 `--baselines`, `--perf`, `--gate`, `--previous results.json`.
 
-The scripts on this page are in [`examples/tutorials/cli`](gh:examples/tutorials/cli) and
-run in CI.
+The scripts on this page are in [`examples/tutorials/cli`](gh:examples/tutorials/cli).
