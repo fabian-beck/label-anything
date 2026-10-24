@@ -83,15 +83,21 @@ exit code 1
 
 ## HTTP server
 
-`label-anything serve` answers `POST /place` (the result, or HTTP 422 with
-`{"errors": [...]}`, also for malformed JSON) and `POST /validate` (the report; malformed
-JSON is a `parse` error in it) with a problem as the request body, and `GET /health`. Responses allow any origin (CORS), and `OPTIONS` answers the preflight of
-browser requests. It listens on 127.0.0.1:7077 by default (`--host`, `--port`); relative
-file paths in problems resolve against its working directory. Problems may read files
-(backgrounds, fonts) only when it listens on a loopback address, or with `--allow-files`:
-on another `--host`, anyone who can reach the server could otherwise read files of the
-machine. Requests are solved side by side, one per worker (`--workers`, default: the number
-of CPUs), so a long solve does not hold up the others.
+`label-anything serve` answers HTTP requests with a problem as the request body:
+
+| Request | Response |
+|---|---|
+| `POST /place` | the result, or HTTP 422 with `{"errors": [...]}` (also for malformed JSON) |
+| `POST /validate` | the report (malformed JSON is a `parse` error in it) |
+| `GET /health` | `{"name": "label-anything", "version": …}` |
+
+* It listens on 127.0.0.1:7077 (`--host`, `--port`) and allows any origin (CORS).
+* Problems may read files (backgrounds, fonts) only while it listens on a loopback address,
+  or with `--allow-files`: on another `--host`, anyone who can reach the server could
+  otherwise read files of the machine. Relative paths resolve against its working
+  directory.
+* Requests are solved side by side, one per worker (`--workers`, default: the number of
+  CPUs), so a long solve does not hold up the others.
 
 ```sh
 --8<-- "examples/tutorials/cli/serve.sh:serve"

@@ -5,7 +5,19 @@
 This site is built with [MkDocs](https://www.mkdocs.org/) and
 [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) from `docs/` and
 `mkdocs.yml`; code shown on its pages is included from `examples/tutorials/`, which CI
-runs.
+runs. It is written for the people who use Label Anything:
+
+* **One place per topic**, linked rather than repeated. Each language has one page; the
+  concepts pages explain the formats and the engine; the specification and the defaults
+  table hold the exact rules and constants.
+* **Tutorials show a task**: what you want, the tested code, its result and what to
+  change — not the mechanics behind it.
+* **Measurements belong to the benchmark page**, with their date; other pages state the
+  behaviour.
+* **Notes for those who work on the engine** — profiles, procedures, research, test
+  inventories — go next to what they are about (`bench/README.md`, a package's README,
+  `ts/packages/core/PORTING.md`, `docs/project/literature/`), and a decision goes into its
+  ADR.
 
 ```sh
 python3 -m venv .venv-docs && .venv-docs/bin/pip install -r docs/requirements.txt
