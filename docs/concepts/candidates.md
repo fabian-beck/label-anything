@@ -58,7 +58,7 @@ A candidate's cost is a sum of terms, each weighted in `weights`:
 | shape | `shape` (0.5) | wrapped lines, alternatives, truncation, shrinking, relaxed overlap |
 | edge | `edge` (0.2) | proximity to the label area's edge (1 at the edge, 0 at ≥ 1 em) |
 | ambiguity | `ambiguity` (1.0) | the label is closer to another item's shape than to its own |
-| contrast | `contrast` (0.5) | with raster backgrounds: how much the backdrop's luma varies under the label (4 × its variance, per em²): 1 per em² for a label half on black and half on white, 0 on any uniform backdrop |
+| contrast | `contrast` (0.5) | with raster backgrounds: how much the backdrop's luma varies under the label (4 × its variance, per em²): 1 per em² for a label half on black and half on white |
 | stability | `stability` (1.0) | displacement from the `warm_start` box: 1 per em up to 1 em, then 1/4 per em up to 5 em |
 | lookahead | `lookahead` (0.3), `starve` (2.0) | how many candidates of unplaced items the choice would take away |
 
@@ -103,10 +103,9 @@ rule.
 
 With `placement.fan: "auto"` (default), a crowd gets a column only if the search left some
 of its items unlabeled and the column places more labels; `"always"` gives every crowd of
-two or more items a column, `"off"` none. Columns work best at the crowded ends of line
-charts and in tight point clusters; in a crowd surrounded by other marks, the leaders would
-cross those marks, and no column forms. The `angles` leader style, whose leaders keep to
-their rays, gets no columns, nor do items that may not have leaders
+two or more items a column, `"off"` none. In a crowd surrounded by other marks, the
+leaders would cross those marks, and no column forms. The `angles` leader style, whose
+leaders keep to their rays, gets no columns, nor do items that may not have leaders
 ([ADR placement/columns](../adr/placement/columns.md)).
 
 How the solver picks one candidate per item: [the solver](solver.md).

@@ -97,8 +97,5 @@ changes only `ink`; the rest of the map keeps its defaults. The presets set:
   `illustration` preset charges an em² of covered picture like a leader.
 * **Ignore** what does not affect legibility: plot backgrounds, area fills under labels,
   faint grid lines.
-* Leaders are thin and may cross much that labels must not. By default they cross
-  obstacles at a small cost (0.2 per em) but never labels or other leaders, and keep
-  `leaders.clearance` (0.4 em) from other items' marks and leaders. A leader grazing a dot
-  seems to point at it, and two leaders closer than that read as a crossing
-  ([leaders](../tutorials/leaders.md)).
+* Leaders are thin and may cross much that labels must not: give them lower weights than
+  labels, as the defaults do ([leaders](../tutorials/leaders.md)).

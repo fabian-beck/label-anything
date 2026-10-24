@@ -17,8 +17,7 @@ errors at once, each as an issue:
 ```
 
 `pointer` is a JSON Pointer (RFC 6901) into the problem; `code` is stable and the same in
-every implementation (CI checks the validators against the JSON Schema and each other);
-`message` is for humans and may change.
+every implementation; `message` is for humans and may change.
 
 ## Validating
 
@@ -82,7 +81,6 @@ The CLI exits with code 2 for these; 1 is for problems that fail validation.
 
 ## Panics and other failures
 
-Malformed input never crashes the engine: the parsers, the raster decoders and the solver
-are fuzzed continuously. An internal error is a bug — please report it. It surfaces as
-`LA_ERROR` in C, `code()` `ERROR` in Java, an `Error` starting with
+Malformed input should never crash the engine: an internal error is a bug — please report
+it. It surfaces as `LA_ERROR` in C, `code()` `ERROR` in Java, an `Error` starting with
 `label-anything: internal error` in the WebAssembly package, and exit code 2 in the CLI.

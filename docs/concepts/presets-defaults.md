@@ -43,5 +43,4 @@ rectangles (`:background`) and put text into `text`, circles and small shapes in
 | Solver | 100 ms (Rust) / 250 ms (TypeScript) budget as a fixed iteration count, seed 0 |
 
 [The defaults table](../reference/defaults.md) lists every option with its default,
-validation rule and meaning. Both implementations generate their constants from it, so the
-documentation and the engines cannot disagree.
+validation rule and meaning; the engines generate their constants from it.

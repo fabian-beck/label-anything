@@ -92,8 +92,8 @@ The result (numbers rounded, `b` shortened):
 To draw a text label: for each line `i`, draw `text.lines[i]` at
 `(box.x + text.x_offset, box.y + text.baseline_offsets[i])` in the label's font at
 `text.font_size` (left-aligned on the baseline), and the leader as a polyline through
-`leader.points`. The `box` is the collision box; drawing it is optional, and a halo or a
-background behind the text usually looks better.
+`leader.points`. Drawing the `box` is optional; a halo or a background behind the text
+usually looks better.
 
 ## Statistics
 

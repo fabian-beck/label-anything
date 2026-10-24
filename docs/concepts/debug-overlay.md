@@ -1,9 +1,7 @@
 # The debug overlay
 
-The debug overlay is an SVG of what the engine saw and did: the item shapes, the
-obstacles, the label boxes and leaders, the omitted items with their reasons and, if
-written during the solve, a heatmap per obstacle class and every candidate. Look at it
-first when a label goes somewhere unexpected.
+The debug overlay is an SVG of what the engine saw and did. Look at it first when a label
+goes somewhere unexpected.
 
 ![Debug overlay of the classmap tutorial: one heatmap per class](../assets/figures/debug-overlay.svg)
 
@@ -23,8 +21,7 @@ labels.
 | Java | `.debugSvg(true)`, `result.debugSvg()` | `LabelAnything.renderSvg(problem, result)` |
 | C | `output.debug_svg` in the problem | `la_render_svg(problem, result, &svg)` |
 
-An overlay rendered afterwards has no heatmaps or candidates, which exist only during the
-solve, and does not show raster backgrounds.
+An overlay rendered afterwards also lacks the raster backgrounds.
 
 ## Layers
 
@@ -35,7 +32,7 @@ The overlay has one SVG group per layer, which a viewer or a script can toggle:
 | `background`, `label-area` | white background; the label area (canvas or region minus padding), dashed |
 | `heatmap-<class>` | the coverage grid of one obstacle class (during the solve only) |
 | `obstacles` | vector and SVG obstacle geometry in grey (title: its class) |
-| `candidates` | candidate boxes, green when statically feasible, red when not (during the solve only) |
+| `candidates` | candidate boxes (during the solve only) |
 | `items` | item marks in blue, area anchors lighter |
 | `leaders` | leaders, underlines and their start points |
 | `labels` | label boxes and their text (title: id, side, cost, rank) |

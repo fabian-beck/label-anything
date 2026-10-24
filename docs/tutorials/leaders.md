@@ -92,10 +92,8 @@ Each omitted placement says why
 | `min_angle_between` | 10° | distant leaders starting within 1 em of each other diverge at least this much |
 | `width` | 1 px | stroke width for the collision tests |
 
-`placement` sets where distant labels go: `min_distance` / `max_distance` (1.5 em /
-8 em), `distant_rings` (4) and `distant_directions` (16, for straight leaders),
-`free_space_seeds` (also try the centres of empty regions) and `k_distant` (candidates
-kept per item, 24).
+Where distant labels may go (`min_distance`, `max_distance`, rings and directions) is set
+in `placement` ([distant candidates](../concepts/candidates.md#candidate-models)).
 
 The rules for what leaders may cross are the defaults of `avoid.leader`
 ([avoidance](../concepts/avoidance.md)): other leaders, labels and other items' marks are
@@ -116,10 +114,8 @@ order that makes the leaders shortest, which also keeps straight leaders from cr
 
 `placement.boundary` also sets the `gap` between stacked labels and the `margin` from the
 canvas edge. The `illustration` preset combines boundary and distant labels with elbow
-leaders ([presets](../reference/presets.md)). `boundary` is also a step you can add to the
-[degradation ladder](../concepts/candidates.md#the-degradation-ladder) (`degrade`); the
-default ladder leaves it out, since a label that fits nowhere else would get a leader
-across the picture.
+leaders ([presets](../reference/presets.md)). `boundary` can also be a step of the
+[degradation ladder](../concepts/candidates.md#the-degradation-ladder).
 
 ## In Python
 

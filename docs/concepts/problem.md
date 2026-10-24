@@ -252,7 +252,3 @@ JavaScript reads them through `readFile`.
 * `candidates`: every generated candidate (box, model, cost, feasibility) in
   `result.candidates` (large).
 * `item_shape`: each item's resolved geometry in canvas pixels (`item_shape`).
-
-The other sections have pages of their own: [avoidance](avoidance.md),
-[candidates and the ladder](candidates.md), [priority](../tutorials/priority.md),
-[leaders](../tutorials/leaders.md), [the solver](solver.md).
