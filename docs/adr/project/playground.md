@@ -23,7 +23,9 @@ starts had to install a binding first.
   and the project's own module graph.
 - The home page's header is the logo, labeled live by the playground's TypeScript worker.
   It is static HTML first, whose boxes become the first solve's `warm_start`, so the live
-  drawing takes over without a jump; nothing moves until the reader does something.
+  drawing takes over without a jump. Then more things come, one at a time, so that the
+  reader sees it is live; once the reader does something (or the header is full), nothing
+  moves until they do.
 
 ## Consequences
 The `wasm` CI job type-checks, builds and browser-tests the playground: every scene solves
