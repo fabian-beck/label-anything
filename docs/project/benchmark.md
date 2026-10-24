@@ -38,8 +38,11 @@ when the conflicts are dropped in priority order, which puts tools that never om
 label and tools that do on one scale; **priority inversions** by a removal test; how
 evenly the labels spread over the data (the share of populated regions with a label);
 soft coverage per class, leader statistics, ambiguity, the gap between labels and their
-shapes, position ranks, text degradation; runtime, peak memory and how runtime grows with
-the problem size; and — for scenario 11 — displacement, flips and nesting between frames.
+shapes, position ranks, text degradation; **whose a label is** — by how much its own point
+is nearer than any other data point, labeled or not — the **data points labels cover** and
+how close **labels stand to each other** ([ADR 0056](../adr/0056-benchmark-measures-whose-a-label-is.md));
+runtime, peak memory and how runtime grows with the problem size; and — for scenario 11 —
+displacement, flips and nesting between frames.
 The full list is in [`bench/README.md`](gh:bench/README.md).
 
 ## What the results show
@@ -90,6 +93,18 @@ D3-Labeler's annealing hours).
   lose 40–65 % of theirs to conflicts in dense scenes, and the label layouts of ECharts and
   d3fc, which compare labels only, a fifth to half to the marks and obstacles they do not
   see.
+* **Whose label is it.** On the quick suite of 2026-10-24
+  ([ADR 0056](../adr/0056-benchmark-measures-whose-a-label-is.md)), outside the 300-airport
+  map 2.0 % of Label Anything's labels are *unclear* — another data point is no more than
+  0.2 em farther from the label than its own — against 5.5 % before
+  [ADR 0050](../adr/0050-stubs-for-labels-in-a-crowd.md)–[0055](../adr/0055-lines-centered-by-default.md)
+  and 9–20 % for the other tools, and none stands closer than 0.4 em to another label
+  (other tools: up to 43 %). On the airport map, among 2,917 unlabeled airports, every tool
+  leaves half or more of its labels unclear (Label Anything 144 of 227, 63 %; textalloc
+  66 %, ggrepel 68 %, vega-label 92 %). What remains is what
+  the engine's rule does not see yet: background points given as obstacles, and the dots of
+  less important items that the `map` preset lets labels cover — 33 labels stand beside the
+  dot of an item labeled elsewhere.
 * **A hub can lose its label to a bigger neighbour.** On the airport maps, a hub's label may
   cover the dots of smaller airports (`lower_items` in the `map` preset), which then get no
   label; where hubs crowd, the bigger one takes the next one's dot this way, for a small gain

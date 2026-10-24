@@ -12,7 +12,8 @@ def text_info(lab: LabelSpec, used: str = "original") -> dict | None:
     return {"lines": list(lay.lines), "used": lay.used if lay.used != "original" else used,
             "truncated": bool(lay.truncated),
             "baseline_offsets": [lab.padding + b for b in lay.baselines],
-            "line_widths": list(lay.line_widths), "x_offset": lab.padding, "font_size": lay.font_size,
+            "line_widths": list(lay.line_widths), "x_offset": lab.padding,
+            "x_offsets": lay.x_offsets(lab.padding), "align": lay.align, "font_size": lay.font_size,
             "font_family": "default", "font_weight": lay.font_weight, "scale": 1.0}
 
 

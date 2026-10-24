@@ -151,7 +151,7 @@ def test_priority_strict_inversion_prefix_and_ndcg():
 
 def test_removal_test_respects_keys_and_blocking():
     # "lo" is omitted but every adjacent position overlaps the higher-key label of "hi": no inversion
-    items = [item("hi", 100, 50, w=120, h=60, priority=2), item("lo", 100, 52, w=10, h=6, priority=1)]
+    items = [item("hi", 100, 50, w=120, h=60, priority=2), item("lo", 100, 60, w=10, h=6, priority=1)]
     prob = problem(items, width=200, height=200)
     res = result([placed("hi", 40, 20, w=120, h=60, side="internal", model="internal"), omitted("lo")])
     m = evaluate(prob, res)
@@ -187,13 +187,18 @@ def test_lower_items_marks_and_their_labels():
 
 
 def test_removal_test_keeps_the_label_margin():
-    # "lo" may only go right of its mark: [103, 45, 133, 55]; the margin is 0.2 em = 2.4 px
+    # "lo" may only go right of its mark: [103, 45, 133, 55]; the margin is 0.2 em = 2.4 px,
+    # the label gap twice that (defaults.spacing null)
     items = [item("hi", 170, 80, priority=2), item("lo", 100, 50, priority=1)]
     prob = problem(items, placement={"position_order": ["right"]})
     near = result([placed("hi", 134.5, 45), omitted("lo")])   # 1.5 px from the free box
     assert evaluate(prob, near)["priority"]["inversions"] == 0
-    far = result([placed("hi", 137, 45), omitted("lo")])      # 4 px away: room enough
+    close = result([placed("hi", 137, 45), omitted("lo")])    # 4 px: more than the margin, less than the gap
+    assert evaluate(prob, close)["priority"]["inversions"] == 0
+    far = result([placed("hi", 140, 45), omitted("lo")])      # 7 px away: room enough
     assert evaluate(prob, far)["priority"]["inversions"] == 1
+    prob["defaults"] = {"spacing": "0.2em"}
+    assert evaluate(prob, close)["priority"]["inversions"] == 1
     prob["defaults"] = {"margin": 0}
     assert evaluate(prob, near)["priority"]["inversions"] == 1
     # the marks of other items keep it at the margin too
@@ -202,6 +207,21 @@ def test_removal_test_keeps_the_label_margin():
     assert evaluate(prob, result([omitted("lo"), omitted("m")]))["priority"]["inversions"] == 1  # m itself
     m = evaluate(prob, result([omitted("lo"), placed("m", 141, 45, side="right")]))
     assert m["priority"]["inversions"] == 0                    # m's mark is 2.5 px from lo's box
+
+
+def test_removal_test_needs_the_own_mark_clearly_nearest():
+    # lo's only position [103, 45, 133, 55] is 1 px from its mark; x's mark 3 px away keeps the
+    # margin but is not farther than lo's own by the margin (spec §4.4, ADR 0054)
+    x = placed("x", 141, 45, side="right")
+    items = [item("lo", 100, 50, priority=2), item("x", 138, 50, priority=1)]
+    prob = problem(items, placement={"position_order": ["right"]})
+    assert evaluate(prob, result([omitted("lo"), x]))["priority"]["inversions"] == 0
+    prob["placement"]["own_nearest"] = False
+    assert evaluate(prob, result([omitted("lo"), x]))["priority"]["inversions"] == 1
+    # 4.5 px away: clearly nearer to its own
+    items[1]["anchor"]["x"] = 139.5
+    prob = problem(items, placement={"position_order": ["right"]})
+    assert evaluate(prob, result([omitted("lo"), placed("x", 142.5, 45, side="right")]))["priority"]["inversions"] == 1
 
 
 def test_removal_test_uses_only_the_items_candidates():

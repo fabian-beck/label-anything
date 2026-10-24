@@ -39,8 +39,9 @@ the Label Anything solvers (`rust`, `wasm`, `ts`):
 
 1. every problem and sequence is solved and the evaluator finds **0 hard violations**;
 2. **no metric regresses by more than 2 %** relative to `--previous` — placement rates, NDCG,
-   priority inversions, hard violations, crossings, ambiguity, gap, position rank, soft coverage
-   and the stability metrics, each in its own direction; a change away from 0 always counts;
+   priority inversions, hard violations, crossings, ambiguity, clarity, covered points, label
+   spacing, gap, position rank, soft coverage and the stability metrics, each in its own
+   direction; a change away from 0 always counts;
    runtimes are excluded (target 3 covers them). Without `--previous` the check is skipped;
 3. the **performance targets** of brief §5.8 are measured and met for every implementation in the
    run: 200 labels + 10k points (800×600) ≤ 15 / 30 / 60 ms, 2,000 labels + 100k points
@@ -162,6 +163,41 @@ deterministic solves (`--no-clock`, default budgets), before → after that chan
 The labels that are lost are those whose only positions needed a leader through a dense
 cluster of marks or across the picture.
 
+## Whose label is it
+
+A reader takes a label for the label of the point nearest to it, and a label about as near
+to another point could be either's. The evaluator measures this for every solver
+([ADR 0056](adr/0056-benchmark-measures-whose-a-label-is.md); `bench/README.md`,
+*association*; columns *unclear*, *points covered* and *labels close* of the report):
+
+* **Clarity** — by how much a label's own point is nearer than any other data point: the
+  marks of all point items, labeled or not, and the circles of the obstacle classes labels
+  do not ignore (the unlabeled points of a scatterplot or map). Below 0 a label is
+  *misattributed*, below 0.2 em *unclear*, below 0.5 em *weak*; points closer together
+  than the threshold need only the distance between them. A point hidden entirely under
+  the label does not compete; a labeled leader counts when another point comes within
+  0.2 em of its box.
+* **Points covered** — data points under a label other than their own, whatever the
+  avoidance settings, and those hidden entirely.
+* **Labels close** — labels nearer than 0.4 em to another label: neighbouring labels that
+  close read as one.
+
+Quick suite, the 9 problems every solver runs, 2026-10-24:
+
+| solver | placed | unclear | of which by background points | labels close |
+|---|---:|---:|---:|---:|
+| Label Anything | 631 | 24.1 % | 104 of 152 | 0 |
+| — main branch before ADR 0050 | 617 | 29.5 % | 110 of 182 | 22.0 % |
+| textalloc | 627 | 34.3 % | 94 of 215 | 14.8 % |
+| adjustText | 719 | 24.9 % | 75 of 179 | 37.4 % |
+| ggrepel | 666 | 35.7 % | 92 of 238 | 18.9 % |
+| vega-label | 554 | 40.4 % | 116 of 224 | 11.9 % |
+
+The 300-airport world map, with 2,917 unlabeled airports, holds 144 of the engine's 152
+unclear labels; on the other 8 problems the engine has 2.0 % unclear labels, the other tools
+9–20 %. What remains is what the engine's rule does not see: background points, and the
+marks of less important items that the `map` preset lets labels cover.
+
 ## Reading the report
 
 * **Summary** — one row per solver. Label Anything rows must show 0 hard violations; baselines
@@ -169,7 +205,9 @@ cluster of marks or across the picture.
   guaranteed to separate everything, d3fc and ECharts compare labels only, the naive baseline
   ignores collisions). *Usable* counts the labels left when conflicts are dropped in priority
   order — the fair number to compare across tools; *conflicts* are the hard violations
-  without the engine's own spacing rules (leader clearance and angles). *Peak MB* is the
+  without the engine's own spacing rules (leader clearance and angles). *Unclear*, *points
+  covered* and *labels close* say whose a label is, what it hides and how close labels
+  stand (see *Whose label is it*). *Peak MB* is the
   largest resident memory of a solver process, *runtime ∝ n^k* the slope of log runtime over
   log size on the stress scenario (full suite).
 * **Performance targets** — median engine time per target and implementation, with every run.

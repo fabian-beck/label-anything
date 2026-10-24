@@ -33,6 +33,18 @@ METRICS = [
     ("leader_crossings", "crossings", "{:d}", -1),
     ("leader_rate", "leaders", "{:.1%}", 0),
     ("ambiguity_rate", "ambig.", "{:.1%}", -1),
+    ("clarity_misattributed_rate", "misattributed", "{:.1%}", -1),
+    ("clarity_unclear_rate", "unclear", "{:.1%}", -1),
+    ("clarity_weak_rate", "weak", "{:.1%}", -1),
+    ("clarity_unclear_background", "unclear by bg. points", "{:d}", -1),
+    ("clarity_margin_p10_em", "margin p10 em", "{:.2f}", 0),
+    ("leadered_unclear_rate", "leadered unclear", "{:.1%}", -1),
+    ("points_covered_rate", "points covered", "{:.1%}", -1),
+    ("points_inside_labels", "points inside labels", "{:d}", -1),
+    ("labels_covering_points_rate", "labels covering points", "{:.1%}", -1),
+    ("labels_close_rate", "labels close", "{:.1%}", -1),
+    ("label_gap_p10_em", "label gap p10 em", "{:.2f}", 0),
+    ("stub_rate", "stubs", "{:.1%}", 0),
     ("priority_inversions", "inversions", "{:d}", -1),
     ("prefix_rate", "prefix", "{:.1%}", +1),
     ("ndcg_at_k", "NDCG@k", "{:.3f}", +1),
@@ -52,7 +64,8 @@ METRICS = [
     ("schema_errors", "schema err.", "{:d}", -1),
 ]
 TABLE_COLS = ["placed_rate", "usable_rate", "hard_violations", "hard_conflicts", "leader_crossings",
-              "leader_near_crossings", "leader_mark_touches", "ambiguity_rate", "priority_inversions", "ndcg_at_k",
+              "leader_near_crossings", "leader_mark_touches", "ambiguity_rate", "clarity_unclear_rate",
+              "points_covered_rate", "labels_close_rate", "priority_inversions", "ndcg_at_k",
               "adjacent_gap_abs_mean", "position_rank_mean", "region_coverage", "soft_coverage_mean"]
 SEQ_METRICS = [
     ("displacement_mean_px", "displacement px", "{:.2f}", -1),
@@ -434,7 +447,8 @@ def _summary_table(report: dict) -> list[str]:
     o = ["<div class='scroll'><table><tr><th class='l'>solver</th><th class='l'>kind</th><th>problems</th>"
          "<th>n/a</th><th>errors</th><th>placed (mean)</th><th>usable (mean)</th><th>hard viol. (sum)</th>"
          "<th>conflicts (sum)</th><th>problems with hard viol.</th>"
-         "<th>ambig. (mean)</th><th>inversions (sum)</th><th>engine ms (sum of medians)</th>"
+         "<th>ambig. (mean)</th><th>unclear (mean)</th><th>points covered (mean)</th><th>labels close (mean)</th>"
+         "<th>inversions (sum)</th><th>engine ms (sum of medians)</th>"
          "<th>wall ms (sum of medians)</th><th>peak MB (max)</th>"
          f"<th title='slope of log runtime over log items on {SCALING_SCENARIO}'>runtime ∝ n^k</th></tr>"]
     for s in report["solvers"]:
@@ -457,6 +471,9 @@ def _summary_table(report: dict) -> list[str]:
                  f"<td>{fmt(sum(conf) if conf else None, '{:d}')}</td>"
                  f"<td>{sum(1 for r in ok if r['summary'].get('hard_violations'))}</td>"
                  f"<td>{fmt(_mean(_numbers(ok, 'ambiguity_rate')), '{:.1%}')}</td>"
+                 f"<td>{fmt(_mean(_numbers(ok, 'clarity_unclear_rate')), '{:.1%}')}</td>"
+                 f"<td>{fmt(_mean(_numbers(ok, 'points_covered_rate')), '{:.1%}')}</td>"
+                 f"<td>{fmt(_mean(_numbers(ok, 'labels_close_rate')), '{:.1%}')}</td>"
                  f"<td>{fmt(sum(inv) if inv else None, '{:d}')}</td>"
                  f"<td>{fmt(eng, '{:,.1f}')}</td><td>{fmt(wall, '{:,.1f}')}</td>"
                  f"<td>{fmt(max(mem) if mem else None, '{:,.0f}')}</td>"
