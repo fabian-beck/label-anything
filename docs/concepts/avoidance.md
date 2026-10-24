@@ -76,14 +76,13 @@ mark is never mislabeled: its item then goes without a label (`omitted_by_priori
 
 The effective maps are merged **key by key**: the defaults above, then the
 [preset](presets-defaults.md)'s keys, then yours. `{"avoid": {"label": {"ink": 2}}}`
-changes only `ink`; the rest of the map keeps its defaults. The presets set, for
-example:
+changes only `ink`; the rest of the map keeps its defaults. The presets set:
 
 | Preset | `avoid.label` | `avoid.leader` |
 |---|---|---|
 | `auto` | points 0.3, lines 1.0, ink 0.1 | points 0.2, lines 0.5 |
 | `scatter` | points 0.3, lines 1.0, ink 0.1, axes hard | points 0.2, lines 0.5, axes 1.0 |
-| `map` | lines 0.8, ink 0.1, areas ignore, text hard | lines 0.3, areas ignore |
+| `map` | lines 0.8, ink 0.1, areas ignore, text hard, lower_items 10 | lines 0.3, areas ignore, lower_items 2.5 |
 | `graph` | lines 1.0, ink 0.1 | lines 0.5 |
 | `illustration` | ink 1.0 ([ADR placement/costs](../adr/placement/costs.md)) | ink 0.025 |
 

@@ -9,8 +9,8 @@ distant, smaller — before the label is given up.
 ## Candidate models
 
 `placement.models` lists the models to use (default `adjacent`, `slider`, `distant`; the
-`auto` preset starts without `distant` and adds it when more than 30 % of the items have
-no free adjacent position).
+`auto` preset adds `distant` only where it is crowded,
+[presets](presets-defaults.md#the-presets)).
 
 **`adjacent`** — 8 fixed positions around the mark: the label's corner or side midpoint
 touches the mark inflated by `placement.offset` (1 px), in the direction of the position.
@@ -98,43 +98,16 @@ keeps every label as specified or omits it.
 Where anchors crowd — the ends of a bundle of lines, a cluster of points — there is
 seldom room for each label next to its mark. After the search, the engine therefore
 stacks the labels of a crowd in a **column** beside it, in the crowd's order, each with
-its own leader fanning out of the crowd (`model: "fan"` in the result):
+its own leader fanning out of the crowd (`model: "fan"` in the result). The column stands
+on a side the items' `position_order` allows, and its leaders follow the leader style and
+keep every hard rule.
 
-* A crowd is the items whose anchors lie within about a label height vertically and an
-  em horizontally of each other (up to 24 items). The column stands on a side the items'
-  `position_order` allows, far enough out that no leader is steeper than 45°, and its
-  labels are stacked around the anchors' heights like boundary labels.
-* With `placement.fan: "auto"` (default), only crowds with items the search left without
-  a label get a column, and only when the column places more labels: labels in its way
-  move into it, labels that cannot stay where they are. `"always"` gives every crowd of
-  two or more items a column; `"off"` none. Columns keep to the label budgets
-  (`priority.budget`): the least important items stay without a label first.
-* Fan leaders follow the leader style (straight, `orthogonal` or `elbow`) and keep every
-  hard rule, except that they may pass close to the marks of their own crowd (they must
-  not cross them); they are at most `leaders.max_length` long. The `angles` style, whose
-  leaders keep to the allowed rays, gets no columns, nor do items that may not have
-  leaders at all (no `distant` or `boundary` in their models or the ladder).
+With `placement.fan: "auto"` (default), a crowd gets a column only when the search left
+some of its items without a label and the column places more labels; `"always"` gives
+every crowd of two or more items a column, `"off"` none. Columns work best at the crowded
+ends of line charts and in tight point clusters; in a crowd surrounded by other marks, the
+leaders would cross those marks and no column forms. The `angles` leader style, whose
+leaders keep to their rays, gets no columns, nor do items that may not have leaders
+([ADR placement/columns](../adr/placement/columns.md)).
 
-Columns work best at the crowded ends of line charts and in tight point clusters; in a
-two-dimensional crowd surrounded by other marks, the leaders would cross those marks and
-no column forms (ADR placement/columns). (A group's label is different: one label with a leader to
-each member of the group.)
-
-## How the solver chooses
-
-The greedy pass processes items in priority order, band by band (items of equal priority
-key form a band, in which the most constrained item goes first) and takes each item's
-cheapest free candidate, counting what it would take away from items still waiting; after
-a band, its unplaced items run the ladder. Local search then relocates, swaps and
-re-inserts labels, accepting changes that keep every hard constraint and never make the
-priority outcome worse. An exact branch-and-bound search runs for small problems with a
-large budget. Crowds with items left without a label then get [fan labels](#fan-labels).
-With `strict` omission, a priority repair then gives every omitted item a
-position that only lower-priority labels hold (those labels are tried again), so no
-label is missing in favour of a less important one; an item kept out by one more
-important label may also move that label to another of its positions, when at most one
-less important label gives way ([ADR priority/repair](../adr/priority/repair.md)). Finally, a verification pass
-re-checks every hard constraint exactly. The [explainer](../try.md#how-it-works-step-by-step) steps through
-these phases on a real solve.
-[The solver](solver.md) describes budgets and determinism; the
-[specification](../reference/spec.md#10-solver) the algorithms.
+How the solver picks one candidate per item: [the solver](solver.md).

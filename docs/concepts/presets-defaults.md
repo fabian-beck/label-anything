@@ -13,14 +13,15 @@ by key. So `{"preset": "map", "avoid": {"label": {"roads": "hard"}}}` keeps ever
 
 | Preset | For | What it sets |
 |---|---|---|
-| `auto` (default) | anything; zero configuration | adjacent and slider positions, distant labels with leaders only when more than 30 % of the items have no free adjacent position; unlabeled points cost 0.3, lines 1.0, ink 0.1 per em² |
-| `scatter` | scatter plots: point marks over dense unlabeled points, trend lines, axes | distant labels with straight leaders; points 0.3, lines 1.0, ink 0.1 per em², `axes` hard |
-| `map` | point features over map backgrounds | cartographic position order (top-right first), adjacent and slider only, map text hard, lines (roads, rivers) soft, filled areas ignored |
+| `auto` (default) | anything; zero configuration | adjacent and slider positions, and distant labels with leaders as well when more than 30 % of the items have no free position (unless the problem sets `placement.models`); unlabeled points, lines and ink soft |
+| `scatter` | scatter plots: point marks over dense unlabeled points, trend lines, axes | distant labels with straight leaders; unlabeled points, lines and ink soft, `axes` hard |
+| `map` | point features over map backgrounds | cartographic position order (top-right first), adjacent and slider only; map text hard, lines (roads, rivers) soft, filled areas ignored; important labels may cover the dots of less important places |
 | `graph` | node-link diagrams | internal labels first (for large nodes), leaders at multiples of 45°, edges (`lines`) soft |
-| `illustration` | technical and anatomical illustrations | labels in the left and right margins (boundary) or distant, elbow leaders into the label's side, ink costly (1.0 per em², as much as a leader) |
+| `illustration` | technical and anatomical illustrations | labels in the left and right margins (boundary) or distant, elbow leaders into the label's side, covering the picture costly |
 | `none` | full control | nothing beyond the defaults |
 
-Each preset also has **SVG class rules** used when an SVG source has no `classes` of its
+The weights each preset gives the obstacle classes are on the
+[avoidance](avoidance.md#merging) page. Each preset also has **SVG class rules** used when an SVG source has no `classes` of its
 own; e.g. `scatter` and `auto` ignore background rectangles (`:background`), make `text`
 the class `text`, circles and small shapes `points`, paths and lines `lines`, and
 everything else `ink`. The complete presets are on the [presets page](../reference/presets.md).
@@ -44,11 +45,3 @@ everything else `ink`. The complete presets are on the [presets page](../referen
 validation rule and meaning. It is the source of the constants of both implementations:
 the Rust and TypeScript code is generated from it, so documentation and engines cannot
 disagree.
-
-## The `auto` preset's adaptive rule
-
-`auto` starts with adjacent and slider candidates only. If more than 30 % of the items
-have no statically free adjacent or slider candidate (`auto.crowded_fraction`), it
-switches to `[adjacent, slider, distant]` — unless the problem sets `placement.models`
-itself. Independent of that, the ladder's `distant` step still gives a leader to an
-individual label that fits nowhere else.

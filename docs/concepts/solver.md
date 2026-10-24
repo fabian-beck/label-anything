@@ -1,4 +1,4 @@
-# Time budget, determinism and cancellation
+# The solver
 
 ```json
 {
@@ -6,12 +6,34 @@
 }
 ```
 
-## Strategies
+## How it chooses
 
-* `greedy` — the priority-ordered greedy pass with the degradation ladder only.
+Given the [candidates](candidates.md) of every item, the solver picks one per item, or
+none, in phases:
+
+1. **Greedy pass.** Items are placed in priority order, band by band (items of equal
+   priority form a band, in which the most constrained item goes first). Each takes its
+   cheapest free candidate, counting what that would take away from the items still
+   waiting. After a band, its items without a label run the
+   [degradation ladder](candidates.md#the-degradation-ladder).
+2. **Local search** relocates, swaps and re-inserts labels, accepting only changes that
+   keep every hard constraint and never make the priority outcome worse.
+3. **Exact search**, for small problems with a large budget: a branch and bound that can
+   prove the best placement.
+4. **Columns and repairs.** Crowds with items left without a label get
+   [fan labels](candidates.md#fan-labels). With `strict` omission, a priority repair gives
+   every omitted item a position that only less important labels hold, so no label is
+   missing in favour of a less important one
+   ([ADR priority/repair](../adr/priority/repair.md)).
+5. **Verification** re-checks every hard constraint exactly.
+
+The [explainer](../try.md#how-it-works-step-by-step) steps through these phases on a real
+solve; the [specification](../reference/spec.md#10-solver) defines them. `solver.strategy`
+sets how far a solve goes:
+
+* `greedy` — the greedy pass with the degradation ladder only.
 * `local` — greedy, then local search (relocate, swap, insert by ejection chains, switch
-  label variants) with a simulated-annealing acceptance rule that never breaks a hard
-  constraint and never makes the priority outcome worse.
+  label variants) with a simulated-annealing acceptance rule.
 * `exact` — local search, then a deterministic branch and bound over the 24 cheapest
   candidates per item, which proves optima on small and medium problems and is a bounded
   improvement step on large ones ([ADR solver/search](../adr/solver/search.md)).

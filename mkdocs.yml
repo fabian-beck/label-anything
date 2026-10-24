@@ -123,7 +123,7 @@ nav:
       - Avoidance classes and policy: concepts/avoidance.md
       - Candidates and the degradation ladder: concepts/candidates.md
       - Presets and defaults: concepts/presets-defaults.md
-      - Time budget, determinism, cancellation: concepts/solver.md
+      - The solver: concepts/solver.md
       - The debug overlay: concepts/debug-overlay.md
       - Errors and validation: concepts/errors.md
   - Reference:

@@ -14,7 +14,7 @@ report = validate(problem)     { valid, errors[], warnings[] }
 | [Avoidance classes and policy](avoidance.md) | obstacle classes; hard, soft and ignore; the four `avoid` maps |
 | [Candidates and the degradation ladder](candidates.md) | candidate models, the cost model, what happens when nothing fits |
 | [Presets and defaults](presets-defaults.md) | how options merge; what each preset does |
-| [Time budget, determinism and cancellation](solver.md) | strategies, the iteration budget, reproducibility |
+| [The solver](solver.md) | how it chooses, strategies, the iteration budget, reproducibility, cancellation |
 | [The debug overlay](debug-overlay.md) | seeing what the engine saw |
 | [Errors and validation](errors.md) | issues, codes, where errors surface per binding |
 
@@ -31,7 +31,7 @@ Every implementation runs the same steps:
    ([candidates](candidates.md)).
 6. **Choose**: a greedy pass in priority order with the degradation ladder, local search,
    and an exact search for small problems; then columns for crowds and repairs
-   ([how the solver chooses](candidates.md#how-the-solver-chooses), [solver](solver.md)).
+   ([the solver](solver.md)).
 7. **Verify** every hard constraint independently, and **report** the placements, the
    explanations and the statistics ([result](result.md)).
 
