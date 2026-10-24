@@ -23,9 +23,10 @@ like a different kind of label.
   the label at the middle of its side (the twin of a `left` or `right` candidate is
   centered on the mark's height), above or below it within the middle half of its side.
   Diagonal positions get none.
-- **Rules**: a stub keeps `leaders.clearance` (0.4 em) from other marks like every leader,
-  other labels keep their spacing from it, and its label follows the rules of an adjacent
-  label, where the own-mark rule allows ties: the stub says whose the label is.
+- **Rules**: a stub keeps `leaders.clearance` (0.4 em) from other marks like every leader
+  (ADR placement/leaders), other labels keep their spacing from it, and its label follows
+  the rules of an adjacent label, where the own-mark rule allows ties: the stub says whose
+  the label is.
 - **Costs**: a stub costs `w_leader_length · len / em` (term `stub`, about 0.1) rather than
   the fixed leader cost, for which the pruning would drop it. A crowded candidate without a
   stub costs `w_leader` more (term `crowd`), so a stub, a clear position or a leader of

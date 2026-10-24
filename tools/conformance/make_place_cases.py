@@ -417,13 +417,13 @@ CASES["fan-max-labels"] = case(
      "priority": {"budget": {"max_labels": 4}},
      "items": [pt(n.lower(), 150, 88 + 3 * k, n)
                for k, n in enumerate(["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"])]},
-    {"placed": 4, "unplaced_ids": ["epsilon", "zeta"],
-     "model": {k: "fan" for k in ("alpha", "beta", "gamma", "delta")}},
-    "The ends of `fan-line-ends`, 3 px apart, with at most 4 labels: the search labels none of "
-    "them (beside the ends a label would come closer to other ends than the label margin, and "
-    "no leader leaves the crowd with its clearance); the column, which keeps to the budget, "
-    "gives labels to the four most important ends (alpha to delta, in input order) and leaves "
-    "the others out.")
+    {"placed": 4, "unplaced_ids": ["delta", "zeta"],
+     "model": {k: "fan" for k in ("alpha", "beta", "gamma", "epsilon")}},
+    "The ends of `fan-line-ends`, 3 px apart, with at most 4 labels. Beside the ends a label "
+    "would come closer to other ends than the label margin; the search labels alpha and "
+    "epsilon with leaders, which leave the crowd beside the marks touching their own (spec "
+    "§7). The column, which keeps to the budget and removes no label without placing it again, "
+    "takes them, beta and gamma, and leaves delta and zeta out (their keys are all equal).")
 
 CASES["fan-full-size"] = case(
     "labels the search shrank take their full size in a fan column",
@@ -474,6 +474,7 @@ CASES["font-class-shrink-floor"] = case(
 # its mark (Alpha's only position) the label would be 0.5 px from Beta's mark but 1 px from
 # its own.
 NEAREST = {"canvas": {"width": 200, "height": 120}, "degrade": ["omit"],
+           "placement": {"models": ["adjacent"]},
            "items": [pt("a", 100, 60, "Alpha", priority=2,
                         placement={"models": ["adjacent"], "position_order": ["top"]}),
                      pt("b", 103.5, 59.5, "Beta", priority=1,
@@ -485,7 +486,7 @@ CASES["own-nearest"] = case(
      "own_nearest": True})
 CASES["own-nearest-off"] = case(
     "without own_nearest a label may come closer to another item's mark than to its own",
-    {**NEAREST, "placement": {"own_nearest": False}},
+    {**NEAREST, "placement": {**NEAREST["placement"], "own_nearest": False}},
     {"placed_ids": ["a"], "anchor_side": {"a": "top"}})
 
 # Beta's mark lies 5 px right of Alpha's (1 px between them). Above its mark, Alpha's label

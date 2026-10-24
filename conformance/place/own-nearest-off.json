@@ -9,6 +9,12 @@
     "degrade": [
       "omit"
     ],
+    "placement": {
+      "models": [
+        "adjacent"
+      ],
+      "own_nearest": false
+    },
     "items": [
       {
         "id": "a",
@@ -52,10 +58,7 @@
           ]
         }
       }
-    ],
-    "placement": {
-      "own_nearest": false
-    }
+    ]
   },
   "expect": {
     "hard_violations": 0,

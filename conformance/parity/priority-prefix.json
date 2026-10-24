@@ -52,16 +52,83 @@
       },
       {
         "id": "t1",
-        "placed": false,
-        "reason": "no_feasible_candidate",
-        "blocking": [
-          "items"
+        "placed": true,
+        "box": {
+          "x": 212.22769379584946,
+          "y": 114.81259005100733,
+          "w": 62.591999999999985,
+          "h": 15.324000000000012
+        },
+        "anchor": [
+          204.0,
+          150.0
         ],
-        "blocked_by": [],
+        "anchor_side": "distant",
+        "model": "distant",
+        "text": {
+          "lines": [
+            "Top item 1"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.643999999999998
+          ],
+          "line_widths": [
+            58.992
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              205.3393920132778,
+              146.76642163621048
+            ],
+            [
+              212.22769379584946,
+              130.13659005100735
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            212.22769379584946,
+            130.13659005100735
+          ]
+        },
+        "cost": 2.1028184389498152,
+        "degrade_steps": [],
         "priority": {
           "tier": 0,
           "score": 99.0,
           "rank": 1
+        }
+      },
+      {
+        "id": "t2",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items",
+          "labels",
+          "leaders"
+        ],
+        "blocked_by": [
+          "t0",
+          "t1"
+        ],
+        "priority": {
+          "tier": 0,
+          "score": 98.0,
+          "rank": 2
         },
         "degrade_steps": [
           "alternatives",
@@ -72,20 +139,6 @@
           "soft_overlap",
           "omit"
         ]
-      },
-      {
-        "id": "t2",
-        "placed": false,
-        "reason": "omitted_by_priority",
-        "blocking": [
-          "items"
-        ],
-        "blocked_by": [],
-        "priority": {
-          "tier": 0,
-          "score": 98.0,
-          "rank": 2
-        }
       },
       {
         "id": "t3",
@@ -106,9 +159,12 @@
         "placed": false,
         "reason": "omitted_by_priority",
         "blocking": [
-          "items"
+          "items",
+          "labels"
         ],
-        "blocked_by": [],
+        "blocked_by": [
+          "t1"
+        ],
         "priority": {
           "tier": 0,
           "score": 96.0,
@@ -327,9 +383,9 @@
       }
     ],
     "stats": {
-      "placed": 1,
+      "placed": 2,
       "total": 20,
-      "placed_weighted": 0.14204003963365733,
+      "placed_weighted": 0.23165732683700077,
       "required_placed": true,
       "hard_violations": 0,
       "leader_crossings": 0,
@@ -338,7 +394,7 @@
       "iterations": 8000,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 484,
+      "candidates": 440,
       "omission_order": [
         "t19",
         "t18",
@@ -357,11 +413,10 @@
         "t5",
         "t4",
         "t3",
-        "t2",
-        "t1"
+        "t2"
       ],
       "priority_inversions": 0,
-      "total_cost": 0.6880199888601365,
+      "total_cost": 2.790838427809952,
       "degraded": {},
       "grid": {
         "cell": 3.0,

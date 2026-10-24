@@ -90,6 +90,18 @@ def test_leader_crossing_and_leader_through_label():
     assert m["leaders"]["rate"] == pytest.approx(2 / 3)
 
 
+def test_leader_may_start_beside_a_mark_touching_its_own():
+    # B's mark overlaps the box of A's: A's leader starts within the clearance of B, which no
+    # leader could keep, and must only not cross it; C touches nothing of A's and keeps its
+    # clearance (spec §7)
+    prob = problem([item("A", 50, 50), item("B", 52.7, 50), item("C", 40, 36)])
+    la = {"points": [[47.5, 49.0], [20, 20]], "style": "straight", "port": [20, 20]}
+    res = result([placed("A", 5, 10, side="distant", model="distant", leader=la)])
+    m = evaluate(prob, res)
+    assert m["hard"]["leader_item"] == 1
+    assert m["hard"]["examples"]["leader_item"] == [["A", "C"]]
+
+
 def test_hard_vector_class_and_soft_coverage():
     prob = problem([item("A", 50, 50, w=20, h=20), item("B", 150, 50, w=20, h=20)],
                    obstacles={"vector": [

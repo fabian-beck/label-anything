@@ -35,9 +35,9 @@ hide:
 </div>
 
 <figure markdown>
-[![The world's economies as a bubble chart, 149 of its 195 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
+[![The world's economies as a bubble chart, 147 of its 195 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
 <figcaption>The world's economies: each country a bubble sized by its GDP (Natural Earth,
-2019). Label Anything labels 149 of 195 in a fraction of a second.</figcaption>
+2019). Label Anything labels 147 of 195 in a fraction of a second.</figcaption>
 </figure>
 
 In this chart:
@@ -53,9 +53,9 @@ In this chart:
 * **Leaders where it is crowded.** France and the United Kingdom overlap Germany's bubble,
   so their labels sit on leaders that do not cross.
 * **Importance decides.** Larger economies are labeled first, the eight largest in larger
-  bold type. Of the 46 countries left out, 43 have no room beside the larger economies'
-  labels, and the result names the labels in the way; Austria, Norway and Hong Kong lie so
-  close among others that no place beside them would be clearly theirs.
+  bold type. Of the 48 countries left out, 46 have no room beside the larger economies'
+  labels, and the result names the labels in the way; Austria and Hong Kong lie so close
+  among others that no place beside them would be clearly theirs.
 * **Full names.** Every label is the country's full name, a long one on two centered lines
   (the United States of America); a name that does not fit is left out rather than
   shortened to a code.
@@ -147,7 +147,7 @@ to its part.</figcaption>
 
 <figure markdown>
 [![The module graph of the library's TypeScript packages, labeled](assets/figures/modules.svg)](assets/figures/modules.svg)
-<figcaption markdown>**A diagram.** This library's own TypeScript modules: 112 nodes, 414
+<figcaption markdown>**A diagram.** This library's own TypeScript modules: 112 nodes, 416
 imports. The most imported are labeled first, in bold; labels may cross edges at a cost,
 never nodes, and a label that would stand as near another node as its own goes out on a
 leader. All 112 placed.</figcaption>

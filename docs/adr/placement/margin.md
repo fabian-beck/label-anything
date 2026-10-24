@@ -39,8 +39,8 @@ labels read as one.
 ## Consequences
 On the six scenes, labels sit about 0.1 em from their own mark and at most 0.3 % of them
 are ambiguous (2–12 % before). On the economies chart no label covers another bubble or
-stands about as near another as its own; Austria, Norway and Hong Kong have no clear place
-and stay unlabeled. Space costs labels where it is short: over 49 sample, tutorial, home
+stands about as near another as its own; Austria and Hong Kong have no clear place and
+stay unlabeled. Space costs labels where it is short: over 49 sample, tutorial, home
 page and playground problems, the spacing and the clear margin place 1,380 labels instead
 of 1,427, more of them on leaders, and the local search meets more conflicts (the 62
 line-end labels of the life-expectancy chart solve in 65 ms instead of 41).

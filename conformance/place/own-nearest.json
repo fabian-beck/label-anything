@@ -9,6 +9,11 @@
     "degrade": [
       "omit"
     ],
+    "placement": {
+      "models": [
+        "adjacent"
+      ]
+    },
     "items": [
       {
         "id": "a",

@@ -354,15 +354,18 @@ export class Evaluator {
       if (k < nMain && segOverlapsRectXY(a.x, a.y, b.x, b.y, ox0, oy0, ox1, oy1)) acc.violate(BLOCK_LABELS, false, 0);
     }
     // other items: clearance (not from the group's members, and not from a mark that
-    // covers the leader's anchor, or a column leader's start: no leader avoids it); the
-    // leader of a fan or boundary label must only not cross a mark closer than the
-    // clearance to its start (it leaves a crowd of touching marks, in the order of its
-    // column)
+    // covers the leader's anchor, or a column leader's start: no leader avoids it). A
+    // leader must only not cross a mark closer than the clearance to its start when it
+    // is a fan or boundary label's (it leaves a crowd of touching marks, in the order of
+    // its column) or when that mark touches the box of its own mark (it leaves a spot of
+    // touching marks, which no leader could keep the clearance from)
     const clearance = item.len.clearance;
     const buf = this.buf;
     obs.itemIndex.query(l.bbox().inflate(clearance), buf);
     const lowerRule = !dy.leaderLower.equals(dy.leaderItems);
-    const anchor = l.member !== null ? model.items[l.member]!.anchor : item.anchor;
+    const own = l.member !== null ? model.items[l.member]! : item;
+    const anchor = own.anchor;
+    const ownBox = own.shape.bbox();
     const start = l.pts[0]!;
     for (let q = 0; q < buf.len; q++) {
       const j = buf.get(q);
@@ -378,7 +381,8 @@ export class Evaluator {
         dmin = minf(dmin, sj.distSegmentXY(a.x, a.y, b.x, b.y));
       }
       if (li.kind === AvoidKind.Hard) {
-        const lim = column && sj.signedDistance(start) < clearance ? EPS : clearance - EPS;
+        const crossOnly = sj.signedDistance(start) < clearance && (column || sj.distRect(ownBox) <= EPS);
+        const lim = crossOnly ? EPS : clearance - EPS;
         if (dmin < lim) acc.violate(BLOCK_ITEMS, false, 0);
       } else if (dmin < clearance) {
         const f = clearance > 0 ? 1 - dmin / clearance : 1;

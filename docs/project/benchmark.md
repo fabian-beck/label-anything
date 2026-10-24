@@ -76,7 +76,7 @@ parentheses where that is more ("n/a": the tool cannot run the problem; commit 2
   TypeScript implementations, so all its labels are usable. In dense scenes, adjustText and
   D3-Labeler lose 40–65 % of their labels to conflicts as drawn; ECharts and d3fc, which
   compare labels only with each other, lose a fifth to a half.
-* **Clear labels**: on the quick suite (2026-10-24), outside the 300-airport map, 2.0 % of
+* **Clear labels**: on the quick suite (2026-10-24), outside the 300-airport map, 1.5 % of
   its labels are *unclear* — another data point is no more than 0.2 em farther from the
   label than its own — against 9–20 % for the other tools, and none stands closer than
   0.4 em to another label (other tools: up to 43 %).
@@ -86,24 +86,24 @@ parentheses where that is more ("n/a": the tool cannot run the problem; commit 2
 
 **Where it falls short:**
 
-* **Dense data loses labels.** Of 1,000 airports on the world map, about 520 get a label;
-  of 2,000 random points, 994. The space between labels
+* **Dense data loses labels.** Of 1,000 airports on the world map, about 580 get a label;
+  of 2,000 random points, 1,003. The space between labels
   ([ADR placement/margin](../adr/placement/margin.md)) costs a few percent of the labels in
   typical scenes. Where hubs crowd, a big airport's label may cover a smaller hub's dot,
   which then stays unlabeled.
 * **Unlabeled points still compete.** Among the 2,917 unlabeled airports of the 300-airport
-  map, every tool leaves half or more of its labels unclear (Label Anything 63 %, textalloc
+  map, every tool leaves half or more of its labels unclear (Label Anything 62 %, textalloc
   66 %, ggrepel 68 %, vega-label 92 %): the rule that keeps a label clearly nearer its own
   point sees only the marks of items, not background points given as obstacles, nor the
   dots of less important items that the `map` preset lets labels cover.
-* **More labels cover more.** Label Anything covers more of what it may cover — 2.1
-  background points per label on the airport map, textalloc 1.7. Raise
+* **More labels cover more.** Label Anything covers more of what it may cover — 1.5
+  background points per label on the airport map, textalloc 1.2. Raise
   `avoid.label.points` where hidden data points matter more.
-* **Crowds need leaders.** 14 of the 32 Gapminder labels and 58 of 149 in the Cora network
-  sit on leaders, up to 8–11 em long. At the crowded ends of the life-expectancy chart, 35
-  of 62 lines get a label, in a column.
+* **Crowds need leaders.** 12 of the 30 Gapminder labels and 31 of 150 in the Cora network
+  sit on leaders, up to 8 em long. At the crowded ends of the life-expectancy chart, 41 of
+  62 lines get a label, in a column.
 * **Moving labels jump sides.** Re-solved frame by frame from the previous result, labels
-  move 2.5–3.5 px per frame, nearly all of it from the 5 % that switch to another side when
+  move 2–4 px per frame, nearly all of it from the 7–15 % that switch to another side when
   a neighbour takes their place. Other tools move as much or more, or keep fewer labels.
 * **Speed misses its targets for large problems.** Hundreds of labels take milliseconds;
   2,000 labels over 100,000 points take about 300 ms natively on one core (2.3–2.6 times

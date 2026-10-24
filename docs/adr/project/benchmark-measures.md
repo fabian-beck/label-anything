@@ -36,10 +36,10 @@ The thresholds are the engine's defaults: every labeler is judged by the picture
 sees, not by its own settings.
 
 ## Consequences
-On the quick suite (2026-10-24, the 9 problems every solver runs), 24.1 % of Label
+On the quick suite (2026-10-24, the 9 problems every solver runs), 23.4 % of Label
 Anything's labels are unclear (29.5 % before the label decisions), those of the other tools
 25–45 %, and none stands nearer than 0.4 em to another label (the other tools up to 54 %).
-The 300-airport map holds 144 of the engine's 152 unclear labels, among 2,917 unlabeled
-airports that its own-mark rule does not see; on the other 8 problems it has 2.0 %. The
+The 300-airport map holds 142 of the engine's 148 unclear labels, among 2,917 unlabeled
+airports that its own-mark rule does not see; on the other 8 problems it has 1.5 %. The
 measures add at most 0.1 s to the evaluation of a problem. Earlier results have no values
 for them, so the release gate compares them from the next release on.

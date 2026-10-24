@@ -8,6 +8,11 @@
     "degrade": [
       "omit"
     ],
+    "placement": {
+      "models": [
+        "adjacent"
+      ]
+    },
     "items": [
       {
         "id": "a",
@@ -61,7 +66,6 @@
         "placed": false,
         "reason": "no_feasible_candidate",
         "blocking": [
-          "canvas_edge",
           "items"
         ],
         "blocked_by": [],
@@ -133,7 +137,7 @@
       "iterations": 800,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 14,
+      "candidates": 2,
       "omission_order": [
         "a"
       ],

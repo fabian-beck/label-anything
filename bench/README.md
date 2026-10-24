@@ -351,20 +351,20 @@ The brief sets the targets for a 2023 laptop; the gate checks them as measured, 
 machine runs the benchmark.
 
 Where the time of the 2,000-label problem goes (native engine, instruction counts of one
-solve): two thirds in the greedy pass. 1,509 of the 2,000 labels find no room at level 0
-and run the degradation ladder; 1,128 of them are omitted in the end. Their wrapped and
-shrunk variants get about a hundred candidate boxes each, a million in all, each tested
-against the other items' marks and the placed labels: 57 % of the greedy pass. The
-on-demand distant candidates at level 0 take 18 %, explaining the omitted labels (`reason`,
-`blocked_by`) 13 %; preparing the 100k obstacle points takes 13 % of the solve, building
-the model and the result about 10 %. No function takes more than 5 %. What would help is
-less work per omitted label — fewer ladder variants, no distant candidates for shrunk ones
-— and each such change places fewer labels. The label margin (ADR placement/margin) costs
-about 10 % here: without it (`defaults.margin: 0`, `placement.offset: 2`) the problem places
-972 labels instead of 872. The TypeScript engine spends another 11 % in garbage collection:
-a solve allocates about 355 MB of short-lived candidate objects, and the ladder's
-candidates stay alive for the explanations; storing candidates as arrays of numbers
-instead of objects would remove most of it.
+solve): seven tenths in the greedy pass. 1,309 of the 2,000 labels find no room at level 0
+and run the degradation ladder; 997 of them are omitted in the end. Their wrapped and
+shrunk variants get candidate boxes of their own, each tested against the other items'
+marks and the placed labels: 54 % of the greedy pass. The on-demand distant candidates at
+level 0 take 21 %, explaining the omitted labels (`reason`, `blocked_by`) 9 %; preparing
+the 100k obstacle points takes 13 % of the solve, building the model and the result about
+6 %. No function takes more than 6 %. What would help is less work per omitted label —
+fewer ladder variants, no distant candidates for shrunk ones — and each such change places
+fewer labels. The label margin and spacing (ADR placement/margin) cost about a quarter of
+the labels here: without them (`defaults.margin: 0`, `placement.offset: 2`) the problem
+places 1,322 labels instead of 1,003. The TypeScript engine spends another 11 % in garbage
+collection: a solve allocates about 355 MB of short-lived candidate objects, and the
+ladder's candidates stay alive for the explanations; storing candidates as arrays of
+numbers instead of objects would remove most of it.
 
 The ink boxes, the label spacing and the stubs (ADR text/measurement, placement/margin,
 placement/stubs) made some solves slower: ellipse marks by far, then line-end labels and

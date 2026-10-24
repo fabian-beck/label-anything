@@ -1006,9 +1006,14 @@ label's side.
   point; for a group label's leader to a member, the member's): no leader of the item
   avoids those. The leader of a fan or boundary label (§6.8, §6.6) is also exempt from
   marks that contain its start, and a mark closer than `clearance` to its start it must
-  only not cross (it leaves a crowd of touching marks in the order of its column). With a soft weight `w`,
-  every mark closer than `clearance` costs `w · (1 − d / clearance)`. The marks of less
-  important items follow `avoid.leader.lower_items` where it is given (§4.4).
+  only not cross (it leaves a crowd of touching marks in the order of its column). Every
+  leader, stubs included, must likewise only not cross a mark closer than `clearance` to
+  its start that touches the bounding box of the leader's own mark (the item's; for a
+  group label's leader to a member, the member's): it leaves a spot of touching marks,
+  from which no leader could keep the clearance (ADR placement/leaders). With a soft
+  weight `w`, every mark closer than `clearance` costs `w · (1 − d / clearance)`. The
+  marks of less important items follow `avoid.leader.lower_items` where it is given
+  (§4.4).
 * **Spacing between leaders** (with `avoid.leader.leaders` hard): two leaders of
   different labels conflict when a segment of one intersects a segment of the other, or
   when a vertex of one (start, bends, port, underline ends) is closer than `clr` to a

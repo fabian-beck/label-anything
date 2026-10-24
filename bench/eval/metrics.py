@@ -75,6 +75,15 @@ def _result_validator():
     return jsonschema.Draft202012Validator(spec.schema("result"))
 
 
+def _leader_own_shape(p, start, group_members: dict):
+    """The mark a leader of the placed label ``p`` starts at: its item's, or for a group label
+    the member's nearest to the leader's start."""
+    members = group_members.get(p.item.raw.get("group"))
+    if not members:
+        return p.item.own_shape
+    return min(members, key=lambda it: it.shape.sdist(start)).shape
+
+
 def _segments(pl: list[Point]):
     for i in range(len(pl) - 1):
         yield pl[i], pl[i + 1]
@@ -323,6 +332,10 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     lengths_em, bends = [], []
     leader_items_hard = spec.is_hard(a_leader, "items")
     leader_lower_hard = lower_policy(a_leader) == "hard"
+    group_members: dict = {}
+    for it in prob.items:
+        if it.raw.get("group") is not None and it.shape is not None:
+            group_members.setdefault(it.raw["group"], []).append(it)
     baseline_port = opts.get("leaders", {}).get("port") == "baseline"
     for k, p in enumerate(placed):
         if not p.leaders:
@@ -357,10 +370,12 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                     note("leader_own_label", p.id)
                     conf_unary.add(k)
                 if leader_items_hard or leader_lower_hard:
-                    # leaders keep the clearance from other marks (spec §7); a fan or boundary leader
-                    # must only not cross a mark closer than the clearance to its start (crowded marks)
+                    # leaders keep the clearance from other marks (spec §7); a leader must only not
+                    # cross a mark closer than the clearance to its start when it is a fan or boundary
+                    # label's (crowded marks) or when that mark touches the box of its own mark
                     r = clearance(p.item) - tol
                     start = pl[0]
+                    own_box = _leader_own_shape(p, start, group_members).bbox()
                     for j in (item_index.query(q.grow(r)) if r > 0 else ()):
                         other = prob.items[j]
                         if (j, k) in leader_item_touch or vis.exempt_mark(p.item, other):
@@ -373,6 +388,8 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                                 continue
                             if other.own_shape.sdist(start) < clearance(p.item):
                                 rr = 0.0
+                        elif other.own_shape.sdist(start) < clearance(p.item) and other.shape.dist_box(own_box) <= tol:
+                            rr = 0.0
                         if other.shape.intersects_segment(a, b, rr):
                             if (j, k) not in leader_item_pairs:
                                 leader_item_pairs.add((j, k))

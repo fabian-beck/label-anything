@@ -97,8 +97,8 @@
         "id": "alpha",
         "placed": true,
         "box": {
-          "x": 174.488,
-          "y": 57.712,
+          "x": 174.083,
+          "y": 58.117000000000004,
           "w": 35.891999999999996,
           "h": 15.599999999999994
         },
@@ -133,21 +133,21 @@
         "leader": {
           "points": [
             [
-              152.5779059843953,
-              85.6326384442551
+              152.57967041495874,
+              85.63456123516448
             ],
             [
-              174.488,
-              65.512
+              174.083,
+              65.917
             ]
           ],
           "style": "straight",
           "port": [
-            174.488,
-            65.512
+            174.083,
+            65.917
           ]
         },
-        "cost": 2.251999157375331,
+        "cost": 2.2357205070836645,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -159,8 +159,8 @@
         "id": "beta",
         "placed": true,
         "box": {
-          "x": 174.488,
-          "y": 78.112,
+          "x": 174.083,
+          "y": 78.517,
           "w": 29.232,
           "h": 12.288000000000011
         },
@@ -195,21 +195,21 @@
         "leader": {
           "points": [
             [
-              153.37437338809127,
-              90.07069690749397
+              153.3847135422751,
+              90.10909358699158
             ],
             [
-              174.488,
-              84.256
+              174.083,
+              84.661
             ]
           ],
           "style": "straight",
           "port": [
-            174.488,
-            84.256
+            174.083,
+            84.661
           ]
         },
-        "cost": 2.1140820777931317,
+        "cost": 2.108949917764416,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -221,8 +221,8 @@
         "id": "gamma",
         "placed": true,
         "box": {
-          "x": 174.488,
-          "y": 95.2,
+          "x": 174.083,
+          "y": 95.605,
           "w": 48.24000000000001,
           "h": 12.407999999999987
         },
@@ -257,21 +257,21 @@
         "leader": {
           "points": [
             [
-              153.35021531713804,
-              95.01294487945484
+              153.32934893621015,
+              95.07955345442284
             ],
             [
-              174.488,
-              101.404
+              174.083,
+              101.809
             ]
           ],
           "style": "straight",
           "port": [
-            174.488,
-            101.404
+            174.083,
+            101.809
           ]
         },
-        "cost": 2.1381486493463036,
+        "cost": 2.093853761077861,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -281,22 +281,50 @@
       },
       {
         "id": "delta",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items",
+          "labels",
+          "leaders"
+        ],
+        "blocked_by": [
+          "beta",
+          "gamma"
+        ],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 3
+        },
+        "degrade_steps": [
+          "alternatives",
+          "wrap",
+          "distant",
+          "evict_lower",
+          "shrink:0.85",
+          "soft_overlap",
+          "omit"
+        ]
+      },
+      {
+        "id": "epsilon",
         "placed": true,
         "box": {
-          "x": 174.488,
-          "y": 112.408,
-          "w": 33.28800000000001,
-          "h": 12.840000000000003
+          "x": 174.083,
+          "y": 112.813,
+          "w": 44.268,
+          "h": 15.600000000000009
         },
         "anchor": [
           150.0,
-          97.0
+          100.0
         ],
         "anchor_side": "fan",
         "model": "fan",
         "text": {
           "lines": [
-            "Delta"
+            "Epsilon"
           ],
           "used": "original",
           "truncated": false,
@@ -304,7 +332,7 @@
             10.919999999999998
           ],
           "line_widths": [
-            29.688
+            40.668
           ],
           "x_offset": 1.7999999999999998,
           "x_offsets": [
@@ -319,59 +347,41 @@
         "leader": {
           "points": [
             [
-              152.61270428293605,
-              99.32890024044134
+              152.65901073073732,
+              102.27588706526133
             ],
             [
-              174.488,
-              118.828
+              174.083,
+              120.613
             ]
           ],
           "style": "straight",
           "port": [
-            174.488,
-            118.828
+            174.083,
+            120.613
           ]
         },
-        "cost": 2.257934214335741,
+        "cost": 2.187498901812967,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
           "score": 0.0,
-          "rank": 3
-        }
-      },
-      {
-        "id": "epsilon",
-        "placed": false,
-        "reason": "no_feasible_candidate",
-        "blocking": [
-          "items"
-        ],
-        "blocked_by": [],
-        "priority": {
-          "tier": 0,
-          "score": 0.0,
           "rank": 4
-        },
-        "degrade_steps": [
-          "alternatives",
-          "wrap",
-          "distant",
-          "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
-          "omit"
-        ]
+        }
       },
       {
         "id": "zeta",
         "placed": false,
-        "reason": "no_feasible_candidate",
+        "reason": "omitted_by_priority",
         "blocking": [
+          "labels",
+          "leaders",
           "items"
         ],
-        "blocked_by": [],
+        "blocked_by": [
+          "gamma",
+          "epsilon"
+        ],
         "priority": {
           "tier": 0,
           "score": 0.0,
@@ -391,7 +401,7 @@
     "stats": {
       "placed": 4,
       "total": 6,
-      "placed_weighted": 0.7751482523375255,
+      "placed_weighted": 0.7618870795651184,
       "required_placed": true,
       "hard_violations": 0,
       "leader_crossings": 0,
@@ -400,13 +410,13 @@
       "iterations": 2400,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 274,
+      "candidates": 70,
       "omission_order": [
         "zeta",
-        "epsilon"
+        "delta"
       ],
       "priority_inversions": 0,
-      "total_cost": 8.762164098850507,
+      "total_cost": 8.62602308773891,
       "degraded": {},
       "grid": {
         "cell": 3.0,

@@ -8,8 +8,8 @@
         "id": "d0",
         "placed": true,
         "box": {
-          "x": 277.5,
-          "y": 193.58,
+          "x": 271.2027957955108,
+          "y": 208.7827957955108,
           "w": 79.23599999999999,
           "h": 12.839999999999975
         },
@@ -44,21 +44,21 @@
         "leader": {
           "points": [
             [
-              259.5,
-              200.0
+              258.47487373415294,
+              202.47487373415294
             ],
             [
-              277.5,
-              200.0
+              271.2027957955108,
+              215.20279579551078
             ]
           ],
           "style": "angles",
           "port": [
-            277.5,
-            200.0
+            271.2027957955108,
+            215.20279579551078
           ]
         },
-        "cost": 1.975,
+        "cost": 2.097399197345676,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -68,65 +68,31 @@
       },
       {
         "id": "d1",
-        "placed": true,
-        "box": {
-          "x": 268.44460963071964,
-          "y": 213.83162170435818,
-          "w": 79.23599999999999,
-          "h": 12.839999999999975
-        },
-        "anchor": [
-          253.24181383520883,
-          205.0488259088474
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items",
+          "labels",
+          "leaders"
         ],
-        "anchor_side": "distant",
-        "model": "distant",
-        "text": {
-          "lines": [
-            "Dense label 1"
-          ],
-          "used": "original",
-          "truncated": false,
-          "baseline_offsets": [
-            10.919999999999998
-          ],
-          "line_widths": [
-            75.636
-          ],
-          "x_offset": 1.7999999999999998,
-          "x_offsets": [
-            1.7999999999999998
-          ],
-          "align": "center",
-          "font_size": 12.0,
-          "font_family": "default",
-          "font_weight": 400,
-          "scale": 1.0
-        },
-        "leader": {
-          "points": [
-            [
-              255.71668756936177,
-              207.52369964300033
-            ],
-            [
-              268.44460963071964,
-              220.25162170435817
-            ]
-          ],
-          "style": "angles",
-          "port": [
-            268.44460963071964,
-            220.25162170435817
-          ]
-        },
-        "cost": 2.371056629820712,
-        "degrade_steps": [],
+        "blocked_by": [
+          "d0",
+          "d6"
+        ],
         "priority": {
           "tier": 0,
           "score": 0.0,
           "rank": 1
-        }
+        },
+        "degrade_steps": [
+          "alternatives",
+          "wrap",
+          "distant",
+          "evict_lower",
+          "shrink:0.85",
+          "soft_overlap",
+          "omit"
+        ]
       },
       {
         "id": "d2",
@@ -254,50 +220,22 @@
       },
       {
         "id": "d4",
-        "placed": false,
-        "reason": "omitted_by_priority",
-        "blocking": [
-          "items",
-          "labels",
-          "leaders"
-        ],
-        "blocked_by": [
-          "d3",
-          "d9"
-        ],
-        "priority": {
-          "tier": 0,
-          "score": 0.0,
-          "rank": 4
-        },
-        "degrade_steps": [
-          "alternatives",
-          "wrap",
-          "distant",
-          "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
-          "omit"
-        ]
-      },
-      {
-        "id": "d5",
         "placed": true,
         "box": {
-          "x": 212.08397311277938,
-          "y": 125.90645435202119,
-          "w": 79.23600000000002,
+          "x": 206.46013827481832,
+          "y": 127.11918502815244,
+          "w": 79.23599999999996,
           "h": 12.83999999999999
         },
         "anchor": [
-          251.70197311277937,
-          194.24645435202117
+          246.07813827481831,
+          195.45918502815243
         ],
         "anchor_side": "distant",
         "model": "distant",
         "text": {
           "lines": [
-            "Dense label 5"
+            "Dense label 4"
           ],
           "used": "original",
           "truncated": false,
@@ -320,21 +258,67 @@
         "leader": {
           "points": [
             [
-              251.70197311277937,
-              190.74645435202117
+              246.07813827481831,
+              191.95918502815243
             ],
             [
-              251.70197311277937,
-              138.74645435202117
+              246.07813827481831,
+              139.95918502815243
             ]
           ],
           "style": "angles",
           "port": [
-            251.70197311277937,
-            138.74645435202117
+            246.07813827481831,
+            139.95918502815243
           ]
         },
         "cost": 2.720833333333333,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 4
+        }
+      },
+      {
+        "id": "d5",
+        "placed": true,
+        "box": {
+          "x": 253.82329345633906,
+          "y": 179.28513400846154,
+          "w": 79.23599999999999,
+          "h": 12.839999999999975
+        },
+        "anchor": [
+          251.70197311277937,
+          194.24645435202117
+        ],
+        "anchor_side": "top-right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Dense label 5"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            75.636
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.5601875570963541,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -346,8 +330,8 @@
         "id": "d6",
         "placed": true,
         "box": {
-          "x": 295.0054480757556,
-          "y": 152.65908065495304,
+          "x": 379.2610217199022,
+          "y": 191.90350701080646,
           "w": 79.23599999999999,
           "h": 12.839999999999975
         },
@@ -382,21 +366,21 @@
         "leader": {
           "points": [
             [
-              258.23589545405514,
-              195.84863327665352
+              259.2610217199022,
+              198.32350701080645
             ],
             [
-              295.0054480757556,
-              159.07908065495303
+              379.2610217199022,
+              198.32350701080645
             ]
           ],
           "style": "angles",
           "port": [
-            295.0054480757556,
-            159.07908065495303
+            379.2610217199022,
+            198.32350701080645
           ]
         },
-        "cost": 2.720833333333334,
+        "cost": 4.2125,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -458,7 +442,7 @@
             259.44191959231273
           ]
         },
-        "cost": 3.0219543261163455,
+        "cost": 2.720833333333333,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -476,7 +460,6 @@
           "labels"
         ],
         "blocked_by": [
-          "d1",
           "d2",
           "d7"
         ],
@@ -561,7 +544,7 @@
     "stats": {
       "placed": 8,
       "total": 10,
-      "placed_weighted": 0.84860265890399,
+      "placed_weighted": 0.7948833326720566,
       "required_placed": true,
       "hard_violations": 0,
       "leader_crossings": 0,
@@ -570,13 +553,13 @@
       "iterations": 4000,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 240,
+      "candidates": 260,
       "omission_order": [
         "d8",
-        "d4"
+        "d1"
       ],
       "priority_inversions": 0,
-      "total_cost": 19.927274724471744,
+      "total_cost": 19.42935052297672,
       "degraded": {},
       "grid": {
         "cell": 3.0,

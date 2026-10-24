@@ -506,17 +506,21 @@ impl<'a> Evaluator<'a> {
             }
         }
         // other items: clearance (not from the group's members, and not from a mark that
-        // covers the leader's anchor, or a column leader's start: no leader avoids it); the
-        // leader of a fan or boundary label must only not cross a mark closer than the
-        // clearance to its start (it leaves a crowd of touching marks, in the order of its
-        // column)
+        // covers the leader's anchor, or a column leader's start: no leader avoids it). A
+        // leader must only not cross a mark closer than the clearance to its start when it
+        // is a fan or boundary label's (it leaves a crowd of touching marks, in the order of
+        // its column) or when that mark touches the box of its own mark (it leaves a spot of
+        // touching marks, which no leader could keep the clearance from)
         let bb = l.bbox().inflate(item.len.clearance);
         self.buf.clear();
         obs.item_index.query(&bb, &mut self.buf);
         let clearance = item.len.clearance;
-        let anchor = match l.member {
-            Some(m) => model.items[m as usize].anchor,
-            None => item.anchor,
+        let (anchor, own_box) = match l.member {
+            Some(m) => (
+                model.items[m as usize].anchor,
+                model.items[m as usize].shape.bbox(),
+            ),
+            None => (item.anchor, item.shape.bbox()),
         };
         let start = l.pts[0];
         for &j in &self.buf {
@@ -539,7 +543,9 @@ impl<'a> Evaluator<'a> {
             };
             match pol {
                 AvoidW::Hard => {
-                    let lim = if column && sj.signed_distance(start) < clearance {
+                    let lim = if sj.signed_distance(start) < clearance
+                        && (column || sj.dist_rect(&own_box) <= EPS)
+                    {
                         EPS
                     } else {
                         clearance - EPS

@@ -8,6 +8,12 @@
     "degrade": [
       "omit"
     ],
+    "placement": {
+      "models": [
+        "adjacent"
+      ],
+      "own_nearest": false
+    },
     "items": [
       {
         "id": "a",
@@ -51,10 +57,7 @@
           ]
         }
       }
-    ],
-    "placement": {
-      "own_nearest": false
-    }
+    ]
   },
   "result": {
     "version": "1",

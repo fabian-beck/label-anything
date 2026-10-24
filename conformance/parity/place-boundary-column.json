@@ -696,8 +696,10 @@
             175.46320000000003
           ]
         },
-        "cost": 4.542690228966492,
-        "degrade_steps": [],
+        "cost": 4.467690228966492,
+        "degrade_steps": [
+          "distant"
+        ],
         "priority": {
           "tier": 0,
           "score": 0.0,
@@ -779,11 +781,13 @@
       "iterations": 4000,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 148,
+      "candidates": 126,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 44.643531177574324,
-      "degraded": {},
+      "total_cost": 44.56853117757432,
+      "degraded": {
+        "distant": 1
+      },
       "grid": {
         "cell": 3.0,
         "cols": 107,
