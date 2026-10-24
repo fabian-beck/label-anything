@@ -3,7 +3,7 @@
 //! This is a line-by-line mirror of `ts/packages/svg/src/xml.ts`. Its acceptance rules
 //! follow `roxmltree` (which the test suite uses as an oracle), but nesting is handled
 //! with an explicit stack, so deeply nested input can never overflow the call stack
-//! (roxmltree recurses once per nesting level; see ADR 0013).
+//! (roxmltree recurses once per nesting level; see ADR obstacles/svg).
 
 use crate::error::{SvgError, SvgErrorCode};
 

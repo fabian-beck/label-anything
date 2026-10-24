@@ -14,7 +14,7 @@ hand-written validator (no schema engine at runtime), which also checks what a s
 cannot: duplicate ids, unknown `keep_with` references, expression syntax, unknown
 classes ([errors and validation](../concepts/errors.md)); CI checks that the validators
 and the schema agree on every conformance case
-([ADR 0003](../adr/0003-schema-types-and-validation.md)).
+([ADR architecture/validation](../adr/architecture/validation.md)).
 
 The TypeScript types `LabelProblem` and `LabelResult` of `@label-anything/core` are
 generated from these schemas, so a problem written as a TypeScript object literal is

@@ -16,15 +16,15 @@ implementations (Rust and TypeScript) that follow one language-neutral spec.
    touching `spec/defaults.md`, `spec/presets/` or `spec/schema/`; CI runs it with
    `--check`.
 5. **Determinism.** No hash-map iteration in decisions, stable sorts with total
-   comparators, only `+ − × ÷ sqrt` and `det_math` in float code (ADR 0007).
+   comparators, only `+ − × ÷ sqrt` and `det_math` in float code (ADR solver/determinism).
 6. **Licenses.** Runtime dependencies must be MIT/Apache-2.0/BSD/ISC/Zlib-compatible.
    `node tools/check-licenses.mjs` enforces this.
-7. **Benchmark first, optimize second.** Performance changes need an ADR with a profile
-   note.
-8. **Decisions get an ADR** in `docs/adr/`: open points and deviations from the brief,
-   changes of results, formats, options or public APIs, performance changes and accepted
-   metric regressions. ADR 0051 has the template and the full list; the documentation
-   build checks every ADR's number and metadata.
+7. **Benchmark first, optimize second.** A performance change needs a profile note in its
+   pull request, and an ADR when it changes a design.
+8. **Decisions are recorded** in `docs/adr/<area>/<name>.md`, one record per topic, kept
+   current: open points of the brief and deviations from it, changes of results, formats,
+   options or public APIs, accepted benchmark regressions. ADR project/decision-records
+   has the format; the documentation build checks that every citation names a record.
 
 ## Development
 

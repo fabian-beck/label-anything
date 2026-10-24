@@ -1,5 +1,5 @@
 // Port of rust/crates/la-core/tests/time_guard.rs: the greedy pass's wall-clock guard
-// (ADR 0042) runs from the start of the pass, so a slow preparation (host text
+// (ADR solver/time-budget) runs from the start of the pass, so a slow preparation (host text
 // measurement) does not leave the labels unplaced.
 import { describe, expect, it } from "vitest";
 import type { Env } from "../src/env.js";
@@ -61,7 +61,7 @@ describe("time guard", () => {
     const r = placeWith(rows("strict"), new Ticking(1)) as Res;
     expect(r.stats.time_guard_hit).toBe(true);
     // every label has a free level-0 position: the level-0 pass after the guard places them
-    // all (ADR 0048); before, the items after the guard were budget_exhausted
+    // all instead of leaving them budget_exhausted (ADR solver/time-budget)
     expect(r.stats.placed).toBe(200);
   });
 
@@ -71,7 +71,7 @@ describe("time guard", () => {
     const r = placeWith(rows("prefix"), new Ticking(6)) as Res;
     expect(r.stats.time_guard_hit).toBe(true);
     const placed = r.stats.placed as number;
-    // before ADR 0048 the 63 items before the first check were all that was placed
+    // more than the 63 items before the guard's first check: the level-0 pass places more
     expect(placed).toBeGreaterThan(64);
     expect(placed).toBeLessThan(200);
     // still a prefix of the priority order (= input order here), the rest out of time

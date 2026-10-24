@@ -38,7 +38,7 @@ displacement of the label relative to its anchor (px, em), flip rate, labels add
 removed among items visible in both frames, and nesting (fraction of zoom-in steps with
 P_t ∩ V_{t+1} ⊆ P_{t+1}, plus the mean kept fraction).
 
-**Results** (Rust core, deterministic runs, ADR 0025, ADR 0027): mean displacement / flip
+**Results** (Rust core, deterministic runs, ADR motion/warm-starts): mean displacement / flip
 rate, from scratch → warm-started: `force-lesmis` 4.89 px / 12.2 % → 2.28 px / 6.9 %,
 `drag-lesmis` 7.55 px / 17.8 % → 2.32 px / 6.9 %, `zoom-pan-1000` 9.10 px / 32.0 % →
 2.79 px / 11.1 %, `zoom-pan-3000` 9.77 px / 36.7 % → 3.50 px / 14.7 %.

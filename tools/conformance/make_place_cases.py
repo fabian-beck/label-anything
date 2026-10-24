@@ -457,7 +457,7 @@ CASES["warm-start-degraded"] = case(
     "label fits nowhere next to it, the label shrunk to 0.85 (the box in warm_start) fits "
     "on its right. An opening in the top wall lets the ladder's distant step place the "
     "full-size label with a leader, but the previous, shrunk box is still free and is "
-    "kept (ADR 0025).")
+    "kept (ADR motion/warm-starts).")
 
 CASES["warm-start-nudge"] = case(
     "a previous box that an obstacle now clips slides along the mark instead of jumping",

@@ -1,4 +1,4 @@
-//! `validate(problem)`: structured errors with JSON pointers (ADR 0003).
+//! `validate(problem)`: structured errors with JSON pointers (ADR architecture/validation).
 //!
 //! The syntax check interprets the embedded `spec/schema/problem.v1.json` (the keywords
 //! of JSON Schema 2020-12 that the schema uses), so the schema stays the single source

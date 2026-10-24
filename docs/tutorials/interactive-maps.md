@@ -15,9 +15,9 @@ by the smallest of a few steps (0.05 to 0.8 em) that frees it. Otherwise the
 `weights.stability` term pulls the label towards its old place: 1.0 per em of
 displacement up to 1 em, then 0.25 per em up to 5 em, so a label that has to move goes
 to a near place rather than to the other side of its point
-([ADR 0027](../adr/0027-nudges-kept-leaders-near-moves.md)). A label the previous solve
+([ADR motion/warm-starts](../adr/motion/warm-starts.md)). A label the previous solve
 had to shrink, wrap or shorten keeps its box the same way while it is free, unless the
-full label fits again ([ADR 0025](../adr/0025-warm-starts-follow-anchors.md)). Boxes
+full label fits again ([ADR motion/warm-starts](../adr/motion/warm-starts.md)). Boxes
 without `anchor` (made by the host) are used where they are. The result reports
 `stats.flicker` (`moved`, `added`, `removed`, `mean_displacement`) and each placement's
 `displacement` in px.
@@ -147,8 +147,7 @@ above).
 box that grows or shrinks, leaders attached to the gliding box) and the opacities of the
 labels and leaders that fade; `renderLabels` draws them, or any renderer reads them. The
 Leaflet, MapLibre and sigma.js helpers below do this after every solve (option
-`transition`, in ms; 0 draws each solve as it is; [ADR 0026](../adr/0026-smooth-label-transitions.md),
-[ADR 0038](../adr/0038-calm-label-transitions.md)). The
+`transition`, in ms; 0 draws each solve as it is; [ADR motion/label-motion](../adr/motion/label-motion.md)). The
 [playground](../try.md) has the options in its Motion section.
 
 ## Leaflet

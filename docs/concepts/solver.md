@@ -14,7 +14,7 @@
   constraint and never makes the priority outcome worse.
 * `exact` — local search, then a deterministic branch and bound over the 24 cheapest
   candidates per item, which proves optima on small and medium problems and is a bounded
-  improvement step on large ones ([ADR 0014](../adr/0014-exact-search-branch-and-bound.md)).
+  improvement step on large ones ([ADR solver/search](../adr/solver/search.md)).
 * `auto` (default) — `local`, or `exact` for problems with at most 3,000 candidates and a
   budget of at least 500 ms.
 
@@ -30,7 +30,7 @@ number of local-search moves:
 
 with rate 100 moves per ms in Rust and 40 in TypeScript — 10,000 moves for both defaults.
 The result therefore depends on the input and the seed, never on the machine's speed or
-load ([ADR 0007](../adr/0007-determinism-and-time-budget.md)).
+load ([ADR solver/time-budget](../adr/solver/time-budget.md)).
 
 A wall-clock **guard** protects against pathologically slow machines and very large
 problems: local search stops at 3 × the budget after the start of the solve, and the
@@ -39,7 +39,7 @@ between priority bands and every 64 items), so a slow preparation — a host `me
 callback for many labels — still leaves the most important labels their turn. The items
 not reached by then still get their best free normal position, in priority order and
 without the ladder, for up to another 10 × the budget
-([ADR 0048](../adr/0048-level-0-pass-after-the-greedy-guard.md)); the ones left are
+([ADR solver/time-budget](../adr/solver/time-budget.md)); the ones left are
 `budget_exhausted`. Either guard sets `stats.time_guard_hit` — the only case in which
 results may depend on timing.
 
@@ -75,7 +75,7 @@ The solver polls the request at every priority band and every 64 items of the gr
 every 256 local-search moves and every 4,096 exact-search nodes. Once cancelled it stops
 improving — the greedy pass places no further items (`budget_exhausted`), the searches keep
 their best state — and still repairs and verifies, so the result is valid; `stats.cancelled`
-is `true` ([ADR 0017](../adr/0017-cancellation-and-progress.md)). `place` is synchronous: in
+is `true` ([ADR solver/time-budget](../adr/solver/time-budget.md)). `place` is synchronous: in
 JavaScript, cancel from a callback or run the solve in a worker
 ([WebAssembly limitations](../bindings/wasm.md#limitations)).
 
@@ -85,10 +85,10 @@ every 256 local-search moves, as `(phase, fraction)`.
 ## The grid
 
 Soft costs are computed on coverage grids, one per obstacle class, with summed-area tables
-for constant-time area queries ([ADR 0005](../adr/0005-coverage-grids-and-summed-area-tables.md)).
+for constant-time area queries ([ADR obstacles/coverage-grids](../adr/obstacles/coverage-grids.md)).
 `grid_cell` `"auto"` is a quarter of the smallest font size, clamped to 1–4 px; larger cells
 are faster and coarser. Hard tests against vector geometry do not use the grid: they are
-exact ([ADR 0006](../adr/0006-exact-hard-constraints.md)).
+exact ([ADR obstacles/hard-constraints](../adr/obstacles/hard-constraints.md)).
 
 ## Performance
 

@@ -5,7 +5,7 @@
  * Invariants: hard feasibility always holds; the priority objective of the omission mode
  * never gets worse (strict: placed key multiset, lexicographically; prefix: prefix length;
  * weighted: tier-wise weight sums); cost changes are accepted by the Metropolis rule with
- * a geometric temperature schedule over a deterministic iteration budget (ADR 0007).
+ * a geometric temperature schedule over a deterministic iteration budget (ADR solver/time-budget).
  *
  * @module
  */
@@ -19,7 +19,7 @@ import { Reason, type Solve } from "./index.js";
 
 /**
  * Moves per millisecond of `time_budget_ms` in TypeScript. Rust uses 100 with its 2.5×
- * smaller default budget, so both run the same number of moves (ADR 0007).
+ * smaller default budget, so both run the same number of moves (ADR solver/time-budget).
  */
 export const MOVES_PER_MS = 40;
 /** The Rust rate (used by the `rust` budget profile of the parity tests). */

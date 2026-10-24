@@ -1,8 +1,8 @@
 //! Deterministic math helpers.
 //!
 //! All float code in the engine uses only `+ - * /`, `sqrt` and the functions in this
-//! module, so that the Rust and TypeScript implementations agree bit for bit (ADR 0007).
-//! The transcendental functions are provided by `la_expr::det_math`.
+//! module, so that the Rust and TypeScript implementations agree bit for bit
+//! (ADR solver/determinism). The transcendental functions are provided by `la_expr::det_math`.
 
 pub use la_expr::det_math::{cbrt, exp, ln, ln_1p, round_half_away, sin_cos_deg};
 

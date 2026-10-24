@@ -528,8 +528,8 @@ export function priorityRepair(s: Solve): void {
 
 /**
  * One pass of the priority repair over the omitted items in total order. With
- * `relocate`, an item may move one label aside (ADR 0049), whose old place joins `freed`;
- * without, an item near a place in `freed` also tries its pruned level-0 candidates.
+ * `relocate`, an item may move one label aside (ADR priority/repair), whose old place joins
+ * `freed`; without, an item near a place in `freed` also tries its pruned level-0 candidates.
  */
 function priorityPass(s: Solve, relocate: boolean, freed: Rect[]): void {
   const softOk = s.model.ladder.some((x) => x.kind === "soft_overlap");
@@ -752,7 +752,7 @@ function relaxedCost(c: Cand): number {
 }
 
 /**
- * Move one label aside (spec §10.3, ADR 0049): omitted item `h` takes one of its usable
+ * Move one label aside (spec §10.3, ADR priority/repair): omitted item `h` takes one of its usable
  * candidates whose conflicts are one label `b` of a key not lower than its own (or a
  * required one) and at most one removable label (strictly lower key, not required); `b`
  * moves to one of its usable candidates, or of its level-0 candidates the pruning

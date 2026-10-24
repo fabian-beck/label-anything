@@ -1,4 +1,4 @@
-//! The priority repair moves one label aside (ADR 0049): an omitted item gets a label
+//! The priority repair moves one label aside (ADR priority/repair): an omitted item gets a label
 //! when the one more important label in its way can move to another of its positions.
 use label_anything_core::env::BasicEnv;
 use label_anything_core::place;

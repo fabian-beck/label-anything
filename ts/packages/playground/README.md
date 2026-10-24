@@ -4,13 +4,13 @@ The engine running in the browser on six scenes — a world map, a network, a sc
 a line chart, a swarm of moving points and annotated photographs — with every option of
 the problem format in a panel. Published with the documentation site at
 <https://fabian-beck.github.io/label-anything/playground/>; the decisions behind it are in
-[ADR 0032](../../../docs/adr/0032-playground.md).
+[ADR project/playground](../../../docs/adr/project/playground.md).
 
 `explain.html` (*How it works*) steps through a real solve: the TypeScript engine records
 its decisions while it solves (`placeTraced`), and the page replays them — candidates and
 their costs, the greedy pass, the ladder, every local-search move, the repairs and the
-verification — on four small scenes whose marks can be dragged ([ADR
-0046](../../../docs/adr/0046-solve-traces-and-the-explainer.md)).
+verification — on four small scenes whose marks can be dragged
+([ADR project/solve-traces](../../../docs/adr/project/solve-traces.md)).
 
 ## Run it locally
 
@@ -27,7 +27,7 @@ node ts/packages/playground/test/server.mjs 8000  # http://127.0.0.1:8000/ (expl
 The build also makes `dist/hero.js`, the live header of the documentation's home page
 (`docs/_overrides/home.html`): the logo, with the name on its label, among random things
 (a rubber duck, coffee, the moon, …), solved with `engine-ts.js`. The home page loads it from the playground's directory
-([ADR 0050](../../../docs/adr/0050-home-page-header-labeled-live.md)).
+([ADR project/playground](../../../docs/adr/project/playground.md)).
 
 ## Tests
 

@@ -1,7 +1,7 @@
 // Port of rust/crates/la-core/tests/measure_paths.rs: without a host measurement callback,
 // wrapping and truncation measure their candidate lines with the fonts in constant time
-// (`FontMeasure`, ADR 0018); with one, every line goes through `Measurer.width`. The two
-// paths must give bit-identical label variants and identical results.
+// (`FontMeasure`, ADR text/measurement); with one, every line goes through `Measurer.width`. The
+// two paths must give bit-identical label variants and identical results.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";

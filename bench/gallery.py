@@ -196,7 +196,7 @@ SECTIONS = (
             "which then keeps no label: {top_omitted} — {n_top_omitted} of the ten busiest airports — stay "
             "unlabeled while small airports elsewhere are labeled ({placed:,} of {total:,}). Moving the busier "
             "label aside would cost two other labels here; the priority repair does that only when at most one "
-            "gives way (ADR 0049). The same type for all (<code>priority.font_classes</code>) or fewer items "
+            "gives way (ADR priority/repair). The same type for all (<code>priority.font_classes</code>) or fewer items "
             "would make room.", wide=True, limit=True),
     )),
 )

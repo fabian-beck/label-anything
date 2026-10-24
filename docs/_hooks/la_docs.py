@@ -1,13 +1,11 @@
 """MkDocs hooks of the documentation site (registered in mkdocs.yml).
 
-* The navigation section titled "Architecture decisions" lists every ``docs/adr/NNNN-*.md``
-  (new ADRs appear without editing mkdocs.yml).
-* ``<!-- la:adr-index -->`` on a page becomes the ADR index: a table per area (number,
-  title, status and amendments).
-* The ADRs' numbers and metadata are checked (ADR 0051): a reused number, a title without
-  its file's number, a status, area or date outside the lists, or an amendment or
-  supersession without its back-link is a warning, which fails ``mkdocs build --strict``.
-* "ADR NNNN" in a page's text becomes a link to that ADR (not in code or existing links).
+* Architecture decisions are ``docs/adr/<area>/<name>.md`` (ADR project/decision-records).
+  The navigation section titled "Architecture decisions" lists them by area, and
+  ``<!-- la:adr-index -->`` on a page becomes the list of them with their summaries.
+* "ADR <area>/<name>" in a page's text links to that record. A record without its title,
+  summary and sections, and a citation anywhere in the repository that names no record,
+  is a warning, which fails ``mkdocs build --strict``.
 * Links written as ``gh:path/in/the/repo`` point to that file on GitHub, at the tag being
   built (``LA_DOCS_TAG``, set by the Pages workflow, or ``GITHUB_REF_NAME`` on a ``v*``
   tag) or at ``main``.
@@ -20,6 +18,7 @@ from __future__ import annotations
 import os
 import posixpath
 import re
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -30,29 +29,30 @@ ROOT = Path(__file__).resolve().parents[2]
 ADR_DIR = ROOT / "docs" / "adr"
 REPO = "https://github.com/fabian-beck/label-anything"
 ADR_SECTION = "Architecture decisions"
-
-# ADR 0051: the statuses, and the areas in the order of the index.
-STATUSES = ("proposed", "accepted", "rejected", "deprecated", "superseded")
-AREAS = (
-    "Project",
-    "Packages and formats",
-    "Obstacles and backgrounds",
-    "Text",
-    "Candidates, leaders and costs",
-    "Priority",
-    "Solver",
-    "Warm starts and transitions",
-    "Benchmark",
-    "Documentation site",
-)
-BACK_LINK = {
-    "Amends": "Amended by",
-    "Amended by": "Amends",
-    "Supersedes": "Superseded by",
-    "Superseded by": "Supersedes",
-}
+# The areas of ADR project/decision-records, in the order of the navigation and the index.
+AREAS = ("architecture", "text", "obstacles", "placement", "priority", "solver", "motion", "project")
+SECTIONS = ("## Context", "## Decision", "## Consequences")
+CITATION = re.compile(r"\bADR\s+([a-z]+/[a-z0-9-]+)")
+# Code blocks, code spans and links, in which a citation stays as it is.
+PROTECTED = re.compile(r"^[ \t]*(```|~~~).*?^[ \t]*\1[^\n]*$|`[^`]+`|\[[^\]]*\]\([^)]*\)", re.M | re.S)
+# Files of the repository searched for citations.
+SOURCES = {".md", ".rs", ".ts", ".mjs", ".js", ".py", ".json", ".toml", ".yml", ".html"}
 
 log = get_plugin_logger(__name__)
+
+
+@dataclass
+class Adr:
+    id: str  # "<area>/<name>"
+    title: str
+    summary: str
+
+    @property
+    def area(self) -> str:
+        return self.id.partition("/")[0]
+
+
+_adrs: list[Adr] = []
 
 
 def _ref() -> str:
@@ -63,75 +63,48 @@ def _ref() -> str:
     return ref if os.environ.get("GITHUB_REF_TYPE") == "tag" and ref.startswith("v") else "main"
 
 
-@dataclass
-class Adr:
-    name: str  # file name; its first four digits are the number
-    heading: str  # the title line without "# "
-    fields: dict[str, str]  # "* Field: value" lines before the first section
-
-    @property
-    def number(self) -> str:
-        return self.name[:4]
-
-    @property
-    def title(self) -> str:
-        return self.heading.partition(" — ")[2]
-
-    def refs(self, field: str) -> list[str]:
-        return re.findall(r"ADR (\d{4})", self.fields.get(field, ""))
-
-
-FIELD = re.compile(r"^\* ([A-Z][a-z]*(?: [a-z]+)?): (.*(?:\n  .*)*)", re.M)
-_adr_cache: list[Adr] = []
+def _load_adrs() -> None:
+    """Read every record, by area and title, and warn about those out of form."""
+    _adrs.clear()
+    for p in sorted(ADR_DIR.rglob("*.md")):
+        adr_id = p.relative_to(ADR_DIR).with_suffix("").as_posix()
+        if adr_id.partition("/")[0] not in AREAS or adr_id.count("/") != 1:
+            log.warning(f"docs/adr/{adr_id}.md: records are docs/adr/<area>/<name>.md, areas {', '.join(AREAS)}")
+            continue
+        text = p.read_text(encoding="utf-8")
+        head = re.match(r"# (.+)\n\n((?:[^#\n].*\n)+)\n", text)
+        found = [text.find(f"\n{s}\n") for s in SECTIONS]
+        if not head or -1 in found or found != sorted(found):
+            log.warning(f"docs/adr/{adr_id}.md: needs a '# title', a summary and the sections {', '.join(SECTIONS)}")
+            continue
+        _adrs.append(Adr(adr_id, head.group(1), " ".join(head.group(2).split())))
+    _adrs.sort(key=lambda a: (AREAS.index(a.area), a.title))
 
 
-def _adrs() -> list[Adr]:
-    """Every ADR, in number order (read once per build, in on_config)."""
-    if not _adr_cache:
-        for p in sorted(ADR_DIR.glob("[0-9][0-9][0-9][0-9]-*.md")):
-            text = p.read_text(encoding="utf-8")
-            heading = next((line[2:].strip() for line in text.splitlines() if line.startswith("# ")), p.stem)
-            head = text.partition("\n## ")[0]
-            fields = {k: " ".join(v.split()) for k, v in FIELD.findall(head)}
-            _adr_cache.append(Adr(p.name, heading, fields))
-    return _adr_cache
-
-
-def _check(adrs: list[Adr]) -> list[str]:
-    """What breaks the rules of ADR 0051, one message per problem."""
-    problems = []
-    by_number: dict[str, Adr] = {}
-    for a in adrs:
-        where = f"docs/adr/{a.name}"
-        if a.number in by_number:
-            problems.append(f"{where}: number {a.number} is taken by {by_number[a.number].name}")
-        by_number.setdefault(a.number, a)
-        if not a.heading.startswith(f"{a.number} — ") or not a.title:
-            problems.append(f"{where}: the title must read '# {a.number} — …'")
-        status = a.fields.get("Status", "")
-        if status not in STATUSES:
-            problems.append(f"{where}: Status must be one of {', '.join(STATUSES)}, not {status!r}")
-        if a.fields.get("Area") not in AREAS:
-            problems.append(f"{where}: Area must be one of {', '.join(AREAS)}")
-        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", a.fields.get("Date", "")):
-            problems.append(f"{where}: Date must be YYYY-MM-DD")
-        if (status == "superseded") != bool(a.refs("Superseded by")):
-            problems.append(f"{where}: an ADR is superseded exactly when it names a 'Superseded by'")
-    for a in adrs:
-        for field, back in BACK_LINK.items():
-            for n in a.refs(field):
-                other = by_number.get(n)
-                if other is None:
-                    problems.append(f"docs/adr/{a.name}: {field} names ADR {n}, which does not exist")
-                elif a.number not in other.refs(back):
-                    problems.append(f"docs/adr/{other.name}: '{back}' must name ADR {a.number} ({field} of {a.name})")
-    return problems
+def _check_citations() -> None:
+    """Warn about every "ADR <area>/<name>" in the repository that names no record."""
+    try:
+        listed = subprocess.run(
+            ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+            cwd=ROOT, capture_output=True, text=True, check=True,
+        ).stdout.splitlines()
+    except (OSError, subprocess.CalledProcessError):
+        return  # not a git checkout
+    known = {a.id for a in _adrs}
+    for name in listed:
+        p = ROOT / name
+        if p.suffix not in SOURCES or not p.is_file() or p.stat().st_size > 1_000_000:
+            continue
+        text = p.read_text(encoding="utf-8", errors="replace")
+        for m in CITATION.finditer(text):
+            if m.group(1) not in known:
+                line = text.count("\n", 0, m.start()) + 1
+                log.warning(f"{name}:{line}: ADR {m.group(1)} does not exist")
 
 
 def on_config(config):
-    _adr_cache.clear()
-    for problem in _check(_adrs()):
-        log.warning(problem)
+    _load_adrs()
+    _check_citations()
 
     def fill(entries: list) -> None:
         for entry in entries:
@@ -141,10 +114,10 @@ def on_config(config):
                 if not isinstance(value, list):
                     continue
                 if title == ADR_SECTION:
-                    listed = {v if isinstance(v, str) else next(iter(v.values())) for v in value}
-                    for a in _adrs():
-                        if f"adr/{a.name}" not in listed:
-                            value.append({a.heading: f"adr/{a.name}"})
+                    for area in AREAS:
+                        pages = [{a.title: f"adr/{a.id}.md"} for a in _adrs if a.area == area]
+                        if pages:
+                            value.append({area.capitalize(): pages})
                 else:
                     fill(value)
 
@@ -161,50 +134,34 @@ def on_files(files: Files, config) -> Files:
 
 
 def _adr_index() -> str:
-    adrs = _adrs()
-    names = {a.number: a.name for a in reversed(adrs)}
-
-    def links(numbers: list[str]) -> str:
-        return ", ".join(f"[{n}](../adr/{names[n]})" if n in names else n for n in numbers)
-
     out = []
     for area in AREAS:
-        rows = [a for a in adrs if a.fields.get("Area") == area]
-        if not rows:
-            continue
-        out += [f"## {area}", "", "| ADR | Decision | Status |", "|---|---|---|"]
-        for a in rows:
-            status = a.fields.get("Status", "")
-            if a.refs("Superseded by"):
-                status = "superseded by " + links(a.refs("Superseded by"))
-            if a.refs("Amended by"):
-                status += "; amended by " + links(a.refs("Amended by"))
-            title = a.title.replace("|", r"\|")
-            out.append(f"| {a.number} | [{title}](../adr/{a.name}) | {status} |")
-        out.append("")
+        rows = [a for a in _adrs if a.area == area]
+        if rows:
+            out += [f"## {area.capitalize()}", ""]
+            out += [f"* [{a.title}](../adr/{a.id}.md) — {a.summary}" for a in rows]
+            out.append("")
     return "\n".join(out)
 
 
-GH_LINK = re.compile(r"\]\(gh:([^)\s]*)\)")
-# Code blocks, code spans and links, in which "ADR NNNN" stays as it is.
-PROTECTED = re.compile(r"^[ \t]*(```|~~~).*?^[ \t]*\1[^\n]*$|`[^`]+`|\[[^\]]*\]\([^)]*\)", re.M | re.S)
-ADR_MENTION = re.compile(r"\bADR (\d{4})\b")
-
-
 def _link_adrs(markdown: str, src_uri: str) -> str:
-    names = {a.number: a.name for a in reversed(_adrs())}
+    known = {a.id for a in _adrs}
     here = posixpath.dirname(src_uri) or "."
 
     def link(m: re.Match) -> str:
-        name = names.get(m.group(1))
-        return f"[{m.group(0)}]({posixpath.relpath(f'adr/{name}', here)})" if name else m.group(0)
+        if m.group(1) not in known:
+            return m.group(0)
+        return f"[{m.group(0)}]({posixpath.relpath(f'adr/{m.group(1)}.md', here)})"
 
     out, pos = [], 0
     for m in PROTECTED.finditer(markdown):
-        out += [ADR_MENTION.sub(link, markdown[pos : m.start()]), m.group(0)]
+        out += [CITATION.sub(link, markdown[pos : m.start()]), m.group(0)]
         pos = m.end()
-    out.append(ADR_MENTION.sub(link, markdown[pos:]))
+    out.append(CITATION.sub(link, markdown[pos:]))
     return "".join(out)
+
+
+GH_LINK = re.compile(r"\]\(gh:([^)\s]*)\)")
 
 
 def on_page_markdown(markdown: str, page, config, files) -> str:

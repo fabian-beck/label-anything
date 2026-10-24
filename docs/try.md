@@ -59,7 +59,7 @@ Time budgets are those of the Rust core (100 search moves per ms); the TypeScrip
 gets 2.5 times the budget, which is the same number of moves, so both engines make the
 same decisions — the TypeScript one takes longer. Labels are measured with the bundled
 Noto Sans and drawn with the same font, so every box fits its text. The decisions are in
-[ADR 0032](adr/0032-playground.md); the source is
+[ADR project/playground](adr/project/playground.md); the source is
 [`ts/packages/playground`](gh:ts/packages/playground/README.md).
 
 Data: countries [made with Natural Earth](https://www.naturalearthdata.com/) (public
