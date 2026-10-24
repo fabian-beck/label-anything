@@ -587,7 +587,7 @@ CASES["label-spacing-twice-margin"] = case(
 # Small marks of every shape in a crowd (the concave L is pushed in, spec §4.5): the parity
 # fixture of this case holds every stub of the Rust core, which TypeScript must reproduce.
 # The innermost 20 points of a spiral of 32: distances to ellipses are slow to compute, and
-# the solve stays well within the time guard (3 × the budget, ADR 0042) on a busy machine.
+# the solve stays well within the time guard (3 × the budget, ADR solver/time-budget) on a busy machine.
 STUB_MARKS = [{"shape": "polygon", "points": [[-5, -5], [5, -5], [5, 0], [0, 0], [0, 5], [-5, 5]]},
               {"shape": "rect", "w": 8, "h": 6}, {"shape": "ellipse", "rx": 5, "ry": 3, "rotation": 30},
               {"shape": "circle", "r": 3}]
@@ -637,7 +637,7 @@ CASES["warm-start-degraded"] = case(
     "label fits nowhere next to it, the label shrunk to 0.85 (the box in warm_start) fits "
     "on its right. An opening in the top wall lets the ladder's distant step place the "
     "full-size label with a leader, but the previous, shrunk box is still free and is "
-    "kept (ADR 0025).")
+    "kept (ADR motion/warm-starts).")
 
 CASES["warm-start-nudge"] = case(
     "a previous box that an obstacle now clips slides along the mark instead of jumping",

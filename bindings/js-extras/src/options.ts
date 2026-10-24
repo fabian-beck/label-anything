@@ -118,7 +118,7 @@ export function buildProblem<D>(
   if (options.padding !== undefined && p.canvas) p.canvas = { ...p.canvas, padding: options.padding };
   if (options.avoid) p.avoid = options.avoid;
   // with a priority, important labels may cover the dots of less important items, which
-  // then go unlabeled (ADR 0045); the caller's own lower_items wins
+  // then go unlabeled (ADR priority/lower-items); the caller's own lower_items wins
   if (options.priority !== undefined || base.items.some((it) => it.priority !== undefined || it.tier !== undefined)) {
     const a = p.avoid ?? {};
     p.avoid = { ...a, label: { lower_items: 10, ...a.label }, leader: { lower_items: 2.5, ...a.leader } };

@@ -15,7 +15,7 @@ copyright: Label Anything contributors · MIT License · bundled font Noto Sans 
 
 docs_dir: docs
 strict: true
-exclude_docs: |
+exclude_docs: | # infrastructure, and the literature notes (for contributors, read on GitHub)
   /requirements.txt
   /_hooks/
   /_overrides/
@@ -71,6 +71,21 @@ extra_css:
 
 plugins:
   - search
+  # Pages that moved or were merged into others: old links keep working.
+  - redirects:
+      redirect_maps:
+        try.md: https://fabian-beck.github.io/label-anything/playground/
+        explainer.md: https://fabian-beck.github.io/label-anything/playground/explain.html
+        benchmark.md: https://github.com/fabian-beck/label-anything/blob/main/bench/README.md
+        bindings/python.md: getting-started/python.md
+        bindings/java.md: getting-started/java.md
+        bindings/wasm.md: getting-started/javascript.md#webassembly
+        reference/javascript-api.md: getting-started/javascript.md#api
+        reference/c-api.md: getting-started/c-go.md#the-header
+        concepts/presets-defaults.md: reference/presets.md
+        project/index.md: project/benchmark.md
+        project/literature.md: https://github.com/fabian-beck/label-anything/blob/main/docs/project/literature/README.md
+        dev/porting.md: https://github.com/fabian-beck/label-anything/blob/main/ts/packages/core/PORTING.md
 
 markdown_extensions:
   - abbr
@@ -98,8 +113,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Playground: try.md
-  - How it works: explainer.md
+  - Playground: https://fabian-beck.github.io/label-anything/playground/
   - Getting started:
       - getting-started/index.md
       - Python: getting-started/python.md
@@ -123,8 +137,7 @@ nav:
       - The result format: concepts/result.md
       - Avoidance classes and policy: concepts/avoidance.md
       - Candidates and the degradation ladder: concepts/candidates.md
-      - Presets and defaults: concepts/presets-defaults.md
-      - Time budget, determinism, cancellation: concepts/solver.md
+      - The solver: concepts/solver.md
       - The debug overlay: concepts/debug-overlay.md
       - Errors and validation: concepts/errors.md
   - Reference:
@@ -134,18 +147,8 @@ nav:
       - Presets: reference/presets.md
       - Expression language: reference/expressions.md
       - JSON Schemas: reference/schemas.md
-      - Python API: bindings/python.md
-      - Java API: bindings/java.md
-      - JavaScript API: reference/javascript-api.md
-      - WebAssembly package: bindings/wasm.md
-      - C API: reference/c-api.md
   - Project:
-      - project/index.md
-      - Benchmark:
-          - project/benchmark.md
-          - Release procedure and gates: benchmark.md
+      - Benchmark: project/benchmark.md
       - Architecture decisions:
-          - project/decisions.md
-      - Literature and improvement notes: project/literature.md
+          - project/decisions/index.md
       - Contributing: project/contributing.md
-      - Porting the core to TypeScript: dev/porting.md

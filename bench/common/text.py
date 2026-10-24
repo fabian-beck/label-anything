@@ -12,7 +12,7 @@ line breaking / wrapping of §5.3, implemented independently of the engine.
 * ink: the bounds of the glyph outlines (the engine reads the same bounds from the table
   ``LAvb`` of its outline-free metrics fonts); a text label's box spans from the ink top of
   its first line to the ink bottom of its last line (an edge without ink: the ascent or
-  descent; ADR 0052). Composite parts keep the ascent and descent.
+  descent; ADR text/measurement). Composite parts keep the ascent and descent.
 
 The bundled Noto Sans subset in ``fonts/`` is used for the family ``default``.
 """
@@ -406,7 +406,7 @@ class TextLayout:
     align: str = "start"  # how the lines are aligned within the widest (spec §5.1)
 
     def x_offsets(self, padding: float) -> list[float]:
-        """Where each line starts from the box's left edge (``text.x_offsets``, ADR 0055)."""
+        """Where each line starts from the box's left edge (``text.x_offsets``, ADR text/line-breaking)."""
         f = {"center": 0.5, "end": 1.0}.get(self.align, 0.0)
         return [padding + (self.width - w) * f for w in self.line_widths]
 

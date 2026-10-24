@@ -123,7 +123,7 @@ CI runs):
 |---|---|
 | Priority | explicit `item.priority`, else input order; omission `strict`; `evict_lower` on |
 | Text | 12 px bundled sans (Noto Sans) · padding 0.15 em · buffer 0.3 em |
-| Spacing | 1 px from the own mark · 0.2 em from other labels and other marks · never nearer to another mark than to the own |
+| Spacing | 1 px from the own mark · 0.2 em from other marks · 0.4 em from other labels · clearly nearer to the own mark than to any other |
 | Candidates | models adjacent + slider + distant (preset `auto`: distant only when crowded) · perceptual position order (top first) · fan labels for crowds left without labels |
 | Leaders | straight, crossings hard, 0.4 em clear of other marks and leaders |
 | Label vs. | labels, items, text, canvas edge: **hard** · ink 0.1 per em² · across a light–dark border of a raster background 0.5 per em² |
@@ -144,8 +144,8 @@ adjustText, vega-label, ggrepel, the label layouts of ECharts and d3fc, and D3-L
 scored the same way.
 `label-anything bench --baselines --perf` writes `bench-report/index.html`: metric tables,
 renderings side by side, runtime-vs-size plots, Rust/TypeScript parity and the performance
-targets; `--gate` enforces the release gates (`docs/benchmark.md`, `bench/README.md`, which
-also lists where the performance targets stand). `python -m bench.gallery` turns a run into a
+targets; `--gate` enforces the release gates (`bench/README.md`, which also has the release
+procedure and where the performance targets stand). `python -m bench.gallery` turns a run into a
 [gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/) of
 renderings, published with each release's report.
 

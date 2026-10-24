@@ -169,7 +169,7 @@ export class Measurer {
    * {@link Measurer.width}, unless that measures every string they produce with simple
    * shaping, i.e. without a host measurement (TypeScript has no full shaping, so the shaping
    * mode and the text do not matter, unlike in Rust). Then the font itself, which measures
-   * each candidate line in constant time with identical widths (ADR 0018).
+   * each candidate line in constant time with identical widths (ADR text/measurement).
    */
   wrapMeasure(font: FontSel, scale: number, width: Measure): Measure | FontMeasure {
     if (envHasMeasureCallback(this.env)) return width;

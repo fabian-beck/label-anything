@@ -26,5 +26,5 @@ required-features = ["serde"]
 
 [dev-dependencies]
 serde_json = { workspace = true }
-# Oracle for differential tests of our own XML parser (see ADR 0013); not a runtime dependency.
+# Oracle for differential tests of our own XML parser (see ADR obstacles/svg); not a runtime dependency.
 roxmltree = { workspace = true }

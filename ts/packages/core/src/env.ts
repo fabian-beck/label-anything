@@ -180,7 +180,7 @@ export interface Env {
   /**
    * Whether {@link Env.measure} may return metrics. Return `false` when it never does: text
    * is then measured with the fonts alone, so wrapping can measure the candidate lines in
-   * constant time (`FontMeasure`, ADR 0018). The default, `true`, is correct for every
+   * constant time (`FontMeasure`, ADR text/measurement). The default, `true`, is correct for every
    * environment.
    */
   hasMeasureCallback?(): boolean;

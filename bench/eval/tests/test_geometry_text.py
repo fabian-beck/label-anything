@@ -85,7 +85,7 @@ def test_text_measurement_kerning_and_wrapping():
 
 
 def test_text_boxes_fit_the_ink():
-    # spec §5.2, ADR 0052: from the ink top of the first line to the ink bottom of the last
+    # spec §5.2, ADR text/measurement: from the ink top of the first line to the ink bottom of the last
     f = text.font(400)
     top, bottom = f.ink("Alpha", 12)
     assert (top, bottom) == pytest.approx((0.76 * 12, 0.24 * 12))

@@ -211,7 +211,7 @@ def test_removal_test_keeps_the_label_margin():
 
 def test_removal_test_needs_the_own_mark_clearly_nearest():
     # lo's only position [103, 45, 133, 55] is 1 px from its mark; x's mark 3 px away keeps the
-    # margin but is not farther than lo's own by the margin (spec §4.4, ADR 0054)
+    # margin but is not farther than lo's own by the margin (spec §4.4, ADR placement/margin)
     x = placed("x", 141, 45, side="right")
     items = [item("lo", 100, 50, priority=2), item("x", 138, 50, priority=1)]
     prob = problem(items, placement={"position_order": ["right"]})

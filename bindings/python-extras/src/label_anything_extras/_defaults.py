@@ -6,7 +6,7 @@ import copy
 from typing import Any, Dict, Mapping
 
 #: With a priority, important labels may cover the dots of less important points, which
-#: then go unlabeled (``avoid`` ``lower_items``, ADR 0045).
+#: then go unlabeled (``avoid`` ``lower_items``, ADR priority/lower-items).
 LOWER_ITEMS: Dict[str, Any] = {"label": {"lower_items": 10}, "leader": {"lower_items": 2.5}}
 
 

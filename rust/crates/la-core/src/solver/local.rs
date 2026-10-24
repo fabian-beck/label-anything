@@ -3,7 +3,7 @@
 //! Invariants: hard feasibility always holds; the priority objective of the omission mode
 //! never gets worse (strict: placed key multiset, lexicographically; prefix: prefix length;
 //! weighted: tier-wise weight sums); cost changes are accepted by the Metropolis rule with a
-//! geometric temperature schedule over a deterministic iteration budget (ADR 0007).
+//! geometric temperature schedule over a deterministic iteration budget (ADR solver/time-budget).
 
 use super::{Reason, Solve};
 use crate::model::opts::{Omission, Step};

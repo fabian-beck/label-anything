@@ -11,7 +11,7 @@ besides the sibling packages `@label-anything/text` (font metrics and line break
 backgrounds). It runs in browsers, workers, Node, Deno and Bun.
 
 The solver is a line-by-line port of the Rust core (`rust/crates/la-core`, see
-`docs/dev/porting.md`): for the same iteration counts it makes the same decisions, and
+[`PORTING.md`](PORTING.md)): for the same iteration counts it makes the same decisions, and
 its results reproduce the Rust results bit for bit (`conformance/parity`).
 
 ```ts
@@ -54,7 +54,7 @@ throw a `PlaceError` with the same pointers and codes as `validate`.
 
 **Time budget and determinism.** `solver.time_budget_ms` (default 250 ms here, 100 ms in
 the Rust core) is turned into a fixed iteration budget (40 local-search moves per ms;
-ADR 0007), so results do not depend on the machine's speed. The clock only acts as a
+ADR solver/time-budget), so results do not depend on the machine's speed. The clock only acts as a
 safety net: local search stops 3 × the budget after the start, and the greedy pass stops
 placing 10 × the budget after the greedy pass started. `signal` is polled every 64 greedy
 steps, 256 local-search moves and 4,096 exact-search nodes; a cancelled solve returns
@@ -74,7 +74,7 @@ taken next, the scores of its free candidates, each placement and the candidates
 out, ladder steps, evictions, omissions), every local-search move with its cost change
 and temperature, and the passes after the search. Each event carries the placement
 changes it made. Tracing never changes a decision (`test/trace.test.ts`); the explainer
-of the playground is built on it (ADR 0046). TypeScript only.
+of the playground is built on it (ADR project/solve-traces). TypeScript only.
 
 ## Command line
 
@@ -111,5 +111,5 @@ average about 6):
 | 2,000 labels + 100k points, 1920×1080, greedy | ≤ 600 ms | 642 / 831 ms | 385 ms |
 
 About a fifth of the TypeScript time is garbage collection: a 2,000-label solve allocates
-about 260 MB, mostly candidates with their boxes and leaders. `docs/dev/porting.md`
+about 260 MB, mostly candidates with their boxes and leaders. [`PORTING.md`](PORTING.md)
 (Performance) describes the techniques of the hot paths.

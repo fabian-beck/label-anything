@@ -120,7 +120,7 @@ that the committed files are current).
 ## `parity` cases
 
 The whole solve pipeline of the TypeScript core must make the same decisions as the Rust
-core (ADR 0007). `parity/` holds the Rust result of every problem in `problems/`
+core (ADR solver/determinism). `parity/` holds the Rust result of every problem in `problems/`
 (`<stem>.json`) and of every `place/` case with an inline problem (`place-<stem>.json`):
 
 ```jsonc

@@ -165,8 +165,8 @@ for _i in range(_n):
     _x, _y = _rnd.uniform(10, _w - 10), _rnd.uniform(10, _h - 10)
     _items.append({"id": f"p{_i}", "anchor": {"type": "point", "x": round(_x, 1), "y": round(_y, 1)},
                    "label": {"type": "text", "text": "x" * _rnd.randint(2, 9)}, "priority": _rnd.randint(0, 9)})
-# with the settings it was found with: no label margin, 2 px offset (ADR 0028), and labels
-# that may come nearer to other marks than to their own (ADR 0051)
+# with the settings it was found with: no label margin, 2 px offset, and labels that may
+# come nearer to other marks than to their own (ADR placement/margin)
 problems["strict-repair"] = {"canvas": {"width": _w, "height": _h}, "defaults": {"margin": 0},
                              "placement": {"offset": 2, "own_nearest": False}, "items": _items}
 

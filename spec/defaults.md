@@ -142,7 +142,7 @@ are stale.
   iteration budget (`budget_ms × 100` local-search moves in Rust, `budget_ms × 40` in
   TypeScript, both capped by `solver.max_iterations` and `400 × number of items`), so a
   solve is deterministic for a given input and seed on every machine. A wall-clock guard at 3 × the budget stops the
-  search on pathologically slow machines and sets `stats.time_guard_hit`. See ADR 0007.
+  search on pathologically slow machines and sets `stats.time_guard_hit`. See ADR solver/time-budget.
 * **Hard vs. soft.** `"hard"` classes are filters: a candidate touching them is discarded.
   Numbers are soft weights per em² of covered area for labels (covered px² / em²) and per
   em of covered length for leaders (spec §8): a label hiding one em² of a class of weight

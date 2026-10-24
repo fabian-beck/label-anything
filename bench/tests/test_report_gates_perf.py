@@ -177,12 +177,12 @@ def test_gates_pass_fail_and_allow_list(tmp_path):
     regressed = rep(entry("rust", placed_rate=0.5), perf=perf_rows())
     assert not gates.check(regressed, prev)["passed"]
     allow_file = tmp_path / "allow.json"
-    write_json(allow_file, {"allow": [{"metric": "placed_rate", "scenario": "01-*", "adr": "0007", "reason": "x"},
-                                      {"metric": "ndcg_at_k", "scenario": "*", "adr": "9999"}]})
+    write_json(allow_file, {"allow": [{"metric": "placed_rate", "scenario": "01-*", "adr": "solver/search", "reason": "x"},
+                                      {"metric": "ndcg_at_k", "scenario": "*", "adr": "solver/nothing"}]})
     allow, problems_ = gates.load_allow(allow_file)
-    assert [a["adr"] for a in allow] == ["0007"] and len(problems_) == 1      # ADR 9999 does not exist
+    assert [a["adr"] for a in allow] == ["solver/search"] and len(problems_) == 1   # no such record
     g = gates.check(regressed, prev, allow, problems_)
-    assert g["passed"] and any("allowed by ADR 0007" in d for d in g["checks"][1]["details"])
+    assert g["passed"] and any("allowed by ADR solver/search" in d for d in g["checks"][1]["details"])
     lines = gates.summary_lines(g)
     assert lines[0] == "release gates: PASS" and any("[pass]" in ln for ln in lines)
 

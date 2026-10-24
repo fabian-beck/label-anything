@@ -31,6 +31,7 @@ seaborn are in the optional `label-anything-extras` package
 (`pip install "label-anything[matplotlib]"`).
 
 Build from source with [maturin](https://www.maturin.rs/): `maturin build --release`
-in this directory. See `docs/bindings/python.md` in the repository for the guide.
+in this directory. The guide:
+[Python](https://fabian-beck.github.io/label-anything/getting-started/python/) on the documentation site.
 
 MIT License.

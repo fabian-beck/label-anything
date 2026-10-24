@@ -22,11 +22,11 @@ when every gate passes, 1 otherwise.
 Allow-list format::
 
     {"allow": [{"metric": "placed_rate", "scenario": "05-airports", "config": "*", "solver": "rust",
-                "adr": "0018", "reason": "denser leaders accepted"}]}
+                "adr": "placement/leaders", "reason": "denser leaders accepted"}]}
 
 ``scenario``, ``config`` and ``solver`` are fnmatch patterns (default ``*``);
-``adr`` must name an existing ``docs/adr/<adr>-*.md``, otherwise the entry is
-ignored (and reported).
+``adr`` must name an existing record ``docs/adr/<adr>.md``, otherwise the entry
+is ignored (and reported).
 """
 from __future__ import annotations
 
@@ -53,14 +53,13 @@ def load_allow(path: str | Path | None = None) -> tuple[list[dict], list[str]]:
     ok, bad = [], []
     for e in data.get("allow", []):
         adr = str(e.get("adr", "")).strip()
-        num = adr.upper().removeprefix("ADR-").removeprefix("ADR").strip("- ")
         if not e.get("metric") or not e.get("scenario"):
             bad.append(f"allow-list entry without metric/scenario: {e}")
-        elif not num or not list(ADR_DIR.glob(f"{num.zfill(4)}-*.md")):
+        elif not adr or not (ADR_DIR / f"{adr}.md").is_file():
             bad.append(f"allow-list entry for {e.get('metric')} / {e.get('scenario')} names no existing ADR "
                        f"({adr or 'missing'}); ignored")
         else:
-            ok.append({**e, "adr": num.zfill(4)})
+            ok.append({**e, "adr": adr})
     return ok, bad
 
 

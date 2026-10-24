@@ -189,7 +189,7 @@ are tested on their grid: a rectangle "touches" a raster class iff its covered a
 key `"*"` is the default for classes not listed. Unknown classes in `avoid` (not present
 in any source and not reserved) produce a validation **warning** `unknown_class`.
 
-**Marks of less important items** (`lower_items`, ADR 0040). The key `lower_items` of
+**Marks of less important items** (`lower_items`, ADR priority/lower-items). The key `lower_items` of
 `avoid.label` and `avoid.leader` (not a class; `"*"` does not set it) is the policy for
 the marks of items `j` of lower priority key than the label's item `i` (§9.1:
 `key(j) < key(i)`; never members of `i`'s group, §5.7); without it they follow `items`.
@@ -201,8 +201,8 @@ covered mark thus stays unlabeled, never wrongly attributed, and the labels of t
 important items may claim the space of the marks around them — a hub keeps its label
 in a dense region instead of losing it to the marks of minor items nearby.
 
-**Label margin and spacing** (`defaults.margin`, 0.2 em, ADR 0028; `defaults.spacing`,
-twice the margin unless set, ADR 0054). Hard `labels` and `items` keep a label away from
+**Label margin and spacing** (`defaults.margin`, 0.2 em; `defaults.spacing`, twice the
+margin unless set; ADR placement/margin). Hard `labels` and `items` keep a label away from
 what is not its own, while it touches its own mark at `placement.offset`. An item's
 **label gap** `g` is its spacing, at least its margin: `g = max(spacing, margin)`, with
 `spacing = 2m` when `defaults.spacing` is `null` (the default: 0.4 em).
@@ -223,7 +223,7 @@ what is not its own, while it touches its own mark at `placement.offset`. An ite
   infeasible below `m / 2` from another mark. A label stays where it is until its
   neighbours come closer than half that, but takes a new place only with the whole of it.
 
-**Own mark nearest** (`placement.own_nearest`, default `true`; ADR 0051, 0054). A label
+**Own mark nearest** (`placement.own_nearest`, default `true`; ADR placement/margin). A label
 without a distant leader — an adjacent or slider label, with or without a stub (§6.9) —
 comes no closer to the mark of another item than to its own, and without a stub it is
 nearer to its own by its margin: it is infeasible when
@@ -241,7 +241,7 @@ closer than the margin; this rule still keeps it farther than the own mark.
 
 ### 4.5 SVG backgrounds
 
-Implemented identically by `label-anything-svg` and `@label-anything/svg` (ADR 0013) and
+Implemented identically by `label-anything-svg` and `@label-anything/svg` (ADR obstacles/svg) and
 tested by `conformance/svg/`. All output is in canvas pixels, y down.
 
 **Parsing.** XML 1.0 with namespaces and internal DTD entities; input that is not
@@ -475,7 +475,7 @@ quantized grid, cells outside the grid ignored.
 Inconsistent geometry (scale or cell not finite and > 0, non-finite offsets or grid
 origin) yields zero coverage.
 
-**Backdrop luma** (for the `contrast` cost term, §8; ADR 0037). With `weights.contrast >
+**Backdrop luma** (for the `contrast` cost term, §8; ADR obstacles/contrast). With `weights.contrast >
 0` and at least one raster source, the engine also records how light the backdrop behind
 the labels is, whatever the sources' modes. The backdrop grid has cells of `C = 2c` from
 the grid origin, `ceil(cols / 2) × ceil(rows / 2)` of them (one per 2 × 2 grid cells).
@@ -525,7 +525,7 @@ collision box and the reported `box`. Line `i` of a text label, of width `w_i`, 
 `x_offsets[i] = padding + (W − w_i) · f` from the box's left edge and stands on the
 reported baseline, where `W` is the widest line and `f` = ½ for `align: center`, 0 for
 `start` and 1 for `end` (`label.align`, else `defaults.align`, default `center`; ADR
-0055): the lines of a label are centered on each other unless it says otherwise.
+text/line-breaking): the lines of a label are centered on each other unless it says otherwise.
 Host-measured lines (`width`, `height`) all start at `padding`. `x_offset` is the
 padding, the left edge of the text block.
 
@@ -602,7 +602,7 @@ vertical metrics (a measurement of the empty string, §5.1), takes the ascent or
 instead. The baseline of line `i` is at `padding + top + i·line_height·size` from the box
 top. So a box fits its letters: one line of `Alpha` is `0.76 + 0.24 + 2 × 0.15 = 1.3 em`
 high with the default padding (with ascent and descent: 1.662 em), and a label above or
-below its anchor stands as close to it as one beside it (ADR 0052).
+below its anchor stands as close to it as one beside it (ADR text/measurement).
 
 ### 5.3 Line breaking, wrapping, truncation
 
@@ -762,11 +762,11 @@ polygons are not obstacles of other labels.
 
 Boundary candidates come from the `boundary` model or the `boundary` ladder step; the
 default ladder has no `boundary` step, since a label that fits nowhere near its anchor
-would get a leader across the picture (ADR 0019).
+would get a leader across the picture (ADR placement/ladder).
 Slots in the margins along `placement.boundary.sides`, `margin` from the edge: an item's
 candidates stand at its anchor's height (left and right; its x for top and bottom) and one,
 two and three label heights (widths) above and below it. After the search and the fans
-(§6.8), the labels on each side form a **column** (ADR 0030):
+(§6.8), the labels on each side form a **column** (ADR placement/columns):
 
 * **Layout.** The members, ordered by their anchors along the side (then index), keep
   their placed variant (else the first, at level 0 with the `boundary` model, else at the
@@ -815,7 +815,7 @@ violating a static hard constraint are infeasible (kept only for explanations).
 Candidates with static cost > `prune_factor × best + 1` of the same item and level are
 dropped.
 
-Filtering while generating (ADR 0015), always exact:
+Filtering while generating (ADR placement/ladder), always exact:
 
 * When labels may overlap no item mark (`avoid.label.items` and the own-mark policy
   hard), non-internal rectangular candidates whose box contains, with a 2·EPS margin,
@@ -828,7 +828,7 @@ Filtering while generating (ADR 0015), always exact:
   label of key ≤ the item's, rectangular candidates are first tested against the same
   kind of occupancy grid of placed rectangular labels.
 * The warm-start box of an item is an extra level-0 candidate of the level-0 variant of
-  its size (width and height within 0.5 px; ADR 0016): slider-kind on the allowed
+  its size (width and height within 0.5 px; ADR motion/warm-starts): slider-kind on the allowed
   position its center points to when it is at most `offset + 1` px from the mark, else a
   distant candidate; none when it overlaps the own mark or is statically infeasible. A
   `warm_start` entry with an `anchor` (the anchor point it was placed for, as a result
@@ -842,7 +842,7 @@ Filtering while generating (ADR 0015), always exact:
   item's leaders start (§7, `attach`) and ends on the box (both within 0.5 px) and, for
   `angles` and `elbow`, its first segment is within 0.5° of an allowed direction; with
   the `baseline` port (not `orthogonal`) it gets the variant's underline; not for the
-  representative of a group (ADR 0027). With `curved` there is none.
+  representative of a group (ADR motion/warm-starts). With `curved` there is none.
 * Nudges: for the warm-start box of the level-0 variant that lies on a slider path (its
   center within 0.75 px of the path of §6.2 over the item's allowed gaps, chained
   through consecutive gaps, curved stretches followed by their chords between the
@@ -850,15 +850,15 @@ Filtering while generating (ADR 0015), always exact:
   point, each step forwards and then backwards (a path all around the mark wraps, one
   that ends stops there), are slider candidates of that variant, placed as those of
   §6.2 are, on the allowed position their center points to (as the warm-start box);
-  only statically feasible ones count. They are made when §10.1 asks for them (ADR
-  0027).
+  only statically feasible ones count. They are made when §10.1 asks for them
+  (ADR motion/warm-starts).
 * Warm-start candidates (the warm-start box, at any size, and its nudges) keep half the
-  label gap and margin (§4.4, ADR 0028).
+  label gap and margin (§4.4, ADR placement/margin).
 
 ### 6.8 Fan labels
 
 After the search (§10.3), crowds of items get their labels stacked in a column beside the
-crowd, each with its own leader (model and anchor side `fan`; ADR 0022). `placement.fan`:
+crowd, each with its own leader (model and anchor side `fan`; ADR placement/columns). `placement.fan`:
 `auto` (default) for crowds with items left without a label, when the column places more
 labels; `always` for every crowd, when the column places at least as many; `off`. There are
 no fans with `prefix` omission, with the `angles` leader style (its leaders keep to the
@@ -926,7 +926,7 @@ its font size.
 ### 6.9 Stubs
 
 In a crowd of points a label next to its point can be read as the label of a neighbour.
-With `placement.stubs: auto` (default `off`; ADR 0050) such a label may stand off its point
+With `placement.stubs: auto` (default `off`; ADR placement/stubs) such a label may stand off its point
 a little, joined to it by a **stub**: a short straight leader at a right angle to the
 label's side.
 
@@ -947,7 +947,7 @@ label's side.
   the tip of an icon mark) to `(x0, p.y)` or `(x1, p.y)` on the box; vertical when
   `|p.x − c.x| ≤ w / 4` and `p` lies above or below the box, to `(p.x, y0)` or `(p.x, y1)`,
   likewise. It meets the side of the label facing the mark at a right angle: a left or
-  right side in its middle (ADR 0054), a top or bottom side within its middle half. A box
+  right side in its middle (ADR placement/stubs), a top or bottom side within its middle half. A box
   diagonal to the mark, or beside it but off its middle, has no stub. `leaders.style`,
   `port`, `attach`, `min_length` and `max_length` do not apply; the result reports a stub
   as the label's `leader` with `stub: true`.
@@ -970,7 +970,7 @@ label's side.
 * **Crowd.** An adjacent or slider candidate without a stub whose box is ambiguous (the
   rule above) costs `w_leader` more (term `crowd`, §8): a label in a crowd stands plain
   only where no stub, no clear position and no leader of about its cost is free (ADR
-  0054).
+  placement/stubs).
 
 ---
 
@@ -1055,7 +1055,7 @@ cost = Σ_class w_label[class] · covered(label_k, class) / em²
   which hides what lies under it: they have no soft class costs (hard classes still
   apply).
 * `ring_k` = the label box grown by `buffer`, minus the label box.
-* `D(label_k)` (ADR 0037): how much the backdrop luma `s` (§4.6) varies under the label
+* `D(label_k)` (ADR obstacles/contrast): how much the backdrop luma `s` (§4.6) varies under the label
   box, `D = I₂ − I₁ · I₁ / A`, with `I₁` and `I₂` the exact integrals of `s` and `s²` over
   the box on the backdrop grid (as covered areas, §4.1, in backdrop cells) and `A` the
   area of the box inside that grid in backdrop cells (the box corners in cell units,
@@ -1066,7 +1066,7 @@ cost = Σ_class w_label[class] · covered(label_k, class) / em²
   backdrop nothing. Internal labels of point items, which lie on their mark, have none.
 * `d` = the distance between the centers of the label box and the item's warm-start box
   (§6.7): 1 per em up to 1 em, then 1/4 per em up to 5 em, so that a label that has to
-  move prefers a near place (ADR 0027); 0 without a warm-start box.
+  move prefers a near place (ADR motion/warm-starts); 0 without a warm-start box.
 * `covered_len` of a leader: the segment is sampled every `c/2` px; each sample adds the
   class coverage of its cell × the sample spacing.
 * `ambiguity_k = clamp((d_own − d_other) / em + 0.5, 0, 1)` when another item's shape is
@@ -1210,7 +1210,7 @@ with the item's best candidate (fewest evictions, then cost) and re-queues them.
 `degrade_options.soft_overlap_weight`. `omit` gives up. Required items are a band of
 their own above everything and therefore run first.
 
-Time guard (ADR 0007, 0042, 0048): with a clock, the pass stops running bands and ladders
+Time guard (ADR solver/time-budget): with a clock, the pass stops running bands and ladders
 10 × `time_budget_ms` after it began (checked before every band and every 64 items).
 The items still undecided then — except `keep_with` members and items whose level-0
 attempt already failed — are visited once more in total order and take their best free
@@ -1219,7 +1219,7 @@ level-0 candidate as in a band's level-0 pass, without the ladder, until another
 first of them without a free level-0 candidate ends the prefix. Every item left
 undecided is `budget_exhausted`. Without a clock the guard never passes.
 
-Warm starts (`warm_start`, with `weights.stability` > 0; ADR 0016, ADR 0025):
+Warm starts (`warm_start`, with `weights.stability` > 0; ADR motion/warm-starts):
 
 * Before a band's level-0 pass, its items (except `keep_with` members) whose level-0
   warm-start candidate (§6.7) is live take it, in total order. Then the others, in total
@@ -1263,7 +1263,7 @@ conflicts with no placed label, or only with labels of strictly lower key (not r
 takes the candidate with the fewest such labels (then the smallest sum of their gains,
 then the lowest cost, then the lowest candidate id) within the label budgets, and those
 labels are removed and visited in their turn. An item without such a candidate may
-**move one label aside** (ADR 0049): of its usable candidates (fan and boundary ones
+**move one label aside** (ADR priority/repair): of its usable candidates (fan and boundary ones
 excepted), cheapest first (relaxed ones at their relaxed cost, ties by id), the first 8
 whose conflicts are one label `b` of a key not strictly lower than its own (or required,
 not a fan or boundary label) and at most one removable label are tried; `b` moves to one

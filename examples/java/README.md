@@ -2,7 +2,7 @@
 
 `Main.java` labels 40 towns on a raster background (passed to the native library by
 pointer), with angled leaders and priority-driven omission, prints the result and writes
-the debug overlay SVG. The guide is `docs/bindings/java.md`.
+the debug overlay SVG. The guide is `docs/getting-started/java.md`.
 
 Run from the repository root:
 

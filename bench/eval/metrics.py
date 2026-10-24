@@ -703,7 +703,7 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
     (spec §4.4) from it, by ``tol`` more; with ``placement.own_nearest`` the position must
     be nearer to the item's own mark than to any other mark it may not cover by the margin
     (or the distance between the marks), by ``tol`` more: the engine leaves such an item
-    out rather than place a label that could be another's (ADR 0054).
+    out rather than place a label that could be another's (ADR placement/margin).
     """
     opts = prob.opts
     margin_opt = (opts.get("defaults") or {}).get("margin", "0.2em")

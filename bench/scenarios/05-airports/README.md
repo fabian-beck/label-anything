@@ -33,7 +33,7 @@ The hub maps answer "which airports must be labeled". By default a label keeps c
 item's mark, whatever its priority, so making all 1,000 airports items lets small airports' dots
 block the hubs in dense regions (in `world-iata-1000-vector` ATL, ORD, LHR, CDG and FRA find no
 position). `avoid.label.lower_items` lifts that: a label may cover the mark of a less important
-item, which then stays unlabeled (spec §4.4, ADR 0040) — `world-iata-1000-lower-vector` labels
+item, which then stays unlabeled (spec §4.4, ADR priority/lower-items) — `world-iata-1000-lower-vector` labels
 those hubs. The hub maps use it too (`lower_items` 10, leaders 2.5), and make only the airports
 worth a label items; the others are context that a label may cover at a small cost. Their marks
 are smaller: r = min(6, 1.8 + 0.1·sqrt(routes)).

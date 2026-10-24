@@ -1,4 +1,4 @@
-//! Greedy placement with the degradation ladder (spec §10.1, ADR 0009).
+//! Greedy placement with the degradation ladder (spec §10.1, ADR priority/key).
 
 use super::{Reason, Solve};
 use crate::candidates::Cand;
@@ -90,13 +90,13 @@ pub fn run(s: &mut Solve) {
         g.set_members.push(set);
     }
     // the guard runs from the start of this pass: preparation always completes, and its
-    // time must not leave the most important bands unplaced (ADR 0042)
+    // time must not leave the most important bands unplaced (ADR solver/time-budget)
     let budget_guard = s.model.solver.time_budget_ms * 10.0;
     let started = s.now();
     if s.model.omission == Omission::Prefix {
         let order = s.pri.order.clone();
         let mut cut = false;
-        // after the guard, level 0 only (ADR 0048): the first item without a free
+        // after the guard, level 0 only (ADR solver/time-budget): the first item without a free
         // level-0 position ends the prefix, and the guard of that pass ends it as well
         let mut finish: Option<f64> = None;
         for (k, &i) in order.iter().enumerate() {
@@ -257,8 +257,8 @@ pub fn run(s: &mut Solve) {
     exhaust(s, &mut g, &all, true);
 }
 
-/// After the greedy guard (ADR 0048): the undecided items, in total order, get their best
-/// free level-0 candidate — no ladder, no explanation of a failure — until the guard passes
+/// After the greedy guard (ADR solver/time-budget): the undecided items, in total order, get their
+/// best free level-0 candidate — no ladder, no explanation of a failure — until the guard passes
 /// once more from the start of this pass; whatever is left is `budget_exhausted`.
 fn finish_level0(s: &mut Solve, g: &mut Greedy, guard: f64) {
     let started = s.now();
@@ -276,10 +276,11 @@ fn finish_level0(s: &mut Solve, g: &mut Greedy, guard: f64) {
     }
 }
 
-/// The best free level-0 candidate of undecided item `i`, after the greedy guard (ADR 0048).
-/// Not for members of a `keep_with` set (placed together or not at all) or items whose
-/// level-0 attempt already failed (their candidates have not become freer since). A cap
-/// that the candidate would exceed omits the item; any other failure leaves it undecided.
+/// The best free level-0 candidate of undecided item `i`, after the greedy guard
+/// (ADR solver/time-budget). Not for members of a `keep_with` set (placed together or not at
+/// all) or items whose level-0 attempt already failed (their candidates have not become freer
+/// since). A cap that the candidate would exceed omits the item; any other failure leaves it
+/// undecided.
 fn place_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> bool {
     if g.sets[i].is_some() || g.tried0[i] {
         return false;
@@ -297,7 +298,7 @@ fn place_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> bool {
     true
 }
 
-/// Whether the greedy guard has passed: `guard` ms after `started` (ADR 0042; never
+/// Whether the greedy guard has passed: `guard` ms after `started` (ADR solver/time-budget; never
 /// without a clock).
 fn guard_passed(s: &Solve, started: f64, guard: f64) -> bool {
     s.now() > 0.0 && s.now() - started > guard
@@ -447,7 +448,7 @@ fn place_item(s: &mut Solve, g: &mut Greedy, i: usize, ladder: bool) -> bool {
         s.reasons[i] = Some(explain(s, i));
         return false;
     }
-    // a label the previous solve degraded keeps its box while that is free (ADR 0025)
+    // a label the previous solve degraded keeps its box while that is free (ADR motion/warm-starts)
     if s.model.weights.stability > 0.0 {
         if let Some(c) = s.warm_ladder_candidate(i) {
             let mut scratch = Vec::new();

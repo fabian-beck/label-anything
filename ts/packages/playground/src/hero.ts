@@ -2,12 +2,14 @@
  * The live header of the documentation's home page (docs/_overrides/home.html), taking the
  * name literally: the logo — a label, its leader and a dot — carries the name as its label,
  * among random things (a rubber duck, coffee, a cactus, the moon, a pair of socks, …), each
- * drawn with its true outline and labeled by the engine. Nothing moves by itself: things
- * move when they are dragged or shuffled, a click adds another, the leader style can be
- * switched, and hovering a label or a thing tells how its label was placed or why it was
- * left out. On the way the engine shows what it does: labels touch the true outlines (into
- * a banana's curve), the moon is labeled inside, the socks share one label, long labels
- * shorten or wrap, the crown's label comes first, and every label keeps off the text.
+ * drawn with its true outline and labeled by the engine. Once the page has loaded, more
+ * things come, one at a time, to show that the header is live, until the user takes over
+ * (or the header is full); otherwise nothing moves by itself: things move when they are
+ * dragged or shuffled, a click adds another, the leader style can be switched, and
+ * hovering a label or a thing tells how its label was placed or why it was left out. On
+ * the way the engine shows what it does: labels touch the true outlines (into a banana's
+ * curve), the moon is labeled inside, the socks share one label, long labels shorten or
+ * wrap, the crown's label comes first, and every label keeps off the text.
  *
  * Built into dist/hero.js; the home page loads it from the playground's directory and
  * solves with the playground's TypeScript engine (engine-ts.js) in a worker. Without it
@@ -23,6 +25,8 @@
  * `[data-la-hero-styles] button[data-style]`, `[data-la-hero-shuffle]` and
  * `[data-la-hero-reset]`). The custom property `--la-hero-layout` says where the things
  * go: `wide` (beside the text) or `strip` (below it, in the room the class `has-toy` makes).
+ * The attribute `data-la-hero-reveal` on `[data-la-hero]` turns on the things that come by
+ * themselves (not with reduced motion).
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
 import { LabelMotion } from "@label-anything/extras";
@@ -45,6 +49,11 @@ const BUDGET_REST = 10;
 const MAX_ADDED = 12;
 /** How long a shuffle takes things to their new places (ms). */
 const SHUFFLE_MS = 600;
+/** The reveal: the first thing comes this long after the page has loaded, the next ones this far apart (ms). */
+const REVEAL_FIRST = 1500;
+const REVEAL_EVERY = 2500;
+/** A thing revealed keeps at least this far from the other things, the labels and the text (px): where none is that free, the reveal ends. */
+const REVEAL_ROOM = 24;
 
 // --- the things ---------------------------------------------------------------------------
 
@@ -254,7 +263,7 @@ const inside = (b: Box, x: number, y: number, pad = 0) => x >= b.x - pad && x <=
 const pathOf = (pts: readonly Pt[], close = false) => pts.map((q, i) => `${i ? "L" : "M"}${px(q[0])} ${px(q[1])}`).join("") + (close ? "Z" : "");
 
 /** How far a thing reaches from its anchor. */
-const reach = (t: Thing) => {
+const reach = (t: Pick<Thing, "art">) => {
   const a = ARTS[t.art]!;
   return a.r ?? Math.max(...a.outline.map((q) => Math.hypot(q[0], q[1])));
 };
@@ -358,6 +367,11 @@ export class Hero {
   #press: { x: number; y: number; t: number; id: number } | null = null;
   #added = 0;
   #reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /** Whether more things still come by themselves, the timer of the next, and where they go. */
+  #revealing = false;
+  #revealTimer = 0;
+  #revealRand = rng(11);
+  #inView = true;
 
   constructor(root: HTMLElement, engine: WorkerEngine) {
     this.root = root;
@@ -382,6 +396,11 @@ export class Hero {
     this.#reset();
     this.#listen();
     new ResizeObserver(() => this.#layout()).observe(root);
+    if (root.hasAttribute("data-la-hero-reveal") && !this.#reduced) {
+      new IntersectionObserver((es) => (this.#inView = es.some((e) => e.isIntersecting))).observe(root);
+      this.#revealing = true;
+      this.#revealTimer = window.setTimeout(() => this.#revealNext(), REVEAL_FIRST);
+    }
   }
 
   // --- layout -----------------------------------------------------------------------------
@@ -1002,6 +1021,9 @@ export class Hero {
     };
     root.addEventListener("pointerup", end);
     root.addEventListener("pointercancel", end);
+    // the user takes over: no more things come by themselves
+    root.addEventListener("pointerdown", () => this.stopReveal());
+    root.addEventListener("keydown", () => this.stopReveal());
     root.querySelector("[data-la-hero-reset]")?.addEventListener("click", () => {
       const from = new Map(this.#visible().map((t) => [t.id, this.#drawnAt(t)] as const));
       this.#reset();
@@ -1092,6 +1114,50 @@ export class Hero {
     }
     this.#startGlide(from);
     this.#request(true);
+  }
+
+  /**
+   * The next thing of the reveal, the next of `MORE`, at the freest place there is; not while
+   * the header is out of sight or the pointer is on a thing or a label.
+   */
+  #revealNext(): void {
+    if (!this.#revealing) return;
+    if (this.result && !document.hidden && this.#inView && !this.root.classList.contains("is-over")) {
+      const at = this.#added < MORE.length ? this.#roomy(Math.min(reach(MORE[this.#added]!), 16)) : null;
+      if (!at) {
+        this.stopReveal();
+        return;
+      }
+      this.#add(at[0], at[1]);
+    }
+    this.#revealTimer = window.setTimeout(() => this.#revealNext(), REVEAL_EVERY);
+  }
+
+  /** No more things come by themselves. */
+  stopReveal(): void {
+    this.#revealing = false;
+    clearTimeout(this.#revealTimer);
+  }
+
+  /**
+   * The freest place for a mark of reach r: as far as can be from the things, the labels, the
+   * text and the logo; null where none keeps `REVEAL_ROOM` from them.
+   */
+  #roomy(r: number): Pt | null {
+    const marks = this.#visible().map((t) => [...this.#drawnAt(t), reach(t)] as const);
+    const boxes = [...this.#drawn.values(), ...[...this.#obstacles, this.#logo].map(([x, y, w, h]) => ({ x, y, w, h }))];
+    let best: Pt | null = null;
+    let room = REVEAL_ROOM;
+    for (let i = 0; i < 120; i++) {
+      const x = r + this.#revealRand() * (this.#w - 2 * r);
+      const y = r + this.#revealRand() * (this.#h - 2 * r);
+      if (!this.#clear(x, y, r + 6, true)) continue;
+      let d = Infinity;
+      for (const [mx, my, mr] of marks) d = Math.min(d, Math.hypot(x - mx, y - my) - mr - r);
+      for (const b of boxes) d = Math.min(d, Math.hypot(Math.max(b.x - x, 0, x - b.x - b.w), Math.max(b.y - y, 0, y - b.y - b.h)) - r);
+      if (d > room) [best, room] = [[x, y], d];
+    }
+    return best;
   }
 
   /** A new thing where the user clicked, the next of `MORE`. */

@@ -220,7 +220,7 @@ pub trait Env {
     }
     /// Whether [`Env::measure`] may return `Some`. Return `false` when it never does: text
     /// is then measured with the fonts alone, so wrapping can measure the candidate lines of
-    /// simple-shaped text in constant time (`la_text::Measure::Font`, ADR 0018). The
+    /// simple-shaped text in constant time (`la_text::Measure::Font`, ADR text/measurement). The
     /// default, `true`, is correct for every environment.
     fn has_measure_callback(&self) -> bool {
         true

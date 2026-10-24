@@ -3,8 +3,8 @@
  * `rust/crates/la-core/src/geom/shape.rs`).
  *
  * Every shape has a reference point, a bounding box, an exact support function (used for
- * shape-aware adjacent and slider candidates, ADR 0008), containment, signed distance,
- * exact rectangle and segment tests, and an outline polygon (exact for polygons and sharp
+ * shape-aware adjacent and slider candidates, ADR placement/positions), containment, signed
+ * distance, exact rectangle and segment tests, and an outline polygon (exact for polygons and sharp
  * rectangles, a circumscribed approximation for curved shapes) used for rasterization and
  * distances.
  *

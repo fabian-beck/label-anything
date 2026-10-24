@@ -1,6 +1,6 @@
 """Whose label is it, and what does it hide: label–point association and the data around labels.
 
-What the stubs, own-mark-nearest and spacing work showed (ADR 0050, 0051, 0054):
+What the stubs, own-mark-nearest and spacing work showed (ADR project/benchmark-measures):
 
 * **Strictly nearer is not enough.** A reader takes a label for the label of the point
   nearest to it, and one about as near to another point reads as either's: North Korea's
@@ -40,7 +40,7 @@ from ..common.geom import Box, GridIndex
 # margins of the clarity measure, em of the label's font: below 0 another point is nearer
 CLEAR_EM = {"misattributed": 0.0, "unclear": 0.2, "weak": 0.5}
 # label gaps of the spacing measure, em of the larger font: below 0.2 em labels kept the old
-# label margin only, below 0.4 em less than the engine's default spacing (ADR 0054)
+# label margin only, below 0.4 em less than the engine's default spacing (ADR placement/margin)
 CLOSE_EM = {"tight": 0.2, "close": 0.4}
 REACH_EM = 2.0           # margins and gaps beyond this count as clear (quantiles are capped)
 COINCIDENT_PX = 0.5      # points closer together than this are one spot
