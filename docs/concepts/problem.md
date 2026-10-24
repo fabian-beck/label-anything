@@ -2,7 +2,7 @@
 
 A problem is one JSON object (`problem.v1`, schema
 [`problem.v1.json`](../reference/schemas.md)). Only `items` is required; every option has
-a [default](../reference/defaults.md), and a [preset](presets-defaults.md) sets several at
+a [default](../reference/defaults.md), and a [preset](../reference/presets.md) sets several at
 once. The bindings build the same object from Python keywords, the Java builder or plain
 JavaScript objects.
 
@@ -11,7 +11,7 @@ JavaScript objects.
 | `version` | `"1"` (optional) |
 | [`canvas`](#canvas) | size, padding, label region; optional |
 | [`y_axis`, `transform`](#coordinates) | how input coordinates map to canvas pixels |
-| [`preset`](presets-defaults.md) | `auto` (default), `scatter`, `map`, `graph`, `illustration`, `none` |
+| [`preset`](../reference/presets.md) | `auto` (default), `scatter`, `map`, `graph`, `illustration`, `none` |
 | [`defaults`](#label-defaults-and-fonts), `text` | label defaults: font, padding, buffer, mark, wrap, truncate; text shaping |
 | [`items`](#items) | what to label: anchor, label, attributes, priority |
 | [`obstacles`](#obstacles) | what to avoid besides the items: vector layers, SVG, raster images |

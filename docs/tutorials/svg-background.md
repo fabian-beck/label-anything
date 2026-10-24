@@ -62,7 +62,7 @@ itself: `{"shape": "from_svg", "svg_id": "o3"}` or
 The rendering shows the SVG's geometry in grey: dots, lines and the boxes of the texts.
 All 20 labels are placed, clear of every text and the legend.
 
-## The same in Python
+## In Python
 
 ```python
 --8<-- "examples/tutorials/python/svg_background.py:place"

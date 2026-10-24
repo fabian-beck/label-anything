@@ -10,7 +10,7 @@ wrapped, distant, smaller — before the label is given up.
 
 `placement.models` lists the models to use (default `adjacent`, `slider`, `distant`; the
 `auto` preset adds `distant` only where it is crowded,
-[presets](presets-defaults.md#the-presets)).
+[presets](../reference/presets.md#auto)).
 
 **`adjacent`** — 8 fixed positions around the mark: the label's corner or side midpoint
 touches the mark, grown by `placement.offset` (1 px), in the position's direction.

@@ -215,7 +215,7 @@ Besides the functions above, `@label-anything/wasm` exports `isInitialized`, and
 `placeValidated(env, problem, report)` for custom environments (clock, files, callbacks;
 see its [README](gh:ts/packages/core/README.md)), and `placeTraced(env, problem)`, which
 also returns the trace of the solver's decisions that the
-[explainer](../try.md#how-it-works-step-by-step) replays.
+[explainer](https://fabian-beck.github.io/label-anything/playground/explain.html) replays.
 
 ??? abstract "The definition: `ts/packages/core/src/api.ts`"
 

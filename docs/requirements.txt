@@ -1,13 +1,15 @@
 # The documentation site (mkdocs.yml at the repository root): MkDocs (BSD-2-Clause) with
-# Material for MkDocs (MIT) and PyMdown Extensions (MIT), pinned with their dependencies.
+# Material for MkDocs (MIT), PyMdown Extensions (MIT) and mkdocs-redirects (MIT), pinned
+# with their dependencies.
 #
 #   python3 -m venv .venv-docs && .venv-docs/bin/pip install -r docs/requirements.txt
 #   .venv-docs/bin/mkdocs build --strict      # or: mkdocs serve
 #
-# Update: bump the three direct pins, reinstall into a fresh venv and replace the
+# Update: bump the four direct pins, reinstall into a fresh venv and replace the
 # transitive pins below with its `pip freeze`.
 mkdocs==1.6.1
 mkdocs-material==9.7.7
+mkdocs-redirects==1.2.2
 pymdown-extensions==10.21.3
 
 # transitive
