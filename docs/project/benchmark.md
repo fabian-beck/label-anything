@@ -112,7 +112,10 @@ parentheses where that is more ("n/a": the tool cannot run the problem; commit 2
   number of candidates: at most 97 MB for 2,000 labels, 580 MB for 20,000.
 
 The [gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/) shows
-the renderings of all labelers side by side, and what the defaults still do badly.
+the renderings of all labelers side by side, and what the defaults still do badly. The
+images of the report and the gallery mark what the measures count, where it happens:
+conflicts in red, ambiguous labels in orange (a line to the point a label may be taken
+for), covered points in magenta and labels too close to each other in purple.
 
 ## Running it
 

@@ -263,10 +263,13 @@ def save_webp(img: Image.Image, path: Path, quality: int = 90) -> list[int]:
     return list(img.size)
 
 
-def write_svg(problem: dict, result: dict, files: dict, out: Path, rel: str, title: str | None = None) -> dict:
-    """The figure as one self-contained SVG at ``out / rel``; the page shows it at the canvas size, the viewer
-    zooms into it (``full`` is the same file, ``full_size`` the largest size the viewer zooms to)."""
-    svg = render.standalone_svg(problem, result, files.get("background_svg"), files.get("background"), title=title)
+def write_svg(problem: dict, result: dict, files: dict, out: Path, rel: str, title: str | None = None,
+              marks: dict | None = None) -> dict:
+    """The figure as one self-contained SVG at ``out / rel``, with the violations of ``marks`` drawn over it; the
+    page shows it at the canvas size, the viewer zooms into it (``full`` is the same file, ``full_size`` the
+    largest size the viewer zooms to)."""
+    svg = render.standalone_svg(problem, result, files.get("background_svg"), files.get("background"), title=title,
+                                marks=marks)
     path = out / rel
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(svg, encoding="utf-8")
@@ -324,8 +327,9 @@ def solve_figure(fig: Fig, files: dict, solve: Solve, out: Path, tmp: Path) -> d
     problem = read_json(files["problem"])
     result = solve(files["problem"], tmp / f"{name}.json")
     truth = read_json(files["truth"]) if files.get("truth") else None
-    s = evaluate(problem, result, truth, removal_test=False)["summary"]
-    images = write_svg(problem, result, files, out, f"img/{name}.svg", fig.title.split(":")[0])
+    ev = evaluate(problem, result, truth, removal_test=False, marks=True)
+    s, clarity, points = ev["summary"], ev["association"]["clarity"], ev["association"]["points"]
+    images = write_svg(problem, result, files, out, f"img/{name}.svg", fig.title.split(":")[0], ev["marks"])
     pl = result.get("placements", [])
     by_id = {p["id"]: p for p in pl}
     leaders = sum(1 for p in pl if p.get("placed") and p.get("leader"))
@@ -360,6 +364,8 @@ def solve_figure(fig: Fig, files: dict, solve: Solve, out: Path, tmp: Path) -> d
             "split_words": split,
             "settings": settings(problem),
             "hard_violations": s["hard_violations"], "leader_len_max_em": s.get("leader_len_max_em"),
+            "misattributed": clarity["misattributed"], "unclear": clarity["unclear"] + clarity["leadered_unclear"],
+            "points_covered": points["covered"], "labels_close": ev["association"]["spacing"]["labels_close"],
             "leader_near_crossings": s.get("leader_near_crossings"),
             "leader_mark_touches": s.get("leader_mark_touches"),
             "runtime_ms": (result.get("stats") or {}).get("runtime_ms")}
@@ -388,8 +394,11 @@ def comparisons(run: Path, report: dict, out: Path, problems: Path = paths.PROBL
                 if res is not None and res.exists() and prob is not None and prob.exists():
                     files = problem_files(problems, f"{scenario}/{config}") or {
                         "background": render.default_background_png(prob)}
-                    cell.update(write_svg(read_json(prob), read_json(res), files, out, rel + ".svg",
-                                          f"{title}, {NAMES.get(s, s)}"))
+                    problem, result = read_json(prob), read_json(res)
+                    truth = read_json(files["truth"]) if files.get("truth") else None
+                    marks = evaluate(problem, result, truth, removal_test=False, marks=True)["marks"]
+                    cell.update(write_svg(problem, result, files, out, rel + ".svg", f"{title}, {NAMES.get(s, s)}",
+                                          marks))
                 else:
                     with Image.open(src) as im:
                         size = save_webp(im, out / (rel + ".webp"))
@@ -433,7 +442,9 @@ def stability(run: Path, report: dict, out: Path, problems: Path = paths.PROBLEM
         res = run / "results" / "rust" / seq["scenario"] / seq["sequence"] / name if name else None
         prob = problems / seq["scenario"] / seq["sequence"] / name if name else None
         if res is not None and res.exists() and prob is not None and prob.exists():
-            m = write_svg(read_json(prob), read_json(res), {}, out, dst + ".svg", f"Frame {k + 1}")
+            problem, result = read_json(prob), read_json(res)
+            marks = evaluate(problem, result, removal_test=False, marks=True)["marks"]
+            m = write_svg(problem, result, {}, out, dst + ".svg", f"Frame {k + 1}", marks)
         else:
             with Image.open(src) as im:
                 size = save_webp(im, out / (dst + ".webp"))
@@ -468,7 +479,7 @@ CSS = r"""
    black text on white in both themes. One weight throughout, as in the images: hierarchy by size and color. */
 :root {
   --paper: #f3f5f8; --card: #ffffff; --ink: #16202a; --muted: #586474; --rule: #d6dce4;
-  --label: #3b6aa0; --label-soft: #e6edf6; --omit: #c0352f; --good: #2d7a4c;
+  --label: #3b6aa0; --label-soft: #e6edf6; --omit: #c0352f; --good: #2d7a4c; --warn: #a35200;
   --chip: #ffffff; --chip-ink: #000000;
   --body: "Noto Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
   --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
@@ -478,10 +489,10 @@ CSS = r"""
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --paper: #0e1318; --card: #151c24; --ink: #e3e8ee; --muted: #9ba6b2; --rule: #27313c;
-  --label: #8bb2e3; --label-soft: #1b2939; --omit: #ff7a72; --good: #67c792; color-scheme: dark } }
+  --label: #8bb2e3; --label-soft: #1b2939; --omit: #ff7a72; --good: #67c792; --warn: #ffab5c; color-scheme: dark } }
 :root[data-theme="dark"] {
   --paper: #0e1318; --card: #151c24; --ink: #e3e8ee; --muted: #9ba6b2; --rule: #27313c;
-  --label: #8bb2e3; --label-soft: #1b2939; --omit: #ff7a72; --good: #67c792; color-scheme: dark }
+  --label: #8bb2e3; --label-soft: #1b2939; --omit: #ff7a72; --good: #67c792; --warn: #ffab5c; color-scheme: dark }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.55;
   font-weight: 400; font-synthesis: none; }
@@ -535,6 +546,7 @@ figcaption p { margin: 0; color: var(--muted); max-width: 75ch; }
   border: 1px solid var(--rule); background: var(--chip); color: var(--chip-ink); border-radius: 1px; }
 .chips li.bad { border-color: var(--omit); color: var(--omit); background: transparent; }
 .chips li.ok { border-color: var(--good); color: var(--good); background: transparent; }
+.chips li.warn { border-color: var(--warn); color: var(--warn); background: transparent; }
 .pairhead { border-bottom: 1px solid var(--rule); }
 .cellhead { font-family: var(--mono); font-size: 12px; padding: 8px 14px; color: var(--muted); border-bottom: 1px solid var(--rule); }
 .cmpgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
@@ -609,6 +621,11 @@ def _fig_chips(m: dict) -> str:
             chips.append((f"longest {m['leader_len_max_em']:.1f} em", ""))
     hv = m["hard_violations"]
     chips.append(("no hard violations", "ok") if hv == 0 else (f"{hv:,} hard violations", "bad"))
+    for key, one, many in (("unclear", "unclear label", "unclear labels"),
+                           ("points_covered", "point covered", "points covered"),
+                           ("labels_close", "label too close", "labels too close")):
+        if m.get(key):
+            chips.append((f"{m[key]:,} {one if m[key] == 1 else many}", "warn"))
     if m.get("runtime_ms") is not None:
         chips.append((f"{m['runtime_ms']:,.0f} ms", ""))
     for reason, n in sorted((m.get("reasons") or {}).items(), key=lambda kv: (-kv[1], kv[0])):
@@ -943,10 +960,12 @@ def stability_html(st: dict) -> str:
 
 def key_html() -> str:
     mark, lead, omit = render.MARK_STROKE, render.LEADER, render.UNPLACED
+    violations = "\n".join(f"  <span>{render.violation_icon(k)}{E(text)}</span>" for k, _c, text in render.VIOLATIONS)
     return f"""<div class="key" aria-label="How to read the images">
   <span><svg width="44" height="18" viewBox="0 0 44 18" aria-hidden="true"><rect width="44" height="18" fill="{render.OBST}"/><rect x="3" y="2" width="38" height="14" fill="#fff" fill-opacity="{render.LABEL_FILL_OPACITY}"/><text x="22" y="13" font-size="10" text-anchor="middle" fill="{render.LABEL_TEXT}" font-family="Noto Sans, sans-serif">Label</text></svg>label box as reported by the engine</span>
   <span><svg width="56" height="18" viewBox="0 0 56 18" aria-hidden="true"><circle cx="6" cy="12" r="4" fill="{render.MARK_FILL}" stroke="{mark}"/><circle cx="17" cy="12" r="4" fill="#e15759" fill-opacity="0.75" stroke="{render._darker('#e15759')}"/><polyline points="21,10 40,4 54,4" fill="none" stroke="{lead}" stroke-width="1.5"/></svg>item mark (in the data's color where the chart has one) and leader</span>
   <span><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4 L14 14 M14 4 L4 14" stroke="{omit}" stroke-width="2.2"/></svg>item whose label was omitted</span>
+{violations}
 </div>"""
 
 

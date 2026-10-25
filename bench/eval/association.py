@@ -39,6 +39,8 @@ from ..common.geom import Box, GridIndex
 
 # margins of the clarity measure, em of the label's font: below 0 another point is nearer
 CLEAR_EM = {"misattributed": 0.0, "unclear": 0.2, "weak": 0.5}
+LEVELS = list(CLEAR_EM)
+DRAWN = ("misattributed", "unclear")  # the levels ``collect["ambiguous"]`` lists (weak ones are many)
 # label gaps of the spacing measure, em of the larger font: below 0.2 em labels kept the old
 # label margin only, below 0.4 em less than the engine's default spacing (ADR placement/margin)
 CLOSE_EM = {"tight": 0.2, "close": 0.4}
@@ -79,6 +81,11 @@ def data_points(prob, classes: dict, a_label: dict) -> list[tuple]:
     return pts
 
 
+def _center(shape) -> list[float]:
+    b = shape.bbox()
+    return [b.cx, b.cy]
+
+
 def _index(points: list[tuple]) -> GridIndex:
     ix = GridIndex(32.0)
     for k, (shape, _owner) in enumerate(points):
@@ -96,14 +103,17 @@ def _others(prob, it, owner) -> bool:
     return g is None or prob.items[owner].raw.get("group") != g
 
 
-def clarity(prob, placed: list, points: list[tuple], point_index: GridIndex, max_list: int = 25) -> dict:
+def clarity(prob, placed: list, points: list[tuple], point_index: GridIndex, max_list: int = 25,
+            collect: dict | None = None) -> dict:
     """The margin by which each label without a leader is nearer to its own point than to any
     other data point: ``m = d_other − d_own`` (signed distances from the label box), counted
     below each threshold of ``CLEAR_EM`` (``m < min(τ·em, distance between the two points)``),
     split by the kind of the nearer point (an item's mark or a background circle). Points the
     label hides entirely do not compete (``points_covered`` counts them). Rates are of all
     placed labels; internal labels are not measured. Leadered labels with another point
-    nearer than the ``unclear`` margin count as ``leadered_unclear``."""
+    nearer than the ``unclear`` margin count as ``leadered_unclear``. ``collect["ambiguous"]``
+    receives the misattributed, unclear and leadered unclear labels with the point each may be
+    taken for (of the worst level, the one with the smallest margin)."""
     counts = {k: 0 for k in CLEAR_EM}
     by_item = {k: 0 for k in CLEAR_EM}
     by_background = {k: 0 for k in CLEAR_EM}
@@ -128,6 +138,8 @@ def clarity(prob, placed: list, points: list[tuple], point_index: GridIndex, max
                     leadered_unclear += 1
                     if len(leadered_examples) < max_list:
                         leadered_examples.append(p.id)
+                    if collect is not None:
+                        collect["ambiguous"].append({"label": p.id, "level": "leadered", "point": _center(shape)})
                     break
             continue
         plain += 1
@@ -135,6 +147,7 @@ def clarity(prob, placed: list, points: list[tuple], point_index: GridIndex, max
         reach = REACH_EM * em
         best = reach
         flags: dict[str, set[str]] = {}
+        worst = None  # ((level, margin), shape): the point the label is most likely taken for
         for k in point_index.query(p.box.grow(max(d_own, 0.0) + reach)):
             shape, owner = points[k]
             if not _others(prob, it, owner) or p.box.contains_box(shape.bbox()):
@@ -144,9 +157,13 @@ def clarity(prob, placed: list, points: list[tuple], point_index: GridIndex, max
                 continue
             m = shape.sdist_box(p.box) - d_own
             best = min(best, m)
-            for name, tau in CLEAR_EM.items():
-                if m < min(tau * em, sep) - EPS_PX:
-                    flags.setdefault(name, set()).add("background" if owner is None else "item")
+            hit = [name for name, tau in CLEAR_EM.items() if m < min(tau * em, sep) - EPS_PX]
+            for name in hit:
+                flags.setdefault(name, set()).add("background" if owner is None else "item")
+            if hit and collect is not None and (worst is None or (LEVELS.index(hit[0]), m) < worst[0]):
+                worst = ((LEVELS.index(hit[0]), m), shape)
+        if worst is not None and LEVELS[worst[0][0]] in DRAWN:
+            collect["ambiguous"].append({"label": p.id, "level": LEVELS[worst[0][0]], "point": _center(worst[1])})
         margins.append(best / em)
         for name, kinds in flags.items():
             counts[name] += 1
@@ -169,11 +186,12 @@ def clarity(prob, placed: list, points: list[tuple], point_index: GridIndex, max
 
 
 def points_covered(prob, placed: list, points: list[tuple], box_index: GridIndex, tol: float,
-                   max_list: int = 25) -> dict:
+                   max_list: int = 25, collect: dict | None = None) -> dict:
     """Data points (``data_points``) that a placed label other than their own overlaps (the
     label box shrunk by ``tol``) or hides entirely (``hidden``: inside the box), and the
     labels that cover any: whatever the avoidance settings, a covered point is hidden from
-    the reader."""
+    the reader. ``collect["covered"]`` receives each covered point: its center, half its
+    extent and whether it is hidden."""
     covered = covered_bg = hidden = 0
     total_bg = sum(1 for _s, owner in points if owner is None)
     labels: set[int] = set()
@@ -195,6 +213,8 @@ def points_covered(prob, placed: list, points: list[tuple], box_index: GridIndex
             covered += 1
             covered_bg += owner is None
             hidden += inside
+            if collect is not None:
+                collect["covered"].append({"point": [bb.cx, bb.cy], "r": max(bb.w, bb.h) / 2, "hidden": inside})
     n_pts, n = len(points), len(placed)
     return {"total": n_pts, "covered": covered, "rate": (covered / n_pts) if n_pts else None, "hidden": hidden,
             "items_total": n_pts - total_bg, "items_covered": covered - covered_bg,
@@ -207,9 +227,23 @@ def _box_gap(a: Box, b: Box) -> float:
     return math.hypot(max(0.0, a.x0 - b.x1, b.x0 - a.x1), max(0.0, a.y0 - b.y1, b.y0 - a.y1))
 
 
-def label_spacing(placed: list, box_index: GridIndex) -> dict:
+def _gap_segment(a: Box, b: Box) -> list[float]:
+    """The shortest segment ``[x0, y0, x1, y1]`` from box ``a`` to box ``b`` (a point where they touch)."""
+    def span(a0, a1, b0, b1):
+        if a1 < b0:
+            return a1, b0
+        if b1 < a0:
+            return a0, b1
+        m = (max(a0, b0) + min(a1, b1)) / 2
+        return m, m
+    (ax, bx), (ay, by) = span(a.x0, a.x1, b.x0, b.x1), span(a.y0, a.y1, b.y0, b.y1)
+    return [ax, ay, bx, by]
+
+
+def label_spacing(placed: list, box_index: GridIndex, collect: dict | None = None) -> dict:
     """The gap from each placed label to the nearest other one, in em of the larger font of the
-    two (overlapping labels: 0): pairs and labels below each threshold of ``CLOSE_EM``."""
+    two (overlapping labels: 0): pairs and labels below each threshold of ``CLOSE_EM``.
+    ``collect["close"]`` receives the gap of each pair nearer than ``close`` that does not overlap."""
     pairs = {name: 0 for name in CLOSE_EM}
     close_labels = 0
     nearest = []
@@ -229,6 +263,8 @@ def label_spacing(placed: list, box_index: GridIndex) -> dict:
                 for name, tau in CLOSE_EM.items():
                     if d < tau * e - EPS_PX:
                         pairs[name] += 1
+                if collect is not None and d < CLOSE_EM["close"] * e - EPS_PX and p.box.intersection_area(q.box) <= 0:
+                    collect["close"].append(_gap_segment(p.box, q.box))  # (overlaps are drawn as such)
         nearest.append(best)
         close_labels += close
     n = len(placed)
@@ -239,12 +275,12 @@ def label_spacing(placed: list, box_index: GridIndex) -> dict:
 
 
 def evaluate_association(prob, placed: list, classes: dict, a_label: dict, box_index: GridIndex, tol: float,
-                         max_list: int = 25) -> dict:
+                         max_list: int = 25, collect: dict | None = None) -> dict:
     points = data_points(prob, classes, a_label)
     ix = _index(points)
-    return {"clarity": clarity(prob, placed, points, ix, max_list),
-            "points": points_covered(prob, placed, points, box_index, tol, max_list),
-            "spacing": label_spacing(placed, box_index)}
+    return {"clarity": clarity(prob, placed, points, ix, max_list, collect),
+            "points": points_covered(prob, placed, points, box_index, tol, max_list, collect),
+            "spacing": label_spacing(placed, box_index, collect)}
 
 
 def summary_fields(a: dict) -> dict:

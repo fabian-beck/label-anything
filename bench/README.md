@@ -88,7 +88,8 @@ Sequences: `python -m bench.eval sequence <sequence.json> --results <dir-with-fr
 **Render one result.** `python bench/render.py problem.json result.json -o out.svg --png out.png`
 (the PNG uses `<problem>.bg.png` as background when present; `--font-href` embeds an
 `@font-face` URL for Noto Sans in the SVG; `--standalone` makes `-o` a self-contained SVG as in
-the gallery, with `<problem>.bg.svg` inlined when the problem has no background of its own).
+the gallery, with `<problem>.bg.svg` inlined when the problem has no background of its own;
+`--violations [--truth truth.json]` marks the violations the evaluator counts, as in the report).
 
 ## Output layout
 
@@ -252,6 +253,25 @@ from `fonts/` (PNG: glyphs positioned with the same GPOS kerning as the measurem
 composite icon parts, leaders and underlines, and unplaced items as red ×. PNG output uses
 Pillow (2× supersampling); no LGPL rasterizer is involved.
 
+Over the result it marks the violations the evaluator counts, where they happen
+(`evaluate(..., marks=True)["marks"]`, every one, not the examples of the metrics; the
+report, the gallery and `render.py --violations` draw them, with the legend
+`render.VIOLATIONS`):
+
+* **conflicts**, red: the area two labels share; the outline of a label over a mark, a hard
+  class, the canvas edge or its own mark; a leader through a label, a mark, a hard class or its
+  own label, or off the canvas; a ring where two leaders cross;
+* **ambiguous labels**, orange: the label's outline and a line from it to the data point it
+  may be taken for — solid where that point is nearer than its own (`misattributed`), dashed
+  where it is less than 0.2 em farther (`unclear`) or comes that near a label with a leader
+  (`leadered unclear`); weak labels (0.5 em) are not marked;
+* **covered points**, magenta: a ring around each data point a label other than its own
+  covers;
+* **too close**, purple: a line across the gap of two labels less than 0.4 em apart (a dot
+  where they touch; overlapping labels are conflicts), and, dashed, a leader nearer than the
+  clearance to another leader or a mark, or starting beside another in nearly the same
+  direction.
+
 ## Runner
 
 `bench/run.py` discovers problems from the scenario manifests, runs every solver
@@ -397,7 +417,8 @@ more (224 against 199 ms) for 994 labels instead of 871.
   excluded;
 * per scenario: the metric table (Label Anything rows bold, baseline emulations marked ≈ with the
   details in the tooltip, n/a rows with the reason) and the renderings side by side — every
-  solver drawn by `bench/render.py`, plus the engine's debug overlay;
+  solver drawn by `bench/render.py` with its violations marked (see *Renderer*; the legend
+  stands above the first images), plus the engine's debug overlay;
 * the stability sequences and the baseline methods with the versions that ran.
 
 `python -m bench.report bench-report/results.json [--previous OLD/results.json] [--gate]` rebuilds
@@ -421,8 +442,9 @@ of the full suite — hub-first airport maps, charts, photos, embeddings, networ
 each solved once with the engine (`--warmup 3`, as by the runner) and drawn by the renderer as
 one self-contained vector image (`render.standalone_svg`: SVG backgrounds inlined, raster
 backgrounds embedded, the label text in an embedded subset of Noto Sans with every glyph at the
-measured pen position), under it the evaluator's numbers (placed, leaders and the longest one,
-hard violations, the omitted labels by reason), the engine's runtime and the settings the
+measured pen position) with its violations marked as in the report, under it the evaluator's
+numbers (placed, leaders and the longest one, hard violations, unclear labels, covered points,
+labels too close, the omitted labels by reason), the engine's runtime and the settings the
 problem gives; from the run, its results of three problems by every baseline and three frames
 of its stability sequence, drawn the same way; and, last, what the engine still does badly, with
 figures. Selecting an image opens a viewer for inspecting it: pinch, double-tap or scroll to

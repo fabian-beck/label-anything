@@ -402,6 +402,8 @@ figure{margin:0}figcaption{font-size:12px;color:var(--ink2)}
 figure.na{border:1px dashed var(--line);padding:10px;align-self:start}
 .chart svg{max-width:100%;height:auto}details{margin:6px 0 14px}summary{cursor:pointer;color:var(--ink2)}
 nav ul{columns:2;padding-left:18px}@media (max-width:640px){nav ul{columns:1}}
+.key{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:12px;color:var(--ink2);margin:10px 0 4px}
+.key span{display:inline-flex;align-items:center;gap:8px;max-width:640px}.key svg{flex:none}
 """
 
 
@@ -646,15 +648,30 @@ def _order(solvers: list[str], name: str) -> int:
     return solvers.index(name) if name in solvers else len(solvers)
 
 
+def _marks_key() -> str:
+    """The legend of the violation marks drawn over the result images (``render.VIOLATIONS``)."""
+    from . import render
+
+    return ("<div class='key' id='marks'><span><b>Marks in the result images</b>&nbsp;(what the metrics count, drawn "
+            "where it happens; red × = item without a label):</span>"
+            + "".join(f"<span>{render.violation_icon(k)}{esc(text)}</span>" for k, _c, text in render.VIOLATIONS)
+            + "</div>")
+
+
 def _scenario_sections(report: dict) -> list[str]:
     solvers = report["solvers"]
     by_sc: dict[str, list] = {}
     for r in report["results"]:
         by_sc.setdefault(r["scenario"], []).append(r)
     o = []
+    keyed = False
     for sc in sorted(by_sc):
         rows = by_sc[sc]
         o.append(f"<h2 id='sc-{esc(sc)}'>{esc(sc)}</h2>")
+        if any(r.get("image") for r in rows):
+            o.append("<p class='note small'><a href='#marks'>How to read the marks in the images</a></p>" if keyed
+                     else _marks_key())
+            keyed = True
         o.append("<div class='scroll'><table><tr><th class='l'>config</th><th class='l'>solver</th><th>items</th>"
                  + "".join(f"<th>{esc(META[k][0])}</th>" for k in TABLE_COLS)
                  + "<th>engine ms</th><th>wall ms (median / p95)</th><th>peak MB</th><th>det.</th>"

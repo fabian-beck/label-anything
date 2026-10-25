@@ -30,7 +30,9 @@ than the engine's at the median.
 - **Measured as the engine does**: text boxes fit the ink (from the outlines' `glyf`
   bounds) with the lines aligned per `align`, and the removal test keeps the engine's
   label spacing and own-mark rule.
-- The report and the regression check of the release gate include the new measures.
+- The report and the regression check of the release gate include the new measures, and
+  the images of the report and the gallery mark every instance where it happens, with the
+  conflicts: a reader sees what a number counts.
 
 The thresholds are the engine's defaults: every labeler is judged by the picture a reader
 sees, not by its own settings.

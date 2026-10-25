@@ -98,6 +98,29 @@ def test_label_spacing():
     assert (a["spacing"]["labels_close"], a["spacing"]["pairs_close"], a["spacing"]["pairs_tight"]) == (2, 1, 0)
 
 
+def _marks(prob, placements):
+    return evaluate(prob, result(placements), removal_test=False, marks=True)["marks"]
+
+
+def test_marks_name_the_point_a_label_may_be_taken_for_the_points_covered_and_the_gaps():
+    # A's label 1 px from A's mark, B's mark 2 px beyond its right edge: unclear, taken for B
+    mk = _marks(problem([item("A", 50, 50), item("B", 87, 50)]), [placed("A", 53, 45, side="right")])
+    assert mk["ambiguous"] == [{"label": "A", "level": "unclear", "point": [87, 50]}]
+    # B strictly nearer: misattributed
+    mk = _marks(problem([item("A", 50, 50), item("B", 85.5, 50)]), [placed("A", 53, 45, side="right")])
+    assert mk["ambiguous"] == [{"label": "A", "level": "misattributed", "point": [85.5, 50]}]
+    # a background dot under the label is covered (and hidden), the one beside it makes it unclear
+    prob = problem([item("A", 50, 50), item("B", 150, 50)],
+                   obstacles={"vector": [{"class": "dots", "points": [[87, 50], [70, 50]], "r": 2}]},
+                   avoid={"label": {"dots": 0.5}})
+    mk = _marks(prob, [placed("A", 53, 45, side="right")])
+    assert mk["covered"] == [{"point": [70, 50], "r": 2, "hidden": True}]
+    assert mk["ambiguous"] == [{"label": "A", "level": "unclear", "point": [87, 50]}]
+    # two labels 1.2 px apart: the gap between them
+    prob = problem([item("A", 20, 80), item("B", 60, 80)], width=300)
+    assert _marks(prob, [placed("A", 10, 10), placed("B", 41.2, 10)])["close"] == [[40, 15, 41.2, 15]]
+
+
 def test_leadered_labels_are_measured_by_what_they_sit_next_to():
     prob = problem([item("A", 20, 80), item("B", 150, 20)])
     # the label far from A, 1 px from B's mark: the leader says A, the position says B
