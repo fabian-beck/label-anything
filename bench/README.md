@@ -401,7 +401,10 @@ relocation chains that reuse their first scan, occupancy marks applied only when
 is read, and a CLI that keeps freed memory between solves. Single-threaded, the 97
 benchmark, sample, tutorial, showcase and playground problems within the time guards then
 took 5.5 % less time in all than before those changes; the 2,000-label problem took 11 %
-more (224 against 199 ms) for 994 labels instead of 871.
+more (224 against 199 ms) for 994 labels instead of 871. The rule against standing nearer to
+an unlabeled point than to the own mark (ADR placement/unlabeled-points) added 4 % to both
+point problems on 2026-10-25 (228 against 220 ms, 14.3 against 13.7 ms; TypeScript 40
+against 36 ms for the 200 labels), with the same labels placed.
 
 ## Report
 

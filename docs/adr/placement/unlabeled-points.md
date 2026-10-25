@@ -56,10 +56,14 @@ with orthogonal ones (9 before). The release gate's allow-list names the configu
 measures this moves by more than 2 %.
 
 Each item probes its 8 fixed positions once per solve, and a candidate beside a mark makes
-one more query of the primitive index, which stops at the first point too near: a solve of
-2,000 labels among 100,000 points prepares 6 ms longer (3 % of its time), one of 200 among
-10,000 under 1 ms. The labels the rule moves exposed an insertion of the local search that
-could invert priorities with weighted omission, now undone (ADR solver/search).
+one more query of the primitive index, which stops at the first point too near. The
+performance problems (`bench/perf`, steady state) take 4 % longer: 228 instead of 220 ms for
+2,000 labels among 100,000 points, 14.3 instead of 13.7 ms for 200 among 10,000; in
+TypeScript, which builds no index of the points there otherwise, 40 instead of 36 ms.
+Elsewhere in the benchmark runtimes change within noise, except where labels move onto
+leaders (the 150-node Cora graph: +5 ms). The labels the rule moves exposed an insertion of
+the local search that could invert priorities with weighted omission, now undone (ADR
+solver/search).
 
 ## Alternatives
 - **The rule for every item** (no probe): unclear labels caused by unlabeled points fell from
