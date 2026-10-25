@@ -90,12 +90,20 @@ def _shape_svg(shp, fill: str, stroke: str, opacity: float = 0.55, dash: str | N
     return f'<path d="{d}" fill-rule="evenodd" {style}/>'
 
 
+def _line_starts(t: dict) -> list[float]:
+    """Where each line of a text layout starts, relative to the box: ``x_offsets`` (the lines
+    aligned per ``align``), or the text block's left edge for results without them."""
+    xs = t.get("x_offsets")
+    if xs is None:
+        return [t.get("x_offset", 0.0)] * len(t.get("lines", []))
+    return list(xs)
+
+
 def _text_svg(x0: float, y0: float, t: dict, color: str = LABEL_TEXT) -> list[str]:
     out = []
     size = t.get("font_size", 12)
     weight = t.get("font_weight", 400)
-    xo = t.get("x_offset", 0.0)
-    for line, base in zip(t.get("lines", []), t.get("baseline_offsets", [])):
+    for line, base, xo in zip(t.get("lines", []), t.get("baseline_offsets", []), _line_starts(t)):
         out.append(f'<text x="{_fmt(x0 + xo)}" y="{_fmt(y0 + base)}" font-size="{_fmt(size)}" '
                    f'font-weight="{weight}" fill="{color}">{escape(line)}</text>')
     return out
@@ -223,8 +231,7 @@ def _draw_text(dr: ImageDraw.ImageDraw, x0: float, y0: float, t: dict, s: float)
     weight = int(t.get("font_weight", 400))
     f = textmod.font(weight)
     pf = _pil_font(weight, size * s)
-    xo = t.get("x_offset", 0.0)
-    for line, base in zip(t.get("lines", []), t.get("baseline_offsets", [])):
+    for line, base, xo in zip(t.get("lines", []), t.get("baseline_offsets", []), _line_starts(t)):
         pos = f.pen_positions(line, size)
         for ch, px in zip(line, pos):
             if ch == " ":
@@ -378,9 +385,8 @@ def _glyph_text(x0: float, y0: float, t: dict, color: str = LABEL_TEXT) -> list[
     size = t.get("font_size", 12)
     weight = int(textmod.resolve_weight(t.get("font_weight", 400)))
     f = textmod.font(weight)
-    xo = t.get("x_offset", 0.0)
     wa = ' font-weight="700"' if weight >= 550 else ""
-    for line, base in zip(t.get("lines", []), t.get("baseline_offsets", [])):
+    for line, base, xo in zip(t.get("lines", []), t.get("baseline_offsets", []), _line_starts(t)):
         if not line:
             continue
         xs = " ".join(_fmt(x0 + xo + px) for px in f.pen_positions(line, size))

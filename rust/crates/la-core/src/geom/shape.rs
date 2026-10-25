@@ -1,9 +1,9 @@
 //! The shape kernel (spec §3.3): item marks and positioned obstacle shapes.
 //!
 //! Every shape has a reference point, a bounding box, an exact support function (used for
-//! shape-aware adjacent and slider candidates, ADR 0008), containment, signed distance,
-//! exact rectangle and segment tests, and an outline polygon (exact for polygons and sharp
-//! rectangles, a circumscribed approximation for curved shapes) used for rasterization and
+//! shape-aware adjacent and slider candidates, ADR placement/positions), containment, signed
+//! distance, exact rectangle and segment tests, and an outline polygon (exact for polygons and
+//! sharp rectangles, a circumscribed approximation for curved shapes) used for rasterization and
 //! distances.
 
 use super::polygon;
@@ -343,16 +343,41 @@ impl Shape {
                 let inner = rotated_rect_corners(*c, hw - rad, hh - rad, *cos, *sin);
                 maxf(convex_poly_rect_distance(&inner, r) - rad, 0.0)
             }
-            Shape::Ellipse { .. } => {
+            Shape::Ellipse { rx, ry, .. } => {
                 if self.overlaps_rect(r) {
                     return 0.0;
                 }
-                // The signed distance to a convex set is convex along a segment, so a
-                // ternary search per rectangle edge finds the exact minimum.
                 let k = r.corners();
                 let mut m = f64::INFINITY;
-                for i in 0..4 {
-                    m = minf(m, min_dist_on_segment(self, k[i], k[(i + 1) % 4]));
+                if *rx <= 0.0 || *ry <= 0.0 {
+                    // a degenerate ellipse is a disc to `signed_distance`: a ternary search
+                    // per rectangle edge (the distance is convex along a segment)
+                    for i in 0..4 {
+                        m = minf(m, min_dist_on_segment(self, k[i], k[(i + 1) % 4]));
+                    }
+                    return maxf(m, 0.0);
+                }
+                // The nearest point of the rectangle to a disjoint convex shape is a corner,
+                // or lies inside an edge, straight across from the shape's extreme point in
+                // that edge's normal direction (a closed form for an ellipse).
+                for p in k {
+                    m = minf(m, self.signed_distance(p));
+                }
+                let top = self.support(P::new(0.0, -1.0));
+                if top.y >= r.y1 && top.x >= r.x0 && top.x <= r.x1 {
+                    m = minf(m, top.y - r.y1);
+                }
+                let bottom = self.support(P::new(0.0, 1.0));
+                if bottom.y <= r.y0 && bottom.x >= r.x0 && bottom.x <= r.x1 {
+                    m = minf(m, r.y0 - bottom.y);
+                }
+                let left = self.support(P::new(-1.0, 0.0));
+                if left.x >= r.x1 && left.y >= r.y0 && left.y <= r.y1 {
+                    m = minf(m, left.x - r.x1);
+                }
+                let right = self.support(P::new(1.0, 0.0));
+                if right.x <= r.x0 && right.y >= r.y0 && right.y <= r.y1 {
+                    m = minf(m, r.x0 - right.x);
                 }
                 maxf(m, 0.0)
             }
@@ -890,6 +915,44 @@ mod tests {
         let r = Shape::ellipse(P::new(0.0, 0.0), 10.0, 5.0, 90.0);
         assert!(r.contains(P::new(0.0, 9.0)));
         assert!(!r.contains(P::new(9.0, 0.0)));
+    }
+
+    #[test]
+    fn ellipse_rect_distance_matches_a_search_along_the_edges() {
+        // the closed form against the ternary search per edge, on rotated ellipses and
+        // rectangles all around them (a fixed pseudo-random sequence)
+        let mut seed = 0x2545_f491_4f6c_dd1du64;
+        let mut next = || {
+            seed ^= seed << 13;
+            seed ^= seed >> 7;
+            seed ^= seed << 17;
+            (seed >> 11) as f64 / (1u64 << 53) as f64
+        };
+        for _ in 0..2000 {
+            let e = Shape::ellipse(
+                P::new(0.0, 0.0),
+                1.0 + 20.0 * next(),
+                1.0 + 20.0 * next(),
+                360.0 * next(),
+            );
+            let (w, h) = (1.0 + 60.0 * next(), 1.0 + 30.0 * next());
+            let r = Rect::xywh(-80.0 + 160.0 * next(), -60.0 + 120.0 * next(), w, h);
+            let k = r.corners();
+            let mut search = f64::INFINITY;
+            for i in 0..4 {
+                search = minf(search, min_dist_on_segment(&e, k[i], k[(i + 1) % 4]));
+            }
+            let search = if e.overlaps_rect(&r) {
+                0.0
+            } else {
+                maxf(search, 0.0)
+            };
+            let d = e.dist_rect(&r);
+            assert!(
+                (d - search).abs() < 1e-9,
+                "{e:?} {r:?}: closed form {d}, search {search}"
+            );
+        }
     }
 
     #[test]

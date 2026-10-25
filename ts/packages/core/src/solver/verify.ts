@@ -5,6 +5,7 @@
  * @module
  */
 
+import type { Cand } from "../candidates.js";
 import { Omission } from "../model/index.js";
 import { Reason, type Solve } from "./index.js";
 import { leadersCross } from "./repair.js";
@@ -58,16 +59,17 @@ export function verify(s: Solve): Verification {
     s.state.unplace(worst, s.cands);
     s.reasons[worst] = Reason.OmittedByPriority;
   }
-  // leader crossings (any policy)
-  const placed: number[] = [];
-  for (let i = 0; i < n; i++) if (s.state.placed[i]! >= 0) placed.push(i);
-  for (let a = 0; a < placed.length; a++) {
-    const ci = s.cands[s.state.placed[placed[a]!]!]!;
-    if (ci.leaders.length === 0) continue;
-    for (let b = a + 1; b < placed.length; b++) {
-      const cj = s.cands[s.state.placed[placed[b]!]!]!;
-      if (cj.leaders.length === 0 || !ci.bbox().touches(cj.bbox())) continue;
-      if (leadersCross(ci, cj)) v.leaderCrossings += 1;
+  // leader crossings (any policy): placed labels with leaders
+  const led: Cand[] = [];
+  for (let i = 0; i < n; i++) {
+    const pid = s.state.placed[i]!;
+    if (pid >= 0 && s.cands[pid]!.leaders.length > 0) led.push(s.cands[pid]!);
+  }
+  for (let a = 0; a < led.length; a++) {
+    const ci = led[a]!;
+    for (let b = a + 1; b < led.length; b++) {
+      const cj = led[b]!;
+      if (ci.bbox().touches(cj.bbox()) && leadersCross(ci, cj)) v.leaderCrossings += 1;
     }
   }
   v.priorityInversions = inversions(s);

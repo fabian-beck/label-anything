@@ -11,7 +11,7 @@ type Box = NonNullable<Placement["box"]>;
 export interface RenderOptions {
   /** The font the labels were measured with. */
   font: CssFont;
-  /** CSS class prefix (default `la`): `la-labels`, `la-label`, `la-leader`. */
+  /** CSS class prefix (default `la`): `la-labels`, `la-label`, `la-leader`, `la-stub`. */
   className?: string;
   /** Text colour (default `currentColor`). */
   fill?: string;
@@ -56,8 +56,13 @@ export function leaderPath(leader: Leader): string {
   return d;
 }
 
+/** Where line `i` of a text layout starts, relative to its box: aligned (`x_offsets`), else at the text block's edge. */
+export function lineStart(t: TextInfo, i: number): number {
+  return t.x_offsets?.[i] ?? t.x_offset ?? 0;
+}
+
 function textElement(doc: Document, box: Box, t: TextInfo, o: RenderOptions, cls: string): SVGTextElement {
-  const x = box.x + (t.x_offset ?? 0);
+  const x = box.x + lineStart(t, 0);
   const attrs: Record<string, string | number> = { class: `${cls}-label`, x: r2(x), y: r2(box.y + (t.baseline_offsets[0] ?? 0)) };
   if (t.font_size !== o.font.size) attrs["font-size"] = r2(t.font_size);
   if (t.font_weight !== undefined && t.font_weight !== o.font.weight) attrs["font-weight"] = t.font_weight;
@@ -66,7 +71,7 @@ function textElement(doc: Document, box: Box, t: TextInfo, o: RenderOptions, cls
     text.textContent = t.lines[0] ?? "";
   } else {
     t.lines.forEach((line, i) => {
-      const span = el(doc, "tspan", { x: r2(x), y: r2(box.y + (t.baseline_offsets[i] ?? 0)) });
+      const span = el(doc, "tspan", { x: r2(box.x + lineStart(t, i)), y: r2(box.y + (t.baseline_offsets[i] ?? 0)) });
       span.textContent = line;
       text.appendChild(span);
     });
@@ -114,7 +119,9 @@ export function renderLabels(group: SVGGElement | Element, result: LabelResult, 
     const op = options.opacity?.get(p.id);
     const lop = options.leaderOpacity?.get(p.id) ?? op;
     for (const leader of p.leaders ?? (p.leader ? [p.leader] : [])) {
-      const path = el(doc, "path", { class: `${cls}-leader`, d: leaderPath(leader), "data-id": leader.member ?? p.id });
+      // a stub (placement.stubs) also gets the class `la-stub`, to be drawn more lightly
+      const kind = leader.stub ? `${cls}-leader ${cls}-stub` : `${cls}-leader`;
+      const path = el(doc, "path", { class: kind, d: leaderPath(leader), "data-id": leader.member ?? p.id });
       if (lop !== undefined && lop < 1) path.setAttribute("opacity", String(r3(lop)));
       leaders.appendChild(path);
     }

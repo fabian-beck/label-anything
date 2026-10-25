@@ -22,11 +22,15 @@
  * decoders made WebP decoding 1.5x slower, "z" for the JSON, SVG and text crates the
  * SVG-background and large-JSON problems 8-12 % slower. "s" everywhere is 9-16 % slower
  * (and raster backgrounds 2.3x slower with the raster crate at "s"). wasm-opt is not used:
- * it does not reduce the gzip size of this module. docs/bindings/wasm.md lists the
- * variants.
+ * it does not reduce the gzip size of this module. README.md lists the variants.
+ *
+ * Panic messages hold the source paths of the dependencies, which lie under CARGO_HOME:
+ * remapped to the crates' own directories, the module is the same on every machine (CI's
+ * CARGO_HOME is longer than most) and a little smaller.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
+import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
@@ -74,6 +78,12 @@ const HOT = ["serde_json", "label-anything-svg", "label-anything-render", "label
 HOT.push("png", "fdeflate", "miniz_oxide", "image-webp", "zune-jpeg");
 const hotLevel = optLevel === "z" ? "s" : optLevel;
 const profile = "wasm-release";
+const cargoHome = process.env.CARGO_HOME ?? `${homedir()}/.cargo`;
+const remaps = [];
+for (const dir of [`${cargoHome}/registry/src`, `${cargoHome}/git/checkouts`]) {
+  if (existsSync(dir)) for (const d of readdirSync(dir)) remaps.push(`--remap-path-prefix=${dir}/${d}/=`);
+}
+remaps.push(`--remap-path-prefix=${rustDir}=`);
 const cargoArgs = [
   "build",
   "-p",
@@ -97,6 +107,8 @@ const cargoArgs = [
   "--config",
   `profile.${profile}.package.label-anything-raster.opt-level=${tomlLevel(coreOptLevel)}`,
   ...HOT.flatMap((c) => ["--config", `profile.${profile}.package.${c}.opt-level=${tomlLevel(hotLevel)}`]),
+  "--config",
+  `build.rustflags=${JSON.stringify(remaps)}`,
 ];
 if (noDefault) cargoArgs.push("--no-default-features");
 if (features) cargoArgs.push("--features", features);

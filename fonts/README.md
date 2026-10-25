@@ -3,7 +3,7 @@
 | File | Purpose |
 |---|---|
 | `NotoSans-Regular.ttf`, `NotoSans-Bold.ttf` | Latin/Greek/Cyrillic subset **with outlines**, used for rendering (PNG output of `label-anything render`, examples). |
-| `NotoSans-Regular.metrics.ttf`, `NotoSans-Bold.metrics.ttf` | The same subset with glyph outlines removed. Embedded by `la-text` (Rust/WASM) and `@label-anything/text` (TypeScript) for measurement only. |
+| `NotoSans-Regular.metrics.ttf`, `NotoSans-Bold.metrics.ttf` | The same subset with glyph outlines removed, but with each glyph's vertical extent (private table `LAvb`, `tools/fonts/bounds.py`). Embedded by `la-text` (Rust/WASM) and `@label-anything/text` (TypeScript) for measurement only. |
 
 All four files are derived from **Noto Sans 2.015** (Copyright 2022 The Noto Project
 Authors) and are licensed under the **SIL Open Font License 1.1** (see `OFL.txt`).
@@ -21,6 +21,6 @@ SHA-256:
 ```
 4d0d22644fecabefb64b805e606f036b87194ea6663121e68121a9f27e10b5ee  NotoSans-Regular.ttf
 6a8dab103163cd5b176e70296cad0a3335f9b43cd248543d9aea011bff452650  NotoSans-Bold.ttf
-31f8c2d0fcf5ec0ecfe83a0715a734794c93885073615a94bb27a23117efc248  NotoSans-Regular.metrics.ttf
-8e41c5fc9b0bcf7823fd80ac777f16d730b1aadcfae6d1c43650b2a9620221d3  NotoSans-Bold.metrics.ttf
+1d465c40930ca875d983605b9e19e518a5628136dde1768c932a271d7a6418d4  NotoSans-Regular.metrics.ttf
+1ced188ac504a43aaf8b3f767e30f89396a6d53c08647a89d7084f284504b277  NotoSans-Bold.metrics.ttf
 ```

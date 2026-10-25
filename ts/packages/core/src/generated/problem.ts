@@ -15,6 +15,10 @@ export type Rect4 = [number, number, number, number];
  */
 export type Affine = [number, number, number, number, number, number];
 /**
+ * A non-negative length: number of pixels, or a string with unit px | pt | em.
+ */
+export type NonNegLength = number | string;
+/**
  * Mark used for point anchors without an explicit mark.
  */
 export type Mark = {
@@ -22,10 +26,6 @@ export type Mark = {
 } & {
   shape: "circle" | "ellipse" | "rect" | "polygon" | "path" | "icon" | "from_svg";
 };
-/**
- * A non-negative length: number of pixels, or a string with unit px | pt | em.
- */
-export type NonNegLength = number | string;
 export type Truncate = "none" | "end" | "middle";
 export type Anchor = {
   [k: string]: unknown | undefined;
@@ -60,7 +60,7 @@ export type TextLabel = TextLabel1 & {
    */
   lines?: string[];
   /**
-   * Alignment of wrapped lines inside the box (reported only).
+   * How the lines of the label align in its box: centered, flush left (start) or flush right (end); default defaults.align (center).
    */
   align?: "start" | "center" | "end";
 };
@@ -379,12 +379,20 @@ export interface ItemDefaults {
    */
   buffer?: number | string;
   /**
-   * Space a label keeps from other labels (the larger of the two margins) and from other items' marks while avoid.label has them hard (spec §4.4): not from its own mark (placement.offset), never more than another mark keeps from the own mark's box, half for warm-start candidates.
+   * Space a label keeps from other items' marks while avoid.label.items is hard (spec §4.4): not from its own mark (placement.offset), never more than another mark keeps from the own mark's box, half for warm-start candidates; also the least space from other labels.
    */
   margin?: number | string;
+  /**
+   * Space a label keeps from other labels and their stubs while avoid.label.labels is hard (the larger of the two labels' spacings, each at least its margin; spec §4.4); null: twice the margin. Half for warm-start candidates.
+   */
+  spacing?: NonNegLength | null;
   mark?: Mark;
   wrap?: Wrap | null;
   truncate?: Truncate;
+  /**
+   * How the lines of a text label align in its box: centered (default), flush left (start) or flush right (end).
+   */
+  align?: "start" | "center" | "end";
 }
 export interface Font {
   /**
@@ -602,6 +610,22 @@ export interface Placement {
    * Fan labels: a crowd's labels stacked in a column beside it with fanning leaders. auto: crowds of items left without a label, when that places more labels; always: every crowd of two or more items.
    */
   fan?: "auto" | "always" | "off";
+  /**
+   * A label without a distant leader comes no closer to another item's mark than to its own, and without a stub it is nearer to its own by its margin (at most by the distance between the two marks; marks it may not cover).
+   */
+  own_nearest?: boolean;
+  /**
+   * Stubs: with auto, a label next to its mark that another item's mark comes within stub_reach of stands stub_length farther out, joined to its mark by a short leader at a right angle to its side (in the middle of a left or right side), where that is feasible; such a crowded label without a stub costs as much as a leader.
+   */
+  stubs?: "off" | "auto";
+  /**
+   * A non-negative length: number of pixels, or a string with unit px | pt | em.
+   */
+  stub_length?: number | string;
+  /**
+   * A non-negative length: number of pixels, or a string with unit px | pt | em.
+   */
+  stub_reach?: number | string;
   /**
    * On a region map (spec §4.8): the largest share of the box of an area item's label (internal ones aside) or of a label on a leader that may lie in other items' regions; 1: no limit, the foreign weight decides.
    */

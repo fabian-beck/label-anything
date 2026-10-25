@@ -10,22 +10,18 @@
 import type { Cand } from "../candidates.js";
 import { EPS, P, Rect, segLenInRect, segOverlapsRectXY, segSegDistXY } from "../geom/index.js";
 import { Occupancy } from "../grid/occupancy.js";
-import { type Spacing, candLeadersConflict } from "../leaders.js";
+import { type Spacing, candLeadersConflict, leaderHitsLabel } from "../leaders.js";
 import { maxf, minf } from "../math.js";
 import type { Shape } from "../geom/shape.js";
 import { AvoidKind, type Dynamic, type Obstacles } from "../obstacles.js";
 import { DynIndex, IdList, StaticIndex } from "../spatial.js";
 
-/** Whether any segment of `c`'s leaders passes through the interior of `r`. */
-export function leadersOverlapRect(c: Cand, r: Rect): boolean {
-  for (const l of c.leaders) {
-    const n = l.segCount();
-    for (let k = 0; k < n; k++) {
-      const a = l.segA(k);
-      const b = l.segB(k);
-      if (segOverlapsRectXY(a.x, a.y, b.x, b.y, r.x0, r.y0, r.x1, r.y1)) return true;
-    }
-  }
+/**
+ * Whether a leader of `c` hits the label box `r`: passes through its interior, or, for a
+ * stub, comes closer than `gap` (spec §6.9).
+ */
+export function leadersHitLabel(c: Cand, r: Rect, gap: number): boolean {
+  for (const l of c.leaders) if (leaderHitsLabel(l, r, gap)) return true;
   return false;
 }
 
@@ -96,9 +92,14 @@ export class State {
    */
   private clr: readonly number[];
   private em: readonly number[];
-  /** The margin of each item's label (`defaults.margin`) and the largest. */
+  /**
+   * The space each item's label keeps from other labels and stubs (its spacing, at least its
+   * margin, spec §4.4) and the largest.
+   */
   private margin: readonly number[];
   private marginMaxV: number;
+  /** How far stubs reach beyond a label's box (the largest such space with stubs, else 0). */
+  private stubGap = 0;
   private cosMin: number;
   private reach: number;
   /** Placed items already tested by a conflict query. */
@@ -109,8 +110,8 @@ export class State {
 
   /**
    * `keys`: the priority key level of every item (smaller = more important); `clr` and
-   * `em`: the leader clearance and font size of every item; `margin`: the label margin of
-   * every item; `cosMin`: the cosine of `leaders.min_angle_between`.
+   * `em`: the leader clearance and font size of every item; `margin`: the space the label of
+   * every item keeps from other labels; `cosMin`: the cosine of `leaders.min_angle_between`.
    */
   constructor(
     nItems: number,
@@ -152,10 +153,10 @@ export class State {
   /**
    * Conflicts of `c` by the `lower_items` rule (in this order): placed items of lower key
    * whose mark the label of `c` covers, then placed items of higher key whose label covers
-   * the mark of `c`'s item; only items with key at most `keyLimit`. With `first`, stops at
-   * the first one.
+   * the mark of `c`'s item; only items with key at most `keyLimit`, other than `skip` and
+   * `other`. With `first`, stops at the first one.
    */
-  private lowerConflicts(c: Cand, cands: readonly Cand[], skip: number, keyLimit: number, first: boolean, out: number[]): void {
+  private lowerConflicts(c: Cand, cands: readonly Cand[], skip: number, keyLimit: number, first: boolean, out: number[], other = -1): void {
     const lw = this.lower;
     if (lw === null) return;
     const i = c.item;
@@ -164,7 +165,7 @@ export class State {
     lw.index.query(c.rect, buf);
     for (let q = 0; q < buf.len; q++) {
       const j = buf.get(q);
-      if (j === i || j === skip || this.placed[j]! < 0 || keys[j]! <= keys[i]! || (lw.groupOf[j] ?? null) === i || !(keys[j]! <= keyLimit)) continue;
+      if (j === i || j === skip || j === other || this.placed[j]! < 0 || keys[j]! <= keys[i]! || (lw.groupOf[j] ?? null) === i || !(keys[j]! <= keyLimit)) continue;
       if (c.labelOverlapsShape(lw.marks[j]!)) {
         out.push(j);
         if (first) return;
@@ -174,7 +175,7 @@ export class State {
     this.labelIx.query(mark.bbox(), buf);
     for (let q = 0; q < buf.len; q++) {
       const j = buf.get(q);
-      if (j === i || j === skip || keys[j]! >= keys[i]! || (lw.groupOf[i] ?? null) === j || !(keys[j]! <= keyLimit)) continue;
+      if (j === i || j === skip || j === other || keys[j]! >= keys[i]! || (lw.groupOf[i] ?? null) === j || !(keys[j]! <= keyLimit)) continue;
       const pid = this.placed[j]!;
       if (pid < 0) continue;
       if (cands[pid]!.labelOverlapsShape(mark)) {
@@ -226,6 +227,15 @@ export class State {
   }
 
   /** The largest label margin: how far label-label conflicts reach beyond a box. */
+  /**
+   * With stubs (spec §6.9), which keep the margin from other labels, conflict queries reach
+   * that far for them.
+   */
+  withStubs(stubs: boolean): State {
+    if (stubs) this.stubGap = this.marginMaxV;
+    return this;
+  }
+
   marginMax(): number {
     return this.marginMaxV;
   }
@@ -399,15 +409,16 @@ export class State {
       const pid = this.placed[j]!;
       if (pid < 0) continue;
       const p = cands[pid]!;
-      if (llHard && c.labelOverlapsGap(p, maxf(this.margin[c.item]!, this.margin[j]!))) {
+      const gap = maxf(this.margin[c.item]!, this.margin[j]!);
+      if (llHard && c.labelOverlapsGap(p, gap)) {
         out.push(j);
         continue;
       }
-      if (lbHard && leadersOverlapRect(c, p.rect)) out.push(j);
+      if (lbHard && leadersHitLabel(c, p.rect, gap)) out.push(j);
     }
-    // leaders near the candidate (placed leaders through the candidate label, leaders
-    // crossing or coming closer than the clearance)
-    const reach = c.leaders.length === 0 ? 0 : this.leaderReach(obs);
+    // leaders near the candidate (placed leaders through the candidate label or stubs
+    // closer than the margin, leaders crossing or coming closer than the clearance)
+    const reach = c.leaders.length === 0 ? this.stubGap : maxf(this.leaderReach(obs), this.stubGap);
     this.segIx.query(bb.inflate(EPS * 2 + reach), buf);
     const seen = this.seen;
     seen.length = 0;
@@ -432,10 +443,10 @@ export class State {
   }
 
   /**
-   * The first placed item (in index-query order) that conflicts with `c` and whose key is
-   * at most `keyLimit` (`Infinity`: any), or -1.
+   * The first placed item (in index-query order) other than `skip` and `other` that
+   * conflicts with `c` and whose key is at most `keyLimit` (`Infinity`: any), or -1.
    */
-  firstConflict(c: Cand, cands: readonly Cand[], obs: Obstacles, skip: number, keyLimit: number): number {
+  firstConflict(c: Cand, cands: readonly Cand[], obs: Obstacles, skip: number, keyLimit: number, other = -1): number {
     const dy = obs.dynamic;
     const llHard = dy.labelLabels.kind === AvoidKind.Hard;
     const lbHard = dy.leaderLabels.kind === AvoidKind.Hard;
@@ -445,41 +456,43 @@ export class State {
     const lix = this.labelIx;
     lix.scanStart(bb, this.marginMaxV);
     for (let j = lix.scanNext(); j >= 0; j = lix.scanNext()) {
-      if (j === skip || !(keys[j]! <= keyLimit)) continue;
+      if (j === skip || j === other || !(keys[j]! <= keyLimit)) continue;
       const pid = this.placed[j]!;
       if (pid < 0) continue;
       const p = cands[pid]!;
-      if (llHard && c.labelOverlapsGap(p, maxf(this.margin[c.item]!, this.margin[j]!))) return j;
-      if (lbHard && leadersOverlapRect(c, p.rect)) return j;
+      const gap = maxf(this.margin[c.item]!, this.margin[j]!);
+      if (llHard && c.labelOverlapsGap(p, gap)) return j;
+      if (lbHard && leadersHitLabel(c, p.rect, gap)) return j;
     }
     if (this.hasSegs()) {
-      // segments near bb grown by 2 EPS and the leader reach
-      const reach = c.leaders.length === 0 ? 0 : this.leaderReach(obs);
+      // segments near bb grown by 2 EPS and the leader reach (and the stubs' margin)
+      const reach = c.leaders.length === 0 ? this.stubGap : maxf(this.leaderReach(obs), this.stubGap);
       const six = this.segIx;
       six.scanStart(bb, EPS * 2 + reach);
       const seen = this.seen;
       seen.length = 0;
       for (let s = six.scanNext(); s >= 0; s = six.scanNext()) {
         const j = this.segItem[s]!;
-        if (j === skip || !(keys[j]! <= keyLimit) || seen.includes(j)) continue;
+        if (j === skip || j === other || !(keys[j]! <= keyLimit) || seen.includes(j)) continue;
         seen.push(j);
         if (this.leadersHit(c, cands[this.placed[j]!]!, dy, j)) return j;
       }
     }
     if (this.lower !== null) {
       const hit: number[] = [];
-      this.lowerConflicts(c, cands, skip, keyLimit, true, hit);
+      this.lowerConflicts(c, cands, skip, keyLimit, true, hit, other);
       if (hit.length > 0) return hit[0]!;
     }
     return -1;
   }
 
   /**
-   * Whether the placed candidate `p` of item `j` has a leader through the label of `c`, or
-   * a leader that conflicts with a leader of `c`.
+   * Whether the placed candidate `p` of item `j` has a leader through the label of `c` (or a
+   * stub closer than the margin), or a leader that conflicts with a leader of `c`.
    */
   private leadersHit(c: Cand, p: Cand, dy: Dynamic, j: number): boolean {
-    if (dy.leaderLabels.kind === AvoidKind.Hard && leadersOverlapRect(p, c.rect)) return true;
+    const gap = maxf(this.margin[c.item]!, this.margin[j]!);
+    if (dy.leaderLabels.kind === AvoidKind.Hard && leadersHitLabel(p, c.rect, gap)) return true;
     return (
       dy.leaderLeaders.kind === AvoidKind.Hard &&
       c.leaders.length > 0 &&

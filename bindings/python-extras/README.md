@@ -22,4 +22,5 @@ The same functions are available as `label_anything.matplotlib`, `.plotly` and
 pip install "label-anything[matplotlib]"   # or [plotly], [seaborn], [all]
 ```
 
-See `docs/bindings/python.md` in the repository. MIT License.
+The guide: [Python](https://fabian-beck.github.io/label-anything/getting-started/python/#plotting-helpers)
+on the documentation site. MIT License.

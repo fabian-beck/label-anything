@@ -7,6 +7,7 @@ solution. Usage: python3 tools/conformance/make_place_cases.py [--check]
 """
 import base64
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -105,19 +106,22 @@ CASES["prefix-mode"] = case(
     {"problem_file": "../problems/priority-prefix.json"},
     {"prefix": True})
 
-# a row of long labels: from the third item on, the positions next to the mark are taken by
-# the labels before it, so the prefix grows only through the ladder (wrapped and distant)
+# t1's name is wider than the canvas and fits only wrapped (the ladder's wrap step): without
+# the ladder the prefix would end at t1, and t2, which fits, would go without a label
 CASES["prefix-ladder"] = case(
     "prefix omission runs the degradation ladder before it cuts the order",
-    {"canvas": {"width": 480, "height": 120}, "priority": {"omission": "prefix"},
-     "items": [pt(f"t{k}", 40 + 36 * k, 60, f"Top item number {k}", priority=100.0 - k) for k in range(10)]},
-    {"prefix": True, "placed_min": 5, "model": {"t2": "distant"}})
+    {"canvas": {"width": 120, "height": 160}, "priority": {"omission": "prefix"},
+     "items": [pt("t0", 60, 30, "Alpha", priority=3.0),
+               pt("t1", 60, 80, "Federal Republic of Germany", priority=2.0),
+               pt("t2", 60, 130, "Gamma", priority=1.0)]},
+    {"prefix": True, "placed": 3, "text_lines": {"t1": ["Federal Republic", "of Germany"]}})
 
 # low has only distant candidates, generated once high's label fills the canvas: every one is
-# dropped while generated (spec §6.7) but statically fine, and counts for the explanation
+# dropped while generated (spec §6.7) but statically fine, and counts for the explanation (the
+# strips beside high's label, 8.3 px wide, are too narrow even for low's shrunk label)
 CASES["explain-blocked-by-labels"] = case(
     "an item whose statically feasible candidates placed labels block is omitted_by_priority",
-    {"canvas": {"width": 400, "height": 300},
+    {"canvas": {"width": 396, "height": 296},
      "items": [{"id": "high", "anchor": {"type": "point", "x": 10, "y": 10},
                 "label": {"type": "box", "width": 368, "height": 268}, "priority": 2.0},
                pt("low", 388, 288, "Low", priority=1.0, placement={"models": ["distant"]})]},
@@ -213,6 +217,22 @@ CASES["hard-line-breaks"] = case(
      "items": [pt("p", 100, 100, "Paris\n2.1M"), pt("c", 300, 100, "Line one\r\nLine two")]},
     {"placed": 2, "text_lines": {"p": ["Paris", "2.1M"], "c": ["Line one", "Line two"]}})
 
+# Lines of different widths: centered on each other by default, flush left or right when the
+# label or the defaults say so (`text_align` re-checks every line's start against the box)
+ALIGNED = {"canvas": {"width": 400, "height": 200},
+           "items": [pt("p", 100, 100, "Rome\n2.8 million"), pt("s", 300, 100, "x", label={
+               "type": "text", "text": "Saint Vincent and the Grenadines", "align": "start",
+               "wrap": {"max_width": "8em", "max_lines": 2}})]}
+CASES["text-align"] = case(
+    "the lines of a label are centered on each other unless the label says otherwise",
+    ALIGNED,
+    {"placed": 2, "text_lines": {"s": ["Saint Vincent and", "the Grenadines"]},
+     "text_align": {"p": "center", "s": "start"}})
+CASES["text-align-defaults"] = case(
+    "defaults.align sets the alignment of every label that does not set its own",
+    {**ALIGNED, "defaults": {"align": "end"}},
+    {"placed": 2, "text_align": {"p": "end", "s": "start"}})
+
 CASES["wrap-no-short-lines"] = case(
     "the wrap step never strands a line narrower than 1.5 em (France / 3)",
     {"canvas": {"width": 50, "height": 200}, "degrade": ["wrap", "omit"],
@@ -231,8 +251,8 @@ CASES["area-hole-either-winding"] = case(
                {"id": "opp", "anchor": {"type": "area", "polygon": _RING, "holes": [_HOLE[::-1]]},
                 "label": {"type": "text", "text": "Holey"}}]},
     {"placed": 2, "model": {"same": "adjacent", "opp": "adjacent"},
-     "box": {"same": {"x": 323.97075, "y": 118.77475, "w": 35.496, "h": 19.944, "tol": 0.01},
-             "opp": {"x": 23.97075, "y": 118.77475, "w": 35.496, "h": 19.944, "tol": 0.01}}})
+     "box": {"same": {"x": 323.97075, "y": 123.11875, "w": 35.496, "h": 15.6, "tol": 0.01},
+             "opp": {"x": 23.97075, "y": 123.11875, "w": 35.496, "h": 15.6, "tol": 0.01}}})
 
 # --- leaders and models ----------------------------------------------------------------
 CASES["distant-when-crowded"] = case(
@@ -307,18 +327,30 @@ CASES["boundary-column"] = case(
     {"canvas": {"width": 320, "height": 240},
      "placement": {"models": ["adjacent", "boundary"], "position_order": ["right"], "fan": "off",
                    "boundary": {"sides": ["right"]}},
-     "items": [pt(n.lower(), 150, 100 + 4 * k, n) for k, n in enumerate(_GREEK)]},
+     "items": [pt(n.lower(), 150, 100 + 3 * k, n) for k, n in enumerate(_GREEK)]},
     {"placed": 10, "inside_canvas": True,
      "model": {n.lower(): "boundary" for n in _GREEK},
      "has_leader": {n.lower(): True for n in _GREEK},
-     "box": {"alpha": {"x": 263.76, "y": 7.48, "w": 35.892, "h": 19.944, "tol": 0.01},
-             "kappa": {"x": 263.76, "y": 208.576, "w": 39.252, "h": 19.944, "tol": 0.01}}},
-    "Ten ends 4 px apart that allow only `right`; no fans. Next to the ends a label would overlap "
-    "the other ends' marks, and boundary labels at their ends' heights leave no room for each "
-    "other. The right side's column takes all ten (spec §6.6): stacked around the ends' heights, "
+     "box": {"alpha": {"x": 263.76, "y": 24.767, "w": 35.892, "h": 15.6, "tol": 0.01},
+             "kappa": {"x": 263.76, "y": 186.407, "w": 39.252, "h": 15.048, "tol": 0.01}}},
+    "Ten ends 3 px apart that allow only `right`; no fans. Next to the ends a label would come "
+    "closer to the other ends' marks than the label margin, even shrunk, and boundary labels at "
+    "their ends' heights leave no room for each other. The right side's column takes all ten (spec §6.6): stacked around the ends' heights, "
     "matched to the slots by leader length and left-aligned on one line, x = 320 − 4 (canvas "
     "padding) − 4 (boundary margin) − 48.24 (Gamma, the widest label) = 263.76; its leaders leave "
     "the crowd past the neighbouring marks, which they only must not cross.")
+
+CASES["boundary-column-full-size"] = case(
+    "a label the search shrank takes its full size in a boundary column",
+    {"canvas": {"width": 320, "height": 240},
+     "placement": {"models": ["adjacent", "boundary"], "position_order": ["right"], "fan": "off",
+                   "boundary": {"sides": ["right"]}},
+     "items": [pt(n.lower(), 150, 100 + 4 * k, n) for k, n in enumerate(_GREEK)]},
+    {"placed": 10, "model": {n.lower(): "boundary" for n in _GREEK},
+     "font": {n.lower(): {"size": 12} for n in _GREEK}},
+    "The ends of `boundary-column` 4 px apart: the search labels iota beside its end, shrunk "
+    "to 0.7225 (8.67 px; the ends 8 px away keep the label margin from so low a box). The "
+    "column takes it with the others at its full size, 12 px (spec §6.6).")
 
 # --- backgrounds and coordinates ------------------------------------------------------
 CASES["svg-background"] = case(
@@ -331,12 +363,12 @@ CASES["svg-text-box"] = case(
     {"canvas": {"width": 200, "height": 120}, "items": [pt("a", 100, 70, "Alpha")],
      "obstacles": {"svg": {
          "source": '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120">'
-                   '<text x="100" y="36.056" font-size="40" text-anchor="middle">MMMM</text></svg>',
+                   '<text x="100" y="41.4" font-size="40" text-anchor="middle">MMMM</text></svg>',
          "classes": [{"selector": "text", "class": "text"}]}}},
     {"placed": 1, "anchor_side": {"a": "right"}, "inside_canvas": True},
-    "The top position (box top at y = 46.056) is free of the text's box only if the box ends 0.2 em "
-    "below the baseline (44.056); with the descender of the bundled font (0.293 em, 47.776) it is "
-    "blocked and the label goes right.")
+    "The top position (box top at y = 51.4: the label box fits the ink of `Alpha`) is free of "
+    "the text's box only if the box ends 0.2 em below the baseline (49.4); with the descender of "
+    "the bundled font (0.293 em, 53.12) it is blocked and the label goes right.")
 
 CASES["distant-keeps-sides"] = case(
     "distant labels keep to the sides of an explicit position order",
@@ -347,7 +379,7 @@ CASES["distant-keeps-sides"] = case(
      "items": [pt("a", 100, 40, "Alpha"), pt("b", 100, 120, "Beta")]},
     {"placed": 1, "unplaced_ids": ["a"], "reasons": {"a": "no_feasible_candidate"},
      "model": {"b": "distant"}, "has_leader": {"b": True},
-     "box": {"b": {"x": 143.884, "y": 81.879, "w": 29.232, "h": 19.944, "tol": 0.01}}},
+     "box": {"b": {"x": 143.884, "y": 89.535, "w": 29.232, "h": 12.288, "tol": 0.01}}},
     "Both items allow only `right`. Left of them everything is free, but distant labels keep to "
     "directions within 22.5° of the listed positions: a, walled in on the right for labels and "
     "leaders, is omitted; b goes up-right, its leader over the soft-for-leaders box.")
@@ -361,36 +393,48 @@ CASES["fan-line-ends"] = case(
      "model": {k: "fan" for k in ("alpha", "beta", "gamma", "delta", "epsilon", "zeta")},
      "anchor_side": {k: "fan" for k in ("alpha", "beta", "gamma", "delta", "epsilon", "zeta")},
      "has_leader": {k: True for k in ("alpha", "beta", "gamma", "delta", "epsilon", "zeta")}},
-    "Six ends 5 px apart that allow only `right`: beside them there is room for two labels, the "
-    "others are left without one by the search. The crowd's column (placement.fan = auto, the "
-    "default) takes all six, the two placed labels in its way included, stacked in the order of "
-    "the ends (spec §6.8).")
+    "Six ends 5 px apart that allow only `right`: the search labels three of them (beta and "
+    "zeta beside their ends, alpha with a leader) and leaves the others without one. The crowd's "
+    "column (placement.fan = auto, the default) takes all six, the three placed labels in its "
+    "way included, stacked in the order of the ends (spec §6.8).")
 
 CASES["fan-always"] = case(
     "fan labels with placement.fan = always: a crowd's labels move into a column",
     {"canvas": {"width": 240, "height": 140}, "placement": {"fan": "always"},
      "items": [pt("a", 100, 70, "Alpha"), pt("b", 104, 76, "Beta")]},
     {"placed": 2, "model": {"a": "fan", "b": "fan"}, "has_leader": {"a": True, "b": True},
-     "box": {"a": {"x": 124.0, "y": 51.856, "w": 35.892, "h": 19.944, "tol": 0.01},
-             "b": {"x": 124.0, "y": 74.2, "w": 29.232, "h": 19.944, "tol": 0.01}}},
+     "box": {"a": {"x": 124.0, "y": 55.828, "w": 35.892, "h": 15.6, "tol": 0.01},
+             "b": {"x": 124.0, "y": 76.228, "w": 29.232, "h": 12.288, "tol": 0.01}}},
     "Both points get adjacent labels (top and bottom; their centers count as right of the "
     "anchors). With `always` the crowd's column takes them: right of the marks' boxes "
     "(x1 = 106) by the least run of 1.5 em (18 px), stacked around the anchors' heights with "
-    "the labels' margin (0.2 em = 2.4 px, more than the boundary gap of 2 px): centers 61.828 "
-    "and 84.172.")
+    "the labels' spacing (0.4 em = 4.8 px, more than the boundary gap of 2 px): centers 63.628 "
+    "and 82.372.")
 
 CASES["fan-max-labels"] = case(
     "fan labels keep to the label budget",
     {"canvas": {"width": 320, "height": 200}, "placement": {"position_order": ["right"]},
      "priority": {"budget": {"max_labels": 4}},
-     "items": [pt(n.lower(), 150, 88 + 5 * k, n)
+     "items": [pt(n.lower(), 150, 88 + 3 * k, n)
                for k, n in enumerate(["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"])]},
-    {"placed": 4, "unplaced_ids": ["delta", "epsilon"],
-     "model": {k: "fan" for k in ("alpha", "beta", "gamma", "zeta")}},
-    "The ends of `fan-line-ends` with at most 4 labels: the search labels the outer ends "
-    "(alpha, zeta; next to the inner ends a label would come closer to other ends than their "
-    "margin), the column gives labels to the two most important ends left without one (input "
-    "order) and leaves the others out.")
+    {"placed": 4, "unplaced_ids": ["delta", "zeta"],
+     "model": {k: "fan" for k in ("alpha", "beta", "gamma", "epsilon")}},
+    "The ends of `fan-line-ends`, 3 px apart, with at most 4 labels. Beside the ends a label "
+    "would come closer to other ends than the label margin; the search labels alpha and "
+    "epsilon with leaders, which leave the crowd beside the marks touching their own (spec "
+    "§7). The column, which keeps to the budget and removes no label without placing it again, "
+    "takes them, beta and gamma, and leaves delta and zeta out (their keys are all equal).")
+
+CASES["fan-full-size"] = case(
+    "labels the search shrank take their full size in a fan column",
+    {"canvas": {"width": 320, "height": 200}, "placement": {"position_order": ["right"]},
+     "items": [pt(n.lower(), 150, 88 + 4 * k, n)
+               for k, n in enumerate(["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"])]},
+    {"placed": 6, "model": {k: "fan" for k in ("alpha", "beta", "gamma", "delta", "epsilon", "zeta")},
+     "font": {k: {"size": 12} for k in ("alpha", "beta", "gamma", "delta", "epsilon", "zeta")}},
+    "The ends of `fan-line-ends` 4 px apart: the search labels beta and zeta beside their ends, "
+    "shrunk to 0.7225 (8.67 px), and no other. The crowd's column takes all six, the two "
+    "shrunk labels at their full size, 12 px, like the others (spec §6.8).")
 
 CASES["font-classes"] = case(
     "font classes scale labels by priority",
@@ -403,14 +447,15 @@ CASES["font-classes"] = case(
     {"placed": 4,
      "font": {"a": {"size": 15, "weight": 700, "class": 0}, "b": {"size": 12, "weight": 400, "class": 1},
               "c": {"size": 9, "weight": 400, "class": 2}, "d": {"size": 9, "class": 2}},
-     "box": {"a": {"x": 49.5, "y": 87.535, "w": 23.865, "h": 24.93},
-             "b": {"x": 148.0, "y": 90.028, "w": 18.0, "h": 19.944},
-             "c": {"x": 246.5, "y": 92.521, "w": 13.5, "h": 14.958}}},
+     "box": {"a": {"x": 49.5, "y": 92.2975, "w": 23.865, "h": 15.405},
+             "b": {"x": 148.0, "y": 93.838, "w": 18.0, "h": 12.324},
+             "c": {"x": 246.5, "y": 95.3785, "w": 13.5, "h": 9.243}}},
     "Four items ranked by `pop`: the first class takes rank 0 (bold, 1.5 × 10 px), the second "
     "ends at ceil(50 % × 4) = 2 and takes rank 1 (1.2 ×), the last the rest (0.9 ×). The offset "
     "(0.5 em) and the padding (0.15 em) follow each label's font size: the label of a starts at "
-    "40 + 2 (mark) + 7.5, of b at 140 + 2 + 6, of c at 240 + 2 + 4.5; regular 'Aa' is 1.2 em wide "
-    "and 1.362 em high, plus twice the padding.")
+    "40 + 2 (mark) + 7.5, of b at 140 + 2 + 6, of c at 240 + 2 + 4.5; 'Aa' is 1.2 em wide "
+    "(regular) and 0.727 em high (the ink from the top of A to the bottom of a), plus twice the "
+    "padding.")
 
 CASES["font-class-shrink-floor"] = case(
     "the shrink step stops at min_scale of the size before a smaller font class",
@@ -424,6 +469,142 @@ CASES["font-class-shrink-floor"] = case(
     "min_scale 0.7): a, in a class of scale 1, gets it; b's class (0.9) keeps it at or above "
     "0.7 × 10 px, i.e. factors down to 0.7 / 0.9 = 0.778: 0.85 × 9 px is too wide.")
 
+# --- own mark nearest, stubs -------------------------------------------------------------
+# Beta's mark overlaps Alpha's, so the label margin does not keep it from Alpha's label; above
+# its mark (Alpha's only position) the label would be 0.5 px from Beta's mark but 1 px from
+# its own.
+NEAREST = {"canvas": {"width": 200, "height": 120}, "degrade": ["omit"],
+           "placement": {"models": ["adjacent"]},
+           "items": [pt("a", 100, 60, "Alpha", priority=2,
+                        placement={"models": ["adjacent"], "position_order": ["top"]}),
+                     pt("b", 103.5, 59.5, "Beta", priority=1,
+                        placement={"models": ["adjacent"], "position_order": ["right"]})]}
+CASES["own-nearest"] = case(
+    "a label comes no closer to another item's mark than to its own",
+    NEAREST,
+    {"placed_ids": ["b"], "unplaced_ids": ["a"], "reasons": {"a": "no_feasible_candidate"},
+     "own_nearest": True})
+CASES["own-nearest-off"] = case(
+    "without own_nearest a label may come closer to another item's mark than to its own",
+    {**NEAREST, "placement": {**NEAREST["placement"], "own_nearest": False}},
+    {"placed_ids": ["a"], "anchor_side": {"a": "top"}})
+
+# Beta's mark lies 5 px right of Alpha's (1 px between them). Above its mark, Alpha's label
+# would be as near to Beta's mark as to its own (1 px): a reader could take it for Beta's.
+CLEAR = {"canvas": {"width": 200, "height": 120}, "degrade": ["omit"],
+         "placement": {"models": ["adjacent"]},
+         "items": [pt("a", 100, 60, "Alpha", priority=2, placement={"position_order": ["top", "left"]}),
+                   pt("b", 105, 60, "Beta", priority=1, placement={"position_order": ["right"]})]}
+CASES["own-nearest-clear"] = case(
+    "without a stub a label is nearer to its own mark than to any other by its margin",
+    CLEAR,
+    {"placed": 2, "anchor_side": {"a": "left", "b": "right"}, "has_leader": {"a": False}, "own_nearest": True},
+    "Above its mark Alpha's label is 1 px from its own mark and from Beta's, not the margin "
+    "(0.2 em = 2.4 px) farther from Beta's (spec §4.4): it stands left of its mark, where "
+    "Beta's mark is 6 px away.")
+CASES["own-nearest-clear-stub"] = case(
+    "with a stub a label may come as near to another mark as to its own",
+    {**CLEAR, "placement": {"models": ["adjacent"], "stubs": "auto"},
+     "items": [pt("a", 100, 60, "Alpha", priority=2, placement={"position_order": ["top"]}),
+               pt("b", 106, 60, "Beta", priority=1, placement={"position_order": ["bottom"]})]},
+    {"placed": 2, "anchor_side": {"a": "top", "b": "bottom"}, "stub": {"a": True, "b": True},
+     "own_nearest": True},
+    "Alpha may only stand above its mark and Beta below its own, where without a stub each "
+    "label would be 1 px from both marks. With a stub, 0.5 em farther out, each is 7 px from "
+    "both marks, and its stub, which keeps the leader clearance (0.4 em) from the other mark, "
+    "says whose it is.")
+
+# Alpha may only stand right of its point; Beta's point, 16 px below it, comes within the
+# stub reach (0.75 em = 9 px) of that place: Alpha stands 0.5 em farther right, joined to its
+# mark by a horizontal stub to the middle of its left side, and Beta's mark is still farther
+# from it than Alpha's. Gamma's point has no other mark near: its label touches its mark.
+STUBS = {"canvas": {"width": 240, "height": 160}, "placement": {"stubs": "auto"},
+         "items": [pt("a", 100, 100, "Alpha", priority=3,
+                      placement={"models": ["adjacent"], "position_order": ["right"]}),
+                   pt("b", 100, 116, "Beta", priority=2), pt("g", 60, 40, "Gamma", priority=1)]}
+CASES["stubs-near-other-marks"] = case(
+    "a label that another mark comes near stands farther out with a stub; others touch their mark",
+    STUBS,
+    {"placed": 3, "anchor_side": {"a": "right"}, "model": {"a": "adjacent", "g": "adjacent"},
+     "has_leader": {"a": True, "g": False}, "stub": {"a": True}, "own_nearest": True,
+     "box": {"a": {"x": 109, "y": 92.2, "w": 35.892, "h": 15.6, "tol": 0.01}}},
+    "Without the stub Alpha's box would start at x = 103 (mark radius 2, offset 1); with it "
+    "the box starts 6 px (0.5 em) farther right, and the stub runs from 1.5 px outside the "
+    "mark to (109, 100).")
+CASES["stubs-not-nearer"] = case(
+    "no stub where the label would come nearer to another mark than to its own",
+    {**STUBS, "items": [STUBS["items"][0], pt("b", 120, 116, "Beta", priority=2), STUBS["items"][2]]},
+    {"placed": 3, "anchor_side": {"a": "right"}, "has_leader": {"a": False}, "own_nearest": True,
+     "box": {"a": {"x": 103, "y": 92.2, "w": 35.892, "h": 15.6, "tol": 0.01}}},
+    "Beta's mark is 6.2 px below the middle of Alpha's label: 0.5 em farther right it would "
+    "still be 6.2 px away, nearer than Alpha's own mark (7 px), so Alpha keeps its place "
+    "against its mark, without a stub.")
+
+# Alpha may stand right of its point or above it; Beta's point, 17 px below and 4 px right of
+# Alpha's, comes within the stub reach (0.75 em = 9 px) of the right position but is no
+# nearer to it than 0.5 em more than Alpha's own mark (no ambiguity cost).
+CROWD = {"canvas": {"width": 240, "height": 160}, "placement": {"stubs": "auto"},
+         "items": [pt("a", 100, 100, "Alpha", priority=2,
+                      placement={"models": ["adjacent"], "position_order": ["right", "top"]}),
+                   pt("b", 104, 117, "Beta", priority=1, placement={"position_order": ["bottom"]})]}
+CASES["stubs-crowd"] = case(
+    "with stubs, a crowded label without a stub costs as much as a leader",
+    CROWD,
+    {"anchor_side": {"a": "top"}, "has_leader": {"a": False}},
+    "Right of its point Alpha's label would be crowded: plain it costs the distance term "
+    "(0.025) and `w_leader` (1), with a stub (centered on its left side, 0.5 em farther out) "
+    "0.29. Above its point, clear of Beta's mark, it costs 0.1 (the second position): it "
+    "goes there (spec §6.9).")
+CASES["stubs-crowd-off"] = case(
+    "without stubs, a crowded position costs nothing extra",
+    {**CROWD, "placement": {"stubs": "off"}},
+    {"anchor_side": {"a": "right"}, "has_leader": {"a": False}},
+    "The problem of `stubs-crowd` without stubs: the right position (0.025) is cheaper "
+    "than the top one (0.1).")
+
+# --- label spacing -----------------------------------------------------------------------
+# Two labels right of points 16 px apart: their boxes, 12.288 px high, are 3.712 px apart,
+# more than the margin (0.2 em = 2.4 px) but less than the spacing (0.4 em = 4.8 px).
+SPACED = {"canvas": {"width": 240, "height": 160}, "degrade": ["omit"],
+          "placement": {"models": ["adjacent"], "position_order": ["right"]},
+          "items": [pt("a", 100, 100, "Ham", priority=2), pt("b", 100, 116, "Ham", priority=1)]}
+CASES["label-spacing"] = case(
+    "labels keep their spacing from each other, more than their margin from other marks",
+    SPACED,
+    {"placed_ids": ["a"], "unplaced_ids": ["b"], "reasons": {"b": "omitted_by_priority"}},
+    "b's only position is 3.712 px from a's label: less than the spacing of 0.4 em "
+    "(spec §4.4), so b goes without a label.")
+CASES["label-spacing-margin"] = case(
+    "with the spacing at the margin, labels may come as close to each other as to other marks",
+    {**SPACED, "defaults": {"spacing": "0.2em"}},
+    {"placed": 2, "box": {"b": {"x": 103, "y": 109.856, "w": 30.444, "h": 12.288, "tol": 0.01}}})
+CASES["label-spacing-twice-margin"] = case(
+    "unless it is set, the spacing is twice the margin",
+    {**SPACED, "defaults": {"margin": "0.1em"}},
+    {"placed": 2},
+    "With a margin of 0.1 em the spacing is 0.2 em (2.4 px): b's label, 3.712 px from a's, "
+    "keeps it.")
+
+# Small marks of every shape in a crowd (the concave L is pushed in, spec §4.5): the parity
+# fixture of this case holds every stub of the Rust core, which TypeScript must reproduce.
+# The innermost 20 points of a spiral of 32: distances to ellipses are slow to compute, and
+# the solve stays well within the time guard (3 × the budget, ADR solver/time-budget) on a busy machine.
+STUB_MARKS = [{"shape": "polygon", "points": [[-5, -5], [5, -5], [5, 0], [0, 0], [0, 5], [-5, 5]]},
+              {"shape": "rect", "w": 8, "h": 6}, {"shape": "ellipse", "rx": 5, "ry": 3, "rotation": 30},
+              {"shape": "circle", "r": 3}]
+CASES["stubs-mark-shapes"] = case(
+    "stubs from marks of every shape in a crowd keep the guarantees",
+    {"canvas": {"width": 320, "height": 240},
+     "placement": {"stubs": "auto", "models": ["adjacent", "slider", "distant"]},
+     "items": [pt(f"m{k}", round(160 + 70 * math.sin(2.4 * k) * (k / 32) ** 0.5, 2),
+                  round(120 + 55 * math.cos(2.4 * k) * (k / 32) ** 0.5, 2),
+                  ["Ash", "Birch", "Cedar", "Elm", "Fir", "Hazel", "Oak", "Pine", "Yew"][k % 9],
+                  priority=20 - k)
+               for k in range(20)]},
+    {"placed_min": 12, "own_nearest": True})
+for k, it in enumerate(CASES["stubs-mark-shapes"]["problem"]["items"]):
+    it["anchor"]["mark"] = STUB_MARKS[k % 4]
+
 # --- warm starts -------------------------------------------------------------------------
 CASES["warm-start-follows-anchor"] = case(
     "a previous box that comes with its anchor moves with the item",
@@ -431,9 +612,9 @@ CASES["warm-start-follows-anchor"] = case(
      "items": [pt("a", 150, 100, "Alpha")],
      "warm_start": {"placements": [
          {"id": "a", "placed": True, "anchor": [100, 80],
-          "box": {"x": 104, "y": 70.028, "w": 35.892, "h": 19.944}}]}},
+          "box": {"x": 104, "y": 72.2, "w": 35.892, "h": 15.6}}]}},
     {"placed": 1, "anchor_side": {"a": "right"}, "model": {"a": "slider"},
-     "box": {"a": {"x": 154, "y": 90.028, "w": 35.892, "h": 19.944, "tol": 0.01}}},
+     "box": {"a": {"x": 154, "y": 92.2, "w": 35.892, "h": 15.6, "tol": 0.01}}},
     "The previous result placed Alpha right of its point at (100, 80); the point is now at "
     "(150, 100), and the box moves by the same (50, 20): it stays right of the point (top "
     "would be first otherwise). Without the shift the old box, 50 px away, would be "
@@ -449,15 +630,15 @@ CASES["warm-start-degraded"] = case(
      "items": [pt("a", 100, 100, "Alpha")],
      "warm_start": {"placements": [
          {"id": "a", "placed": True, "anchor": [100, 100],
-          "box": {"x": 104, "y": 91.524, "w": 30.508, "h": 16.952}}]}},
+          "box": {"x": 104, "y": 93.37, "w": 30.508, "h": 13.26}}]}},
     {"placed": 1, "anchor_side": {"a": "right"}, "model": {"a": "slider"},
      "font": {"a": {"size": 10.2}},
-     "box": {"a": {"x": 104, "y": 91.524, "w": 30.508, "h": 16.952, "tol": 0.01}}},
+     "box": {"a": {"x": 104, "y": 93.37, "w": 30.508, "h": 13.26, "tol": 0.01}}},
     "Walls (hard for labels and leaders) leave a pocket around the point: the full-size "
     "label fits nowhere next to it, the label shrunk to 0.85 (the box in warm_start) fits "
     "on its right. An opening in the top wall lets the ladder's distant step place the "
     "full-size label with a leader, but the previous, shrunk box is still free and is "
-    "kept (ADR 0025).")
+    "kept (ADR motion/warm-starts).")
 
 CASES["warm-start-nudge"] = case(
     "a previous box that an obstacle now clips slides along the mark instead of jumping",
@@ -467,9 +648,9 @@ CASES["warm-start-nudge"] = case(
      "items": [pt("a", 100, 80, "Alpha")],
      "warm_start": {"placements": [
          {"id": "a", "placed": True, "anchor": [100, 80],
-          "box": {"x": 82.054, "y": 57.056, "w": 35.892, "h": 19.944}}]}},
+          "box": {"x": 82.054, "y": 61.4, "w": 35.892, "h": 15.6}}]}},
     {"placed": 1, "anchor_side": {"a": "top"}, "model": {"a": "slider"},
-     "box": {"a": {"x": 82.654, "y": 57.056, "w": 35.892, "h": 19.944, "tol": 0.01}}},
+     "box": {"a": {"x": 82.654, "y": 61.4, "w": 35.892, "h": 15.6, "tol": 0.01}}},
     "The previous result placed Alpha above its point; a hard obstacle now covers the "
     "box's left 0.5 px. The box slides 0.05 em (0.6 px, the smallest nudge) to the right "
     "along the top of the mark; the nearest slider candidate would be 4.1 px away.")
@@ -485,11 +666,11 @@ CASES["warm-start-keeps-leader"] = case(
      "items": [pt("a", 120, 100, "Alpha")],
      "warm_start": {"placements": [
          {"id": "a", "placed": True, "anchor": [110, 95],
-          "box": {"x": 147.83, "y": 37.226, "w": 35.892, "h": 19.944},
+          "box": {"x": 147.83, "y": 41.57, "w": 35.892, "h": 15.6},
           "leader": {"points": [[112.475, 92.525], [147.83, 57.17]], "style": "angles",
                      "port": [147.83, 57.17]}}]}},
     {"placed": 1, "model": {"a": "distant"}, "has_leader": {"a": True},
-     "box": {"a": {"x": 157.83, "y": 42.226, "w": 35.892, "h": 19.944, "tol": 0.01}}},
+     "box": {"a": {"x": 157.83, "y": 46.57, "w": 35.892, "h": 15.6, "tol": 0.01}}},
     "Walls that labels may not overlap (leaders may cross them) surround the point, so "
     "its label needs a leader. The previous result had a 50 px leader at 45°, between "
     "the distant rings (44 and 70 px from the leader start); the point moved by (10, 5) "

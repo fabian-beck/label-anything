@@ -155,6 +155,11 @@ export const SECTIONS: Section[] = [
         hint: "Crowds get a column of labels with fanning leaders",
       },
       {
+        key: "placement.stubs", label: "Stubs", kind: "segmented",
+        options: [{ value: "auto", label: "auto" }, { value: "off", label: "off" }],
+        hint: "A label next to its point among others stands off a little, joined by a short stub",
+      },
+      {
         key: "placement.internal", label: "Inside areas", kind: "segmented",
         options: ["auto", "prefer", "allow", "never"].map((v) => ({ value: v, label: v })),
       },

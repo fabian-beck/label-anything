@@ -1,0 +1,199 @@
+{
+  "kind": "place",
+  "name": "a label the search shrank takes its full size in a boundary column",
+  "$comment": "The ends of `boundary-column` 4 px apart: the search labels iota beside its end, shrunk to 0.7225 (8.67 px; the ends 8 px away keep the label margin from so low a box). The column takes it with the others at its full size, 12 px (spec §6.6).",
+  "problem": {
+    "canvas": {
+      "width": 320,
+      "height": 240
+    },
+    "placement": {
+      "models": [
+        "adjacent",
+        "boundary"
+      ],
+      "position_order": [
+        "right"
+      ],
+      "fan": "off",
+      "boundary": {
+        "sides": [
+          "right"
+        ]
+      }
+    },
+    "items": [
+      {
+        "id": "alpha",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      },
+      {
+        "id": "beta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 104
+        },
+        "label": {
+          "type": "text",
+          "text": "Beta"
+        }
+      },
+      {
+        "id": "gamma",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 108
+        },
+        "label": {
+          "type": "text",
+          "text": "Gamma"
+        }
+      },
+      {
+        "id": "delta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 112
+        },
+        "label": {
+          "type": "text",
+          "text": "Delta"
+        }
+      },
+      {
+        "id": "epsilon",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 116
+        },
+        "label": {
+          "type": "text",
+          "text": "Epsilon"
+        }
+      },
+      {
+        "id": "zeta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 120
+        },
+        "label": {
+          "type": "text",
+          "text": "Zeta"
+        }
+      },
+      {
+        "id": "eta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 124
+        },
+        "label": {
+          "type": "text",
+          "text": "Eta"
+        }
+      },
+      {
+        "id": "theta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 128
+        },
+        "label": {
+          "type": "text",
+          "text": "Theta"
+        }
+      },
+      {
+        "id": "iota",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 132
+        },
+        "label": {
+          "type": "text",
+          "text": "Iota"
+        }
+      },
+      {
+        "id": "kappa",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 136
+        },
+        "label": {
+          "type": "text",
+          "text": "Kappa"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 10,
+    "model": {
+      "alpha": "boundary",
+      "beta": "boundary",
+      "gamma": "boundary",
+      "delta": "boundary",
+      "epsilon": "boundary",
+      "zeta": "boundary",
+      "eta": "boundary",
+      "theta": "boundary",
+      "iota": "boundary",
+      "kappa": "boundary"
+    },
+    "font": {
+      "alpha": {
+        "size": 12
+      },
+      "beta": {
+        "size": 12
+      },
+      "gamma": {
+        "size": 12
+      },
+      "delta": {
+        "size": 12
+      },
+      "epsilon": {
+        "size": 12
+      },
+      "zeta": {
+        "size": 12
+      },
+      "eta": {
+        "size": 12
+      },
+      "theta": {
+        "size": 12
+      },
+      "iota": {
+        "size": 12
+      },
+      "kappa": {
+        "size": 12
+      }
+    }
+  }
+}

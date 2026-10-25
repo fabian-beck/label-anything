@@ -200,18 +200,22 @@ Hard/soft/ignore come from the effective options (defaults.md ← preset ← pro
 | usable labels | `usable.{count,rate,weighted,prefix,in_conflict}` | the labels a host keeps by dropping conflicts in priority order: a label in a conflict of its own (over a mark, a hard class or the canvas edge; its leader through a mark or its own label) is dropped, and of two conflicting labels (overlap, crossing leaders, a leader through a label, a label over the mark of a placed item) the more important one stays; `weighted` as `placed_weighted`; `prefix`: the items of the total order with a usable label before the first without (the measure of `prefix` omission); equals placed for a result without conflicts. Compares tools that never omit a label (adjustText, D3-Labeler) with tools that do |
 | spread | `spread.{regions,labeled,region_coverage}` | of the populated regions (cells of 8 em of the default font holding an item's reference point), the share with at least one label: whether labels spread over the data or crowd where it is sparse (even distribution; Imhof 1975) |
 | soft coverage | `coverage.<class>.{mean,max,touching}` | covered px² / label px² per placed label (union area: exact clipping for one primitive, 1/8 px point sampling otherwise, ≤ 6 thin strokes: clipped length × width; raster classes: integral of the value map), averaged; also `items` (other marks) and `labels` (other labels); classes ignored for labels are skipped |
-| leaders | `crossings`, `label_intersections`, `length_mean_em`, `length_max_em`, `bends_mean`, `rate` | pairs of crossing leaders (always counted), leader–other-label pairs, polyline length / label font size, points − 2 |
+| leaders | `crossings`, `label_intersections`, `length_mean_em`, `length_max_em`, `bends_mean`, `rate`, `stubs`, `stub_rate` | pairs of crossing leaders (always counted), leader–other-label pairs, polyline length / label font size, points − 2; stubs: labels whose leader is marked `stub` (placement.stubs) |
 | visual (`bench/eval/visual.py`) | `leader_length.{p50_em,p90_em,max_em,max_diag,long,far}` | leader length / font size; `far` = longer than 25 % of the canvas diagonal (with `far_boundary`: those of boundary labels); `long` = longer than 10 em |
 | | `near_crossings.{count,min_px,parallel}` | label pairs whose leaders come closer than 4 px without crossing (the start-start approach of neighbouring marks exempt): they read as crossing; `parallel` = distant leaders starting within 1 em that diverge by less than 10° |
 | | `leader_marks.{touches,leaders_touching}`, `.classes.<k>.{points,lines,areas,leaders}` | leader–mark pairs passing within 1.5 px (half stroke + 1 px) of another item's mark (exemptions as `leader_item`); per vector class the primitives leaders pass that close (the first 3 px of a leader skipped: lines ending at the own mark) |
 | | `labels_over.<k>.{points_hidden,lines_hidden,areas_hidden,lines_em}` | soft vector classes under placed labels: primitives touched (circles = points, polylines = lines, the rest = areas) and polyline length inside labels / font size |
 | | `contrast.{labels,border,rate}` | with raster sources: labels across a contrast border, whose backdrop luma (Rec. 709 of the rasters in order over `canvas.background`, at each canvas pixel centre in the box) spreads by ≥ 0.5 between its 10th and 90th percentile, e.g. half on black and half on white; internal labels of point items skipped; `null` without rasters |
 | ambiguity | `ambiguity.rate` | fraction of placed labels whose nearest item shape is not their own: signed distance from the label box (min over box points; ≤ 0 when overlapping); leadered labels: distance from the leader's first point to the outlines (a leader ending at a mark that lies on a larger one ends at the smaller one's outline) |
+| association (`bench/eval/association.py`) | `clarity.{misattributed,unclear,weak}` (and `_rate`, `by_item`, `by_background`), `clarity.margin_p10_em`, `margin_p50_em` | how clearly a label says whose it is. **Data points** are the marks of point items and the circles of every vector class labels do not ignore (a circle within 0.5 px of an item's point is that item's mark). For a label without a leader (internal labels skipped), margin m = d(other point, box) − d(own shape, box), signed distances, over the points not its own nor of its group: `misattributed` m < 0, `unclear` m < 0.2 em (the label margin), `weak` m < 0.5 em, each threshold capped by the distance between the two points (points closer than 0.5 px are one spot: the label names it; as the engine's rule, spec §4.4); rates of all placed labels; `by_item`/`by_background`: whether a labelled or unlabelled item's mark or only background circles made it unclear; a point inside the label box is hidden (see `points`), not a competitor, while one partly under its edge competes; quantiles of the per-label margin in em (capped at 2 em) |
+| | `clarity.leadered_unclear` (and `_rate`) | labels with a leader whose box another data point comes nearer than 0.2 em: the leader says whose it is, its position says another point's |
+| | `points.{total,covered,rate,hidden,items_covered,background_covered,labels_covering,labels_covering_rate}` | data points (as above) that a label other than their own overlaps (box shrunk by t), whatever the avoidance settings: a covered point is hidden from the reader; `hidden`: those entirely inside a label box; `labels_covering` = labels covering any |
+| | `spacing.{pairs_tight,pairs_close,labels_close,labels_close_rate,nearest_p10_em,nearest_p50_em}` | the gap between label boxes in em of the larger font: pairs closer than 0.2 em (the label margin) and 0.4 em (the engine's default spacing, ADR placement/margin), labels whose nearest other label is closer than 0.4 em, quantiles of the nearest gap (capped at 2 em): labels too close to each other read as one |
 | shape fidelity | `adjacent_gap_mean`, `_abs_mean`, `_max_abs`, `adjacent_touch_rate` | gap = signed distance(box, own shape) − `placement.offset` for adjacent/slider labels without leader (target 0; touch = \|gap\| ≤ t) |
 | | `own_mark_violations`, `internal_outside` | as above |
 | | `internal_eligible`, `internal_rate` | placed items whose shape can contain the placed box grown by `placement.inner_padding` (circles exactly, rects/ellipses at the center, polygons at the pole of inaccessibility); rate = fraction of them placed internally |
 | position | `position.rank_mean`, `hist` | PerceptPPO rank (top 0, right 1, bottom 2, left 3, top-right 4, bottom-right 5, top-left 6, bottom-left 7) of adjacent labels by `anchor_side` |
-| priority | `inversions` | **removal test**: an omitted h counts if any of its fixed adjacent positions (support-function placement around the true shape ⊕ offset, spec §6.1: the 8 positions, or only those of an explicit `position_order` list, when the `adjacent` model is enabled; area anchors also their pole unless `internal: never`) is free given only the placed labels/leaders of key ≥ key(h), the marks of all other items (those of lower key per `lower_items`) and the hard classes; with `avoid.label.lower_items` soft, h whose mark a placed label of higher key covers is not counted; hard labels and marks keep the label margin (spec §4.4) from the position; conservative: the candidate box is *grown* by t (and the margin by t); key = (required, tier, reserved, band(score)); items without such candidates (e.g. `models: ["distant"]`) are counted in `removal_untestable` |
+| priority | `inversions` | **removal test**: an omitted h counts if any of its fixed adjacent positions (support-function placement around the true shape ⊕ offset, spec §6.1: the 8 positions, or only those of an explicit `position_order` list, when the `adjacent` model is enabled; area anchors also their pole unless `internal: never`) is free given only the placed labels/leaders of key ≥ key(h), the marks of all other items (those of lower key per `lower_items`) and the hard classes; with `avoid.label.lower_items` soft, h whose mark a placed label of higher key covers is not counted; hard labels keep the label gap (`defaults.spacing`, twice the margin unless set, at least the margin) and hard marks the label margin (spec §4.4) from the position, and with `placement.own_nearest` the position is nearer to the item's own mark than to any other mark it may not cover by the margin or the distance between the two marks (ADR placement/margin); conservative: the candidate box is *grown* by t (and the gap, the margin and the clear margin by t); key = (required, tier, reserved, band(score)); items without such candidates (e.g. `models: ["distant"]`) are counted in `removal_untestable` |
 | | `prefix_length`, `prefix_rate` | items at the start of the priority order that are all placed |
 | | `ndcg_at_k` | k = placed; DCG = Σ_j g(rank of the j-th placed in rank order)/log2(j + 2), normalized by the ideal (the top-k); 1 iff the placed set is a prefix |
 | | `coverage.satisfaction` | groups of `priority.coverage.by` (canonical JSON of the value) with ≥ min(min_per_group, group size) placed labels / groups |
@@ -231,17 +235,19 @@ outlierness = mean distance to the k nearest anchors, isolation = nearest-anchor
 crowding = −anchors within 4 em, label_size, mark_size, centrality = −distance to
 `priority.focus`, degree = `attrs.degree`, input_order = −index.
 
-Text measurement for omitted items (removal test) re-implements spec §5.2 simple shaping
-(cmap, hmtx, GPOS kern pair adjustment with IgnoreMarks, typo metrics) and §5.3 line
-breaking with fontTools on the bundled Noto Sans; the label box is the first normal
-variant (`balanced(L_min)` under wrap settings).
+Text measurement for omitted items (removal test) and for the baselines re-implements spec
+§5.2 simple shaping (cmap, hmtx, GPOS kern pair adjustment with IgnoreMarks, typo metrics,
+the ink of the glyph outlines: a text box spans from the ink top of its first line to the
+ink bottom of its last, ADR text/measurement) and §5.3 line breaking with fontTools on the bundled Noto
+Sans; the label box is the first normal variant (`balanced(L_min)` under wrap settings),
+its lines aligned per `align` (default `center`, ADR text/line-breaking).
 
 ## Renderer
 
 `bench/render.py` draws, identically for every solver: background (embedded raster, SVG
 embedded as image in SVG output, `<config>.bg.png` for PNG output), vector obstacles
 (only without a background image), item marks with their true shapes (area anchors
-dashed), label boxes, text at the reported `baseline_offsets` and `x_offset` with Noto Sans
+dashed), label boxes, text at the reported `baseline_offsets` and `x_offsets` with Noto Sans
 from `fonts/` (PNG: glyphs positioned with the same GPOS kerning as the measurement),
 composite icon parts, leaders and underlines, and unplaced items as red ×. PNG output uses
 Pillow (2× supersampling); no LGPL rasterizer is involved.
@@ -327,12 +333,56 @@ bench/.venv/bin/python -m bench.perf --solver 'ts=node ts/packages/cli/dist/main
 bench/.venv/bin/python -m bench.perf generate bench/out/perf      # the problems only
 ```
 
+### Where they stand
+
+`python -m bench.perf --engine rust/target/release/label-anything --ts --wasm --runs 7` at
+commit a0a4eab (2026-10-17) on a 4-core cloud VM (Intel Xeon @ 2.1 GHz, Linux, Node 22),
+median engine time in ms (target in parentheses):
+
+| problem | Rust | WASM | TS |
+|---|---:|---:|---:|
+| 200 labels + 10k points | 23.3 (15) | **26.2** (30) | **59.1** (60) |
+| 2,000 labels + 100k points, greedy | 313.5 (120) | 385.0 (250) | 825.4 (600) |
+| 2048² raster preparation | 27.9 (25) | **36.8** (60) | **113.3** (150) |
+
+Four of the nine targets are met on this VM (runs vary by about ±10 %); on the
+GitHub-hosted runner of the CI benchmark the native engine took 18.1, 272.4 and 20.8 ms.
+The brief sets the targets for a 2023 laptop; the gate checks them as measured, on whatever
+machine runs the benchmark.
+
+Where the time of the 2,000-label problem goes (native engine, instruction counts of one
+solve): seven tenths in the greedy pass. 1,309 of the 2,000 labels find no room at level 0
+and run the degradation ladder; 997 of them are omitted in the end. Their wrapped and
+shrunk variants get candidate boxes of their own, each tested against the other items'
+marks and the placed labels: 54 % of the greedy pass. The on-demand distant candidates at
+level 0 take 21 %, explaining the omitted labels (`reason`, `blocked_by`) 9 %; preparing
+the 100k obstacle points takes 13 % of the solve, building the model and the result about
+6 %. No function takes more than 6 %. What would help is less work per omitted label —
+fewer ladder variants, no distant candidates for shrunk ones — and each such change places
+fewer labels. The label margin and spacing (ADR placement/margin) cost about a quarter of
+the labels here: without them (`defaults.margin: 0`, `placement.offset: 2`) the problem
+places 1,322 labels instead of 1,003. The TypeScript engine spends another 11 % in garbage
+collection: a solve allocates about 355 MB of short-lived candidate objects, and the
+ladder's candidates stay alive for the explanations; storing candidates as arrays of
+numbers instead of objects would remove most of it.
+
+The ink boxes, the label spacing and the stubs (ADR text/measurement, placement/margin,
+placement/stubs) made some solves slower: ellipse marks by far, then line-end labels and
+dense maps, whose local search meets more conflicts. A profile of 2026-10-24 took most of
+it back without changing a placement: an ellipse's distance to a box in closed form,
+relocation chains that reuse their first scan, occupancy marks applied only when the grid
+is read, and a CLI that keeps freed memory between solves. Single-threaded, the 97
+benchmark, sample, tutorial, showcase and playground problems within the time guards then
+took 5.5 % less time in all than before those changes; the 2,000-label problem took 11 %
+more (224 against 199 ms) for 994 labels instead of 871.
+
 ## Report
 
 `bench-report/index.html` (static, no external scripts) and `results.json` contain:
 
 * a **summary** per solver (problems run / n/a / failed, mean placed and usable rate, hard
-  violations and conflicts, ambiguity, inversions, summed runtimes, peak memory, and the
+  violations and conflicts, ambiguity, unclear labels, covered points, close labels,
+  inversions, summed runtimes, peak memory, and the
   empirical scaling exponent k of runtime ∝ nᵏ over the stress scenario's sizes);
 * the **performance-target table** (median, target, ratio, every run) and the **release-gate**
   summary when evaluated;
@@ -354,6 +404,14 @@ bench/.venv/bin/python -m bench.perf generate bench/out/perf      # the problems
 the analyses and `index.html` of an existing run without solving anything again. Comparisons
 happen at the precision `results.json` stores (6 decimals), so a stored run and a fresh one
 with identical results show no change.
+
+Reading it: Label Anything rows must show 0 hard violations; baselines usually do not
+(adjustText and D3-Labeler never omit a label, ggrepel's repulsion is not guaranteed to
+separate everything, d3fc and ECharts compare labels with labels only, `naive` ignores
+collisions). *Usable* labels are the fair number to compare across tools. Any non-zero
+parity delta between `rust`, `wasm` and `ts` is a bug or an ADR-documented difference.
+Compare timings from the same machine only. The baselines are reference points configured
+from the problem with tool defaults elsewhere, not tuned competitors.
 
 ## Gallery
 
@@ -389,8 +447,29 @@ fails unless, for the Label Anything solvers, every problem was solved with **0 
 **no metric regressed by more than 2 %** against `--previous` (skipped, not failed, without it),
 and the **performance targets** were measured and met. Accepted regressions are listed in
 `bench/gates-allow.json` (`metric`, `scenario`, optional `config` / `solver` patterns, `adr`,
-`reason`); an entry counts only if `docs/adr/<adr>-*.md` exists. The summary is printed and
-stored in `results.json` (`gate`). Release procedure: `docs/benchmark.md`.
+`reason`); an entry counts only if the record `docs/adr/<adr>.md` exists. The summary is printed and
+stored in `results.json` (`gate`). An accepted regression is a trade-off for a better result
+elsewhere, explained in the record of the decision behind it:
+
+```json
+{"allow": [{"metric": "placed_rate", "scenario": "05-airports", "config": "*", "solver": "rust",
+            "adr": "placement/leaders", "reason": "labels near the antimeridian now omitted instead of clipped"}]}
+```
+
+**Before tagging a release**, run the full suite with every implementation and baseline
+against the results of the previous release, and keep this run's `bench-report/results.json`
+with the release: it is the `--previous` of the next one.
+
+```sh
+cargo build --release --manifest-path rust/Cargo.toml -p label-anything-cli
+npm ci && npm run build && npm run build:wasm -w @label-anything/wasm
+bench/.venv/bin/python bench/run.py --suite full --runs 7 \
+    --engine rust/target/release/label-anything --ts --wasm \
+    --baselines --gate --previous path/to/previous-release/results.json
+```
+
+The `baselines` CI job checks the gates on the quick suite of each tag; this full run is the
+release run.
 
 ## Milestone acceptance (M3, M4)
 
@@ -411,6 +490,17 @@ python bench/run.py --suite full --engine $E --runs 1 --warmup 0 --no-render --o
 python -m bench.milestones /tmp/milestones/results.json
 python -m bench.milestones /tmp/milestones/results.json --baseline ladder
 ```
+
+At commit d80414b (2026-10-16): **M3 passed**, with 0 leader crossings on all 345 solves.
+**M4 passed against the greedy pass alone**: on the 36 dense problems the full solve's
+`placed_weighted` is 57.6 % above that of the greedy pass without the ladder on average
+(median 28.2 %; 5 % needed), with no new priority inversions. **Against the greedy pass with
+the ladder, M4 is not met**: the local search alone adds +0.7 % on average (median +0.1 %),
+and 20 times the iterations add at most 1.7 %. With strict priorities the greedy pass and
+the ladder already secure the high-priority labels that dominate `placed_weighted`; the
+local search mostly lowers costs. Eight problems were not compared because a solve hit the
+time guard (the three largest stress problems and five large priority problems), so their
+results depend on the machine.
 
 ## Docker and CI
 

@@ -112,9 +112,9 @@
         "placed": true,
         "box": {
           "x": 323.97075,
-          "y": 118.77474999999998,
+          "y": 123.11874999999999,
           "w": 35.49599999999998,
-          "h": 19.944000000000017
+          "h": 15.600000000000009
         },
         "anchor": [
           341.71875,
@@ -129,12 +129,16 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             31.896
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -154,9 +158,9 @@
         "placed": true,
         "box": {
           "x": 23.97075,
-          "y": 118.77474999999998,
+          "y": 123.11874999999999,
           "w": 35.49600000000001,
-          "h": 19.944000000000017
+          "h": 15.600000000000009
         },
         "anchor": [
           41.71875,
@@ -171,12 +175,16 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             31.896
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,

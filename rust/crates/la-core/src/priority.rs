@@ -114,7 +114,7 @@ fn eq_radius(it: &Item) -> f64 {
 }
 
 /// k-th nearest-neighbour gap distance of every item among all item marks and the
-/// `points`-class discs (spec §4.4 `outlierness`), found exactly in a k-d tree (ADR 0044).
+/// `points`-class discs (spec §4.4 `outlierness`), found exactly in a k-d tree.
 fn knn_gaps(model: &Model, k: usize) -> Vec<f64> {
     let mut pts: Vec<(P, f64, Option<usize>)> = model
         .items

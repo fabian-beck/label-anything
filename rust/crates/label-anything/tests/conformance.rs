@@ -226,6 +226,14 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
             }
         }
     }
+    if let Some(Value::Object(m)) = exp.get("stub") {
+        for (id, want) in m {
+            let got = placement(&r, id).is_some_and(|p| p["leader"]["stub"] == true);
+            if Some(got) != want.as_bool() {
+                f.push(format!("stub.{id}: expected {want}, got {got}"));
+            }
+        }
+    }
     if let Some(max) = exp.get("max_bends").and_then(|v| v.as_u64()) {
         for p in r["placements"].as_array().into_iter().flatten() {
             for n in leader_point_counts(p) {
@@ -254,6 +262,44 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
                 .unwrap_or(Value::Null);
             if &got != want {
                 f.push(format!("text_lines.{id}: expected {want}, got {got}"));
+            }
+        }
+    }
+    if let Some(Value::Object(m)) = exp.get("text_align") {
+        // every line starts where the alignment puts it (spec §5.1): centered in the box, or
+        // flush with the text block's left (`start`) or right (`end`) edge
+        for (id, want) in m {
+            let p = placement(&r, id).cloned().unwrap_or(Value::Null);
+            let t = &p["text"];
+            if &t["align"] != want {
+                f.push(format!(
+                    "text_align.{id}: expected {want}, got {}",
+                    t["align"]
+                ));
+                continue;
+            }
+            let w = p["box"]["w"].as_f64().unwrap_or(f64::NAN);
+            let pad = t["x_offset"].as_f64().unwrap_or(f64::NAN);
+            let xs = t["x_offsets"].as_array().cloned().unwrap_or_default();
+            let ws = t["line_widths"].as_array().cloned().unwrap_or_default();
+            if xs.len() != ws.len() || xs.is_empty() {
+                f.push(format!(
+                    "text_align.{id}: {} x_offsets for {} lines",
+                    xs.len(),
+                    ws.len()
+                ));
+            }
+            for (k, (x, lw)) in xs.iter().zip(&ws).enumerate() {
+                let x = x.as_f64().unwrap_or(f64::NAN);
+                let lw = lw.as_f64().unwrap_or(f64::NAN);
+                let off = match want.as_str() {
+                    Some("start") => x - pad,
+                    Some("end") => x + lw - (w - pad),
+                    _ => x + lw / 2.0 - w / 2.0,
+                };
+                if off.is_nan() || off.abs() > 1e-6 {
+                    f.push(format!("text_align.{id}: line {k} is {off} px off"));
+                }
             }
         }
     }
@@ -391,7 +437,10 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
             });
         for it in problem["items"].as_array().into_iter().flatten() {
             let id = it["id"].as_str().unwrap_or("");
-            let Some(p) = placement(&r, id).filter(|p| p["model"] == "adjacent") else {
+            // (a label with a stub stands farther out)
+            let Some(p) = placement(&r, id)
+                .filter(|p| p["model"] == "adjacent" && p["leader"]["stub"] != true)
+            else {
                 continue;
             };
             let Some(b) = box_of(p) else { continue };
@@ -414,6 +463,53 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
             let d = (dx * dx + dy * dy).sqrt() - rr - offset;
             if d > gap + 1e-9 || d < -1e-6 {
                 f.push(format!("touch_gap_max: {id} gap {d}"));
+            }
+        }
+    }
+    if exp.get("own_nearest") == Some(&Value::Bool(true)) {
+        // circle marks: no other item's mark is nearer to a label without a distant leader
+        // (adjacent or slider, with or without a stub) than its own mark
+        let default_mark = problem
+            .pointer("/defaults/mark")
+            .cloned()
+            .unwrap_or_else(|| la_core::options::default_of("defaults.mark", "rust"));
+        let circles: Vec<(String, f64, f64, f64)> = problem["items"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|it| {
+                let mark = it["anchor"].get("mark").unwrap_or(&default_mark);
+                (mark["shape"] == "circle").then(|| {
+                    (
+                        it["id"].as_str().unwrap_or("").to_string(),
+                        it["anchor"]["x"].as_f64().unwrap_or(0.0),
+                        it["anchor"]["y"].as_f64().unwrap_or(0.0),
+                        mark["r"].as_f64().unwrap_or(0.0),
+                    )
+                })
+            })
+            .collect();
+        for (id, ax, ay, ar) in &circles {
+            let Some(p) = placement(&r, id).filter(|p| {
+                (p["model"] == "adjacent" || p["model"] == "slider")
+                    && (p["leader"].is_null() || p["leader"]["stub"] == true)
+            }) else {
+                continue;
+            };
+            let Some(b) = box_of(p) else { continue };
+            let dist = |x: f64, y: f64, rr: f64| {
+                let dx = (b.x0 - x).max(x - b.x1).max(0.0);
+                let dy = (b.y0 - y).max(y - b.y1).max(0.0);
+                (dx * dx + dy * dy).sqrt() - rr
+            };
+            let own = dist(*ax, *ay, *ar);
+            for (jd, x, y, rr) in &circles {
+                let d = dist(*x, *y, *rr);
+                if jd != id && d < own - 1e-6 {
+                    f.push(format!(
+                        "own_nearest: {id} is {d} from {jd}, {own} from its mark"
+                    ));
+                }
             }
         }
     }

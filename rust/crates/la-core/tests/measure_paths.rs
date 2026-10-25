@@ -1,6 +1,6 @@
 //! Without a host measurement callback, wrapping and truncation measure their candidate
-//! lines with the fonts in constant time (`la_text::Measure::Font`, ADR 0018); with one,
-//! every line goes through `Measurer::width`. The two paths must give bit-identical label
+//! lines with the fonts in constant time (`la_text::Measure::Font`, ADR text/measurement); with
+//! one, every line goes through `Measurer::width`. The two paths must give bit-identical label
 //! variants and byte-identical results.
 use label_anything_core::env::{BasicEnv, Env};
 use label_anything_core::labels::{self, Measurer};

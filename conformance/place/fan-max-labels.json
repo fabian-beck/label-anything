@@ -1,7 +1,7 @@
 {
   "kind": "place",
   "name": "fan labels keep to the label budget",
-  "$comment": "The ends of `fan-line-ends` with at most 4 labels: the search labels the outer ends (alpha, zeta; next to the inner ends a label would come closer to other ends than their margin), the column gives labels to the two most important ends left without one (input order) and leaves the others out.",
+  "$comment": "The ends of `fan-line-ends`, 3 px apart, with at most 4 labels. Beside the ends a label would come closer to other ends than the label margin; the search labels alpha and epsilon with leaders, which leave the crowd beside the marks touching their own (spec §7). The column, which keeps to the budget and removes no label without placing it again, takes them, beta and gamma, and leaves delta and zeta out (their keys are all equal).",
   "problem": {
     "canvas": {
       "width": 320,
@@ -35,7 +35,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 93
+          "y": 91
         },
         "label": {
           "type": "text",
@@ -47,7 +47,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 98
+          "y": 94
         },
         "label": {
           "type": "text",
@@ -59,7 +59,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 103
+          "y": 97
         },
         "label": {
           "type": "text",
@@ -71,7 +71,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 108
+          "y": 100
         },
         "label": {
           "type": "text",
@@ -83,7 +83,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 113
+          "y": 103
         },
         "label": {
           "type": "text",
@@ -100,13 +100,13 @@
     "placed": 4,
     "unplaced_ids": [
       "delta",
-      "epsilon"
+      "zeta"
     ],
     "model": {
       "alpha": "fan",
       "beta": "fan",
       "gamma": "fan",
-      "zeta": "fan"
+      "epsilon": "fan"
     }
   }
 }

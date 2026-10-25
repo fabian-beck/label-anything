@@ -5,10 +5,11 @@ Every country of Natural Earth (public domain, 2019 estimates; the playground's
 up, the bubble's area its GDP, its colour its continent. The chart is an SVG
 (``economies-chart.svg``) that the problem hands the engine as its background, classified
 with CSS selectors: grid lines may be covered, axes, their text and the legend may not.
-Every country has a label, in the order of its GDP: the largest set larger and bold (font
-classes) and inside their bubble where they fit, the others on their bubble's outline or
-out on a leader, long names shortened to their ISO code, and what does not fit left out
-(strict priority); labels may cover the bubbles of smaller economies at a cost.
+Every country has a label, its full name, in the order of its GDP: the largest set larger and
+bold (font classes) and inside their bubble where they fit, the others on their bubble's
+outline or out on a leader, and what does not fit left out rather than shortened (strict
+priority). No label covers another bubble or comes nearer to one than to its own (the
+defaults); where other bubbles are close, a label may stand off its bubble with a short stub.
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ import json
 import math
 from xml.sax.saxutils import escape
 
-from common import FIGURES, HERE, PLAYGROUND_DATA, compose, f, report, solve, write_problem
+from common import FIGURES, HERE, PLAYGROUND_DATA, compose, f, report, solve, textmod, write_problem
 
 NAME = "economies"
 W, H = 960, 600
@@ -34,6 +35,15 @@ CONTINENTS = {
     "South America": "#d4a72c",
     "Oceania": "#b07aa1",
 }
+# every label is the country's name in full (world.json writes Natural Earth's abbreviations
+# out): the Republic of the Congo told apart from the Democratic Republic, Eswatini as usual
+FULL = {"COG": "Republic of the Congo", "SWZ": "Eswatini"}
+# names wider than this (in em of their font) break into two balanced lines
+LONG_EM = 9.0
+FONT_SIZE = 11.5
+# the font classes: the eight largest economies set larger and bold, the next 22 at the
+# nominal size, the rest smaller
+CLASSES = [{"first": 8, "scale": 1.25, "weight": "bold"}, {"first": 30, "scale": 1.0}, {"scale": 0.85}]
 TEXT = "#1f2328"
 MUTED = "#5f6670"
 
@@ -53,6 +63,7 @@ def countries() -> list[dict]:
     out = [c for c in data if c["continent"] in CONTINENTS and (c["pop"] or 0) >= 100_000 and (c["gdp"] or 0) > 0]
     gmax = max(c["gdp"] for c in out)
     for c in out:
+        c["name"] = FULL.get(c["id"], c["name"])
         c["x"] = sx(c["gdp"] * 1e6 / c["pop"])
         c["y"] = sy(c["pop"])
         c["r"] = max(2.0, R_MAX * math.sqrt(c["gdp"] / gmax))
@@ -108,14 +119,26 @@ def chart(cs: list[dict]) -> str:
     return "\n".join(o) + "\n"
 
 
+def label(name: str, rank: int) -> dict:
+    """The label of the country of GDP rank `rank`: a long name breaks into two balanced
+    lines, the engine choosing the break (a line width below which it needs two)."""
+    k = next(i for i, c in enumerate(CLASSES) if "first" not in c or rank < c["first"])
+    size = FONT_SIZE * CLASSES[k]["scale"]
+    weight = 700 if CLASSES[k].get("weight") == "bold" else 400
+    width_em = textmod.measure_fn(size, weight)(name) / size
+    if width_em <= LONG_EM:
+        return {"type": "text", "text": name}
+    return {"type": "text", "text": name, "wrap": {"max_width": f"{0.6 * width_em:.2f}em", "max_lines": 2}}
+
+
 def problem(cs: list[dict]) -> dict:
     items = []
-    for c in cs:
+    for rank, c in enumerate(cs):
         items.append({
             "id": c["id"],
             "anchor": {"type": "point", "x": round(c["x"], 2), "y": round(c["y"], 2),
                        "mark": {"shape": "circle", "r": round(c["r"], 2)}},
-            "label": {"type": "text", "text": c["name"], "alternatives": [c["id"]]},
+            "label": label(c["name"], rank),
             "priority": c["gdp"],
             # a label inside its bubble where it fits
             **({"placement": {"internal": "prefer"}} if c["r"] >= 15 else {}),
@@ -123,7 +146,7 @@ def problem(cs: list[dict]) -> dict:
     return {
         "version": "1",
         "canvas": {"width": W, "height": H, "padding": 2},
-        "defaults": {"font": {"size": 11.5}},
+        "defaults": {"font": {"size": FONT_SIZE}},
         "obstacles": {
             "svg": {
                 "path": f"{NAME}-chart.svg",
@@ -139,16 +162,15 @@ def problem(cs: list[dict]) -> dict:
         },
         "items": items,
         "avoid": {
-            "label": {"grid": "ignore", "axes": "hard", "legend": "hard", "lower_items": 1.5},
-            "leader": {"grid": "ignore", "axes": "hard", "legend": "hard", "lower_items": 0.5},
+            "label": {"grid": "ignore", "axes": "hard", "legend": "hard"},
+            "leader": {"grid": "ignore", "axes": "hard", "legend": "hard"},
         },
-        "placement": {"models": ["adjacent", "slider", "internal", "distant"], "max_distance": "6em"},
+        # a label next to its bubble among other bubbles may stand off it with a stub
+        "placement": {"models": ["adjacent", "slider", "internal", "distant"], "max_distance": "6em",
+                      "stubs": "auto"},
         "leaders": {"style": "straight", "max_length": "9em"},
-        "priority": {
-            "font_classes": [{"first": 8, "scale": 1.25, "weight": "bold"}, {"first": 30, "scale": 1.0},
-                             {"scale": 0.85}],
-        },
-        "degrade": ["alternatives", "distant", "omit"],
+        "priority": {"font_classes": CLASSES},
+        "degrade": ["distant", "omit"],
         "solver": {"seed": 1},
     }
 
@@ -166,6 +188,7 @@ def make(cli: str) -> str:
                         ".labels .inside text{stroke:none}",
                   label_class=lambda p: "inside" if inside(p) else "",
                   label_color=lambda p: "#ffffff" if inside(p) else TEXT,
-                  leaders=f'fill="none" stroke="{MUTED}" stroke-width="0.8"')
+                  leaders=f'fill="none" stroke="{MUTED}" stroke-width="0.8"',
+                  stubs=f'fill="none" stroke="{MUTED}" stroke-width="1" stroke-linecap="round"')
     (FIGURES / f"{NAME}.svg").write_text(svg, encoding="utf-8")
     return report(NAME, result)

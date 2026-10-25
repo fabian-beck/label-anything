@@ -1,7 +1,7 @@
 {
   "kind": "place",
   "name": "fan labels: crowded line ends get a column of labels with fanning leaders",
-  "$comment": "Six ends 5 px apart that allow only `right`: beside them there is room for two labels, the others are left without one by the search. The crowd's column (placement.fan = auto, the default) takes all six, the two placed labels in its way included, stacked in the order of the ends (spec §6.8).",
+  "$comment": "Six ends 5 px apart that allow only `right`: the search labels three of them (beta and zeta beside their ends, alpha with a leader) and leaves the others without one. The crowd's column (placement.fan = auto, the default) takes all six, the three placed labels in its way included, stacked in the order of the ends (spec §6.8).",
   "problem": {
     "canvas": {
       "width": 320,

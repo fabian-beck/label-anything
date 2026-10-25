@@ -104,9 +104,9 @@
         "placed": true,
         "box": {
           "x": 143.88427779428616,
-          "y": 81.87853696265825,
+          "y": 89.53453696265825,
           "w": 29.23199999999997,
-          "h": 19.944000000000017
+          "h": 12.288000000000011
         },
         "anchor": [
           100.0,
@@ -121,12 +121,16 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.367999999999999
           ],
           "line_widths": [
             25.632
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -170,7 +174,7 @@
       "iterations": 800,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 51,
+      "candidates": 53,
       "omission_order": [
         "a"
       ],

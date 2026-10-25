@@ -30,18 +30,18 @@ practice in web map engines.
 
 ## What the engine already does (from the repo, read-only, so the ideas below are new)
 
-* ADR 0016/0025: warm start from the previous result, with boxes moved by their anchor's
-  movement. A stability cost `w·(min(1,d/em) + min(1,max(0,d/em−1)/4))` (ADR 0027) uses
+* ADR motion/warm-starts: warm start from the previous result, with boxes moved by their anchor's
+  movement. A stability cost `w·(min(1,d/em) + min(1,max(0,d/em−1)/4))` (ADR motion/warm-starts) uses
   distance only and has no notion of *side*. Degraded labels keep their box.
-* ADR 0027: nudges of a blocked warm box along the slider path (0.05–0.8 em); kept leaders.
-* ADR 0026: `LabelMotion` in `@label-anything/extras` uses a critically damped spring plus
+* ADR motion/warm-starts: nudges of a blocked warm box along the slider path (0.05–0.8 em); kept leaders.
+* ADR motion/label-motion: `LabelMotion` in `@label-anything/extras` uses a critically damped spring plus
   linear fades (T = 300 ms). **Engine-side hysteresis was rejected** because it "either
   breaks strict priority or overlaps labels".
 * Scenario 11 (`bench/scenarios/11-stability/build.py`) has zoom 1 → 8 in 19 geometric steps
   (≈ ×1.116 per step), then pan. It has no zoom-out steps and no round trips.
   `bench/eval/stability.py` measures displacement, flips, added/removed, and nesting on
   zoom-in steps.
-* ADR 0025 table: zoom-pan-1000 warm start gives 3.01 px, 11.6 % flips. zoom-pan-3000 gives
+* ADR motion/warm-starts table: zoom-pan-1000 warm start gives 3.01 px, 11.6 % flips. zoom-pan-3000 gives
   3.81 px, 15.5 % flips.
 
 ---
@@ -170,7 +170,7 @@ practice in web map engines.
 * **Relevance:** the main empirical argument for making consistency a constraint rather
   than a weak cost (Ideas 1, 2). *[interpretation]* Benchmark: count "flicker" (label
   on→off→on within a window) per label, as these evaluations do. Today's
-  `added`/`removed` counts don't separate a single change from flicker. ADR 0026 notes
+  `added`/`removed` counts don't separate a single change from flicker. ADR motion/label-motion notes
   that half the appearances last one or two solves.
 
 ### S6. Gemsa, Niedermann, Nöllenburg 2013: Trajectory-based dynamic map labeling
@@ -217,7 +217,7 @@ practice in web map engines.
     points", ipa.win.tue.nl/?p=716) covers this line of work (title only seen).
 * **Relevance:** Idea 4. Make **label speed** an explicit quantity, e.g. offset change ≤
   v_max em per solve, hard or soft. Today the stability term penalizes distance but
-  allows any jump when the warm box is blocked. ADR 0026's spring smooths only the drawing,
+  allows any jump when the warm box is blocked. ADR motion/label-motion's spring smooths only the drawing,
   and it can show 33 px glides.
 
 ### S8. de Berg, Gerrits 2012: Approximation algorithms for free-label maximization
@@ -298,7 +298,7 @@ practice in web map engines.
     states over time.
   * Gives bounds on the overlaps that occur during transitions.
   * A weighted penalty variant is NP-complete. A prototype was evaluated.
-* **Relevance:** Idea 5. ADR 0026's `LabelMotion` glides and fades without checking
+* **Relevance:** Idea 5. ADR motion/label-motion's `LabelMotion` glides and fades without checking
   overlap during the glide, and admits that "a label fading out may overlap the label that
   took its place for up to T". The engine could plan transitions: choose slide vs.
   fade-out/fade-in per label so that interpolated boxes don't collide, and report the
@@ -411,7 +411,7 @@ practice in web map engines.
   discrete candidate switching. *[interpretation]* For Label Anything, use a short
   force/relaxation step on the *continuous slider parameter* between solves (labels slide
   along their mark instead of switching candidate). It would plug into the existing nudge
-  mechanism (ADR 0027) as a first stage.
+  mechanism (ADR motion/warm-starts) as a first stage.
 
 ### S17. Mote 2007/2008: Fast point-feature label placement for dynamic visualizations
 * **Citation:** Kevin D. Mote. Fast point-feature label placement for dynamic
@@ -488,7 +488,7 @@ practice in web map engines.
     the world**.
 * **Relevance:** *[interpretation]* Coherence comes from restricting label motion to a
   low-dimensional manifold attached to the object. Label Anything already moves warm boxes
-  with their anchors (ADR 0025). The next step is to store and reason about the warm state
+  with their anchors (ADR motion/warm-starts). The next step is to store and reason about the warm state
   as (side, slider t, leader direction) in item-relative coordinates, and to restrict
   near-term moves to that 1D path (Ideas 2 and 4).
 
@@ -542,7 +542,7 @@ practice in web map engines.
   * Goal: limit label drift under camera zoom and pan.
   * Labels move less than in the prior state of the art. A user study found them easier to
     follow.
-* **Relevance:** directly on weakness 4, and for the boundary columns (ADR 0030). The same
+* **Relevance:** directly on weakness 4, and for the boundary columns (ADR placement/columns). The same
   authors as the project's cited CVM 2026 paper. Its offline/interactive split supports
   Idea 6 (sequence mode when frames are known) next to the interactive warm start. Their
   drift measures are worth comparing with `displacement_mean_px`.
@@ -620,7 +620,7 @@ practice in web map engines.
   symbol index GL JS" and ""Map Label Placement in Mapbox GL" blog Brammanis Been Yap
   continuous labelling", 2026-10-18. Then direct GitHub fetches.
 * **Relevance:** Ideas 2, 3, 5. The "same anchor first" pass is **hysteresis on side that
-  does not touch selection or priority**. It answers ADR 0026's objection, which was about
+  does not touch selection or priority**. It answers ADR motion/label-motion's objection, which was about
   keeping a label *shown*, not about its *side*. Viewport padding is a cheap anti-pop
   measure for pans.
 
@@ -660,7 +660,7 @@ using same anchor"; S5 consistency vs. flicker; S20 1D motion constraint).
   same half-plane. Only then fall back to the full candidate set, with an added cost
   `w_flip` on candidates whose `anchor_side` differs from the warm side. A "switch only
   if gain > τ" rule is the same as giving the warm side a bonus τ.
-* *Why it is compatible with ADR 0026:* it changes only *which candidate* an already-selected
+* *Why it is compatible with ADR motion/label-motion:* it changes only *which candidate* an already-selected
   label takes, never *whether* it is shown, so strict priority is untouched. Today the
   stability term is distance-based, capped at 2. A side flip of a wide label (d ≈ w + 2·gap)
   costs about as much as any 5-em move, so the engine has no specific aversion to flips.
@@ -676,7 +676,7 @@ desideratum).
   padding band outside the canvas as "invisible but placed", so labels entering on a pan
   are already decided and don't pop or flip when they arrive.
 * *Effect:* zero displacement and flips for untouched labels by construction (not just
-  low cost). Per-frame time scales with change (weakness 5). Cascades (ADR 0027: ~40 % of
+  low cost). Per-frame time scales with change (weakness 5). Cascades (ADR motion/warm-starts: ~40 % of
   moves were labels displaced by moved labels) are cut off at the dirty-set boundary.
 
 **4. Bounded label speed** (S7, S8; S9 for why it must stay soft; S16 continuous force
@@ -687,12 +687,12 @@ relaxation).
   fade-in there", with a higher cost. Opt-in: allow a short **transient overlap** (≤ k
   solves, counted and reported) instead of an instantaneous jump, as in de Berg &
   Gerrits's speed/overlap trade-off.
-* *Effect:* replaces large jumps (ADR 0026's 33 px glides and 186 px raw jumps) with slides
+* *Effect:* replaces large jumps (ADR motion/label-motion's 33 px glides and 186 px raw jumps) with slides
   or fades. The opt-in overlap must be off by default to keep the hard-constraint
   guarantee.
 
 **5. Overlap-aware transition plans from the engine** (S11; S25a/b fades 300 ms; extends
-ADR 0026).
+ADR motion/label-motion).
 * *What:* the engine returns, per changed label, `transition: slide | fade` (and the path).
   It slides only when the straight-line interpolation of the box, including the leader,
   stays clear of other labels' interpolated boxes over the transition; otherwise it fades

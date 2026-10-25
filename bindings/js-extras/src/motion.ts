@@ -208,6 +208,7 @@ function scaleText(t: TextInfo, s: number): TextInfo {
     baseline_offsets: t.baseline_offsets.map((b) => b * s),
   };
   if (t.x_offset !== undefined) out.x_offset = t.x_offset * s;
+  if (t.x_offsets) out.x_offsets = t.x_offsets.map((x) => x * s);
   if (t.line_widths) out.line_widths = t.line_widths.map((w) => w * s);
   return out;
 }

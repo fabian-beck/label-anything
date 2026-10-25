@@ -30,8 +30,8 @@ labeling, leader routing.
 * **Repository context** comes from reading the code (not modified): `rust/crates/la-core/src/solver/repair.rs`
   (`stack`: bounded isotonic stacking by pool-adjacent-violators, PAV; `hungarian`: minimum
   total-length assignment), `solver/fan.rs` (the fan column, which keeps the anchors' order
-  unless a Hungarian matching is shorter), `docs/adr/0022-fan-labels.md`,
-  `docs/adr/0030-boundary-columns.md` and spec §6.6, §6.8, §7. Boundary labels with the
+  unless a Hungarian matching is shorter), `docs/adr/placement/columns.md` and spec §6.6,
+  §6.8, §7. Boundary labels with the
   `orthogonal` style use `opo` leaders (spec §7). The default leader style is `straight`
   (spec/defaults.md).
 
@@ -62,7 +62,7 @@ labeling, leader routing.
     sliding ports, labels on one, two or four sides.
   * Simple, efficient algorithms that minimize total leader length or, for rectilinear leaders,
     the total number of bends.
-* **Relevance:** This is the model behind LA's boundary columns (spec §6.6, ADR 0030) and fan
+* **Relevance:** This is the model behind LA's boundary columns (spec §6.6, ADR placement/columns) and fan
   columns (§6.8). LA already uses the two standard tools from this line of work: order-keeping
   stacking and a minimum-total-length assignment (`hungarian` in `repair.rs`). The paper
   separates *fixed* from *sliding* ports. LA's slots are fixed after the PAV stacking.
@@ -141,7 +141,7 @@ labeling, leader routing.
   * A total-length minimization algorithm for uniform label sizes. NP-completeness for labels
     of arbitrary sizes.
 * **Relevance (weaknesses 3, 6):** LA's fan and boundary leaders all have one shape per run
-  (`leaders.style`). ADR 0022 records that `angles` and `elbow` fans failed at line ends
+  (`leaders.style`). ADR placement/columns records that `angles` and `elbow` fans failed at line ends
   because parallel diagonals from close ends come nearer to each other than the clearance.
   *(interpretation)* The paper's main point is that **mixing** leader types per label restores
   feasibility. A fan column could give the labels near the crowd's vertical centre straight or
@@ -209,7 +209,7 @@ labeling, leader routing.
   * Algorithms track the "combinatorially different" labelings that occur while zooming.
 * **Relevance (weaknesses 6, 4):** Two ideas. (a) *Multiple stacks*: one column per crowd is LA's
   current model. Several stacks (clusters) per side are explicitly modelled here, and they are
-  the natural remedy when one fan column saturates. (b) *Dynamic consistency*: ADR 0022 reports
+  the natural remedy when one fan column saturates. (b) *Dynamic consistency*: ADR placement/columns reports
   fans raise flip rate +4–5 % because "columns are built anew in each frame".
   *(interpretation)* Keeping a column's membership and order from the previous frame, and
   changing it only at combinatorial events, is the paper's model. It would remove most of
@@ -282,7 +282,7 @@ labeling, leader routing.
   * Aimed at highest-quality illustrations, not fast interactive use. The authors argue that
     rectangular boundary-labeling results are hardly applicable when labels are not uniform
     and the figure's boundary is not a rectangle.
-* **Relevance (weaknesses 1, 3):** ADR 0022 says two-dimensional scatter crowds (Gapminder,
+* **Relevance (weaknesses 1, 3):** ADR placement/columns says two-dimensional scatter crowds (Gapminder,
   software metrics, citations, cities) "get few or no columns: their leaders would cross the
   marks and labels around the crowd". *(interpretation)* A **contour labeling pass** for 2D
   crowds is the natural counterpart of the fan column. Take the crowd's hull, offset it by the
@@ -361,7 +361,7 @@ labeling, leader routing.
     exploring large numbers of objects.
   * UNVERIFIED (from memory): labels are stacked in columns left and right of the focus
     circle, ordered by the objects' y to avoid leader crossings.
-* **Relevance:** ADR 0022 already names excentric labeling as the model for fan labels.
+* **Relevance:** ADR placement/columns already names excentric labeling as the model for fan labels.
   *(interpretation)* The interactive form, labels for the crowd under a lens on demand,
   answers weakness 1 for interactive hosts. Crowd members that stay unlabeled statically could
   be reported in the result as "lens-able" crowds, so the host can show an excentric lens.
@@ -485,7 +485,7 @@ labeling, leader routing.
   * Real-time layout algorithms that **use the previous frame's layout decisions** to stay
     consistent during interaction.
   * Evaluation criteria for static and dynamic label layouts.
-* **Relevance (weakness 4, the fan instability noted in ADR 0022):** *(interpretation)* LA warm-
+* **Relevance (weakness 4, the fan instability noted in ADR placement/columns):** *(interpretation)* LA warm-
   starts its candidates but rebuilds fan and boundary columns from scratch in each frame. Reuse
   the previous frame's column membership, order and side as a strong prior: the same column if
   still feasible, otherwise the minimal change.
@@ -512,7 +512,7 @@ labeling, leader routing.
 * **Relevance (weakness 3):** *(interpretation)* Use this together with C15 to define leader
   metrics for LA's benchmark: leader length relative to font size, number of leaders, leader
   over marks, leader angle variety. The benchmark currently reports mostly counts and
-  longest-leader percentiles (ADR 0022). Metrics are a precondition for tuning the trade-off
+  longest-leader percentiles (ADR placement/columns). Metrics are a precondition for tuning the trade-off
   of "more labels versus more long leaders".
 
 ### C19. Čmolík, Bittner 2010 — Layout-aware optimization for interactive labeling of 3D models
@@ -734,7 +734,7 @@ abstracts unless noted. Worth a follow-up once the search budget allows:
      spread out); or
    * split the crowd between both ends by a joint assignment.
 3. **Contour/radial labeling for 2D crowds (weaknesses 1, 3). Sources: C9, C10, C12, C13.** Fans
-   fail for 2D scatter crowds (ADR 0022). Put labels on an offset contour around the crowd's
+   fail for 2D scatter crowds (ADR placement/columns). Put labels on an offset contour around the crowd's
    hull, ordered by angle. Straight radial leaders in angular order are crossing-free, and
    their lengths are bounded by the crowd's size. When there are more members than slots,
    select by priority, or emit one cluster label ("+N"; C10, C13).

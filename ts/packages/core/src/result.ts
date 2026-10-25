@@ -25,8 +25,8 @@ import { atan2Deg } from "./detmath.js";
 import type { P } from "./geom/index.js";
 import type { Shape } from "./geom/shape.js";
 import { type TextLayout, type Variant, partKindName } from "./labels.js";
-import { cmpF64, cmpStr } from "./math.js";
-import { leaderStyleName, stepName } from "./model/index.js";
+import { cmpF64, cmpStr, maxf } from "./math.js";
+import { labelGap, leaderStyleName, stepName } from "./model/index.js";
 import { EXPLAIN_CANDIDATES } from "./solver/greedy.js";
 import { Reason, type Solve, reasonName } from "./solver/index.js";
 import type { Verification } from "./solver/verify.js";
@@ -51,6 +51,7 @@ export function leaderJson(l: Leader, s: Solve): Json {
   if (l.underline !== null) m.underline = [pt(l.underline[0]), pt(l.underline[1])];
   if (l.curve !== null) m.curve = [pt(l.curve[0]), pt(l.curve[1]), pt(l.curve[2])];
   if (l.member !== null) m.member = s.model.items[l.member]!.id;
+  if (l.stub) m.stub = true;
   return m;
 }
 
@@ -62,6 +63,8 @@ export function textJson(t: TextLayout, family: string, weight: number): Json {
     baseline_offsets: t.baselines.map(num),
     line_widths: t.widths.map(num),
     x_offset: num(t.xOffset),
+    x_offsets: t.xOffsets.map(num),
+    align: t.align,
     font_size: num(t.fontSize),
     font_family: family,
     font_weight: weight,
@@ -84,6 +87,7 @@ function partsJson(v: Variant, c: Cand, family: string, weight: number): Json[] 
       // part baselines are relative to the label box; report them relative to the part
       tj.baseline_offsets = p.text.baselines.map((b) => num(b - p.rect.y0));
       tj.x_offset = 0;
+      tj.x_offsets = [0];
       m.text = tj;
     }
     return m;
@@ -284,7 +288,9 @@ export function build(s: Solve, ver: Verification, phases: readonly [string, num
         s.state.conflicts(c, s.cands, s.obs, i, buf);
         for (const j of buf) {
           const jc = s.cands[s.state.placed[j]!]!;
-          add(jc.rect.overlaps(c.rect) ? "labels" : "leaders", 1);
+          // the label itself, or one closer than the label gap (spec §4.4)
+          const gap = maxf(labelGap(item.len), labelGap(model.items[j]!.len));
+          add(c.labelOverlapsGap(jc, gap) ? "labels" : "leaders", 1);
           if (!blockers.includes(j)) blockers.push(j);
         }
       }

@@ -9,12 +9,14 @@
 //! those labeled on that side): ordered by anchor height, stacked around it like boundary
 //! labels, matched to the slots by total leader length when that is shorter than keeping
 //! the order, at a distance from the crowd that keeps the leaders at most 45° steep (as far
-//! as the canvas allows). A placed label in its way whose item stands in the crowd's strip
-//! joins the column; a placed member that cannot move into it keeps its label; a member
-//! without a label that fails leaves it (lowest priority first). The column is applied when
-//! it places more labels (`always`: at least as many, in a column of two or more), within
-//! the label budgets (`priority.budget`), and unless it inverts priorities: an omitted item
-//! that would become placeable once less important labels were removed.
+//! as the canvas allows). A placed member takes its label's text at full size when the
+//! ladder shrank it, unless only the shrunk size fits. A placed label in its way whose item
+//! stands in the crowd's strip joins the column; a placed member that cannot move into it
+//! keeps its label; a member without a label that fails leaves it (lowest priority first).
+//! The column is applied when it places more labels (`always`: at least as many, in a
+//! column of two or more), within the label budgets (`priority.budget`), and unless it
+//! inverts priorities: an omitted item that would become placeable once less important
+//! labels were removed.
 //!
 //! Fan leaders are built like boundary leaders (straight, or per the `orthogonal`, `elbow`
 //! style) and keep to `leaders.max_length`; the `angles` style, whose leaders run along the
@@ -253,7 +255,7 @@ fn column(
             continue;
         }
         pass.work = pass.work.saturating_sub(1);
-        match layout(s, area, &[j], right) {
+        match layout(s, area, &[j], right, true) {
             Ok(_) => members.push(j),
             Err(fails) if fails[0].1.is_some() => members.push(j),
             Err(_) => {}
@@ -289,7 +291,13 @@ fn column(
             continue;
         }
         pass.work = pass.work.saturating_sub(members.len());
-        match layout(s, area, &members, right) {
+        // the members' labels at full size first, at their placed sizes when that fails
+        let mut laid = layout(s, area, &members, right, true);
+        if laid.is_err() && s.any_shrunk(&members) {
+            pass.work = pass.work.saturating_sub(members.len());
+            laid = layout(s, area, &members, right, false);
+        }
+        match laid {
             Err(fails) => {
                 // a placed label in the way joins the column
                 let joins = fails.iter().filter_map(|&(_, b)| b).find(|&k| {
@@ -364,14 +372,16 @@ fn drop_lowest_unlabeled(s: &Solve, members: &mut Vec<usize>) -> bool {
     }
 }
 
-/// Stack `members` in one column and test it against everything else placed. `Err`: the
-/// members that fail, each with the placed item in its way (none: a reason of its own).
+/// Stack `members` in one column and test it against everything else placed; with `full`,
+/// labels the ladder shrank take their full size. `Err`: the members that fail, each with
+/// the placed item in its way (none: a reason of its own).
 #[allow(clippy::type_complexity)]
 fn layout(
     s: &mut Solve,
     area: &Rect,
     members: &[usize],
     right: bool,
+    full: bool,
 ) -> Result<Vec<(usize, Cand)>, Vec<(usize, Option<usize>)>> {
     let model = s.model;
     let items = &model.items;
@@ -381,10 +391,10 @@ fn layout(
             .then(crate::math::cmp_f64(items[a].anchor.x, items[b].anchor.x))
             .then(a.cmp(&b))
     });
-    // the variant of each member: its placed one, else its first
+    // the variant of each member: its placed one (with `full` unshrunk), else its first
     let vis: Vec<usize> = order
         .iter()
-        .map(|&j| s.state.placed[j].map_or(0, |c| s.cands[c as usize].variant as usize))
+        .map(|&j| s.state.placed[j].map_or(0, |c| s.column_variant(j, c, full)))
         .collect();
     let hs: Vec<f64> = order
         .iter()
@@ -393,10 +403,13 @@ fn layout(
         .collect();
     let gap = items[order[0]].len.boundary_gap;
     let desired: Vec<f64> = order.iter().map(|&j| items[j].anchor.y).collect();
-    // at least the larger margin of the two labels apart (spec §6.8)
+    // at least the larger label gap of the two labels apart (spec §6.8)
     let gaps: Vec<f64> = (1..order.len())
         .map(|k| {
-            let m = maxf(items[order[k - 1]].len.margin, items[order[k]].len.margin);
+            let m = maxf(
+                items[order[k - 1]].len.label_gap(),
+                items[order[k]].len.label_gap(),
+            );
             (hs[k - 1] + hs[k]) * 0.5 + maxf(gap, m)
         })
         .collect();

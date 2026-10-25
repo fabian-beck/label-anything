@@ -57,7 +57,7 @@ def _font_of(label_font: dict | None, defaults_font: dict) -> dict:
     return f
 
 
-def resolve_label(label: dict, opts: dict, base_font: dict | None = None) -> LabelSpec:
+def resolve_label(label: dict, opts: dict, base_font: dict | None = None, part: bool = False) -> LabelSpec:
     d = opts.get("defaults", {})
     dfont = base_font if base_font is not None else d.get("font", {})
     kind = label.get("type", "text")
@@ -72,11 +72,13 @@ def resolve_label(label: dict, opts: dict, base_font: dict | None = None) -> Lab
         trunc = label.get("truncate", d.get("truncate", "none"))
         if "width" in label and "height" in label:
             lines = label.get("lines") or [label.get("text", "")]
-            lay = text.layout_lines(lines, size, weight, lh)
+            lay = text.layout_lines(lines, size, weight, lh, ink=False)  # the host measured it
             lay.width = float(label["width"])
             lay.height = float(label["height"])
         else:
-            lay = text.normal_variant(label.get("text", ""), size, weight, lh, wrap, trunc, em)
+            # a text label's box fits its ink, a composite's text part spans ascent and descent
+            lay = text.normal_variant(label.get("text", ""), size, weight, lh, wrap, trunc, em, ink=not part)
+            lay.align = label.get("align", d.get("align", "center"))
         return LabelSpec("text", lay.width + 2 * pad, lay.height + 2 * pad, pad, em, size, weight, layout=lay,
                          has_wrap=bool(wrap) or "lines" in label, text=label.get("text", ""), raw=label)
     if kind in ("icon", "box"):
@@ -92,7 +94,7 @@ def resolve_label(label: dict, opts: dict, base_font: dict | None = None) -> Lab
         for p in label["parts"]:
             pp = dict(p)
             pp.setdefault("padding", 0)
-            ps = resolve_label(pp, opts, base_font=f)
+            ps = resolve_label(pp, opts, base_font=f, part=True)
             parts.append(ps)
         main = sum((p.w if direction == "row" else p.h) for p in parts) + gap * (len(parts) - 1)
         cross = max((p.h if direction == "row" else p.w) for p in parts)

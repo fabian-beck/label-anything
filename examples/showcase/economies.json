@@ -52,9 +52,10 @@
    "label": {
     "type": "text",
     "text": "United States of America",
-    "alternatives": [
-     "USA"
-    ]
+    "wrap": {
+     "max_width": "7.44em",
+     "max_lines": 2
+    }
    },
    "priority": 21433226,
    "placement": {
@@ -74,10 +75,7 @@
    },
    "label": {
     "type": "text",
-    "text": "China",
-    "alternatives": [
-     "CHN"
-    ]
+    "text": "China"
    },
    "priority": 14342903,
    "placement": {
@@ -97,10 +95,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Japan",
-    "alternatives": [
-     "JPN"
-    ]
+    "text": "Japan"
    },
    "priority": 5081769,
    "placement": {
@@ -120,10 +115,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Germany",
-    "alternatives": [
-     "DEU"
-    ]
+    "text": "Germany"
    },
    "priority": 3861123,
    "placement": {
@@ -143,10 +135,7 @@
    },
    "label": {
     "type": "text",
-    "text": "India",
-    "alternatives": [
-     "IND"
-    ]
+    "text": "India"
    },
    "priority": 2868929,
    "placement": {
@@ -166,10 +155,7 @@
    },
    "label": {
     "type": "text",
-    "text": "United Kingdom",
-    "alternatives": [
-     "GBR"
-    ]
+    "text": "United Kingdom"
    },
    "priority": 2829108,
    "placement": {
@@ -189,10 +175,7 @@
    },
    "label": {
     "type": "text",
-    "text": "France",
-    "alternatives": [
-     "FRA"
-    ]
+    "text": "France"
    },
    "priority": 2715518,
    "placement": {
@@ -212,10 +195,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Italy",
-    "alternatives": [
-     "ITA"
-    ]
+    "text": "Italy"
    },
    "priority": 2003576,
    "placement": {
@@ -235,10 +215,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Brazil",
-    "alternatives": [
-     "BRA"
-    ]
+    "text": "Brazil"
    },
    "priority": 1839758
   },
@@ -255,10 +232,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Canada",
-    "alternatives": [
-     "CAN"
-    ]
+    "text": "Canada"
    },
    "priority": 1736425
   },
@@ -275,10 +249,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Russia",
-    "alternatives": [
-     "RUS"
-    ]
+    "text": "Russia"
    },
    "priority": 1699876
   },
@@ -295,10 +266,7 @@
    },
    "label": {
     "type": "text",
-    "text": "South Korea",
-    "alternatives": [
-     "KOR"
-    ]
+    "text": "South Korea"
    },
    "priority": 1646739
   },
@@ -315,10 +283,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Australia",
-    "alternatives": [
-     "AUS"
-    ]
+    "text": "Australia"
    },
    "priority": 1396567
   },
@@ -335,10 +300,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Spain",
-    "alternatives": [
-     "ESP"
-    ]
+    "text": "Spain"
    },
    "priority": 1393490
   },
@@ -355,10 +317,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Mexico",
-    "alternatives": [
-     "MEX"
-    ]
+    "text": "Mexico"
    },
    "priority": 1268870
   },
@@ -375,10 +334,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Taiwan",
-    "alternatives": [
-     "TWN"
-    ]
+    "text": "Taiwan"
    },
    "priority": 1127000
   },
@@ -395,10 +351,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Indonesia",
-    "alternatives": [
-     "IDN"
-    ]
+    "text": "Indonesia"
    },
    "priority": 1119190
   },
@@ -415,10 +368,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Netherlands",
-    "alternatives": [
-     "NLD"
-    ]
+    "text": "Netherlands"
    },
    "priority": 907050
   },
@@ -435,10 +385,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Saudi Arabia",
-    "alternatives": [
-     "SAU"
-    ]
+    "text": "Saudi Arabia"
    },
    "priority": 792966
   },
@@ -455,10 +402,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Turkey",
-    "alternatives": [
-     "TUR"
-    ]
+    "text": "Turkey"
    },
    "priority": 761425
   },
@@ -475,10 +419,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Switzerland",
-    "alternatives": [
-     "CHE"
-    ]
+    "text": "Switzerland"
    },
    "priority": 703082
   },
@@ -495,10 +436,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Poland",
-    "alternatives": [
-     "POL"
-    ]
+    "text": "Poland"
    },
    "priority": 595858
   },
@@ -515,10 +453,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Thailand",
-    "alternatives": [
-     "THA"
-    ]
+    "text": "Thailand"
    },
    "priority": 543548
   },
@@ -535,10 +470,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Belgium",
-    "alternatives": [
-     "BEL"
-    ]
+    "text": "Belgium"
    },
    "priority": 533097
   },
@@ -555,10 +487,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Sweden",
-    "alternatives": [
-     "SWE"
-    ]
+    "text": "Sweden"
    },
    "priority": 530883
   },
@@ -575,10 +504,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Venezuela",
-    "alternatives": [
-     "VEN"
-    ]
+    "text": "Venezuela"
    },
    "priority": 482359
   },
@@ -595,10 +521,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Iran",
-    "alternatives": [
-     "IRN"
-    ]
+    "text": "Iran"
    },
    "priority": 453996
   },
@@ -615,10 +538,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Nigeria",
-    "alternatives": [
-     "NGA"
-    ]
+    "text": "Nigeria"
    },
    "priority": 448120
   },
@@ -635,10 +555,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Argentina",
-    "alternatives": [
-     "ARG"
-    ]
+    "text": "Argentina"
    },
    "priority": 445445
   },
@@ -655,10 +572,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Austria",
-    "alternatives": [
-     "AUT"
-    ]
+    "text": "Austria"
    },
    "priority": 445075
   },
@@ -676,9 +590,10 @@
    "label": {
     "type": "text",
     "text": "United Arab Emirates",
-    "alternatives": [
-     "ARE"
-    ]
+    "wrap": {
+     "max_width": "5.99em",
+     "max_lines": 2
+    }
    },
    "priority": 421142
   },
@@ -695,10 +610,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Norway",
-    "alternatives": [
-     "NOR"
-    ]
+    "text": "Norway"
    },
    "priority": 403336
   },
@@ -715,10 +627,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Israel",
-    "alternatives": [
-     "ISR"
-    ]
+    "text": "Israel"
    },
    "priority": 394652
   },
@@ -735,10 +644,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Ireland",
-    "alternatives": [
-     "IRL"
-    ]
+    "text": "Ireland"
    },
    "priority": 388698
   },
@@ -755,10 +661,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Philippines",
-    "alternatives": [
-     "PHL"
-    ]
+    "text": "Philippines"
    },
    "priority": 376795
   },
@@ -775,10 +678,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Singapore",
-    "alternatives": [
-     "SGP"
-    ]
+    "text": "Singapore"
    },
    "priority": 372062
   },
@@ -795,10 +695,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Hong Kong",
-    "alternatives": [
-     "HKG"
-    ]
+    "text": "Hong Kong"
    },
    "priority": 365711
   },
@@ -815,10 +712,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Malaysia",
-    "alternatives": [
-     "MYS"
-    ]
+    "text": "Malaysia"
    },
    "priority": 364681
   },
@@ -835,10 +729,7 @@
    },
    "label": {
     "type": "text",
-    "text": "South Africa",
-    "alternatives": [
-     "ZAF"
-    ]
+    "text": "South Africa"
    },
    "priority": 351431
   },
@@ -855,10 +746,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Denmark",
-    "alternatives": [
-     "DNK"
-    ]
+    "text": "Denmark"
    },
    "priority": 350104
   },
@@ -875,10 +763,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Colombia",
-    "alternatives": [
-     "COL"
-    ]
+    "text": "Colombia"
    },
    "priority": 323615
   },
@@ -895,10 +780,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Egypt",
-    "alternatives": [
-     "EGY"
-    ]
+    "text": "Egypt"
    },
    "priority": 303092
   },
@@ -915,10 +797,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Bangladesh",
-    "alternatives": [
-     "BGD"
-    ]
+    "text": "Bangladesh"
    },
    "priority": 302571
   },
@@ -935,10 +814,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Chile",
-    "alternatives": [
-     "CHL"
-    ]
+    "text": "Chile"
    },
    "priority": 282318
   },
@@ -955,10 +831,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Pakistan",
-    "alternatives": [
-     "PAK"
-    ]
+    "text": "Pakistan"
    },
    "priority": 278221
   },
@@ -975,10 +848,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Finland",
-    "alternatives": [
-     "FIN"
-    ]
+    "text": "Finland"
    },
    "priority": 269296
   },
@@ -995,10 +865,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Vietnam",
-    "alternatives": [
-     "VNM"
-    ]
+    "text": "Vietnam"
    },
    "priority": 261921
   },
@@ -1015,10 +882,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Czechia",
-    "alternatives": [
-     "CZE"
-    ]
+    "text": "Czechia"
    },
    "priority": 250680
   },
@@ -1035,10 +899,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Romania",
-    "alternatives": [
-     "ROU"
-    ]
+    "text": "Romania"
    },
    "priority": 250077
   },
@@ -1055,10 +916,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Portugal",
-    "alternatives": [
-     "PRT"
-    ]
+    "text": "Portugal"
    },
    "priority": 238785
   },
@@ -1075,10 +933,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Iraq",
-    "alternatives": [
-     "IRQ"
-    ]
+    "text": "Iraq"
    },
    "priority": 234094
   },
@@ -1095,10 +950,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Peru",
-    "alternatives": [
-     "PER"
-    ]
+    "text": "Peru"
    },
    "priority": 226848
   },
@@ -1115,10 +967,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Greece",
-    "alternatives": [
-     "GRC"
-    ]
+    "text": "Greece"
    },
    "priority": 209852
   },
@@ -1135,10 +984,7 @@
    },
    "label": {
     "type": "text",
-    "text": "New Zealand",
-    "alternatives": [
-     "NZL"
-    ]
+    "text": "New Zealand"
    },
    "priority": 206928
   },
@@ -1155,10 +1001,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Kazakhstan",
-    "alternatives": [
-     "KAZ"
-    ]
+    "text": "Kazakhstan"
    },
    "priority": 181665
   },
@@ -1175,10 +1018,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Qatar",
-    "alternatives": [
-     "QAT"
-    ]
+    "text": "Qatar"
    },
    "priority": 175837
   },
@@ -1195,10 +1035,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Algeria",
-    "alternatives": [
-     "DZA"
-    ]
+    "text": "Algeria"
    },
    "priority": 171091
   },
@@ -1215,10 +1052,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Hungary",
-    "alternatives": [
-     "HUN"
-    ]
+    "text": "Hungary"
    },
    "priority": 163469
   },
@@ -1235,10 +1069,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Ukraine",
-    "alternatives": [
-     "UKR"
-    ]
+    "text": "Ukraine"
    },
    "priority": 153781
   },
@@ -1255,10 +1086,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Kuwait",
-    "alternatives": [
-     "KWT"
-    ]
+    "text": "Kuwait"
    },
    "priority": 134628
   },
@@ -1275,10 +1103,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Morocco",
-    "alternatives": [
-     "MAR"
-    ]
+    "text": "Morocco"
    },
    "priority": 119700
   },
@@ -1295,10 +1120,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Ecuador",
-    "alternatives": [
-     "ECU"
-    ]
+    "text": "Ecuador"
    },
    "priority": 107435
   },
@@ -1315,10 +1137,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Slovakia",
-    "alternatives": [
-     "SVK"
-    ]
+    "text": "Slovakia"
    },
    "priority": 105079
   },
@@ -1335,10 +1154,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Puerto Rico",
-    "alternatives": [
-     "PRI"
-    ]
+    "text": "Puerto Rico"
    },
    "priority": 104988
   },
@@ -1355,10 +1171,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Cuba",
-    "alternatives": [
-     "CUB"
-    ]
+    "text": "Cuba"
    },
    "priority": 100023
   },
@@ -1375,10 +1188,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Syria",
-    "alternatives": [
-     "SYR"
-    ]
+    "text": "Syria"
    },
    "priority": 98830
   },
@@ -1395,10 +1205,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Ethiopia",
-    "alternatives": [
-     "ETH"
-    ]
+    "text": "Ethiopia"
    },
    "priority": 95912
   },
@@ -1415,10 +1222,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Kenya",
-    "alternatives": [
-     "KEN"
-    ]
+    "text": "Kenya"
    },
    "priority": 95503
   },
@@ -1436,9 +1240,10 @@
    "label": {
     "type": "text",
     "text": "Dominican Republic",
-    "alternatives": [
-     "DOM"
-    ]
+    "wrap": {
+     "max_width": "5.61em",
+     "max_lines": 2
+    }
    },
    "priority": 88941
   },
@@ -1455,10 +1260,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Angola",
-    "alternatives": [
-     "AGO"
-    ]
+    "text": "Angola"
    },
    "priority": 88815
   },
@@ -1475,10 +1277,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Sri Lanka",
-    "alternatives": [
-     "LKA"
-    ]
+    "text": "Sri Lanka"
    },
    "priority": 84008
   },
@@ -1495,10 +1294,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Guatemala",
-    "alternatives": [
-     "GTM"
-    ]
+    "text": "Guatemala"
    },
    "priority": 76710
   },
@@ -1515,10 +1311,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Oman",
-    "alternatives": [
-     "OMN"
-    ]
+    "text": "Oman"
    },
    "priority": 76331
   },
@@ -1535,10 +1328,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Myanmar",
-    "alternatives": [
-     "MMR"
-    ]
+    "text": "Myanmar"
    },
    "priority": 76085
   },
@@ -1555,10 +1345,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Luxembourg",
-    "alternatives": [
-     "LUX"
-    ]
+    "text": "Luxembourg"
    },
    "priority": 71104
   },
@@ -1575,10 +1362,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Bulgaria",
-    "alternatives": [
-     "BGR"
-    ]
+    "text": "Bulgaria"
    },
    "priority": 68558
   },
@@ -1595,10 +1379,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Ghana",
-    "alternatives": [
-     "GHA"
-    ]
+    "text": "Ghana"
    },
    "priority": 66983
   },
@@ -1615,10 +1396,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Panama",
-    "alternatives": [
-     "PAN"
-    ]
+    "text": "Panama"
    },
    "priority": 66800
   },
@@ -1635,10 +1413,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Tanzania",
-    "alternatives": [
-     "TZA"
-    ]
+    "text": "Tanzania"
    },
    "priority": 63177
   },
@@ -1655,10 +1430,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Belarus",
-    "alternatives": [
-     "BLR"
-    ]
+    "text": "Belarus"
    },
    "priority": 63080
   },
@@ -1675,10 +1447,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Costa Rica",
-    "alternatives": [
-     "CRI"
-    ]
+    "text": "Costa Rica"
    },
    "priority": 61801
   },
@@ -1695,10 +1464,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Croatia",
-    "alternatives": [
-     "HRV"
-    ]
+    "text": "Croatia"
    },
    "priority": 60752
   },
@@ -1715,10 +1481,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Côte d'Ivoire",
-    "alternatives": [
-     "CIV"
-    ]
+    "text": "Côte d'Ivoire"
    },
    "priority": 58539
   },
@@ -1735,10 +1498,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Uzbekistan",
-    "alternatives": [
-     "UZB"
-    ]
+    "text": "Uzbekistan"
    },
    "priority": 57921
   },
@@ -1755,10 +1515,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Uruguay",
-    "alternatives": [
-     "URY"
-    ]
+    "text": "Uruguay"
    },
    "priority": 56045
   },
@@ -1775,10 +1532,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Lithuania",
-    "alternatives": [
-     "LTU"
-    ]
+    "text": "Lithuania"
    },
    "priority": 54627
   },
@@ -1795,10 +1549,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Slovenia",
-    "alternatives": [
-     "SVN"
-    ]
+    "text": "Slovenia"
    },
    "priority": 54174
   },
@@ -1815,10 +1566,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Macao",
-    "alternatives": [
-     "MAC"
-    ]
+    "text": "Macao"
    },
    "priority": 53859
   },
@@ -1835,10 +1583,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Libya",
-    "alternatives": [
-     "LBY"
-    ]
+    "text": "Libya"
    },
    "priority": 52091
   },
@@ -1855,10 +1600,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Lebanon",
-    "alternatives": [
-     "LBN"
-    ]
+    "text": "Lebanon"
    },
    "priority": 51991
   },
@@ -1875,10 +1617,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Serbia",
-    "alternatives": [
-     "SRB"
-    ]
+    "text": "Serbia"
    },
    "priority": 51475
   },
@@ -1896,9 +1635,10 @@
    "label": {
     "type": "text",
     "text": "Democratic Republic of the Congo",
-    "alternatives": [
-     "COD"
-    ]
+    "wrap": {
+     "max_width": "9.60em",
+     "max_lines": 2
+    }
    },
    "priority": 50400
   },
@@ -1915,10 +1655,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Azerbaijan",
-    "alternatives": [
-     "AZE"
-    ]
+    "text": "Azerbaijan"
    },
    "priority": 48047
   },
@@ -1935,10 +1672,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Jordan",
-    "alternatives": [
-     "JOR"
-    ]
+    "text": "Jordan"
    },
    "priority": 44502
   },
@@ -1955,10 +1689,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Bolivia",
-    "alternatives": [
-     "BOL"
-    ]
+    "text": "Bolivia"
    },
    "priority": 40895
   },
@@ -1975,10 +1706,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Turkmenistan",
-    "alternatives": [
-     "TKM"
-    ]
+    "text": "Turkmenistan"
    },
    "priority": 40761
   },
@@ -1995,10 +1723,7 @@
    },
    "label": {
     "type": "text",
-    "text": "North Korea",
-    "alternatives": [
-     "PRK"
-    ]
+    "text": "North Korea"
    },
    "priority": 40000
   },
@@ -2015,10 +1740,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Cameroon",
-    "alternatives": [
-     "CMR"
-    ]
+    "text": "Cameroon"
    },
    "priority": 39007
   },
@@ -2035,10 +1757,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Tunisia",
-    "alternatives": [
-     "TUN"
-    ]
+    "text": "Tunisia"
    },
    "priority": 38796
   },
@@ -2055,10 +1774,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Bahrain",
-    "alternatives": [
-     "BHR"
-    ]
+    "text": "Bahrain"
    },
    "priority": 38574
   },
@@ -2075,10 +1791,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Paraguay",
-    "alternatives": [
-     "PRY"
-    ]
+    "text": "Paraguay"
    },
    "priority": 38145
   },
@@ -2095,10 +1808,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Uganda",
-    "alternatives": [
-     "UGA"
-    ]
+    "text": "Uganda"
    },
    "priority": 35165
   },
@@ -2115,10 +1825,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Latvia",
-    "alternatives": [
-     "LVA"
-    ]
+    "text": "Latvia"
    },
    "priority": 34102
   },
@@ -2135,10 +1842,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Estonia",
-    "alternatives": [
-     "EST"
-    ]
+    "text": "Estonia"
    },
    "priority": 31471
   },
@@ -2155,10 +1859,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Nepal",
-    "alternatives": [
-     "NPL"
-    ]
+    "text": "Nepal"
    },
    "priority": 30641
   },
@@ -2175,10 +1876,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Sudan",
-    "alternatives": [
-     "SDN"
-    ]
+    "text": "Sudan"
    },
    "priority": 30513
   },
@@ -2195,10 +1893,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Cambodia",
-    "alternatives": [
-     "KHM"
-    ]
+    "text": "Cambodia"
    },
    "priority": 27089
   },
@@ -2215,10 +1910,7 @@
    },
    "label": {
     "type": "text",
-    "text": "El Salvador",
-    "alternatives": [
-     "SLV"
-    ]
+    "text": "El Salvador"
    },
    "priority": 27022
   },
@@ -2235,10 +1927,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Honduras",
-    "alternatives": [
-     "HND"
-    ]
+    "text": "Honduras"
    },
    "priority": 25095
   },
@@ -2255,10 +1944,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Cyprus",
-    "alternatives": [
-     "CYP"
-    ]
+    "text": "Cyprus"
    },
    "priority": 24948
   },
@@ -2275,10 +1961,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Papua New Guinea",
-    "alternatives": [
-     "PNG"
-    ]
+    "text": "Papua New Guinea"
    },
    "priority": 24829
   },
@@ -2296,9 +1979,10 @@
    "label": {
     "type": "text",
     "text": "Trinidad and Tobago",
-    "alternatives": [
-     "TTO"
-    ]
+    "wrap": {
+     "max_width": "5.79em",
+     "max_lines": 2
+    }
    },
    "priority": 24269
   },
@@ -2315,10 +1999,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Iceland",
-    "alternatives": [
-     "ISL"
-    ]
+    "text": "Iceland"
    },
    "priority": 24188
   },
@@ -2335,10 +2016,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Senegal",
-    "alternatives": [
-     "SEN"
-    ]
+    "text": "Senegal"
    },
    "priority": 23578
   },
@@ -2355,10 +2033,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Zambia",
-    "alternatives": [
-     "ZMB"
-    ]
+    "text": "Zambia"
    },
    "priority": 23309
   },
@@ -2375,10 +2050,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Yemen",
-    "alternatives": [
-     "YEM"
-    ]
+    "text": "Yemen"
    },
    "priority": 22581
   },
@@ -2395,10 +2067,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Zimbabwe",
-    "alternatives": [
-     "ZWE"
-    ]
+    "text": "Zimbabwe"
    },
    "priority": 21440
   },
@@ -2416,9 +2085,10 @@
    "label": {
     "type": "text",
     "text": "Bosnia and Herzegovina",
-    "alternatives": [
-     "BIH"
-    ]
+    "wrap": {
+     "max_width": "6.83em",
+     "max_lines": 2
+    }
    },
    "priority": 20164
   },
@@ -2435,10 +2105,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Afghanistan",
-    "alternatives": [
-     "AFG"
-    ]
+    "text": "Afghanistan"
    },
    "priority": 19291
   },
@@ -2455,10 +2122,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Botswana",
-    "alternatives": [
-     "BWA"
-    ]
+    "text": "Botswana"
    },
    "priority": 18340
   },
@@ -2475,10 +2139,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Laos",
-    "alternatives": [
-     "LAO"
-    ]
+    "text": "Laos"
    },
    "priority": 18173
   },
@@ -2495,10 +2156,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Georgia",
-    "alternatives": [
-     "GEO"
-    ]
+    "text": "Georgia"
    },
    "priority": 17477
   },
@@ -2515,10 +2173,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Mali",
-    "alternatives": [
-     "MLI"
-    ]
+    "text": "Mali"
    },
    "priority": 17279
   },
@@ -2535,10 +2190,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Gabon",
-    "alternatives": [
-     "GAB"
-    ]
+    "text": "Gabon"
    },
    "priority": 16874
   },
@@ -2555,10 +2207,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Jamaica",
-    "alternatives": [
-     "JAM"
-    ]
+    "text": "Jamaica"
    },
    "priority": 16458
   },
@@ -2575,10 +2224,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Palestine",
-    "alternatives": [
-     "PSX"
-    ]
+    "text": "Palestine"
    },
    "priority": 16276
   },
@@ -2595,10 +2241,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Burkina Faso",
-    "alternatives": [
-     "BFA"
-    ]
+    "text": "Burkina Faso"
    },
    "priority": 15990
   },
@@ -2615,10 +2258,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Mozambique",
-    "alternatives": [
-     "MOZ"
-    ]
+    "text": "Mozambique"
    },
    "priority": 15291
   },
@@ -2635,10 +2275,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Albania",
-    "alternatives": [
-     "ALB"
-    ]
+    "text": "Albania"
    },
    "priority": 15279
   },
@@ -2655,10 +2292,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Malta",
-    "alternatives": [
-     "MLT"
-    ]
+    "text": "Malta"
    },
    "priority": 14989
   },
@@ -2675,10 +2309,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Benin",
-    "alternatives": [
-     "BEN"
-    ]
+    "text": "Benin"
    },
    "priority": 14390
   },
@@ -2695,10 +2326,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Haiti",
-    "alternatives": [
-     "HTI"
-    ]
+    "text": "Haiti"
    },
    "priority": 14332
   },
@@ -2715,10 +2343,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Madagascar",
-    "alternatives": [
-     "MDG"
-    ]
+    "text": "Madagascar"
    },
    "priority": 14114
   },
@@ -2735,10 +2360,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Mongolia",
-    "alternatives": [
-     "MNG"
-    ]
+    "text": "Mongolia"
    },
    "priority": 13996
   },
@@ -2755,10 +2377,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Armenia",
-    "alternatives": [
-     "ARM"
-    ]
+    "text": "Armenia"
    },
    "priority": 13672
   },
@@ -2775,10 +2394,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Bahamas",
-    "alternatives": [
-     "BHS"
-    ]
+    "text": "Bahamas"
    },
    "priority": 13578
   },
@@ -2795,10 +2411,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Brunei",
-    "alternatives": [
-     "BRN"
-    ]
+    "text": "Brunei"
    },
    "priority": 13469
   },
@@ -2815,10 +2428,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Niger",
-    "alternatives": [
-     "NER"
-    ]
+    "text": "Niger"
    },
    "priority": 12911
   },
@@ -2835,10 +2445,7 @@
    },
    "label": {
     "type": "text",
-    "text": "North Macedonia",
-    "alternatives": [
-     "MKD"
-    ]
+    "text": "North Macedonia"
    },
    "priority": 12547
   },
@@ -2855,10 +2462,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Nicaragua",
-    "alternatives": [
-     "NIC"
-    ]
+    "text": "Nicaragua"
    },
    "priority": 12520
   },
@@ -2875,10 +2479,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Namibia",
-    "alternatives": [
-     "NAM"
-    ]
+    "text": "Namibia"
    },
    "priority": 12366
   },
@@ -2895,10 +2496,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Guinea",
-    "alternatives": [
-     "GIN"
-    ]
+    "text": "Guinea"
    },
    "priority": 12296
   },
@@ -2915,10 +2513,11 @@
    },
    "label": {
     "type": "text",
-    "text": "Congo",
-    "alternatives": [
-     "COG"
-    ]
+    "text": "Republic of the Congo",
+    "wrap": {
+     "max_width": "6.23em",
+     "max_lines": 2
+    }
    },
    "priority": 12267
   },
@@ -2935,10 +2534,7 @@
    },
    "label": {
     "type": "text",
-    "text": "South Sudan",
-    "alternatives": [
-     "SDS"
-    ]
+    "text": "South Sudan"
    },
    "priority": 11998
   },
@@ -2955,10 +2551,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Moldova",
-    "alternatives": [
-     "MDA"
-    ]
+    "text": "Moldova"
    },
    "priority": 11968
   },
@@ -2975,10 +2568,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Chad",
-    "alternatives": [
-     "TCD"
-    ]
+    "text": "Chad"
    },
    "priority": 11314
   },
@@ -2995,10 +2585,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Equatorial Guinea",
-    "alternatives": [
-     "GNQ"
-    ]
+    "text": "Equatorial Guinea"
    },
    "priority": 11026
   },
@@ -3015,10 +2602,7 @@
    },
    "label": {
     "type": "text",
-    "text": "New Caledonia",
-    "alternatives": [
-     "NCL"
-    ]
+    "text": "New Caledonia"
    },
    "priority": 10770
   },
@@ -3035,10 +2619,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Rwanda",
-    "alternatives": [
-     "RWA"
-    ]
+    "text": "Rwanda"
    },
    "priority": 10354
   },
@@ -3055,10 +2636,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Kyrgyzstan",
-    "alternatives": [
-     "KGZ"
-    ]
+    "text": "Kyrgyzstan"
    },
    "priority": 8454
   },
@@ -3075,10 +2653,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Tajikistan",
-    "alternatives": [
-     "TJK"
-    ]
+    "text": "Tajikistan"
    },
    "priority": 8116
   },
@@ -3095,10 +2670,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Kosovo",
-    "alternatives": [
-     "KOS"
-    ]
+    "text": "Kosovo"
    },
    "priority": 7926
   },
@@ -3115,10 +2687,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Malawi",
-    "alternatives": [
-     "MWI"
-    ]
+    "text": "Malawi"
    },
    "priority": 7666
   },
@@ -3135,10 +2704,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Mauritania",
-    "alternatives": [
-     "MRT"
-    ]
+    "text": "Mauritania"
    },
    "priority": 7600
   },
@@ -3155,10 +2721,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Guam",
-    "alternatives": [
-     "GUM"
-    ]
+    "text": "Guam"
    },
    "priority": 5920
   },
@@ -3175,10 +2738,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Montenegro",
-    "alternatives": [
-     "MNE"
-    ]
+    "text": "Montenegro"
    },
    "priority": 5542
   },
@@ -3195,10 +2755,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Fiji",
-    "alternatives": [
-     "FJI"
-    ]
+    "text": "Fiji"
    },
    "priority": 5496
   },
@@ -3215,10 +2772,7 @@
    },
    "label": {
     "type": "text",
-    "text": "French Polynesia",
-    "alternatives": [
-     "PYF"
-    ]
+    "text": "French Polynesia"
    },
    "priority": 5490
   },
@@ -3235,10 +2789,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Togo",
-    "alternatives": [
-     "TGO"
-    ]
+    "text": "Togo"
    },
    "priority": 5490
   },
@@ -3255,10 +2806,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Barbados",
-    "alternatives": [
-     "BRB"
-    ]
+    "text": "Barbados"
    },
    "priority": 5209
   },
@@ -3275,10 +2823,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Guyana",
-    "alternatives": [
-     "GUY"
-    ]
+    "text": "Guyana"
    },
    "priority": 5173
   },
@@ -3295,10 +2840,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Jersey",
-    "alternatives": [
-     "JEY"
-    ]
+    "text": "Jersey"
    },
    "priority": 5080
   },
@@ -3315,10 +2857,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Somalia",
-    "alternatives": [
-     "SOM"
-    ]
+    "text": "Somalia"
    },
    "priority": 4719
   },
@@ -3335,10 +2874,7 @@
    },
    "label": {
     "type": "text",
-    "text": "eSwatini",
-    "alternatives": [
-     "SWZ"
-    ]
+    "text": "Eswatini"
    },
    "priority": 4471
   },
@@ -3355,10 +2891,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Sierra Leone",
-    "alternatives": [
-     "SLE"
-    ]
+    "text": "Sierra Leone"
    },
    "priority": 4121
   },
@@ -3376,9 +2909,10 @@
    "label": {
     "type": "text",
     "text": "United States Virgin Islands",
-    "alternatives": [
-     "VIR"
-    ]
+    "wrap": {
+     "max_width": "7.74em",
+     "max_lines": 2
+    }
    },
    "priority": 3855
   },
@@ -3395,10 +2929,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Suriname",
-    "alternatives": [
-     "SUR"
-    ]
+    "text": "Suriname"
    },
    "priority": 3697
   },
@@ -3415,10 +2946,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Djibouti",
-    "alternatives": [
-     "DJI"
-    ]
+    "text": "Djibouti"
    },
    "priority": 3324
   },
@@ -3435,10 +2963,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Curaçao",
-    "alternatives": [
-     "CUW"
-    ]
+    "text": "Curaçao"
    },
    "priority": 3101
   },
@@ -3455,10 +2980,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Liberia",
-    "alternatives": [
-     "LBR"
-    ]
+    "text": "Liberia"
    },
    "priority": 3070
   },
@@ -3475,10 +2997,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Aruba",
-    "alternatives": [
-     "ABW"
-    ]
+    "text": "Aruba"
    },
    "priority": 3056
   },
@@ -3495,10 +3014,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Burundi",
-    "alternatives": [
-     "BDI"
-    ]
+    "text": "Burundi"
    },
    "priority": 3012
   },
@@ -3515,10 +3031,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Bhutan",
-    "alternatives": [
-     "BTN"
-    ]
+    "text": "Bhutan"
    },
    "priority": 2530
   },
@@ -3535,10 +3048,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Lesotho",
-    "alternatives": [
-     "LSO"
-    ]
+    "text": "Lesotho"
    },
    "priority": 2376
   },
@@ -3556,9 +3066,10 @@
    "label": {
     "type": "text",
     "text": "Central African Republic",
-    "alternatives": [
-     "CAF"
-    ]
+    "wrap": {
+     "max_width": "6.75em",
+     "max_lines": 2
+    }
    },
    "priority": 2220
   },
@@ -3575,10 +3086,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Saint Lucia",
-    "alternatives": [
-     "LCA"
-    ]
+    "text": "Saint Lucia"
    },
    "priority": 2122
   },
@@ -3595,10 +3103,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Eritrea",
-    "alternatives": [
-     "ERI"
-    ]
+    "text": "Eritrea"
    },
    "priority": 2065
   },
@@ -3615,10 +3120,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Timor-Leste",
-    "alternatives": [
-     "TLS"
-    ]
+    "text": "Timor-Leste"
    },
    "priority": 2017
   },
@@ -3635,10 +3137,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Cabo Verde",
-    "alternatives": [
-     "CPV"
-    ]
+    "text": "Cabo Verde"
    },
    "priority": 1981
   },
@@ -3655,10 +3154,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Belize",
-    "alternatives": [
-     "BLZ"
-    ]
+    "text": "Belize"
    },
    "priority": 1879
   },
@@ -3675,10 +3171,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Gambia",
-    "alternatives": [
-     "GMB"
-    ]
+    "text": "Gambia"
    },
    "priority": 1826
   },
@@ -3695,10 +3188,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Solomon Islands",
-    "alternatives": [
-     "SLB"
-    ]
+    "text": "Solomon Islands"
    },
    "priority": 1589
   },
@@ -3715,10 +3205,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Guinea-Bissau",
-    "alternatives": [
-     "GNB"
-    ]
+    "text": "Guinea-Bissau"
    },
    "priority": 1339
   },
@@ -3735,10 +3222,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Grenada",
-    "alternatives": [
-     "GRD"
-    ]
+    "text": "Grenada"
    },
    "priority": 1210
   },
@@ -3755,10 +3239,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Comoros",
-    "alternatives": [
-     "COM"
-    ]
+    "text": "Comoros"
    },
    "priority": 1165
   },
@@ -3775,10 +3256,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Vanuatu",
-    "alternatives": [
-     "VUT"
-    ]
+    "text": "Vanuatu"
    },
    "priority": 934
   },
@@ -3795,10 +3273,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Western Sahara",
-    "alternatives": [
-     "SAH"
-    ]
+    "text": "Western Sahara"
    },
    "priority": 907
   },
@@ -3815,10 +3290,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Samoa",
-    "alternatives": [
-     "WSM"
-    ]
+    "text": "Samoa"
    },
    "priority": 852
   },
@@ -3836,9 +3308,10 @@
    "label": {
     "type": "text",
     "text": "Saint Vincent and the Grenadines",
-    "alternatives": [
-     "VCT"
-    ]
+    "wrap": {
+     "max_width": "9.37em",
+     "max_lines": 2
+    }
    },
    "priority": 824
   },
@@ -3855,10 +3328,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Tonga",
-    "alternatives": [
-     "TON"
-    ]
+    "text": "Tonga"
    },
    "priority": 512
   },
@@ -3876,9 +3346,10 @@
    "label": {
     "type": "text",
     "text": "São Tomé and Principe",
-    "alternatives": [
-     "STP"
-    ]
+    "wrap": {
+     "max_width": "6.41em",
+     "max_lines": 2
+    }
    },
    "priority": 418
   },
@@ -3895,10 +3366,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Micronesia",
-    "alternatives": [
-     "FSM"
-    ]
+    "text": "Micronesia"
    },
    "priority": 401
   },
@@ -3915,10 +3383,7 @@
    },
    "label": {
     "type": "text",
-    "text": "Kiribati",
-    "alternatives": [
-     "KIR"
-    ]
+    "text": "Kiribati"
    },
    "priority": 194
   }
@@ -3927,14 +3392,12 @@
   "label": {
    "grid": "ignore",
    "axes": "hard",
-   "legend": "hard",
-   "lower_items": 1.5
+   "legend": "hard"
   },
   "leader": {
    "grid": "ignore",
    "axes": "hard",
-   "legend": "hard",
-   "lower_items": 0.5
+   "legend": "hard"
   }
  },
  "placement": {
@@ -3944,7 +3407,8 @@
    "internal",
    "distant"
   ],
-  "max_distance": "6em"
+  "max_distance": "6em",
+  "stubs": "auto"
  },
  "leaders": {
   "style": "straight",
@@ -3967,7 +3431,6 @@
   ]
  },
  "degrade": [
-  "alternatives",
   "distant",
   "omit"
  ],

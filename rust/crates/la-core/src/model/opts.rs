@@ -468,6 +468,10 @@ pub struct PlacementOpts {
     pub prune_factor: f64,
     pub boundary: BoundaryOpts,
     pub fan: FanMode,
+    /// `placement.stubs: auto` (spec §6.9).
+    pub stubs: bool,
+    /// `placement.own_nearest` (spec §4.4).
+    pub own_nearest: bool,
     /// `placement.max_foreign`: the largest share of the box of an area item's label (not
     /// an internal one) or of a label on a leader that may lie in other items' regions
     /// (spec §4.8).
@@ -501,6 +505,8 @@ impl PlacementOpts {
                 "off" => FanMode::Off,
                 _ => FanMode::Auto,
             },
+            stubs: o.string("placement.stubs") == "auto",
+            own_nearest: o.bool("placement.own_nearest"),
             max_foreign: o.f64("placement.max_foreign"),
         }
     }

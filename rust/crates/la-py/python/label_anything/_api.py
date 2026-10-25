@@ -230,9 +230,11 @@ def place(
     padding: Optional[Length] = None,
     buffer: Optional[Length] = None,
     margin: Optional[Length] = None,
+    spacing: Optional[Length] = None,
     mark: Any = None,
     wrap: Optional[WrapLike] = None,
     truncate: Optional[str] = None,
+    align: Optional[str] = None,
     shaping: Optional[str] = None,
     defaults: Optional[Mapping[str, Any]] = None,
     text: Optional[Mapping[str, Any]] = None,
@@ -270,6 +272,10 @@ def place(
     prune_factor: Optional[float] = None,
     boundary: Any = None,
     fan: Optional[str] = None,
+    own_nearest: Optional[bool] = None,
+    stubs: Optional[str] = None,
+    stub_length: Optional[Length] = None,
+    stub_reach: Optional[Length] = None,
     placement: Optional[Mapping[str, Any]] = None,
     # --- leaders ---
     leaders: Optional[LeadersLike] = None,
@@ -318,7 +324,7 @@ def place(
     polygons or anchor dicts; ``labels`` are strings, :class:`Text`, :class:`Icon`,
     :class:`Box`, :class:`Composite` or label dicts. ``attrs`` values may be dates
     (ISO 8601 strings in the problem) and durations (seconds).
-    Every other keyword maps 1:1 to a schema field (see ``docs/bindings/python.md``);
+    Every other keyword maps 1:1 to a schema field (see ``docs/getting-started/python.md``);
     ``None`` leaves the spec default.
 
     * ``background``: a raster/SVG path, bytes, SVG markup, a NumPy RGBA/RGB array or a

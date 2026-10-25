@@ -167,6 +167,17 @@ fn run_case(name: &str, case: &Value, errors: &mut Vec<String>, prepared: bool) 
                 ));
             }
         }
+        if let Some(ink) = entry.get("ink") {
+            let expected = ink
+                .as_array()
+                .map(|a| (a[0].as_i64().unwrap() as i16, a[1].as_i64().unwrap() as i16));
+            if font.ink_units(text) != expected {
+                fail(format!(
+                    "ink_units({text:?}) = {:?}, expected {expected:?}",
+                    font.ink_units(text)
+                ));
+            }
+        }
         checked += 1;
     }
     for entry in case["breaks"].as_array().into_iter().flatten() {

@@ -71,9 +71,9 @@
         "placed": true,
         "box": {
           "x": 13.0,
-          "y": 8.996025000000001,
+          "y": 10.2856875,
           "w": 38.33584999999999,
-          "h": 12.007949999999996
+          "h": 9.428624999999998
         },
         "anchor": [
           10.0,
@@ -88,12 +88,16 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            8.807274999999999
+            6.610875
           ],
           "line_widths": [
             36.16835
           ],
           "x_offset": 1.0837499999999998,
+          "x_offsets": [
+            1.0837499999999998
+          ],
+          "align": "center",
           "font_size": 7.225,
           "font_family": "default",
           "font_weight": 400,

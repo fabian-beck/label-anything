@@ -22,11 +22,11 @@ import {
 import { Evaluator } from "../cost.js";
 import { type Env, envCancelled, envNow } from "../env.js";
 import { type P, Rect } from "../geom/index.js";
-import { type Measurer, type Variant, ladderVariants } from "../labels.js";
-import { distant, distantDirs } from "../leaders.js";
+import { type Measurer, type Variant, fullSize, ladderVariants } from "../labels.js";
+import { Stubs, distant, distantDirs } from "../leaders.js";
 import { cosDeg } from "../detmath.js";
 import { cmpF64, minf } from "../math.js";
-import { type Model, Models } from "../model/index.js";
+import { type Model, Models, labelGap } from "../model/index.js";
 import type { Obstacles } from "../obstacles.js";
 import type { Priorities } from "../priority.js";
 import { StaticIndex } from "../spatial.js";
@@ -90,6 +90,8 @@ export class Solve {
   warmNudge: ([number, number][] | null)[];
   /** Directions of distant candidates (see `distantDirs`). */
   distantDirs: [number, P][];
+  /** Stubs (spec §6.9), when `placement.stubs` is `auto`. */
+  readonly stubs: Stubs | null;
   /**
    * Statically feasible candidates of unplaced items that the placed-label filter had
    * dropped (see {@link feasibleUnfiltered}); explanations only.
@@ -99,7 +101,10 @@ export class Solve {
   timeGuardHit = false;
   /** The host cancelled the solve (sticky once seen; see {@link pollCancel}). */
   cancelled = false;
-  /** Observer of the solver's decisions (TypeScript only, ADR 0046); null: not traced. */
+  /**
+   * Observer of the solver's decisions (TypeScript only, ADR project/solve-traces); null: not
+   * traced.
+   */
   trace: Tracer | null = null;
   /** Static cost evaluation (scratch buffers). */
   readonly evaluator: Evaluator;
@@ -127,7 +132,7 @@ export class Solve {
       pri.prio.map((p) => p.key),
       model.items.map((it) => it.len.clearance),
       model.items.map((it) => it.em()),
-      model.items.map((it) => it.len.margin),
+      model.items.map((it) => labelGap(it.len)),
       model.leaders.minAngleBetween > 0 ? cosDeg(model.leaders.minAngleBetween) : 1,
       obs.dynamic.lowerCover
         ? new LowerMarks(
@@ -137,7 +142,7 @@ export class Solve {
             obs.indexCell,
           )
         : null,
-    );
+    ).withStubs(model.placement.stubs);
     this.reasons = new Array<Reason | null>(n).fill(null);
     this.stepsTried = [];
     for (let i = 0; i < n; i++) this.stepsTried.push([]);
@@ -149,9 +154,30 @@ export class Solve {
     this.warmNudge = new Array<[number, number][] | null>(n).fill(null);
     this.staticDropped = new Array<number>(n).fill(0);
     this.distantDirs = distantDirs(model);
+    this.stubs = Stubs.of(model, obs);
     this.blockedFeasible = [];
     for (let i = 0; i < n; i++) this.blockedFeasible.push([]);
     this.evaluator = new Evaluator(model, obs, env);
+  }
+
+  /**
+   * The variant of placed item `j` (candidate `c`) in a column (fan or boundary, spec §6.6,
+   * §6.8): its placed one, at full size with `full` when the ladder shrank it.
+   */
+  columnVariant(j: number, c: number, full: boolean): number {
+    const v = this.cands[c]!.variant;
+    return full ? fullSize(this.variants[j]!, v) : v;
+  }
+
+  /**
+   * Whether a placed label among `members` is shrunk: a column takes them at full size
+   * first, and with their placed sizes only when that column fails (spec §6.6, §6.8).
+   */
+  anyShrunk(members: readonly number[]): boolean {
+    return members.some((j) => {
+      const c = this.state.placed[j]!;
+      return c >= 0 && this.columnVariant(j, c, true) !== this.columnVariant(j, c, false);
+    });
   }
 
   /** Generate and evaluate candidates for `variants[vis]` of item `i` with `models`. */
@@ -197,9 +223,9 @@ export class Solve {
       if (item.area !== null) {
         const rank = internalRank(item, v, m, circleRatio);
         if (rank !== null) internal(item, vi, v, rank, fresh);
-        adjacent(item, vi, v, sliderPerGap, m, fresh, adjKeep);
+        adjacent(item, vi, v, sliderPerGap, m, this.stubs, fresh, adjKeep);
       } else {
-        adjacent(item, vi, v, sliderPerGap, m, fresh, adjKeep);
+        adjacent(item, vi, v, sliderPerGap, m, this.stubs, fresh, adjKeep);
         const rank = internalRank(item, v, m, circleRatio);
         if (rank !== null) internal(item, vi, v, rank, fresh);
       }
@@ -245,9 +271,9 @@ export class Solve {
       if (item.area !== null) {
         const rank = internalRank(item, v, models, circleRatio);
         if (rank !== null) internal(item, vi, v, rank, fresh);
-        adjacent(item, vi, v, sliderPerGap, models, fresh, adjKeep);
+        adjacent(item, vi, v, sliderPerGap, models, this.stubs, fresh, adjKeep);
       } else {
-        adjacent(item, vi, v, sliderPerGap, models, fresh, adjKeep);
+        adjacent(item, vi, v, sliderPerGap, models, this.stubs, fresh, adjKeep);
         const rank = internalRank(item, v, models, circleRatio);
         if (rank !== null) internal(item, vi, v, rank, fresh);
       }
@@ -339,9 +365,9 @@ export class Solve {
         // area anchors: internal candidates first; external ones around the dot
         const rank = internalRank(item, v, models, circleRatio);
         if (rank !== null) internal(item, vi, v, rank, fresh);
-        adjacent(item, vi, v, sliderPerGap, models, fresh, adjKeep);
+        adjacent(item, vi, v, sliderPerGap, models, this.stubs, fresh, adjKeep);
       } else {
-        adjacent(item, vi, v, sliderPerGap, models, fresh, adjKeep);
+        adjacent(item, vi, v, sliderPerGap, models, this.stubs, fresh, adjKeep);
         const rank = internalRank(item, v, models, circleRatio);
         if (rank !== null) internal(item, vi, v, rank, fresh);
       }

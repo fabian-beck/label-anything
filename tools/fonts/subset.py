@@ -10,7 +10,9 @@ Usage: python3 tools/fonts/subset.py <dir-with-upstream-ttfs> fonts/
 Produces, per weight:
   NotoSans-<Weight>.ttf          Latin/Greek/Cyrillic subset with outlines (rendering)
   NotoSans-<Weight>.metrics.ttf  same, outlines removed (measurement only; embedded
-                                 by la-text and @label-anything/text)
+                                 by la-text and @label-anything/text), with the
+                                 vertical glyph bounds of the outlines (table `LAvb`,
+                                 tools/fonts/bounds.py)
 Both files carry identical cmap/hmtx/hhea/OS/2/GDEF/GSUB/GPOS data, so text widths
 measured from either are identical.
 """
@@ -20,6 +22,8 @@ from pathlib import Path
 
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._g_l_y_f import Glyph
+
+from bounds import add_bounds
 
 UNICODES = ",".join([
     "U+0020-007E", "U+00A0-024F", "U+02B0-036F", "U+0370-03FF", "U+0400-052F",
@@ -48,7 +52,9 @@ def main(src_dir: Path, out_dir: Path) -> None:
             adv, _ = font["hmtx"][g]
             font["hmtx"][g] = (adv, 0)
         font["post"].formatType = 3.0
-        font.save(out_dir / f"NotoSans-{name}.metrics.ttf")
+        metrics = out_dir / f"NotoSans-{name}.metrics.ttf"
+        font.save(metrics)
+        add_bounds(metrics, full)
 
 
 if __name__ == "__main__":

@@ -34,7 +34,7 @@ test = ["pytest>=7", "numpy>=1.21", "pillow>=9"]
 [project.urls]
 Homepage = "https://github.com/fabian-beck/label-anything"
 Repository = "https://github.com/fabian-beck/label-anything"
-Documentation = "https://github.com/fabian-beck/label-anything/blob/main/docs/bindings/python.md"
+Documentation = "https://fabian-beck.github.io/label-anything/getting-started/python/"
 
 [tool.maturin]
 python-source = "python"

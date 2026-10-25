@@ -94,4 +94,4 @@ goes to the sea rather than onto the next country.
 The engine samples regions on the obstacle grid (`solver.grid_cell`, about ¼ em): exact to
 the cell, and in constant time for a label away from borders. The definitions are in the
 specification, [§4.8](../reference/spec.md); the reasons in
-[ADR 0050](../adr/0050-regions.md).
+[ADR obstacles/regions](../adr/obstacles/regions.md).

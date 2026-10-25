@@ -33,6 +33,90 @@ pub fn leader_start(model: &Model, item: &Item, toward: P) -> P {
     }
 }
 
+/// Stubs (spec §6.9): what an adjacent candidate needs to decide whether it stands farther
+/// out with a stub.
+pub struct Stubs<'a> {
+    pub model: &'a Model,
+    pub obs: &'a crate::obstacles::Obstacles,
+    buf: std::cell::RefCell<Vec<u32>>,
+    ev: std::cell::RefCell<crate::cost::Evaluator<'a>>,
+}
+
+impl<'a> Stubs<'a> {
+    /// The stubs of a solve, when `placement.stubs` is `auto`.
+    pub fn of(model: &'a Model, obs: &'a crate::obstacles::Obstacles) -> Option<Stubs<'a>> {
+        model.placement.stubs.then(|| Stubs {
+            model,
+            obs,
+            buf: std::cell::RefCell::new(Vec::new()),
+            ev: std::cell::RefCell::new(crate::cost::Evaluator::new(
+                model,
+                obs,
+                &crate::env::BasicEnv,
+            )),
+        })
+    }
+    /// Whether the label box `r` of `item` is ambiguous ([`crate::cost::crowded`]).
+    pub fn ambiguous(&self, item: &Item, r: &Rect) -> bool {
+        crate::cost::crowded(self.model, self.obs, item, r, &mut self.buf.borrow_mut())
+    }
+    /// The candidate `c` of variant `v` with its stub, when the stub meets a side of the
+    /// label squarely and the candidate is statically feasible (spec §6.9); `None`
+    /// otherwise.
+    pub fn stubbed(&self, item: &Item, v: &Variant, mut c: Cand) -> Option<Cand> {
+        c.leaders.push(stub_leader(item, &c.rect)?);
+        c.lshape = crate::candidates::label_shape(&c.rect, &v.shape);
+        self.ev.borrow_mut().eval(&mut c, v, None);
+        // evaluated again with the item's other candidates
+        c.evaluated = false;
+        c.feasible.then_some(c)
+    }
+}
+
+/// The stub of an item's label box `r` (spec §6.9): horizontal or vertical, from the mark
+/// (`anchor_gap` outside its boundary, or the tip of an icon mark) to the box side facing
+/// it, which it meets at a right angle: a left or right side in its middle (the box
+/// centered on the mark's reference point vertically), a top or bottom side within its
+/// middle half. `None` when the box is not beside, above or below the mark's reference
+/// point in that way.
+pub fn stub_leader(item: &Item, r: &Rect) -> Option<Leader> {
+    let refp = item.shape.reference();
+    let m = r.center();
+    let beside = (refp.y - m.y).abs() <= crate::geom::EPS;
+    let over = (refp.x - m.x).abs() <= 0.25 * r.w();
+    let (port, d) = if beside && refp.x < r.x0 {
+        (P::new(r.x0, refp.y), P::new(1.0, 0.0))
+    } else if beside && refp.x > r.x1 {
+        (P::new(r.x1, refp.y), P::new(-1.0, 0.0))
+    } else if over && refp.y < r.y0 {
+        (P::new(refp.x, r.y0), P::new(0.0, 1.0))
+    } else if over && refp.y > r.y1 {
+        (P::new(refp.x, r.y1), P::new(0.0, -1.0))
+    } else {
+        return None;
+    };
+    let start = if item.tip {
+        refp
+    } else {
+        item.shape.boundary_point(d) + d * item.len.anchor_gap
+    };
+    let mut l = Leader::new(vec![start, port], LeaderStyle::Straight);
+    l.stub = true;
+    Some(l)
+}
+
+/// Whether leader `l` hits the label box `r`: passes through it, or, for a stub, comes
+/// closer than `gap` (the space two labels keep, spec §6.9).
+pub fn leader_hits_label(l: &Leader, r: &Rect, gap: f64) -> bool {
+    if l.stub && gap > crate::geom::EPS {
+        l.segments()
+            .any(|(a, b)| crate::geom::dist_seg_rect(a, b, r) < gap - crate::geom::EPS)
+    } else {
+        l.segments()
+            .any(|(a, b)| crate::geom::seg_overlaps_rect(a, b, r))
+    }
+}
+
 /// Place a label of half size (hw, hh) so that its port side faces direction `d` at `t`.
 fn attach_label(t: P, d: P, hw: f64, hh: f64, port: Port) -> (Rect, P) {
     let sx = crate::math::sign_eps(d.x, 1e-9);
@@ -149,7 +233,7 @@ pub fn distant(
         }
         if let (true, Some(t)) = (underline, &v.text) {
             let p = l.port;
-            let x0 = rect.x0 + t.x_offset;
+            let x0 = rect.x0 + t.x_offsets[0];
             let far = if p.x <= rect.center().x {
                 x0 + t.widths[0]
             } else {
@@ -410,7 +494,8 @@ pub struct Spacing {
     pub near: f64,
     /// Cosine of `leaders.min_angle_between`; 1 turns the angle rule off.
     pub cos_min: f64,
-    /// The space two labels keep: the larger of the two items' `defaults.margin`.
+    /// The space two labels keep: the larger of the two items' label gaps (spacing, at
+    /// least margin).
     pub gap: f64,
 }
 

@@ -20,10 +20,14 @@ function expectError(data: Uint8Array, code: TextError["code"], message: RegExp)
 describe("Font", () => {
   it("decodes the bundled font", () => {
     const data = regular();
-    expect(data.length).toBe(79776);
+    expect(data.length).toBe(88552);
     const font = Font.fromBytes(data);
     expect([font.unitsPerEm, font.ascender, font.descender, font.lineGap]).toEqual([1000, 1069, -293, 0]);
     expect(font.advanceUnits("AV")).toBe(1199);
+    // the glyph bounds of the outlines (table LAvb): ink from the lowest to the highest glyph
+    expect(font.inkUnits("SAU")).toEqual([-10, 724]);
+    expect(font.inkUnits("Spain")).toEqual([-240, 737]);
+    expect(font.inkUnits(" ")).toBeNull();
     expect(font.width("AV", 12)).toBe((1199 * 12) / 1000);
     expect(font.advanceUnits("")).toBe(0);
     // unmapped code points use glyph 0, also outside the BMP

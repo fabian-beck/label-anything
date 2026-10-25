@@ -15,6 +15,7 @@ import {
   type Measure,
   balancedWrap,
   extraWrapVariants,
+  needsComplexShaping,
   truncateEnd,
   truncateMiddle,
   wrapVariants,
@@ -32,8 +33,10 @@ import {
   type Model,
   type PartSpec,
   type Step,
+  type TextAlign,
   type TextSpec,
   dataUrlBytes,
+  textAlignFactor,
 } from "./model/index.js";
 
 let BUNDLED: FontBook | null = null;
@@ -166,23 +169,40 @@ export class Measurer {
    * {@link Measurer.width}, unless that measures every string they produce with simple
    * shaping, i.e. without a host measurement (TypeScript has no full shaping, so the shaping
    * mode and the text do not matter, unlike in Rust). Then the font itself, which measures
-   * each candidate line in constant time with identical widths (ADR 0018).
+   * each candidate line in constant time with identical widths (ADR text/measurement).
    */
   wrapMeasure(font: FontSel, scale: number, width: Measure): Measure | FontMeasure {
     if (envHasMeasureCallback(this.env)) return width;
     return { font: this.fontOf(font), size: font.size * scale };
   }
 
-  /** `[ascent, descent]` in px, both positive. */
-  vmetrics(font: FontSel, scale: number): [number, number] {
+  /**
+   * The ink of `text` in px (spec §5.2): how far its glyphs reach above and below the
+   * baseline (the bounds of their outlines, `LAvb`), when the text is measured with simple
+   * shaping (as Rust measures it: not with shaping `full`, nor `auto` for a text with complex
+   * scripts), its font has glyph bounds and a glyph of it has an outline; else null. For
+   * boxes whose vertical metrics are the font's, not the host's.
+   */
+  ink(font: FontSel, scale: number, text: string): [number, number] | null {
+    if (this.shaping === "full" || (this.shaping === "auto" && needsComplexShaping(text))) return null;
+    const size = font.size * scale;
+    const f = this.fontOf(font);
+    const ink = f.inkUnits(text);
+    if (ink === null) return null;
+    const upm = f.unitsPerEm;
+    return [(ink[1] * size) / upm, (-ink[0] * size) / upm];
+  }
+
+  /** `[ascent, descent]` in px, both positive, and whether the host measured them. */
+  vmetrics(font: FontSel, scale: number): [number, number, boolean] {
     const size = font.size * scale;
     if (this.env.measure) {
       const m = this.env.measure("", font.spec(scale));
-      if (m !== null && m !== undefined) return [m.ascent, m.descent];
+      if (m !== null && m !== undefined) return [m.ascent, m.descent, true];
     }
     const f = this.fontOf(font);
     const upm = f.unitsPerEm;
-    return [(f.ascender * size) / upm, (-f.descender * size) / upm];
+    return [(f.ascender * size) / upm, (-f.descender * size) / upm, false];
   }
 }
 
@@ -192,7 +212,14 @@ export interface TextLayout {
   widths: number[];
   /** Baseline of each line relative to the box top. */
   baselines: number[];
+  /** The left edge of the text block relative to the box's left edge (the padding). */
   xOffset: number;
+  /**
+   * Where each line starts relative to the box's left edge: aligned per `align` within the
+   * widest line (spec §5.1).
+   */
+  xOffsets: number[];
+  align: TextAlign;
   fontSize: number;
   scale: number;
   /** "original", "alternative:N", "truncated", "group" */
@@ -207,6 +234,8 @@ export function textLayoutEq(a: TextLayout, b: TextLayout): boolean {
     arrEq(a.widths, b.widths) &&
     arrEq(a.baselines, b.baselines) &&
     a.xOffset === b.xOffset &&
+    arrEq(a.xOffsets, b.xOffsets) &&
+    a.align === b.align &&
     a.fontSize === b.fontSize &&
     a.scale === b.scale &&
     a.used === b.used &&
@@ -260,6 +289,32 @@ export class Variant {
   }
 }
 
+/**
+ * The variant that shrunk variant `vi` was made from by the ladder's `shrink` step: the
+ * first at scale 1 with the same text (lines, origin and truncation), or the first at scale
+ * 1 of a label without text; `vi` itself when it is not shrunk (spec §6.6, §6.8).
+ */
+export function fullSize(variants: readonly Variant[], vi: number): number {
+  const v = variants[vi]!;
+  if (v.scale >= 1) return vi;
+  const sameText = (e: Variant): boolean => {
+    const a = e.text;
+    const b = v.text;
+    if (a === null || b === null) return a === b;
+    return (
+      a.used === b.used &&
+      a.truncated === b.truncated &&
+      a.lines.length === b.lines.length &&
+      a.lines.every((l, k) => l === b.lines[k])
+    );
+  };
+  for (let k = 0; k < variants.length; k++) {
+    const e = variants[k]!;
+    if (e.scale === 1 && sameText(e)) return k;
+  }
+  return vi;
+}
+
 const RECT_SHAPE: LabelShape = { kind: "rect" };
 
 /** Build a text variant from lines. */
@@ -272,28 +327,46 @@ function textVariant(
   used: string,
   truncated: boolean,
 ): Variant {
-  const [asc, desc] = m.vmetrics(spec.font, scale);
+  const [asc, desc, host] = m.vmetrics(spec.font, scale);
+  // the box fits the ink: from the top of the first line's glyphs to the bottom of the last
+  // line's, where their bounds are known and the font gives the vertical metrics (spec §5.2)
+  const ink = (l: string | undefined): [number, number] | null =>
+    l === undefined || host ? null : m.ink(spec.font, scale, l);
+  const first = ink(lines[0]);
+  const last = lines.length > 1 ? ink(lines[lines.length - 1]) : first;
+  const top = first !== null ? first[0] : asc;
+  const bottom = last !== null ? last[1] : desc;
   const size = spec.font.size * scale;
   const pitch = spec.font.lineHeight * size;
   const widths = lines.map((l) => m.width(spec.font, scale, l));
   let wmax = 0;
   for (const w of widths) wmax = maxf(wmax, w);
   const n = lines.length > 1 ? lines.length : 1;
-  const contentH = asc + desc + (n - 1) * pitch;
+  const contentH = top + bottom + (n - 1) * pitch;
   const p = pad * scale;
   const baselines: number[] = [];
-  for (let i = 0; i < n; i++) baselines.push(p + asc + i * pitch);
+  for (let i = 0; i < n; i++) baselines.push(p + top + i * pitch);
+  const xOffsets = lineOffsets(widths, wmax, p, spec.align);
   return new Variant(
     wmax + 2 * p,
     contentH + 2 * p,
     0,
     0,
-    { lines, widths, baselines, xOffset: p, fontSize: size, scale, used, truncated },
+    { lines, widths, baselines, xOffset: p, xOffsets, align: spec.align, fontSize: size, scale, used, truncated },
     [],
     RECT_SHAPE,
     [],
     scale,
   );
+}
+
+/**
+ * `line_offsets`: where lines of `widths` start in a box with padding `p`, aligned per `align`
+ * within the widest line, `wmax` (spec §5.1).
+ */
+function lineOffsets(widths: readonly number[], wmax: number, p: number, align: TextAlign): number[] {
+  const f = textAlignFactor(align);
+  return widths.map((w) => p + (wmax - w) * f);
 }
 
 function toWrapOpts(spec: TextSpec, scale: number): WrapOptions | null {
@@ -336,6 +409,9 @@ function textVariants(m: Measurer, spec: TextSpec, text: string, pad: number, sc
           widths: new Array<number>(nl).fill(w * scale),
           baselines,
           xOffset: p,
+          // host-measured lines all have the box's width
+          xOffsets: new Array<number>(nl).fill(p),
+          align: spec.align,
           fontSize: spec.font.size * scale,
           scale,
           used,
@@ -519,6 +595,8 @@ function compositeVariant(
             widths: [w],
             baselines: [y + t[1]],
             xOffset: x,
+            xOffsets: [x],
+            align: t[0].align,
             fontSize: t[0].font.size * scale,
             scale,
             used: "original",

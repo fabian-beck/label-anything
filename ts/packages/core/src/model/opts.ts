@@ -459,6 +459,10 @@ export class PlacementOpts {
     public pruneFactor: number,
     public boundary: BoundaryOpts,
     public fan: FanMode,
+    /** `placement.stubs: auto` (spec §6.9). */
+    public stubs: boolean,
+    /** `placement.own_nearest` (spec §4.4). */
+    public ownNearest: boolean,
     /**
      * `placement.max_foreign`: the largest share of the box of an area item's label (not an
      * internal one) or of a label on a leader that may lie in other items' regions (spec §4.8).
@@ -480,6 +484,8 @@ export class PlacementOpts {
       maxf(prune, 1),
       { sides: o.strings("placement.boundary.sides"), spread: o.string("placement.boundary.align") === "spread" },
       fanMode(o.string("placement.fan")),
+      o.string("placement.stubs") === "auto",
+      o.bool("placement.own_nearest"),
       o.f64("placement.max_foreign"),
     );
   }

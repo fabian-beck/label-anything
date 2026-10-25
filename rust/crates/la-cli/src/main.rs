@@ -18,6 +18,23 @@ mod csv;
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
+/// Freed memory stays with the process: solves that follow each other (`--warmup`,
+/// `bench`, `serve`) reuse it instead of mimalloc returning (purging) it to the system and
+/// the next solve faulting it in again, which with transparent huge pages cost tens of
+/// milliseconds now and then. `MIMALLOC_PURGE_DELAY` still overrides this.
+#[cfg(feature = "mimalloc")]
+fn keep_freed_memory() {
+    extern "C" {
+        fn mi_option_set(option: std::os::raw::c_int, value: std::os::raw::c_long);
+    }
+    // `mi_option_purge_delay` of the bundled mimalloc (v3, libmimalloc-sys 0.1.49)
+    const MI_OPTION_PURGE_DELAY: std::os::raw::c_int = 15;
+    if std::env::var_os("MIMALLOC_PURGE_DELAY").is_none() {
+        // SAFETY: sets a mimalloc option; any value is valid, -1 never purges
+        unsafe { mi_option_set(MI_OPTION_PURGE_DELAY, -1) }
+    }
+}
+
 use clap::{Parser, Subcommand};
 use label_anything::{Env, Issue, NativeEnv, Report};
 use serde_json::{json, Value};
@@ -340,6 +357,8 @@ fn set_option(p: &mut Value, path: &[&str], value: Value) -> Result<(), Issue> {
 }
 
 fn main() -> ExitCode {
+    #[cfg(feature = "mimalloc")]
+    keep_freed_memory();
     let cli = Cli::parse();
     match run(cli) {
         Ok(code) => code,

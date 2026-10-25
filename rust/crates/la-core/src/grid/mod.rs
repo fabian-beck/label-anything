@@ -1,4 +1,4 @@
-//! Per-class coverage grids with summed-area tables (spec §4.1, ADR 0005).
+//! Per-class coverage grids with summed-area tables (spec §4.1, ADR obstacles/coverage-grids).
 
 pub mod dt;
 pub mod occupancy;

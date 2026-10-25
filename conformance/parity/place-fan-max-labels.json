@@ -33,7 +33,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 93
+          "y": 91
         },
         "label": {
           "type": "text",
@@ -45,7 +45,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 98
+          "y": 94
         },
         "label": {
           "type": "text",
@@ -57,7 +57,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 103
+          "y": 97
         },
         "label": {
           "type": "text",
@@ -69,7 +69,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 108
+          "y": 100
         },
         "label": {
           "type": "text",
@@ -81,7 +81,7 @@
         "anchor": {
           "type": "point",
           "x": 150,
-          "y": 113
+          "y": 103
         },
         "label": {
           "type": "text",
@@ -97,10 +97,10 @@
         "id": "alpha",
         "placed": true,
         "box": {
-          "x": 175.516,
-          "y": 54.51200000000001,
+          "x": 174.083,
+          "y": 58.117000000000004,
           "w": 35.891999999999996,
-          "h": 19.94400000000001
+          "h": 15.599999999999994
         },
         "anchor": [
           150.0,
@@ -115,12 +115,16 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             32.292
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -129,21 +133,21 @@
         "leader": {
           "points": [
             [
-              152.57368290723494,
-              85.6280479994303
+              152.57967041495874,
+              85.63456123516448
             ],
             [
-              175.516,
-              64.48400000000001
+              174.083,
+              65.917
             ]
           ],
           "style": "straight",
           "port": [
-            175.516,
-            64.48400000000001
+            174.083,
+            65.917
           ]
         },
-        "cost": 2.2499935494428827,
+        "cost": 2.2357205070836645,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -155,14 +159,14 @@
         "id": "beta",
         "placed": true,
         "box": {
-          "x": 175.516,
-          "y": 76.856,
+          "x": 174.083,
+          "y": 78.517,
           "w": 29.232,
-          "h": 19.944000000000017
+          "h": 12.288000000000011
         },
         "anchor": [
           150.0,
-          93.0
+          91.0
         ],
         "anchor_side": "fan",
         "model": "fan",
@@ -173,12 +177,16 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.367999999999999
           ],
           "line_widths": [
             25.632
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -187,21 +195,21 @@
         "leader": {
           "points": [
             [
-              153.40189305862924,
-              92.17712478610049
+              153.3847135422751,
+              90.10909358699158
             ],
             [
-              175.516,
-              86.828
+              174.083,
+              84.661
             ]
           ],
           "style": "straight",
           "port": [
-            175.516,
-            86.828
+            174.083,
+            84.661
           ]
         },
-        "cost": 2.083519835006208,
+        "cost": 2.108949917764416,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -213,14 +221,14 @@
         "id": "gamma",
         "placed": true,
         "box": {
-          "x": 175.516,
-          "y": 99.20000000000002,
+          "x": 174.083,
+          "y": 95.605,
           "w": 48.24000000000001,
-          "h": 19.94399999999999
+          "h": 12.407999999999987
         },
         "anchor": [
           150.0,
-          98.0
+          94.0
         ],
         "anchor_side": "fan",
         "model": "fan",
@@ -231,12 +239,16 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.488
           ],
           "line_widths": [
             44.64
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -245,21 +257,21 @@
         "leader": {
           "points": [
             [
-              153.20614680376514,
-              99.40378868520396
+              153.32934893621015,
+              95.07955345442284
             ],
             [
-              175.516,
-              109.17200000000001
+              174.083,
+              101.809
             ]
           ],
           "style": "straight",
           "port": [
-            175.516,
-            109.17200000000001
+            174.083,
+            101.809
           ]
         },
-        "cost": 2.116910786981196,
+        "cost": 2.093853761077861,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -270,11 +282,16 @@
       {
         "id": "delta",
         "placed": false,
-        "reason": "no_feasible_candidate",
+        "reason": "omitted_by_priority",
         "blocking": [
-          "items"
+          "items",
+          "labels",
+          "leaders"
         ],
-        "blocked_by": [],
+        "blocked_by": [
+          "beta",
+          "gamma"
+        ],
         "priority": {
           "tier": 0,
           "score": 0.0,
@@ -292,16 +309,83 @@
       },
       {
         "id": "epsilon",
-        "placed": false,
-        "reason": "no_feasible_candidate",
-        "blocking": [
-          "items"
+        "placed": true,
+        "box": {
+          "x": 174.083,
+          "y": 112.813,
+          "w": 44.268,
+          "h": 15.600000000000009
+        },
+        "anchor": [
+          150.0,
+          100.0
         ],
-        "blocked_by": [],
+        "anchor_side": "fan",
+        "model": "fan",
+        "text": {
+          "lines": [
+            "Epsilon"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            40.668
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              152.65901073073732,
+              102.27588706526133
+            ],
+            [
+              174.083,
+              120.613
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            174.083,
+            120.613
+          ]
+        },
+        "cost": 2.187498901812967,
+        "degrade_steps": [],
         "priority": {
           "tier": 0,
           "score": 0.0,
           "rank": 4
+        }
+      },
+      {
+        "id": "zeta",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "labels",
+          "leaders",
+          "items"
+        ],
+        "blocked_by": [
+          "gamma",
+          "epsilon"
+        ],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 5
         },
         "degrade_steps": [
           "alternatives",
@@ -312,70 +396,12 @@
           "soft_overlap",
           "omit"
         ]
-      },
-      {
-        "id": "zeta",
-        "placed": true,
-        "box": {
-          "x": 175.516,
-          "y": 121.54400000000001,
-          "w": 28.295999999999992,
-          "h": 19.944000000000017
-        },
-        "anchor": [
-          150.0,
-          113.0
-        ],
-        "anchor_side": "fan",
-        "model": "fan",
-        "text": {
-          "lines": [
-            "Zeta"
-          ],
-          "used": "original",
-          "truncated": false,
-          "baseline_offsets": [
-            14.628
-          ],
-          "line_widths": [
-            24.696
-          ],
-          "x_offset": 1.7999999999999998,
-          "font_size": 12.0,
-          "font_family": "default",
-          "font_weight": 400,
-          "scale": 1.0
-        },
-        "leader": {
-          "points": [
-            [
-              152.83274468153658,
-              115.05561610453564
-            ],
-            [
-              175.516,
-              131.51600000000002
-            ]
-          ],
-          "style": "straight",
-          "port": [
-            175.516,
-            131.51600000000002
-          ]
-        },
-        "cost": 2.183881554081363,
-        "degrade_steps": [],
-        "priority": {
-          "tier": 0,
-          "score": 0.0,
-          "rank": 5
-        }
       }
     ],
     "stats": {
       "placed": 4,
       "total": 6,
-      "placed_weighted": 0.7526136409516658,
+      "placed_weighted": 0.7618870795651184,
       "required_placed": true,
       "hard_violations": 0,
       "leader_crossings": 0,
@@ -384,13 +410,13 @@
       "iterations": 2400,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 163,
+      "candidates": 70,
       "omission_order": [
-        "epsilon",
+        "zeta",
         "delta"
       ],
       "priority_inversions": 0,
-      "total_cost": 8.63430572551165,
+      "total_cost": 8.62602308773891,
       "degraded": {},
       "grid": {
         "cell": 3.0,

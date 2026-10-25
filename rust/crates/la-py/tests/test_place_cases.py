@@ -98,6 +98,10 @@ def check(problem: Dict[str, Any], exp: Dict[str, Any]) -> List[str]:
         got = bool(segments(by_id[i])) if i in by_id else False
         if got != want:
             f.append(f"has_leader.{i}: expected {want}, got {got}")
+    for i, want in exp.get("stub", {}).items():
+        got = bool(((by_id.get(i) or {}).get("leader") or {}).get("stub"))
+        if got != want:
+            f.append(f"stub.{i}: expected {want}, got {got}")
     for i, want in exp.get("underline", {}).items():
         got = underline_at_port(by_id[i]) if i in by_id else False
         if got != want:
@@ -106,6 +110,23 @@ def check(problem: Dict[str, Any], exp: Dict[str, Any]) -> List[str]:
         got = by_id.get(i, {}).get("text", {}).get("lines")
         if got != want:
             f.append(f"text_lines.{i}: expected {want}, got {got}")
+    for i, want in exp.get("text_align", {}).items():
+        # every line starts where the alignment puts it (spec §5.1): centered in the box, or
+        # flush with the text block's left (start) or right (end) edge
+        p = by_id.get(i, {})
+        t = p.get("text") or {}
+        if t.get("align") != want:
+            f.append(f"text_align.{i}: expected {want}, got {t.get('align')}")
+            continue
+        w = (p.get("box") or {}).get("w", float("nan"))
+        pad = t.get("x_offset", float("nan"))
+        xs, ws = t.get("x_offsets") or [], t.get("line_widths") or []
+        if len(xs) != len(ws) or not xs:
+            f.append(f"text_align.{i}: {len(xs)} x_offsets for {len(ws)} lines")
+        for k, (x, lw) in enumerate(zip(xs, ws)):
+            off = x - pad if want == "start" else x + lw - (w - pad) if want == "end" else x + lw / 2 - w / 2
+            if not abs(off) <= 1e-6:
+                f.append(f"text_align.{i}: line {k} is {off} px off")
     for i, want in exp.get("box", {}).items():
         tol = want.get("tol", 0.01)
         got = by_id.get(i, {}).get("box") or {}
@@ -147,7 +168,8 @@ def check(problem: Dict[str, Any], exp: Dict[str, Any]) -> List[str]:
         offset = px(problem.get("placement", {}).get("offset", DEFAULT_OFFSET), em)
         for it in problem["items"]:
             p = by_id.get(it.get("id", ""))
-            if not p or p.get("model") != "adjacent" or not p.get("box"):
+            # (a label with a stub stands farther out)
+            if not p or p.get("model") != "adjacent" or not p.get("box") or (p.get("leader") or {}).get("stub"):
                 continue
             mark = it["anchor"].get("mark") or problem.get("defaults", {}).get("mark") or DEFAULT_MARK
             if mark.get("shape") != "circle":
@@ -159,6 +181,28 @@ def check(problem: Dict[str, Any], exp: Dict[str, Any]) -> List[str]:
             d = math.hypot(dx, dy) - float(mark.get("r", 0.0)) - offset
             if d > gap_max + 1e-9 or d < -1e-6:
                 f.append(f"touch_gap_max: {it['id']} gap {d}")
+    if exp.get("own_nearest"):
+        # circle marks: no other item's mark is nearer to a label without a distant leader
+        # (adjacent or slider, with or without a stub) than its own mark
+        default = problem.get("defaults", {}).get("mark") or DEFAULT_MARK
+        circles = [(it.get("id", ""), it["anchor"]["x"], it["anchor"]["y"], float(m.get("r", 0.0)))
+                   for it in problem["items"] for m in [it["anchor"].get("mark") or default]
+                   if m.get("shape") == "circle"]
+        for i, ax, ay, ar in circles:
+            p = by_id.get(i)
+            if not p or p.get("model") not in ("adjacent", "slider") or not p.get("box"):
+                continue
+            if p.get("leader") and not p["leader"].get("stub"):
+                continue
+            b = la.BBox(**p["box"])
+
+            def dist(x: float, y: float, rr: float) -> float:
+                return math.hypot(max(b.x - x, x - b.x1, 0.0), max(b.y - y, y - b.y1, 0.0)) - rr
+
+            own = dist(ax, ay, ar)
+            for j, x, y, rr in circles:
+                if j != i and dist(x, y, rr) < own - 1e-6:
+                    f.append(f"own_nearest: {i} is {dist(x, y, rr)} from {j}, {own} from its mark")
     if exp.get("deterministic") and la.place_problem(problem).raw["placements"] != raw:
         f.append("deterministic: two runs differ")
     return f

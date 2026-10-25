@@ -2,10 +2,10 @@
 
 use crate::candidates::Cand;
 use crate::geom::shape::Shape;
-use crate::geom::{seg_len_in_rect, seg_overlaps_rect, seg_seg_dist, Rect, EPS, P};
+use crate::geom::{seg_len_in_rect, seg_seg_dist, Rect, EPS, P};
 use crate::grid::occupancy::Occupancy;
 use crate::index::{DynIndex, StaticIndex};
-use crate::leaders::{cand_leaders_conflict, Spacing};
+use crate::leaders::{cand_leaders_conflict, leader_hits_label, Spacing};
 use crate::math::{maxf, minf};
 use crate::obstacles::{AvoidW, Obstacles};
 
@@ -35,6 +35,9 @@ impl LowerMarks {
     }
 }
 
+/// No pending placement (`State::pend_at`).
+const NONE: u32 = u32::MAX;
+
 /// The set of placed labels with spatial indexes.
 pub struct State {
     /// Placed candidate per item.
@@ -51,6 +54,15 @@ pub struct State {
     pub label_area_sum: f64,
     buf: Vec<u32>,
     occ: Occupancy,
+    /// Label boxes placed (`true`) or removed (`false`) since `occ` was last brought up to
+    /// date: only candidate generation reads the grid, so local search, exact search and
+    /// repair, which place and remove labels all the time, never pay for marking it. A box
+    /// placed and removed again before that cancels out (`None`; `pend_at`: the index of
+    /// each item's pending placement, `NONE` for none). The grid counts boxes per cell, so
+    /// applying the remaining changes later (in order) gives the same grid.
+    pend: Vec<Option<(Rect, bool)>>,
+    pend_item: Vec<u32>,
+    pend_at: Vec<u32>,
     /// Priority key level per item, and the number of placed labels per key level.
     keys: Vec<usize>,
     key_count: Vec<u32>,
@@ -59,9 +71,13 @@ pub struct State {
     /// `leaders.min_angle_between`, and how far they reach beyond a candidate's box.
     clr: Vec<f64>,
     em: Vec<f64>,
-    /// The margin of each item's label (`defaults.margin`) and the largest.
+    /// The space each item's label keeps from other labels and stubs (its spacing, at least
+    /// its margin, spec §4.4) and the largest.
     margin: Vec<f64>,
     margin_max: f64,
+    /// How far stubs reach beyond a label's box (the largest such space with stubs, else
+    /// 0).
+    stub_gap: f64,
     cos_min: f64,
     reach: f64,
     /// Placed items already tested by a conflict query.
@@ -73,8 +89,9 @@ pub struct State {
 
 impl State {
     /// `keys`: the priority key level of every item (smaller = more important); `clr`
-    /// and `em`: the leader clearance and font size of every item; `margin`: the label
-    /// margin of every item; `cos_min`: the cosine of `leaders.min_angle_between`.
+    /// and `em`: the leader clearance and font size of every item; `margin`: the space the
+    /// label of every item keeps from other labels; `cos_min`: the cosine of
+    /// `leaders.min_angle_between`.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         n_items: usize,
@@ -96,6 +113,7 @@ impl State {
         State {
             margin,
             margin_max,
+            stub_gap: 0.0,
             placed: vec![None; n_items],
             relaxed: vec![false; n_items],
             label_ix: DynIndex::new(extent, cell),
@@ -107,6 +125,9 @@ impl State {
             label_area_sum: 0.0,
             buf: Vec::new(),
             occ: Occupancy::new(extent),
+            pend: Vec::new(),
+            pend_item: Vec::new(),
+            pend_at: vec![NONE; n_items],
             keys,
             key_count: vec![0; n_keys],
             max_key: None,
@@ -223,6 +244,15 @@ impl State {
         self.margin_max
     }
 
+    /// With stubs (spec §6.9), which keep the margin from other labels, conflict queries
+    /// reach that far for them.
+    pub fn with_stubs(mut self, stubs: bool) -> State {
+        if stubs {
+            self.stub_gap = self.margin_max;
+        }
+        self
+    }
+
     /// How far leader conflicts reach beyond a candidate's bounding box when leaders may
     /// not come close (`avoid.leader.leaders` hard): the largest clearance, and the
     /// largest font size with the angle rule.
@@ -251,13 +281,30 @@ impl State {
 
     /// Quick, exact rejection: the box `r` of a rectangular label overlaps a placed
     /// rectangular label (`false` means "unknown", not "free").
-    pub fn quick_blocked(&self, r: &Rect) -> bool {
-        self.n_placed > 0 && self.occ.blocked(r)
+    pub fn quick_blocked(&mut self, r: &Rect) -> bool {
+        self.n_placed > 0 && self.occupancy().blocked(r)
     }
 
     /// The placed-label occupancy grid (its windows serve grids with the same cells).
-    pub fn occupancy(&self) -> &Occupancy {
+    pub fn occupancy(&mut self) -> &Occupancy {
+        for (e, &item) in self.pend.iter().zip(&self.pend_item) {
+            if let Some((r, add)) = e {
+                self.occ.mark(r, *add);
+            }
+            self.pend_at[item as usize] = NONE;
+        }
+        self.pend.clear();
+        self.pend_item.clear();
         &self.occ
+    }
+
+    /// Log a change of the occupancy grid (see `pend`); a long log is applied now and then.
+    fn pend_mark(&mut self, item: usize, r: Rect, add: bool) {
+        self.pend.push(Some((r, add)));
+        self.pend_item.push(item as u32);
+        if self.pend.len() > 4 * self.pend_at.len() + 1024 {
+            self.occupancy();
+        }
     }
 
     pub fn place(&mut self, item: usize, cid: u32, cands: &[Cand], relaxed: bool) {
@@ -267,7 +314,8 @@ impl State {
         self.relaxed[item] = relaxed;
         self.label_ix.insert(item as u32, c.rect);
         if c.lshape.is_none() {
-            self.occ.mark(&c.rect, true);
+            self.pend_at[item] = self.pend.len() as u32;
+            self.pend_mark(item, c.rect, true);
         }
         if let Some(&k) = self.keys.get(item) {
             self.key_count[k] += 1;
@@ -305,7 +353,20 @@ impl State {
         let Some(cid) = self.placed[item] else { return };
         let c = &cands[cid as usize];
         if c.lshape.is_none() {
-            self.occ.mark(&c.rect, false);
+            let at = self.pend_at[item];
+            if at != NONE {
+                // placed since the last update: nothing to undo in the grid
+                debug_assert!(self.pend[at as usize] == Some((c.rect, true)));
+                self.pend[at as usize] = None;
+                self.pend_at[item] = NONE;
+                // (searches undo in LIFO order: drop cancelled entries at the end)
+                while let Some(None) = self.pend.last() {
+                    self.pend.pop();
+                    self.pend_item.pop();
+                }
+            } else {
+                self.pend_mark(item, c.rect, false);
+            }
         }
         if let Some(&k) = self.keys.get(item) {
             self.key_count[k] -= 1;
@@ -354,19 +415,17 @@ impl State {
                 continue;
             }
             if dy.leader_labels.is_hard()
-                && c.leaders
-                    .iter()
-                    .any(|l| l.segments().any(|(a, b)| seg_overlaps_rect(a, b, &p.rect)))
+                && c.leaders.iter().any(|l| leader_hits_label(l, &p.rect, gap))
             {
                 out.push(j);
             }
         }
-        // leaders near the candidate (placed leaders through the candidate label, leaders
-        // crossing or coming closer than the clearance)
+        // leaders near the candidate (placed leaders through the candidate label or stubs
+        // closer than the margin, leaders crossing or coming closer than the clearance)
         let reach = if c.leaders.is_empty() {
-            0.0
+            self.stub_gap
         } else {
-            self.leader_reach(obs)
+            maxf(self.leader_reach(obs), self.stub_gap)
         };
         self.seg_ix
             .query(&bb.inflate(EPS * 2.0 + reach), &mut self.buf);
@@ -387,13 +446,12 @@ impl State {
         out.dedup();
     }
 
-    /// Whether the placed candidate `p` of item `j` has a leader through the label of `c`,
-    /// or a leader that conflicts with a leader of `c`.
+    /// Whether the placed candidate `p` of item `j` has a leader through the label of `c`
+    /// (or a stub closer than the margin), or a leader that conflicts with a leader of `c`.
     fn leaders_hit(&self, c: &Cand, p: &Cand, dy: &crate::obstacles::Dynamic, j: usize) -> bool {
+        let gap = maxf(self.margin[c.item as usize], self.margin[j]);
         if dy.leader_labels.is_hard()
-            && p.leaders
-                .iter()
-                .any(|l| l.segments().any(|(a, b)| seg_overlaps_rect(a, b, &c.rect)))
+            && p.leaders.iter().any(|l| leader_hits_label(l, &c.rect, gap))
         {
             return true;
         }
@@ -441,18 +499,16 @@ impl State {
                 return Some(ju);
             }
             if dy.leader_labels.is_hard()
-                && c.leaders
-                    .iter()
-                    .any(|l| l.segments().any(|(a, b)| seg_overlaps_rect(a, b, &p.rect)))
+                && c.leaders.iter().any(|l| leader_hits_label(l, &p.rect, gap))
             {
                 return Some(ju);
             }
         }
         if self.segs.len() > self.free_segs.len() {
             let reach = if c.leaders.is_empty() {
-                0.0
+                self.stub_gap
             } else {
-                self.leader_reach(obs)
+                maxf(self.leader_reach(obs), self.stub_gap)
             };
             self.seg_ix
                 .query(&bb.inflate(EPS * 2.0 + reach), &mut self.buf);

@@ -43,9 +43,9 @@
         "placed": true,
         "box": {
           "x": 124.0,
-          "y": 51.856,
+          "y": 55.828,
           "w": 35.891999999999996,
-          "h": 19.94400000000001
+          "h": 15.599999999999994
         },
         "anchor": [
           100.0,
@@ -60,12 +60,16 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             32.292
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -74,21 +78,21 @@
         "leader": {
           "points": [
             [
-              103.31319939435949,
-              68.87185560622059
+              103.38280283821481,
+              69.10186584645396
             ],
             [
               124.0,
-              61.828
+              63.628
             ]
           ],
           "style": "straight",
           "port": [
             124.0,
-            61.828
+            63.628
           ]
         },
-        "cost": 2.0862705374037507,
+        "cost": 2.096127421676887,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -101,9 +105,9 @@
         "placed": true,
         "box": {
           "x": 124.0,
-          "y": 74.19999999999999,
+          "y": 76.228,
           "w": 29.232,
-          "h": 19.944000000000017
+          "h": 12.288000000000011
         },
         "anchor": [
           104.0,
@@ -118,12 +122,16 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.367999999999999
           ],
           "line_widths": [
             25.632
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -132,21 +140,21 @@
         "leader": {
           "points": [
             [
-              107.23997144996075,
-              77.32385233445396
+              107.33483705622507,
+              77.06247908611331
             ],
             [
               124.0,
-              84.172
+              82.372
             ]
           ],
           "style": "straight",
           "port": [
             124.0,
-            84.172
+            82.372
           ]
         },
-        "cost": 1.977190180216505,
+        "cost": 1.9643860586977095,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -167,10 +175,10 @@
       "iterations": 800,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 50,
+      "candidates": 53,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 4.063460717620256,
+      "total_cost": 4.060513480374596,
       "degraded": {},
       "grid": {
         "cell": 3.0,

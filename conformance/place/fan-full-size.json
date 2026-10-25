@@ -1,0 +1,125 @@
+{
+  "kind": "place",
+  "name": "labels the search shrank take their full size in a fan column",
+  "$comment": "The ends of `fan-line-ends` 4 px apart: the search labels beta and zeta beside their ends, shrunk to 0.7225 (8.67 px), and no other. The crowd's column takes all six, the two shrunk labels at their full size, 12 px, like the others (spec §6.8).",
+  "problem": {
+    "canvas": {
+      "width": 320,
+      "height": 200
+    },
+    "placement": {
+      "position_order": [
+        "right"
+      ]
+    },
+    "items": [
+      {
+        "id": "alpha",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 88
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      },
+      {
+        "id": "beta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 92
+        },
+        "label": {
+          "type": "text",
+          "text": "Beta"
+        }
+      },
+      {
+        "id": "gamma",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 96
+        },
+        "label": {
+          "type": "text",
+          "text": "Gamma"
+        }
+      },
+      {
+        "id": "delta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Delta"
+        }
+      },
+      {
+        "id": "epsilon",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 104
+        },
+        "label": {
+          "type": "text",
+          "text": "Epsilon"
+        }
+      },
+      {
+        "id": "zeta",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 108
+        },
+        "label": {
+          "type": "text",
+          "text": "Zeta"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 6,
+    "model": {
+      "alpha": "fan",
+      "beta": "fan",
+      "gamma": "fan",
+      "delta": "fan",
+      "epsilon": "fan",
+      "zeta": "fan"
+    },
+    "font": {
+      "alpha": {
+        "size": 12
+      },
+      "beta": {
+        "size": 12
+      },
+      "gamma": {
+        "size": 12
+      },
+      "delta": {
+        "size": 12
+      },
+      "epsilon": {
+        "size": 12
+      },
+      "zeta": {
+        "size": 12
+      }
+    }
+  }
+}

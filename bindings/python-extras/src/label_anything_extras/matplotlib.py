@@ -624,6 +624,8 @@ def _draw(
         lines = list(info.get("lines", []))
         offsets = list(info.get("baseline_offsets", []))
         x_off = float(info.get("x_offset", 0.0))
+        # the lines aligned as the engine laid them out (centered by default)
+        align = str(info.get("align") or align)
         size_pt = float(info.get("font_size", 12.0)) * 72.0 / dpi
         family = info.get("font_family") or fontfamily
         if family in ("default", ""):

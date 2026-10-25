@@ -31,6 +31,9 @@ fn leader_json(l: &Leader, s: &Solve) -> Value {
     if let Some(mem) = l.member {
         m.insert("member".into(), json!(s.model.items[mem as usize].id));
     }
+    if l.stub {
+        m.insert("stub".into(), json!(true));
+    }
     Value::Object(m)
 }
 
@@ -42,6 +45,8 @@ fn text_json(t: &TextLayout, family: &str, weight: u16) -> Value {
         "baseline_offsets": t.baselines,
         "line_widths": t.widths,
         "x_offset": t.x_offset,
+        "x_offsets": t.x_offsets,
+        "align": t.align.name(),
         "font_size": t.font_size,
         "font_family": family,
         "font_weight": weight,
@@ -68,6 +73,7 @@ fn parts_json(v: &Variant, c: &Cand, family: &str, weight: u16) -> Value {
                         let rel: Vec<f64> = t.baselines.iter().map(|b| b - p.rect.y0).collect();
                         o.insert("baseline_offsets".into(), json!(rel));
                         o.insert("x_offset".into(), json!(0.0));
+                        o.insert("x_offsets".into(), json!([0.0]));
                     }
                     m.insert("text".into(), tj);
                 }
@@ -311,7 +317,12 @@ pub fn build(
                     s.state.conflicts(&c, &s.cands, s.obs, i, &mut buf);
                     for &j in &buf {
                         let jc = &s.cands[s.state.placed[j as usize].unwrap() as usize];
-                        let key = if jc.rect.overlaps(&c.rect) {
+                        // the label itself, or one closer than the label gap (spec §4.4)
+                        let gap = crate::math::maxf(
+                            item.len.label_gap(),
+                            model.items[j as usize].len.label_gap(),
+                        );
+                        let key = if c.label_overlaps_gap(jc, gap) {
                             "labels"
                         } else {
                             "leaders"

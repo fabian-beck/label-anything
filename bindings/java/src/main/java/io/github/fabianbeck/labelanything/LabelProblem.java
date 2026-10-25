@@ -293,14 +293,24 @@ public final class LabelProblem {
       return put("defaults.buffer", length);
     }
 
-    /** Space labels keep from other labels and other marks, in px (default 0.2 em). */
+    /** Space labels keep from other items' marks, in px (default 0.2 em). */
     public Builder margin(double px) {
       return put("defaults.margin", px);
     }
 
-    /** Space labels keep from other labels and other marks ({@code "0.2em"}). */
+    /** Space labels keep from other items' marks ({@code "0.2em"}). */
     public Builder margin(String length) {
       return put("defaults.margin", length);
+    }
+
+    /** Space labels keep from other labels, in px (default twice the margin, at least the margin). */
+    public Builder spacing(double px) {
+      return put("defaults.spacing", px);
+    }
+
+    /** Space labels keep from other labels ({@code "0.4em"}; default twice the margin, at least the margin). */
+    public Builder spacing(String length) {
+      return put("defaults.spacing", length);
     }
 
     /** Mark of point anchors without their own mark (default circle r = 2). */
@@ -316,6 +326,11 @@ public final class LabelProblem {
     /** Default truncation of wrapped text. */
     public Builder truncate(Truncate truncate) {
       return put("defaults.truncate", truncate);
+    }
+
+    /** Default alignment of the lines of text labels (centered unless set). */
+    public Builder align(Label.Align align) {
+      return put("defaults.align", align);
     }
 
     /** Text shaping mode. */

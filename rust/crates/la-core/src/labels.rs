@@ -3,7 +3,9 @@
 use crate::env::{Env, FontSpec};
 use crate::geom::Rect;
 use crate::math::maxf;
-use crate::model::{FixedKind, FontSel, Item, LabelShape, LabelSpec, PartSpec, TextSpec, Truncate};
+use crate::model::{
+    FixedKind, FontSel, Item, LabelShape, LabelSpec, PartSpec, TextAlign, TextSpec, Truncate,
+};
 use la_text::{FontBook, WrapOptions};
 use std::sync::OnceLock;
 
@@ -142,11 +144,32 @@ impl<'a> Measurer<'a> {
         }
     }
 
-    /// (ascent, descent) in px, both positive.
-    pub fn vmetrics(&self, font: &FontSel, scale: f64) -> (f64, f64) {
+    /// The ink of `text` in px (spec §5.2): how far its glyphs reach above and below the
+    /// baseline (the bounds of their outlines, `LAvb`), when the text is measured with
+    /// simple shaping, its font has glyph bounds and a glyph of it has an outline; else
+    /// `None`. For boxes whose vertical metrics are the font's, not the host's.
+    pub fn ink(&self, font: &FontSel, scale: f64, text: &str) -> Option<(f64, f64)> {
+        if match self.shaping {
+            "full" => true,
+            "auto" => la_text::needs_complex_shaping(text),
+            _ => false,
+        } {
+            return None;
+        }
+        let spec = font.spec(scale);
+        let f = self
+            .fonts
+            .font(self.fonts.resolve(&font.family, font.weight, font.italic));
+        let (y0, y1) = f.ink_units(text)?;
+        let upm = f.units_per_em() as f64;
+        Some((y1 as f64 * spec.size / upm, -(y0 as f64) * spec.size / upm))
+    }
+
+    /// (ascent, descent) in px, both positive, and whether the host measured them.
+    pub fn vmetrics(&self, font: &FontSel, scale: f64) -> (f64, f64, bool) {
         let spec: FontSpec = font.spec(scale);
         if let Some(m) = self.env.measure("", &spec) {
-            return (m.ascent, m.descent);
+            return (m.ascent, m.descent, true);
         }
         let f = self
             .fonts
@@ -155,6 +178,7 @@ impl<'a> Measurer<'a> {
         (
             f.ascender() as f64 * spec.size / upm,
             -(f.descender() as f64) * spec.size / upm,
+            false,
         )
     }
 }
@@ -166,7 +190,12 @@ pub struct TextLayout {
     pub widths: Vec<f64>,
     /// Baseline of each line relative to the box top.
     pub baselines: Vec<f64>,
+    /// The left edge of the text block relative to the box's left edge (the padding).
     pub x_offset: f64,
+    /// Where each line starts relative to the box's left edge: aligned per `align` within
+    /// the widest line (spec §5.1).
+    pub x_offsets: Vec<f64>,
+    pub align: TextAlign,
     pub font_size: f64,
     pub scale: f64,
     /// "original", "alternative:N", "truncated", "group"
@@ -223,6 +252,25 @@ impl Variant {
     }
 }
 
+/// The variant that shrunk variant `vi` was made from by the ladder's `shrink` step: the
+/// first at scale 1 with the same text (lines, origin and truncation), or the first at
+/// scale 1 of a label without text; `vi` itself when it is not shrunk (spec §6.6, §6.8).
+pub fn full_size(variants: &[Variant], vi: usize) -> usize {
+    let v = &variants[vi];
+    if v.scale >= 1.0 {
+        return vi;
+    }
+    let same_text = |e: &Variant| match (&e.text, &v.text) {
+        (Some(a), Some(b)) => a.lines == b.lines && a.used == b.used && a.truncated == b.truncated,
+        (None, None) => true,
+        _ => false,
+    };
+    variants
+        .iter()
+        .position(|e| e.scale == 1.0 && same_text(e))
+        .unwrap_or(vi)
+}
+
 /// Build a text variant from lines.
 fn text_variant(
     m: &Measurer,
@@ -233,7 +281,25 @@ fn text_variant(
     used: &str,
     truncated: bool,
 ) -> Variant {
-    let (asc, desc) = m.vmetrics(&spec.font, scale);
+    let (asc, desc, host) = m.vmetrics(&spec.font, scale);
+    // the box fits the ink: from the top of the first line's glyphs to the bottom of the
+    // last line's, where their bounds are known and the font gives the vertical metrics
+    // (spec §5.2)
+    let ink = |l: &String| {
+        if host {
+            None
+        } else {
+            m.ink(&spec.font, scale, l)
+        }
+    };
+    let first = lines.first().and_then(ink);
+    let last = if lines.len() > 1 {
+        lines.last().and_then(ink)
+    } else {
+        first
+    };
+    let top = first.map_or(asc, |ink| ink.0);
+    let bottom = last.map_or(desc, |ink| ink.1);
     let size = spec.font.size * scale;
     let pitch = spec.font.line_height * size;
     let widths: Vec<f64> = lines
@@ -245,9 +311,10 @@ fn text_variant(
         wmax = maxf(wmax, w);
     }
     let n = lines.len().max(1);
-    let content_h = asc + desc + (n as f64 - 1.0) * pitch;
+    let content_h = top + bottom + (n as f64 - 1.0) * pitch;
     let p = pad * scale;
-    let baselines = (0..n).map(|i| p + asc + i as f64 * pitch).collect();
+    let baselines = (0..n).map(|i| p + top + i as f64 * pitch).collect();
+    let x_offsets = line_offsets(&widths, wmax, p, spec.align);
     Variant {
         w: wmax + 2.0 * p,
         h: content_h + 2.0 * p,
@@ -258,6 +325,8 @@ fn text_variant(
             widths,
             baselines,
             x_offset: p,
+            x_offsets,
+            align: spec.align,
             font_size: size,
             scale,
             used: used.to_string(),
@@ -268,6 +337,13 @@ fn text_variant(
         steps: vec![],
         scale,
     }
+}
+
+/// Where lines of `widths` start in a box with padding `p`: aligned per `align` within the
+/// widest line, `wmax` (spec §5.1).
+fn line_offsets(widths: &[f64], wmax: f64, p: f64, align: TextAlign) -> Vec<f64> {
+    let f = align.factor();
+    widths.iter().map(|&w| p + (wmax - w) * f).collect()
 }
 
 fn to_wrap_opts(spec: &TextSpec, scale: f64) -> Option<WrapOptions> {
@@ -322,6 +398,9 @@ fn text_variants(
                 widths: vec![w * scale; lines.len().max(1)],
                 baselines,
                 x_offset: p,
+                // host-measured lines all have the box's width
+                x_offsets: vec![p; lines.len().max(1)],
+                align: spec.align,
                 font_size: spec.font.size * scale,
                 scale,
                 used: used.to_string(),
@@ -519,7 +598,7 @@ fn composite_variant(
     for part in parts {
         match part {
             PartSpec::Text(t) => {
-                let (asc, desc) = m.vmetrics(&t.font, scale);
+                let (asc, desc, _) = m.vmetrics(&t.font, scale);
                 let w = m.width(&t.font, scale, &t.text);
                 sizes.push((w, asc + desc, Some((t, asc))));
             }
@@ -557,6 +636,8 @@ fn composite_variant(
             widths: vec![*w],
             baselines: vec![y + asc],
             x_offset: x,
+            x_offsets: vec![x],
+            align: ts.align,
             font_size: ts.font.size * scale,
             scale,
             used: "original".into(),

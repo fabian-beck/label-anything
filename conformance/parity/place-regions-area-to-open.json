@@ -83,7 +83,7 @@
           "x": 122.712,
           "y": 133.5,
           "w": 54.57600000000001,
-          "h": 19.944000000000017
+          "h": 15.600000000000023
         },
         "anchor": [
           150.0,
@@ -98,12 +98,16 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             50.976
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,

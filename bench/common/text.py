@@ -8,13 +8,18 @@ line breaking / wrapping of §5.3, implemented independently of the engine.
   when the lookup flag has IgnoreMarks; the first matching subtable applies;
   ``XAdvance`` of value record 1 (and 2, which also advances past the pair),
 * width = (Σ advances + Σ adjustments) · size / unitsPerEm,
-* vertical metrics from hhea (or OS/2 typo metrics when USE_TYPO_METRICS).
+* vertical metrics from hhea (or OS/2 typo metrics when USE_TYPO_METRICS),
+* ink: the bounds of the glyph outlines (the engine reads the same bounds from the table
+  ``LAvb`` of its outline-free metrics fonts); a text label's box spans from the ink top of
+  its first line to the ink bottom of its last line (an edge without ink: the ascent or
+  descent; ADR text/measurement). Composite parts keep the ascent and descent.
 
 The bundled Noto Sans subset in ``fonts/`` is used for the family ``default``.
 """
 from __future__ import annotations
 
 import functools
+import struct
 import unicodedata
 from dataclasses import dataclass, field
 
@@ -47,6 +52,35 @@ class Font:
                 if cls == 3:
                     self.marks.add(self.gid[name])
         self.lookups = self._kern_lookups(f)
+        self.vbounds = self._vbounds(f)
+
+    @staticmethod
+    def _vbounds(f: TTFont) -> list[tuple[int, int]] | None:
+        """(yMin, yMax) per glyph id, (0, 0) for a glyph without outline: the private table
+        ``LAvb`` of an outline-free metrics font (spec §5.2: ``uint16`` version 1, ``uint16``
+        numGlyphs, that of ``maxp``, then ``int16`` yMin, yMax per glyph), else the bounds of
+        the outlines in ``glyf`` (the bundled Noto Sans); None without either."""
+        if "LAvb" in f:
+            data = f.getTableData("LAvb")
+            if len(data) < 4:
+                return None
+            version, n = struct.unpack(">HH", data[:4])
+            if version != 1 or n != f["maxp"].numGlyphs or len(data) < 4 + 4 * n:
+                return None
+            v = struct.unpack(f">{2 * n}h", data[4:4 + 4 * n])
+            return [(v[2 * i], v[2 * i + 1]) for i in range(n)]
+        if "glyf" not in f:
+            return None
+        glyf = f["glyf"]
+        out = []
+        for name in f.getGlyphOrder():
+            g = glyf[name]
+            if g.numberOfContours == 0:
+                out.append((0, 0))
+                continue
+            g.recalcBounds(glyf)
+            out.append((g.yMin, g.yMax))
+        return out
 
     # -- GPOS ---------------------------------------------------------------
     def _kern_lookups(self, f: TTFont):
@@ -191,6 +225,22 @@ class Font:
             out.append(x * size / self.upem)
             x += self.adv[g[k]] + adj[k]
         return out
+
+    def ink(self, text: str, size: float) -> tuple[float, float] | None:
+        """How far the outlines of the glyphs of ``text`` reach above and below the baseline,
+        in px (spec §5.2); None without ``LAvb`` or when no glyph has an outline."""
+        if self.vbounds is None:
+            return None
+        lo = hi = None
+        for g in self.glyphs(text):
+            y0, y1 = self.vbounds[g]
+            if y0 == y1:
+                continue
+            lo = y0 if lo is None else min(lo, y0)
+            hi = y1 if hi is None else max(hi, y1)
+        if lo is None:
+            return None
+        return hi * size / self.upem, -lo * size / self.upem
 
     def ascent(self, size: float) -> float:
         return self.ascent_u * size / self.upem
@@ -353,17 +403,30 @@ class TextLayout:
     used: str = "original"
     truncated: bool = False
     baselines: list[float] = field(default_factory=list)  # relative to the content top
+    align: str = "start"  # how the lines are aligned within the widest (spec §5.1)
+
+    def x_offsets(self, padding: float) -> list[float]:
+        """Where each line starts from the box's left edge (``text.x_offsets``, ADR text/line-breaking)."""
+        f = {"center": 0.5, "end": 1.0}.get(self.align, 0.0)
+        return [padding + (self.width - w) * f for w in self.line_widths]
 
 
-def layout_lines(lines: list[str], size: float, weight: int, line_height: float) -> TextLayout:
+def layout_lines(lines: list[str], size: float, weight: int, line_height: float, ink: bool = True) -> TextLayout:
+    """A block of lines: from the ink top of the first line to the ink bottom of the last
+    (``ink``, the edges of lines without ink: the ascent and descent), baselines a pitch of
+    ``line_height`` apart (spec §5.2)."""
     f = font(weight)
     widths = [f.width(s, size) for s in lines]
     asc, desc = f.ascent(size), f.descent(size)
+    first = f.ink(lines[0], size) if ink and lines else None
+    last = f.ink(lines[-1], size) if ink and lines else None
+    top = first[0] if first else asc
+    bottom = last[1] if last else desc
     pitch = line_height * size
-    h = asc + desc + (len(lines) - 1) * pitch
+    h = top + bottom + (max(len(lines), 1) - 1) * pitch
     return TextLayout(lines=list(lines), line_widths=widths, width=max(widths) if widths else 0.0, height=h,
                       ascent=asc, descent=desc, line_pitch=pitch, font_size=size, font_weight=weight,
-                      baselines=[asc + i * pitch for i in range(len(lines))])
+                      baselines=[top + i * pitch for i in range(len(lines))])
 
 
 def measure_fn(size: float, weight: int):
@@ -372,33 +435,37 @@ def measure_fn(size: float, weight: int):
 
 
 def normal_variant(text: str, size: float, weight: int, line_height: float, wrap: dict | None,
-                   truncate: str = "none", em: float | None = None) -> TextLayout:
+                   truncate: str = "none", em: float | None = None, ink: bool = True) -> TextLayout:
     """The first normal variant of a text label (spec §5.3): balanced(L_min) with wrap
     settings, else the single line; truncated per ``truncate`` when L_min > max_lines."""
     from .spec import length  # local import to avoid a cycle
 
     meas = measure_fn(size, weight)
+
+    def lay_out(lines):
+        return layout_lines(lines, size, weight, line_height, ink)
+
     if "\n" in text:
-        return layout_lines(text.split("\n"), size, weight, line_height)
+        return lay_out(text.split("\n"))
     if not wrap:
-        return layout_lines([text], size, weight, line_height)
+        return lay_out([text])
     mw = wrap.get("max_width")
     max_w = length(mw, em if em is not None else size) if mw is not None else None
     max_lines = wrap.get("max_lines")
     if max_w is None:
-        return layout_lines([text], size, weight, line_height)
+        return lay_out([text])
     g = greedy(text, max_w, meas)
     l_min = len(g)
     if max_lines is not None and l_min > max_lines:
         if truncate == "end":
-            lay = layout_lines(truncate_end(text, max_w, max_lines, meas), size, weight, line_height)
+            lay = lay_out(truncate_end(text, max_w, max_lines, meas))
             lay.used, lay.truncated = "truncated", True
             return lay
         if truncate == "middle":
-            lay = layout_lines(truncate_middle(text, max_w, max_lines, meas), size, weight, line_height)
+            lay = lay_out(truncate_middle(text, max_w, max_lines, meas))
             lay.used, lay.truncated = "truncated", True
             return lay
-        return layout_lines(balanced(text, max_lines, meas), size, weight, line_height)
+        return lay_out(balanced(text, max_lines, meas))
     if wrap.get("balance", True) is False:
-        return layout_lines(g, size, weight, line_height)
-    return layout_lines(balanced(text, l_min, meas), size, weight, line_height)
+        return lay_out(g)
+    return lay_out(balanced(text, l_min, meas))

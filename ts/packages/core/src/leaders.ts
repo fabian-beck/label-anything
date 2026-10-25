@@ -5,8 +5,10 @@
  * @module
  */
 
-import { Cand, KEEP_BOX, type KeepFn, Kind, Leader, SIDE_DISTANT, dirOf } from "./candidates.js";
-import { EPS, P, Rect, distPointSeg, segIntersects } from "./geom/index.js";
+import { Cand, KEEP_BOX, type KeepFn, Kind, Leader, SIDE_DISTANT, dirOf, labelShape } from "./candidates.js";
+import { Evaluator, crowded } from "./cost.js";
+import { BasicEnv } from "./env.js";
+import { EPS, P, Rect, distPointSeg, distSegRect, segIntersects, segOverlapsRect } from "./geom/index.js";
 import type { Variant } from "./labels.js";
 import { clampf, cmpF64, len2d, maxf, minf, signEps } from "./math.js";
 import { Attach, type Item, LeaderStyle, type Model, Port, posDir } from "./model/index.js";
@@ -54,6 +56,96 @@ function leaderStartIn(model: Model, item: Item): boolean {
   LS[0] = refp.x;
   LS[1] = refp.y;
   return true;
+}
+
+/**
+ * Stubs (spec §6.9): what an adjacent or slider candidate needs to decide whether it stands
+ * farther out with a stub.
+ */
+export class Stubs {
+  private readonly buf = new IdList();
+  private readonly ev: Evaluator;
+
+  constructor(
+    readonly model: Model,
+    readonly obs: Obstacles,
+  ) {
+    this.ev = new Evaluator(model, obs, new BasicEnv());
+  }
+
+  /** The stubs of a solve, when `placement.stubs` is `auto`. */
+  static of(model: Model, obs: Obstacles): Stubs | null {
+    return model.placement.stubs ? new Stubs(model, obs) : null;
+  }
+
+  /** Whether the label box `r` of `item` is ambiguous ({@link crowded}). */
+  ambiguous(item: Item, r: Rect): boolean {
+    return crowded(this.model, this.obs, item, r, this.buf);
+  }
+
+  /**
+   * The candidate `c` of variant `v` with its stub, when the stub meets a side of the label
+   * squarely and the candidate is statically feasible (spec §6.9); null otherwise.
+   */
+  stubbed(item: Item, v: Variant, c: Cand): Cand | null {
+    const l = stubLeader(item, c.rect);
+    if (l === null) return null;
+    c.leaders.push(l);
+    c.lshape = labelShape(c.rect, v.shape);
+    this.ev.eval(c, v, null);
+    // evaluated again with the item's other candidates
+    c.evaluated = false;
+    return c.feasible ? c : null;
+  }
+}
+
+/**
+ * The stub of an item's label box `r` (spec §6.9): horizontal or vertical, from the mark
+ * (`anchor_gap` outside its boundary, or the tip of an icon mark) to the box side facing it,
+ * which it meets at a right angle: a left or right side in its middle (the box centered on
+ * the mark's reference point vertically), a top or bottom side within its middle half. Null
+ * when the box is not beside, above or below the mark's reference point in that way.
+ */
+export function stubLeader(item: Item, r: Rect): Leader | null {
+  const refp = item.shape.reference();
+  const m = r.center();
+  const beside = Math.abs(refp.y - m.y) <= EPS;
+  const over = Math.abs(refp.x - m.x) <= 0.25 * r.w();
+  let port: P;
+  let d: P;
+  if (beside && refp.x < r.x0) {
+    port = new P(r.x0, refp.y);
+    d = new P(1, 0);
+  } else if (beside && refp.x > r.x1) {
+    port = new P(r.x1, refp.y);
+    d = new P(-1, 0);
+  } else if (over && refp.y < r.y0) {
+    port = new P(refp.x, r.y0);
+    d = new P(0, 1);
+  } else if (over && refp.y > r.y1) {
+    port = new P(refp.x, r.y1);
+    d = new P(0, -1);
+  } else {
+    return null;
+  }
+  const start = item.tip ? refp : item.shape.boundaryPoint(d).add(d.mul(item.len.anchorGap));
+  const l = new Leader([start, port], LeaderStyle.Straight);
+  l.stub = true;
+  return l;
+}
+
+/**
+ * Whether leader `l` hits the label box `r`: passes through it, or, for a stub, comes closer
+ * than `gap` (the space two labels keep, spec §6.9).
+ */
+export function leaderHitsLabel(l: Leader, r: Rect, gap: number): boolean {
+  const n = l.segCount();
+  if (l.stub && gap > EPS) {
+    for (let k = 0; k < n; k++) if (distSegRect(l.segA(k), l.segB(k), r) < gap - EPS) return true;
+    return false;
+  }
+  for (let k = 0; k < n; k++) if (segOverlapsRect(l.segA(k), l.segB(k), r)) return true;
+  return false;
 }
 
 /** Output of {@link attachCenter}: the label center `[x, y]`. */
@@ -183,7 +275,7 @@ export function distant(
     const t = v.text;
     if (underline && t !== null) {
       const p = l.port;
-      const x0 = rect.x0 + t.xOffset;
+      const x0 = rect.x0 + t.xOffsets[0]!;
       const far = p.x <= rect.center().x ? x0 + t.widths[0]! : x0;
       l.underline = [p, new P(far, p.y)];
     }
@@ -508,7 +600,7 @@ export interface Spacing {
   near: number;
   /** Cosine of `leaders.min_angle_between`; 1 turns the angle rule off. */
   cosMin: number;
-  /** The space two labels keep: the larger of the two items' `defaults.margin`. */
+  /** The space two labels keep: the larger of the two items' label gaps (spacing, at least margin). */
   gap: number;
 }
 

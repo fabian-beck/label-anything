@@ -1,5 +1,5 @@
 /**
- * The region map (spec §4.8, ADR 0050): the region each grid cell lies in, the borders
+ * The region map (spec §4.8, ADR obstacles/regions): the region each grid cell lies in, the borders
  * between regions, and what a label box or a leader has of them; port of
  * `rust/crates/la-core/src/grid/regions.rs`.
  *

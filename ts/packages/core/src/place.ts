@@ -33,7 +33,7 @@ import { Issue, validate as validateProblem } from "./validate.js";
  * Which implementation's per-implementation constants a solve uses: `ts` (the defaults of
  * this package: `solver.time_budget_ms` 250 and 40 moves per ms) or `rust` (100 and 100,
  * the Rust core's), so that tests can run the TypeScript solver with exactly the Rust
- * iteration budgets (ADR 0007: same decisions for the same iteration counts).
+ * iteration budgets (ADR solver/time-budget: same decisions for the same iteration counts).
  */
 export type BudgetProfile = "ts" | "rust";
 
@@ -49,7 +49,7 @@ export interface Placed {
 /**
  * Solve a problem that already passed `validate` (its warnings are passed through).
  * Throws {@link PlaceError} when the problem cannot be prepared. `trace` records the
- * solver's decisions (ADR 0046).
+ * solver's decisions (ADR project/solve-traces).
  */
 export function placeValidated(
   problem: unknown,
@@ -200,8 +200,8 @@ export function placeValidated(
 }
 
 /**
- * Solve a problem and record the solver's decisions (ADR 0046): the result, identical to
- * {@link placeWith}'s, and the trace (`trace.ts`).
+ * Solve a problem and record the solver's decisions (ADR project/solve-traces): the result,
+ * identical to {@link placeWith}'s, and the trace (`trace.ts`).
  */
 export function placeTracedWith(problem: unknown, env: Env, profile: BudgetProfile = "ts"): { result: Record<string, unknown>; trace: SolveTrace } {
   const report = validateProblem(problem);

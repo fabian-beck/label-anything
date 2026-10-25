@@ -1,18 +1,18 @@
 # The problem format
 
-A problem is one JSON object (`problem.v1`, schema:
+A problem is one JSON object (`problem.v1`, schema
 [`problem.v1.json`](../reference/schemas.md)). Only `items` is required; every option has
-a default ([defaults](../reference/defaults.md)), and a [preset](presets-defaults.md)
-changes several at once. The bindings build the same object — Python keywords, the Java
-builder, plain objects in JavaScript.
+a [default](../reference/defaults.md), and a [preset](../reference/presets.md) sets several at
+once. The bindings build the same object from Python keywords, the Java builder or plain
+JavaScript objects.
 
 | Key | What it holds |
 |---|---|
 | `version` | `"1"` (optional) |
 | [`canvas`](#canvas) | size, padding, label region; optional |
 | [`y_axis`, `transform`](#coordinates) | how input coordinates map to canvas pixels |
-| [`preset`](presets-defaults.md) | `auto` (default), `scatter`, `map`, `graph`, `illustration`, `none` |
-| [`defaults`](#label-defaults-and-fonts), `text` | label defaults: font, padding, buffer, mark, wrap, truncate; text shaping |
+| [`preset`](../reference/presets.md) | `auto` (default), `scatter`, `map`, `graph`, `illustration`, `none` |
+| [`defaults`](#label-defaults-and-fonts), `text` | label defaults: font, padding, buffer, margin, spacing, mark, wrap, truncate, align; text shaping |
 | [`items`](#items) | what to label: anchor, label, attributes, priority |
 | [`obstacles`](#obstacles) | what to avoid besides the items: vector layers, SVG, raster images |
 | [`avoid`](avoidance.md) | how hard to avoid each obstacle class, for labels and leaders |
@@ -27,10 +27,10 @@ builder, plain objects in JavaScript.
 
 ## Lengths
 
-A length is a number (pixels) or a string with a unit: `"3px"`, `"9pt"` (4/3 px each),
-`"0.5em"` (the font size of the label the length belongs to; for lengths that belong to no
-label, such as `canvas.padding`, the default font size). Invalid unit strings are
-validation errors (`unit`).
+A length is a number of pixels or a string with a unit: `"3px"`, `"9pt"` (1 pt = 4/3 px)
+or `"0.5em"` (relative to the font size of the label it belongs to, or to the default font
+size for lengths outside a label, such as `canvas.padding`). An invalid unit is a
+validation error (`unit`).
 
 ## Coordinates
 
@@ -75,9 +75,9 @@ Mark rotations are degrees **clockwise** on screen (as in SVG); leader angles ar
 * `region` `[x, y, w, h]`: labels must stay inside this sub-rectangle, e.g. a chart's plot
   area.
 * `allow_outside: true` drops the `canvas_edge` class.
-* `background` (`"#rrggbb"`, white): the colour of the canvas where no raster lies. Labels
-  avoid lying across the edge between it and a raster of another lightness (the
-  [`contrast` cost](../tutorials/raster-backgrounds.md#contrast-borders)).
+* `background` (`"#rrggbb"`, default white): the colour of the canvas where no raster
+  lies. Labels avoid straddling the edge between it and a raster of another lightness
+  ([the contrast cost](../tutorials/raster-backgrounds.md#contrast-borders)).
 
 Without `canvas`, the canvas is the first raster background's size (divided by its
 `scale`), else the first SVG's viewport, else the problem is **unbounded**: there is no
@@ -116,8 +116,8 @@ Placements in the result come in input order.
 
 ## Labels
 
-**Text.** Measured with the bundled Noto Sans (Latin, Greek, Cyrillic) or a font you
-supply; the label box is the text block grown by `padding` (0.15 em) on every side.
+**Text** is measured with the bundled Noto Sans (Latin, Greek, Cyrillic) or a font you
+supply; the label box is the text block plus `padding` (0.15 em) on every side.
 
 ```json
 {
@@ -137,17 +137,20 @@ supply; the label box is the text block grown by `padding` (0.15 em) on every si
 }
 ```
 
-* `text`: a line feed (`"Paris\n2.1M"`) breaks the line; such a label keeps exactly its
-  lines and is never rewrapped or truncated.
+* `text`: a line feed (`"Paris\n2.1M"`) breaks the line, and such a label keeps its lines:
+  it is never rewrapped or truncated.
 * `alternatives`: shorter fallbacks, tried in order by the `alternatives` ladder step.
-* `wrap`: `max_width` (a length) and `max_lines`; line breaks at spaces, after
-  punctuation (`/ \ . _ - , ; : |`), at camelCase and acronym boundaries and between CJK
-  characters; `balance` (default true) makes the lines similar in length.
-* `truncate`: when the text needs more than `max_lines`: `end` (`org.exa…`), `middle`
+* `wrap`: `max_width` (a length) and `max_lines`. Lines break at spaces, after punctuation
+  (`/ \ . _ - , ; : |`), at camelCase and acronym boundaries and between CJK characters;
+  `balance` (default true) evens out the line lengths.
+* `truncate`, for text that needs more than `max_lines`: `end` (`org.exa…`), `middle`
   (`org…Name`) or `none` (keep it all).
-* `width`, `height`, `lines`: measured by the host (e.g. in a browser); the engine then
-  does not measure this label.
-* `align`: `start`, `center`, `end` of wrapped lines (reported only; you draw the text).
+* `width`, `height`, `lines`: the host's measurement (e.g. in a browser), which the engine
+  then uses instead of its own.
+* `align`: how the lines of a label of several lines align: `center` (the default, from
+  `defaults.align`), `start` (flush left) or `end` (flush right). The result reports where
+  each line starts (`text.x_offsets`), so that you draw them aligned
+  ([ADR text/line-breaking](../adr/text/line-breaking.md)).
 
 **Icons and boxes** have a fixed `width` × `height` and a `shape` for the collision test:
 `rect`, `rounded:4`, `circle`, or `polygon` with a `polygon` silhouette.
@@ -176,7 +179,7 @@ The result reports the box of each part (`parts`), so you can draw the icon and 
 
 ## Label defaults and fonts
 
-`defaults` applies to every label that does not say otherwise:
+`defaults` applies to every label that does not set its own values:
 
 ```json
 {
@@ -186,7 +189,8 @@ The result reports the box of each part (`parts`), so you can draw the icon and 
     "buffer": "0.3em",
     "mark": { "shape": "circle", "r": 2 },
     "wrap": null,
-    "truncate": "none"
+    "truncate": "none",
+    "align": "center"
   },
   "text": { "shaping": "auto" }
 }
@@ -196,14 +200,17 @@ The result reports the box of each part (`parts`), so you can draw the icon and 
   back to upright). Other fonts: `font.file` with a TTF/OTF path or `data:` URL; the
   nearest available weight is used.
 * `buffer` is a soft ring around each label that keeps other items' marks and leaders at
-  a distance (ambiguity).
-* `margin` (0.2 em) is the space a label keeps, as a hard rule, from other labels (the
-  larger margin of the two) and from other items' marks, while `avoid.label` has them
-  hard. Its own mark it touches at `placement.offset` (1 px), so each label sits clearly
-  closer to its own mark than to anything else. From a mark closer than that to the own
-  mark it keeps only as much as that mark keeps from the own mark (points on top of each
-  other can still be labeled), and a label that keeps its place from a warm start needs
-  half the margin (spec §6.7).
+  a distance, so the label is not read as theirs.
+* `margin` (0.2 em) is the space a label keeps from other items' marks, as a hard rule
+  while `avoid.label.items` is hard. It touches its own mark at `placement.offset` (1 px),
+  so each label sits clearly closer to its own mark than to anything else. From a mark
+  closer than that to its own it keeps only as much as that mark keeps from its own, so
+  that points on top of each other can still be labeled.
+* `spacing` (twice the margin unless set: 0.4 em) is the space a label keeps from other
+  labels (the larger of the two, at least the margin) while `avoid.label.labels` is hard:
+  with the padding, the letters of two labels stand farther apart than the lines of one
+  label, so that neighbouring labels do not read as one. A label that keeps its place from
+  a warm start needs half of both ([ADR placement/margin](../adr/placement/margin.md)).
 * `text.shaping`: `simple` (kerning only; identical in every implementation), `full`
   (HarfBuzz-compatible shaping in the Rust core, for complex scripts) or `auto` (full for
   scripts that need it, where available).
@@ -233,15 +240,15 @@ Everything to avoid besides the items is in `obstacles`, sorted into **classes**
   (`[x, y, r]`), `rects` (`[x, y, w, h]`), `polygons` (+ `fill_rule`), `polylines`
   (stroke `width`, 1) and `shapes` (any [mark](../tutorials/shapes.md) with `x`, `y`); a
   layer's `region` puts its geometry on the [region map](regions.md).
-* `svg`: SVG markup (`source`) or a file (`path`), with class rules — see
-  [SVG backgrounds](../tutorials/svg-background.md) — and the picture's
-  [regions](regions.md) (`regions`: the countries of a map, which labels keep to).
+* `svg`: SVG markup (`source`) or a file (`path`), with class rules
+  ([SVG backgrounds](../tutorials/svg-background.md)) and the picture's
+  [regions](regions.md) (`regions`).
 * `raster`: an image (`source`: path, `data:` URL or base64; or `rgba` pixels) in one of
-  five modes — see [raster backgrounds](../tutorials/raster-backgrounds.md).
+  five modes ([raster backgrounds](../tutorials/raster-backgrounds.md)).
 
-`svg` and `raster` also take a list of sources. File paths are read by the host: relative
-to the problem file for the CLI, the working directory for C and Java, through
-`readFile` in JavaScript.
+`svg` and `raster` also take a list of sources. The host reads the files: relative paths
+resolve against the problem file in the CLI and the working directory in C and Java;
+JavaScript reads them through `readFile`.
 
 ## Output
 
@@ -255,9 +262,5 @@ to the problem file for the CLI, the working directory for C and Java, through
   `result.debug_svg`.
 * `cost_breakdown`: each placed label's cost per term (`cost_breakdown`).
 * `candidates`: every generated candidate (box, model, cost, feasibility) in
-  `result.candidates` — large.
+  `result.candidates` (large).
 * `item_shape`: each item's resolved geometry in canvas pixels (`item_shape`).
-
-The remaining sections each have a page: [avoidance](avoidance.md),
-[candidates and the ladder](candidates.md), [priority](../tutorials/priority.md),
-[leaders](../tutorials/leaders.md), [the solver](solver.md).

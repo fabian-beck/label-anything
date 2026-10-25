@@ -91,6 +91,18 @@ function truncateParse(s: string): Truncate {
   return s === "end" ? "end" : s === "middle" ? "middle" : "none";
 }
 
+/** How the lines of a text label align within its box (`label.align`, `defaults.align`; spec §5.1). */
+export type TextAlign = "start" | "center" | "end";
+
+function textAlignParse(s: string): TextAlign {
+  return s === "start" ? "start" : s === "end" ? "end" : "center";
+}
+
+/** `TextAlign::factor`: the share of the space left of a line, by which it stands in from the left edge. */
+export function textAlignFactor(a: TextAlign): number {
+  return a === "start" ? 0 : a === "end" ? 1 : 0.5;
+}
+
 /** Resolved font of a label. */
 export class FontSel {
   constructor(
@@ -125,7 +137,7 @@ export interface TextSpec {
   truncate: Truncate;
   /** Host-measured `(width, height, lines)`. */
   explicit: [number, number, string[]] | null;
-  align: string;
+  align: TextAlign;
   font: FontSel;
 }
 
@@ -168,8 +180,13 @@ export interface Area {
 export interface ItemLengths {
   padding: number;
   buffer: number;
-  /** `defaults.margin`: the space the label keeps from other labels and other marks. */
+  /** `defaults.margin`: the space the label keeps from other items' marks. */
   margin: number;
+  /**
+   * `defaults.spacing`: the space the label keeps from other labels, twice `margin` unless
+   * set (at least `margin`, see {@link labelGap}).
+   */
+  spacing: number;
   offset: number;
   innerPadding: number;
   maxDistance: number;
@@ -180,6 +197,17 @@ export interface ItemLengths {
   clearance: number;
   boundaryGap: number;
   boundaryMargin: number;
+  /** `placement.stub_length` and `placement.stub_reach` (spec §6.9). */
+  stubLength: number;
+  stubReach: number;
+}
+
+/**
+ * `ItemLengths::label_gap`: the space the label keeps from other labels (spec §4.4), its
+ * spacing, at least its margin.
+ */
+export function labelGap(l: ItemLengths): number {
+  return maxf(l.spacing, l.margin);
 }
 
 /** Per-item lengths before resolution against the item's font size. */
@@ -187,6 +215,8 @@ export interface ItemLengthSpec {
   padding: Length;
   buffer: Length;
   margin: Length;
+  /** `null`: twice the margin. */
+  spacing: Length | null;
   offset: Length;
   innerPadding: Length;
   maxDistance: Length;
@@ -197,14 +227,18 @@ export interface ItemLengthSpec {
   clearance: Length;
   boundaryGap: Length;
   boundaryMargin: Length;
+  stubLength: Length;
+  stubReach: Length;
 }
 
 /** `ItemLengthSpec::resolve`: the lengths in px for a font size of `em` px. */
 export function resolveLengths(l: ItemLengthSpec, em: number): ItemLengths {
+  const margin = l.margin.px(em);
   return {
     padding: l.padding.px(em),
     buffer: l.buffer.px(em),
-    margin: l.margin.px(em),
+    margin,
+    spacing: l.spacing === null ? 2 * margin : l.spacing.px(em),
     offset: l.offset.px(em),
     innerPadding: l.innerPadding.px(em),
     maxDistance: l.maxDistance.px(em),
@@ -215,6 +249,8 @@ export function resolveLengths(l: ItemLengthSpec, em: number): ItemLengths {
     clearance: l.clearance.px(em),
     boundaryGap: l.boundaryGap.px(em),
     boundaryMargin: l.boundaryMargin.px(em),
+    stubLength: l.stubLength.px(em),
+    stubReach: l.stubReach.px(em),
   };
 }
 
@@ -1470,6 +1506,7 @@ interface ItemDefaults {
   mark: unknown;
   wrap: unknown;
   truncate: string;
+  align: string;
   internal: string;
   positionOrder: unknown;
 }
@@ -1480,6 +1517,7 @@ function itemDefaults(o: Opts): ItemDefaults {
       padding: o.length("defaults.padding"),
       buffer: o.length("defaults.buffer"),
       margin: o.length("defaults.margin"),
+      spacing: Length.fromValue(o.get("defaults.spacing")),
       offset: o.length("placement.offset"),
       innerPadding: o.length("placement.inner_padding"),
       maxDistance: o.length("placement.max_distance"),
@@ -1490,10 +1528,13 @@ function itemDefaults(o: Opts): ItemDefaults {
       clearance: o.length("leaders.clearance"),
       boundaryGap: o.length("placement.boundary.gap"),
       boundaryMargin: o.length("placement.boundary.margin"),
+      stubLength: o.length("placement.stub_length"),
+      stubReach: o.length("placement.stub_reach"),
     },
     mark: o.get("defaults.mark"),
     wrap: o.get("defaults.wrap"),
     truncate: o.string("defaults.truncate"),
+    align: o.string("defaults.align"),
     internal: o.string("placement.internal"),
     positionOrder: o.get("placement.position_order"),
   };
@@ -1583,7 +1624,7 @@ function buildItem(
       wrap,
       truncate: truncateParse(asStr(get(v, "truncate")) ?? defs.truncate),
       explicit,
-      align: asStr(get(v, "align")) ?? "start",
+      align: textAlignParse(asStr(get(v, "align")) ?? defs.align),
       font: f.clone(),
     };
   };

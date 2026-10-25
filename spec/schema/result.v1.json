@@ -74,7 +74,13 @@
           "description": "Baseline y of each line, relative to box.y."
         },
         "line_widths": { "type": "array", "items": { "type": "number" } },
-        "x_offset": { "type": "number", "description": "Text start x relative to box.x (the padding)." },
+        "x_offset": { "type": "number", "description": "Left edge of the text block relative to box.x (the padding)." },
+        "x_offsets": {
+          "type": "array",
+          "items": { "type": "number" },
+          "description": "Start x of each line relative to box.x: the lines aligned per align within the widest line."
+        },
+        "align": { "enum": ["start", "center", "end"], "description": "How the lines align in the box." },
         "font_size": { "type": "number" },
         "font_family": { "type": "string" },
         "font_weight": { "type": "integer" },
@@ -114,7 +120,8 @@
           "items": { "$ref": "#/$defs/point" },
           "description": "For style=curved: [start, control, end] of the quadratic Bezier (points holds its flattening)."
         },
-        "member": { "type": "string", "description": "For fan leaders of a group: the member id this leader points to." }
+        "member": { "type": "string", "description": "For fan leaders of a group: the member id this leader points to." },
+        "stub": { "type": "boolean", "description": "A stub (placement.stubs): the short leader of an adjacent or slider label near other marks, at a right angle to the label's side, which hosts may draw more lightly." }
       }
     },
     "placement": {

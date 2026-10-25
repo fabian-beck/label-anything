@@ -21,7 +21,7 @@ import type { SplitScratch } from "./grid/regions.js";
 import { EPS, P, Rect, segOverlapsRectXY } from "./geom/index.js";
 import type { Variant } from "./labels.js";
 import { clampf, maxf, minf } from "./math.js";
-import type { Model } from "./model/index.js";
+import type { Item, Model } from "./model/index.js";
 import { AvoidKind, type Obstacles, primDistSegment, primOverlapsRect } from "./obstacles.js";
 import { IdList } from "./spatial.js";
 
@@ -61,6 +61,25 @@ class Acc {
     if (relaxable) this.relaxCost += extra;
     else this.relaxed = false;
   }
+}
+
+/**
+ * `crowded`: whether the mark of another item (not of the item's group) comes closer than
+ * `stub_reach` to the label box `r` of `item`: the label could be read as that item's (spec
+ * §6.9). `buf` is scratch space for the item query.
+ */
+export function crowded(model: Model, obs: Obstacles, item: Item, r: Rect, buf: IdList): boolean {
+  const reach = item.len.stubReach;
+  // a label against a mark larger than its font size reads as attached to it
+  const b = item.shape.bbox();
+  if (reach <= 0 || maxf(b.w(), b.h()) > item.em()) return false;
+  const i = item.index;
+  obs.itemIndex.query(r.inflate(reach), buf);
+  for (let q = 0; q < buf.len; q++) {
+    const j = buf.get(q);
+    if (j !== i && (model.groupOf[j] ?? null) !== i && model.items[j]!.shape.distRect(r) < reach) return true;
+  }
+  return false;
 }
 
 function finish(c: Cand, acc: Acc): void {
@@ -114,7 +133,13 @@ export class Evaluator {
     const ring = r.inflate(item.len.buffer);
     const gapGuess = item.len.offset + 0.5 * em;
     const margin = c.warm ? WARM_MARGIN * item.len.margin : item.len.margin;
-    const reach = maxf(item.len.buffer > gapGuess ? item.len.buffer : gapGuess, margin);
+    // a label without a distant leader comes no closer to another item's mark than to its
+    // own, and without a stub it is nearer to its own by its margin (spec §4.4)
+    const nearRule =
+      model.placement.ownNearest && c.kind !== Kind.Internal && (c.leaders.length === 0 || c.hasStub());
+    const dOwn = nearRule ? item.shape.distRect(r) : 0;
+    const clear = nearRule && !c.hasStub() ? margin : 0;
+    const reach = maxf(maxf(item.len.buffer > gapGuess ? item.len.buffer : gapGuess, margin), dOwn + clear);
     const buf = this.buf;
     obs.itemIndex.query(r.inflate(reach), buf);
     const labelItemsHard = dy.labelItems.kind === AvoidKind.Hard;
@@ -146,12 +171,17 @@ export class Evaluator {
       if (!(lower ? labelLowerHard : labelItemsHard)) continue;
       if (c.labelOverlapsShape(sj)) {
         acc.violate(BLOCK_ITEMS, false, 0);
-      } else if (margin > EPS) {
-        // the margin (up to rounding), but never more than the mark keeps from the own
-        // mark's box
-        const d = sj.distRect(r);
-        if (d < margin - EPS && d < sj.distRect(item.shape.bbox())) acc.violate(BLOCK_ITEMS, false, 0);
+        continue;
       }
+      const d = sj.distRect(r);
+      // the margin (up to rounding), but never more than the mark keeps from the own mark's
+      // box
+      if (margin > EPS && d < margin - EPS && d < sj.distRect(item.shape.bbox())) acc.violate(BLOCK_ITEMS, false, 0);
+      // nearer to the label than its own mark, or, without a stub, not a margin farther (at
+      // most as far as the two marks' reference points lie apart; the marks of the item's
+      // group aside)
+      const sep = clear > 0 ? minf(clear, sj.reference().dist(item.shape.reference())) : 0;
+      if (nearRule && d < dOwn + sep - EPS && (model.groupOf[j] ?? null) !== i) acc.violate(BLOCK_ITEMS, false, 0);
     }
     if (dy.labelItems.kind === AvoidKind.Soft) {
       const cov = obs.otherItemsCovered(i, r);
@@ -234,9 +264,11 @@ export class Evaluator {
     if (!acc.relaxed) return finish(c, acc);
     // 5. position
     acc.add("position", (w.position * c.rank) / 8);
-    // 6. distance from own shape
-    const gap = c.kind === Kind.Internal ? 0 : item.shape.distRect(r);
-    if (c.leaders.length === 0) acc.add("distance", (w.distance * gap) / em);
+    // 6. distance from own shape (the rule of step 2 measured it already)
+    const gap = c.kind === Kind.Internal ? 0 : nearRule ? dOwn : item.shape.distRect(r);
+    // (a stub is part of the distance, not a leader to a distant label)
+    const stub = c.hasStub();
+    if (c.leaders.length === 0 || stub) acc.add("distance", (w.distance * gap) / em);
     // 7. shape penalty
     acc.add("shape", w.shape * v.penalty);
     // 8. edge proximity
@@ -244,15 +276,26 @@ export class Evaluator {
       const d = minf(minf(r.x0 - la.x0, la.x1 - r.x1), minf(r.y0 - la.y0, la.y1 - r.y1));
       acc.add("edge", w.edge * maxf(0, 1 - maxf(d, 0) / em));
     }
-    // 9. ambiguity (the item query above covers the reach of adjacent labels)
-    if (w.ambiguity > 0 && c.kind !== Kind.Internal) {
+    // 9. ambiguity (the item query above covers the reach of adjacent labels); a stub
+    // resolves it
+    if (w.ambiguity > 0 && c.kind !== Kind.Internal && !stub) {
       let amb: number;
       if (c.leaders.length > 0) amb = 0.5 * this.ambiguityPoint(i, c.leaders[0]!.port, em);
       else if (gap <= gapGuess) amb = this.ambiguityRectCached(i, r, gap, em);
       else amb = this.ambiguityRect(i, r, gap, em);
       acc.add("ambiguity", w.ambiguity * amb);
     }
-    // 10. stability
+    // 10. crowd: with stubs, a label beside its mark that another item's mark comes near, and
+    // that has no stub, costs as much as a leader (spec §6.9)
+    if (
+      model.placement.stubs &&
+      !stub &&
+      (c.kind === Kind.Adjacent || c.kind === Kind.Slider) &&
+      crowded(model, this.obs, item, r, this.buf)
+    ) {
+      acc.add("crowd", w.leader);
+    }
+    // 11. stability
     if (w.stability > 0) {
       const b = model.warm.get(item.id);
       if (b !== undefined && b !== null) {
@@ -263,7 +306,7 @@ export class Evaluator {
         acc.add("stability", w.stability * (minf(1, d / em) + tail));
       }
     }
-    // 11. host cost
+    // 12. host cost
     if (this.env.hasCostCallback && this.env.hasCostCallback()) {
       acc.add("user", this.env.extraCost ? this.env.extraCost(item.id, r, c.leaders.length > 0) : 0);
     }
@@ -315,7 +358,9 @@ export class Evaluator {
     const w = model.weights;
     const dy = obs.dynamic;
     const hw = model.leaders.width * 0.5;
-    acc.add("leader", w.leader + (w.leaderLength * l.len) / em + w.bends * l.bends);
+    // a stub (spec §6.9) costs its length, not a leader
+    if (l.stub) acc.add("stub", (w.leaderLength * l.len) / em);
+    else acc.add("leader", w.leader + (w.leaderLength * l.len) / em + w.bends * l.bends);
     // region borders on the way
     const rm = obs.regions;
     if (rm !== null) acc.add("leader_borders", w.leaderBorders * rm.crossings(l.pts));
@@ -339,15 +384,18 @@ export class Evaluator {
       if (k < nMain && segOverlapsRectXY(a.x, a.y, b.x, b.y, ox0, oy0, ox1, oy1)) acc.violate(BLOCK_LABELS, false, 0);
     }
     // other items: clearance (not from the group's members, and not from a mark that
-    // covers the leader's anchor, or a column leader's start: no leader avoids it); the
-    // leader of a fan or boundary label must only not cross a mark closer than the
-    // clearance to its start (it leaves a crowd of touching marks, in the order of its
-    // column)
+    // covers the leader's anchor, or a column leader's start: no leader avoids it). A
+    // leader must only not cross a mark closer than the clearance to its start when it
+    // is a fan or boundary label's (it leaves a crowd of touching marks, in the order of
+    // its column) or when that mark touches the box of its own mark (it leaves a spot of
+    // touching marks, which no leader could keep the clearance from)
     const clearance = item.len.clearance;
     const buf = this.buf;
     obs.itemIndex.query(l.bbox().inflate(clearance), buf);
     const lowerRule = !dy.leaderLower.equals(dy.leaderItems);
-    const anchor = l.member !== null ? model.items[l.member]!.anchor : item.anchor;
+    const own = l.member !== null ? model.items[l.member]! : item;
+    const anchor = own.anchor;
+    const ownBox = own.shape.bbox();
     const start = l.pts[0]!;
     for (let q = 0; q < buf.len; q++) {
       const j = buf.get(q);
@@ -363,7 +411,8 @@ export class Evaluator {
         dmin = minf(dmin, sj.distSegmentXY(a.x, a.y, b.x, b.y));
       }
       if (li.kind === AvoidKind.Hard) {
-        const lim = column && sj.signedDistance(start) < clearance ? EPS : clearance - EPS;
+        const crossOnly = sj.signedDistance(start) < clearance && (column || sj.distRect(ownBox) <= EPS);
+        const lim = crossOnly ? EPS : clearance - EPS;
         if (dmin < lim) acc.violate(BLOCK_ITEMS, false, 0);
       } else if (dmin < clearance) {
         const f = clearance > 0 ? 1 - dmin / clearance : 1;

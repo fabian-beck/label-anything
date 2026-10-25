@@ -91,14 +91,20 @@ points at the offending property; for `required` at the missing property (e.g.
     "omission_order": ["z", "y"],
     "anchor_side": { "a": "top" }, "model": { "a": "adjacent" },
     "has_leader": { "b": true },
+    "stub": { "a": true },             // the label's leader is a stub (placement.stubs)
+    "own_nearest": true,               // circle marks: no other item's mark is nearer to a
+                                       // label without a distant leader than its own
     "max_bends": 1,                    // every leader of every placed label bends at most so often
     "underline": { "b": true },        // baseline port: the underline starts at the leader's
                                        // end on a side edge, horizontal, in the box's lower half
     "inside_canvas": true,             // every box inside canvas minus padding
     "prefix": true,                    // placed set is a prefix of the priority order
     "deterministic": true,             // two runs give identical placements
-    "touch_gap_max": 0.5,              // adjacent labels touch their inflated mark
+    "touch_gap_max": 0.5,              // adjacent labels (without a stub) touch their inflated mark
     "text_lines": { "a": ["org.example.", "Foo"] },
+    "text_align": { "a": "center" },   // text.align, and every line starts where that puts it:
+                                       // centered in the box, or flush with the text block's
+                                       // left (start) or right (end) edge (± 1e-6)
     "font": { "a": { "size": 15, "weight": 700, "class": 0 } },  // text.font_size (± 1e-6),
                                        // text.font_weight, priority.font_class (null: none)
     "box": { "a": { "x": 10, "y": 20, "w": 30, "h": 16, "tol": 0.01 } }
@@ -115,7 +121,7 @@ that the committed files are current).
 ## `parity` cases
 
 The whole solve pipeline of the TypeScript core must make the same decisions as the Rust
-core (ADR 0007). `parity/` holds the Rust result of every problem in `problems/`
+core (ADR solver/determinism). `parity/` holds the Rust result of every problem in `problems/`
 (`<stem>.json`) and of every `place/` case with an inline problem (`place-<stem>.json`):
 
 ```jsonc
@@ -147,7 +153,7 @@ checked against HarfBuzz for widths; a Python transcription of spec §5.3 for wr
   "font": { "family": "default", "weight": 400 }      // or { "file": "fonts/x.ttf" } (relative to text/)
   "size": 12,
   "metrics": { "units_per_em": 1000, "ascender": 1069, "descender": -293, "line_gap": 0 },
-  "widths": [ { "text": "AV", "units": 1199, "width": 14.388, "tol": 0.01 } ],
+  "widths": [ { "text": "AV", "units": 1199, "ink": [0, 717], "width": 14.388, "tol": 0.01 } ],
   "breaks": [ { "text": "org.example.Foo", "breaks": [3, 11] } ],   // a line may end after code point k
   "wrap": [ { "text": "org.example.Foo", "max_width": 60, "lines": ["org.example.", "Foo"] } ],  // greedy
   "balanced": [ { "text": "...", "lines_target": 2, "max_width": null, "lines": ["...", "..."] } ],
@@ -158,8 +164,11 @@ checked against HarfBuzz for widths; a Python transcription of spec §5.3 for wr
   "extra_variants": [ { "text": "...", "max_lines": 2, "variants": [ ... ] } ] }
 ```
 
-`units` (advance in font units) must match exactly; widths (also inside variants) within
-`tol` (default 0.01 px). Line feeds are ordinary whitespace (no mandatory breaks).
+`units` (advance in font units) must match exactly, and so must `ink` (the lowest yMin and
+the highest yMax of the text's glyphs with an outline, font units, from the font's `LAvb`
+table, spec §5.2; `null`: the font has no glyph bounds, or no glyph of the text has an
+outline); widths (also inside variants) within `tol` (default 0.01 px). Line feeds are
+ordinary whitespace (no mandatory breaks).
 
 ## `expr` cases
 

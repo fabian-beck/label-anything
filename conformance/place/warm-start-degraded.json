@@ -1,7 +1,7 @@
 {
   "kind": "place",
   "name": "a label shrunk in the previous solve keeps its box instead of running the ladder again",
-  "$comment": "Walls (hard for labels and leaders) leave a pocket around the point: the full-size label fits nowhere next to it, the label shrunk to 0.85 (the box in warm_start) fits on its right. An opening in the top wall lets the ladder's distant step place the full-size label with a leader, but the previous, shrunk box is still free and is kept (ADR 0025).",
+  "$comment": "Walls (hard for labels and leaders) leave a pocket around the point: the full-size label fits nowhere next to it, the label shrunk to 0.85 (the box in warm_start) fits on its right. An opening in the top wall lets the ladder's distant step place the full-size label with a leader, but the previous, shrunk box is still free and is kept (ADR motion/warm-starts).",
   "problem": {
     "canvas": {
       "width": 240,
@@ -79,9 +79,9 @@
           ],
           "box": {
             "x": 104,
-            "y": 91.524,
+            "y": 93.37,
             "w": 30.508,
-            "h": 16.952
+            "h": 13.26
           }
         }
       ]
@@ -107,9 +107,9 @@
     "box": {
       "a": {
         "x": 104,
-        "y": 91.524,
+        "y": 93.37,
         "w": 30.508,
-        "h": 16.952,
+        "h": 13.26,
         "tol": 0.01
       }
     }

@@ -82,3 +82,20 @@ def test_text_measurement_kerning_and_wrapping():
     assert len(bal) == 2 and "".join(bal) == s
     tr = text.truncate_end(s, 60, 1, meas)
     assert len(tr) == 1 and tr[0].endswith(text.ELLIPSIS) and meas(tr[0]) <= 60
+
+
+def test_text_boxes_fit_the_ink():
+    # spec §5.2, ADR text/measurement: from the ink top of the first line to the ink bottom of the last
+    f = text.font(400)
+    top, bottom = f.ink("Alpha", 12)
+    assert (top, bottom) == pytest.approx((0.76 * 12, 0.24 * 12))
+    lay = text.layout_lines(["Alpha"], 12, 400, 1.2)
+    assert lay.height == pytest.approx(0.76 * 12 + 0.24 * 12)
+    assert lay.baselines == pytest.approx([0.76 * 12])
+    # capitals only: no descender; a line without ink keeps the ascent or descent
+    assert f.ink("SAU", 12)[1] < 0.05 * 12
+    assert f.ink(" ", 12) is None
+    two = text.layout_lines(["Alpha", " "], 12, 400, 1.2)
+    assert two.height == pytest.approx(0.76 * 12 + 1.2 * 12 + f.descent(12))
+    # a composite's text part spans ascent and descent
+    assert text.layout_lines(["Alpha"], 12, 400, 1.2, ink=False).height == pytest.approx(f.ascent(12) + f.descent(12))

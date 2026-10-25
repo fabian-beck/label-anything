@@ -98,9 +98,17 @@ export interface TextInfo {
   baseline_offsets: number[];
   line_widths?: number[];
   /**
-   * Text start x relative to box.x (the padding).
+   * Left edge of the text block relative to box.x (the padding).
    */
   x_offset?: number;
+  /**
+   * Start x of each line relative to box.x: the lines aligned per align within the widest line.
+   */
+  x_offsets?: number[];
+  /**
+   * How the lines align in the box.
+   */
+  align?: "start" | "center" | "end";
   font_size: number;
   font_family?: string;
   font_weight?: number;
@@ -135,6 +143,10 @@ export interface Leader {
    * For fan leaders of a group: the member id this leader points to.
    */
   member?: string;
+  /**
+   * A stub (placement.stubs): the short leader of an adjacent or slider label near other marks, at a right angle to the label's side, which hosts may draw more lightly.
+   */
+  stub?: boolean;
 }
 export interface PriorityInfo {
   required?: boolean;

@@ -1,0 +1,86 @@
+{
+  "kind": "place",
+  "name": "no stub where the label would come nearer to another mark than to its own",
+  "$comment": "Beta's mark is 6.2 px below the middle of Alpha's label: 0.5 em farther right it would still be 6.2 px away, nearer than Alpha's own mark (7 px), so Alpha keeps its place against its mark, without a stub.",
+  "problem": {
+    "canvas": {
+      "width": 240,
+      "height": 160
+    },
+    "placement": {
+      "stubs": "auto"
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        },
+        "priority": 3,
+        "placement": {
+          "models": [
+            "adjacent"
+          ],
+          "position_order": [
+            "right"
+          ]
+        }
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 120,
+          "y": 116
+        },
+        "label": {
+          "type": "text",
+          "text": "Beta"
+        },
+        "priority": 2
+      },
+      {
+        "id": "g",
+        "anchor": {
+          "type": "point",
+          "x": 60,
+          "y": 40
+        },
+        "label": {
+          "type": "text",
+          "text": "Gamma"
+        },
+        "priority": 1
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 3,
+    "anchor_side": {
+      "a": "right"
+    },
+    "has_leader": {
+      "a": false
+    },
+    "own_nearest": true,
+    "box": {
+      "a": {
+        "x": 103,
+        "y": 92.2,
+        "w": 35.892,
+        "h": 15.6,
+        "tol": 0.01
+      }
+    }
+  }
+}

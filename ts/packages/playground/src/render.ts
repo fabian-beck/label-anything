@@ -62,6 +62,14 @@ export function drawLabels(
     if (a <= 0) continue;
     ctx.globalAlpha = a;
     for (const l of leadersOf(p)) {
+      // a stub (placement.stubs) is drawn lighter, without the dot at its start
+      if (l.stub) {
+        ctx.globalAlpha = a * 0.7;
+        leaderPath(ctx, l);
+        ctx.stroke();
+        ctx.globalAlpha = a;
+        continue;
+      }
       leaderPath(ctx, l);
       ctx.stroke();
       const s = l.points[0];
@@ -86,8 +94,9 @@ export function drawLabels(
     }
     for (const { box, text } of texts(p)) {
       ctx.font = cssFont(text);
-      const x = box.x + (text.x_offset ?? 0);
       text.lines.forEach((line, i) => {
+        // each line where the engine aligned it (centered by default)
+        const x = box.x + (text.x_offsets?.[i] ?? text.x_offset ?? 0);
         const y = box.y + (text.baseline_offsets[i] ?? 0);
         if (style === "halo") {
           ctx.lineWidth = 3;

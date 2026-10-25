@@ -1,5 +1,5 @@
 /**
- * Greedy placement with the degradation ladder (spec §10.1, ADR 0009); port of
+ * Greedy placement with the degradation ladder (spec §10.1, ADR priority/key); port of
  * `rust/crates/la-core/src/solver/greedy.rs`.
  *
  * @module
@@ -14,7 +14,7 @@ import { AvoidKind, type Dynamic } from "../obstacles.js";
 import { keepWithSets } from "../priority.js";
 import { IdList } from "../spatial.js";
 import { Reason, type Solve } from "./index.js";
-import { leadersOverlapRect } from "./state.js";
+import { leadersHitLabel } from "./state.js";
 
 /**
  * Exact hard conflict between two candidates of different items; `sp`: the spacing rules
@@ -23,8 +23,8 @@ import { leadersOverlapRect } from "./state.js";
 export function pairConflict(a: Cand, b: Cand, dy: Dynamic, sp: Spacing): boolean {
   if (dy.labelLabels.kind === AvoidKind.Hard && a.labelOverlapsGap(b, sp.gap)) return true;
   if (dy.leaderLabels.kind === AvoidKind.Hard) {
-    if (leadersOverlapRect(a, b.rect)) return true;
-    if (leadersOverlapRect(b, a.rect)) return true;
+    if (leadersHitLabel(a, b.rect, sp.gap)) return true;
+    if (leadersHitLabel(b, a.rect, sp.gap)) return true;
   }
   return dy.leaderLeaders.kind === AvoidKind.Hard && candLeadersConflict(a, b, sp);
 }
@@ -163,13 +163,13 @@ export function run(s: Solve): void {
     g.setMembers.push(set);
   });
   // the guard runs from the start of this pass: preparation always completes, and its
-  // time must not leave the most important bands unplaced (ADR 0042)
+  // time must not leave the most important bands unplaced (ADR solver/time-budget)
   const budgetGuard = s.model.solver.timeBudgetMs * 10;
   const started = s.now();
   if (s.model.omission === Omission.Prefix) {
     const order = s.pri.order.slice();
     let cut = false;
-    // after the guard, level 0 only (ADR 0048): the first item without a free level-0
+    // after the guard, level 0 only (ADR solver/time-budget): the first item without a free level-0
     // position ends the prefix, and the guard of that pass ends it as well
     let finish: number | null = null;
     for (let k = 0; k < order.length; k++) {
@@ -317,8 +317,8 @@ export function run(s: Solve): void {
 }
 
 /**
- * After the greedy guard (ADR 0048): the undecided items, in total order, get their best
- * free level-0 candidate — no ladder, no explanation of a failure — until the guard passes
+ * After the greedy guard (ADR solver/time-budget): the undecided items, in total order, get their
+ * best free level-0 candidate — no ladder, no explanation of a failure — until the guard passes
  * once more from the start of this pass; whatever is left is `budget_exhausted`.
  */
 function finishLevel0(s: Solve, g: Greedy, guard: number): void {
@@ -334,10 +334,11 @@ function finishLevel0(s: Solve, g: Greedy, guard: number): void {
 }
 
 /**
- * The best free level-0 candidate of undecided item `i`, after the greedy guard (ADR 0048).
- * Not for members of a `keep_with` set (placed together or not at all) or items whose
- * level-0 attempt already failed (their candidates have not become freer since). A cap
- * that the candidate would exceed omits the item; any other failure leaves it undecided.
+ * The best free level-0 candidate of undecided item `i`, after the greedy guard
+ * (ADR solver/time-budget). Not for members of a `keep_with` set (placed together or not at
+ * all) or items whose level-0 attempt already failed (their candidates have not become freer
+ * since). A cap that the candidate would exceed omits the item; any other failure leaves it
+ * undecided.
  */
 function placeLevel0(s: Solve, g: Greedy, i: number): boolean {
   if (g.sets[i]! >= 0 || g.tried0[i]) return false;
@@ -353,7 +354,10 @@ function placeLevel0(s: Solve, g: Greedy, i: number): boolean {
   return true;
 }
 
-/** Whether the greedy guard has passed: `guard` ms after `started` (ADR 0042; never without a clock). */
+/**
+ * Whether the greedy guard has passed: `guard` ms after `started` (ADR solver/time-budget;
+ * never without a clock).
+ */
 function guardPassed(s: Solve, started: number, guard: number): boolean {
   return s.now() > 0 && s.now() - started > guard;
 }
@@ -493,7 +497,7 @@ function placeItem(s: Solve, g: Greedy, i: number, ladder: boolean): boolean {
     if (s.trace !== null) s.trace.omitted(i);
     return false;
   }
-  // a label the previous solve degraded keeps its box while that is free (ADR 0025)
+  // a label the previous solve degraded keeps its box while that is free (ADR motion/warm-starts)
   if (s.model.weights.stability > 0) {
     const c = s.warmLadderCandidate(i);
     if (c !== null && s.state.isFree(s.cands[c]!, s.cands, s.obs, i)) {

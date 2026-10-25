@@ -51,8 +51,10 @@ OPTION_PATHS: Dict[str, str] = {
     "padding": "defaults.padding",
     "buffer": "defaults.buffer",
     "margin": "defaults.margin",
+    "spacing": "defaults.spacing",
     "mark": "defaults.mark",
     "truncate": "defaults.truncate",
+    "align": "defaults.align",
     "shaping": "text.shaping",
     # placement
     "models": "placement.models",
@@ -71,6 +73,10 @@ OPTION_PATHS: Dict[str, str] = {
     "prune_factor": "placement.prune_factor",
     "boundary": "placement.boundary",
     "fan": "placement.fan",
+    "own_nearest": "placement.own_nearest",
+    "stubs": "placement.stubs",
+    "stub_length": "placement.stub_length",
+    "stub_reach": "placement.stub_reach",
     # avoid
     "avoid_leader": "avoid.leader",
     "avoid_buffer": "avoid.buffer",

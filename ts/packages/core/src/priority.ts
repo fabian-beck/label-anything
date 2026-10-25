@@ -121,7 +121,7 @@ function eqRadius(it: Item): number {
 
 /**
  * k-th nearest-neighbour gap distance of every item among all item marks and the
- * `points`-class discs (spec §4.4 `outlierness`), found exactly in a k-d tree (ADR 0044).
+ * `points`-class discs (spec §4.4 `outlierness`), found exactly in a k-d tree.
  */
 function knnGaps(model: Model, k: number): number[] {
   const pts: Disc[] = model.items.map((it, i) => [it.anchor, eqRadius(it), i]);

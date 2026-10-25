@@ -57,6 +57,40 @@ impl Truncate {
     }
 }
 
+/// How the lines of a text label align within its box (`label.align`, `defaults.align`;
+/// spec §5.1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TextAlign {
+    Start,
+    Center,
+    End,
+}
+
+impl TextAlign {
+    fn parse(s: &str) -> TextAlign {
+        match s {
+            "start" => TextAlign::Start,
+            "end" => TextAlign::End,
+            _ => TextAlign::Center,
+        }
+    }
+    pub fn name(self) -> &'static str {
+        match self {
+            TextAlign::Start => "start",
+            TextAlign::Center => "center",
+            TextAlign::End => "end",
+        }
+    }
+    /// The share of the space left of a line, by which it stands in from the left edge.
+    pub fn factor(self) -> f64 {
+        match self {
+            TextAlign::Start => 0.0,
+            TextAlign::Center => 0.5,
+            TextAlign::End => 1.0,
+        }
+    }
+}
+
 /// Resolved font of a label.
 #[derive(Clone, Debug, PartialEq)]
 pub struct FontSel {
@@ -95,7 +129,7 @@ pub struct TextSpec {
     pub truncate: Truncate,
     /// Host-measured `(width, height, lines)`.
     pub explicit: Option<(f64, f64, Vec<String>)>,
-    pub align: String,
+    pub align: TextAlign,
     pub font: FontSel,
 }
 
@@ -165,8 +199,11 @@ pub struct Area {
 pub struct ItemLengths {
     pub padding: f64,
     pub buffer: f64,
-    /// `defaults.margin`: the space the label keeps from other labels and other marks.
+    /// `defaults.margin`: the space the label keeps from other items' marks.
     pub margin: f64,
+    /// `defaults.spacing`: the space the label keeps from other labels, twice `margin`
+    /// unless set (at least `margin`, see [`ItemLengths::label_gap`]).
+    pub spacing: f64,
     pub offset: f64,
     pub inner_padding: f64,
     pub max_distance: f64,
@@ -177,6 +214,17 @@ pub struct ItemLengths {
     pub clearance: f64,
     pub boundary_gap: f64,
     pub boundary_margin: f64,
+    /// `placement.stub_length` and `placement.stub_reach` (spec §6.9).
+    pub stub_length: f64,
+    pub stub_reach: f64,
+}
+
+impl ItemLengths {
+    /// The space the label keeps from other labels (spec §4.4): its spacing, at least its
+    /// margin.
+    pub fn label_gap(&self) -> f64 {
+        crate::math::maxf(self.spacing, self.margin)
+    }
 }
 
 /// Per-item lengths before resolution against the item's font size.
@@ -185,6 +233,8 @@ pub struct ItemLengthSpec {
     pub padding: Length,
     pub buffer: Length,
     pub margin: Length,
+    /// `None`: twice the margin.
+    pub spacing: Option<Length>,
     pub offset: Length,
     pub inner_padding: Length,
     pub max_distance: Length,
@@ -195,15 +245,22 @@ pub struct ItemLengthSpec {
     pub clearance: Length,
     pub boundary_gap: Length,
     pub boundary_margin: Length,
+    pub stub_length: Length,
+    pub stub_reach: Length,
 }
 
 impl ItemLengthSpec {
     /// The lengths in px for a font size of `em` px.
     pub fn resolve(&self, em: f64) -> ItemLengths {
+        let margin = self.margin.px(em);
         ItemLengths {
             padding: self.padding.px(em),
             buffer: self.buffer.px(em),
-            margin: self.margin.px(em),
+            margin,
+            spacing: match self.spacing {
+                Some(l) => l.px(em),
+                None => 2.0 * margin,
+            },
             offset: self.offset.px(em),
             inner_padding: self.inner_padding.px(em),
             max_distance: self.max_distance.px(em),
@@ -214,6 +271,8 @@ impl ItemLengthSpec {
             clearance: self.clearance.px(em),
             boundary_gap: self.boundary_gap.px(em),
             boundary_margin: self.boundary_margin.px(em),
+            stub_length: self.stub_length.px(em),
+            stub_reach: self.stub_reach.px(em),
         }
     }
 }
@@ -1751,6 +1810,7 @@ struct ItemDefaults {
     mark: Value,
     wrap: Value,
     truncate: String,
+    align: String,
     internal: String,
     position_order: Value,
 }
@@ -1762,6 +1822,7 @@ impl ItemDefaults {
                 padding: o.length("defaults.padding"),
                 buffer: o.length("defaults.buffer"),
                 margin: o.length("defaults.margin"),
+                spacing: Length::from_value(&o.get("defaults.spacing")),
                 offset: o.length("placement.offset"),
                 inner_padding: o.length("placement.inner_padding"),
                 max_distance: o.length("placement.max_distance"),
@@ -1772,10 +1833,13 @@ impl ItemDefaults {
                 clearance: o.length("leaders.clearance"),
                 boundary_gap: o.length("placement.boundary.gap"),
                 boundary_margin: o.length("placement.boundary.margin"),
+                stub_length: o.length("placement.stub_length"),
+                stub_reach: o.length("placement.stub_reach"),
             },
             mark: o.get("defaults.mark"),
             wrap: o.get("defaults.wrap"),
             truncate: o.string("defaults.truncate"),
+            align: o.string("defaults.align"),
             internal: o.string("placement.internal"),
             position_order: o.get("placement.position_order"),
         }
@@ -1962,11 +2026,11 @@ fn build_item(
                     .unwrap_or(&defs.truncate),
             ),
             explicit,
-            align: v
-                .get("align")
-                .and_then(|a| a.as_str())
-                .unwrap_or("start")
-                .to_string(),
+            align: TextAlign::parse(
+                v.get("align")
+                    .and_then(|a| a.as_str())
+                    .unwrap_or(&defs.align),
+            ),
             font: f.clone(),
         }
     };

@@ -1,7 +1,7 @@
 {
   "kind": "place",
   "name": "SVG text boxes span the bundled font's ascender and descender",
-  "$comment": "The top position (box top at y = 46.056) is free of the text's box only if the box ends 0.2 em below the baseline (44.056); with the descender of the bundled font (0.293 em, 47.776) it is blocked and the label goes right.",
+  "$comment": "The top position (box top at y = 51.4: the label box fits the ink of `Alpha`) is free of the text's box only if the box ends 0.2 em below the baseline (49.4); with the descender of the bundled font (0.293 em, 53.12) it is blocked and the label goes right.",
   "problem": {
     "canvas": {
       "width": 200,
@@ -23,7 +23,7 @@
     ],
     "obstacles": {
       "svg": {
-        "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"120\"><text x=\"100\" y=\"36.056\" font-size=\"40\" text-anchor=\"middle\">MMMM</text></svg>",
+        "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"120\"><text x=\"100\" y=\"41.4\" font-size=\"40\" text-anchor=\"middle\">MMMM</text></svg>",
         "classes": [
           {
             "selector": "text",

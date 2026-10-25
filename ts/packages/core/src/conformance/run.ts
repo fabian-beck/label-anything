@@ -229,6 +229,14 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
       if (got !== hl[id]) f.push(`has_leader.${id}: expected ${show(hl[id])}, got ${got}`);
     }
   }
+  const sb = get(exp, "stub");
+  if (isObj(sb)) {
+    for (const id of Object.keys(sb)) {
+      const p = placementOf(r, id);
+      const got = p !== undefined && isObj(p.leader) && p.leader.stub === true;
+      if (got !== sb[id]) f.push(`stub.${id}: expected ${show(sb[id])}, got ${got}`);
+    }
+  }
   const mb = get(exp, "max_bends");
   if (typeof mb === "number") {
     for (const p of r.placements as unknown[]) {
@@ -252,6 +260,32 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
       const lines = get(get(p, "text"), "lines");
       const got = lines !== undefined ? lines : null;
       if (!jsonEq(got, tl[id])) f.push(`text_lines.${id}: expected ${show(tl[id])}, got ${show(got)}`);
+    }
+  }
+  const ta = get(exp, "text_align");
+  if (isObj(ta)) {
+    // every line starts where the alignment puts it (spec §5.1): centered in the box, or
+    // flush with the text block's left (`start`) or right (`end`) edge
+    for (const id of Object.keys(ta)) {
+      const p = placementOf(r, id);
+      const t = get(p, "text");
+      const want = ta[id];
+      if (get(t, "align") !== want) {
+        f.push(`text_align.${id}: expected ${show(want)}, got ${show(get(t, "align") ?? null)}`);
+        continue;
+      }
+      const nums = (v: unknown): number[] => (Array.isArray(v) ? v.map((x) => f64(x) ?? NaN) : []);
+      const w = f64(get(get(p, "box"), "w")) ?? NaN;
+      const pad = f64(get(t, "x_offset")) ?? NaN;
+      const xs = nums(get(t, "x_offsets"));
+      const ws = nums(get(t, "line_widths"));
+      if (xs.length !== ws.length || xs.length === 0) f.push(`text_align.${id}: ${xs.length} x_offsets for ${ws.length} lines`);
+      for (let k = 0; k < xs.length && k < ws.length; k++) {
+        const x = xs[k]!;
+        const lw = ws[k]!;
+        const off = want === "start" ? x - pad : want === "end" ? x + lw - (w - pad) : x + lw / 2 - w / 2;
+        if (!(Math.abs(off) <= 1e-6)) f.push(`text_align.${id}: line ${k} is ${off} px off`);
+      }
     }
   }
   const fo = get(exp, "font");
@@ -360,7 +394,8 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
     for (const it of Array.isArray(items) ? items : []) {
       const id = typeof get(it, "id") === "string" ? (get(it, "id") as string) : "";
       const p = placementOf(r, id);
-      if (p === undefined || p.model !== "adjacent") continue;
+      // (a label with a stub stands farther out)
+      if (p === undefined || p.model !== "adjacent" || (isObj(p.leader) && p.leader.stub === true)) continue;
       const b = boxOf(p);
       if (b === null) continue;
       const anchor = get(it, "anchor");
@@ -377,6 +412,38 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
       const dy = Math.max(Math.max(b.y0 - ay, ay - b.y1), 0);
       const d = Math.sqrt(dx * dx + dy * dy) - rr - offset;
       if (d > gap + 1e-9 || d < -1e-6) f.push(`touch_gap_max: ${id} gap ${d}`);
+    }
+  }
+  if (get(exp, "own_nearest") === true) {
+    // circle marks: no other item's mark is nearer to a label without a distant leader
+    // (adjacent or slider, with or without a stub) than its own mark
+    const dm = pointer(problem, "/defaults/mark");
+    const defaultMark = dm !== undefined ? dm : defaultOf("defaults.mark", "rust");
+    const circles: [string, number, number, number][] = [];
+    const items = get(problem, "items");
+    for (const it of Array.isArray(items) ? items : []) {
+      const anchor = get(it, "anchor");
+      const mark = get(anchor, "mark") ?? defaultMark;
+      if (get(mark, "shape") !== "circle") continue;
+      const id = typeof get(it, "id") === "string" ? (get(it, "id") as string) : "";
+      circles.push([id, f64(get(anchor, "x")) ?? 0, f64(get(anchor, "y")) ?? 0, f64(get(mark, "r")) ?? 0]);
+    }
+    for (const [id, ax, ay, ar] of circles) {
+      const p = placementOf(r, id);
+      if (p === undefined || (p.model !== "adjacent" && p.model !== "slider")) continue;
+      if (p.leader !== null && p.leader !== undefined && !(isObj(p.leader) && p.leader.stub === true)) continue;
+      const b = boxOf(p);
+      if (b === null) continue;
+      const dist = (x: number, y: number, rr: number): number => {
+        const dx = Math.max(Math.max(b.x0 - x, x - b.x1), 0);
+        const dy = Math.max(Math.max(b.y0 - y, y - b.y1), 0);
+        return Math.sqrt(dx * dx + dy * dy) - rr;
+      };
+      const own = dist(ax, ay, ar);
+      for (const [jd, x, y, rr] of circles) {
+        const d = dist(x, y, rr);
+        if (jd !== id && d < own - 1e-6) f.push(`own_nearest: ${id} is ${d} from ${jd}, ${own} from its mark`);
+      }
     }
   }
   if (get(exp, "deterministic") === true) {

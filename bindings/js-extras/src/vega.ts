@@ -23,7 +23,7 @@
 import type { FontSpec, LabelProblem, LabelResult } from "@label-anything/core";
 import { isPromiseLike, resolveEngine, type AnyEngine, type Engine } from "./engine.js";
 import { buildProblem, keepHostText, placeOptionsOf, resolveFont, type LabelOptions, type PointAnchor } from "./options.js";
-import { leaderPath } from "./render.js";
+import { leaderPath, lineStart } from "./render.js";
 
 /** The parts of the `vega` module used here. */
 export interface VegaLike {
@@ -104,11 +104,11 @@ export function registerVegaTransform(vega: VegaLike, defaults: VegaTransformDef
       const texts = pulse.materialize(pulse.SOURCE).source ?? [];
       const as = (_.as as string[] | undefined) ?? OUTPUT;
       const leaderAs = (_.leaderAs as string | undefined) ?? "leaderPath";
-      layout(vega, texts, size as [number, number], _, defaults).forEach(({ item, x, y, placed, leader }) => {
+      layout(vega, texts, size as [number, number], _, defaults).forEach(({ item, x, y, placed, leader, align }) => {
         item[as[0]!] = x;
         item[as[1]!] = y;
         item[as[2]!] = placed ? 1 : 0;
-        item[as[3]!] = "left";
+        item[as[3]!] = align;
         item[as[4]!] = "alphabetic";
         item[leaderAs] = leader ?? "";
       });
@@ -124,6 +124,8 @@ interface Laid {
   y: number | undefined;
   placed: boolean;
   leader: string | null;
+  /** Vega's `align` of the text item: its lines aligned as the engine laid them out. */
+  align: "left" | "center" | "right";
 }
 
 function layout(
@@ -216,12 +218,15 @@ function apply(texts: SceneItem[], result: LabelResult): Laid[] {
   const byId = new Map(result.placements.map((p) => [p.id, p]));
   return texts.map((item, i) => {
     const p = byId.get(String(i));
-    if (!p || !p.placed || !p.box) return { item, x: item.x, y: item.y, placed: false, leader: null };
+    if (!p || !p.placed || !p.box) return { item, x: item.x, y: item.y, placed: false, leader: null, align: "left" };
     const t = p.text ?? p.parts?.find((q) => q.text)?.text;
-    const x = p.box.x + (t?.x_offset ?? 0);
     const y = p.box.y + (t?.baseline_offsets[0] ?? p.box.h * 0.8);
     const leaders = p.leaders ?? (p.leader ? [p.leader] : []);
-    return { item, x, y, placed: true, leader: leaders.length ? leaders.map(leaderPath).join("") : null };
+    const leader = leaders.length ? leaders.map(leaderPath).join("") : null;
+    // Vega draws the lines of a text item itself: several lines take the engine's alignment
+    if (t && t.lines.length > 1 && t.align === "center") return { item, x: p.box.x + p.box.w / 2, y, placed: true, leader, align: "center" };
+    if (t && t.lines.length > 1 && t.align === "end") return { item, x: p.box.x + p.box.w - (t.x_offset ?? 0), y, placed: true, leader, align: "right" };
+    return { item, x: p.box.x + (t ? lineStart(t, 0) : 0), y, placed: true, leader, align: "left" };
   });
 }
 

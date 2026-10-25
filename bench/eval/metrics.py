@@ -19,6 +19,7 @@ from ..common import geom, spec
 from ..common.geom import Box, GridIndex, Point
 from ..common.model import (DIRECTIONS, PERCEPTUAL, Item, Problem, adjacent_box, load_problem,
                             position_order)
+from . import association as assoc
 from . import classes as clsmod
 from . import priority as pr
 from . import visual as vis
@@ -72,6 +73,15 @@ def _result_validator():
     import jsonschema
 
     return jsonschema.Draft202012Validator(spec.schema("result"))
+
+
+def _leader_own_shape(p, start, group_members: dict):
+    """The mark a leader of the placed label ``p`` starts at: its item's, or for a group label
+    the member's nearest to the leader's start."""
+    members = group_members.get(p.item.raw.get("group"))
+    if not members:
+        return p.item.own_shape
+    return min(members, key=lambda it: it.shape.sdist(start)).shape
 
 
 def _segments(pl: list[Point]):
@@ -322,6 +332,10 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     lengths_em, bends = [], []
     leader_items_hard = spec.is_hard(a_leader, "items")
     leader_lower_hard = lower_policy(a_leader) == "hard"
+    group_members: dict = {}
+    for it in prob.items:
+        if it.raw.get("group") is not None and it.shape is not None:
+            group_members.setdefault(it.raw["group"], []).append(it)
     baseline_port = opts.get("leaders", {}).get("port") == "baseline"
     for k, p in enumerate(placed):
         if not p.leaders:
@@ -356,10 +370,12 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                     note("leader_own_label", p.id)
                     conf_unary.add(k)
                 if leader_items_hard or leader_lower_hard:
-                    # leaders keep the clearance from other marks (spec §7); a fan or boundary leader
-                    # must only not cross a mark closer than the clearance to its start (crowded marks)
+                    # leaders keep the clearance from other marks (spec §7); a leader must only not
+                    # cross a mark closer than the clearance to its start when it is a fan or boundary
+                    # label's (crowded marks) or when that mark touches the box of its own mark
                     r = clearance(p.item) - tol
                     start = pl[0]
+                    own_box = _leader_own_shape(p, start, group_members).bbox()
                     for j in (item_index.query(q.grow(r)) if r > 0 else ()):
                         other = prob.items[j]
                         if (j, k) in leader_item_touch or vis.exempt_mark(p.item, other):
@@ -372,6 +388,8 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                                 continue
                             if other.own_shape.sdist(start) < clearance(p.item):
                                 rr = 0.0
+                        elif other.own_shape.sdist(start) < clearance(p.item) and other.shape.dist_box(own_box) <= tol:
+                            rr = 0.0
                         if other.shape.intersects_segment(a, b, rr):
                             if (j, k) not in leader_item_pairs:
                                 leader_item_pairs.add((j, k))
@@ -546,6 +564,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
 
     stats = result.get("stats", {}) or {}
     n_placed = len(placed)
+    stubs = sum(1 for p in placed if (p.raw.get("leader") or {}).get("stub"))
     out = {
         "problem": {"n_items": n, "canvas": [prob.width, prob.height] if prob.bounded else None,
                     "preset": opts.get("preset"), "omission": opts.get("priority", {}).get("omission", "strict"),
@@ -562,6 +581,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
         "leaders": {"count": sum(len(p.leaders) for p in placed),
                     "labels_with_leader": sum(1 for p in placed if p.leaders),
                     "rate": (sum(1 for p in placed if p.leaders) / n_placed) if n_placed else None,
+                    "stubs": stubs, "stub_rate": (stubs / n_placed) if n_placed else None,
                     "crossings": leader_crossings, "label_intersections": len(leader_label_pairs),
                     "length_mean_em": _mean(lengths_em), "length_max_em": max(lengths_em) if lengths_em else None,
                     "bends_mean": _mean(bends), "bends_max": max(bends) if bends else None},
@@ -591,6 +611,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                                                 "priority_inversions", "placed_weighted")},
         "result_check": {k: v[:max_list] for k, v in checks.items()},
         "visual": vis.evaluate_visual(prob, placed, classes, a_label, a_leader, max_list),
+        "association": assoc.evaluate_association(prob, placed, classes, a_label, box_index, tol, max_list),
     }
     out["summary"] = summary(out)
     return out
@@ -649,7 +670,8 @@ def summary(m: dict) -> dict:
         "usable_weighted": (m.get("usable") or {}).get("weighted"),
         "usable_prefix": (m.get("usable") or {}).get("prefix"),
         "leader_crossings": m["leaders"]["crossings"],
-        "leader_rate": m["leaders"]["rate"], "ambiguity_rate": m["ambiguity"]["rate"],
+        "leader_rate": m["leaders"]["rate"], "stub_rate": m["leaders"].get("stub_rate"),
+        "ambiguity_rate": m["ambiguity"]["rate"],
         "adjacent_gap_abs_mean": m["shape"]["adjacent_gap_abs_mean"], "internal_rate": m["shape"]["internal_rate"],
         "region_coverage": (m.get("spread") or {}).get("region_coverage"),
         "position_rank_mean": m["position"]["rank_mean"], "priority_inversions": m["priority"]["inversions"],
@@ -658,6 +680,7 @@ def summary(m: dict) -> dict:
         "soft_coverage_mean": _mean(soft), "runtime_ms": m["runtime"]["runtime_ms"],
         "schema_errors": len(m["result_check"]["schema_errors"]),
         **(vis.summary_fields(m["visual"]) if "visual" in m else {}),
+        **(assoc.summary_fields(m["association"]) if "association" in m else {}),
     }
 
 
@@ -692,14 +715,24 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
     higher or equal key (spec §9.2 removal test, 8 adjacent positions + area pole).
 
     Conservative: a position counts as feasible only if the label box *grown* by ``tol``
-    is free, so contacts within the tolerance never produce an inversion. Hard labels and
-    marks keep the label margin (spec §4.4) from it, by ``tol`` more.
+    is free, so contacts within the tolerance never produce an inversion. Hard labels keep
+    the label gap (the spacing, at least the margin) and hard marks the label margin
+    (spec §4.4) from it, by ``tol`` more; with ``placement.own_nearest`` the position must
+    be nearer to the item's own mark than to any other mark it may not cover by the margin
+    (or the distance between the marks), by ``tol`` more: the engine leaves such an item
+    out rather than place a label that could be another's (ADR placement/margin).
     """
     opts = prob.opts
     margin_opt = (opts.get("defaults") or {}).get("margin", "0.2em")
+    spacing_opt = (opts.get("defaults") or {}).get("spacing")
+    own_nearest = (opts.get("placement") or {}).get("own_nearest", True) is not False
 
     def margin(it: Item) -> float:
         return spec.length(margin_opt, it.label.em)
+
+    def label_gap(it: Item) -> float:
+        m = margin(it)
+        return max(m, 2 * m if spacing_opt is None else spec.length(spacing_opt, it.label.em))
 
     band = float(opts.get("priority", {}).get("band", 0) or 0)
     keys = pr.keys(infos, band)
@@ -718,7 +751,7 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
         if it.shape is not None:
             item_index.insert(it.index, it.shape.bbox())
     order = sorted(placed, key=lambda p: keys[p.id], reverse=True)
-    m_max = max((margin(p.item) for p in placed), default=0.0)
+    g_max = max((label_gap(p.item) for p in placed), default=0.0)
     box_index = GridIndex(32.0)
     seg_list: list[tuple[int, Point, Point]] = []
     seg_index = GridIndex(32.0)
@@ -743,15 +776,16 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
         if not cands:
             untestable.append(it.id)
         m_h = margin(it)
+        g_h = label_gap(it)
         for _side, b in cands:
             g = b.grow(tol)
             if area is not None and edge_hard and not area.contains_box(b):
                 continue
             ok = True
             if labels_hard:
-                for k in box_index.query(g.grow(m_h + m_max)):
+                for k in box_index.query(g.grow(g_h + g_max)):
                     o = order[k]
-                    if keys[o.id] >= kh and (o.box.overlaps(g) or _box_gap(o.box, b) < max(m_h, margin(o.item)) + tol):
+                    if keys[o.id] >= kh and (o.box.overlaps(g) or _box_gap(o.box, b) < max(g_h, label_gap(o.item)) + tol):
                         ok = False
                         break
             if ok and leader_labels_hard:
@@ -772,6 +806,19 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
                             continue
                     lower = keys[other.id] < kh and not same_group(it, other)
                     if lower_hard if lower else items_hard:
+                        ok = False
+                        break
+            if ok and own_nearest and own is not None:
+                # clearly nearer to its own mark than to any mark it may not cover (spec §4.4)
+                d_own = own.sdist_box(b)
+                for j in item_index.query(b.grow(max(d_own, 0.0) + m_h + tol)):
+                    other = prob.items[j]
+                    if other.id == it.id or same_group(it, other):
+                        continue
+                    if not (lower_hard if keys[other.id] < kh else items_hard):
+                        continue
+                    s = min(m_h, math.dist(other.ref, it.ref))
+                    if other.shape.sdist_box(b) < d_own + s + tol:
                         ok = False
                         break
             if ok:

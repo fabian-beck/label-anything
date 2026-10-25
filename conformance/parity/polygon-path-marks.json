@@ -9,9 +9,9 @@
         "placed": true,
         "box": {
           "x": 124.392,
-          "y": 99.05599999999998,
+          "y": 106.59200000000001,
           "w": 51.21600000000001,
-          "h": 19.944000000000017
+          "h": 12.407999999999987
         },
         "anchor": [
           150.0,
@@ -26,12 +26,16 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.488
           ],
           "line_widths": [
             47.616
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -51,9 +55,9 @@
         "placed": true,
         "box": {
           "x": 319.112,
-          "y": 109.20182251803891,
+          "y": 116.30582251803892,
           "w": 61.775999999999954,
-          "h": 19.944000000000017
+          "h": 12.840000000000003
         },
         "anchor": [
           350.0,
@@ -68,12 +72,16 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.919999999999998
           ],
           "line_widths": [
             58.176
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,
@@ -93,9 +101,9 @@
         "placed": true,
         "box": {
           "x": 220.726,
-          "y": 264.05600000000004,
+          "y": 271.592,
           "w": 58.548,
-          "h": 19.94399999999996
+          "h": 12.408000000000015
         },
         "anchor": [
           250.0,
@@ -110,12 +118,16 @@
           "used": "original",
           "truncated": false,
           "baseline_offsets": [
-            14.628
+            10.488
           ],
           "line_widths": [
             54.948
           ],
           "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
           "font_size": 12.0,
           "font_family": "default",
           "font_weight": 400,

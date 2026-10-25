@@ -1,8 +1,9 @@
 // Browser tests of the live header of the documentation's home page (dist/hero.js, on a
 // page with the markup of docs/_overrides/home.html): the logo keeps its place, the labels
 // keep off each other and the header's text, the things show what the engine does (an
-// internal label, a group, wrapping, leader styles), nothing moves by itself, and dragging,
-// clicking, shuffling and resetting work.
+// internal label, a group, wrapping, leader styles), nothing moves by itself (unless the
+// header reveals more things, until the user takes over), and dragging, clicking, shuffling
+// and resetting work.
 import { expect, test } from "@playwright/test";
 import { startServer } from "./server.mjs";
 
@@ -51,8 +52,8 @@ const PAGE = `<!doctype html>
     </h1>
     <p data-la-avoid="text">Put a label on anything.</p>
     <p data-la-avoid="text">A label placement engine for charts, maps and diagrams. Hand it your points and shapes,
-      their labels and what must stay visible: it finds a place for every label, with no overlaps and leader
-      lines where needed, and says why a label had to go.</p>
+      their labels and what must stay visible: it places the labels without overlaps, with leader lines where
+      needed, and says why any label had to go.</p>
     <ul data-la-avoid="children"><li>Python</li><li>JavaScript</li><li>Java</li><li>Rust</li></ul>
     <div data-la-avoid="children"><a href="#">Try the playground</a> <a href="#">Get started</a></div>
     <p data-la-hero-hint data-la-avoid>Live <span data-la-hero-styles>Leaders
@@ -66,10 +67,10 @@ const PAGE = `<!doctype html>
 <script type="module" src="../hero.js"></script>
 </body></html>`;
 
-async function open(page) {
+async function open(page, body = PAGE) {
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.route(`${base}hero-test/`, (route) => route.fulfill({ contentType: "text/html; charset=utf-8", body: PAGE }));
+  await page.route(`${base}hero-test/`, (route) => route.fulfill({ contentType: "text/html; charset=utf-8", body }));
   await page.goto(`${base}hero-test/`);
   // the first solve, and the one after it (with a warm engine)
   await page.waitForFunction(() => (globalThis.labelAnythingHero?.solves ?? 0) >= 2, null, { timeout: 30_000 });
@@ -171,6 +172,28 @@ test("nothing moves by itself", async ({ page }) => {
   await page.waitForTimeout(1500);
   expect(await drawn()).toEqual(before);
   expect(await page.evaluate(() => globalThis.labelAnythingHero.solves)).toBe(solves);
+});
+
+test("with data-la-hero-reveal, more things come by themselves until the user takes over", async ({ page }) => {
+  const errors = await open(page, PAGE.replace("data-la-hero>", "data-la-hero data-la-hero-reveal>"));
+  const total = () => page.evaluate(() => globalThis.labelAnythingHero.result.stats.total);
+  const start = await total();
+  await page.waitForFunction((n) => globalThis.labelAnythingHero.result.stats.total >= n + 2, start, { timeout: 15_000 });
+  await page.waitForTimeout(900);
+  const s = await state(page);
+  expect(byId(s, "add0")?.placed).toBe(true);
+  expect(byId(s, "name").placed).toBe(true);
+  expect(s.stats.hard_violations).toBe(0);
+  const boxes = s.placements.filter((p) => p.placed).map(boxOf);
+  for (const b of boxes) for (const t of s.text) expect(overlaps(b, t)).toBe(false);
+  // a click on an empty spot adds one more, and no more come by themselves
+  const hero = await page.locator("[data-la-hero]").boundingBox();
+  await page.mouse.click(hero.x + hero.width - 20, hero.y + hero.height - 60);
+  await page.waitForTimeout(1000);
+  const clicked = await total();
+  await page.waitForTimeout(3500);
+  expect(await total()).toBe(clicked);
+  expect(errors).toEqual([]);
 });
 
 test("shuffle moves every thing to a free place, a pair stays a pair", async ({ page }) => {

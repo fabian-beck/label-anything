@@ -42,7 +42,7 @@ this repository, read-only), and say whether the code matches the original.
   sums the ≤ 9 blocks with fractional weights.
 * `grid/occupancy.rs:78-90`: `freeze` builds a SAT for the occupancy grid. The query is at
   `:174-177`.
-* Docs: `docs/adr/0005-coverage-grids-and-summed-area-tables.md`, `spec/spec.md:146`
+* Docs: `docs/adr/obstacles/coverage-grids.md`, `spec/spec.md:146`
   (§4.1).
 
 **What it does.** Each obstacle class gets a per-class coverage grid (0..255 per cell) and
@@ -76,7 +76,7 @@ inclusion–exclusion). Engineering additions, none of which needs a fix:
   interpolating the SAT.
 * The `u8` grid is dropped after the SAT is built (cells are SAT differences), so memory
   is 4 B per cell and class.
-* Suggested doc change: cite Crow 1984 in ADR 0005 and spec §4.1. The "integral image" of
+* Suggested doc change: cite Crow 1984 in ADR obstacles/coverage-grids and spec §4.1. The "integral image" of
   Viola & Jones (computer vision) is the same structure (UNVERIFIED, not searched).
 
 ---
@@ -243,7 +243,7 @@ this for area anchors, but polygon *marks* only try the pole and the reference p
   * `solver/local.rs:87` (seed `solver.seed ^ 0x9E3779B9`);
   * `priority.rs:351` (random tie-break permutation);
   * `grid/occupancy.rs:242` (tests).
-* Spec: `spec/spec.md:1112-1126` (§10.4). `docs/adr/0007` and `ts/packages/core/src/pcg.ts`
+* Spec: `spec/spec.md:1112-1126` (§10.4). `docs/adr/solver/determinism.md` and `ts/packages/core/src/pcg.ts`
   (16-bit limbs). Test vectors: `conformance/math/pcg32.json`.
 
 **Source.** O'Neill, M. E. (2014). *PCG: A family of simple fast space-efficient
@@ -302,7 +302,7 @@ HMC-CS-2014-0905, Harvey Mudd College, 5 Sept 2014.
   whenever they improve the priority objective.
 * Budget: `rust/crates/la-core/src/lib.rs:196-197`:
   `iters = min(max_iterations, budget_ms·100, 400·n)`, i.e. 10,000 moves at the default
-  100 ms (`docs/adr/0007`, `docs/concepts/solver.md`).
+  100 ms (`docs/adr/solver/time-budget.md`, `docs/concepts/solver.md`).
 * Spec: `spec/spec.md:1047-1056` (§10.2).
 
 **Sources.**
@@ -564,7 +564,7 @@ heuristics (no source verified).
   * `:153` give up if the pool has more than 3000 candidates;
   * `:157-174` the pairwise conflict lists.
 * `rust/crates/la-core/src/lib.rs:216-217`: node budget `max(budget·2000, 10000)`.
-* `docs/adr/0014-exact-search-branch-and-bound.md`.
+* `docs/adr/solver/search.md`.
 
 **Sources (UNVERIFIED; searches exhausted).**
 * Verweij, B., & Aardal, K. (1999). *An optimisation algorithm for maximum independent set
@@ -690,7 +690,7 @@ Knuth–Plass as background and state the min–max objective explicitly.
     parameter steps after applying the CTM (`:139-185`);
   * `:30-50` `arc_segments`, the sagitta formula `n = ceil(Δ / (2·acos(1 − tol/r)))` with
     r = the largest singular value of the ellipse map, at least one segment per 90°;
-  * tolerance 0.25 px (`spec/spec.md:104, 256`); `docs/adr/0013-svg-implementation.md:43`.
+  * tolerance 0.25 px (`spec/spec.md:104, 256`); `docs/adr/obstacles/svg.md`.
 * Coverage: `rust/crates/la-core/src/grid/raster.rs`.
   * `:1-6` 4×4 supersampling per cell into 16-bit sample masks, union by OR, plus a TOUCH
     bit;
@@ -722,8 +722,8 @@ Knuth–Plass as background and state the min–max objective explicitly.
   because the ellipse is a contraction of the circle of radius r, so chord errors shrink.
 * Supersampled coverage has a quantization error of up to 1/16 of a cell per boundary
   cell. "Touch" marking makes "any coverage" conservative, which is consistent with
-  ADR 0005.
-* No change needed beyond citing Wang/Filip and Amanatides–Woo in ADR 0013 and spec §4.2.
+  ADR obstacles/coverage-grids.
+* No change needed beyond citing Wang/Filip and Amanatides–Woo in ADR obstacles/svg and spec §4.2.
 
 ---
 
@@ -836,7 +836,7 @@ simple operationalization; no deviation can be claimed without reading the sourc
    DT, so poles and seeds are centres of the largest boxes with the label's aspect ratio.
    Both F&H/Meijster and polylabel generalize directly.
 3. **Branch and bound.** Add forward checking (cheapest *compatible* candidate) and simple
-   clique bounds (Verweij & Aardal). Order by MRV within equal priority. State in ADR 0014
+   clique bounds (Verweij & Aardal). Order by MRV within equal priority. State in ADR solver/search
    that the objective is static-only.
 4. **Greedy ordering and lookahead.** Use cost-aware constrainedness (count near-best
    candidates) and cost-aware lookahead (regret: the increase of the neighbour's best
@@ -847,7 +847,7 @@ simple operationalization; no deviation can be claimed without reading the sourc
 6. **Docs.**
    * Spec §4.7 claims DT-based early rejection, which is not in the code.
    * Spec §10.2 says "median |Δ|", but the code takes the median of positive Δ.
-   * Cite Crow (ADR 0005), Meijster plus F&H (dt.rs), Garcia-Castellanos plus Agafonkin
+   * Cite Crow (ADR obstacles/coverage-grids), Meijster plus F&H (dt.rs), Garcia-Castellanos plus Agafonkin
      (polylabel), O'Neill and Lemire (pcg.rs), Metropolis, Kirkpatrick and Christensen
      (local.rs), Knuth–Plass as contrast (wrap.rs), Wang/Filip (flatten.rs).
    * The `next_below` bias should be documented.

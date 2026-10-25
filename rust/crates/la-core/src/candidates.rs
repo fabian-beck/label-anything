@@ -82,6 +82,9 @@ pub struct Leader {
     pub curve: Option<[P; 3]>,
     /// For fan leaders: which member the leader points to.
     pub member: Option<u32>,
+    /// A stub (spec §6.9): the short leader of an adjacent or slider label near other
+    /// marks.
+    pub stub: bool,
 }
 
 impl Leader {
@@ -101,6 +104,7 @@ impl Leader {
             underline: None,
             curve: None,
             member: None,
+            stub: false,
         }
     }
     /// Segments including the underline.
@@ -266,6 +270,10 @@ impl Cand {
             lshape: None,
             warm: false,
         }
+    }
+    /// The label has a stub (spec §6.9).
+    pub fn has_stub(&self) -> bool {
+        self.leaders.first().is_some_and(|l| l.stub)
     }
     /// Bounding box of label and leaders.
     pub fn bbox(&self) -> Rect {
@@ -479,7 +487,7 @@ fn warm_leader(
     if model.leaders.port == crate::model::opts::Port::Baseline && style != LeaderStyle::Orthogonal
     {
         if let Some(t) = &v.text {
-            let x0 = rect.x0 + t.x_offset;
+            let x0 = rect.x0 + t.x_offsets[0];
             let far = if port.x <= rect.center().x {
                 x0 + t.widths[0]
             } else {
@@ -659,18 +667,24 @@ pub fn warm_nudges(
     out
 }
 
-/// Adjacent and slider candidates of one variant.
+/// Adjacent and slider candidates of one variant. With `stubs`, a candidate that another
+/// item's mark comes near is replaced by the same position `stub_length` farther out, with a
+/// stub, where the stub meets a side of the label squarely and the candidate is statically
+/// feasible (spec §6.9).
 pub fn adjacent(
     item: &Item,
     vi: usize,
     v: &Variant,
     slider_per_gap: usize,
     models: Models,
+    stubs: Option<&crate::leaders::Stubs>,
     out: &mut Vec<Cand>,
 ) {
     let hw = v.w * 0.5;
     let hh = v.h * 0.5;
     let o = item.len.offset;
+    // the offset of labels with a stub
+    let os = o + item.len.stub_length;
     let shape = &item.shape;
     // rank of each fixed position by angular index (its first occurrence in the order)
     let mut rank_at = [None; 8];
@@ -684,15 +698,31 @@ pub fn adjacent(
             let a = p.angular_index();
             let c = touch_from_support(st.pos[a], pos_dirs()[a], hw, hh);
             let c = push_in(shape, o, c, hw, hh);
-            out.push(Cand::new(
-                it,
-                vi as u16,
-                v.level,
-                Kind::Adjacent,
-                Side::Pos(p),
-                r as f64,
-                Rect::from_center(c, hw, hh),
-            ));
+            let cand = |rect| {
+                Cand::new(
+                    it,
+                    vi as u16,
+                    v.level,
+                    Kind::Adjacent,
+                    Side::Pos(p),
+                    r as f64,
+                    rect,
+                )
+            };
+            let plain = cand(Rect::from_center(c, hw, hh));
+            let stubbed = match stubs {
+                Some(s) if s.ambiguous(item, &plain.rect) => {
+                    let mut c = touch_center(shape, os, pos_dirs()[a], hw, hh);
+                    if matches!(p, Pos::Left | Pos::Right) {
+                        // the stub meets the middle of the label's side
+                        c.y = shape.reference().y;
+                    }
+                    let c = push_in(shape, os, c, hw, hh);
+                    s.stubbed(item, v, cand(Rect::from_center(c, hw, hh)))
+                }
+                _ => None,
+            };
+            out.push(stubbed.unwrap_or(plain));
         }
     }
     if !models.has(Models::SLIDER) || slider_per_gap == 0 {
@@ -705,13 +735,11 @@ pub fn adjacent(
         let (Some(ra), Some(rb)) = (rank_at[k], rank_at[(k + 1) % 8]) else {
             continue;
         };
-        let n = cspace_path(shape, o, hw, hh, k, Some(st), &mut path);
-        sample_path(&path[..n], slider_per_gap, shape, o, hw, hh, |j, c| {
+        let cand = |j: usize, c: P| {
             let t = (j + 1) as f64 / (slider_per_gap + 1) as f64;
             let rank = ra + (rb - ra) * t + 0.25;
             let side = if t < 0.5 { a } else { b };
-            let c = push_in(shape, o, c, hw, hh);
-            out.push(Cand::new(
+            Cand::new(
                 it,
                 vi as u16,
                 v.level,
@@ -719,8 +747,39 @@ pub fn adjacent(
                 Side::Pos(side),
                 rank,
                 Rect::from_center(c, hw, hh),
-            ));
+            )
+        };
+        let n = cspace_path(shape, o, hw, hh, k, Some(st), &mut path);
+        let Some(s) = stubs else {
+            sample_path(&path[..n], slider_per_gap, shape, o, hw, hh, |j, c| {
+                out.push(cand(j, push_in(shape, o, c, hw, hh)))
+            });
+            continue;
+        };
+        let mut samples: Vec<P> = Vec::with_capacity(slider_per_gap);
+        sample_path(&path[..n], slider_per_gap, shape, o, hw, hh, |_, c| {
+            samples.push(push_in(shape, o, c, hw, hh))
         });
+        // the boxes another mark comes near, and the samples of the path of labels with
+        // a stub (made only when needed)
+        let near: Vec<bool> = samples
+            .iter()
+            .map(|&c| s.ambiguous(item, &Rect::from_center(c, hw, hh)))
+            .collect();
+        let mut far: Vec<P> = Vec::new();
+        if near.contains(&true) {
+            let n = cspace_path(shape, os, hw, hh, k, None, &mut path);
+            sample_path(&path[..n], slider_per_gap, shape, os, hw, hh, |_, c| {
+                far.push(push_in(shape, os, c, hw, hh))
+            });
+        }
+        for (j, &c) in samples.iter().enumerate() {
+            let stubbed = match far.get(j) {
+                Some(&cf) if near[j] => s.stubbed(item, v, cand(j, cf)),
+                _ => None,
+            };
+            out.push(stubbed.unwrap_or_else(|| cand(j, c)));
+        }
     }
 }
 

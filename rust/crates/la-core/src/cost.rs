@@ -5,7 +5,7 @@ use crate::env::Env;
 use crate::geom::{Rect, EPS, P};
 use crate::labels::Variant;
 use crate::math::{clampf, maxf, minf};
-use crate::model::Model;
+use crate::model::{Item, Model};
 use crate::obstacles::{AvoidW, Obstacles, OwnMark};
 
 /// Named cost terms (for `cost_breakdown`).
@@ -66,6 +66,26 @@ impl Acc<'_> {
             self.relaxed = false;
         }
     }
+}
+
+/// Whether the mark of another item (not of the item's group) comes closer than
+/// `stub_reach` to the label box `r` of `item`: the label could be read as that item's
+/// (spec §6.9). `buf` is scratch space for the item query.
+pub fn crowded(model: &Model, obs: &Obstacles, item: &Item, r: &Rect, buf: &mut Vec<u32>) -> bool {
+    let reach = item.len.stub_reach;
+    // a label against a mark larger than its font size reads as attached to it
+    let b = item.shape.bbox();
+    if reach <= 0.0 || maxf(b.w(), b.h()) > item.em() {
+        return false;
+    }
+    let i = item.index;
+    obs.item_index.query(&r.inflate(reach), buf);
+    buf.iter().any(|&j| {
+        let j = j as usize;
+        j != i
+            && model.group_of.get(j).copied().flatten() != Some(i)
+            && model.items[j].shape.dist_rect(r) < reach
+    })
 }
 
 fn finish(c: &mut Cand, acc: Acc) {
@@ -135,13 +155,31 @@ impl<'a> Evaluator<'a> {
         } else {
             item.len.margin
         };
+        // a label without a distant leader comes no closer to another item's mark than to
+        // its own, and without a stub it is nearer to its own by its margin (spec §4.4)
+        let near_rule = model.placement.own_nearest
+            && c.kind != Kind::Internal
+            && (c.leaders.is_empty() || c.has_stub());
+        let d_own = if near_rule {
+            item.shape.dist_rect(&r)
+        } else {
+            0.0
+        };
+        let clear = if near_rule && !c.has_stub() {
+            margin
+        } else {
+            0.0
+        };
         let reach = maxf(
-            if item.len.buffer > gap_guess {
-                item.len.buffer
-            } else {
-                gap_guess
-            },
-            margin,
+            maxf(
+                if item.len.buffer > gap_guess {
+                    item.len.buffer
+                } else {
+                    gap_guess
+                },
+                margin,
+            ),
+            d_own + clear,
         );
         self.buf.clear();
         obs.item_index.query(&r.inflate(reach), &mut self.buf);
@@ -188,13 +226,30 @@ impl<'a> Evaluator<'a> {
             }
             if c.label_overlaps_shape(sj) {
                 acc.violate(Block::Items, false, 0.0);
-            } else if margin > crate::geom::EPS {
-                // the margin (up to rounding), but never more than the mark keeps from the
-                // own mark's box
-                let d = sj.dist_rect(&r);
-                if d < margin - crate::geom::EPS && d < sj.dist_rect(&item.shape.bbox()) {
-                    acc.violate(Block::Items, false, 0.0);
-                }
+                continue;
+            }
+            let d = sj.dist_rect(&r);
+            // the margin (up to rounding), but never more than the mark keeps from the own
+            // mark's box
+            if margin > crate::geom::EPS
+                && d < margin - crate::geom::EPS
+                && d < sj.dist_rect(&item.shape.bbox())
+            {
+                acc.violate(Block::Items, false, 0.0);
+            }
+            // nearer to the label than its own mark, or, without a stub, not a margin farther
+            // (at most as far as the two marks' reference points lie apart; the marks of the
+            // item's group aside)
+            let sep = if clear > 0.0 {
+                minf(clear, sj.reference().dist(item.shape.reference()))
+            } else {
+                0.0
+            };
+            if near_rule
+                && d < d_own + sep - crate::geom::EPS
+                && model.group_of.get(j).copied().flatten() != Some(i)
+            {
+                acc.violate(Block::Items, false, 0.0);
             }
         }
         if let AvoidW::Soft(wt) = dy.label_items {
@@ -312,13 +367,17 @@ impl<'a> Evaluator<'a> {
         }
         // 5. position
         acc.add("position", w.position * c.rank / 8.0);
-        // 6. distance from own shape
+        // 6. distance from own shape (the rule of step 2 measured it already)
         let gap = if c.kind == Kind::Internal {
             0.0
+        } else if near_rule {
+            d_own
         } else {
             item.shape.dist_rect(&r)
         };
-        if c.leaders.is_empty() {
+        // (a stub is part of the distance, not a leader to a distant label)
+        let stub = c.has_stub();
+        if c.leaders.is_empty() || stub {
             acc.add("distance", w.distance * gap / em);
         }
         // 7. shape penalty
@@ -331,8 +390,9 @@ impl<'a> Evaluator<'a> {
             );
             acc.add("edge", w.edge * maxf(0.0, 1.0 - maxf(d, 0.0) / em));
         }
-        // 9. ambiguity (the item query above covers the reach of adjacent labels)
-        if w.ambiguity > 0.0 && c.kind != Kind::Internal {
+        // 9. ambiguity (the item query above covers the reach of adjacent labels); a stub
+        // resolves it
+        if w.ambiguity > 0.0 && c.kind != Kind::Internal && !stub {
             let amb = if let Some(l) = c.leaders.first() {
                 0.5 * self.ambiguity_point(i, l.port, em)
             } else if gap <= gap_guess {
@@ -342,7 +402,16 @@ impl<'a> Evaluator<'a> {
             };
             acc.add("ambiguity", w.ambiguity * amb);
         }
-        // 10. stability
+        // 10. crowd: with stubs, a label beside its mark that another item's mark comes
+        // near, and that has no stub, costs as much as a leader (spec §6.9)
+        if model.placement.stubs
+            && !stub
+            && matches!(c.kind, Kind::Adjacent | Kind::Slider)
+            && crowded(model, self.obs, item, &r, &mut self.buf)
+        {
+            acc.add("crowd", w.leader);
+        }
+        // 11. stability
         if w.stability > 0.0 {
             if let Some(Some(b)) = model.warm.get(&item.id) {
                 let d = b.center().dist(r.center());
@@ -352,7 +421,7 @@ impl<'a> Evaluator<'a> {
                 acc.add("stability", w.stability * (minf(1.0, d / em) + tail));
             }
         }
-        // 11. host cost
+        // 12. host cost
         if self.env.has_cost_callback() {
             acc.add(
                 "user",
@@ -426,10 +495,15 @@ impl<'a> Evaluator<'a> {
         let w = &model.weights;
         let dy = &obs.dynamic;
         let hw = model.leaders.width * 0.5;
-        acc.add(
-            "leader",
-            w.leader + w.leader_length * l.len / em + w.bends * l.bends as f64,
-        );
+        if l.stub {
+            // a stub (spec §6.9) costs its length, not a leader
+            acc.add("stub", w.leader_length * l.len / em);
+        } else {
+            acc.add(
+                "leader",
+                w.leader + w.leader_length * l.len / em + w.bends * l.bends as f64,
+            );
+        }
         // region borders on the way
         if let Some(rm) = &obs.regions {
             acc.add(
@@ -461,17 +535,21 @@ impl<'a> Evaluator<'a> {
             }
         }
         // other items: clearance (not from the group's members, and not from a mark that
-        // covers the leader's anchor, or a column leader's start: no leader avoids it); the
-        // leader of a fan or boundary label must only not cross a mark closer than the
-        // clearance to its start (it leaves a crowd of touching marks, in the order of its
-        // column)
+        // covers the leader's anchor, or a column leader's start: no leader avoids it). A
+        // leader must only not cross a mark closer than the clearance to its start when it
+        // is a fan or boundary label's (it leaves a crowd of touching marks, in the order of
+        // its column) or when that mark touches the box of its own mark (it leaves a spot of
+        // touching marks, which no leader could keep the clearance from)
         let bb = l.bbox().inflate(item.len.clearance);
         self.buf.clear();
         obs.item_index.query(&bb, &mut self.buf);
         let clearance = item.len.clearance;
-        let anchor = match l.member {
-            Some(m) => model.items[m as usize].anchor,
-            None => item.anchor,
+        let (anchor, own_box) = match l.member {
+            Some(m) => (
+                model.items[m as usize].anchor,
+                model.items[m as usize].shape.bbox(),
+            ),
+            None => (item.anchor, item.shape.bbox()),
         };
         let start = l.pts[0];
         for &j in &self.buf {
@@ -494,7 +572,9 @@ impl<'a> Evaluator<'a> {
             };
             match pol {
                 AvoidW::Hard => {
-                    let lim = if column && sj.signed_distance(start) < clearance {
+                    let lim = if sj.signed_distance(start) < clearance
+                        && (column || sj.dist_rect(&own_box) <= EPS)
+                    {
                         EPS
                     } else {
                         clearance - EPS

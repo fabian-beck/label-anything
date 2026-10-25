@@ -1,0 +1,177 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 400,
+      "height": 200
+    },
+    "items": [
+      {
+        "id": "p",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Rome\n2.8 million"
+        }
+      },
+      {
+        "id": "s",
+        "anchor": {
+          "type": "point",
+          "x": 300,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Saint Vincent and the Grenadines",
+          "align": "start",
+          "wrap": {
+            "max_width": "8em",
+            "max_lines": 2
+          }
+        }
+      }
+    ],
+    "defaults": {
+      "align": "end"
+    }
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "p",
+        "placed": true,
+        "box": {
+          "x": 69.02799999999999,
+          "y": 70.26400000000001,
+          "w": 61.94400000000002,
+          "h": 26.73599999999999
+        },
+        "anchor": [
+          100.0,
+          100.0
+        ],
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Rome",
+            "2.8 million"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.367999999999999,
+            24.767999999999997
+          ],
+          "line_widths": [
+            32.712,
+            58.344
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            27.432,
+            1.7999999999999998
+          ],
+          "align": "end",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.024999999999999998,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "s",
+        "placed": true,
+        "box": {
+          "x": 249.24,
+          "y": 69.75999999999999,
+          "w": 101.51999999999998,
+          "h": 27.24000000000001
+        },
+        "anchor": [
+          300.0,
+          100.0
+        ],
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Saint Vincent and",
+            "the Grenadines"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998,
+            25.319999999999997
+          ],
+          "line_widths": [
+            97.92,
+            86.412
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998,
+            1.7999999999999998
+          ],
+          "align": "start",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.15,
+        "degrade_steps": [
+          "wrap"
+        ],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 1
+        }
+      }
+    ],
+    "stats": {
+      "placed": 2,
+      "total": 2,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 800,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 80,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.175,
+      "degraded": {
+        "wrapped": 2
+      },
+      "grid": {
+        "cell": 3.0,
+        "cols": 134,
+        "rows": 67,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

@@ -3,8 +3,8 @@
   "name": "an item whose statically feasible candidates placed labels block is omitted_by_priority",
   "problem": {
     "canvas": {
-      "width": 400,
-      "height": 300
+      "width": 396,
+      "height": 296
     },
     "items": [
       {

@@ -126,7 +126,7 @@ impl<'a> Solve<'a> {
                 pri.prio.iter().map(|p| p.key).collect(),
                 model.items.iter().map(|it| it.len.clearance).collect(),
                 model.items.iter().map(|it| it.em()).collect(),
-                model.items.iter().map(|it| it.len.margin).collect(),
+                model.items.iter().map(|it| it.len.label_gap()).collect(),
                 if model.leaders.min_angle_between > 0.0 {
                     la_expr::det_math::cos_deg(model.leaders.min_angle_between)
                 } else {
@@ -142,7 +142,8 @@ impl<'a> Solve<'a> {
                         obs.index_cell,
                     )
                 }),
-            ),
+            )
+            .with_stubs(model.placement.stubs),
             reasons: vec![None; n],
             steps_tried: vec![Vec::new(); n],
             level_done: vec![0; n],
@@ -160,6 +161,27 @@ impl<'a> Solve<'a> {
             cancelled: false,
             start_ms,
         }
+    }
+
+    /// The variant of placed item `j` in a column (fan or boundary, spec §6.6, §6.8): its
+    /// placed one, at full size with `full` when the ladder shrank it.
+    pub fn column_variant(&self, j: usize, c: u32, full: bool) -> usize {
+        let v = self.cands[c as usize].variant as usize;
+        if full {
+            labels::full_size(&self.variants[j], v)
+        } else {
+            v
+        }
+    }
+
+    /// Whether a placed label among `members` is shrunk: a column takes them at full size
+    /// first, and with their placed sizes only when that column fails (spec §6.6, §6.8).
+    pub fn any_shrunk(&self, members: &[usize]) -> bool {
+        members.iter().any(|&j| {
+            self.state.placed[j].is_some_and(|c| {
+                self.column_variant(j, c, true) != self.column_variant(j, c, false)
+            })
+        })
     }
 
     /// Generate and evaluate candidates for `variants[vi_range]` of item `i` with `models`.
@@ -674,6 +696,7 @@ fn raw_candidates(
         }
         !placed.is_some_and(|occ| w.is_some_and(|w| occ.blocked_in(&w)))
     };
+    let stubs = crate::leaders::Stubs::of(model, obs);
     let mut fresh: Vec<Cand> = Vec::new();
     for &vi in vis {
         let v = &variants[vi];
@@ -691,6 +714,7 @@ fn raw_candidates(
                 v,
                 model.placement.slider_per_gap,
                 models,
+                stubs.as_ref(),
                 &mut fresh,
             );
         } else {
@@ -700,6 +724,7 @@ fn raw_candidates(
                 v,
                 model.placement.slider_per_gap,
                 models,
+                stubs.as_ref(),
                 &mut fresh,
             );
             if let Some(rank) = internal_rank {

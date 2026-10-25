@@ -207,7 +207,7 @@ export class ScatterScene implements Scene {
     return {
       preset: "scatter" as const,
       canvas: { region: [this.#plot.x0, this.#plot.y0, this.#plot.x1 - this.#plot.x0, this.#plot.y1 - this.#plot.y0] as [number, number, number, number] },
-      placement: { max_distance: "6em" },
+      placement: { max_distance: "6em", stubs: "auto" as const },
       leaders: { max_length: "7em" },
       priority: { font_classes: (this.params.data === "countries" ? FONT_CLASSES[1]!.value : []) as never },
     };

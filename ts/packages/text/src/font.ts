@@ -87,6 +87,11 @@ export class Font {
   /** Line gap in font units (`hhea.lineGap` or `OS/2.sTypoLineGap`). */
   readonly lineGap: number;
   private readonly advances: Uint16Array;
+  /**
+   * Vertical extent `[yMin, yMax]` of every glyph's outline (2 per glyph), from the private
+   * table `LAvb` of the bundled metrics fonts (spec §5.2); null without one.
+   */
+  private readonly vbounds: Int16Array | null;
   private readonly cmap: CharMap;
   private readonly kerning: Kerning;
   private glyphs = new Uint16Array(64);
@@ -122,6 +127,8 @@ export class Font {
     this.descender = descender;
     this.lineGap = lineGap;
     this.advances = Font.parseAdvances(tables.required("hmtx"), longMetrics, numGlyphs);
+    const lavb = tables.get("LAvb");
+    this.vbounds = lavb === null ? null : Font.parseVbounds(lavb, numGlyphs);
     const cmapTable = tables.required("cmap");
     const cmap = readTable("cmap", () => CharMap.parse(cmapTable, numGlyphs));
     if (cmap === null) throw invalid("no Unicode 'cmap' subtable of format 4 or 12");
@@ -139,6 +146,62 @@ export class Font {
     });
     advances.fill(advances[count - 1], count);
     return advances;
+  }
+
+  /**
+   * The `LAvb` table: version 1, `numGlyphs` as in `maxp`, then `(yMin, yMax)` per glyph
+   * (int16, font units). Anything else is ignored.
+   */
+  private static parseVbounds(t: Reader, numGlyphs: number): Int16Array | null {
+    try {
+      if (t.u16(0) !== 1 || t.u16(2) !== numGlyphs) return null;
+      const out = new Int16Array(2 * numGlyphs);
+      for (let g = 0; g < numGlyphs; g++) {
+        out[2 * g] = t.i16(4 + 4 * g);
+        out[2 * g + 1] = t.i16(6 + 4 * g);
+      }
+      return out;
+    } catch (error) {
+      if (error instanceof Malformed) return null;
+      throw error;
+    }
+  }
+
+  /**
+   * The ink of `text` under simple shaping (spec §5.2): the smallest `yMin` and the largest
+   * `yMax` (font units, y up) of the glyphs its code points map to, glyphs without outline
+   * (`yMin = yMax`) aside. Null when the font has no glyph bounds or no glyph of the text
+   * has an outline.
+   */
+  inkUnits(text: string): [number, number] | null {
+    const b = this.vbounds;
+    if (b === null) return null;
+    let lo = 0;
+    let hi = 0;
+    let any = false;
+    for (let i = 0; i < text.length; i++) {
+      let cp = text.charCodeAt(i);
+      if (cp >= 0xd800 && cp <= 0xdbff && i + 1 < text.length) {
+        const low = text.charCodeAt(i + 1);
+        if (low >= 0xdc00 && low <= 0xdfff) {
+          cp = 0x10000 + ((cp - 0xd800) << 10) + (low - 0xdc00);
+          i++;
+        }
+      }
+      const g = this.cmap.glyph(cp);
+      const y0 = b[2 * g]!;
+      const y1 = b[2 * g + 1]!;
+      if (y0 === y1) continue;
+      if (!any) {
+        lo = y0;
+        hi = y1;
+        any = true;
+      } else {
+        if (y0 < lo) lo = y0;
+        if (y1 > hi) hi = y1;
+      }
+    }
+    return any ? [lo, hi] : null;
   }
 
   /**
