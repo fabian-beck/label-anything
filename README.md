@@ -142,12 +142,13 @@ diagrams, illustrations, line charts, stress sizes, interactive zooming, priorit
 implementation-independent evaluator, and nine baselines — naive, greedy, textalloc,
 adjustText, vega-label, ggrepel, the label layouts of ECharts and d3fc, and D3-Labeler —
 scored the same way.
-`label-anything bench --baselines --perf` writes `bench-report/index.html`: metric tables,
-renderings side by side, runtime-vs-size plots, Rust/TypeScript parity and the performance
-targets; `--gate` enforces the release gates (`bench/README.md`, which also has the release
-procedure and where the performance targets stand). `python -m bench.gallery` turns a run into a
-[gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/) of
-renderings, published with each release's report.
+`label-anything bench --baselines --perf` writes `bench-report/index.html`, an interactive
+report: where each labeler stands, every problem with the labelers side by side and their
+numbers, runtime-vs-size plots, Rust/TypeScript parity and the performance targets; `--gate`
+enforces the release gates (`bench/README.md`, which also has the release procedure and where
+the performance targets stand). `python -m bench.gallery` adds its figures; the
+[latest report](https://fabian-beck.github.io/label-anything/benchmark-report/) is published
+with each release.
 
 How good the results are, in short: no overlaps and no crossing leaders anywhere in the
 benchmark, and more usable labels than any other tool on every problem of the quick suite and

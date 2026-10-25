@@ -100,9 +100,9 @@ bench/out/problems/<scenario>/<config>.bg.svg|.png   background for rendering
 bench/out/problems/<scenario>/scenario.json          manifest: configs (quick flag, size, files), sources
 bench/out/problems/11-stability/<seq>/f000….json + sequence.json
 bench/out/perf/scatter-200.json, scatter-2000.json, raster-2048.json   performance-target problems
-bench-report/results.json, index.html, results/<solver>/…, metrics/<solver>/…, img/<solver>/…,
+bench-report/results.json, index.html, fonts/…, results/<solver>/…, metrics/<solver>/…, img/<solver>/…,
              overlay/<solver>/… (engine debug overlays), plots/runtime-{engine,wall}.svg
-bench-report/gallery/index.html, img/*.svg, fonts/…, gallery.json    the gallery (python -m bench.gallery)
+bench-report/gallery/gallery.json, img/*.svg, img/cmp/<solver>/*.svg    the report's figures (python -m bench.gallery)
 ```
 
 **truth.json** (every config; `bench/common/truth.py`) — `{"version": 1, "canvas": [W, H],
@@ -398,38 +398,61 @@ more (224 against 199 ms) for 994 labels instead of 871.
 
 ## Report
 
-`bench-report/index.html` (static, no external scripts) and `results.json` contain:
+`bench-report/index.html` (`bench/report_html.py`; static, no external scripts, Noto Sans
+copied next to it) is one page from the overview to every number, for readers and for the
+engine's developers (ADR project/benchmark-report):
 
-* a **summary** per solver (problems run / n/a / failed, mean placed and usable rate, hard
-  violations and conflicts, ambiguity, unclear labels, covered points, close labels,
-  inversions, summed runtimes, peak memory, and the
-  empirical scaling exponent k of runtime ∝ nᵏ over the stress scenario's sizes);
-* the **performance-target table** (median, target, ratio, every run) and the **release-gate**
-  summary when evaluated;
-* **runtime vs. problem size**: log–log small multiples — one panel for the Label Anything
-  implementations and one per baseline against the reference implementation — for the
-  engine-reported and the wall-clock runtime, inline and as `plots/runtime-*.svg`, with a
-  table view;
-* **implementation parity**: per problem the deltas of every metric between `rust` and `ts` /
-  `wasm`, and whether the placements are identical;
-* **changes vs. the previous release** (`--previous`): every changed metric, regressions beyond
-  2 % (relative; any change away from 0 counts; direction per metric) highlighted, runtimes
-  excluded;
-* per scenario: the metric table (Label Anything rows bold, baseline emulations marked ≈ with the
-  details in the tooltip, n/a rows with the reason) and the renderings side by side — every
-  solver drawn by `bench/render.py` with its violations marked (see *Renderer*; the legend
-  stands above the first images), plus the engine's debug overlay;
-* the stability sequences and the baseline methods with the versions that ran.
+* **the header**: what ran, and Label Anything's headline numbers — hard violations, usable
+  labels, unclear labels, the median time per problem — next to the range of the other
+  labelers;
+* **the bar** at the top: the contents; the labelers compared with Label Anything —
+  ggrepel, adjustText and textalloc by default, the others added on demand, the choice kept
+  in the address (`?vs=ggrepel,naive`) and in the browser; and *all metrics*, which shows
+  every column of the tables;
+* **at a glance**: where each labeler stands — one strip per measure (usable labels, hard
+  violations, unclear labels, points covered, labels too close: means and sums over the
+  problems it ran; time per problem: the median) with every labeler as a dot, further right
+  always better; folded below it the summary table (problems run / n/a / failed, mean placed
+  and usable rate, hard violations and conflicts, ambiguity, unclear labels, covered points,
+  close labels, inversions, summed runtimes, peak memory, and the empirical scaling exponent
+  k of runtime ∝ nᵏ over the stress scenario's sizes), how to read the images and what the
+  measures mean;
+* **chapters by kind of data** — maps, charts, photos and illustrations, embeddings and
+  networks, priority, scale; a scenario no chapter names comes under *More problems*: the
+  gallery's figures (see *Gallery*), then every scenario of the run with its problems (one
+  config at a time) and the labelers side by side — each result drawn by `bench/render.py`
+  with its violations marked (see *Renderer*), its main numbers under it — and its table
+  (Label Anything rows bold, baseline emulations marked ≈ with the details in the tooltip,
+  n/a rows with the reason). A canvas larger than 3.2 times 600 × 400 px shows the 600 × 400
+  px window holding the most items, at about full size (*show the whole images* switches);
+  selecting an image opens a viewer on it — zoom, pan, and the arrows flip between the
+  labelers shown and keep the view, for comparing the same spot. The scale chapter adds the
+  runtime against the number of labels, one panel per labeler on shared log–log axes;
+* **interactive use**: the stability sequences — the gallery's frames, the table, and,
+  folded, the first, middle and last frame of every labeler;
+* **where it falls short**: the gallery's limits and notes, and the problems where another
+  labeler does better than Label Anything by more than a point (usable labels; unclear
+  labels, points covered, labels too close with at least as many usable labels) without
+  more hard violations;
+* **engineering details**, folded: the performance-target table (median, target, ratio,
+  every run) and the release-gate summary when evaluated; runtime vs. problem size
+  (log–log small multiples — one panel for the Label Anything implementations and one per
+  baseline against the reference implementation — engine-reported and wall-clock, also as
+  `plots/runtime-*.svg`, with a table view); implementation parity (per problem the deltas
+  of every metric between `rust` and `ts` / `wasm`, and whether the placements are
+  identical); the changes vs. the previous release (`--previous`: every changed metric,
+  regressions beyond 2 % — relative; any change away from 0 counts; direction per metric —
+  highlighted, runtimes excluded); the other labelers' methods and versions.
 
 The summary, scenario and sequence tables color every value against the median of its
-column — in the scenario and sequence tables, of the solvers on the same problem or
-sequence — so that differences and similarities stand out: blue better, red worse, two
-steps each way, gray near the median, the best value bold (direction per metric, as for the
-changes; the cell's tooltip names the class and the median). Counts, times and memory
-compare by ratio (log10(1 + v)), everything else by difference. Each side of the median
-spans to its farthest value, but at least 5 percentage points for rates, a factor of two on
-the log scale and a tenth of the largest value otherwise, so that small differences stay
-gray.
+column over all solvers, whichever are shown — in the scenario and sequence tables, of the
+solvers on the same problem or sequence — so that differences and similarities stand out:
+blue better, red worse, two steps each way, gray near the median, the best value bold
+(direction per metric, as for the changes; the cell's tooltip names the class and the
+median). Counts, times and memory compare by ratio (log10(1 + v)), everything else by
+difference. Each side of the median spans to its farthest value, but at least 5 percentage
+points for rates, a factor of two on the log scale and a tenth of the largest value
+otherwise, so that small differences stay gray.
 
 `python -m bench.report bench-report/results.json [--previous OLD/results.json] [--gate]` rebuilds
 the analyses and `index.html` of an existing run without solving anything again. Comparisons
@@ -447,25 +470,24 @@ from the problem with tool defaults elsewhere, not tuned competitors.
 ## Gallery
 
 `python -m bench.gallery --engine rust/target/release/label-anything --run bench-report` writes
-`bench-report/gallery/` (`index.html`, `img/*.svg`, `fonts/`, `gallery.json`): selected problems
-of the full suite — hub-first airport maps, charts, photos, embeddings, networks, priority —
-each solved once with the engine (`--warmup 3`, as by the runner) and drawn by the renderer as
-one self-contained vector image (`render.standalone_svg`: SVG backgrounds inlined, raster
-backgrounds embedded, the label text in an embedded subset of Noto Sans with every glyph at the
-measured pen position) with its violations marked as in the report, under it the evaluator's
-numbers (placed, leaders and the longest one, hard violations, unclear labels, covered points,
-labels too close, the omitted labels by reason), the engine's runtime and the settings the
-problem gives; from the run, its results of three problems by every baseline and three frames
-of its stability sequence, drawn the same way; and, last, what the engine still does badly, with
-figures. Selecting an image opens a viewer for inspecting it: pinch, double-tap or scroll to
-zoom (once a zoom settles, the vector image is drawn again at that size, so it stays sharp),
-drag to pan, swipe or use the arrow keys for the next image; between the labelers' renderings
-of one problem the view stays where it is, for comparing the same spot. The problems must be
-built (`python -m bench.scenarios build` builds every config); a figure whose problem is
-missing is left out. The page uses one font weight and loads nothing from other servers (Noto
-Sans is copied next to it). A gallery written into its run directory is linked from the run's
-report; the CI `baselines` job builds both, so the Pages workflow publishes the gallery at
-`<site>/benchmark-report/gallery/`. `bench/gallery.py` lists the figures and their captions.
+`bench-report/gallery/` (`gallery.json`, `img/`), which the report shows in its chapters:
+selected problems of the full suite — hub-first airport maps, charts, photos, embeddings,
+networks, priority — each solved once with the engine (`--warmup 3`, as by the runner) and
+drawn by the renderer as one self-contained vector image (`render.standalone_svg`: SVG
+backgrounds inlined, raster backgrounds embedded, the label text in an embedded subset of Noto
+Sans with every glyph at the measured pen position) with its violations marked, with a caption,
+the evaluator's numbers (placed, leaders and the longest one, hard violations, unclear labels,
+covered points, labels too close, the omitted labels by reason), the engine's runtime and the
+settings the problem gives; every problem of the run drawn the same way for every labeler
+that ran it (`img/cmp/`, the report's side-by-side images; 28 s for the quick suite's 110
+results); three frames of the stability sequences; and the notes on what the engine still does
+badly. Vector images stay sharp in the report's viewer: once a zoom settles, the image is
+drawn again at that size. The problems must be built (`python -m bench.scenarios build` builds
+every config); a figure whose problem is missing is left out. Written into a run directory,
+the gallery rebuilds that run's report; `gallery/index.html` leads there (the gallery's
+address of earlier versions). The CI `baselines` job builds both, so the Pages workflow
+publishes them at `<site>/benchmark-report/`. `bench/gallery.py` lists the figures and their
+captions.
 
 **Data colors.** An item whose `attrs.color` is a `#rrggbb` string is drawn in that color by the
 renderer (PNG, SVG and standalone SVG) — the region of a bubble, the series of a line end, the

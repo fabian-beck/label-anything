@@ -111,9 +111,11 @@ parentheses where that is more ("n/a": the tool cannot run the problem; commit 2
   ([where the time goes](gh:bench/README.md#where-they-stand)). Memory grows with the
   number of candidates: at most 97 MB for 2,000 labels, 580 MB for 20,000.
 
-The [gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/) shows
-the renderings of all labelers side by side, and what the defaults still do badly. The
-images of the report and the gallery mark what the measures count, where it happens:
+The [benchmark report](https://fabian-beck.github.io/label-anything/benchmark-report/) shows
+where each labeler stands, every problem with the labelers side by side (three by default,
+the others on demand) and what the defaults still do badly
+([ADR project/benchmark-report](../adr/project/benchmark-report.md)). Its images mark what
+the measures count, where it happens:
 conflicts in red, ambiguous labels in orange (a line to the point a label may be taken
 for), covered points in magenta and labels too close to each other in purple.
 
@@ -126,9 +128,9 @@ bench/.venv/bin/python -m bench.scenarios build        # build the problems (~12
 rust/target/release/label-anything bench --suite quick --baselines --perf -o bench-report
 ```
 
-`bench-report/index.html` is the report: metrics and renderings per scenario and solver,
+`bench-report/index.html` is the report: renderings and metrics per problem and solver,
 performance and parity, every table value coloured blue (better) or red (worse) against
-the median of the solvers; `python -m bench.gallery` adds the gallery. CI runs the quick
+the median of the solvers; `python -m bench.gallery` adds its figures. CI runs the quick
 suite on every pull request and the full suite on release tags. A release needs 0 hard
 violations, no metric regression above 2 % against the previous release unless an ADR
 accepts it, and the performance targets met

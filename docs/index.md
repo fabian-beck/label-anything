@@ -232,7 +232,7 @@ problems.
 * [Getting started](getting-started/index.md) in Python, JavaScript/TypeScript, Java, C,
   Go or on the command line.
 * [Tutorials](tutorials/index.md): one task each, with code and a figure of its result.
-* [The benchmark's gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/):
+* [The benchmark report](https://fabian-beck.github.io/label-anything/benchmark-report/):
   charts, maps, photos, embeddings and networks from the benchmark, next to other labelers.
 * [Concepts](concepts/index.md): the problem and result formats, avoidance, candidates,
   presets, the solver.

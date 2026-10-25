@@ -465,7 +465,7 @@ jobs:
           bench/.venv/bin/python bench/run.py --suite quick --runs 3
           --engine "$PWD/rust/target/release/label-anything"
           --baselines --require-baselines --perf
-      - name: Gallery (bench-report/gallery, published with the report)
+      - name: Gallery (bench-report/gallery, the report's figures and side-by-side drawings)
         run: >
           bench/.venv/bin/python -m bench.gallery
           --engine "$PWD/rust/target/release/label-anything" --run bench-report
