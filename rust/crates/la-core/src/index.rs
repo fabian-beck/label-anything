@@ -60,12 +60,19 @@ impl Buckets {
 pub struct StaticIndex {
     b: Buckets,
     offsets: Vec<u32>,
-    ids: Vec<u32>,
+    /// The boxes of every bucket, each with its first bucket (column, row): a query
+    /// reports a box only in its first bucket within the query range, so results need no
+    /// deduplication state (and the index can be shared between threads).
+    entries: Vec<Entry>,
     boxes: Vec<Rect>,
-    /// First bucket (column, row) of every box: a query reports a box only in its first
-    /// bucket within the query range, so results need no deduplication state (and the
-    /// index can be shared between threads).
-    first: Vec<(u16, u16)>,
+}
+
+/// A box in a bucket of a [`StaticIndex`], with the first bucket it lies in.
+#[derive(Clone, Copy, Debug, Default)]
+struct Entry {
+    id: u32,
+    col: u16,
+    row: u16,
 }
 
 impl StaticIndex {
@@ -87,19 +94,22 @@ impl StaticIndex {
             counts[i] += counts[i - 1];
         }
         let mut fill = counts.clone();
-        let mut ids = vec![0u32; *counts.last().unwrap_or(&0) as usize];
-        // bucket coordinates fit u16 (at most 4096 columns and rows)
-        let mut first = vec![(0u16, 0u16); boxes.len()];
+        let mut entries = vec![Entry::default(); *counts.last().unwrap_or(&0) as usize];
         for (id, r) in boxes.iter().enumerate() {
             if r.is_empty() {
                 continue;
             }
             let (c0, c1, r0, r1) = b.range(r);
-            first[id] = (c0 as u16, r0 as u16);
+            // bucket coordinates fit u16 (at most 4096 columns and rows)
+            let e = Entry {
+                id: id as u32,
+                col: c0 as u16,
+                row: r0 as u16,
+            };
             for row in r0..=r1 {
                 for col in c0..=c1 {
                     let k = row * b.cols + col;
-                    ids[fill[k] as usize] = id as u32;
+                    entries[fill[k] as usize] = e;
                     fill[k] += 1;
                 }
             }
@@ -107,9 +117,8 @@ impl StaticIndex {
         StaticIndex {
             b,
             offsets: counts,
-            ids,
+            entries,
             boxes,
-            first,
         }
     }
 
@@ -133,24 +142,24 @@ impl StaticIndex {
         let (c0, c1, r0, r1) = self.b.range(r);
         if c0 == c1 && r0 == r1 {
             let k = r0 * self.b.cols + c0;
-            for &id in &self.ids[self.offsets[k] as usize..self.offsets[k + 1] as usize] {
-                if self.boxes[id as usize].touches(r) {
-                    out.push(id);
+            for e in &self.entries[self.offsets[k] as usize..self.offsets[k + 1] as usize] {
+                if self.boxes[e.id as usize].touches(r) {
+                    out.push(e.id);
                 }
             }
             return;
         }
         // a box is met first (in scan order) in its first row and column of the range
         for row in r0..=r1 {
-            for col in c0..=c1 {
-                let k = row * self.b.cols + col;
-                for &id in &self.ids[self.offsets[k] as usize..self.offsets[k + 1] as usize] {
-                    let (fc, fr) = self.first[id as usize];
-                    if (fc as usize).max(c0) == col
-                        && (fr as usize).max(r0) == row
-                        && self.boxes[id as usize].touches(r)
+            let k0 = row * self.b.cols;
+            let cells = &self.offsets[k0 + c0..=k0 + c1 + 1];
+            for (col, w) in (c0..=c1).zip(cells.windows(2)) {
+                for e in &self.entries[w[0] as usize..w[1] as usize] {
+                    if (e.col as usize).max(c0) == col
+                        && (e.row as usize).max(r0) == row
+                        && self.boxes[e.id as usize].touches(r)
                     {
-                        out.push(id);
+                        out.push(e.id);
                     }
                 }
             }

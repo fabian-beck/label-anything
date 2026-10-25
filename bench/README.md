@@ -376,6 +376,22 @@ benchmark, sample, tutorial, showcase and playground problems within the time gu
 took 5.5 % less time in all than before those changes; the 2,000-label problem took 11 %
 more (224 against 199 ms) for 994 labels instead of 871.
 
+A profile of 2026-10-25 by instruction counts (without a clock) found more work that
+changes no result. Explaining an omitted label (`reason`, `blocked_by`) generates its
+candidates again without the placed labels and keeps only the statically usable ones, but
+evaluated each of them completely: on the airports with strict omission that was 46 % of
+all instructions, on the class metrics 40 %. The evaluation now stops at the first rule
+that disqualifies a candidate. The schema check of the input looked up each keyword it
+knows in every schema object by hashing its name, up to a fifth of a CLI call on large
+inputs; it now reads each object once (2.8 times faster). And the static spatial index
+keeps, with each entry of a bucket, the bucket where its box begins, which every query
+reads (another 1 to 4 % of the instructions). On the 62 benchmark problems,
+single-threaded (medians of alternating runs, without the index change), the 41 that the
+native engine solves within its time guards took 8.8 % less engine time and 12 % less per
+CLI call, with the same results; the TypeScript engine's took as long as before, within the
+noise. The problems that reach a guard placed 143 (native) and 206 (TypeScript) more labels
+in 5.5 % and 9.2 % less time.
+
 ## Report
 
 `bench-report/index.html` (static, no external scripts) and `results.json` contain:
