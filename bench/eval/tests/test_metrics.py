@@ -102,6 +102,33 @@ def test_leader_may_start_beside_a_mark_touching_its_own():
     assert m["hard"]["examples"]["leader_item"] == [["A", "C"]]
 
 
+def test_marks_list_every_violation_where_it_happens():
+    # the crossing leaders of A and B both run through D's label; B's label is off the canvas;
+    # E's and F's labels overlap
+    prob = problem([item("A", 20, 80), item("B", 80, 80), item("D", 150, 20), item("E", 120, 110),
+                    item("F", 170, 110)], height=130)
+    la = {"points": [[22, 78], [100, 30]], "style": "straight", "port": [100, 30]}
+    lb = {"points": [[78, 78], [20, 30]], "style": "straight", "port": [20, 30]}
+    res = result([
+        placed("A", 100, 25, side="distant", model="distant", leader=la),
+        placed("B", -10, 25, side="distant", model="distant", leader=lb),
+        placed("D", 40, 50, side="bottom-left"),
+        placed("E", 123, 95, side="top-right"),
+        placed("F", 140, 98, side="top-left"),
+    ])
+    m = evaluate(prob, res, marks=True)
+    mk = m.pop("marks")
+    assert m == evaluate(prob, res)  # the metrics are the same with marks
+    assert mk["labels"] == ["B", "E", "F"]
+    assert mk["leaders"] == ["A", "B"]
+    (x, y), = mk["crossings"]
+    t = 56 / 136  # where la (22 + 78 t, 78 - 48 t) meets lb (78 - 58 t, 78 - 48 t)
+    assert (x, y) == (pytest.approx(22 + 78 * t), pytest.approx(78 - 48 * t))
+    assert mk["overlaps"] == [[140, 98, 153, 105]]
+    # E's and F's labels overlap: the shared area shows it, not a gap
+    assert mk["close"] == [] and m["hard"]["label_label"] == 1
+
+
 def test_hard_vector_class_and_soft_coverage():
     prob = problem([item("A", 50, 50, w=20, h=20), item("B", 150, 50, w=20, h=20)],
                    obstacles={"vector": [

@@ -129,7 +129,23 @@ def _parse_placed(prob: Problem, result: dict, checks: dict) -> tuple[list[Place
 
 
 def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: float = TOL,
-             removal_test: bool = True, max_list: int = 25) -> dict:
+             removal_test: bool = True, max_list: int = 25, marks: bool = False) -> dict:
+    """The metrics of one result. With ``marks``, ``out["marks"]`` also lists every violation the
+    metrics count, with what a renderer needs to draw it (``bench/render.py``):
+
+    * ``labels``, ``leaders``: ids of the labels in a conflict (over another label, a mark, a
+      hard class, the canvas edge; its own mark) and of those whose leader is in one (crossing,
+      through a label, a mark, a hard class or its own label; off the canvas);
+    * ``overlaps``: the ``[x0, y0, x1, y1]`` areas two labels share, ``crossings``: the ``[x, y]``
+      where leaders cross;
+    * ``tight_leaders``: ids of labels whose leader comes nearer than the clearance to another leader
+      or a mark, or starts beside another in nearly the same direction;
+    * ``ambiguous``: ``{"label", "level", "point"}`` for labels another data point is nearer to
+      (``misattributed``), about as near (``unclear``) or, with a leader, nearer than the margin
+      (``leadered``): the point it may be taken for (``association.clarity``);
+    * ``covered``: ``{"point", "r", "hidden"}`` for data points under another item's label;
+    * ``close``: ``[x0, y0, x1, y1]`` from label to label where two are nearer than 0.4 em.
+    """
     engine = pr.from_result(result.get("placements", []))
     prob = load_problem(problem, ranks={k: v.rank for k, v in engine.items()} if engine else None)
     opts = prob.opts
@@ -177,6 +193,11 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     # (conflict) and leaders within the clearance only (a spacing rule, like leader_near/leader_angle)
     conf_unary: set[int] = set()
     conf_pairs: set[tuple[int, int]] = set()
+    # for ``marks``: the labels and leaders in a conflict, leaders breaking a spacing rule
+    leader_bad: set[int] = set()
+    leader_tight: set[int] = set()
+    lower_covering: set[int] = set()
+    cross_points: list[Point] = []
 
     def note(kind, what):
         lst = examples.setdefault(kind, [])
@@ -225,6 +246,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                     hard["label_lower"] += 1
                     note("label_lower", [p.id, other.id])
                     conf_pairs.add((pidx[p.id], pidx[other.id]))
+                    lower_covering.add(pidx[p.id])
                 if lower_hard if lower else items_hard:
                     hard["label_item"] += 1
                     note("label_item", [p.id, other.id])
@@ -260,6 +282,11 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
             note("canvas_edge", p.id)
             conf_unary.add(pidx[p.id])
 
+    # the labels in a conflict of their own (the leaders' conflicts follow)
+    label_bad = set(conf_unary) | lower_covering
+    if labels_hard:
+        label_bad.update(pidx[i] for pair in overlap_pairs for i in pair)
+
     # -- leaders
     seg_index = GridIndex(32.0)
     segs: list[tuple[int, Point, Point]] = []
@@ -280,6 +307,8 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                 continue
             if geom.segments_cross(a, b, c, d, tol):
                 crossing_pairs.add((min(k, k2), max(k, k2)))
+                if marks:
+                    cross_points.append(geom.crossing_point(a, b, c, d))
     leader_crossings = len(crossing_pairs)
     lopts = opts.get("leaders", {})
 
@@ -289,6 +318,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     if spec.is_hard(a_leader, "leaders"):
         hard["leader_leader"] = leader_crossings
         conf_pairs.update(crossing_pairs)
+        leader_bad.update(k for pair in crossing_pairs for k in pair)
         for a, b in sorted(crossing_pairs)[:max_list]:
             note("leader_leader", [placed[a].id, placed[b].id])
         # leaders closer than the clearance (except where both start), and distant leaders
@@ -321,6 +351,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                             angle_pairs.add((k, k2))
         hard["leader_near"] = len(near_pairs)
         hard["leader_angle"] = len(angle_pairs)
+        leader_tight.update(k for pair in near_pairs | angle_pairs for k in pair)
         for a, b in sorted(near_pairs)[:max_list]:
             note("leader_near", [placed[a].id, placed[b].id])
         for a, b in sorted(angle_pairs)[:max_list]:
@@ -357,6 +388,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                 hard["leader_canvas"] += 1
                 note("leader_canvas", p.id)
                 conf_unary.add(k)
+                leader_bad.add(k)
             seglist = list(_segments(pl))
             for si, (a, b) in enumerate(seglist):
                 q = Box(min(a[0], b[0]), min(a[1], b[1]), max(a[0], b[0]), max(a[1], b[1]))
@@ -369,6 +401,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                     hard["leader_own_label"] += 1
                     note("leader_own_label", p.id)
                     conf_unary.add(k)
+                    leader_bad.add(k)
                 if leader_items_hard or leader_lower_hard:
                     # leaders keep the clearance from other marks (spec §7); a leader must only not
                     # cross a mark closer than the clearance to its start when it is a fan or boundary
@@ -397,14 +430,19 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                             if other.shape.intersects_segment(a, b, 0.0):
                                 leader_item_touch.add((j, k))
                                 conf_unary.add(k)
+                                leader_bad.add(k)
+                            else:
+                                leader_tight.add(k)
                 for c in leader_hard_classes:
                     if classes[c].segment_hits(a, b):
                         leader_class_hits[c] = leader_class_hits.get(c, 0) + 1
                         note(f"leader_class:{c}", p.id)
                         conf_unary.add(k)
+                        leader_bad.add(k)
     if spec.is_hard(a_leader, "labels"):
         hard["leader_label"] = len(leader_label_pairs)
         conf_pairs.update(leader_label_pairs)
+        leader_bad.update(k for k, _j in leader_label_pairs)
         for a, b in sorted(leader_label_pairs)[:max_list]:
             note("leader_label", [placed[a].id, placed[b].id])
     if leader_items_hard or leader_lower_hard:
@@ -565,6 +603,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     stats = result.get("stats", {}) or {}
     n_placed = len(placed)
     stubs = sum(1 for p in placed if (p.raw.get("leader") or {}).get("stub"))
+    found: dict | None = {"ambiguous": [], "covered": [], "close": []} if marks else None
     out = {
         "problem": {"n_items": n, "canvas": [prob.width, prob.height] if prob.bounded else None,
                     "preset": opts.get("preset"), "omission": opts.get("priority", {}).get("omission", "strict"),
@@ -611,9 +650,20 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                                                 "priority_inversions", "placed_weighted")},
         "result_check": {k: v[:max_list] for k, v in checks.items()},
         "visual": vis.evaluate_visual(prob, placed, classes, a_label, a_leader, max_list),
-        "association": assoc.evaluate_association(prob, placed, classes, a_label, box_index, tol, max_list),
+        "association": assoc.evaluate_association(prob, placed, classes, a_label, box_index, tol, max_list,
+                                                  collect=found),
     }
     out["summary"] = summary(out)
+    if found is not None:
+        overlaps = []
+        if labels_hard:
+            for a, b in overlap_pairs:
+                p, q = placed[pidx[a]].box, placed[pidx[b]].box
+                overlaps.append([max(p.x0, q.x0), max(p.y0, q.y0), min(p.x1, q.x1), min(p.y1, q.y1)])
+        out["marks"] = {"labels": [placed[k].id for k in sorted(label_bad)],
+                        "leaders": [placed[k].id for k in sorted(leader_bad)],
+                        "tight_leaders": [placed[k].id for k in sorted(leader_tight - leader_bad)],
+                        "overlaps": overlaps, "crossings": [list(q) for q in cross_points], **found}
     return out
 
 
