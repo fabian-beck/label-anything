@@ -371,6 +371,7 @@ invalid = {
                                                                        "regions": [{"selector": "path", "kind": "each"}]}}},
                                      [("/obstacles/svg/regions/0/kind", "unknown_property")], []),
     "max-foreign-range": ({"items": [], "placement": {"max_foreign": 1.5}}, [("/placement/max_foreign", "range")], []),
+    "side-margin-range": ({"items": [], "defaults": {"side_margin": -1}}, [("/defaults/side_margin", "range")], []),
     # a missing discriminator is one error, not the requirements of every variant
     "anchor-missing-type": ({"items": [{"anchor": {"x": 1, "y": 1}, "label": {"type": "text", "text": "A"}}]},
                             [("/items/0/anchor/type", "required")], [], True),

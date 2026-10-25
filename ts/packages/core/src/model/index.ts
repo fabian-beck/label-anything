@@ -187,6 +187,11 @@ export interface ItemLengths {
    * set (at least `margin`, see {@link labelGap}).
    */
   spacing: number;
+  /**
+   * `defaults.side_margin`: how much nearer its own mark the label is than another item's
+   * mark beside one of its sides (spec §4.4).
+   */
+  sideMargin: number;
   offset: number;
   innerPadding: number;
   maxDistance: number;
@@ -217,6 +222,7 @@ export interface ItemLengthSpec {
   margin: Length;
   /** `null`: twice the margin. */
   spacing: Length | null;
+  sideMargin: Length;
   offset: Length;
   innerPadding: Length;
   maxDistance: Length;
@@ -239,6 +245,7 @@ export function resolveLengths(l: ItemLengthSpec, em: number): ItemLengths {
     buffer: l.buffer.px(em),
     margin,
     spacing: l.spacing === null ? 2 * margin : l.spacing.px(em),
+    sideMargin: l.sideMargin.px(em),
     offset: l.offset.px(em),
     innerPadding: l.innerPadding.px(em),
     maxDistance: l.maxDistance.px(em),
@@ -1518,6 +1525,7 @@ function itemDefaults(o: Opts): ItemDefaults {
       buffer: o.length("defaults.buffer"),
       margin: o.length("defaults.margin"),
       spacing: Length.fromValue(o.get("defaults.spacing")),
+      sideMargin: o.length("defaults.side_margin"),
       offset: o.length("placement.offset"),
       innerPadding: o.length("placement.inner_padding"),
       maxDistance: o.length("placement.max_distance"),

@@ -204,6 +204,9 @@ pub struct ItemLengths {
     /// `defaults.spacing`: the space the label keeps from other labels, twice `margin`
     /// unless set (at least `margin`, see [`ItemLengths::label_gap`]).
     pub spacing: f64,
+    /// `defaults.side_margin`: how much nearer its own mark the label is than another
+    /// item's mark beside one of its sides (spec §4.4).
+    pub side_margin: f64,
     pub offset: f64,
     pub inner_padding: f64,
     pub max_distance: f64,
@@ -235,6 +238,7 @@ pub struct ItemLengthSpec {
     pub margin: Length,
     /// `None`: twice the margin.
     pub spacing: Option<Length>,
+    pub side_margin: Length,
     pub offset: Length,
     pub inner_padding: Length,
     pub max_distance: Length,
@@ -261,6 +265,7 @@ impl ItemLengthSpec {
                 Some(l) => l.px(em),
                 None => 2.0 * margin,
             },
+            side_margin: self.side_margin.px(em),
             offset: self.offset.px(em),
             inner_padding: self.inner_padding.px(em),
             max_distance: self.max_distance.px(em),
@@ -1823,6 +1828,7 @@ impl ItemDefaults {
                 buffer: o.length("defaults.buffer"),
                 margin: o.length("defaults.margin"),
                 spacing: Length::from_value(&o.get("defaults.spacing")),
+                side_margin: o.length("defaults.side_margin"),
                 offset: o.length("placement.offset"),
                 inner_padding: o.length("placement.inner_padding"),
                 max_distance: o.length("placement.max_distance"),

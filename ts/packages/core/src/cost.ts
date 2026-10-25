@@ -82,6 +82,18 @@ export function crowded(model: Model, obs: Obstacles, item: Item, r: Rect, buf: 
   return false;
 }
 
+/**
+ * How squarely the point `p` lies beside a side of `r`, where a label of a mark at `p` would
+ * go: 1 straight across a side (or inside `r`), 0 on the diagonal of a corner, and
+ * `|dx² − dy²| / (dx² + dy²)` for the offset `(dx, dy)` of `p` from `r` (spec §4.4).
+ */
+export function facing(r: Rect, p: P): number {
+  const dx = p.x < r.x0 ? r.x0 - p.x : p.x > r.x1 ? p.x - r.x1 : 0;
+  const dy = p.y < r.y0 ? r.y0 - p.y : p.y > r.y1 ? p.y - r.y1 : 0;
+  const s = dx * dx + dy * dy;
+  return s > 0 ? Math.abs(dx * dx - dy * dy) / s : 1;
+}
+
 function finish(c: Cand, acc: Acc): void {
   c.evaluated = true;
   c.cost = acc.cost;
@@ -139,7 +151,15 @@ export class Evaluator {
       model.placement.ownNearest && c.kind !== Kind.Internal && (c.leaders.length === 0 || c.hasStub());
     const dOwn = nearRule ? item.shape.distRect(r) : 0;
     const clear = nearRule && !c.hasStub() ? margin : 0;
-    const reach = maxf(maxf(item.len.buffer > gapGuess ? item.len.buffer : gapGuess, margin), dOwn + clear);
+    // a mark that lies more squarely beside a side of the label than its own, where its own
+    // label would go, must be farther still: up to the side margin
+    const side = clear > 0 ? maxf(c.warm ? WARM_MARGIN * item.len.sideMargin : item.len.sideMargin, clear) : 0;
+    const ownFacing = side > clear ? facing(r, item.shape.reference()) : 1;
+    // no other mark needs more than the side margin's share the own mark leaves
+    const reach = maxf(
+      maxf(item.len.buffer > gapGuess ? item.len.buffer : gapGuess, margin),
+      dOwn + clear + (side - clear) * (1 - ownFacing),
+    );
     const buf = this.buf;
     obs.itemIndex.query(r.inflate(reach), buf);
     const labelItemsHard = dy.labelItems.kind === AvoidKind.Hard;
@@ -177,10 +197,17 @@ export class Evaluator {
       // the margin (up to rounding), but never more than the mark keeps from the own mark's
       // box
       if (margin > EPS && d < margin - EPS && d < sj.distRect(item.shape.bbox())) acc.violate(BLOCK_ITEMS, false, 0);
-      // nearer to the label than its own mark, or, without a stub, not a margin farther (at
-      // most as far as the two marks' reference points lie apart; the marks of the item's
-      // group aside)
-      const sep = clear > 0 ? minf(clear, sj.reference().dist(item.shape.reference())) : 0;
+      // nearer to the label than its own mark, or, without a stub, not a margin farther, up to
+      // the side margin for a point's mark more squarely beside a side than the own (at most as
+      // far as the two marks' reference points lie apart; the marks of the item's group aside)
+      let sep = 0;
+      if (clear > 0) {
+        const need =
+          side > clear && model.items[j]!.area === null
+            ? clear + (side - clear) * maxf(facing(r, sj.reference()) - ownFacing, 0)
+            : clear;
+        sep = minf(need, sj.reference().dist(item.shape.reference()));
+      }
       if (nearRule && d < dOwn + sep - EPS && (model.groupOf[j] ?? null) !== i) acc.violate(BLOCK_ITEMS, false, 0);
     }
     if (dy.labelItems.kind === AvoidKind.Soft) {

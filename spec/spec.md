@@ -229,10 +229,19 @@ comes no closer to the mark of another item than to its own, and without a stub 
 nearer to its own by its margin: it is infeasible when
 `dist(mark_j, box) < dist(mark_i, box) + s − EPS` for an item `j` (not a member of `i`'s
 group) whose mark the label may not cover (`items`, or `lower_items` for a less important
-`j`, hard), where `s = min(m, |p_j − p_i|)` for a label without a stub (`m` its margin, at
-half for warm-start candidates; `p` the marks' reference points) and `s = 0` for one with a
-stub. A reader takes a label for the label of the mark nearest to it; one about as near to
-another mark could be that one's, unless a stub says whose it is. Marks closer together
+`j`, hard), where `s = min(m + (k − m) · max(0, f_j − f_i), |p_j − p_i|)` for a label
+without a stub (`m` its margin and `k` its side margin `defaults.side_margin`, 0.5 em, at
+least `m`, both at half for warm-start candidates; `k = m` for an area item's mark, its dot;
+`p` the marks' reference points) and `s = 0` for one with a stub. `f` says how squarely a
+mark lies beside a side of the box: for the offset `(dx, dy)` of its reference point from
+the box (0 along an axis where the point lies within the box's extent),
+`f = |dx² − dy²| / (dx² + dy²)`, and 1 for an offset of 0: 1 straight across a side, 0 on the
+diagonal of a corner. A reader takes a label for the label of the mark nearest to it; one
+about as near to another mark could be that one's, unless a stub says whose it is. A mark
+beside the middle of a side stands where its own label would go, one at a corner does not:
+a mark more squarely beside the label than the label's own mark must be farther by up to
+the side margin — a label hanging below and left of its mark's corner does not start right
+beside another point. Marks closer together
 than the margin need only the distance between them: a label of one of two coincident
 marks may stand anywhere, one of two marks 1 px apart on the side away from the other.
 Internal labels lie on their own mark, and the leader of a distant label says whose it is:

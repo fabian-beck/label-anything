@@ -72,6 +72,10 @@ marks overlap or touch. Without a stub it must be *clearly* nearer: by its margi
 (0.2 em), or, for marks closer together than that, by the distance between them. A label
 below two touching points thus stands on the side away from the other point, takes a stub
 or a leader, or is left out — it is never as near to a neighbour's point as to its own.
+A point beside the middle of a side of the label stands where that point's own label would
+go: where it lies more squarely beside the label than the label's own mark — a label
+hanging below and left of its mark's corner, starting right beside another point — it
+must be farther by up to `defaults.side_margin` (0.5 em).
 The rule protects the marks a label may not cover (hard `items`, or hard `lower_items`);
 internal labels and labels on leaders are exempt
 ([ADR placement/margin](../adr/placement/margin.md)).

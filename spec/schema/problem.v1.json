@@ -383,6 +383,10 @@
           ],
           "description": "Space a label keeps from other labels and their stubs while avoid.label.labels is hard (the larger of the two labels' spacings, each at least its margin; spec §4.4); null: twice the margin. Half for warm-start candidates."
         },
+        "side_margin": {
+          "$ref": "#/$defs/nonNegLength",
+          "description": "With placement.own_nearest: how much nearer its own mark a label without a stub is than another point's mark that lies more squarely beside one of its sides than its own, where that point's own label would go (spec §4.4): the full side margin for a mark straight across a side when the own mark is on a corner's diagonal, the margin when the own mark is as squarely beside the label, and never less than the margin. Half for warm-start candidates."
+        },
         "mark": {
           "$ref": "#/$defs/mark",
           "description": "Mark used for point anchors without an explicit mark."

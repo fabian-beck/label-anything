@@ -35,9 +35,9 @@ hide:
 </div>
 
 <figure markdown>
-[![The world's economies as a bubble chart, 148 of its 193 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
+[![The world's economies as a bubble chart, 147 of its 193 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
 <figcaption>The world's economies: each country a bubble sized by its GDP (Natural Earth,
-2019). Label Anything labels 148 of 193 in a fraction of a second.</figcaption>
+2019). Label Anything labels 147 of 193 in a fraction of a second.</figcaption>
 </figure>
 
 In this chart:
@@ -53,7 +53,7 @@ In this chart:
 * **Leaders where it is crowded.** France and the United Kingdom overlap Germany's bubble,
   so their labels sit on leaders that do not cross.
 * **Importance decides.** Larger economies are labeled first, the eight largest in larger
-  bold type. Of the 45 countries left out, 43 have no room beside the larger economies'
+  bold type. Of the 46 countries left out, 44 have no room beside the larger economies'
   labels, and the result names the labels in the way; Austria and Hong Kong lie so close
   among others that no place beside them would be clearly theirs.
 * **Full names.** Every label is the country's full name, a long one on two centered lines

@@ -195,6 +195,17 @@ class BuilderJsonTest {
   }
 
   @Test
+  void sideMargin() {
+    var problem = LabelProblem.builder().item("a", 1, 2, Label.text("A")).sideMargin("0.6em").build();
+    assertSameJson("""
+        {
+          "items": [{"id": "a", "anchor": {"type": "point", "x": 1, "y": 2},
+                     "label": {"type": "text", "text": "A"}}],
+          "defaults": {"side_margin": "0.6em"}
+        }""", problem.toJson());
+  }
+
+  @Test
   void regions() {
     var problem = LabelProblem.builder()
         .item(Item.point("port", 5, 5).label(Label.text("Port")).region("island"))

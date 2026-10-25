@@ -127,7 +127,7 @@ CI runs):
 |---|---|
 | Priority | explicit `item.priority`, else input order; omission `strict`; `evict_lower` on |
 | Text | 12 px bundled sans (Noto Sans) · padding 0.15 em · buffer 0.3 em |
-| Spacing | 1 px from the own mark · 0.2 em from other marks · 0.4 em from other labels · clearly nearer to the own mark than to any other |
+| Spacing | 1 px from the own mark · 0.2 em from other marks · 0.4 em from other labels · clearly nearer to the own mark than to any other, by 0.5 em where another point faces a side of the label more squarely |
 | Candidates | models adjacent + slider + distant (preset `auto`: distant only when crowded) · perceptual position order (top first) · fan labels for crowds left without labels |
 | Leaders | straight, crossings hard, 0.4 em clear of other marks and leaders |
 | Label vs. | labels, items, text, canvas edge: **hard** · ink 0.1 per em² · across a light–dark border of a raster background 0.5 per em² · across a region border or in another region 0.5 per em², an area's or a leader's label at most ¼ in other regions |

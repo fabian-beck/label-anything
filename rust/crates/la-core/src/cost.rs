@@ -88,6 +88,32 @@ pub fn crowded(model: &Model, obs: &Obstacles, item: &Item, r: &Rect, buf: &mut 
     })
 }
 
+/// How squarely the point `p` lies beside a side of `r`, where a label of a mark at `p`
+/// would go: 1 straight across a side (or inside `r`), 0 on the diagonal of a corner, and
+/// `|dx² − dy²| / (dx² + dy²)` for the offset `(dx, dy)` of `p` from `r` (spec §4.4).
+pub fn facing(r: &Rect, p: P) -> f64 {
+    let dx = if p.x < r.x0 {
+        r.x0 - p.x
+    } else if p.x > r.x1 {
+        p.x - r.x1
+    } else {
+        0.0
+    };
+    let dy = if p.y < r.y0 {
+        r.y0 - p.y
+    } else if p.y > r.y1 {
+        p.y - r.y1
+    } else {
+        0.0
+    };
+    let s = dx * dx + dy * dy;
+    if s > 0.0 {
+        (dx * dx - dy * dy).abs() / s
+    } else {
+        1.0
+    }
+}
+
 fn finish(c: &mut Cand, acc: Acc) {
     c.evaluated = true;
     c.cost = acc.cost;
@@ -170,6 +196,23 @@ impl<'a> Evaluator<'a> {
         } else {
             0.0
         };
+        // a mark that lies more squarely beside a side of the label than its own, where its
+        // own label would go, must be farther still: up to the side margin
+        let side = if clear > 0.0 {
+            let s = if c.warm {
+                crate::candidates::WARM_MARGIN * item.len.side_margin
+            } else {
+                item.len.side_margin
+            };
+            maxf(s, clear)
+        } else {
+            0.0
+        };
+        let own_facing = if side > clear {
+            facing(&r, item.shape.reference())
+        } else {
+            1.0
+        };
         let reach = maxf(
             maxf(
                 if item.len.buffer > gap_guess {
@@ -179,7 +222,8 @@ impl<'a> Evaluator<'a> {
                 },
                 margin,
             ),
-            d_own + clear,
+            // no other mark needs more than the side margin's share the own mark leaves
+            d_own + clear + (side - clear) * (1.0 - own_facing),
         );
         self.buf.clear();
         obs.item_index.query(&r.inflate(reach), &mut self.buf);
@@ -237,11 +281,17 @@ impl<'a> Evaluator<'a> {
             {
                 acc.violate(Block::Items, false, 0.0);
             }
-            // nearer to the label than its own mark, or, without a stub, not a margin farther
+            // nearer to the label than its own mark, or, without a stub, not a margin farther,
+            // up to the side margin for a point's mark more squarely beside a side than the own
             // (at most as far as the two marks' reference points lie apart; the marks of the
             // item's group aside)
             let sep = if clear > 0.0 {
-                minf(clear, sj.reference().dist(item.shape.reference()))
+                let need = if side > clear && model.items[j].area.is_none() {
+                    clear + (side - clear) * maxf(facing(&r, sj.reference()) - own_facing, 0.0)
+                } else {
+                    clear
+                };
+                minf(need, sj.reference().dist(item.shape.reference()))
             } else {
                 0.0
             };

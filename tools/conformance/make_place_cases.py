@@ -514,6 +514,33 @@ CASES["own-nearest-clear-stub"] = case(
     "both marks, and its stub, which keeps the leader clearance (0.4 em) from the other mark, "
     "says whose it is.")
 
+# Beta's label prefers the place below and left of its mark, where its box ends at the mark's
+# corner (1 px away). Alpha's point lies 5 px from the left side of that box, at its middle:
+# where Alpha's own label would go. The ambiguity cost is off, so only the hard rule decides.
+def side_case(ax, ay, **extra):
+    return {"canvas": {"width": 300, "height": 160}, "weights": {"ambiguity": 0}, **extra,
+            "items": [pt("a", ax, ay, "A", placement={"position_order": ["left"]}),
+                      pt("b", 200, 70, "Luxembourg", placement={"position_order": ["bottom-left", "right"]})]}
+
+
+CASES["own-nearest-side"] = case(
+    "a mark beside a side of the label, where its own label would go, keeps the side margin",
+    side_case(115.2, 80),
+    {"placed": 2, "anchor_side": {"a": "left", "b": "right"}, "own_nearest": True},
+    "Below left of its mark Beta's label is 1 px from its own mark and 5 px from Alpha's, which "
+    "faces the middle of its left side: more than the margin (2.4 px) farther, but not the side "
+    "margin (0.5 em = 6 px; spec §4.4). It stands right of its mark.")
+CASES["own-nearest-side-margin"] = case(
+    "with the side margin at the margin, a mark beside a side needs only the margin",
+    side_case(115.2, 80, defaults={"side_margin": "0.2em"}),
+    {"placed": 2, "anchor_side": {"a": "left", "b": "bottom-left"}})
+CASES["own-nearest-side-diagonal"] = case(
+    "a mark on the diagonal of the label's corner needs only the margin",
+    side_case(117.26, 67.17),
+    {"placed": 2, "anchor_side": {"a": "left", "b": "bottom-left"}, "own_nearest": True},
+    "Alpha's point lies 5 px from the box's top left corner, on its diagonal, where no label of "
+    "Alpha's would go: the margin (2.4 px) suffices, as before the side margin.")
+
 # Alpha may only stand right of its point; Beta's point, 16 px below it, comes within the
 # stub reach (0.75 em = 9 px) of that place: Alpha stands 0.5 em farther right, joined to its
 # mark by a horizontal stub to the middle of its left side, and Beta's mark is still farther

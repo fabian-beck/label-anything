@@ -16144,14 +16144,14 @@
     "y": 249.2,
     "mark": {
      "shape": "circle",
-     "r": 4.88
+     "r": 4.95
     }
    },
    "label": {
     "type": "text",
     "text": "cost"
    },
-   "priority": 4.00468
+   "priority": 4.00495
   },
   {
    "id": "core/detmath",
@@ -16569,14 +16569,14 @@
     "y": 315.7,
     "mark": {
      "shape": "circle",
-     "r": 7.04
+     "r": 7.05
     }
    },
    "label": {
     "type": "text",
     "text": "model"
    },
-   "priority": 18.017
+   "priority": 18.01708
   },
   {
    "id": "core/model/opts",

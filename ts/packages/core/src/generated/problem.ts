@@ -386,6 +386,10 @@ export interface ItemDefaults {
    * Space a label keeps from other labels and their stubs while avoid.label.labels is hard (the larger of the two labels' spacings, each at least its margin; spec §4.4); null: twice the margin. Half for warm-start candidates.
    */
   spacing?: NonNegLength | null;
+  /**
+   * A non-negative length: number of pixels, or a string with unit px | pt | em.
+   */
+  side_margin?: number | string;
   mark?: Mark;
   wrap?: Wrap | null;
   truncate?: Truncate;

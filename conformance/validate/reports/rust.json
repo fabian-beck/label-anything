@@ -388,6 +388,17 @@
       ],
       "warnings": []
     },
+    "validate/side-margin-range.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/defaults/side_margin",
+          "code": "range",
+          "message": "must be >= 0"
+        }
+      ],
+      "warnings": []
+    },
     "validate/stub-options.json": {
       "valid": false,
       "errors": [
