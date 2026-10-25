@@ -263,6 +263,28 @@ def test_removal_test_needs_the_own_mark_clearly_nearest():
     assert evaluate(prob, result([omitted("lo"), placed("x", 142.5, 45, side="right")]))["priority"]["inversions"] == 1
 
 
+def test_removal_test_needs_the_own_mark_nearer_than_unlabeled_points():
+    # lo's only position [103, 45, 133, 55] is 1 px from its mark; an unlabeled point 1 px from
+    # the box is not farther than lo's own mark by the margin (spec §4.4, ADR
+    # placement/unlabeled-points)
+    def prob_with(x, own_nearest=None):
+        p = problem([item("lo", 100, 50)], placement={"position_order": ["right"]},
+                    obstacles={"vector": [{"class": "points", "r": 1, "points": [[x, 50]]}]})
+        if own_nearest is not None:
+            p["placement"]["own_nearest"] = own_nearest
+        return p
+
+    assert evaluate(prob_with(135), result([omitted("lo")]))["priority"]["inversions"] == 0
+    assert evaluate(prob_with(135, "items"), result([omitted("lo")]))["priority"]["inversions"] == 1
+    assert evaluate(prob_with(138.5), result([omitted("lo")]))["priority"]["inversions"] == 1   # 4.5 px: clear
+    assert evaluate(prob_with(118), result([omitted("lo")]))["priority"]["inversions"] == 1     # hidden
+    # in a field of points where none of lo's fixed positions is clear, the rule does not hold
+    field = [[x, y] for x in range(60, 141, 5) for y in range(30, 71, 5) if math.dist((x, y), (100, 50)) > 4]
+    p = problem([item("lo", 100, 50)], placement={"position_order": ["right"]},
+                obstacles={"vector": [{"class": "points", "r": 1, "points": field}]})
+    assert evaluate(p, result([omitted("lo")]))["priority"]["inversions"] == 1
+
+
 def test_removal_test_uses_only_the_items_candidates():
     # "lo" sits right below a wall of hard 'block' rects on its right side; only 'left' is free.
     items = [item("lo", 100, 50)]

@@ -158,6 +158,40 @@ impl StaticIndex {
     }
 }
 
+impl StaticIndex {
+    /// The first id, in the order of [`StaticIndex::query`], whose box touches `r` and for
+    /// which `f` holds (`f` is called in that order until it holds).
+    pub fn find(&self, r: &Rect, mut f: impl FnMut(u32) -> bool) -> Option<u32> {
+        if self.boxes.is_empty() {
+            return None;
+        }
+        let (c0, c1, r0, r1) = self.b.range(r);
+        if c0 == c1 && r0 == r1 {
+            let k = r0 * self.b.cols + c0;
+            return self.ids[self.offsets[k] as usize..self.offsets[k + 1] as usize]
+                .iter()
+                .copied()
+                .find(|&id| self.boxes[id as usize].touches(r) && f(id));
+        }
+        for row in r0..=r1 {
+            for col in c0..=c1 {
+                let k = row * self.b.cols + col;
+                for &id in &self.ids[self.offsets[k] as usize..self.offsets[k + 1] as usize] {
+                    let (fc, fr) = self.first[id as usize];
+                    if (fc as usize).max(c0) == col
+                        && (fr as usize).max(r0) == row
+                        && self.boxes[id as usize].touches(r)
+                        && f(id)
+                    {
+                        return Some(id);
+                    }
+                }
+            }
+        }
+        None
+    }
+}
+
 /// Dynamic index (placed labels, leader segments). Removal is O(bucket size).
 #[derive(Clone, Debug)]
 pub struct DynIndex {

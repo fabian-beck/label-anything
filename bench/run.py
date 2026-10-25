@@ -10,6 +10,8 @@ Solvers (``--solver``, repeatable; default: the built-in baselines ``naive`` and
 * ``textalloc`` / ``adjusttext`` /       third-party baselines (bench/baselines/; skipped with a
   ``vega-label`` / ``ggrepel`` /         message when their toolchain is missing),
   ``d3fc`` / ``echarts`` / ``d3-labeler``
+* ``mumtaz2019``                         reimplementation of Mumtaz et al. (2019), outlier labeling
+                                         (bench/baselines/mumtaz2019_baseline.py),
 * ``NAME=COMMAND``                       external command template with ``{problem}`` and
                                          ``{result}`` placeholders, e.g.
                                          ``rust=label-anything place {problem} -o {result}``.
@@ -17,7 +19,7 @@ Solvers (``--solver``, repeatable; default: the built-in baselines ``naive`` and
 Solvers named ``rust``, ``wasm`` or ``ts`` (optionally ``-suffix``) are Label Anything
 implementations: they get the performance targets, the parity table and the release
 gates. ``--engine PATH`` adds ``rust=PATH place {problem} -o {result} --warmup N`` and its debug
-overlay; ``--baselines`` adds all nine baselines (what ``label-anything bench --baselines``
+overlay; ``--baselines`` adds all ten baselines (what ``label-anything bench --baselines``
 passes). ``--overlay NAME=COMMAND`` (placeholders ``{problem}``, ``{result}``, ``{svg}``)
 renders an engine debug overlay next to the benchmark rendering, from one extra untimed run.
 
@@ -73,7 +75,8 @@ from bench.solvers import greedy, naive  # noqa: E402
 
 BUILTIN = {"naive": naive.solve, "greedy": greedy.solve}
 BUILTIN_NAMES = set(BUILTIN) | set(BASELINES)
-ALL_BASELINES = ["naive", "greedy", "textalloc", "adjusttext", "vega-label", "ggrepel", "d3fc", "echarts", "d3-labeler"]
+ALL_BASELINES = ["naive", "greedy", "textalloc", "adjusttext", "vega-label", "ggrepel", "d3fc", "echarts", "d3-labeler",
+                 "mumtaz2019"]
 fmt = rep.fmt
 
 
@@ -526,6 +529,7 @@ def main(argv=None) -> int:
     ap.add_argument("--suite", choices=["quick", "full"], default="quick")
     ap.add_argument("--solver", action="append",
                     help="naive | greedy | textalloc | adjusttext | vega-label | ggrepel | d3fc | echarts | d3-labeler | "
+                         "mumtaz2019 | "
                          "NAME=COMMAND (repeatable)")
     ap.add_argument("--engine", help="Rust CLI binary: adds rust=ENGINE place {problem} -o {result} and its overlay")
     ap.add_argument("--ts", action="store_true",

@@ -134,6 +134,93 @@ CASES["strict-repair"] = case(
     {"problem_file": "../problems/strict-repair.json"},
     {"placed_min": 50})
 
+
+def random_problem(seed):
+    """The random problem of `seed` of rust/crates/la-core/tests/random_problems.rs (SplitMix64)."""
+    m64 = (1 << 64) - 1
+    state = [seed]
+
+    def nxt():
+        state[0] = (state[0] + 0x9E3779B97F4A7C15) & m64
+        z = state[0]
+        z = ((z ^ (z >> 30)) * 0xBF58476D1CE4E5B9) & m64
+        z = ((z ^ (z >> 27)) * 0x94D049BB133111EB) & m64
+        return z ^ (z >> 31)
+
+    def rng(a, b):
+        return a + (b - a) * ((nxt() >> 11) / (1 << 53))
+
+    def below(n):
+        return nxt() % n
+
+    words = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta", "Iota", "Kappa",
+             "org.example.Name", "A much longer label"]
+    w, h = rng(200.0, 500.0), rng(150.0, 400.0)
+    n = 5 + below(40)
+    clustered = below(2) == 0
+    items = []
+    for i in range(n):
+        if clustered:
+            x = w * 0.5 + rng(-60.0, 60.0)
+            y = h * 0.5 + rng(-45.0, 45.0)
+        else:
+            x, y = rng(0.0, w), rng(0.0, h)
+        text = words[below(len(words))]
+        kind = below(6)
+        if kind == 0:
+            label = {"type": "composite", "gap": 2, "parts": [
+                {"type": "icon", "width": 9, "height": 9, "shape": "circle"}, {"type": "text", "text": text}]}
+        elif kind == 1:
+            label = {"type": "text", "text": text, "wrap": {"max_width": 40, "max_lines": 2}}
+        elif kind == 2:
+            bw = rng(8.0, 40.0)
+            label = {"type": "box", "width": bw, "height": rng(6.0, 20.0)}
+        else:
+            label = {"type": "text", "text": text}
+        item = {"id": f"i{i}", "anchor": {"type": "point", "x": x, "y": y}, "label": label,
+                "priority": float(below(4))}
+        if below(10) == 0:
+            item["required"] = True
+        if below(12) == 0:
+            item["tier"] = 1
+        items.append(item)
+    points = []
+    for _ in range(below(200)):
+        px = rng(0.0, w)
+        points.append([px, rng(0.0, h)])
+    walls = []
+    for _ in range(below(4)):
+        wx = rng(0.0, w)
+        wy = rng(0.0, h)
+        ww = rng(5.0, 60.0)
+        walls.append([wx, wy, ww, rng(5.0, 60.0)])
+    vector = [{"class": "points", "points": points, "r": 1.5}, {"class": "walls", "rects": walls}]
+    if below(3) == 0:
+        y0 = rng(0.0, h)
+        vector.append({"class": "lines", "polylines": [[[0.0, y0], [w, rng(0.0, h)]]], "width": 1.5})
+    models = [["adjacent", "slider"], ["adjacent", "slider", "distant"], ["adjacent", "slider", "boundary"],
+              ["adjacent", "slider", "distant", "boundary"]][below(4)]
+    style = ["straight", "angles", "orthogonal", "elbow", "curved"][below(5)]
+    omission = ["strict", "strict", "prefix", "weighted"][below(4)]
+    strategy = ["greedy", "local", "auto"][below(3)]
+    stubs = ["off", "auto"][int(below(3) == 0)]
+    return {"canvas": {"width": w, "height": h, "padding": 2}, "items": items, "obstacles": {"vector": vector},
+            "avoid": {"label": {"walls": "hard", "points": 0.3, "lines": 1.0}},
+            "placement": {"models": models, "stubs": stubs}, "leaders": {"style": style},
+            "priority": {"omission": omission},
+            "solver": {"strategy": strategy, "time_budget_ms": 200, "max_iterations": 3000}}
+
+
+# random problem 537 of the property test, weighted omission: an insertion of the local search
+# moved a more important label aside and freed the room of an omitted item but for the label
+# it inserted; no priority repair follows weighted omission, so the insertion is undone (spec
+# §10.2). With a budget that the iterations use up before the clock.
+WEIGHTED_INSERT = random_problem(537)
+WEIGHTED_INSERT["solver"]["time_budget_ms"] = 5000
+CASES["weighted-insert"] = case(
+    "weighted omission: an insertion leaves no more important item blocked only by less important labels",
+    WEIGHTED_INSERT, {"placed_min": 20})
+
 # the hub's only position covers the mark of a minor item: by default the mark blocks it; with
 # lower_items soft the hub is labeled and the minor item, whose top position is free, is not
 LOWER = {"canvas": {"width": 200, "height": 80}, "placement": ONE_SLOT, "degrade": ["omit"],
@@ -513,6 +600,39 @@ CASES["own-nearest-clear-stub"] = case(
     "label would be 1 px from both marks. With a stub, 0.5 em farther out, each is 7 px from "
     "both marks, and its stub, which keeps the leader clearance (0.4 em) from the other mark, "
     "says whose it is.")
+
+# Alpha may only stand above its point: its label (35.892 × 15.6 px) spans x 82.054–117.946
+# and y 41.4–57, 1 px from its mark. An unlabeled point (r 0.5) at (119, 50) is 0.554 px from
+# that box: nearer than Alpha's own mark, so a reader could take the label for the point's.
+POINTS = {"canvas": {"width": 200, "height": 120}, "degrade": ["omit"], "placement": {"models": ["adjacent"]},
+          "obstacles": {"vector": [{"class": "points", "r": 0.5, "points": [[119, 50]]}]},
+          "items": [pt("a", 100, 60, "Alpha", placement={"position_order": ["top"]})]}
+CASES["own-nearest-points"] = case(
+    "a label comes no closer to an unlabeled point than to its own mark",
+    POINTS,
+    {"placed": 0, "unplaced_ids": ["a"], "reasons": {"a": "no_feasible_candidate"}},
+    "The point is a disc of a vector layer of class points (soft for labels): the label could "
+    "cover it at a cost, but not stand nearer to it than to its own mark (spec §4.4).")
+CASES["own-nearest-points-items"] = case(
+    "with own_nearest items an unlabeled point may come nearer to a label than its own mark",
+    {**POINTS, "placement": {**POINTS["placement"], "own_nearest": "items"}},
+    {"placed_ids": ["a"], "anchor_side": {"a": "top"}})
+# A field of points every 6 px around Alpha's mark: no fixed position beside the mark keeps
+# clear of them, so the rule does not hold for Alpha, and its label stands above its mark among
+# them (covering points at their class's cost).
+FIELD = [[x, y] for x in range(40, 161, 6) for y in range(12, 109, 6) if math.hypot(x - 100, y - 60) > 4]
+CASES["own-nearest-points-field"] = case(
+    "in a field of points where no place beside the mark is clear, the rule for unlabeled points does not hold",
+    {**POINTS, "obstacles": {"vector": [{"class": "points", "r": 0.5, "points": FIELD}]}},
+    {"placed_ids": ["a"], "anchor_side": {"a": "top"}},
+    "Every one of Alpha's 8 fixed positions has a point within its margin that it does not hide: "
+    "the rule could not be met anywhere beside the mark (spec §4.4).")
+CASES["own-nearest-points-hidden"] = case(
+    "an unlabeled point entirely under a label does not compete with the label's own mark",
+    {**POINTS, "obstacles": {"vector": [{"class": "points", "r": 0.5, "points": [[100, 50]]}]}},
+    {"placed_ids": ["a"], "anchor_side": {"a": "top"}},
+    "The point lies inside the label box above Alpha's mark: the label hides it (at the cost of "
+    "its class) rather than stand nearer to it than to its own mark.")
 
 # Alpha may only stand right of its point; Beta's point, 16 px below it, comes within the
 # stub reach (0.75 em = 9 px) of that place: Alpha stands 0.5 em farther right, joined to its

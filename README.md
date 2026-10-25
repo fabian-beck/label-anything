@@ -136,12 +136,13 @@ The complete table is `spec/defaults.md`; presets (`scatter`, `map`, `graph`,
 
 ## Benchmark
 
-`bench/` is a real-world benchmark: twelve scenarios built from open data (scatterplots,
+`bench/` is a real-world benchmark: thirteen scenarios built from open data (scatterplots,
 volcano plots, embeddings, airports on a world map, city POIs on map tiles, node-link
-diagrams, illustrations, line charts, stress sizes, interactive zooming, priority), an
-implementation-independent evaluator, and nine baselines — naive, greedy, textalloc,
-adjustText, vega-label, ggrepel, the label layouts of ECharts and d3fc, and D3-Labeler —
-scored the same way.
+diagrams, illustrations, line charts, stress sizes, interactive zooming, priority, and the
+outlier plots of a labeling paper), an implementation-independent evaluator, and ten
+baselines — naive, greedy, textalloc, adjustText, vega-label, ggrepel, the label layouts of
+ECharts and d3fc, D3-Labeler, and the outlier labeling of Mumtaz et al. (2019) — scored the
+same way.
 `label-anything bench --baselines --perf` writes `bench-report/index.html`: metric tables,
 renderings side by side, runtime-vs-size plots, Rust/TypeScript parity and the performance
 targets; `--gate` enforces the release gates (`bench/README.md`, which also has the release

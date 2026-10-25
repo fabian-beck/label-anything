@@ -464,8 +464,10 @@ pub struct PlacementOpts {
     pub fan: FanMode,
     /// `placement.stubs: auto` (spec §6.9).
     pub stubs: bool,
-    /// `placement.own_nearest` (spec §4.4).
+    /// `placement.own_nearest` `true` or `"items"` (spec §4.4).
     pub own_nearest: bool,
+    /// `placement.own_nearest` `true`: the rule holds against the unlabeled points too.
+    pub own_nearest_points: bool,
 }
 
 impl PlacementOpts {
@@ -496,7 +498,8 @@ impl PlacementOpts {
                 _ => FanMode::Auto,
             },
             stubs: o.string("placement.stubs") == "auto",
-            own_nearest: o.bool("placement.own_nearest"),
+            own_nearest: o.get("placement.own_nearest").as_bool() != Some(false),
+            own_nearest_points: o.get("placement.own_nearest").as_bool() == Some(true),
         }
     }
 }

@@ -170,6 +170,12 @@ export class Evaluator {
       const sep = clear > 0 ? minf(clear, sj.reference().dist(item.shape.reference())) : 0;
       if (nearRule && d < dOwn + sep - EPS && (model.groupOf[j] ?? null) !== i) acc.violate(BLOCK_ITEMS, false, 0);
     }
+    // nor to an unlabeled point, where some place beside the mark keeps clear of them (spec
+    // §4.4)
+    if (nearRule && acc.feasible && obs.pointsRule[i] === true) {
+      const pc = obs.pointNearer(item, r, dOwn, clear);
+      if (pc !== null) acc.violate(pc, false, 0);
+    }
     if (dy.labelItems.kind === AvoidKind.Soft) {
       const cov = obs.otherItemsCovered(i, r);
       acc.add("items", (dy.labelItems.w * (lowerRule ? maxf(cov - lowerCov, 0) : cov)) / em2);

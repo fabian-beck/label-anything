@@ -2,14 +2,15 @@
 
 The real-world benchmark ([`bench/`](gh:bench/README.md)) measures label placement on
 problems built from open data, with one evaluator for every solver: the Rust, WebAssembly
-and TypeScript implementations of Label Anything and nine baselines — `naive`, `greedy`,
+and TypeScript implementations of Label Anything and ten baselines — `naive`, `greedy`,
 [textalloc](https://github.com/ckjellson/textalloc),
 [adjustText](https://github.com/Phlya/adjustText), Vega's
 [`label` transform](https://vega.github.io/vega/docs/transforms/label/),
 [ggrepel](https://github.com/slowkow/ggrepel), the label layouts of
 [d3fc](https://github.com/d3fc/d3fc/tree/master/packages/d3fc-label-layout) and
-[Apache ECharts](https://echarts.apache.org/), and the simulated annealing of
-[D3-Labeler](https://github.com/tinker10/D3-Labeler).
+[Apache ECharts](https://echarts.apache.org/), the simulated annealing of
+[D3-Labeler](https://github.com/tinker10/D3-Labeler), and the cost-based outlier labeling of
+[Mumtaz et al. (2019)](https://doi.org/10.2312/evs.20191161), reimplemented from the paper.
 
 | # | Scenario | Data |
 |---|---|---|
@@ -25,6 +26,7 @@ and TypeScript implementations of Label Anything and nine baselines — `naive`,
 | 10 | stress / scale | airports at 10× density, up to 20,000 anchors |
 | 11 | interactive stability | a zoom-and-pan camera path over the airports |
 | 12 | priority showcase | metrics and airports with attribute, outlier and coverage priorities |
+| 13 | outlier labeling after Mumtaz et al. (2019) | the paper's four figures, digitized, with its published layouts |
 
 ## What is measured
 

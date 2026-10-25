@@ -366,8 +366,8 @@
       "errors": [
         {
           "pointer": "/placement/own_nearest",
-          "code": "type",
-          "message": "expected boolean, got string"
+          "code": "enum",
+          "message": "must be one of true, false, \"items\""
         },
         {
           "pointer": "/placement/stub_reach",

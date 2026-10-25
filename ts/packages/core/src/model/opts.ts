@@ -455,8 +455,10 @@ export class PlacementOpts {
     public fan: FanMode,
     /** `placement.stubs: auto` (spec §6.9). */
     public stubs: boolean,
-    /** `placement.own_nearest` (spec §4.4). */
+    /** `placement.own_nearest` `true` or `"items"` (spec §4.4). */
     public ownNearest: boolean,
+    /** `placement.own_nearest` `true`: the rule holds against the unlabeled points too. */
+    public ownNearestPoints: boolean,
   ) {}
 
   static from(o: Opts): PlacementOpts {
@@ -474,7 +476,8 @@ export class PlacementOpts {
       { sides: o.strings("placement.boundary.sides"), spread: o.string("placement.boundary.align") === "spread" },
       fanMode(o.string("placement.fan")),
       o.string("placement.stubs") === "auto",
-      o.bool("placement.own_nearest"),
+      o.get("placement.own_nearest") !== false,
+      o.get("placement.own_nearest") === true,
     );
   }
 }

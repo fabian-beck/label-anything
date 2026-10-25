@@ -249,6 +249,13 @@ impl<'a> Evaluator<'a> {
                 acc.violate(Block::Items, false, 0.0);
             }
         }
+        // nor to an unlabeled point, where some place beside the mark keeps clear of them
+        // (spec §4.4)
+        if near_rule && acc.feasible && obs.points_rule.get(i).copied().unwrap_or(false) {
+            if let Some(pc) = obs.point_nearer(item, &r, d_own, clear) {
+                acc.violate(Block::Class(pc as u16), false, 0.0);
+            }
+        }
         if let AvoidW::Soft(wt) = dy.label_items {
             let cov = obs.other_items_covered(i, &r);
             let cov = if lower_rule {

@@ -176,7 +176,8 @@ pub fn place_validated(
             )],
         });
     }
-    let obs = obstacles::prepare(&m, min_font);
+    let mut obs = obstacles::prepare(&m, min_font);
+    obs.set_points_rule(&m, &variants);
     let t1 = env.now_ms();
     let measurer = labels::Measurer {
         fonts,

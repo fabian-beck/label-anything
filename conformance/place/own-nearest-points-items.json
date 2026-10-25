@@ -1,0 +1,64 @@
+{
+  "kind": "place",
+  "name": "with own_nearest items an unlabeled point may come nearer to a label than its own mark",
+  "problem": {
+    "canvas": {
+      "width": 200,
+      "height": 120
+    },
+    "degrade": [
+      "omit"
+    ],
+    "placement": {
+      "models": [
+        "adjacent"
+      ],
+      "own_nearest": "items"
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "class": "points",
+          "r": 0.5,
+          "points": [
+            [
+              119,
+              50
+            ]
+          ]
+        }
+      ]
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        },
+        "placement": {
+          "position_order": [
+            "top"
+          ]
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed_ids": [
+      "a"
+    ],
+    "anchor_side": {
+      "a": "top"
+    }
+  }
+}

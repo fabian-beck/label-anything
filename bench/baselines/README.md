@@ -15,12 +15,15 @@ document; every emulation is written into the result's `warnings` (codes
 | `d3fc` | [d3fc-label-layout](https://github.com/d3fc/d3fc/tree/master/packages/d3fc-label-layout) `layoutRemoveOverlaps(layoutGreedy())` | 7.0.4 (d3-array 3.2.4) | Node ≥ 20, subprocess | MIT | none | yes (hidden) |
 | `echarts` | [Apache ECharts](https://echarts.apache.org/) scatter labels, `labelLayout.hideOverlap` | echarts 6.1.0 (zrender 6.1.0), server-side rendering | Node ≥ 20, subprocess | Apache-2.0 | none | yes (hidden) |
 | `d3-labeler` | [D3-Labeler](https://github.com/tinker10/D3-Labeler) (simulated annealing) | `labeler.js` at commit `6de8670`, vendored (`vendor/d3-labeler`) | Node ≥ 20, subprocess | MIT | lines to the anchor | never |
+| `mumtaz2019` | [Mumtaz et al. 2019](https://doi.org/10.2312/evs.20191161) (cost-based greedy), reimplemented here | `bench/baselines/mumtaz2019_baseline.py` | Python, in-process | MIT (this repository) | lines towards the box centre | never |
 
 `naive` and `greedy` (`bench/solvers/`) are the built-in reference baselines.
 
 The first four tools avoid obstacles; d3fc, ECharts and D3-Labeler — the label layouts of
 two widely used chart libraries and the classic simulated-annealing labeler of D3 — avoid
 only other labels (D3-Labeler also the labeled anchors), which is how they are used.
+`mumtaz2019` is a published method without published code, reimplemented from the paper
+(below).
 
 ## Installation and use
 
@@ -267,6 +270,42 @@ Its energy weighs leader length, leader crossings, label–label and label–anc
 orientation bias; it never omits a label. A label whose box is away from its mark gets a
 straight leader from the mark to the box edge facing it, as the tool's demo draws one. Other
 marks and obstacle classes are not avoided.
+
+## mumtaz2019
+
+H. Mumtaz, M. van Garderen, F. Beck, D. Weiskopf: *Label Placement for Outliers in
+Scatterplots*, EuroVis 2019 short paper, [doi:10.2312/evs.20191161](https://doi.org/10.2312/evs.20191161).
+The paper publishes no code; `mumtaz2019_baseline.py` implements its §3 as written. Labels are
+placed one after the other in priority order and never moved. Each label is put at the
+cheapest of the positions of a radial grid around its point: the label's centre on 20 circles,
+each radius 30 % larger than the last, at 100 angles each. The cost (Table 1 of the paper)
+adds up these terms:
+
+| term | criterion | weight |
+|---|---|---|
+| `C_overlap` | outliers (the items' marks, the own one included) under the label | 1000 per point |
+| | non-outliers (obstacle points) under the label | 100 per point |
+| | placed labels under the label | 1000 per label |
+| `C_buffer` | other outliers in the label buffer (30 % of the label height around the box) | 100 per point |
+| | other outliers, non-outliers and placed labels in the leader buffer (the same width on both sides of the leader) | 300, 30, 300 |
+| `C_distance` | leader length: point to box edge on the line to the box centre | 1 per px |
+| `C_position` | the label's centre on the side of its point towards the chart centre, per axis (the paper prefers labels *outward*) | 15 per axis |
+| | the label (partly) outside the chart area | 10,000 |
+
+The paper leaves out the first radius, which point of the label sits on the circle and the
+weights. The baseline takes 1/8 of the label height for the first radius, so the outermost
+circle lies 18 label heights out, and the label's centre. Its weights follow the order §5
+gives: overlaps first, then buffers, then leader length. A leader is drawn when the gap
+between point and box exceeds the label buffer. Nothing is added that the paper does not
+have: no omission, no hard constraints, no leader–leader term.
+
+Emulations: the method knows points only. Polylines, rects, polygons and raster cells reach
+the cost as non-outlier points every 4 px, those of hard classes with the outliers' weights
+(the paper tailors its weights to the scenario, §5). Item marks are circles of their
+bounding radius. Deterministic, pure Python + numpy: the points under a label are
+counted on summed-area tables of their centres (a 1 px grid), and the exact leader-buffer
+terms are evaluated, in cost order, only for candidates that can still win. Problems with
+more than 5,000 labels are "n/a": in dense problems the method takes about 25 ms per label.
 
 ## Emulations at a glance
 
