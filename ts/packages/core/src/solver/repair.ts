@@ -222,6 +222,7 @@ export function boundaryPass(s: Solve): void {
   const area = slotArea(s.model, s.obs);
   if (area === null) return;
   const n = s.model.items.length;
+  const guard = s.prefixGuard();
   for (let side = 0; side < 4; side++) {
     const members: number[] = [];
     for (let i = 0; i < n; i++) {
@@ -229,15 +230,16 @@ export function boundaryPass(s: Solve): void {
       if (c >= 0 && s.cands[c]!.kind === Kind.Boundary && s.cands[c]!.bside === side) members.push(i);
     }
     if (members.length < 2) continue;
-    if (!restack(s, area, side, members, true) && s.anyShrunk(members)) restack(s, area, side, members, false);
+    if (!restack(s, area, side, members, true, guard) && s.anyShrunk(members)) restack(s, area, side, members, false, guard);
   }
 }
 
 /**
  * Lay out the boundary column of `members` on `side` (`full`: shrunk labels at full size)
- * and keep it when every label stays feasible and free and the total cost drops.
+ * and keep it when every label stays feasible and free and the total cost drops (and, with
+ * `guard`, no mark before the prefix end is left uncovered, see {@link Solve.uncovers}).
  */
-function restack(s: Solve, area: Rect, side: number, members: readonly number[], full: boolean): boolean {
+function restack(s: Solve, area: Rect, side: number, members: readonly number[], full: boolean, guard: number | null): boolean {
   const fresh = columnCands(s, area, side, members, full);
   if (fresh.some(([, c]) => !c.feasible)) return false;
   const order = fresh.map(([i]) => i);
@@ -259,7 +261,7 @@ function restack(s: Solve, area: Rect, side: number, members: readonly number[],
   }
   if (ok) {
     const after = totalCost(s, order);
-    if (after < before - 1e-9) {
+    if (after < before - 1e-9 && !(guard !== null && s.uncovers(old.map(([, c]) => c), guard, []))) {
       if (s.trace !== null) s.trace.pass("boundary", "boundary", order);
       return true;
     }
@@ -465,6 +467,7 @@ export { leadersCross };
 export function uncross(s: Solve): void {
   if (s.obs.dynamic.leaderLeaders.isHard()) return;
   const n = s.model.items.length;
+  const guard = s.prefixGuard();
   for (let round = 0; round < 50; round++) {
     let improved = false;
     pairs: for (let i = 0; i < n; i++) {
@@ -504,9 +507,12 @@ export function uncross(s: Solve): void {
           s.state.place(i, idI, s.cands, false);
           if (s.state.isFree(s.cands[idJ]!, s.cands, s.obs, j)) {
             s.state.place(j, idJ, s.cands, false);
-            improved = true;
-            if (s.trace !== null) s.trace.pass("uncross", "uncross", [i, j]);
-            break pairs;
+            if (!(guard !== null && s.uncovers([ci, cj], guard, []))) {
+              improved = true;
+              if (s.trace !== null) s.trace.pass("uncross", "uncross", [i, j]);
+              break pairs;
+            }
+            s.state.unplace(j, s.cands);
           }
           s.state.unplace(i, s.cands);
         }

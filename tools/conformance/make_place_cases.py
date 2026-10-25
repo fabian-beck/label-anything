@@ -148,6 +148,26 @@ CASES["lower-items-cover"] = case(
     {**LOWER, "avoid": {"label": {"lower_items": 2.0}}},
     {"placed": 1, "placed_ids": ["hub"], "unplaced_ids": ["minor"], "reasons": {"minor": "omitted_by_priority"}})
 
+# the same with prefix omission and a third, least important item in free space: the minor
+# item, whose mark the hub's label covers, has no candidate but does not end the prefix
+# (spec §9.2), so the third item is labeled
+CASES["prefix-covered-mark"] = case(
+    "prefix omission: an item whose mark a more important label covers does not end the prefix",
+    {**LOWER, "avoid": {"label": {"lower_items": 2.0}}, "priority": {"omission": "prefix"},
+     "items": LOWER["items"] + [pt("next", 150, 20, "Next", priority=0.5)]},
+    {"placed": 2, "placed_ids": ["hub", "next"], "unplaced_ids": ["minor"],
+     "reasons": {"minor": "omitted_by_priority"}})
+
+# the most important item is a group member that its group's label names (the first member
+# represents the group): it does not end the prefix either
+CASES["prefix-grouped"] = case(
+    "prefix omission: a member of a group label does not end the prefix",
+    {"canvas": {"width": 300, "height": 120}, "priority": {"omission": "prefix"},
+     "items": [pt("a", 80, 60, "Pair", group="g", priority=1.0),
+               pt("b", 84, 62, "Pair", group="g", priority=3.0),
+               pt("c", 220, 60, "Gamma", priority=2.0)]},
+    {"prefix": True, "placed": 2, "placed_ids": ["a", "c"], "reasons": {"b": "grouped"}})
+
 CASES["max-labels"] = case(
     "a label budget keeps the highest priorities",
     {"canvas": {"width": 600, "height": 200}, "priority": {"budget": {"max_labels": 2}},

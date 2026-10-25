@@ -97,7 +97,8 @@ pub fn run(s: &mut Solve) {
         let order = s.pri.order.clone();
         let mut cut = false;
         // after the guard, level 0 only (ADR solver/time-budget): the first item without a free
-        // level-0 position ends the prefix, and the guard of that pass ends it as well
+        // level-0 position ends the prefix (as below, not one with a covered mark), and the
+        // guard of that pass ends it as well
         let mut finish: Option<f64> = None;
         for (k, &i) in order.iter().enumerate() {
             if g.done[i] {
@@ -114,7 +115,7 @@ pub fn run(s: &mut Solve) {
                 }
             }
             if s.time_guard_hit && !g.cap_reached {
-                if !cut && !place_level0(s, &mut g, i) && !g.done[i] {
+                if !cut && !place_level0(s, &mut g, i) && !g.done[i] && !s.in_prefix(i) {
                     cut = true;
                 }
                 if !g.done[i] {
@@ -129,9 +130,16 @@ pub fn run(s: &mut Solve) {
                 continue;
             }
             // level 0 and then the ladder (spec §10.1), in total order; the first item
-            // that fails every step cuts the prefix
+            // that fails every step cuts the prefix, unless the label of a more important
+            // item covers its mark (spec §9.2) — every member's, for a `keep_with` set
             if !process_unit(s, &mut g, i, true) {
-                cut = true;
+                let unit = match g.sets[i] {
+                    Some(si) => g.set_members[si].clone(),
+                    None => vec![i],
+                };
+                if !unit.iter().all(|&m| s.in_prefix(m)) {
+                    cut = true;
+                }
             }
         }
         return;

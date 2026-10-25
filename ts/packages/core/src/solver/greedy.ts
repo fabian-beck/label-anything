@@ -170,7 +170,8 @@ export function run(s: Solve): void {
     const order = s.pri.order.slice();
     let cut = false;
     // after the guard, level 0 only (ADR solver/time-budget): the first item without a free level-0
-    // position ends the prefix, and the guard of that pass ends it as well
+    // position ends the prefix (as below, not one with a covered mark), and the guard of that
+    // pass ends it as well
     let finish: number | null = null;
     for (let k = 0; k < order.length; k++) {
       const i = order[k]!;
@@ -186,7 +187,7 @@ export function run(s: Solve): void {
         }
       }
       if (s.timeGuardHit && !g.capReached) {
-        if (!cut && !placeLevel0(s, g, i) && !g.done[i]) cut = true;
+        if (!cut && !placeLevel0(s, g, i) && !g.done[i] && !s.inPrefix(i)) cut = true;
         if (!g.done[i]) {
           g.done[i] = 1;
           s.reasons[i] = Reason.BudgetExhausted;
@@ -199,9 +200,14 @@ export function run(s: Solve): void {
         continue;
       }
       // level 0 and then the ladder (spec §10.1), in total order; the first item that
-      // fails every step cuts the prefix
+      // fails every step cuts the prefix, unless the label of a more important item covers
+      // its mark (spec §9.2) — every member's, for a `keep_with` set
       if (s.trace !== null) s.trace.pick(i, g.live[i]!, "ordered");
-      if (!processUnit(s, g, i, true)) cut = true;
+      if (!processUnit(s, g, i, true)) {
+        const si = g.sets[i]!;
+        const unit = si >= 0 ? g.setMembers[si]!.slice() : [i];
+        if (!unit.every((m) => s.inPrefix(m))) cut = true;
+      }
     }
     return;
   }

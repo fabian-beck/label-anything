@@ -283,6 +283,7 @@ pub fn boundary_pass(s: &mut Solve) {
         return;
     };
     let n = s.model.items.len();
+    let guard = s.prefix_guard();
     for side in 0u8..4 {
         let members: Vec<usize> = (0..n)
             .filter(|&i| {
@@ -297,15 +298,23 @@ pub fn boundary_pass(s: &mut Solve) {
         if members.len() < 2 {
             continue;
         }
-        if !restack(s, &area, side, &members, true) && s.any_shrunk(&members) {
-            restack(s, &area, side, &members, false);
+        if !restack(s, &area, side, &members, true, guard) && s.any_shrunk(&members) {
+            restack(s, &area, side, &members, false, guard);
         }
     }
 }
 
 /// Lay out the boundary column of `members` on `side` (`full`: shrunk labels at full size)
-/// and keep it when every label stays feasible and free and the total cost drops.
-fn restack(s: &mut Solve, area: &Rect, side: u8, members: &[usize], full: bool) -> bool {
+/// and keep it when every label stays feasible and free and the total cost drops (and, with
+/// `guard`, no mark before the prefix end is left uncovered, see [`Solve::uncovers`]).
+fn restack(
+    s: &mut Solve,
+    area: &Rect,
+    side: u8,
+    members: &[usize],
+    full: bool,
+    guard: Option<usize>,
+) -> bool {
     let fresh = column_cands(s, area, side, members, full);
     if fresh.iter().any(|(_, c)| !c.feasible) {
         return false;
@@ -336,7 +345,11 @@ fn restack(s: &mut Solve, area: &Rect, side: u8, members: &[usize], full: bool) 
     }
     if ok {
         let after = total_cost(s, &order);
-        if after < before - 1e-9 {
+        let uncovers = |s: &mut Solve, end: usize| {
+            let olds: Vec<u32> = old.iter().map(|&(_, c)| c).collect();
+            s.uncovers(&olds, end, &mut Vec::new())
+        };
+        if after < before - 1e-9 && !guard.is_some_and(|end| uncovers(s, end)) {
             return true;
         }
     }
@@ -537,6 +550,7 @@ pub fn uncross(s: &mut Solve) {
         return;
     }
     let n = s.model.items.len();
+    let guard = s.prefix_guard();
     for _round in 0..50 {
         let mut improved = false;
         'pairs: for i in 0..n {
@@ -596,8 +610,11 @@ pub fn uncross(s: &mut Solve) {
                     let cj2 = &s.cands[id_j as usize];
                     if s.state.is_free(cj2, &s.cands, s.obs, j, &mut scratch) {
                         s.state.place(j, id_j, &s.cands, false);
-                        improved = true;
-                        break 'pairs;
+                        if !guard.is_some_and(|end| s.uncovers(&[ci, cj], end, &mut scratch)) {
+                            improved = true;
+                            break 'pairs;
+                        }
+                        s.state.unplace(j, &s.cands);
                     }
                     s.state.unplace(i, &s.cands);
                 }

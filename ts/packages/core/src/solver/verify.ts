@@ -80,11 +80,10 @@ export function verify(s: Solve): Verification {
 export function inversions(s: Solve): number {
   const n = s.model.items.length;
   if (s.model.omission === Omission.Prefix) {
+    // the labels after the first omitted item that ends the prefix (spec §9.2)
     const order = s.pri.order;
-    const r = order.findIndex((i) => s.state.placed[i]! < 0);
-    if (r < 0) return 0;
     let count = 0;
-    for (let k = r; k < order.length; k++) if (s.state.placed[order[k]!]! >= 0) count += 1;
+    for (let k = s.prefixEnd(0); k < order.length; k++) if (s.state.placed[order[k]!]! >= 0) count += 1;
     return count;
   }
   let count = 0;

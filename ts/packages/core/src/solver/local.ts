@@ -122,9 +122,15 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
   // Every state change is an accepted move, so `st.accepted` versions the state. An
   // insertion that failed on this version fails again (an attempt rolls back whatever it
   // tried, and below the label cap the order of its tries does not matter): a retry only
-  // draws the random offset it would draw (prefix mode retries the first omitted item at
-  // every insertion move).
+  // draws the random offset it would draw (prefix mode retries the item that ends the
+  // prefix at every insertion move).
   const failedAt = new Array<number>(n).fill(-1);
+  // prefix omission: the total-order position of the first item that ends the prefix
+  // (spec §9.2). The items before it stay placed or covered: when labels may cover the
+  // marks of less important items, a move must not uncover one (`guard`).
+  let end = mode === Omission.Prefix ? s.prefixEnd(0) : n;
+  const guard = mode === Omission.Prefix && s.state.hasLower();
+  const coverBuf: number[] = [];
   const tr = s.trace;
   if (tr !== null) tr.anneal(iterations, t0, cur);
   for (let it = 0; it < iterations; it++) {
@@ -144,12 +150,9 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
       // insertion (ejection chain)
       let u = -1;
       if (mode === Omission.Prefix) {
-        for (const i of s.pri.order) {
-          if (s.state.placed[i]! < 0) {
-            u = i;
-            break;
-          }
-        }
+        // (a move may have covered the mark of the item there)
+        end = s.prefixEnd(end);
+        if (end < s.pri.order.length) u = s.pri.order[end]!;
       } else {
         // pick an unplaced item, biased to higher priority: two draws, keep the better
         const a = rng.nextBelow(n);
@@ -177,7 +180,7 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
         if (tr !== null) tr.move(it, "insert", u, -1, -1, -1, -1, 0, null, temp, "idle", "known", cur, best);
         continue;
       }
-      if (tryInsert(s, u, softOk, sets, rng, scratch)) {
+      if (tryInsert(s, u, softOk, sets, rng, scratch, guard ? end : null)) {
         st.inserted += 1;
         st.accepted += 1;
         // the priority objective improved: this state becomes the new reference
@@ -217,6 +220,12 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
       const delta = nw - old;
       if (delta <= 0 || rng.nextF64() < exp(-delta / temp)) {
         place(s, i, k);
+        if (guard && s.uncovers([curC], end, coverBuf)) {
+          s.state.unplace(i, s.cands);
+          place(s, i, curC);
+          if (tr !== null) tr.move(it, "relocate", i, curC, k, -1, -1, 0, delta, temp, "uncovers", null, cur, best);
+          continue;
+        }
         st.accepted += 1;
         cur += delta;
         if (cur < best - 1e-9) {
@@ -252,22 +261,27 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
       }
       if (bestJ >= 0) {
         const delta = newI + bestJc - old - oldJ;
+        let outcome: "rejected" | "uncovers" = "rejected";
         if (delta <= 0 || rng.nextF64() < exp(-delta / temp)) {
           place(s, j, bestJ);
-          st.accepted += 1;
-          cur += delta;
-          if (cur < best - 1e-9) {
-            best = cur;
-            snapshot = s.state.placed.slice();
-            snapReasons = s.reasons.slice();
+          if (!(guard && s.uncovers([curC, jc], end, coverBuf))) {
+            st.accepted += 1;
+            cur += delta;
+            if (cur < best - 1e-9) {
+              best = cur;
+              snapshot = s.state.placed.slice();
+              snapReasons = s.reasons.slice();
+            }
+            if (tr !== null) tr.move(it, "swap", i, curC, k, j, bestJ, 1, delta, temp, delta <= 0 ? "improved" : "accepted", null, cur, best);
+            continue;
           }
-          if (tr !== null) tr.move(it, "swap", i, curC, k, j, bestJ, 1, delta, temp, delta <= 0 ? "improved" : "accepted", null, cur, best);
-          continue;
+          s.state.unplace(j, s.cands);
+          outcome = "uncovers";
         }
         s.state.unplace(i, s.cands);
         place(s, i, curC);
         place(s, j, jc);
-        if (tr !== null) tr.move(it, "swap", i, curC, k, j, bestJ, 1, delta, temp, "rejected", null, cur, best);
+        if (tr !== null) tr.move(it, "swap", i, curC, k, j, bestJ, 1, delta, temp, outcome, null, cur, best);
       } else {
         s.state.unplace(i, s.cands);
         place(s, i, curC);
@@ -340,6 +354,16 @@ class Tx {
     place(s, i, c);
   }
 
+  /**
+   * With `prefix` omission: whether the labels moved by the transaction left an item before
+   * position `end` uncovered that ends the prefix (see {@link Solve.uncovers}).
+   */
+  uncovers(s: Solve, end: number, buf: number[]): boolean {
+    const old: number[] = [];
+    for (const x of this.log) if (x[1] >= 0) old.push(x[1]);
+    return s.uncovers(old, end, buf);
+  }
+
   rollback(s: Solve): void {
     for (const [i] of this.log) s.state.unplace(i, s.cands);
     for (const [i, old, reason] of this.log) {
@@ -352,9 +376,10 @@ class Tx {
 /**
  * Try to place unplaced item `u`: directly, by relocating blockers (ejection chain of
  * depth ≤ 3), or — when the omission mode allows it — by evicting blockers whose removal
- * improves the priority objective.
+ * improves the priority objective. `guard`: with `prefix` omission, the position of `u`,
+ * before which the chain may uncover no mark (see {@link Solve.uncovers}).
  */
-function tryInsert(s: Solve, u: number, softOk: boolean, sets: readonly boolean[], rng: Pcg32, scratch: number[]): boolean {
+function tryInsert(s: Solve, u: number, softOk: boolean, sets: readonly boolean[], rng: Pcg32, scratch: number[], guard: number | null): boolean {
   const ids = s.byItem[u]!.slice();
   const scoredCost: number[] = [];
   const scoredId: number[] = [];
@@ -394,7 +419,7 @@ function tryInsert(s: Solve, u: number, softOk: boolean, sets: readonly boolean[
         break;
       }
     }
-    if (ok && !capFullAfterInsert(s)) return true;
+    if (ok && !capFullAfterInsert(s) && !(guard !== null && tx.uncovers(s, guard, scratch))) return true;
     tx.rollback(s);
     // eviction (priority-improving): strict → all blockers have strictly lower keys;
     // weighted → same tier and the weights improve

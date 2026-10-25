@@ -102,11 +102,16 @@ fn problem(seed: u64) -> Value {
     let strategy = ["greedy", "local", "auto"][r.below(3) as usize];
     // drawn last, so that the problems are otherwise those of the seeds before
     let stubs = ["off", "auto"][(r.below(3) == 0) as usize];
+    let mut avoid = json!({"walls": "hard", "points": 0.3, "lines": 1.0});
+    if r.below(2) == 0 {
+        // labels may cover the marks of less important items (spec §4.4)
+        avoid["lower_items"] = json!(2.0);
+    }
     json!({
         "canvas": {"width": w, "height": h, "padding": 2},
         "items": items,
         "obstacles": obstacles,
-        "avoid": {"label": {"walls": "hard", "points": 0.3, "lines": 1.0}},
+        "avoid": {"label": avoid},
         "placement": {"models": models, "stubs": stubs},
         "leaders": {"style": style},
         "priority": {"omission": omission},

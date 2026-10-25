@@ -148,11 +148,14 @@ export function problem(seed: number): Record<string, unknown> {
   const strategy = ["greedy", "local", "auto"][r.below(3)]!;
   // drawn last, so that the problems are otherwise those of the seeds before
   const stubs = r.below(3) === 0 ? "auto" : "off";
+  const avoid: Record<string, unknown> = { walls: "hard", points: 0.3, lines: 1.0 };
+  // labels may cover the marks of less important items (spec §4.4)
+  if (r.below(2) === 0) avoid.lower_items = 2.0;
   return {
     canvas: { width: w, height: h, padding: 2 },
     items,
     obstacles: { vector },
-    avoid: { label: { walls: "hard", points: 0.3, lines: 1.0 } },
+    avoid: { label: avoid },
     placement: { models, stubs },
     leaders: { style },
     priority: { omission },

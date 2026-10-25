@@ -1,0 +1,96 @@
+{
+  "kind": "place",
+  "name": "prefix omission: an item whose mark a more important label covers does not end the prefix",
+  "problem": {
+    "canvas": {
+      "width": 200,
+      "height": 80
+    },
+    "placement": {
+      "models": [
+        "adjacent"
+      ],
+      "position_order": [
+        "right"
+      ]
+    },
+    "degrade": [
+      "omit"
+    ],
+    "items": [
+      {
+        "id": "hub",
+        "anchor": {
+          "type": "point",
+          "x": 60,
+          "y": 50
+        },
+        "label": {
+          "type": "text",
+          "text": "Hub"
+        },
+        "priority": 2.0
+      },
+      {
+        "id": "minor",
+        "anchor": {
+          "type": "point",
+          "x": 85,
+          "y": 50,
+          "mark": {
+            "shape": "circle",
+            "r": 12
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "Minor"
+        },
+        "priority": 1.0,
+        "placement": {
+          "position_order": [
+            "top"
+          ]
+        }
+      },
+      {
+        "id": "next",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 20
+        },
+        "label": {
+          "type": "text",
+          "text": "Next"
+        },
+        "priority": 0.5
+      }
+    ],
+    "avoid": {
+      "label": {
+        "lower_items": 2.0
+      }
+    },
+    "priority": {
+      "omission": "prefix"
+    }
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 2,
+    "placed_ids": [
+      "hub",
+      "next"
+    ],
+    "unplaced_ids": [
+      "minor"
+    ],
+    "reasons": {
+      "minor": "omitted_by_priority"
+    }
+  }
+}

@@ -1248,8 +1248,12 @@ then index; `random`/`random(n)`: a PCG32 permutation with seed `n` or `solver.s
   leaves `h` no candidate, §4.4). `stats.priority_inversions`
   counts violations of this (verified after solving by the same removal test) and MUST
   be 0.
-* `prefix`: the placed set is a prefix of the total order. Items after the first omitted
-  item are omitted with reason `omitted_by_priority`.
+* `prefix`: the placed set is a prefix of the total order, apart from items unlabeled
+  for a reason of their own, which do not end it: members of a group label (§5.7, reason
+  `grouped`) and, with a soft or ignored `avoid.label.lower_items`, items whose mark a
+  placed label of higher key covers (§4.4: no candidate is left them). Items after the
+  first other omitted item are omitted with reason `omitted_by_priority`.
+  `stats.priority_inversions` counts the placed items after it.
 * `weighted`: maximize Σ max(score, 0) + ε per tier, tiers strict. Inversions are
   reported, not forbidden.
 
@@ -1328,7 +1332,8 @@ The items still undecided then — except `keep_with` members and items whose le
 attempt already failed — are visited once more in total order and take their best free
 level-0 candidate as in a band's level-0 pass, without the ladder, until another
 10 × `time_budget_ms` have passed (checked every 64 items); with `prefix` omission the
-first of them without a free level-0 candidate ends the prefix. Every item left
+first of them without a free level-0 candidate ends the prefix (unless it does not end it
+by §9.2). Every item left
 undecided is `budget_exhausted`. Without a clock the guard never passes.
 
 Warm starts (`warm_start`, with `weights.stability` > 0; ADR motion/warm-starts):
@@ -1351,7 +1356,9 @@ Moves: relocate one item; swap (relocate an item into a position that conflicts 
 other item which is relocated in turn); insert an unplaced item by an ejection chain of
 depth ≤ 3; switch a label variant. Acceptance: hard feasibility is invariant; the
 priority objective (strict: placed key multiset, lexicographic; prefix: prefix length;
-weighted: tier-wise weight sums) must not get worse; cost changes are accepted by the
+weighted: tier-wise weight sums) must not get worse — with `prefix` omission no move
+leaves the mark of an item before the end of the prefix uncovered that a moved label
+covered (§9.2), and an insertion tries the item at the end; cost changes are accepted by the
 Metropolis rule `u < exp(−Δ/T)` with a geometric schedule from `T₀` to `T₀/1000` over the
 iteration budget. `T₀` is the median increase of the static cost over 50 random
 relocation probes, of those that increase it (0.1 when none does). `Δ` is the change of
@@ -1368,7 +1375,8 @@ After search: fan labels (§6.8); the boundary labels of each side are re-stacke
 (§6.6) when that keeps them feasible and lowers their cost, and the sides' columns take in
 items without a label (§6.6, filling); any two crossing leaders (only
 possible when `avoid.leader.leaders` is soft) are uncrossed by exchanging label positions when that shortens the total leader
-length. With `strict` omission, the **priority repair** then visits the omitted items in
+length. With `prefix` omission, a re-stacking or exchange that would leave a mark before the
+end of the prefix uncovered (as in §10.2) is not made. With `strict` omission, the **priority repair** then visits the omitted items in
 total order (except `keep_with` members and items cut by the time guard): an item with a
 usable candidate (statically feasible, or relaxed with `soft_overlap` in the ladder) that
 conflicts with no placed label, or only with labels of strictly lower key (not required),

@@ -26,7 +26,7 @@ import { type Measurer, type Variant, fullSize, ladderVariants } from "../labels
 import { Stubs, distant, distantDirs } from "../leaders.js";
 import { cosDeg } from "../detmath.js";
 import { cmpF64, minf } from "../math.js";
-import { type Model, Models, labelGap } from "../model/index.js";
+import { type Model, Models, Omission, labelGap } from "../model/index.js";
 import type { Obstacles } from "../obstacles.js";
 import type { Priorities } from "../priority.js";
 import { StaticIndex } from "../spatial.js";
@@ -673,6 +673,51 @@ export class Solve {
   pollCancel(): boolean {
     if (!this.cancelled && envCancelled(this.env)) this.cancelled = true;
     return this.cancelled;
+  }
+
+  /**
+   * With `prefix` omission (spec §9.2): whether item `i` keeps the prefix going — it is
+   * placed, merged into a group label, or has no candidate because a placed label of a
+   * more important item covers its mark (§4.4).
+   */
+  inPrefix(i: number): boolean {
+    return this.state.placed[i]! >= 0 || this.reasons[i] === Reason.Grouped || this.state.markCovered(i, this.cands);
+  }
+
+  /**
+   * With `prefix` omission: the total-order position of the first item from position
+   * `from` on that ends the prefix (see {@link inPrefix}), the number of items when none
+   * does.
+   */
+  prefixEnd(from: number): number {
+    let r = from;
+    while (r < this.pri.order.length && this.inPrefix(this.pri.order[r]!)) r++;
+    return r;
+  }
+
+  /**
+   * With `prefix` omission and labels that may cover the marks of less important items:
+   * the end of the prefix, which moves of placed labels keep (see {@link uncovers}), else
+   * null.
+   */
+  prefixGuard(): number | null {
+    return this.model.omission === Omission.Prefix && this.state.hasLower() ? this.prefixEnd(0) : null;
+  }
+
+  /**
+   * With `prefix` omission: whether the labels that left the candidates `old` covered the
+   * mark of an item before position `end` of the total order that now ends the prefix
+   * (`buf`: scratch). Moves of placed labels must not do that.
+   */
+  uncovers(old: readonly number[], end: number, buf: number[]): boolean {
+    for (const c of old) {
+      this.state.lowerCovered(this.cands[c]!, buf);
+      for (let k = 0; k < buf.length; k++) {
+        const j = buf[k]!;
+        if (this.pri.prio[j]!.rank < end && !this.inPrefix(j)) return true;
+      }
+    }
+    return false;
   }
 }
 

@@ -128,6 +128,8 @@ export type TraceOutcome =
   | "blocked"
   /** swap: the blocker has no free candidate */
   | "no_room"
+  /** prefix omission: the move would uncover a mark whose item would then end the prefix */
+  | "uncovers"
   /** insertion: the item got a label */
   | "inserted"
   /** insertion: no candidate could be freed */

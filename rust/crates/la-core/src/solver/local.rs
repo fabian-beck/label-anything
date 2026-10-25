@@ -134,9 +134,19 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
     // Every state change is an accepted move, so `st.accepted` versions the state. An
     // insertion that failed on this version fails again (an attempt rolls back whatever it
     // tried, and below the label cap the order of its tries does not matter): a retry only
-    // draws the random offset it would draw (prefix mode retries the first omitted item at
-    // every insertion move).
+    // draws the random offset it would draw (prefix mode retries the item that ends the
+    // prefix at every insertion move).
     let mut failed_at: Vec<Option<u64>> = vec![None; n];
+    // prefix omission: the total-order position of the first item that ends the prefix
+    // (spec §9.2). The items before it stay placed or covered: when labels may cover the
+    // marks of less important items, a move must not uncover one (`guard`).
+    let mut end = if mode == Omission::Prefix {
+        s.prefix_end(0)
+    } else {
+        n
+    };
+    let guard = mode == Omission::Prefix && s.state.has_lower();
+    let mut cover_buf: Vec<u32> = Vec::new();
     for it in 0..iterations {
         if it % 256 == 0 {
             if s.env.now_ms() > deadline_ms && deadline_ms > 0.0 {
@@ -155,12 +165,11 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
         if r < 0.2 && any_unplaced {
             // insertion (ejection chain)
             let u = match mode {
-                Omission::Prefix => s
-                    .pri
-                    .order
-                    .iter()
-                    .copied()
-                    .find(|&i| s.state.placed[i].is_none()),
+                Omission::Prefix => {
+                    // (a move may have covered the mark of the item there)
+                    end = s.prefix_end(end);
+                    s.pri.order.get(end).copied()
+                }
                 _ => {
                     // pick an unplaced item, biased to higher priority: two draws, keep the better
                     let a = rng.next_below(n as u32) as usize;
@@ -198,7 +207,15 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
                 }
                 continue;
             }
-            if try_insert(s, u, soft_ok, &sets, &mut rng, &mut scratch) {
+            if try_insert(
+                s,
+                u,
+                soft_ok,
+                &sets,
+                &mut rng,
+                &mut scratch,
+                guard.then_some(end),
+            ) {
                 st.inserted += 1;
                 st.accepted += 1;
                 // the priority objective improved: this state becomes the new reference
@@ -233,6 +250,11 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
             let delta = new - old;
             if delta <= 0.0 || rng.next_f64() < exp(-delta / temp) {
                 place(s, i, k);
+                if guard && s.uncovers(&[cur_c], end, &mut cover_buf) {
+                    s.state.unplace(i, &s.cands);
+                    place(s, i, cur_c);
+                    continue;
+                }
                 st.accepted += 1;
                 cur += delta;
                 if cur < best - 1e-9 {
@@ -269,14 +291,17 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
                     let delta = new_i + cj - old - old_j;
                     if delta <= 0.0 || rng.next_f64() < exp(-delta / temp) {
                         place(s, j, kj);
-                        st.accepted += 1;
-                        cur += delta;
-                        if cur < best - 1e-9 {
-                            best = cur;
-                            snapshot.clone_from(&s.state.placed);
-                            snap_reasons.clone_from(&s.reasons);
+                        if !(guard && s.uncovers(&[cur_c, jc], end, &mut cover_buf)) {
+                            st.accepted += 1;
+                            cur += delta;
+                            if cur < best - 1e-9 {
+                                best = cur;
+                                snapshot.clone_from(&s.state.placed);
+                                snap_reasons.clone_from(&s.reasons);
+                            }
+                            continue;
                         }
-                        continue;
+                        s.state.unplace(j, &s.cands);
                     }
                     s.state.unplace(i, &s.cands);
                     place(s, i, cur_c);
@@ -357,6 +382,12 @@ impl Tx {
         self.touch(s, i);
         place(s, i, c);
     }
+    /// With `prefix` omission: whether the labels moved by the transaction left an item
+    /// before position `end` uncovered that ends the prefix (see [`Solve::uncovers`]).
+    fn uncovers(&self, s: &mut Solve, end: usize, buf: &mut Vec<u32>) -> bool {
+        let old: Vec<u32> = self.log.iter().filter_map(|x| x.1).collect();
+        s.uncovers(&old, end, buf)
+    }
     fn rollback(self, s: &mut Solve) {
         for (i, _, _) in &self.log {
             s.state.unplace(*i, &s.cands);
@@ -372,7 +403,8 @@ impl Tx {
 
 /// Try to place unplaced item `u`: directly, by relocating blockers (ejection chain of
 /// depth ≤ 3), or — when the omission mode allows it — by evicting blockers whose removal
-/// improves the priority objective.
+/// improves the priority objective. `guard`: with `prefix` omission, the position of `u`,
+/// before which the chain may uncover no mark (see [`Solve::uncovers`]).
 fn try_insert(
     s: &mut Solve,
     u: usize,
@@ -380,6 +412,7 @@ fn try_insert(
     sets: &[bool],
     rng: &mut Pcg32,
     scratch: &mut Vec<u32>,
+    guard: Option<usize>,
 ) -> bool {
     let ids: Vec<u32> = s.by_item[u].clone();
     let mut scored: Vec<(f64, u32)> = Vec::new();
@@ -437,7 +470,8 @@ fn try_insert(
                 break;
             }
         }
-        if ok && !cap_full_after_insert(s) {
+        if ok && !cap_full_after_insert(s) && !guard.is_some_and(|end| tx.uncovers(s, end, scratch))
+        {
             return true;
         }
         tx.rollback(s);
