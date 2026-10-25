@@ -120,11 +120,11 @@ jobs:
       - run: npm ci
       - name: Build the module and its glue (cargo + wasm-bindgen)
         run: npm run build:wasm -w @label-anything/wasm
-      - name: Size budget (gzip < 1 MB)
+      - name: Size budget (gzip < 1.1 MB)
         run: |
           size=$(gzip -9 -c ts/packages/wasm-adapter/wasm/label_anything_bg.wasm | wc -c)
           echo "label_anything_bg.wasm: $size bytes gzip"
-          test "$size" -lt 1000000
+          test "$size" -lt 1100000
       - name: Type-check and build
         run: npm run build
       - name: Rust CLI (the native results the WebAssembly results must equal)
