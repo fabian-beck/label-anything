@@ -212,6 +212,7 @@ Hard/soft/ignore come from the effective options (defaults.md ← preset ← pro
 | | `clarity.leadered_unclear` (and `_rate`) | labels with a leader whose box another data point comes nearer than 0.2 em: the leader says whose it is, its position says another point's |
 | | `points.{total,covered,rate,hidden,items_covered,background_covered,labels_covering,labels_covering_rate}` | data points (as above) that a label other than their own overlaps (box shrunk by t), whatever the avoidance settings: a covered point is hidden from the reader; `hidden`: those entirely inside a label box; `labels_covering` = labels covering any |
 | | `spacing.{pairs_tight,pairs_close,labels_close,labels_close_rate,nearest_p10_em,nearest_p50_em}` | the gap between label boxes in em of the larger font: pairs closer than 0.2 em (the label margin) and 0.4 em (the engine's default spacing, ADR placement/margin), labels whose nearest other label is closer than 0.4 em, quantiles of the nearest gap (capped at 2 em): labels too close to each other read as one |
+| clutter (`bench/eval/clutter.py`) | `clutter.{edge_density,text,leaders,leader_share,per_label_em,edges_px,box_area}` | the edge density the labels add (ADR project/benchmark-measures): the outline length of the glyphs of every placed text at its font size (bundled Noto Sans, `.notdef` for missing glyphs), plus twice the length of every leader and underline (the two edges of a stroke), plus the box perimeter of icon and box labels, per canvas px (unbounded problems: the extent of marks and labels); `text`/`leaders` the two parts, `leader_share` the leaders' share, `per_label_em` the edge length per placed label in em of its font, `box_area` the label boxes' share of the canvas. Agrees with the Canny edge density of the rendered labels (r = 0.991); informational in the report (more labels add clutter), not gated |
 | shape fidelity | `adjacent_gap_mean`, `_abs_mean`, `_max_abs`, `adjacent_touch_rate` | gap = signed distance(box, own shape) − `placement.offset` for adjacent/slider labels without leader (target 0; touch = \|gap\| ≤ t) |
 | | `own_mark_violations`, `internal_outside` | as above |
 | | `internal_eligible`, `internal_rate` | placed items whose shape can contain the placed box grown by `placement.inner_padding` (circles exactly, rects/ellipses at the center, polygons at the pole of inaccessibility); rate = fraction of them placed internally |
@@ -402,7 +403,7 @@ more (224 against 199 ms) for 994 labels instead of 871.
 
 * a **summary** per solver (problems run / n/a / failed, mean placed and usable rate, hard
   violations and conflicts, ambiguity, unclear labels, covered points, close labels,
-  inversions, summed runtimes, peak memory, and the
+  clutter, inversions, summed runtimes, peak memory, and the
   empirical scaling exponent k of runtime ∝ nᵏ over the stress scenario's sizes);
 * the **performance-target table** (median, target, ratio, every run) and the **release-gate**
   summary when evaluated;

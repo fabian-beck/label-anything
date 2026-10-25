@@ -61,11 +61,14 @@ METRICS = [
     ("label_points_hidden", "points hidden", "{:d}", -1),
     ("label_lines_em", "lines hidden em", "{:.1f}", -1),
     ("labels_on_contrast_border", "contrast border", "{:d}", -1),
+    ("clutter", "clutter", "{:.2%}", 0),
+    ("clutter_leader_share", "clutter by leaders", "{:.1%}", 0),
+    ("clutter_per_label_em", "edges per label em", "{:.1f}", 0),
     ("schema_errors", "schema err.", "{:d}", -1),
 ]
 TABLE_COLS = ["placed_rate", "usable_rate", "hard_violations", "hard_conflicts", "leader_crossings",
               "leader_near_crossings", "leader_mark_touches", "ambiguity_rate", "clarity_unclear_rate",
-              "points_covered_rate", "labels_close_rate", "priority_inversions", "ndcg_at_k",
+              "points_covered_rate", "labels_close_rate", "clutter", "priority_inversions", "ndcg_at_k",
               "adjacent_gap_abs_mean", "position_rank_mean", "region_coverage", "soft_coverage_mean"]
 SEQ_METRICS = [
     ("displacement_mean_px", "displacement px", "{:.2f}", -1),
@@ -450,6 +453,7 @@ def _summary_table(report: dict) -> list[str]:
          "<th>n/a</th><th>errors</th><th>placed (mean)</th><th>usable (mean)</th><th>hard viol. (sum)</th>"
          "<th>conflicts (sum)</th><th>problems with hard viol.</th>"
          "<th>ambig. (mean)</th><th>unclear (mean)</th><th>points covered (mean)</th><th>labels close (mean)</th>"
+         "<th title='edge density of the labels and leaders: their outline length per canvas pixel'>clutter (mean)</th>"
          "<th>inversions (sum)</th><th>engine ms (sum of medians)</th>"
          "<th>wall ms (sum of medians)</th><th>peak MB (max)</th>"
          f"<th title='slope of log runtime over log items on {SCALING_SCENARIO}'>runtime ∝ n^k</th></tr>"]
@@ -476,6 +480,7 @@ def _summary_table(report: dict) -> list[str]:
                  f"<td>{fmt(_mean(_numbers(ok, 'clarity_unclear_rate')), '{:.1%}')}</td>"
                  f"<td>{fmt(_mean(_numbers(ok, 'points_covered_rate')), '{:.1%}')}</td>"
                  f"<td>{fmt(_mean(_numbers(ok, 'labels_close_rate')), '{:.1%}')}</td>"
+                 f"<td>{fmt(_mean(_numbers(ok, 'clutter')), '{:.2%}')}</td>"
                  f"<td>{fmt(sum(inv) if inv else None, '{:d}')}</td>"
                  f"<td>{fmt(eng, '{:,.1f}')}</td><td>{fmt(wall, '{:,.1f}')}</td>"
                  f"<td>{fmt(max(mem) if mem else None, '{:,.0f}')}</td>"
