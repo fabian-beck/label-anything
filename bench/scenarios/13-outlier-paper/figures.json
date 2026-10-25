@@ -1,0 +1,2674 @@
+{
+ "paper": "H. Mumtaz, M. van Garderen, F. Beck, D. Weiskopf: Label Placement for Outliers in Scatterplots. EuroVis 2019 short paper, doi:10.2312/evs.20191161",
+ "units": "image px of the figures as embedded in the PDF; data values in the axes' units",
+ "figures": {
+  "fig1-cbo-rfc": {
+   "figure": "Figure 1",
+   "image_size": [
+    1025,
+    1006
+   ],
+   "scale": 0.5,
+   "plot": [
+    0,
+    92,
+    934,
+    1006
+   ],
+   "dot_radius": 7.0,
+   "x": {
+    "name": "cbo",
+    "ticks": [
+     [
+      47.0,
+      0
+     ],
+     [
+      808.0,
+      60
+     ]
+    ]
+   },
+   "y": {
+    "name": "rfc",
+    "ticks": [
+     [
+      99.0,
+      140
+     ],
+     [
+      986.0,
+      0
+     ]
+    ]
+   },
+   "outliers": [
+    {
+     "name": "ActionManager",
+     "cbo": 57,
+     "rfc": 53,
+     "label": [
+      682,
+      657,
+      858,
+      680
+     ],
+     "leader": false
+    },
+    {
+     "name": "BadParamsException",
+     "cbo": 39,
+     "rfc": 11,
+     "label": [
+      424,
+      938,
+      657,
+      961
+     ],
+     "leader": true
+    },
+    {
+     "name": "EditArticleAction",
+     "cbo": 16,
+     "rfc": 83,
+     "label": [
+      156,
+      466,
+      342,
+      485
+     ],
+     "leader": false
+    },
+    {
+     "name": "Guardian",
+     "cbo": 52,
+     "rfc": 36,
+     "label": [
+      655,
+      763,
+      757,
+      782
+     ],
+     "leader": false
+    },
+    {
+     "name": "IAction",
+     "cbo": 61,
+     "rfc": 5,
+     "label": [
+      783,
+      961,
+      858,
+      979
+     ],
+     "leader": false
+    },
+    {
+     "name": "InitializationBean",
+     "cbo": 20,
+     "rfc": 140,
+     "label": [
+      211,
+      105,
+      397,
+      123
+     ],
+     "leader": false
+    },
+    {
+     "name": "NotAllowedException",
+     "cbo": 43,
+     "rfc": 11,
+     "label": [
+      617,
+      897,
+      857,
+      916
+     ],
+     "leader": true
+    },
+    {
+     "name": "PFFForm",
+     "cbo": 28,
+     "rfc": 61,
+     "label": [
+      365,
+      570,
+      460,
+      588
+     ],
+     "leader": false
+    },
+    {
+     "name": "PFFValidator",
+     "cbo": 35,
+     "rfc": 10,
+     "label": [
+      463,
+      868,
+      600,
+      887
+     ],
+     "leader": true
+    },
+    {
+     "name": "PFFWidget",
+     "cbo": 25,
+     "rfc": 28,
+     "label": [
+      336,
+      779,
+      457,
+      802
+     ],
+     "leader": true
+    },
+    {
+     "name": "PTFDataModel",
+     "cbo": 27,
+     "rfc": 7,
+     "label": [
+      313,
+      902,
+      477,
+      921
+     ],
+     "leader": true
+    },
+    {
+     "name": "ProfileForm",
+     "cbo": 17,
+     "rfc": 21,
+     "label": [
+      197,
+      859,
+      326,
+      878
+     ],
+     "leader": false
+    },
+    {
+     "name": "Redactor",
+     "cbo": 69,
+     "rfc": 41,
+     "label": [
+      828,
+      732,
+      925,
+      750
+     ],
+     "leader": false
+    },
+    {
+     "name": "RedactorsManager",
+     "cbo": 29,
+     "rfc": 42,
+     "label": [
+      340,
+      668,
+      548,
+      691
+     ],
+     "leader": true
+    },
+    {
+     "name": "RequestWrapper",
+     "cbo": 40,
+     "rfc": 28,
+     "label": [
+      460,
+      815,
+      646,
+      838
+     ],
+     "leader": false
+    },
+    {
+     "name": "Rights",
+     "cbo": 29,
+     "rfc": 24,
+     "label": [
+      381,
+      840,
+      448,
+      864
+     ],
+     "leader": false
+    },
+    {
+     "name": "ShowProfileAction",
+     "cbo": 20,
+     "rfc": 38,
+     "label": [
+      196,
+      613,
+      402,
+      632
+     ],
+     "leader": true
+    },
+    {
+     "name": "Topic",
+     "cbo": 35,
+     "rfc": 44,
+     "label": [
+      463,
+      714,
+      519,
+      737
+     ],
+     "leader": false
+    },
+    {
+     "name": "TopicsManagerBean",
+     "cbo": 8,
+     "rfc": 69,
+     "label": [
+      53,
+      506,
+      281,
+      529
+     ],
+     "leader": true
+    }
+   ],
+   "others": [
+    {
+     "cbo": 0,
+     "rfc": 0
+    },
+    {
+     "cbo": 1,
+     "rfc": 10
+    },
+    {
+     "cbo": 1,
+     "rfc": 12
+    },
+    {
+     "cbo": 1,
+     "rfc": 18
+    },
+    {
+     "cbo": 2,
+     "rfc": 0
+    },
+    {
+     "cbo": 2,
+     "rfc": 1
+    },
+    {
+     "cbo": 2,
+     "rfc": 5
+    },
+    {
+     "cbo": 2,
+     "rfc": 6
+    },
+    {
+     "cbo": 2,
+     "rfc": 19
+    },
+    {
+     "cbo": 3,
+     "rfc": 6
+    },
+    {
+     "cbo": 3,
+     "rfc": 7
+    },
+    {
+     "cbo": 3,
+     "rfc": 9
+    },
+    {
+     "cbo": 3,
+     "rfc": 15
+    },
+    {
+     "cbo": 3,
+     "rfc": 31
+    },
+    {
+     "cbo": 3,
+     "rfc": 32
+    },
+    {
+     "cbo": 4,
+     "rfc": 7
+    },
+    {
+     "cbo": 4,
+     "rfc": 11
+    },
+    {
+     "cbo": 4,
+     "rfc": 13
+    },
+    {
+     "cbo": 4,
+     "rfc": 16
+    },
+    {
+     "cbo": 4,
+     "rfc": 20
+    },
+    {
+     "cbo": 4,
+     "rfc": 33
+    },
+    {
+     "cbo": 5,
+     "rfc": 6
+    },
+    {
+     "cbo": 5,
+     "rfc": 8
+    },
+    {
+     "cbo": 5,
+     "rfc": 11
+    },
+    {
+     "cbo": 5,
+     "rfc": 12
+    },
+    {
+     "cbo": 5,
+     "rfc": 15
+    },
+    {
+     "cbo": 5,
+     "rfc": 22
+    },
+    {
+     "cbo": 5,
+     "rfc": 34
+    },
+    {
+     "cbo": 6,
+     "rfc": 5
+    },
+    {
+     "cbo": 6,
+     "rfc": 8
+    },
+    {
+     "cbo": 6,
+     "rfc": 10
+    },
+    {
+     "cbo": 6,
+     "rfc": 12
+    },
+    {
+     "cbo": 6,
+     "rfc": 15
+    },
+    {
+     "cbo": 6,
+     "rfc": 17
+    },
+    {
+     "cbo": 6,
+     "rfc": 18
+    },
+    {
+     "cbo": 6,
+     "rfc": 19
+    },
+    {
+     "cbo": 6,
+     "rfc": 25
+    },
+    {
+     "cbo": 6,
+     "rfc": 33
+    },
+    {
+     "cbo": 7,
+     "rfc": 8
+    },
+    {
+     "cbo": 7,
+     "rfc": 10
+    },
+    {
+     "cbo": 7,
+     "rfc": 11
+    },
+    {
+     "cbo": 7,
+     "rfc": 18
+    },
+    {
+     "cbo": 7,
+     "rfc": 20
+    },
+    {
+     "cbo": 7,
+     "rfc": 56
+    },
+    {
+     "cbo": 7,
+     "rfc": 62
+    },
+    {
+     "cbo": 8,
+     "rfc": 12
+    },
+    {
+     "cbo": 8,
+     "rfc": 18
+    },
+    {
+     "cbo": 8,
+     "rfc": 29
+    },
+    {
+     "cbo": 8,
+     "rfc": 34
+    },
+    {
+     "cbo": 8,
+     "rfc": 38
+    },
+    {
+     "cbo": 9,
+     "rfc": 8
+    },
+    {
+     "cbo": 9,
+     "rfc": 10
+    },
+    {
+     "cbo": 9,
+     "rfc": 12
+    },
+    {
+     "cbo": 9,
+     "rfc": 27
+    },
+    {
+     "cbo": 9,
+     "rfc": 28
+    },
+    {
+     "cbo": 10,
+     "rfc": 6
+    },
+    {
+     "cbo": 10,
+     "rfc": 9
+    },
+    {
+     "cbo": 10,
+     "rfc": 13
+    },
+    {
+     "cbo": 10,
+     "rfc": 15
+    },
+    {
+     "cbo": 10,
+     "rfc": 17
+    },
+    {
+     "cbo": 10,
+     "rfc": 27
+    },
+    {
+     "cbo": 10,
+     "rfc": 29
+    },
+    {
+     "cbo": 10,
+     "rfc": 44
+    },
+    {
+     "cbo": 11,
+     "rfc": 9
+    },
+    {
+     "cbo": 11,
+     "rfc": 14
+    },
+    {
+     "cbo": 11,
+     "rfc": 15
+    },
+    {
+     "cbo": 11,
+     "rfc": 20
+    },
+    {
+     "cbo": 11,
+     "rfc": 29
+    },
+    {
+     "cbo": 11,
+     "rfc": 32
+    },
+    {
+     "cbo": 11,
+     "rfc": 34
+    },
+    {
+     "cbo": 11,
+     "rfc": 36
+    },
+    {
+     "cbo": 11,
+     "rfc": 38
+    },
+    {
+     "cbo": 11,
+     "rfc": 39
+    },
+    {
+     "cbo": 11,
+     "rfc": 42
+    },
+    {
+     "cbo": 11,
+     "rfc": 43
+    },
+    {
+     "cbo": 11,
+     "rfc": 44
+    },
+    {
+     "cbo": 11,
+     "rfc": 52
+    },
+    {
+     "cbo": 11,
+     "rfc": 53
+    },
+    {
+     "cbo": 12,
+     "rfc": 14
+    },
+    {
+     "cbo": 12,
+     "rfc": 24
+    },
+    {
+     "cbo": 12,
+     "rfc": 29
+    },
+    {
+     "cbo": 12,
+     "rfc": 35
+    },
+    {
+     "cbo": 12,
+     "rfc": 38
+    },
+    {
+     "cbo": 12,
+     "rfc": 40
+    },
+    {
+     "cbo": 12,
+     "rfc": 42
+    },
+    {
+     "cbo": 12,
+     "rfc": 63
+    },
+    {
+     "cbo": 13,
+     "rfc": 9
+    },
+    {
+     "cbo": 13,
+     "rfc": 23
+    },
+    {
+     "cbo": 13,
+     "rfc": 26
+    },
+    {
+     "cbo": 13,
+     "rfc": 33
+    },
+    {
+     "cbo": 13,
+     "rfc": 40
+    },
+    {
+     "cbo": 13,
+     "rfc": 44
+    },
+    {
+     "cbo": 13,
+     "rfc": 48
+    },
+    {
+     "cbo": 13,
+     "rfc": 51
+    },
+    {
+     "cbo": 13,
+     "rfc": 52
+    },
+    {
+     "cbo": 13,
+     "rfc": 54
+    },
+    {
+     "cbo": 13,
+     "rfc": 62
+    },
+    {
+     "cbo": 13,
+     "rfc": 63
+    },
+    {
+     "cbo": 13,
+     "rfc": 71
+    },
+    {
+     "cbo": 14,
+     "rfc": 12
+    },
+    {
+     "cbo": 14,
+     "rfc": 29
+    },
+    {
+     "cbo": 14,
+     "rfc": 32
+    },
+    {
+     "cbo": 14,
+     "rfc": 36
+    },
+    {
+     "cbo": 14,
+     "rfc": 54
+    },
+    {
+     "cbo": 14,
+     "rfc": 64
+    },
+    {
+     "cbo": 14,
+     "rfc": 66
+    },
+    {
+     "cbo": 15,
+     "rfc": 26
+    },
+    {
+     "cbo": 15,
+     "rfc": 28
+    },
+    {
+     "cbo": 15,
+     "rfc": 30
+    },
+    {
+     "cbo": 15,
+     "rfc": 32
+    },
+    {
+     "cbo": 15,
+     "rfc": 33
+    },
+    {
+     "cbo": 15,
+     "rfc": 53
+    },
+    {
+     "cbo": 16,
+     "rfc": 9
+    },
+    {
+     "cbo": 16,
+     "rfc": 10
+    },
+    {
+     "cbo": 16,
+     "rfc": 31
+    },
+    {
+     "cbo": 17,
+     "rfc": 33
+    },
+    {
+     "cbo": 17,
+     "rfc": 42
+    },
+    {
+     "cbo": 18,
+     "rfc": 47
+    },
+    {
+     "cbo": 19,
+     "rfc": 44
+    },
+    {
+     "cbo": 19,
+     "rfc": 51
+    },
+    {
+     "cbo": 21,
+     "rfc": 52
+    },
+    {
+     "cbo": 22,
+     "rfc": 31
+    },
+    {
+     "cbo": 22,
+     "rfc": 50
+    },
+    {
+     "cbo": 23,
+     "rfc": 36
+    },
+    {
+     "cbo": 25,
+     "rfc": 37
+    }
+   ]
+  },
+  "fig3-cbo-wmc": {
+   "figure": "Figure 3",
+   "image_size": [
+    1032,
+    997
+   ],
+   "scale": 0.5,
+   "plot": [
+    0,
+    83,
+    940,
+    997
+   ],
+   "dot_radius": 7.0,
+   "x": {
+    "name": "cbo",
+    "ticks": [
+     [
+      53.0,
+      0
+     ],
+     [
+      814.0,
+      60
+     ]
+    ]
+   },
+   "y": {
+    "name": "wmc",
+    "ticks": [
+     [
+      131.0,
+      35
+     ],
+     [
+      960.0,
+      0
+     ]
+    ]
+   },
+   "outliers": [
+    {
+     "name": "ActionManager",
+     "cbo": 57,
+     "wmc": 4,
+     "label": [
+      688,
+      872,
+      864,
+      895
+     ],
+     "leader": false
+    },
+    {
+     "name": "Article",
+     "cbo": 19,
+     "wmc": 31,
+     "label": [
+      269,
+      196,
+      341,
+      215
+     ],
+     "leader": false
+    },
+    {
+     "name": "ArticlesManagerBean",
+     "cbo": 7,
+     "wmc": 21,
+     "label": [
+      31,
+      432,
+      274,
+      456
+     ],
+     "leader": false
+    },
+    {
+     "name": "ArticlesManagerLocal",
+     "cbo": 7,
+     "wmc": 18,
+     "label": [
+      20,
+      548,
+      257,
+      571
+     ],
+     "leader": false
+    },
+    {
+     "name": "BadParamsException",
+     "cbo": 39,
+     "wmc": 6,
+     "label": [
+      430,
+      832,
+      663,
+      855
+     ],
+     "leader": false
+    },
+    {
+     "name": "Contact",
+     "cbo": 13,
+     "wmc": 18,
+     "label": [
+      141,
+      493,
+      227,
+      511
+     ],
+     "leader": true
+    },
+    {
+     "name": "Guardian",
+     "cbo": 52,
+     "wmc": 15,
+     "label": [
+      661,
+      610,
+      763,
+      629
+     ],
+     "leader": false
+    },
+    {
+     "name": "HTMLHelper",
+     "cbo": 21,
+     "wmc": 15,
+     "label": [
+      249,
+      657,
+      385,
+      680
+     ],
+     "leader": true
+    },
+    {
+     "name": "HyperlinkProperties",
+     "cbo": 13,
+     "wmc": 29,
+     "label": [
+      106,
+      286,
+      329,
+      310
+     ],
+     "leader": true
+    },
+    {
+     "name": "IAction",
+     "cbo": 61,
+     "wmc": 5,
+     "label": [
+      804,
+      812,
+      876,
+      830
+     ],
+     "leader": false
+    },
+    {
+     "name": "InitializationBean",
+     "cbo": 20,
+     "wmc": 29,
+     "label": [
+      210,
+      242,
+      396,
+      260
+     ],
+     "leader": false
+    },
+    {
+     "name": "Issue",
+     "cbo": 22,
+     "wmc": 22,
+     "label": [
+      305,
+      445,
+      359,
+      463
+     ],
+     "leader": false
+    },
+    {
+     "name": "NotAllowedException",
+     "cbo": 43,
+     "wmc": 6,
+     "label": [
+      500,
+      787,
+      740,
+      811
+     ],
+     "leader": false
+    },
+    {
+     "name": "PFFField",
+     "cbo": 15,
+     "wmc": 23,
+     "label": [
+      209,
+      385,
+      300,
+      404
+     ],
+     "leader": false
+    },
+    {
+     "name": "PFFForm",
+     "cbo": 28,
+     "wmc": 29,
+     "label": [
+      360,
+      279,
+      456,
+      297
+     ],
+     "leader": false
+    },
+    {
+     "name": "PFFValidator",
+     "cbo": 35,
+     "wmc": 8,
+     "label": [
+      450,
+      729,
+      589,
+      748
+     ],
+     "leader": true
+    },
+    {
+     "name": "PFFWidget",
+     "cbo": 25,
+     "wmc": 17,
+     "label": [
+      282,
+      560,
+      400,
+      584
+     ],
+     "leader": false
+    },
+    {
+     "name": "PTFDataModel",
+     "cbo": 27,
+     "wmc": 7,
+     "label": [
+      320,
+      762,
+      478,
+      781
+     ],
+     "leader": false
+    },
+    {
+     "name": "Redactor",
+     "cbo": 69,
+     "wmc": 31,
+     "label": [
+      838,
+      194,
+      937,
+      213
+     ],
+     "leader": true
+    },
+    {
+     "name": "RedactorsManager",
+     "cbo": 29,
+     "wmc": 17,
+     "label": [
+      328,
+      479,
+      537,
+      503
+     ],
+     "leader": true
+    },
+    {
+     "name": "RequestWrapper",
+     "cbo": 40,
+     "wmc": 23,
+     "label": [
+      466,
+      422,
+      652,
+      445
+     ],
+     "leader": false
+    },
+    {
+     "name": "Rights",
+     "cbo": 29,
+     "wmc": 15,
+     "label": [
+      387,
+      610,
+      454,
+      634
+     ],
+     "leader": false
+    },
+    {
+     "name": "TestManagerBean",
+     "cbo": 13,
+     "wmc": 36,
+     "label": [
+      116,
+      114,
+      318,
+      137
+     ],
+     "leader": false
+    },
+    {
+     "name": "TestManagerRemote",
+     "cbo": 6,
+     "wmc": 33,
+     "label": [
+      24,
+      185,
+      247,
+      208
+     ],
+     "leader": false
+    },
+    {
+     "name": "Topic",
+     "cbo": 35,
+     "wmc": 34,
+     "label": [
+      469,
+      161,
+      525,
+      184
+     ],
+     "leader": false
+    },
+    {
+     "name": "TopicsManager",
+     "cbo": 19,
+     "wmc": 19,
+     "label": [
+      236,
+      514,
+      403,
+      537
+     ],
+     "leader": false
+    },
+    {
+     "name": "TopicsManagerBean",
+     "cbo": 8,
+     "wmc": 24,
+     "label": [
+      48,
+      353,
+      276,
+      376
+     ],
+     "leader": true
+    }
+   ],
+   "others": [
+    {
+     "cbo": 0,
+     "wmc": 0
+    },
+    {
+     "cbo": 1,
+     "wmc": 3
+    },
+    {
+     "cbo": 1,
+     "wmc": 6
+    },
+    {
+     "cbo": 1,
+     "wmc": 10
+    },
+    {
+     "cbo": 2,
+     "wmc": 0
+    },
+    {
+     "cbo": 2,
+     "wmc": 1
+    },
+    {
+     "cbo": 2,
+     "wmc": 3
+    },
+    {
+     "cbo": 2,
+     "wmc": 4
+    },
+    {
+     "cbo": 3,
+     "wmc": 4
+    },
+    {
+     "cbo": 3,
+     "wmc": 7
+    },
+    {
+     "cbo": 3,
+     "wmc": 8
+    },
+    {
+     "cbo": 3,
+     "wmc": 10
+    },
+    {
+     "cbo": 3,
+     "wmc": 11
+    },
+    {
+     "cbo": 4,
+     "wmc": 4
+    },
+    {
+     "cbo": 4,
+     "wmc": 5
+    },
+    {
+     "cbo": 4,
+     "wmc": 7
+    },
+    {
+     "cbo": 4,
+     "wmc": 8
+    },
+    {
+     "cbo": 4,
+     "wmc": 10
+    },
+    {
+     "cbo": 5,
+     "wmc": 4
+    },
+    {
+     "cbo": 5,
+     "wmc": 5
+    },
+    {
+     "cbo": 5,
+     "wmc": 7
+    },
+    {
+     "cbo": 5,
+     "wmc": 11
+    },
+    {
+     "cbo": 5,
+     "wmc": 13
+    },
+    {
+     "cbo": 6,
+     "wmc": 4
+    },
+    {
+     "cbo": 6,
+     "wmc": 4
+    },
+    {
+     "cbo": 6,
+     "wmc": 5
+    },
+    {
+     "cbo": 6,
+     "wmc": 8
+    },
+    {
+     "cbo": 6,
+     "wmc": 9
+    },
+    {
+     "cbo": 6,
+     "wmc": 10
+    },
+    {
+     "cbo": 6,
+     "wmc": 11
+    },
+    {
+     "cbo": 7,
+     "wmc": 4
+    },
+    {
+     "cbo": 7,
+     "wmc": 5
+    },
+    {
+     "cbo": 7,
+     "wmc": 11
+    },
+    {
+     "cbo": 7,
+     "wmc": 13
+    },
+    {
+     "cbo": 8,
+     "wmc": 5
+    },
+    {
+     "cbo": 8,
+     "wmc": 12
+    },
+    {
+     "cbo": 8,
+     "wmc": 14
+    },
+    {
+     "cbo": 9,
+     "wmc": 4
+    },
+    {
+     "cbo": 9,
+     "wmc": 6
+    },
+    {
+     "cbo": 9,
+     "wmc": 9
+    },
+    {
+     "cbo": 9,
+     "wmc": 10
+    },
+    {
+     "cbo": 10,
+     "wmc": 4
+    },
+    {
+     "cbo": 10,
+     "wmc": 5
+    },
+    {
+     "cbo": 10,
+     "wmc": 8
+    },
+    {
+     "cbo": 10,
+     "wmc": 9
+    },
+    {
+     "cbo": 10,
+     "wmc": 13
+    },
+    {
+     "cbo": 10,
+     "wmc": 20
+    },
+    {
+     "cbo": 11,
+     "wmc": 4
+    },
+    {
+     "cbo": 11,
+     "wmc": 5
+    },
+    {
+     "cbo": 11,
+     "wmc": 9
+    },
+    {
+     "cbo": 11,
+     "wmc": 10
+    },
+    {
+     "cbo": 11,
+     "wmc": 11
+    },
+    {
+     "cbo": 11,
+     "wmc": 12
+    },
+    {
+     "cbo": 11,
+     "wmc": 13
+    },
+    {
+     "cbo": 11,
+     "wmc": 14
+    },
+    {
+     "cbo": 11,
+     "wmc": 20
+    },
+    {
+     "cbo": 12,
+     "wmc": 4
+    },
+    {
+     "cbo": 12,
+     "wmc": 5
+    },
+    {
+     "cbo": 12,
+     "wmc": 9
+    },
+    {
+     "cbo": 12,
+     "wmc": 9
+    },
+    {
+     "cbo": 12,
+     "wmc": 11
+    },
+    {
+     "cbo": 12,
+     "wmc": 16
+    },
+    {
+     "cbo": 12,
+     "wmc": 20
+    },
+    {
+     "cbo": 13,
+     "wmc": 5
+    },
+    {
+     "cbo": 13,
+     "wmc": 9
+    },
+    {
+     "cbo": 13,
+     "wmc": 10
+    },
+    {
+     "cbo": 13,
+     "wmc": 11
+    },
+    {
+     "cbo": 13,
+     "wmc": 12
+    },
+    {
+     "cbo": 13,
+     "wmc": 13
+    },
+    {
+     "cbo": 13,
+     "wmc": 14
+    },
+    {
+     "cbo": 13,
+     "wmc": 15
+    },
+    {
+     "cbo": 13,
+     "wmc": 16
+    },
+    {
+     "cbo": 14,
+     "wmc": 4
+    },
+    {
+     "cbo": 14,
+     "wmc": 9
+    },
+    {
+     "cbo": 14,
+     "wmc": 10
+    },
+    {
+     "cbo": 14,
+     "wmc": 12
+    },
+    {
+     "cbo": 14,
+     "wmc": 15
+    },
+    {
+     "cbo": 14,
+     "wmc": 16
+    },
+    {
+     "cbo": 15,
+     "wmc": 9
+    },
+    {
+     "cbo": 15,
+     "wmc": 20
+    },
+    {
+     "cbo": 16,
+     "wmc": 5
+    },
+    {
+     "cbo": 16,
+     "wmc": 10
+    },
+    {
+     "cbo": 16,
+     "wmc": 14
+    },
+    {
+     "cbo": 17,
+     "wmc": 4
+    },
+    {
+     "cbo": 17,
+     "wmc": 6
+    },
+    {
+     "cbo": 17,
+     "wmc": 9
+    },
+    {
+     "cbo": 18,
+     "wmc": 13
+    },
+    {
+     "cbo": 20,
+     "wmc": 9
+    },
+    {
+     "cbo": 22,
+     "wmc": 6
+    },
+    {
+     "cbo": 23,
+     "wmc": 5
+    },
+    {
+     "cbo": 25,
+     "wmc": 4
+    }
+   ]
+  },
+  "fig4-cbo-wmc-more": {
+   "figure": "Figure 4",
+   "image_size": [
+    1069,
+    1000
+   ],
+   "scale": 0.5,
+   "plot": [
+    0,
+    88,
+    980,
+    1000
+   ],
+   "dot_radius": 7.0,
+   "x": {
+    "name": "cbo",
+    "ticks": [
+     [
+      93.0,
+      0
+     ],
+     [
+      854.0,
+      60
+     ]
+    ]
+   },
+   "y": {
+    "name": "wmc",
+    "ticks": [
+     [
+      136.0,
+      35
+     ],
+     [
+      965.0,
+      0
+     ]
+    ]
+   },
+   "outliers": [
+    {
+     "name": "ActionManager",
+     "cbo": 57,
+     "wmc": 4,
+     "label": [
+      728,
+      877,
+      904,
+      900
+     ],
+     "leader": false
+    },
+    {
+     "name": "Article",
+     "cbo": 19,
+     "wmc": 31,
+     "label": [
+      309,
+      201,
+      381,
+      220
+     ],
+     "leader": false
+    },
+    {
+     "name": "ArticlesManagerBean",
+     "cbo": 7,
+     "wmc": 21,
+     "label": [
+      25,
+      429,
+      268,
+      452
+     ],
+     "leader": true
+    },
+    {
+     "name": "ArticlesManagerLocal",
+     "cbo": 7,
+     "wmc": 18,
+     "label": [
+      60,
+      553,
+      297,
+      576
+     ],
+     "leader": false
+    },
+    {
+     "name": "BadParamsException",
+     "cbo": 39,
+     "wmc": 6,
+     "label": [
+      470,
+      837,
+      703,
+      860
+     ],
+     "leader": false
+    },
+    {
+     "name": "CharacterEncodingFilter",
+     "cbo": 1,
+     "wmc": 6,
+     "label": [
+      18,
+      900,
+      286,
+      924
+     ],
+     "leader": true
+    },
+    {
+     "name": "Contact",
+     "cbo": 13,
+     "wmc": 18,
+     "label": [
+      181,
+      498,
+      267,
+      516
+     ],
+     "leader": true
+    },
+    {
+     "name": "EditArticleAction",
+     "cbo": 16,
+     "wmc": 14,
+     "label": [
+      68,
+      591,
+      256,
+      610
+     ],
+     "leader": true
+    },
+    {
+     "name": "Guardian",
+     "cbo": 52,
+     "wmc": 15,
+     "label": [
+      701,
+      615,
+      803,
+      634
+     ],
+     "leader": false
+    },
+    {
+     "name": "HTMLHelper",
+     "cbo": 21,
+     "wmc": 15,
+     "label": [
+      351,
+      657,
+      492,
+      676
+     ],
+     "leader": true
+    },
+    {
+     "name": "HyperlinkProperties",
+     "cbo": 13,
+     "wmc": 29,
+     "label": [
+      146,
+      291,
+      369,
+      315
+     ],
+     "leader": true
+    },
+    {
+     "name": "IAction",
+     "cbo": 61,
+     "wmc": 5,
+     "label": [
+      840,
+      817,
+      915,
+      836
+     ],
+     "leader": false
+    },
+    {
+     "name": "InitializationBean",
+     "cbo": 20,
+     "wmc": 29,
+     "label": [
+      250,
+      247,
+      436,
+      265
+     ],
+     "leader": false
+    },
+    {
+     "name": "Issue",
+     "cbo": 22,
+     "wmc": 22,
+     "label": [
+      354,
+      448,
+      407,
+      466
+     ],
+     "leader": false
+    },
+    {
+     "name": "Message",
+     "cbo": 15,
+     "wmc": 20,
+     "label": [
+      246,
+      462,
+      343,
+      485
+     ],
+     "leader": false
+    },
+    {
+     "name": "NewAccountForm",
+     "cbo": 25,
+     "wmc": 4,
+     "label": [
+      309,
+      877,
+      509,
+      895
+     ],
+     "leader": false
+    },
+    {
+     "name": "NotAllowedException",
+     "cbo": 43,
+     "wmc": 6,
+     "label": [
+      561,
+      781,
+      801,
+      805
+     ],
+     "leader": true
+    },
+    {
+     "name": "PFFField",
+     "cbo": 15,
+     "wmc": 23,
+     "label": [
+      249,
+      390,
+      340,
+      409
+     ],
+     "leader": false
+    },
+    {
+     "name": "PFFForm",
+     "cbo": 28,
+     "wmc": 29,
+     "label": [
+      400,
+      284,
+      496,
+      302
+     ],
+     "leader": false
+    },
+    {
+     "name": "PFFValidator",
+     "cbo": 35,
+     "wmc": 8,
+     "label": [
+      478,
+      745,
+      615,
+      764
+     ],
+     "leader": false
+    },
+    {
+     "name": "PFFWidget",
+     "cbo": 25,
+     "wmc": 17,
+     "label": [
+      322,
+      565,
+      440,
+      589
+     ],
+     "leader": false
+    },
+    {
+     "name": "PTFDataModel",
+     "cbo": 27,
+     "wmc": 7,
+     "label": [
+      381,
+      802,
+      545,
+      821
+     ],
+     "leader": false
+    },
+    {
+     "name": "Redactor",
+     "cbo": 69,
+     "wmc": 31,
+     "label": [
+      878,
+      199,
+      977,
+      218
+     ],
+     "leader": true
+    },
+    {
+     "name": "RedactorsManager",
+     "cbo": 29,
+     "wmc": 17,
+     "label": [
+      368,
+      484,
+      577,
+      508
+     ],
+     "leader": true
+    },
+    {
+     "name": "RequestWrapper",
+     "cbo": 40,
+     "wmc": 23,
+     "label": [
+      506,
+      427,
+      692,
+      450
+     ],
+     "leader": false
+    },
+    {
+     "name": "Rights",
+     "cbo": 29,
+     "wmc": 15,
+     "label": [
+      427,
+      615,
+      494,
+      639
+     ],
+     "leader": false
+    },
+    {
+     "name": "ShowProfileAction",
+     "cbo": 20,
+     "wmc": 9,
+     "label": [
+      242,
+      758,
+      448,
+      776
+     ],
+     "leader": false
+    },
+    {
+     "name": "TestManagerBean",
+     "cbo": 13,
+     "wmc": 36,
+     "label": [
+      156,
+      119,
+      358,
+      142
+     ],
+     "leader": false
+    },
+    {
+     "name": "TestManagerRemote",
+     "cbo": 6,
+     "wmc": 33,
+     "label": [
+      64,
+      190,
+      287,
+      213
+     ],
+     "leader": false
+    },
+    {
+     "name": "Topic",
+     "cbo": 35,
+     "wmc": 34,
+     "label": [
+      509,
+      166,
+      565,
+      189
+     ],
+     "leader": false
+    },
+    {
+     "name": "TopicsManager",
+     "cbo": 19,
+     "wmc": 19,
+     "label": [
+      276,
+      519,
+      443,
+      542
+     ],
+     "leader": false
+    },
+    {
+     "name": "TopicsManagerBean",
+     "cbo": 8,
+     "wmc": 24,
+     "label": [
+      88,
+      358,
+      316,
+      381
+     ],
+     "leader": true
+    },
+    {
+     "name": "Util",
+     "cbo": 18,
+     "wmc": 13,
+     "label": [
+      304,
+      662,
+      338,
+      681
+     ],
+     "leader": false
+    }
+   ],
+   "others": [
+    {
+     "cbo": 0,
+     "wmc": 0
+    },
+    {
+     "cbo": 1,
+     "wmc": 3
+    },
+    {
+     "cbo": 1,
+     "wmc": 10
+    },
+    {
+     "cbo": 2,
+     "wmc": 0
+    },
+    {
+     "cbo": 2,
+     "wmc": 1
+    },
+    {
+     "cbo": 2,
+     "wmc": 3
+    },
+    {
+     "cbo": 2,
+     "wmc": 4
+    },
+    {
+     "cbo": 3,
+     "wmc": 4
+    },
+    {
+     "cbo": 3,
+     "wmc": 7
+    },
+    {
+     "cbo": 3,
+     "wmc": 8
+    },
+    {
+     "cbo": 3,
+     "wmc": 10
+    },
+    {
+     "cbo": 3,
+     "wmc": 11
+    },
+    {
+     "cbo": 4,
+     "wmc": 4
+    },
+    {
+     "cbo": 4,
+     "wmc": 5
+    },
+    {
+     "cbo": 4,
+     "wmc": 7
+    },
+    {
+     "cbo": 4,
+     "wmc": 8
+    },
+    {
+     "cbo": 4,
+     "wmc": 10
+    },
+    {
+     "cbo": 5,
+     "wmc": 4
+    },
+    {
+     "cbo": 5,
+     "wmc": 5
+    },
+    {
+     "cbo": 5,
+     "wmc": 7
+    },
+    {
+     "cbo": 5,
+     "wmc": 11
+    },
+    {
+     "cbo": 5,
+     "wmc": 13
+    },
+    {
+     "cbo": 6,
+     "wmc": 4
+    },
+    {
+     "cbo": 6,
+     "wmc": 5
+    },
+    {
+     "cbo": 6,
+     "wmc": 8
+    },
+    {
+     "cbo": 6,
+     "wmc": 9
+    },
+    {
+     "cbo": 6,
+     "wmc": 10
+    },
+    {
+     "cbo": 6,
+     "wmc": 11
+    },
+    {
+     "cbo": 7,
+     "wmc": 4
+    },
+    {
+     "cbo": 7,
+     "wmc": 5
+    },
+    {
+     "cbo": 7,
+     "wmc": 11
+    },
+    {
+     "cbo": 7,
+     "wmc": 13
+    },
+    {
+     "cbo": 8,
+     "wmc": 5
+    },
+    {
+     "cbo": 8,
+     "wmc": 12
+    },
+    {
+     "cbo": 8,
+     "wmc": 14
+    },
+    {
+     "cbo": 9,
+     "wmc": 4
+    },
+    {
+     "cbo": 9,
+     "wmc": 6
+    },
+    {
+     "cbo": 9,
+     "wmc": 9
+    },
+    {
+     "cbo": 9,
+     "wmc": 10
+    },
+    {
+     "cbo": 10,
+     "wmc": 4
+    },
+    {
+     "cbo": 10,
+     "wmc": 5
+    },
+    {
+     "cbo": 10,
+     "wmc": 8
+    },
+    {
+     "cbo": 10,
+     "wmc": 9
+    },
+    {
+     "cbo": 10,
+     "wmc": 13
+    },
+    {
+     "cbo": 10,
+     "wmc": 20
+    },
+    {
+     "cbo": 11,
+     "wmc": 4
+    },
+    {
+     "cbo": 11,
+     "wmc": 5
+    },
+    {
+     "cbo": 11,
+     "wmc": 9
+    },
+    {
+     "cbo": 11,
+     "wmc": 10
+    },
+    {
+     "cbo": 11,
+     "wmc": 11
+    },
+    {
+     "cbo": 11,
+     "wmc": 12
+    },
+    {
+     "cbo": 11,
+     "wmc": 13
+    },
+    {
+     "cbo": 11,
+     "wmc": 14
+    },
+    {
+     "cbo": 11,
+     "wmc": 20
+    },
+    {
+     "cbo": 12,
+     "wmc": 4
+    },
+    {
+     "cbo": 12,
+     "wmc": 5
+    },
+    {
+     "cbo": 12,
+     "wmc": 9
+    },
+    {
+     "cbo": 12,
+     "wmc": 9
+    },
+    {
+     "cbo": 12,
+     "wmc": 11
+    },
+    {
+     "cbo": 12,
+     "wmc": 16
+    },
+    {
+     "cbo": 12,
+     "wmc": 20
+    },
+    {
+     "cbo": 13,
+     "wmc": 5
+    },
+    {
+     "cbo": 13,
+     "wmc": 9
+    },
+    {
+     "cbo": 13,
+     "wmc": 10
+    },
+    {
+     "cbo": 13,
+     "wmc": 11
+    },
+    {
+     "cbo": 13,
+     "wmc": 12
+    },
+    {
+     "cbo": 13,
+     "wmc": 13
+    },
+    {
+     "cbo": 13,
+     "wmc": 14
+    },
+    {
+     "cbo": 13,
+     "wmc": 15
+    },
+    {
+     "cbo": 13,
+     "wmc": 16
+    },
+    {
+     "cbo": 14,
+     "wmc": 4
+    },
+    {
+     "cbo": 14,
+     "wmc": 9
+    },
+    {
+     "cbo": 14,
+     "wmc": 10
+    },
+    {
+     "cbo": 14,
+     "wmc": 12
+    },
+    {
+     "cbo": 14,
+     "wmc": 15
+    },
+    {
+     "cbo": 14,
+     "wmc": 16
+    },
+    {
+     "cbo": 15,
+     "wmc": 9
+    },
+    {
+     "cbo": 16,
+     "wmc": 5
+    },
+    {
+     "cbo": 16,
+     "wmc": 10
+    },
+    {
+     "cbo": 17,
+     "wmc": 4
+    },
+    {
+     "cbo": 17,
+     "wmc": 6
+    },
+    {
+     "cbo": 17,
+     "wmc": 9
+    },
+    {
+     "cbo": 22,
+     "wmc": 6
+    },
+    {
+     "cbo": 23,
+     "wmc": 5
+    }
+   ]
+  },
+  "fig8-income-disorders": {
+   "figure": "Figure 8",
+   "image_size": [
+    1358,
+    928
+   ],
+   "scale": 0.4,
+   "plot": [
+    0,
+    109,
+    1239,
+    928
+   ],
+   "dot_radius": 7.0,
+   "x": {
+    "name": "median_income",
+    "ticks": [
+     [
+      113.5,
+      40000
+     ],
+     [
+      1217.5,
+      75000
+     ]
+    ]
+   },
+   "y": {
+    "name": "mental_disorders",
+    "ticks": [
+     [
+      195.0,
+      4.0
+     ],
+     [
+      922.5,
+      0.5
+     ]
+    ]
+   },
+   "outliers": [
+    {
+     "name": "Alabama",
+     "median_income": 44400,
+     "mental_disorders": 2.516,
+     "label": [
+      193,
+      511,
+      316,
+      535
+     ],
+     "leader": false
+    },
+    {
+     "name": "Alaska",
+     "median_income": 75100,
+     "mental_disorders": 1.175,
+     "label": [
+      1141,
+      787,
+      1230,
+      811
+     ],
+     "leader": false
+    },
+    {
+     "name": "Connecticut",
+     "median_income": 72800,
+     "mental_disorders": 1.835,
+     "label": [
+      1066,
+      655,
+      1231,
+      677
+     ],
+     "leader": false
+    },
+    {
+     "name": "District of Columbia",
+     "median_income": 70000,
+     "mental_disorders": 1.488,
+     "label": [
+      944,
+      831,
+      1221,
+      855
+     ],
+     "leader": true
+    },
+    {
+     "name": "Florida",
+     "median_income": 48800,
+     "mental_disorders": 1.535,
+     "label": [
+      334,
+      712,
+      427,
+      736
+     ],
+     "leader": false
+    },
+    {
+     "name": "Georgia",
+     "median_income": 50700,
+     "mental_disorders": 1.446,
+     "label": [
+      360,
+      761,
+      469,
+      789
+     ],
+     "leader": true
+    },
+    {
+     "name": "Maine",
+     "median_income": 50700,
+     "mental_disorders": 3.416,
+     "label": [
+      408,
+      326,
+      495,
+      348
+     ],
+     "leader": false
+    },
+    {
+     "name": "Maryland",
+     "median_income": 73500,
+     "mental_disorders": 1.332,
+     "label": [
+      1103,
+      709,
+      1235,
+      739
+     ],
+     "leader": false
+    },
+    {
+     "name": "Massachusetts",
+     "median_income": 67800,
+     "mental_disorders": 2.646,
+     "label": [
+      888,
+      484,
+      1094,
+      508
+     ],
+     "leader": false
+    },
+    {
+     "name": "Minnesota",
+     "median_income": 68700,
+     "mental_disorders": 1.952,
+     "label": [
+      959,
+      585,
+      1107,
+      607
+     ],
+     "leader": false
+    },
+    {
+     "name": "Mississippi",
+     "median_income": 40000,
+     "mental_disorders": 2.586,
+     "label": [
+      28,
+      496,
+      178,
+      524
+     ],
+     "leader": false
+    },
+    {
+     "name": "Nevada",
+     "median_income": 52000,
+     "mental_disorders": 1.207,
+     "label": [
+      440,
+      803,
+      543,
+      827
+     ],
+     "leader": true
+    },
+    {
+     "name": "New Hampshire",
+     "median_income": 75600,
+     "mental_disorders": 3.185,
+     "label": [
+      1013,
+      338,
+      1236,
+      368
+     ],
+     "leader": false
+    },
+    {
+     "name": "New Jersey",
+     "median_income": 68300,
+     "mental_disorders": 1.414,
+     "label": [
+      888,
+      697,
+      1044,
+      725
+     ],
+     "leader": true
+    },
+    {
+     "name": "Rhode Island",
+     "median_income": 55600,
+     "mental_disorders": 2.955,
+     "label": [
+      518,
+      420,
+      696,
+      444
+     ],
+     "leader": false
+    },
+    {
+     "name": "Vermont",
+     "median_income": 59400,
+     "mental_disorders": 2.933,
+     "label": [
+      678,
+      381,
+      802,
+      403
+     ],
+     "leader": true
+    },
+    {
+     "name": "Washington",
+     "median_income": 67200,
+     "mental_disorders": 1.754,
+     "label": [
+      847,
+      624,
+      1014,
+      654
+     ],
+     "leader": true
+    }
+   ],
+   "others": [
+    {
+     "median_income": 42300,
+     "mental_disorders": 2.805
+    },
+    {
+     "median_income": 42700,
+     "mental_disorders": 2.646
+    },
+    {
+     "median_income": 42800,
+     "mental_disorders": 2.796
+    },
+    {
+     "median_income": 45100,
+     "mental_disorders": 2.064
+    },
+    {
+     "median_income": 45900,
+     "mental_disorders": 1.905
+    },
+    {
+     "median_income": 46300,
+     "mental_disorders": 1.945
+    },
+    {
+     "median_income": 47000,
+     "mental_disorders": 2.035
+    },
+    {
+     "median_income": 47300,
+     "mental_disorders": 2.115
+    },
+    {
+     "median_income": 50700,
+     "mental_disorders": 1.865
+    },
+    {
+     "median_income": 51300,
+     "mental_disorders": 1.736
+    },
+    {
+     "median_income": 51600,
+     "mental_disorders": 1.855
+    },
+    {
+     "median_income": 51900,
+     "mental_disorders": 1.945
+    },
+    {
+     "median_income": 52200,
+     "mental_disorders": 1.535
+    },
+    {
+     "median_income": 53200,
+     "mental_disorders": 2.175
+    },
+    {
+     "median_income": 54100,
+     "mental_disorders": 2.305
+    },
+    {
+     "median_income": 54800,
+     "mental_disorders": 1.805
+    },
+    {
+     "median_income": 55000,
+     "mental_disorders": 1.655
+    },
+    {
+     "median_income": 55400,
+     "mental_disorders": 2.015
+    },
+    {
+     "median_income": 56400,
+     "mental_disorders": 1.255
+    },
+    {
+     "median_income": 56500,
+     "mental_disorders": 1.765
+    },
+    {
+     "median_income": 57400,
+     "mental_disorders": 1.375
+    },
+    {
+     "median_income": 57700,
+     "mental_disorders": 1.645
+    },
+    {
+     "median_income": 57900,
+     "mental_disorders": 1.555
+    },
+    {
+     "median_income": 59100,
+     "mental_disorders": 2.155
+    },
+    {
+     "median_income": 60300,
+     "mental_disorders": 2.005
+    },
+    {
+     "median_income": 60400,
+     "mental_disorders": 1.565
+    },
+    {
+     "median_income": 60800,
+     "mental_disorders": 1.746
+    },
+    {
+     "median_income": 60800,
+     "mental_disorders": 1.895
+    },
+    {
+     "median_income": 60900,
+     "mental_disorders": 1.434
+    },
+    {
+     "median_income": 61400,
+     "mental_disorders": 1.575
+    },
+    {
+     "median_income": 63600,
+     "mental_disorders": 1.184
+    },
+    {
+     "median_income": 64500,
+     "mental_disorders": 1.385
+    },
+    {
+     "median_income": 66200,
+     "mental_disorders": 1.215
+    },
+    {
+     "median_income": 66500,
+     "mental_disorders": 1.105
+    }
+   ]
+  }
+ }
+}

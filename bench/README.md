@@ -1,7 +1,8 @@
 # Label Anything — real-world benchmark
 
-Twelve scenarios built from real, openly licensed data (one of them synthetic-from-real,
-one a synthetic camera path over real data), an implementation-independent evaluator, one
+Thirteen scenarios built from real, openly licensed data (one of them synthetic-from-real,
+one a synthetic camera path over real data, one digitized from a paper's figures), an
+implementation-independent evaluator, one
 renderer for every implementation, and a
 runner that produces `bench-report/`. Everything here depends only on the JSON formats
 (`spec/schema/problem.v1.json`, `spec/schema/result.v1.json`) and on `spec/` itself, never
@@ -132,9 +133,10 @@ the definitions of spec §4.6. Item marks are defined by the problem's anchors (
 | 10 | stress / scale | `n00200` … `n20000` (7 sizes) | scenario 05 at 10× density (jittered copies) | **yes** |
 | 11 | interactive stability | sequences `zoom-pan-1000` (quick), `zoom-pan-3000` (30 frames each), `force-lesmis` (quick, 61 frames), `drag-lesmis` (quick, 41 frames) | scenarios 05 and 07 | camera path and force simulation only |
 | 12 | priority showcase | `metrics-attr-strict` (quick) + 17 more `<dataset>-<type>-<mode>` (types attr, outlier, coverage; modes strict, prefix, weighted), `europe-attr-strict`, `europe-attr-prefix` | scenarios 01 and 05 | no |
+| 13 | outlier labeling after Mumtaz et al. (2019) | `fig1-cbo-rfc` (quick), `fig3-cbo-wmc`, `fig4-cbo-wmc-more`, `fig8-income-disorders` | the paper's Figures 1, 3, 4 and 8, digitized (committed: `figures.json`); with the published layouts | no (digitized) |
 
-217 problems in the full suite (incl. 162 sequence frames), all valid against the schema,
-each ≤ 3.5 MB; the quick suite (11 configs + the three quick sequences, 132 frames) is ≈ 7.5 MB.
+228 problems in the full suite (incl. 162 sequence frames), all valid against the schema,
+each ≤ 3.5 MB; the quick suite (12 configs + the three quick sequences, 132 frames) is ≈ 7.6 MB.
 Every scenario directory documents what and why, the configs and the rendering recipe
 (`README.md`) and the data licenses (`LICENSE.md`).
 
@@ -157,6 +159,9 @@ Every scenario directory documents what and why, the configs and the rendering r
 * **10, 11 — synthetic.** Scenario 10 jitters copies of real airports (σ = 0.6°, seed 10)
   to reach 10× density and 20,000 anchors; scenario 11 is a synthetic camera path over
   real data and a force simulation of a real graph (`bench/common/forcesim.py`).
+* **13 — digitized.** The data of Mumtaz et al.'s figures exists only as the figures: the
+  dots, axes and printed labels were read off the raster images of the paper's PDF
+  (`digitize.py`) into `figures.json`, which is committed (≈ 34 KB) instead of fetched.
 * **Everywhere — SVG `ignore`.** Elements that must not interact with labels are mapped
   to the class `background` with `avoid.label/leader.background = "ignore"` because the
   literal class `"ignore"` does not validate in v1 (see *Spec findings*).
@@ -294,8 +299,10 @@ The third-party baselines of brief §8.3 — **textalloc**, **adjustText**, **ve
 label transform, headless in Node) and **ggrepel** (R; final positions read from the drawn grob
 tree after `grid.force()`) — and the label layouts of two widely used chart libraries,
 **d3fc** (`d3fc-label-layout`, greedy + removeOverlaps) and **ECharts** (`labelLayout.hideOverlap`,
-rendered server-side), plus the classic simulated annealing of **D3-Labeler**, live in
-`bench/baselines/` with pinned toolchains (`requirements.txt`, `package.json` +
+rendered server-side), plus the classic simulated annealing of **D3-Labeler** and a
+reimplementation of the outlier labeling of **Mumtaz et al. (2019)** (`mumtaz2019`, the cost-based
+greedy search of the paper; it has no published code), live in `bench/baselines/` with pinned
+toolchains (`requirements.txt`, `package.json` +
 `package-lock.json`, `install-r.sh`, `vendor/`). Each adapter
 translates a problem into the tool's native input in canvas pixel coordinates, hands the tool
 the problem's own label boxes (spec §5 measurement, padding included) and the items in priority

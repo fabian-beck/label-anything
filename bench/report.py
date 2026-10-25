@@ -763,6 +763,10 @@ BASELINE_METHODS = {
                "labelLayout.hideOverlap (larger symbols first, then priority order); labels only, no leaders.",
     "d3-labeler": "D3-Labeler's simulated annealing (labeler.js, vendored), 1,000 sweeps, seeded: labels start at "
                   "their anchors; labels and labeled anchors only; never omits labels; leaders to the anchor.",
+    "mumtaz2019": "Mumtaz et al. (EuroVis 2019), reimplemented: labels in priority order, each at the cheapest "
+                  "of 20 × 100 positions on rings around its point (radius + 30 % per ring); cost = covered "
+                  "outliers, points and labels, label and leader buffers, leader length, outward position; "
+                  "never omits labels; leaders to the box centre.",
 }
 
 
