@@ -390,22 +390,23 @@
 <circle cx="110.9" cy="462.2" r="2" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
 </g>
 <g class="leaders" fill="none" stroke="#333333" stroke-width="1" stroke-linejoin="round">
+<polyline points="139.3,357.2 157.3,357.2"/>
 <polyline points="104.03,408.25 110.92,391.62"/>
-<polyline points="89.35,415.13 105.98,422.02"/>
+<polyline points="83.77,409.55 66.93,368.9"/>
 </g>
 <g class="labels">
 <rect x="684.8" y="184.44" width="74.17" height="15.32" fill="#ffffff" fill-opacity="0.75"/>
 <text x="686.6 694.18 701.44 708.86 716.24 723.5 730.92 738.12 741.21 747.74" y="195.08" font-size="12" fill="#000000">CouponView</text>
-<rect x="138.8" y="351.58" width="83.83" height="15.6" fill="#ffffff" fill-opacity="0.75"/>
-<text x="140.6 147.27 154.69 161.46 172.68 179.44 185.67 192.4 198.16 202.5 209.76 214.71" y="362.5" font-size="12" fill="#000000">ThemeFactory</text>
+<rect x="157.3" y="349.4" width="83.83" height="15.6" fill="#ffffff" fill-opacity="0.75"/>
+<text x="159.1 165.77 173.19 179.96 191.18 197.94 204.17 210.9 216.66 221 228.26 233.21" y="360.32" font-size="12" fill="#000000">ThemeFactory</text>
 <rect x="75.58" y="260.76" width="71.59" height="12.84" fill="#ffffff" fill-opacity="0.75"/>
 <text x="77.38 86.5 93.76 98.09 104.86 112.66 120.08 123.17 126.27 133.65 140.42" y="271.68" font-size="12" fill="#000000">NoteBuilder</text>
-<rect x="395.87" y="175" width="72.06" height="15.6" fill="#ffffff" fill-opacity="0.75"/>
-<text x="397.67 401.74 412.96 419.69 427.07 433.84 441.42 444.52 447.61 454.38 461.8" y="185.92" font-size="12" fill="#000000">ImageClient</text>
+<rect x="355.84" y="163.2" width="72.06" height="15.6" fill="#ffffff" fill-opacity="0.75"/>
+<text x="357.64 361.71 372.93 379.66 387.04 393.81 401.39 404.49 407.58 414.35 421.77" y="174.12" font-size="12" fill="#000000">ImageClient</text>
 <rect x="110.92" y="376.02" width="82.26" height="15.6" fill="#ffffff" fill-opacity="0.75"/>
 <text x="112.72 119.01 125.74 131.86 139.12 146.54 150.87 158.67 166.09 169.18 172.28 179.66 186.43" y="386.94" font-size="12" fill="#000000">LayoutBuilder</text>
-<rect x="109.15" y="397.36" width="67.18" height="12.84" fill="#ffffff" fill-opacity="0.75"/>
-<text x="110.95 117.62 123.71 130.48 137.9 142.23 149.81 152.91 156.01 162.77 170.19" y="408.28" font-size="12" fill="#000000">EventClient</text>
+<rect x="117.4" y="407.78" width="67.18" height="12.84" fill="#ffffff" fill-opacity="0.75"/>
+<text x="119.2 125.87 131.97 138.74 146.15 150.48 158.07 161.16 164.26 171.03 178.44" y="418.7" font-size="12" fill="#000000">EventClient</text>
 <rect x="113.62" y="323.96" width="72.44" height="12.84" fill="#ffffff" fill-opacity="0.75"/>
 <text x="115.42 123 129.73 134.69 139.02 147.91 154.65 162.06 169.44 172.54 179.31" y="334.88" font-size="12" fill="#000000">CartHandler</text>
 <rect x="119.14" y="472.4" width="68.93" height="12.84" fill="#ffffff" fill-opacity="0.75"/>
@@ -422,18 +423,18 @@
 <text x="411.62 419.42 426.16 433.54 440.92 447.68 455.27 458.36 461.46 468.23 475.64" y="149.82" font-size="12" fill="#000000">BadgeClient</text>
 <rect x="524.07" y="84.78" width="57.43" height="12.84" fill="#ffffff" fill-opacity="0.75"/>
 <text x="525.87 534.6 539.56 542.66 550.04 556.62 560.96 568.22 572.93" y="95.7" font-size="12" fill="#000000">GridStore</text>
-<rect x="503.6" y="142" width="64.55" height="12.41" fill="#ffffff" fill-opacity="0.75"/>
-<text x="505.4 512.07 518.17 524.94 532.35 536.68 543.27 547.6 554.86 559.58" y="152.48" font-size="12" fill="#000000">EventStore</text>
-<rect x="623.8" y="132.98" width="59.5" height="12.84" fill="#ffffff" fill-opacity="0.75"/>
-<text x="625.6 633.19 639.92 644.88 649.21 656.79 659.89 662.98 669.75 677.17" y="143.9" font-size="12" fill="#000000">CartClient</text>
-<rect x="105.98" y="422.02" width="61.6" height="12.84" fill="#ffffff" fill-opacity="0.75"/>
-<text x="107.78 111.84 119.26 126.64 133.17 139.52 146.72 149.81 156.34" y="432.94" font-size="12" fill="#000000">IndexView</text>
-<rect x="553.59" y="251.05" width="77.51" height="12.9" fill="#ffffff" fill-opacity="0.75"/>
-<text x="555.39 564.15 568.87 575.6 579.73 584.06 592.95 599.68 607.1 614.48 617.58 624.34" y="262.03" font-size="12" fill="#000000">DraftHandler</text>
-<rect x="196.2" y="310.28" width="68.7" height="12.84" fill="#ffffff" fill-opacity="0.75"/>
-<text x="198 204.67 212.09 218.86 230.08 236.84 244.04 247.14 253.67" y="321.2" font-size="12" fill="#000000">ThemeView</text>
-<rect x="104.69" y="442.6" width="86.7" height="15.6" fill="#ffffff" fill-opacity="0.75"/>
-<text x="106.49 110.56 117.98 125.36 132.38 138.73 149.61 156.34 163.76 170.49 177.87 184.64" y="453.52" font-size="12" fill="#000000">InboxManager</text>
+<rect x="488.54" y="131.79" width="64.55" height="12.41" fill="#ffffff" fill-opacity="0.75"/>
+<text x="490.34 497.01 503.11 509.87 517.29 521.62 528.21 532.54 539.8 544.52" y="142.28" font-size="12" fill="#000000">EventStore</text>
+<rect x="623.8" y="127.28" width="59.5" height="12.84" fill="#ffffff" fill-opacity="0.75"/>
+<text x="625.6 633.19 639.92 644.88 649.21 656.79 659.89 662.98 669.75 677.17" y="138.2" font-size="12" fill="#000000">CartClient</text>
+<rect x="5.33" y="356.06" width="61.6" height="12.84" fill="#ffffff" fill-opacity="0.75"/>
+<text x="7.13 11.2 18.62 26 32.52 38.87 46.07 49.17 55.7" y="366.98" font-size="12" fill="#000000">IndexView</text>
+<rect x="562.88" y="240.6" width="77.51" height="12.9" fill="#ffffff" fill-opacity="0.75"/>
+<text x="564.68 573.44 578.15 584.89 589.01 593.35 602.24 608.97 616.39 623.77 626.86 633.63" y="251.58" font-size="12" fill="#000000">DraftHandler</text>
+<rect x="157.85" y="299.86" width="68.7" height="12.84" fill="#ffffff" fill-opacity="0.75"/>
+<text x="159.65 166.32 173.74 180.51 191.73 198.49 205.69 208.79 215.32" y="310.78" font-size="12" fill="#000000">ThemeView</text>
+<rect x="86.12" y="442.6" width="86.7" height="15.6" fill="#ffffff" fill-opacity="0.75"/>
+<text x="87.92 91.99 99.41 106.79 113.81 120.15 131.04 137.77 145.19 151.92 159.3 166.07" y="453.52" font-size="12" fill="#000000">InboxManager</text>
 </g>
 <g class="unplaced" stroke="#d62728" stroke-width="1.2" stroke-linecap="round">
 </g></svg>

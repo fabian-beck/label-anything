@@ -11,11 +11,13 @@
  */
 
 import { envNow, envProgress } from "../env.js";
+import { EPS, type Rect } from "../geom/index.js";
 import { cmpF64, exp, ln, maxf } from "../math.js";
 import { Omission } from "../model/index.js";
 import { Pcg32 } from "../pcg.js";
 import { keepWithSets } from "../priority.js";
 import { Reason, type Solve } from "./index.js";
+import { inverted } from "./verify.js";
 
 /**
  * Moves per millisecond of `time_budget_ms` in TypeScript. Rust uses 100 with its 2.5×
@@ -341,11 +343,7 @@ class Tx {
   }
 
   rollback(s: Solve): void {
-    for (const [i] of this.log) s.state.unplace(i, s.cands);
-    for (const [i, old, reason] of this.log) {
-      if (old >= 0) place(s, i, old);
-      s.reasons[i] = reason;
-    }
+    setItems(s, this.log);
   }
 }
 
@@ -379,6 +377,10 @@ function tryInsert(s: Solve, u: number, softOk: boolean, sets: readonly boolean[
       const tx = new Tx();
       if (capFull(s) && !evictOneLower(s, u, sets, tx)) return false;
       tx.place(s, u, c);
+      if (inverts(s, tx)) {
+        tx.rollback(s);
+        continue;
+      }
       return true;
     }
     if (blockers.length > 2) continue;
@@ -394,7 +396,7 @@ function tryInsert(s: Solve, u: number, softOk: boolean, sets: readonly boolean[
         break;
       }
     }
-    if (ok && !capFullAfterInsert(s)) return true;
+    if (ok && !capFullAfterInsert(s) && !inverts(s, tx)) return true;
     tx.rollback(s);
     // eviction (priority-improving): strict → all blockers have strictly lower keys;
     // weighted → same tier and the weights improve
@@ -415,10 +417,59 @@ function tryInsert(s: Solve, u: number, softOk: boolean, sets: readonly boolean[
         s.reasons[j] = Reason.OmittedByPriority;
       }
       tx2.place(s, u, c);
+      if (inverts(s, tx2)) {
+        tx2.rollback(s);
+        continue;
+      }
       return true;
     }
   }
   return false;
+}
+
+/**
+ * Whether the insertion logged in `tx` lets an omitted item become placeable once labels
+ * of strictly lower key are removed (the removal test of the verification, spec §9.2),
+ * where it was not before. Only with weighted omission, which no priority repair follows
+ * (spec §10.3): moving a more important label aside can free the room such an item needed
+ * but for a less important label, the one inserted say. The items watched are those with
+ * a candidate meeting a label the insertion placed, moved or removed.
+ */
+function inverts(s: Solve, tx: Tx): boolean {
+  if (s.model.omission !== Omission.Weighted) return false;
+  const reach = s.state.leaderReach(s.obs) + s.state.marginMax() + 2 * EPS;
+  const changed: Rect[] = [];
+  for (const [j, old] of tx.log) {
+    if (old >= 0) changed.push(s.cands[old]!.bbox().inflate(reach));
+    const c = s.state.placed[j]!;
+    if (c >= 0) changed.push(s.cands[c]!.bbox().inflate(reach));
+  }
+  const buf: number[] = [];
+  const after: number[] = [];
+  for (let h = 0; h < s.model.items.length; h++) {
+    if (s.state.placed[h]! >= 0) continue;
+    const meets = s.byItem[h]!.some((c) => {
+      const b = s.cands[c]!.bbox();
+      return changed.some((r) => r.touches(b));
+    });
+    if (meets && inverted(s, h, buf)) after.push(h);
+  }
+  if (after.length === 0) return false;
+  // back to the state before the insertion for the removal test, then forward again
+  const now = tx.log.map(([i]) => [i, s.state.placed[i]!, s.reasons[i]!] as const);
+  setItems(s, tx.log);
+  const created = after.some((h) => !inverted(s, h, buf));
+  setItems(s, now);
+  return created;
+}
+
+/** Set the labels and reasons of the items in `states` (item, candidate or -1, reason). */
+function setItems(s: Solve, states: readonly (readonly [number, number, Reason | null])[]): void {
+  for (const [i] of states) s.state.unplace(i, s.cands);
+  for (const [i, c, reason] of states) {
+    if (c >= 0) place(s, i, c);
+    s.reasons[i] = reason;
+  }
 }
 
 /** `(required, tier, reserved)` of `a` ≤ that of `b` (lexicographic, `false < true`). */

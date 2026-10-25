@@ -586,9 +586,9 @@ export interface Placement {
    */
   fan?: "auto" | "always" | "off";
   /**
-   * A label without a distant leader comes no closer to another item's mark than to its own, and without a stub it is nearer to its own by its margin (at most by the distance between the two marks; marks it may not cover).
+   * A label without a distant leader comes no closer to another item's mark, or to an unlabeled point (a disc of a vector layer, a shape of class points) it does not hide, than to its own, and without a stub it is nearer to its own by its margin (at most by the distance between the two marks; marks it may not cover; unlabeled points only where some fixed position beside the mark keeps clear of them). items: other items' marks only; false: no such rule.
    */
-  own_nearest?: boolean;
+  own_nearest?: true | false | "items";
   /**
    * Stubs: with auto, a label next to its mark that another item's mark comes within stub_reach of stands stub_length farther out, joined to its mark by a short leader at a right angle to its side (in the middle of a left or right side), where that is feasible; such a crowded label without a stub costs as much as a leader.
    */

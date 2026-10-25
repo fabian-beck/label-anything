@@ -78,7 +78,7 @@
 <circle cx="251.7" cy="144.8" r="3" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
 </g>
 <g class="leaders" fill="none" stroke="#333333" stroke-width="1" stroke-linejoin="round">
-<polyline points="261,163 309,163"/>
+<polyline points="261,163 339,163"/>
 <polyline points="244.6,173.6 244.6,191.6"/>
 <polyline points="222.92,157.52 210.19,144.79"/>
 <polyline points="226.42,140.62 192.48,106.68"/>
@@ -87,10 +87,10 @@
 <polyline points="247.08,137.42 259.81,124.69"/>
 </g>
 <g class="labels">
-<rect x="268.23" y="134.16" width="35.18" height="12.41" fill="#ffffff" fill-opacity="0.75"/>
-<text x="270.03 277.61 284.38 289.1 295.86" y="144.65" font-size="12" fill="#000000">Ceres</text>
-<rect x="309" y="156.86" width="34.14" height="12.29" fill="#ffffff" fill-opacity="0.75"/>
-<text x="310.8 317.76 324.53 330.28 334.61" y="167.22" font-size="12" fill="#000000">Vesta</text>
+<rect x="269.4" y="143.2" width="35.18" height="12.41" fill="#ffffff" fill-opacity="0.75"/>
+<text x="271.2 278.78 285.55 290.27 297.04" y="153.68" font-size="12" fill="#000000">Ceres</text>
+<rect x="339" y="156.86" width="34.14" height="12.29" fill="#ffffff" fill-opacity="0.75"/>
+<text x="340.8 347.76 354.53 360.28 364.61" y="167.22" font-size="12" fill="#000000">Vesta</text>
 <rect x="255.73" y="170.93" width="36.26" height="12.84" fill="#ffffff" fill-opacity="0.75"/>
 <text x="257.53 264.79 271.52 274.62 277.71 284.44" y="181.85" font-size="12" fill="#000000">Pallas</text>
 <rect x="223.31" y="191.6" width="42.59" height="15.32" fill="#ffffff" fill-opacity="0.75"/>

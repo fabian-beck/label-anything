@@ -76,6 +76,16 @@ The rule protects the marks a label may not cover (hard `items`, or hard `lower_
 internal labels and labels on leaders are exempt
 ([ADR placement/margin](../adr/placement/margin.md)).
 
+The unlabeled points of a chart count too: the discs of vector layers and the shapes an SVG
+background puts in class `points`. A label is never nearer to one of them than to its own
+mark, by the same margin, unless it hides the point entirely; what hiding it costs is the
+point's class weight. A label beside an outlier at the edge of a cloud of other points thus
+takes a clear side or a leader rather than seem to name a neighbour. Inside a field of points
+so dense that none of an item's fixed positions keeps clear of them, the rule cannot be met
+and does not hold for that item. Where the labeled marks look unlike the other points, so
+that a reader never takes a label for theirs, `placement.own_nearest: "items"` keeps the
+rule to items' marks ([ADR placement/unlabeled-points](../adr/placement/unlabeled-points.md)).
+
 **Marks of less important items.** `avoid.label.lower_items` is the policy between a label
 and the marks of items with a *lower* priority key; it defaults to that of `items`, and is
 10 in the `map` preset and in the helpers given a priority. A weight lets important labels

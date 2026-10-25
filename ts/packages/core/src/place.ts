@@ -114,6 +114,7 @@ export function placeValidated(
     ]);
   }
   const obs = prepare(m, minFont);
+  obs.setPointsRule(m, variants);
   const t1 = envNow(env);
   const s = new Solve(m, obs, env, pri, measurer, variants, t0);
   if (trace !== null) {

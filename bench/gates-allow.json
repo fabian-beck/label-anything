@@ -1,4 +1,717 @@
 {
   "$comment": "Accepted metric regressions for the release gate (bench/gates.py, bench/run.py --gate), relative to the previous release. Each entry: metric (a summary key of bench/report.py METRICS / SEQ_METRICS), scenario, optional config and solver (fnmatch patterns, default *), the ADR that justifies the change (a record docs/adr/<adr>.md; entries without one are ignored) and a reason. Example: {\"metric\": \"placed_rate\", \"scenario\": \"05-airports\", \"config\": \"*\", \"solver\": \"rust\", \"adr\": \"placement/leaders\", \"reason\": \"...\"}",
-  "allow": []
+  "allow": [
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "02-volcano",
+      "config": "top50-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "05-airports",
+      "config": "europe-names-400-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-300-none",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "label_lines_em",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-100-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "label_lines_em",
+      "scenario": "02-volcano",
+      "config": "nfcore-top20-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "label_lines_em",
+      "scenario": "03-gapminder",
+      "config": "y2005-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "label_lines_em",
+      "scenario": "05-airports",
+      "config": "europe-hubs-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "label_lines_em",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "label_points_hidden",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-100-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "label_points_hidden",
+      "scenario": "13-outlier-paper",
+      "config": "fig1-cbo-rfc",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "05-airports",
+      "config": "europe-names-400-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "02-volcano",
+      "config": "nfcore-top20-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "03-gapminder",
+      "config": "y2005-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "07-node-link",
+      "config": "flare-imports",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "12-priority",
+      "config": "europe-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "05-airports",
+      "config": "world-iata-300-none",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-100-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-30-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "02-volcano",
+      "config": "nfcore-top20-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "02-volcano",
+      "config": "top50-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "03-gapminder",
+      "config": "y2005-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "05-airports",
+      "config": "world-hubs-100-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-300-none",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "07-node-link",
+      "config": "cora-circles",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "07-node-link",
+      "config": "flare-imports",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "13-outlier-paper",
+      "config": "fig1-cbo-rfc",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "13-outlier-paper",
+      "config": "fig4-cbo-wmc-more",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "13-outlier-paper",
+      "config": "fig8-income-disorders",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "more labels on leaders: places beside a mark near unlabeled points are infeasible"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-30-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "02-volcano",
+      "config": "nfcore-top20-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "02-volcano",
+      "config": "top50-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-30-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "02-volcano",
+      "config": "nfcore-top20-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "points_covered_rate",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-100-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "points_covered_rate",
+      "scenario": "05-airports",
+      "config": "europe-names-400-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "points_covered_rate",
+      "scenario": "13-outlier-paper",
+      "config": "fig1-cbo-rfc",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-100-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "02-volcano",
+      "config": "top30-transform",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "05-airports",
+      "config": "europe-hubs-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "05-airports",
+      "config": "europe-names-400-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "13-outlier-paper",
+      "config": "fig1-cbo-rfc",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "13-outlier-paper",
+      "config": "fig8-income-disorders",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "02-volcano",
+      "config": "top50-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "labels leave preferred places that stand nearer an unlabeled point than their mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "05-airports",
+      "config": "world-hubs-100-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "labels leave preferred places that stand nearer an unlabeled point than their mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "labels leave preferred places that stand nearer an unlabeled point than their mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "07-node-link",
+      "config": "cora-circles",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "labels leave preferred places that stand nearer an unlabeled point than their mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "07-node-link",
+      "config": "flare-imports",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "labels leave preferred places that stand nearer an unlabeled point than their mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "13-outlier-paper",
+      "config": "fig1-cbo-rfc",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "labels leave preferred places that stand nearer an unlabeled point than their mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "13-outlier-paper",
+      "config": "fig4-cbo-wmc-more",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "labels leave preferred places that stand nearer an unlabeled point than their mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "13-outlier-paper",
+      "config": "fig8-income-disorders",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "labels leave preferred places that stand nearer an unlabeled point than their mark"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-30-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "05-airports",
+      "config": "world-hubs-100-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "07-node-link",
+      "config": "cora-circles",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-30-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-100-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "02-volcano",
+      "config": "top30-transform",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "05-airports",
+      "config": "europe-hubs-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "13-outlier-paper",
+      "config": "fig1-cbo-rfc",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "a label may hide an unlabeled point entirely but not stand nearer to it than to its mark"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-30-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "02-volcano",
+      "config": "nfcore-top20-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "02-volcano",
+      "config": "top50-svg",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-30-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "02-volcano",
+      "config": "nfcore-top20-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "placement/unlabeled-points",
+      "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    }
+  ]
 }

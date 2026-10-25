@@ -719,13 +719,16 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
     the label gap (the spacing, at least the margin) and hard marks the label margin
     (spec §4.4) from it, by ``tol`` more; with ``placement.own_nearest`` the position must
     be nearer to the item's own mark than to any other mark it may not cover by the margin
-    (or the distance between the marks), by ``tol`` more: the engine leaves such an item
-    out rather than place a label that could be another's (ADR placement/margin).
+    (or the distance between the marks), by ``tol`` more, and likewise than to any unlabeled
+    point it does not hide entirely where one of the item's 8 fixed positions keeps clear of
+    them: the engine leaves such an item out rather than place a label that could be another's
+    (ADR placement/margin, placement/unlabeled-points).
     """
     opts = prob.opts
     margin_opt = (opts.get("defaults") or {}).get("margin", "0.2em")
     spacing_opt = (opts.get("defaults") or {}).get("spacing")
-    own_nearest = (opts.get("placement") or {}).get("own_nearest", True) is not False
+    own_nearest_opt = (opts.get("placement") or {}).get("own_nearest", True)
+    own_nearest = own_nearest_opt is not False
 
     def margin(it: Item) -> float:
         return spec.length(margin_opt, it.label.em)
@@ -761,6 +764,37 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
             for a, b in _segments(pl):
                 seg_index.insert(len(seg_list), Box(min(a[0], b[0]), min(a[1], b[1]), max(a[0], b[0]), max(a[1], b[1])))
                 seg_list.append((k, a, b))
+    # the unlabeled points (circles of the classes labels do not ignore, not drawn at an item's point)
+    unlabeled = [shape for shape, owner in assoc.data_points(prob, classes, a_label) if owner is None] \
+        if own_nearest_opt is True else []
+    point_index = GridIndex(32.0)
+    for k, shape in enumerate(unlabeled):
+        point_index.insert(k, shape.bbox())
+
+    def point_nearer(it: Item, b: Box, d_own: float, m: float, t: float) -> bool:
+        """An unlabeled point the box does not hide entirely comes nearer to it than the own mark
+        plus the margin (at most the distance to the own mark's point), by ``t`` more."""
+        for k in point_index.query(b.grow(max(d_own, 0.0) + m + t)):
+            shape = unlabeled[k]
+            if b.contains_box(shape.bbox()):
+                continue  # hidden entirely, not a competitor
+            if shape.sdist_box(b) < d_own + min(m, math.dist(shape.ref, it.ref)) + t:
+                return True
+        return False
+
+    @functools.lru_cache(maxsize=None)
+    def points_rule_of(index: int) -> bool:
+        # the rule holds for the item when one of its 8 fixed positions keeps clear of the points
+        it = prob.items[index]
+        shape = it.dot if it.anchor_type == "area" else it.shape
+        for pos in PERCEPTUAL:
+            b = adjacent_box(shape, it.offset, it.label.w, it.label.h, pos)
+            if not point_nearer(it, b, shape.sdist_box(b), margin(it), 0.0):
+                return True
+        return False
+
+    def points_rule(it: Item) -> bool:
+        return bool(unlabeled) and points_rule_of(it.index)
     out = []
     untestable = []
     for it in prob.items:
@@ -821,6 +855,8 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
                     if other.shape.sdist_box(b) < d_own + s + tol:
                         ok = False
                         break
+                if ok and points_rule(it) and point_nearer(it, b, d_own, m_h, tol):
+                    ok = False
             if ok:
                 for c in hard_classes:
                     if classes[c].box_hits(g):

@@ -26,9 +26,11 @@ import { MaskRaster } from "./grid/raster.js";
 import { asF64, get } from "./json.js";
 import { clampf, cmpStr, maxf, minf, toIndex } from "./math.js";
 import type { Shape } from "./geom/shape.js";
-import { type Model, type Prim, primBbox } from "./model/index.js";
+import { dirOf, touchCenter } from "./candidates.js";
+import type { Variant } from "./labels.js";
+import { type Item, type Model, type Prim, primBbox } from "./model/index.js";
 import { parseRustF64 } from "./json.js";
-import { StaticIndex } from "./spatial.js";
+import { IdList, StaticIndex } from "./spatial.js";
 
 export const AvoidKind = { Hard: 0, Ignore: 1, Soft: 2 } as const;
 export type AvoidKind = (typeof AvoidKind)[keyof typeof AvoidKind];
@@ -135,6 +137,13 @@ export class Obstacles {
   /** {@link prims} and {@link primIndex} once built. */
   private primList: [number, Prim][] | null = null;
   private primIx: StaticIndex | null = null;
+  /** {@link pointFlags} once built. */
+  private pointFlag: Uint8Array | null = null;
+  /**
+   * Per item, whether the rule holds against the unlabeled points: one of the fixed
+   * positions of its first variant keeps clear of them ({@link setPointsRule}).
+   */
+  pointsRule: boolean[] = [];
   /** {@link itemsSat} and {@link own} once built. */
   private itemsSatCache: Sat | null = null;
   private ownCache: ([GridSpec, Sat] | null)[] | null = null;
@@ -153,8 +162,10 @@ export class Obstacles {
      * candidate generation.
      */
     public itemOcc: Occupancy | null,
-    /** The item shapes (for {@link itemsSat} and {@link own}). */
+    /** The item shapes (for {@link itemsSat}, {@link own} and {@link pointFlags}). */
     private readonly itemShapes: readonly Shape[],
+    /** `placement.own_nearest: true` (whether {@link pointFlags} flags any point). */
+    private readonly ownNearestPoints: boolean,
     /** Computes the free space ({@link dt}, {@link seeds}, {@link seedIndex}). */
     private readonly freeSource: () => FreeSpace,
     public labelArea: Rect | null,
@@ -222,6 +233,97 @@ export class Obstacles {
       this.primIx = ix;
     }
     return ix;
+  }
+
+  /**
+   * Which of {@link prims} are unlabeled points (1), which a label beside its mark must not
+   * stand nearer to than to its own mark (spec §4.4, own mark nearest): the discs of vector
+   * layers and the closed shapes of class `points` (the circles and markers an SVG background
+   * puts there), of classes labels do not ignore, whose centre lies at least 0.5 px from every
+   * item's reference point (a point drawn under an item's mark is that mark). Empty without
+   * any, or without `placement.own_nearest: true`. Built on first use (Rust
+   * `Obstacles::point_flag`, built up front).
+   */
+  pointFlags(): Uint8Array {
+    let flag = this.pointFlag;
+    if (flag === null) {
+      flag = new Uint8Array(0);
+      if (this.ownNearestPoints) {
+        const prims = this.prims();
+        const f = new Uint8Array(prims.length);
+        let any = false;
+        for (let k = 0; k < prims.length; k++) {
+          const [ci, p] = prims[k]!;
+          const cl = this.classes[ci]!;
+          if (!cl.label.isIgnore() && (p.kind === "disc" || (p.kind !== "polyline" && cl.name === "points"))) {
+            f[k] = 1;
+            any = true;
+          }
+        }
+        if (any) {
+          // the points drawn at an item's reference point are its mark (items are fewer than
+          // points)
+          const ix = this.primIndex();
+          const buf = new IdList();
+          for (const shape of this.itemShapes) {
+            const c = shape.reference();
+            ix.query(Rect.fromCenter(c, 0.5, 0.5), buf);
+            for (let q = 0; q < buf.len; q++) {
+              const k = buf.get(q);
+              if (f[k] === 1 && primBbox(prims[k]![1]).center().dist(c) < 0.5) f[k] = 0;
+            }
+          }
+          flag = f;
+        }
+      }
+      this.pointFlag = flag;
+    }
+    return flag;
+  }
+
+  /**
+   * The class of the first unlabeled point that the label box `r` of `item` does not hide
+   * and that comes nearer to it than its own mark (`dOwn`) plus `clear`, at most the
+   * distance between the point's centre and the own mark's reference point (spec §4.4);
+   * `null` if there is none (Rust `Obstacles::point_nearer`).
+   */
+  pointNearer(item: Item, r: Rect, dOwn: number, clear: number): number | null {
+    const flag = this.pointFlags();
+    const prims = this.prims();
+    const ownRef = item.shape.reference();
+    const k = this.primIndex().find(r.inflate(dOwn + clear), (k) => {
+      if (flag[k] !== 1) return false;
+      const p = prims[k]![1];
+      const b = primBbox(p);
+      // a point entirely under the label is hidden, not a competitor
+      if (r.containsRect(b)) return false;
+      const sep = clear > 0 ? minf(clear, b.center().dist(ownRef)) : 0;
+      return primDistRect(p, r) < dOwn + sep - EPS;
+    });
+    return k < 0 ? null : prims[k]![0];
+  }
+
+  /**
+   * Whether the rule holds against the unlabeled points, per item (spec §4.4): when one of
+   * the 8 fixed positions (spec §6.1) of the item's first variant keeps clear of them by its
+   * margin. In a field of points so dense that none does, no place beside the mark could,
+   * and the item's labels follow the rule for items' marks only (Rust
+   * `Obstacles::set_points_rule`).
+   */
+  setPointsRule(model: Model, variants: readonly (readonly Variant[])[]): void {
+    if (this.pointFlags().length === 0) return;
+    this.pointsRule = model.items.map((it, i) => {
+      const v = variants[i]?.[0];
+      if (v === undefined) return false;
+      const hw = 0.5 * v.w;
+      const hh = 0.5 * v.h;
+      for (let k = 0; k < 8; k++) {
+        const c = touchCenter(it.shape, it.len.offset, dirOf(45 * k), hw, hh);
+        const b = Rect.fromCenter(c, hw, hh);
+        if (this.pointNearer(it, b, it.shape.distRect(b), it.len.margin) === null) return true;
+      }
+      return false;
+    });
   }
 
   /**
@@ -490,6 +592,7 @@ export function prepare(model: Model, minFont: number): Obstacles {
     itemIndex,
     itemOcc,
     model.items.map((it) => it.shape),
+    model.placement.ownNearestPoints,
     freeSource,
     model.labelArea,
     model.leaderArea,
@@ -590,6 +693,32 @@ export function primOverlapsRect(p: Prim, r: Rect): boolean {
     }
     case "shape":
       return p.shape.overlapsRect(r);
+  }
+}
+
+/** `Prim::dist_rect`: distance between the rectangle and the primitive (0 if they overlap or touch). */
+export function primDistRect(p: Prim, r: Rect): number {
+  switch (p.kind) {
+    case "disc":
+      return maxf(rectDistPointXY(r.x0, r.y0, r.x1, r.y1, p.c.x, p.c.y) - p.r, 0);
+    case "rect":
+      return p.rect.distRect(r);
+    case "polygon":
+      return polygon.distRect(p.rings, p.evenOdd, p.bbox, r);
+    case "polyline": {
+      const pts = p.points;
+      const n = pts.length;
+      const segs = (n > 0 ? n - 1 : 0) + (p.closed && n > 2 ? 1 : 0);
+      let m = n === 1 ? r.distPoint(pts[0]!) : Infinity;
+      for (let i = 0; i < segs; i++) {
+        const a = pts[i]!;
+        const b = pts[(i + 1) % n]!;
+        m = minf(m, distSegRectXY(a.x, a.y, b.x, b.y, r.x0, r.y0, r.x1, r.y1));
+      }
+      return maxf(m - p.hw, 0);
+    }
+    case "shape":
+      return p.shape.distRect(r);
   }
 }
 
