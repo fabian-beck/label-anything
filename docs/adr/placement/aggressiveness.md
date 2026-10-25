@@ -73,6 +73,12 @@ finds no omitted label with a free place at any level: the fewer candidates of a
 level brought out that the pruning could drop the only free places of an item, which the
 repair now tries (ADR priority/repair).
 
+Against the other labelers on the quick suite (2026-10-25), `medium` keeps the most usable
+labels on every problem but the chart of 1,206 classes, where the greedy baseline keeps 51
+to its 48, 45 % of them unclear (`high`: 62). On the full suite it places 3.4 % fewer
+labels than `high` with 9.3 % less clutter and a third less solve time; on 10,000 and
+more stress anchors, where the time guard ends the solve, it places more.
+
 Hosts that relied on the old defaults set `aggressiveness: "high"`. Conformance cases that
 test shrinking set it too, three cases pin what each level does, and the parity tests solve
 every sample problem at `low` and `high` in both implementations.
