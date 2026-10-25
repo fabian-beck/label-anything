@@ -1351,8 +1351,12 @@
           "description": "Fan labels: a crowd's labels stacked in a column beside it with fanning leaders. auto: crowds of items left without a label, when that places more labels; always: every crowd of two or more items."
         },
         "own_nearest": {
-          "type": "boolean",
-          "description": "A label without a distant leader comes no closer to another item's mark than to its own, and without a stub it is nearer to its own by its margin (at most by the distance between the two marks; marks it may not cover)."
+          "enum": [
+            true,
+            false,
+            "items"
+          ],
+          "description": "A label without a distant leader comes no closer to another item's mark, or to an unlabeled point (a disc of a vector layer, a shape of class points) it does not hide, than to its own, and without a stub it is nearer to its own by its margin (at most by the distance between the two marks; marks it may not cover; unlabeled points only where some fixed position beside the mark keeps clear of them). items: other items' marks only; false: no such rule."
         },
         "stubs": {
           "enum": [

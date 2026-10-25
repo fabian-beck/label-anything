@@ -1,0 +1,101 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 200,
+      "height": 120
+    },
+    "degrade": [
+      "omit"
+    ],
+    "placement": {
+      "models": [
+        "adjacent"
+      ]
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "class": "points",
+          "r": 0.5,
+          "points": [
+            [
+              119,
+              50
+            ]
+          ]
+        }
+      ]
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        },
+        "placement": {
+          "position_order": [
+            "top"
+          ]
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "a",
+        "placed": false,
+        "reason": "no_feasible_candidate",
+        "blocking": [
+          "points"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        },
+        "degrade_steps": [
+          "omit"
+        ]
+      }
+    ],
+    "stats": {
+      "placed": 0,
+      "total": 1,
+      "placed_weighted": -0.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 1,
+      "omission_order": [
+        "a"
+      ],
+      "priority_inversions": 0,
+      "total_cost": 0.0,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 67,
+        "rows": 40,
+        "classes": [
+          "points"
+        ]
+      }
+    },
+    "debug_svg": null
+  }
+}

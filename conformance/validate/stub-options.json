@@ -23,7 +23,7 @@
       },
       {
         "pointer": "/placement/own_nearest",
-        "code": "type"
+        "code": "enum"
       }
     ],
     "warnings": [],

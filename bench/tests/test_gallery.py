@@ -7,7 +7,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from bench import gallery, run
+from bench import gallery, report_html, run
 from bench.common import paths
 from bench.common.jsonio import read_json, write_json
 from bench.eval.tests.helpers import item, problem
@@ -49,40 +49,42 @@ def test_gallery_from_a_run(tmp_path, monkeypatch):
                      "--solver", "naive", "--runs", "1"]) == 0
     out = rep / "gallery"
     assert gallery.build(out, _solve, problems, rep, SECTIONS, log=lambda m: None) == 0
-    page = (out / "index.html").read_text(encoding="utf-8")
-    assert page.startswith("<!doctype html>") and "<title>Label Anything Gallery</title>" in page
-    assert '<section id="tests">' in page and 'href="#tests"' in page and "Never shown" not in page
-    assert "Bubbles &amp; labels: 3 of 3" in page and "<code>markup</code>" in page and "0 leaders" in page
     data = read_json(out / "gallery.json")
+    # the sections with their captions formatted with the figures' numbers; a figure not built is left out
+    (sec, weak) = data["sections"]
+    assert (sec["id"], sec["title"], sec["lede"]) == ("tests", "Test figures", "A lede with <code>markup</code>.")
+    (f,) = sec["figures"]
+    assert (f["title"], f["text"], f["wide"]) == ("Bubbles & labels: 3 of 3", "Captions are HTML; 0 leaders.", True)
+    assert weak["figures"][0]["text"] == "0 omitted." and weak["figures"][0]["limit"]
     fig = data["figures"]["03-gapminder/y2005-vector"]
     assert (fig["placed"], fig["total"], fig["hard_violations"]) == (3, 3, 0)
     assert fig["settings"]["items"] == 3 and fig["reasons"] == {}
+    assert ["3 of 3 placed", ""] in fig["chips"] and ["no hard violations", "ok"] in fig["chips"]
+    assert fig["settings_json"].startswith("{") and '"items": 3' in fig["settings_json"]
     # one vector image: the page shows it at the canvas size, the viewer zooms into the same file
     assert fig["img"] == fig["full"] == "img/03-gapminder__y2005-vector.svg" and fig["size"] == [200, 100]
     assert fig["full_size"] == [round(200 * gallery.ZOOM), round(100 * gallery.ZOOM)]
     root = ET.parse(out / fig["img"]).getroot()
     assert root.get("viewBox") == "0 0 200 100" and "@font-face" in (out / fig["img"]).read_text(encoding="utf-8")
-    assert (f'href="{fig["full"]}" target="_blank" rel="noopener" data-w="{fig["full_size"][0]}" '
-            f'data-h="{fig["full_size"][1]}" data-bw="200" data-vector="1"') in page
-    assert '<dialog class="viewer" id="viewer"' in page and "dlg.showModal()" in page
-    # the settings of the problem, a download link; the limits section last, with its figure
-    assert "Settings of this problem" in page and f'<a href="{fig["img"]}" download>SVG</a>' in page
-    assert page.index('<section id="tests">') < page.index('<section id="weak">')
-    assert 'class="fig limit"' in page and "0 omitted." in page
-    # one font weight on the page
-    assert "font-weight: 700" not in page and "NotoSans-Bold" not in page
-    # the run's renderings of the same problem: Label Anything and the greedy baseline (naive is not shown)
+    # every problem of the run drawn for every solver that ran it, with the caption where one is written
     (cmp,) = data["comparisons"]
-    assert [c["solver"] for c in cmp["cells"]] == ["rust", "greedy"]
-    assert all((out / c["img"]).exists() and c["full"] == c["img"] for c in cmp["cells"])
+    assert [c["solver"] for c in cmp["cells"]] == ["rust", "greedy", "naive"] and "46 bubbles" in cmp["text"]
     assert [c["img"] for c in cmp["cells"]] == [f"img/cmp/{s}/03-gapminder__y2005-vector.svg"
-                                                for s in ("rust", "greedy")]
-    assert 'class="cell mine"' in page
-    # self-contained (fonts and their licence), linked from and to the report
-    assert (out / "fonts" / "NotoSans-Regular.ttf").exists() and (out / "fonts" / "OFL.txt").exists()
-    assert not (out / "fonts" / "NotoSans-Bold.ttf").exists()
-    assert "fonts.googleapis" not in page and 'href="../index.html"' in page
-    assert "href='gallery/'" in (rep / "index.html").read_text(encoding="utf-8")
+                                                for s in ("rust", "greedy", "naive")]
+    assert all((out / c["img"]).exists() and c["full"] == c["img"] for c in cmp["cells"])
+    # the gallery's address leads to the report, which shows the figures, the drawings and the limits
+    assert 'url=../#maps' in (out / "index.html").read_text(encoding="utf-8")
+    page = (rep / "index.html").read_text(encoding="utf-8")
+    assert "Bubbles &amp; labels: 3 of 3" in page and "<code>markup</code>" in page and "0 leaders" in page
+    assert "id='03-gapminder--y2005-vector'" in page and "Settings of this problem" in page
+    assert page.count('src="gallery/img/cmp/') == 3 and "gallery/img/03-gapminder__y2005-vector.svg" in page
+    assert page.index("id='tests'") < page.index("id='weak'") and "class='fig limit'" in page
+    assert (f'data-w="{fig["full_size"][0]}" data-h="{fig["full_size"][1]}" data-bw="200" data-vector="1"'
+            in page)
+    assert '<dialog class="viewer" id="viewer"' in page and "dlg.showModal()" in page
+    # self-contained: Noto Sans next to the report, nothing from other servers
+    assert (rep / "fonts" / "NotoSans-Regular.ttf").exists() and (rep / "fonts" / "OFL.txt").exists()
+    assert "fonts.googleapis" not in page and "<script src" not in page
 
 
 def test_stability_frames(tmp_path):
@@ -103,9 +105,12 @@ def test_stability_frames(tmp_path):
     assert all(f["full"] == f["img"] for f in st["frames"])  # frames are zoomed as the run rendered them
     assert (st["zoom_steps"], st["pan_steps"], st["flips_zoom"], st["flips_pan"]) == (19, 10, 0.25, 0.05)
     assert all((tmp_path / "out" / f["img"]).exists() for f in st["frames"])
-    html = gallery.stability_html(st)
-    assert "Frame 30 of 30" in html and "25 % change side per zoom step" in html and "80 % of labels" in html
-    assert "makes 25 % of the labels change sides" in html
+    st.update(gallery.stability_text(st))
+    assert ["25 % change side per zoom step", "bad"] in st["chips"] and ["80 % of labels stay when zooming in", ""] \
+        in st["chips"]
+    assert "makes 25 % of the labels change sides" in st["text"] and st["title"].startswith("Zooming")
+    html = report_html.stability_fig(st, "gallery/")
+    assert "frame 30 of 30" in html and html.count('class="shot"') == 3
 
 
 def test_missing_run_parts_are_left_out(tmp_path):

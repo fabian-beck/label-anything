@@ -2,14 +2,15 @@
 
 The real-world benchmark ([`bench/`](gh:bench/README.md)) measures label placement on
 problems built from open data, with one evaluator for every solver: the Rust, WebAssembly
-and TypeScript implementations of Label Anything and nine baselines — `naive`, `greedy`,
+and TypeScript implementations of Label Anything and ten baselines — `naive`, `greedy`,
 [textalloc](https://github.com/ckjellson/textalloc),
 [adjustText](https://github.com/Phlya/adjustText), Vega's
 [`label` transform](https://vega.github.io/vega/docs/transforms/label/),
 [ggrepel](https://github.com/slowkow/ggrepel), the label layouts of
 [d3fc](https://github.com/d3fc/d3fc/tree/master/packages/d3fc-label-layout) and
-[Apache ECharts](https://echarts.apache.org/), and the simulated annealing of
-[D3-Labeler](https://github.com/tinker10/D3-Labeler).
+[Apache ECharts](https://echarts.apache.org/), the simulated annealing of
+[D3-Labeler](https://github.com/tinker10/D3-Labeler), and the cost-based outlier labeling of
+[Mumtaz et al. (2019)](https://doi.org/10.2312/evs.20191161), reimplemented from the paper.
 
 | # | Scenario | Data |
 |---|---|---|
@@ -25,6 +26,7 @@ and TypeScript implementations of Label Anything and nine baselines — `naive`,
 | 10 | stress / scale | airports at 10× density, up to 20,000 anchors |
 | 11 | interactive stability | a zoom-and-pan camera path over the airports |
 | 12 | priority showcase | metrics and airports with attribute, outlier and coverage priorities |
+| 13 | outlier labeling after Mumtaz et al. (2019) | the paper's four figures, digitized, with its published layouts |
 
 ## What is measured
 
@@ -130,9 +132,11 @@ problems of the full suite without animations, 2026-10-25):
 * On 10,000 and 20,000 stress anchors, `medium` places more labels than `high` (1,096
   against 983, 988 against 914): `high` spends the time budget on its further means.
 
-The [gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/) shows
-the renderings of all labelers side by side, and what the defaults still do badly. The
-images of the report and the gallery mark what the measures count, where it happens:
+The [benchmark report](https://fabian-beck.github.io/label-anything/benchmark-report/) shows
+where each labeler stands, every problem with the labelers side by side (three by default,
+the others on demand) and what the defaults still do badly
+([ADR project/benchmark-report](../adr/project/benchmark-report.md)). Its images mark what
+the measures count, where it happens:
 conflicts in red, ambiguous labels in orange (a line to the point a label may be taken
 for), covered points in magenta and labels too close to each other in purple.
 
@@ -145,8 +149,9 @@ bench/.venv/bin/python -m bench.scenarios build        # build the problems (~12
 rust/target/release/label-anything bench --suite quick --baselines --perf -o bench-report
 ```
 
-`bench-report/index.html` is the report: metrics and renderings per scenario and solver,
-performance and parity; `python -m bench.gallery` adds the gallery. CI runs the quick
+`bench-report/index.html` is the report: renderings and metrics per problem and solver,
+performance and parity, every table value coloured blue (better) or red (worse) against
+the median of the solvers; `python -m bench.gallery` adds its figures. CI runs the quick
 suite on every pull request and the full suite on release tags. A release needs 0 hard
 violations, no metric regression above 2 % against the previous release unless an ADR
 accepts it, and the performance targets met

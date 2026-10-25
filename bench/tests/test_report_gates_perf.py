@@ -4,12 +4,13 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import re
 import sys
 import xml.etree.ElementTree as ET
 
 import pytest
 
-from bench import gates, report, run
+from bench import gates, report, report_html, run
 from bench.common import paths
 from bench.common.jsonio import read_json, write_json
 from bench.common.spec import effective_options
@@ -134,10 +135,105 @@ def test_sequence_table_notes_a_planned_baseline():
              "options": {"step": 32.0, "iter_lim": 18}},
             {"solver": "textalloc", "scenario": "11-x", "sequence": "s", "metrics": metrics, "frames": []},
             {"solver": "ggrepel", "scenario": "11-x", "sequence": "s", "skipped": "frame 0: too large"}]
-    html = "".join(report._sequence_section(rep(sequences=seqs)))
+    cur = rep(sequences=seqs, solvers=["adjusttext", "textalloc", "ggrepel"])
+    html = report_html.sequence_table(cur, report_html.Pick(cur["solvers"]))
     assert html.count("class='em'") == 1
     assert "18 iterations per frame (the comparison budget of the sequence), lines sampled every 32 px" in html
     assert "n/a: frame 0: too large" in html
+
+
+def test_heat_colours_each_value_against_the_column_median():
+    # higher is better: each side of the median (80 %) scaled to its farthest value
+    hs, mid = report.heat([0.80, 0.90, 0.68, 0.40, 0.81, None], "{:.1%}", +1)
+    assert mid == pytest.approx(0.80) and hs[5] is None
+    assert hs[:5] == [(0, False), (2, True), (-1, False), (-2, False), (0, False)]
+    # differences below the floor (5 percentage points) stay near the median
+    assert report.heat([0.800, 0.805, 0.810], "{:.1%}", +1)[0] == [(0, False)] * 3
+    # counts compare by ratio, lower is better: the zeros are the best, 3 is the median
+    hs, mid = report.heat([0, 0, 3, 40, 1000], "{:d}", -1, log=True)
+    assert mid == 3 and hs == [(2, True), (2, True), (0, False), (-1, False), (-2, False)]
+    # values compare as shown: 99.96 % and 100 % are both the best
+    assert report.heat([0.9996, 1.0, 0.5, 0.6, 0.7], "{:.1%}", +1)[0] == [
+        (2, True), (2, True), (-2, False), (-1, False), (0, False)]
+    # nothing to compare: no direction, or fewer than two values
+    assert report.heat([1, 2, 3], "{:d}", 0) == ([None] * 3, None)
+    assert report.heat([0.5, None], "{:.1%}", +1) == ([None, None], None)
+
+
+def test_tables_are_coloured_per_column_with_tooltips(tmp_path):
+    (a, b, c) = report.heat_attrs([{"x": 0.9}, {"x": 0.5}, {"x": None}], [("x", "{:.1%}", +1, False)])
+    assert a["x"] == " class='hb2 best' title='much better than the median (70.0%), the best'"
+    assert b["x"] == " class='hw2' title='much worse than the median (70.0%)'" and c["x"] == ""
+    cur = rep(entry("rust", placed_rate=0.95), entry("greedy", placed_rate=0.6), solvers=["rust", "greedy"])
+    pick = report_html.Pick(cur["solvers"])
+    stats = {s: report_html.aggregates(cur, s) for s in cur["solvers"]}
+    html = report_html.summary_table(cur, stats, pick)
+    assert "<td class='hb2 best' title='much better than the median (77.5%), the best'>95.0%</td>" in html
+    assert "<td class='h0' title='near the median (0)'>0</td>" in html          # equal hard violations
+    # the problem tables compare the solvers on each problem (config) on its own
+    cur = rep(entry("rust", placed_rate=0.9), entry("greedy", placed_rate=0.5),
+              entry("rust", "c2", placed_rate=0.2, hard_violations=2), entry("greedy", "c2", placed_rate=0.6),
+              solvers=["rust", "greedy"])
+    pick = report_html.Pick(cur["solvers"])
+    block = report_html.scenario_html(cur, "01-x", cur["results"], {}, tmp_path, pick)
+    rows = block.split("<table class='metrics'>")[1].split("<tr")[2:]
+    assert [r.count("class='hb2 best' title='much better than the median (70.0%), the best'>90.0%") for r in
+            rows] == [1, 0, 0, 0]
+    assert "class='hb2 best' title='much better than the median (40.0%), the best'>60.0%" in rows[3]
+    assert "<td class='bad'>2</td>" in rows[2]                    # a hard violation by Label Anything
+    # one config at a time: a tab per config
+    assert block.count("class='tab'") == 2 and "aria-controls='cfg-01-x-c2'" in block
+
+
+def test_report_page_shows_three_labelers_by_default_and_folds_the_details(tmp_path):
+    tools = ["ggrepel", "adjusttext", "textalloc"]
+    cur = rep(*(entry(s, usable_rate=0.8) for s in ["rust", "naive", "greedy"] + tools),
+              solvers=["rust", "naive", "greedy"] + tools,
+              problems=[{"scenario": "01-x", "config": "c1", "title": "Tiny scatter", "description": "Ten points.",
+                         "n_items": 10}])
+    html = report_html.page(tmp_path, cur, {})
+    # the bar: the three tools by default, naive and greedy on demand; Label Anything always
+    on = re.findall(r"data-solver='([^']+)' data-default='1' aria-pressed='true'", html)
+    assert on == tools and html.count("data-default='0' aria-pressed='false'") == 2
+    assert ' data-solver="naive" hidden' in html and ' data-solver="greedy" hidden' in html
+    assert ' data-solver="ggrepel" hidden' not in html and ' data-solver="rust" hidden' not in html
+    # Label Anything's numbers next to the range of the others; where each labeler stands
+    assert "class='kpis'" in html and "the others 80.0%" in html and "<table class='stand'>" in html
+    # a scenario no chapter names comes under "More problems", with its title and description
+    for anchor in ("id='summary'", "id='more'", "id='sc-01-x'", "id='weak'", "id='details'", "id='perf'",
+                   "id='gates'", "id='runtime'", "id='parity'", "id='diff'"):
+        assert anchor in html
+    assert "Tiny scatter" in html and "Ten points. · 10 items" in html
+    # self-contained: styles and script inline, fonts next to the page
+    assert "<script src" not in html and "<link rel=" not in html and "fonts/NotoSans-Bold.ttf" in html
+    # without the tools, the first three others are shown
+    assert report_html.Pick(["rust", "naive", "greedy", "rust-ts"]).on == {"naive", "greedy"}
+    assert report_html.Pick(["ts", "ggrepel"]).ref == "ts"
+
+
+def test_others_better_needs_as_many_usable_labels_and_no_more_violations():
+    cur = rep(entry("rust", usable_rate=0.80, clarity_unclear_rate=0.20),
+              entry("greedy", usable_rate=0.85, clarity_unclear_rate=0.10),               # better on both
+              entry("ggrepel", usable_rate=0.95, clarity_unclear_rate=0.05, hard_violations=3),  # violates
+              entry("d3fc", usable_rate=0.50, clarity_unclear_rate=0.01),                 # fewer usable labels
+              entry("ts", usable_rate=0.99, clarity_unclear_rate=0.0),                    # Label Anything too
+              solvers=["rust", "greedy", "ggrepel", "d3fc", "ts"])
+    rows = report.others_better(cur, "rust")
+    assert [(r["metric"], r["solver"], r["value"]) for r in rows] == [("usable_rate", "greedy", 0.85),
+                                                                       ("clarity_unclear_rate", "greedy", 0.10)]
+    html = report_html.better_table(cur, report_html.Pick(cur["solvers"]))
+    assert "<td>20.0%</td><td class='l'>greedy: 10.0%</td>" in html
+
+
+def test_crop_window_shows_the_densest_part_of_a_large_canvas():
+    dense = [item(f"a{k}", 1500 + k % 5 * 10, 600 + k // 5 * 10) for k in range(25)]
+    x, y, w, h = report_html.crop_window(problem(dense + [item("b", 100, 100)], width=1800, height=800))
+    assert (w, h) == (600, 400) and x <= 1500 and x + w >= 1540 and y <= 600 and y + h >= 640
+    assert report_html.crop_window(problem(dense, width=1000, height=700)) is None    # legible as a whole
+    html = report_html.shot({"img": "a.png", "size": [1800, 800]}, "alt", "cap", crop=[1200, 400, 600, 400],
+                            canvas=[1800, 800])
+    assert 'class="shot crop"' in html and 'data-crop="0.6667,0.5000,0.3333,0.5000"' in html
+    assert 'style="width:300.00%;left:-200.00%;top:-100.00%"' in html
 
 
 def test_runtime_svg_small_multiples():

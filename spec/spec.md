@@ -256,6 +256,20 @@ Internal labels lie on their own mark, and the leader of a distant label says wh
 they are exempt. The margin above lets a mark that overlaps or touches the own mark come
 closer than the margin; this rule still keeps it farther than the own mark.
 
+The rule holds against the **unlabeled points** as well (ADR placement/unlabeled-points),
+unless `placement.own_nearest` is `"items"`: the discs of vector layers (`points`,
+`circles`) and the closed shapes of class `points` (the circles and small markers an SVG
+background puts there under the presets' rules), of classes labels do not `ignore`, whose
+centre (of the bounding box) lies at least 0.5 px from every item's reference point — a
+point drawn under an item's mark is that mark. The label is infeasible when
+`dist(point, box) < dist(mark_i, box) + s − EPS`, `s` as above with the point's centre for
+`p_j`. A point entirely inside the label box is hidden, not a competitor: what hiding it
+costs is its class's cost (§8). The rule holds against the unlabeled points only for an item
+of which one of the 8 fixed positions (§6.1) of its first variant keeps clear of them by
+this test with its margin: in a field of points so dense that no place beside the mark
+could, its labels follow the rule for items' marks only. With `false` the rule does not
+apply at all.
+
 ### 4.5 SVG backgrounds
 
 Implemented identically by `label-anything-svg` and `@label-anything/svg` (ADR obstacles/svg) and
@@ -1263,7 +1277,11 @@ depth ≤ 3; switch a label variant. Acceptance: hard feasibility is invariant; 
 priority objective (strict: placed key multiset, lexicographic; prefix: prefix length;
 weighted: tier-wise weight sums) must not get worse; cost changes are accepted by the
 Metropolis rule `u < exp(−Δ/T)` with a geometric schedule from `T₀` to `T₀/1000` over the
-iteration budget. `T₀` is the median increase of the static cost over 50 random
+iteration budget. With `weighted` omission, which no priority repair follows (§10.3), an
+insertion is undone when it makes an omitted item placeable once labels of strictly lower
+key were removed (the removal test of §9.2) where it was not before: the items checked are
+those with a candidate meeting (within the leader spacing reach) a label the insertion
+places, moves or removes. `T₀` is the median increase of the static cost over 50 random
 relocation probes, of those that increase it (0.1 when none does). `Δ` is the change of
 the moved labels' own costs (static plus dynamic against the other labels); what a move
 changes in the dynamic costs of the other labels is not part of it. The search keeps the

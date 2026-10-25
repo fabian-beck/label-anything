@@ -15,6 +15,7 @@ ggrepel        ggplot2 + ggrepel, positions after grid.force   Rscript + bench/b
 d3fc           d3fc-label-layout removeOverlaps(greedy) (Node) npm ci --prefix bench/baselines
 echarts        ECharts scatter labels, hideOverlap (Node, SSR) npm ci --prefix bench/baselines
 d3-labeler     D3-Labeler simulated annealing (Node, vendored) bench/baselines/vendor/d3-labeler
+mumtaz2019     Mumtaz et al. 2019, reimplemented (Python)      numpy (bench/requirements.txt)
 =============  ==============================================  ===============================
 
     python -m bench.baselines NAME problem.json -o result.json
@@ -81,4 +82,6 @@ BASELINES: dict[str, Baseline] = {
                         "Node ≥ 20 + echarts (npm ci --prefix bench/baselines)"),
     "d3-labeler": Baseline("d3-labeler", "bench.baselines.d3_labeler_baseline",
                            "Node ≥ 20 + the vendored labeler.js (bench/baselines/vendor/d3-labeler)"),
+    "mumtaz2019": Baseline("mumtaz2019", "bench.baselines.mumtaz2019_baseline",
+                           "Python: numpy (bench/requirements.txt)"),
 }

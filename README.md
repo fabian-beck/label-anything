@@ -141,18 +141,20 @@ The complete table is `spec/defaults.md`; presets (`scatter`, `map`, `graph`,
 
 ## Benchmark
 
-`bench/` is a real-world benchmark: twelve scenarios built from open data (scatterplots,
+`bench/` is a real-world benchmark: thirteen scenarios built from open data (scatterplots,
 volcano plots, embeddings, airports on a world map, city POIs on map tiles, node-link
-diagrams, illustrations, line charts, stress sizes, interactive zooming, priority), an
-implementation-independent evaluator, and nine baselines — naive, greedy, textalloc,
-adjustText, vega-label, ggrepel, the label layouts of ECharts and d3fc, and D3-Labeler —
-scored the same way.
-`label-anything bench --baselines --perf` writes `bench-report/index.html`: metric tables,
-renderings side by side, runtime-vs-size plots, Rust/TypeScript parity and the performance
-targets; `--gate` enforces the release gates (`bench/README.md`, which also has the release
-procedure and where the performance targets stand). `python -m bench.gallery` turns a run into a
-[gallery](https://fabian-beck.github.io/label-anything/benchmark-report/gallery/) of
-renderings, published with each release's report.
+diagrams, illustrations, line charts, stress sizes, interactive zooming, priority, and the
+outlier plots of a labeling paper), an implementation-independent evaluator, and ten
+baselines — naive, greedy, textalloc, adjustText, vega-label, ggrepel, the label layouts of
+ECharts and d3fc, D3-Labeler, and the outlier labeling of Mumtaz et al. (2019) — scored the
+same way.
+`label-anything bench --baselines --perf` writes `bench-report/index.html`, an interactive
+report: where each labeler stands, every problem with the labelers side by side and their
+numbers, runtime-vs-size plots, Rust/TypeScript parity and the performance targets; `--gate`
+enforces the release gates (`bench/README.md`, which also has the release procedure and where
+the performance targets stand). `python -m bench.gallery` adds its figures; the
+[latest report](https://fabian-beck.github.io/label-anything/benchmark-report/) is published
+with each release.
 
 How good the results are, in short: no overlaps and no crossing leaders anywhere in the
 benchmark, and more usable labels than any other tool on every problem of the quick suite but

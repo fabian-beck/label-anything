@@ -227,6 +227,57 @@ export class StaticIndex {
       }
     }
   }
+
+  /**
+   * The first id, in the order of {@link query}, whose box touches `r` and for which `f`
+   * holds (`f` is called in that order until it holds, and must not query this index); -1
+   * if there is none (Rust `StaticIndex::find`).
+   */
+  find(r: Rect, f: (id: number) => boolean): number {
+    if (this.boxes.length === 0) return -1;
+    const b = this.b;
+    b.range(r);
+    const c0 = RANGE[0]!;
+    const c1 = RANGE[1]!;
+    const r0 = RANGE[2]!;
+    const r1 = RANGE[3]!;
+    const { x0, y0, x1, y1 } = r;
+    const bx = this.bx;
+    const ids = this.ids;
+    const offsets = this.offsets;
+    if (c0 === c1 && r0 === r1) {
+      const k = r0 * b.cols + c0;
+      const end = offsets[k + 1]!;
+      for (let i = offsets[k]!; i < end; i++) {
+        const id = ids[i]!;
+        const o = 4 * id;
+        if (bx[o]! <= x1 && x0 <= bx[o + 2]! && bx[o + 1]! <= y1 && y0 <= bx[o + 3]! && f(id)) return id;
+      }
+      return -1;
+    }
+    let gen = (this.gen + 1) >>> 0;
+    if (gen === 0) {
+      this.stamp.fill(0);
+      gen = 1;
+    }
+    this.gen = gen;
+    const stamp = this.stamp;
+    for (let row = r0; row <= r1; row++) {
+      for (let col = c0; col <= c1; col++) {
+        const k = row * b.cols + col;
+        const end = offsets[k + 1]!;
+        for (let i = offsets[k]!; i < end; i++) {
+          const id = ids[i]!;
+          if (stamp[id] !== gen) {
+            stamp[id] = gen;
+            const o = 4 * id;
+            if (bx[o]! <= x1 && x0 <= bx[o + 2]! && bx[o + 1]! <= y1 && y0 <= bx[o + 3]! && f(id)) return id;
+          }
+        }
+      }
+    }
+    return -1;
+  }
 }
 
 /** An empty bucket (end of a scan). */
