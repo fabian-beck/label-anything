@@ -79,7 +79,7 @@
 </g>
 <g class="leaders" fill="none" stroke="#333333" stroke-width="1" stroke-linejoin="round">
 <polyline points="261,163 267,166.15 273,168.4 279,169.75 285,170.2 291,169.75 297,168.4 303,166.15 309,163"/>
-<polyline points="246.32,173.26 253.21,189.89"/>
+<polyline points="244.6,173.6 244.6,191.6"/>
 <polyline points="221.6,160.7 211.85,165.82 202.1,169.47 192.35,171.67 182.6,172.4 172.85,171.67 163.1,169.47 153.35,165.82 143.6,160.7"/>
 <polyline points="242.5,124.2 242.5,76.2"/>
 <polyline points="245.62,136.44 247.57,134.82 249.22,133.06 250.54,131.18 251.56,129.16 252.27,127.02 252.66,124.75 252.74,122.34 252.51,119.81"/>
@@ -91,10 +91,10 @@
 <text x="310.8 317.76 324.53 330.28 334.61" y="167.22" font-size="12" fill="#000000">Vesta</text>
 <rect x="255.73" y="170.93" width="36.26" height="12.84" fill="#ffffff" fill-opacity="0.75"/>
 <text x="257.53 264.79 271.52 274.62 277.71 284.44" y="181.85" font-size="12" fill="#000000">Pallas</text>
-<rect x="253.21" y="189.89" width="42.59" height="15.32" fill="#ffffff" fill-opacity="0.75"/>
-<text x="255.01 263.9 270.02 277.4 280.5 287.27" y="200.53" font-size="12" fill="#000000">Hygiea</text>
-<rect x="207.92" y="174.5" width="28.97" height="14.45" fill="#ffffff" fill-opacity="0.75"/>
-<text x="209.72 212.99 220.41 227.82" y="184.87" font-size="12" fill="#000000">Juno</text>
+<rect x="223.31" y="191.6" width="42.59" height="15.32" fill="#ffffff" fill-opacity="0.75"/>
+<text x="225.11 234 240.12 247.5 250.59 257.36" y="202.24" font-size="12" fill="#000000">Hygiea</text>
+<rect x="190.6" y="173.33" width="28.97" height="14.45" fill="#ffffff" fill-opacity="0.75"/>
+<text x="192.4 195.68 203.1 210.51" y="183.7" font-size="12" fill="#000000">Juno</text>
 <rect x="97.3" y="154.54" width="46.3" height="12.32" fill="#ffffff" fill-opacity="0.75"/>
 <text x="99.1 106.77 112.52 116.85 121.57 128.3 135.07" y="164.94" font-size="12" fill="#000000">Astraea</text>
 <rect x="172.09" y="149.68" width="33.41" height="12.84" fill="#ffffff" fill-opacity="0.75"/>

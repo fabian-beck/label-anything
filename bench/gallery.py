@@ -211,7 +211,8 @@ COMPARISONS = (
 )
 NAMES = {"rust": "Label Anything", "ggrepel": "ggrepel (R)", "adjusttext": "adjustText", "textalloc": "textalloc",
          "vega-label": "vega-label", "echarts": "ECharts (hideOverlap)", "d3fc": "d3fc label layout",
-         "d3-labeler": "D3-Labeler", "greedy": "Greedy baseline", "naive": "Naive (no collision test)"}
+         "d3-labeler": "D3-Labeler", "mumtaz2019": "Mumtaz et al. (2019)", "greedy": "Greedy baseline",
+         "naive": "Naive (no collision test)"}
 REASONS = {"omitted_by_priority": "behind more important labels", "no_feasible_candidate": "no free position",
            "budget_exhausted": "out of time", "keep_with": "with their set", "grouped": "in a group label"}
 

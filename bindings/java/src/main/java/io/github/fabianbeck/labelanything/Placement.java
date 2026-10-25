@@ -259,11 +259,20 @@ public final class Placement extends Spec {
   }
 
   /**
-   * Whether a label next to its mark is never nearer to another item's mark than to its own
-   * (spec §4.4, default true).
+   * Whether a label next to its mark is never nearer to another item's mark, nor to an
+   * unlabeled point it does not hide, than to its own (spec §4.4, default true).
    */
   public Placement ownNearest(boolean enabled) {
     return with("own_nearest", enabled);
+  }
+
+  /**
+   * A label next to its mark is never nearer to another item's mark than to its own, but may be
+   * nearer to an unlabeled point ({@code own_nearest: "items"}, spec §4.4): for charts that draw
+   * the labeled marks unlike the other points.
+   */
+  public Placement ownNearestItemsOnly() {
+    return with("own_nearest", "items");
   }
 
   /**

@@ -6,8 +6,9 @@ use crate::grid::dt::{distance_transform, dt_maxima};
 use crate::grid::raster::MaskRaster;
 use crate::grid::{Backdrop, GridSpec, Sat};
 use crate::index::StaticIndex;
+use crate::labels::Variant;
 use crate::math::{maxf, minf};
-use crate::model::{Model, Prim};
+use crate::model::{Item, Model, Prim};
 use serde_json::Value;
 use std::collections::BTreeSet;
 
@@ -104,6 +105,12 @@ pub struct Obstacles {
     /// Exact vector primitives (class index, primitive).
     pub prims: Vec<(usize, Prim)>,
     pub prim_index: StaticIndex,
+    /// Which primitives are unlabeled points, which a label beside its mark must not stand
+    /// nearer to than to its own mark (spec §4.4, own mark nearest); empty without any.
+    pub point_flag: Vec<bool>,
+    /// Per item, whether the rule holds against the unlabeled points: one of the fixed
+    /// positions of its first variant keeps clear of them ([`Obstacles::set_points_rule`]).
+    pub points_rule: Vec<bool>,
     /// Item marks.
     pub item_index: StaticIndex,
     /// Cells inside item marks, when labels may overlap no mark at all (`label_items`,
@@ -135,6 +142,61 @@ pub struct FreeSpace {
 }
 
 impl Obstacles {
+    /// The class of the first unlabeled point that the label box `r` of `item` does not hide
+    /// and that comes nearer to it than its own mark (`d_own`) plus `clear`, at most the
+    /// distance between the point's centre and the own mark's reference point (spec §4.4).
+    pub fn point_nearer(&self, item: &Item, r: &Rect, d_own: f64, clear: f64) -> Option<usize> {
+        let own_ref = item.shape.reference();
+        self.prim_index
+            .find(&r.inflate(d_own + clear), |k| {
+                if !self.point_flag[k as usize] {
+                    return false;
+                }
+                let prim = &self.prims[k as usize].1;
+                let b = prim.bbox();
+                // a point entirely under the label is hidden, not a competitor
+                if r.contains_rect(&b) {
+                    return false;
+                }
+                let sep = if clear > 0.0 {
+                    minf(clear, b.center().dist(own_ref))
+                } else {
+                    0.0
+                };
+                prim.dist_rect(r) < d_own + sep - EPS
+            })
+            .map(|k| self.prims[k as usize].0)
+    }
+
+    /// Whether the rule holds against the unlabeled points, per item (spec §4.4): when one
+    /// of the 8 fixed positions (spec §6.1) of the item's first variant keeps clear of them
+    /// by its margin. In a field of points so dense that none does, no place beside the mark
+    /// could, and the item's labels follow the rule for items' marks only.
+    pub fn set_points_rule(&mut self, model: &Model, variants: &[Vec<Variant>]) {
+        if self.point_flag.is_empty() {
+            return;
+        }
+        let rule = model
+            .items
+            .iter()
+            .zip(variants)
+            .map(|(it, vs)| {
+                let Some(v) = vs.first() else {
+                    return false;
+                };
+                let (hw, hh) = (0.5 * v.w, 0.5 * v.h);
+                (0..8).any(|k| {
+                    let d = crate::candidates::dir_of(45.0 * k as f64);
+                    let c = crate::candidates::touch_center(&it.shape, it.len.offset, d, hw, hh);
+                    let b = Rect::from_center(c, hw, hh);
+                    let d_own = it.shape.dist_rect(&b);
+                    self.point_nearer(it, &b, d_own, it.len.margin).is_none()
+                })
+            })
+            .collect();
+        self.points_rule = rule;
+    }
+
     /// The free space of the obstacles prepared from `model`. Only free-space seeds of
     /// distant candidates need it, so it is computed on first use.
     pub fn free_space(&self, model: &Model) -> &FreeSpace {
@@ -363,6 +425,7 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         &model.extent,
         index_cell,
     );
+    let point_flag = unlabeled_points(model, &classes, &prims, &prim_index);
     // items coverage (global and per item)
     let mut all_items = MaskRaster::new(grid);
     for it in &model.items {
@@ -406,6 +469,8 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         dynamic,
         prims,
         prim_index,
+        point_flag,
+        points_rule: Vec::new(),
         item_index,
         item_occ,
         items_sat,
@@ -416,6 +481,49 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         leader_area: model.leader_area,
         index_cell,
     }
+}
+
+/// Which primitives are unlabeled points (spec §4.4, own mark nearest): the discs of vector
+/// layers and the closed shapes of class `points` (the circles and markers an SVG background
+/// puts there), of classes labels do not ignore, whose centre lies at least 0.5 px from every
+/// item's reference point (a point drawn under an item's mark is that mark). Empty without
+/// any, or without `placement.own_nearest: true`.
+fn unlabeled_points(
+    model: &Model,
+    classes: &[Class],
+    prims: &[(usize, Prim)],
+    prim_index: &StaticIndex,
+) -> Vec<bool> {
+    if !model.placement.own_nearest_points {
+        return Vec::new();
+    }
+    let mut flag: Vec<bool> = prims
+        .iter()
+        .map(|(ci, p)| {
+            let class = &classes[*ci];
+            class.label != AvoidW::Ignore
+                && match p {
+                    Prim::Disc { .. } => true,
+                    Prim::Polygon { .. } | Prim::Rect(_) | Prim::Shape(_) => class.name == "points",
+                    Prim::Polyline { .. } => false,
+                }
+        })
+        .collect();
+    if !flag.iter().any(|&f| f) {
+        return Vec::new();
+    }
+    // the points drawn at an item's reference point are its mark (items are fewer than points)
+    let mut buf = Vec::new();
+    for it in &model.items {
+        let c = it.shape.reference();
+        prim_index.query(&Rect::from_center(c, 0.5, 0.5), &mut buf);
+        for &k in &buf {
+            if flag[k as usize] && prims[k as usize].1.bbox().center().dist(c) < 0.5 {
+                flag[k as usize] = false;
+            }
+        }
+    }
+    flag
 }
 
 /// Distance transform of the static hard obstacles (incl. item marks when labels must
@@ -556,6 +664,33 @@ impl Prim {
                 n == 1 && r.dist_point(points[0]) < hw - EPS
             }
             Prim::Shape(s) => s.overlaps_rect(r),
+        }
+    }
+
+    /// Distance between the rectangle and the primitive (0 if they overlap or touch).
+    pub fn dist_rect(&self, r: &Rect) -> f64 {
+        match self {
+            Prim::Disc { c, r: rad } => maxf(r.dist_point(*c) - rad, 0.0),
+            Prim::Rect(b) => b.dist_rect(r),
+            Prim::Polygon {
+                rings,
+                even_odd,
+                bbox,
+            } => polygon::dist_rect(rings, *even_odd, bbox, r),
+            Prim::Polyline { points, hw, closed } => {
+                let n = points.len();
+                let segs = n.saturating_sub(1) + if *closed && n > 2 { 1 } else { 0 };
+                let mut m = if n == 1 {
+                    r.dist_point(points[0])
+                } else {
+                    f64::INFINITY
+                };
+                for i in 0..segs {
+                    m = minf(m, dist_seg_rect(points[i], points[(i + 1) % n], r));
+                }
+                maxf(m - hw, 0.0)
+            }
+            Prim::Shape(s) => s.dist_rect(r),
         }
     }
 

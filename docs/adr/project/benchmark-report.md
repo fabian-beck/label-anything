@@ -9,7 +9,7 @@ The report was a page of tables, 17 metric columns for every labeler on every pr
 with small result images below them; the gallery was a separate page of figures with
 captions, and three problems drawn by every tool. A reader saw numbers without pictures or
 pictures without the other labelers, and nothing said where Label Anything stands overall.
-Ten labelers per problem made every comparison crowded, and a 1,800 px world map shown a
+Eleven labelers per problem made every comparison crowded, and a 1,800 px world map shown a
 quarter of the page wide showed no label at all.
 
 ## Decision
@@ -47,7 +47,7 @@ labelers, with the run's raster images.
 
 ## Alternatives
 - **Two linked pages, report and gallery**: the split this replaces.
-- **Every labeler by default**: ten images per problem; the differences that matter drown.
+- **Every labeler by default**: eleven images per problem; the differences that matter drown.
 - **The best baselines by default**: changes from run to run, and readers compare tools
   they know.
 - **Colours relative to the labelers shown**: would change when one is added; against all

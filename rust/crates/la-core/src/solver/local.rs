@@ -5,7 +5,8 @@
 //! weighted: tier-wise weight sums); cost changes are accepted by the Metropolis rule with a
 //! geometric temperature schedule over a deterministic iteration budget (ADR solver/time-budget).
 
-use super::{Reason, Solve};
+use super::{verify, Reason, Solve};
+use crate::geom::Rect;
 use crate::model::opts::{Omission, Step};
 use la_expr::det_math::{exp, Pcg32};
 
@@ -358,15 +359,7 @@ impl Tx {
         place(s, i, c);
     }
     fn rollback(self, s: &mut Solve) {
-        for (i, _, _) in &self.log {
-            s.state.unplace(*i, &s.cands);
-        }
-        for (i, old, reason) in &self.log {
-            if let Some(c) = old {
-                place(s, *i, *c);
-            }
-            s.reasons[*i] = *reason;
-        }
+        set_items(s, &self.log);
     }
 }
 
@@ -415,6 +408,10 @@ fn try_insert(
                 return false;
             }
             tx.place(s, u, c);
+            if inverts(s, &tx) {
+                tx.rollback(s);
+                continue;
+            }
             return true;
         }
         if blockers.len() > 2 {
@@ -437,7 +434,7 @@ fn try_insert(
                 break;
             }
         }
-        if ok && !cap_full_after_insert(s) {
+        if ok && !cap_full_after_insert(s) && !inverts(s, &tx) {
             return true;
         }
         tx.rollback(s);
@@ -472,10 +469,74 @@ fn try_insert(
                 s.reasons[j] = Some(Reason::OmittedByPriority);
             }
             tx.place(s, u, c);
+            if inverts(s, &tx) {
+                tx.rollback(s);
+                continue;
+            }
             return true;
         }
     }
     false
+}
+
+/// Whether the insertion logged in `tx` lets an omitted item become placeable once labels
+/// of strictly lower key are removed (the removal test of the verification, spec §9.2),
+/// where it was not before. Only with weighted omission, which no priority repair follows
+/// (spec §10.3): moving a more important label aside can free the room such an item needed
+/// but for a less important label, the one inserted say. The items watched are those with
+/// a candidate meeting a label the insertion placed, moved or removed.
+fn inverts(s: &mut Solve, tx: &Tx) -> bool {
+    if s.model.omission != Omission::Weighted {
+        return false;
+    }
+    let reach = s.state.leader_reach(s.obs) + s.state.margin_max() + 2.0 * crate::geom::EPS;
+    let mut changed: Vec<Rect> = Vec::new();
+    for &(j, old, _) in &tx.log {
+        for c in [old, s.state.placed[j]].into_iter().flatten() {
+            changed.push(s.cands[c as usize].bbox().inflate(reach));
+        }
+    }
+    let keys: Vec<usize> = s.pri.prio.iter().map(|p| p.key).collect();
+    let mut buf = Vec::new();
+    let mut after = Vec::new();
+    for h in 0..s.model.items.len() {
+        let meets = s.state.placed[h].is_none()
+            && s.by_item[h].iter().any(|&c| {
+                let b = s.cands[c as usize].bbox();
+                changed.iter().any(|r| r.touches(&b))
+            });
+        if meets && verify::inverted(s, h, &keys, &mut buf) {
+            after.push(h);
+        }
+    }
+    if after.is_empty() {
+        return false;
+    }
+    // back to the state before the insertion for the removal test, then forward again
+    let new: Vec<(usize, Option<u32>, Option<Reason>)> = tx
+        .log
+        .iter()
+        .map(|&(i, _, _)| (i, s.state.placed[i], s.reasons[i]))
+        .collect();
+    set_items(s, &tx.log);
+    let created = after
+        .iter()
+        .any(|&h| !verify::inverted(s, h, &keys, &mut buf));
+    set_items(s, &new);
+    created
+}
+
+/// Set the labels and reasons of the items in `states` (item, candidate, reason).
+fn set_items(s: &mut Solve, states: &[(usize, Option<u32>, Option<Reason>)]) {
+    for &(i, _, _) in states {
+        s.state.unplace(i, &s.cands);
+    }
+    for &(i, c, reason) in states {
+        if let Some(c) = c {
+            place(s, i, c);
+        }
+        s.reasons[i] = reason;
+    }
 }
 
 fn cap_full(s: &Solve) -> bool {

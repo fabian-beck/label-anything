@@ -49,14 +49,18 @@ REPO_URL = "https://github.com/fabian-beck/label-anything"
 # ---------------------------------------------------------------------------
 NAMES = {"rust": "Label Anything", "ts": "Label Anything (TypeScript)", "wasm": "Label Anything (WebAssembly)",
          "ggrepel": "ggrepel", "adjusttext": "adjustText", "textalloc": "textalloc", "vega-label": "vega-label",
-         "echarts": "ECharts", "d3fc": "d3fc", "d3-labeler": "D3-Labeler", "greedy": "greedy", "naive": "naive"}
+         "echarts": "ECharts", "d3fc": "d3fc", "d3-labeler": "D3-Labeler", "mumtaz2019": "Mumtaz et al.",
+         "greedy": "greedy", "naive": "naive"}
 ABOUT = {"ggrepel": "ggrepel for R (ggplot2): repulsion", "adjusttext": "adjustText for Python (matplotlib): "
          "repulsion, never omits a label", "textalloc": "textalloc for Python (matplotlib): candidate positions",
          "vega-label": "Vega's label transform (vega-label)", "echarts": "ECharts' label layout with hideOverlap",
          "d3fc": "d3fc label layout: greedy with overlap removal", "d3-labeler": "D3-Labeler: simulated annealing, "
-         "never omits a label", "greedy": "the benchmark's greedy baseline: 8 positions, first free one wins",
+         "never omits a label", "mumtaz2019": "Mumtaz et al. (EuroVis 2019), reimplemented: cost-based outlier "
+         "labeling with leaders, never omits a label",
+         "greedy": "the benchmark's greedy baseline: 8 positions, first free one wins",
          "naive": "the benchmark's naive baseline: every label top-right, no collision test"}
-ORDER = ("ggrepel", "adjusttext", "textalloc", "vega-label", "echarts", "d3fc", "d3-labeler", "greedy", "naive")
+ORDER = ("ggrepel", "adjusttext", "textalloc", "vega-label", "echarts", "d3fc", "d3-labeler", "mumtaz2019", "greedy",
+         "naive")
 DEFAULT_VS = ("ggrepel", "adjusttext", "textalloc")
 """Compared with Label Anything by default: the most used of the tools (R and Python); the others on demand."""
 
@@ -555,7 +559,7 @@ CHAPTERS = (  # id, title, subtitle, lede, scenarios; the gallery's section of t
     ("charts", "Charts", "scatterplots, bubbles, line ends",
      "Labels next to their marks and clear of axes, legends and each other: outliers of a scatterplot, the bubbles "
      "of a Gapminder chart, the genes of a volcano plot, the ends of line charts.",
-     ("03-gapminder", "02-volcano", "09-line-end-labels", "01-software-metrics")),
+     ("03-gapminder", "02-volcano", "09-line-end-labels", "01-software-metrics", "13-outlier-paper")),
     ("images", "Photos and illustrations", "area anchors, leaders, margin labels",
      "Regions of photos and drawings, labeled inside, beside or in the margin, with leaders.", ("08-illustration",)),
     ("graphs", "Embeddings and networks", "clusters and nodes",
@@ -1114,6 +1118,10 @@ BASELINE_METHODS = {
                "labelLayout.hideOverlap (larger symbols first, then priority order); labels only, no leaders.",
     "d3-labeler": "D3-Labeler's simulated annealing (labeler.js, vendored), 1,000 sweeps, seeded: labels start at "
                   "their anchors; labels and labeled anchors only; never omits labels; leaders to the anchor.",
+    "mumtaz2019": "Mumtaz et al. (EuroVis 2019), reimplemented: labels in priority order, each at the cheapest "
+                  "of 20 × 100 positions on rings around its point (radius + 30 % per ring); cost = covered "
+                  "outliers, points and labels, label and leader buffers, leader length, outward position; "
+                  "never omits labels; leaders to the box centre.",
 }
 
 
