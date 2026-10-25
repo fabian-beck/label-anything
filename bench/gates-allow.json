@@ -712,6 +712,2606 @@
       "solver": "rust*",
       "adr": "placement/unlabeled-points",
       "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "03-gapminder",
+      "config": "y2005-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "10-stress",
+      "config": "n00500",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "10-stress",
+      "config": "n20000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "ambiguity_rate",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_misattributed_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_misattributed_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_misattributed_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-300-none",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_misattributed_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_misattributed_rate",
+      "scenario": "07-node-link",
+      "config": "cora-circles",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_misattributed_rate",
+      "scenario": "10-stress",
+      "config": "n00500",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_misattributed_rate",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_misattributed_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_misattributed_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_misattributed_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_misattributed_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_misattributed_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_misattributed_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_unclear_background",
+      "scenario": "07-node-link",
+      "config": "cora-circles",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_unclear_rate",
+      "scenario": "05-airports",
+      "config": "europe-names-400-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_unclear_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_unclear_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_unclear_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-300-none",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_unclear_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_unclear_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-saliency",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_unclear_rate",
+      "scenario": "07-node-link",
+      "config": "cora-circles",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_unclear_rate",
+      "scenario": "10-stress",
+      "config": "n00500",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_unclear_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-100-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "02-volcano",
+      "config": "nfcore-top20-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "03-gapminder",
+      "config": "y1955-all-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "03-gapminder",
+      "config": "y2005-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-300-none",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-saliency",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "07-node-link",
+      "config": "cora-circles",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "07-node-link",
+      "config": "flare-imports",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "10-stress",
+      "config": "n00500",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "12-priority",
+      "config": "metrics-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "coverage_satisfaction",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "coverage_satisfaction",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "coverage_satisfaction",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "coverage_satisfaction",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "flip_rate",
+      "scenario": "11-stability",
+      "config": "zoom-pan-3000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "label_lines_em",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-30-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "label_lines_em",
+      "scenario": "05-airports",
+      "config": "europe-hubs-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "label_points_hidden",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-30-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "label_points_hidden",
+      "scenario": "05-airports",
+      "config": "europe-hubs-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "label_points_hidden",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "label_points_hidden",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "label_points_hidden",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "label_points_hidden",
+      "scenario": "12-priority",
+      "config": "europe-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-30-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "02-volcano",
+      "config": "nfcore-top20-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "03-gapminder",
+      "config": "y2005-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "03-gapminder",
+      "config": "y2005-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "05-airports",
+      "config": "europe-hubs-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-300-none",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "06-city-pois",
+      "config": "monaco-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "06-city-pois",
+      "config": "monaco-saliency",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "10-stress",
+      "config": "n20000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "10-stress",
+      "config": "n05000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-30-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "02-volcano",
+      "config": "nfcore-top20-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "02-volcano",
+      "config": "top50-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "03-gapminder",
+      "config": "y2005-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "03-gapminder",
+      "config": "y2005-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "05-airports",
+      "config": "europe-names-400-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-300-none",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "10-stress",
+      "config": "n00500",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "10-stress",
+      "config": "n05000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "10-stress",
+      "config": "n10000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "10-stress",
+      "config": "n20000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "fewer labels on leaders, which are rarely unclear: a larger share of the labels stands among other points"
+    },
+    {
+      "metric": "ndcg_at_k",
+      "scenario": "07-node-link",
+      "config": "flare-imports",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "ndcg_at_k",
+      "scenario": "12-priority",
+      "config": "metrics-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "ndcg_at_k",
+      "scenario": "12-priority",
+      "config": "metrics-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "ndcg_at_k",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "ndcg_at_k",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-100-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "02-volcano",
+      "config": "nfcore-top20-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "03-gapminder",
+      "config": "y1955-all-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "03-gapminder",
+      "config": "y2005-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "03-gapminder",
+      "config": "y2005-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-300-none",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-saliency",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "07-node-link",
+      "config": "cora-circles",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "07-node-link",
+      "config": "flare-imports",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "09-line-end-labels",
+      "config": "life-62-boundary",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "metrics-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "metrics-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "metrics-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-100-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "02-volcano",
+      "config": "nfcore-top20-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "03-gapminder",
+      "config": "y1955-all-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "03-gapminder",
+      "config": "y2005-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "03-gapminder",
+      "config": "y2005-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "05-airports",
+      "config": "world-iata-300-none",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "07-node-link",
+      "config": "cora-circles",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "07-node-link",
+      "config": "flare-imports",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "09-line-end-labels",
+      "config": "life-62-boundary",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "10-stress",
+      "config": "n05000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "points_covered_rate",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-30-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_covered_rate",
+      "scenario": "05-airports",
+      "config": "europe-hubs-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_covered_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_covered_rate",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_covered_rate",
+      "scenario": "10-stress",
+      "config": "n10000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_covered_rate",
+      "scenario": "10-stress",
+      "config": "n20000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_covered_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_covered_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "02-volcano",
+      "config": "top50-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "06-city-pois",
+      "config": "monaco-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "06-city-pois",
+      "config": "monaco-saliency",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "10-stress",
+      "config": "n05000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "10-stress",
+      "config": "n10000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "10-stress",
+      "config": "n20000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "12-priority",
+      "config": "europe-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "02-volcano",
+      "config": "top50-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "05-airports",
+      "config": "world-iata-300-none",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "07-node-link",
+      "config": "flare-imports",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "07-node-link",
+      "config": "lesmis-force",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "12-priority",
+      "config": "metrics-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "12-priority",
+      "config": "metrics-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "other positions once smaller type, relaxed overlaps and long leaders are left to aggressiveness high"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-100-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "02-volcano",
+      "config": "top50-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "03-gapminder",
+      "config": "y2005-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "03-gapminder",
+      "config": "y2005-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "05-airports",
+      "config": "europe-hubs-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-saliency",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "07-node-link",
+      "config": "cora-circles",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "07-node-link",
+      "config": "flare-imports",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "10-stress",
+      "config": "n00500",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "10-stress",
+      "config": "n10000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "metrics-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "metrics-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "metrics-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "priority_inversions",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "with prefix and weighted omission, the labels the default gives up leave room that less important labels take"
+    },
+    {
+      "metric": "priority_inversions",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "with prefix and weighted omission, the labels the default gives up leave room that less important labels take"
+    },
+    {
+      "metric": "priority_inversions",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "with prefix and weighted omission, the labels the default gives up leave room that less important labels take"
+    },
+    {
+      "metric": "priority_inversions",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "with prefix and weighted omission, the labels the default gives up leave room that less important labels take"
+    },
+    {
+      "metric": "priority_inversions",
+      "scenario": "12-priority",
+      "config": "metrics-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "with prefix and weighted omission, the labels the default gives up leave room that less important labels take"
+    },
+    {
+      "metric": "priority_inversions",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "with prefix and weighted omission, the labels the default gives up leave room that less important labels take"
+    },
+    {
+      "metric": "priority_inversions",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "with prefix and weighted omission, the labels the default gives up leave room that less important labels take"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-100-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "03-gapminder",
+      "config": "y1955-all-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "03-gapminder",
+      "config": "y2005-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "03-gapminder",
+      "config": "y2005-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "metrics-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "metrics-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "metrics-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "02-volcano",
+      "config": "nfcore-top20-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "03-gapminder",
+      "config": "y2005-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "05-airports",
+      "config": "europe-hubs-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "06-city-pois",
+      "config": "monaco-saliency",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "08-illustration",
+      "config": "rocket-distant",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "labels keep their type size: larger labels cover more"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-100-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "02-volcano",
+      "config": "nfcore-top20-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "03-gapminder",
+      "config": "y1955-all-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "03-gapminder",
+      "config": "y2005-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "03-gapminder",
+      "config": "y2005-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-300-none",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-saliency",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "07-node-link",
+      "config": "cora-circles",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "07-node-link",
+      "config": "flare-imports",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "09-line-end-labels",
+      "config": "life-62-boundary",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "metrics-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "metrics-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "metrics-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "01-software-metrics",
+      "config": "cbo-rfc-100-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "02-volcano",
+      "config": "nfcore-top20-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "03-gapminder",
+      "config": "y1955-all-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "03-gapminder",
+      "config": "y2005-svg",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "03-gapminder",
+      "config": "y2005-vector",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "05-airports",
+      "config": "world-iata-300-none",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "07-node-link",
+      "config": "cora-circles",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "07-node-link",
+      "config": "flare-imports",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "09-line-end-labels",
+      "config": "life-62-boundary",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "10-stress",
+      "config": "n05000",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-attr-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-attr-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-attr-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-coverage-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-prefix",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-strict",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "metrics-outlier-weighted",
+      "solver": "rust*",
+      "adr": "placement/aggressiveness",
+      "reason": "the default places no label that needs smaller type, a relaxed overlap or a leader longer than 4 em"
     }
   ]
 }
