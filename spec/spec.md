@@ -81,9 +81,25 @@ straddling the edge between a dark raster and a light canvas.
 
 ### 2.4 Merging defaults and presets
 
-Effective options = `defaults.md` ← `presets/<preset>.json#options` ← problem. Objects
-merge recursively; arrays and scalars replace. Maps keyed by class (`avoid.label`,
-`avoid.leader`, `avoid.buffer`) merge per key. Preset `none` contributes nothing.
+Effective options = `defaults.md` ← aggressiveness level ← `presets/<preset>.json#options`
+← problem. Objects merge recursively; arrays and scalars replace. Maps keyed by class
+(`avoid.label`, `avoid.leader`, `avoid.buffer`) merge per key. Preset `none` contributes
+nothing.
+
+**Aggressiveness** (`placement.aggressiveness`; ADR placement/aggressiveness): how hard the
+engine tries to place every label, in three levels. The level is the problem's
+`placement.aggressiveness`, else the preset's, else `medium`. Its column of the
+aggressiveness table in `defaults.md` replaces the defaults of the options it lists
+(`degrade`, `placement.max_distance`, `placement.fan`, `defaults.margin`); a preset or the
+problem that sets one of them overrides it, as it overrides any default.
+
+* `high`: every means that keeps a label clear of what it may not cover and nearer to its
+  own mark than to any other — distant labels up to 8 em away, distant labels from the
+  ladder, fan columns (§6.8), smaller type (`shrink`) and relaxed overlaps
+  (`soft_overlap`, §10.1).
+* `medium` (default): no smaller type and no relaxed overlaps; distant labels within 4 em.
+* `low`: no distant labels from the ladder and no fan columns; the distant labels of the
+  models within 2.5 em; a label margin of 0.3 em (§4.4), so 0.6 em between labels.
 
 ---
 
@@ -201,11 +217,12 @@ covered mark thus stays unlabeled, never wrongly attributed, and the labels of t
 important items may claim the space of the marks around them — a hub keeps its label
 in a dense region instead of losing it to the marks of minor items nearby.
 
-**Label margin and spacing** (`defaults.margin`, 0.2 em; `defaults.spacing`, twice the
-margin unless set; ADR placement/margin). Hard `labels` and `items` keep a label away from
-what is not its own, while it touches its own mark at `placement.offset`. An item's
-**label gap** `g` is its spacing, at least its margin: `g = max(spacing, margin)`, with
-`spacing = 2m` when `defaults.spacing` is `null` (the default: 0.4 em).
+**Label margin and spacing** (`defaults.margin`, 0.2 em, 0.3 em with aggressiveness `low`
+(§2.4); `defaults.spacing`, twice the margin unless set; ADR placement/margin). Hard
+`labels` and `items` keep a label away from what is not its own, while it touches its own
+mark at `placement.offset`. An item's **label gap** `g` is its spacing, at least its
+margin: `g = max(spacing, margin)`, with `spacing = 2m` when `defaults.spacing` is `null`
+(the default: 0.4 em).
 
 * With `avoid.label.labels` hard, two labels conflict when their boxes come closer than
   the larger label gap of their items, `g`: `dist(box_a, box_b) < g − EPS` (boxes `g`
@@ -859,14 +876,14 @@ Filtering while generating (ADR placement/ladder), always exact:
 
 After the search (§10.3), crowds of items get their labels stacked in a column beside the
 crowd, each with its own leader (model and anchor side `fan`; ADR placement/columns). `placement.fan`:
-`auto` (default) for crowds with items left without a label, when the column places more
-labels; `always` for every crowd, when the column places at least as many; `off`. There are
-no fans with `prefix` omission, with the `angles` leader style (its leaders keep to the
-allowed rays, which a column of labels cannot), after a cancellation or after the time
-guard. Items that may not get leaders (neither their models, as extended by the `auto`
-preset, nor the ladder have `distant` or `boundary`), `keep_with` members, area anchors
-and grouped items take no part. `h` below is the height of an item's first variant, `em`
-its font size.
+`auto` (default; `off` with aggressiveness `low`, §2.4) for crowds with items left without
+a label, when the column places more labels; `always` for every crowd, when the column
+places at least as many; `off`. There are no fans with `prefix` omission, with the
+`angles` leader style (its leaders keep to the allowed rays, which a column of labels
+cannot), after a cancellation or after the time guard. Items that may not get leaders
+(neither their models, as extended by the `auto` preset, nor the ladder have `distant` or
+`boundary`), `keep_with` members, area anchors and grouped items take no part. `h` below
+is the height of an item's first variant, `em` its font size.
 
 * **Crowds.** In total order, every item not yet in a crowd seeds one (`auto`: only items
   without a label whose reason is `omitted_by_priority`, `no_feasible_candidate` or

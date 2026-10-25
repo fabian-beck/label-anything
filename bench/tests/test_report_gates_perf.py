@@ -1,6 +1,7 @@
 """Performance-target problems, report analyses (diff, parity, runtime plots), release gates and the runner."""
 from __future__ import annotations
 
+import argparse
 import copy
 import json
 import sys
@@ -11,6 +12,7 @@ import pytest
 from bench import gates, report, run
 from bench.common import paths
 from bench.common.jsonio import read_json, write_json
+from bench.common.spec import effective_options
 from bench.eval.tests.helpers import item, problem
 from bench.perf import TARGETS, implementation
 from bench.perf.generate import SplitMix64, problems, scatter_problem
@@ -329,3 +331,19 @@ def test_engine_wall_time_comes_from_a_cold_single_solve():
     assert run.Solver("rust=/bin/la place {problem} -o {result}").cold_cmd is None
     assert run.Solver("rust=/bin/la place {problem} -o {result} --warmup 0").cold_cmd is None
     assert run.Solver("other=/bin/x {problem} {result} --warmup 3").cold_cmd is None  # not an engine
+
+
+def test_levels_judge_each_run_against_the_problem_it_solved():
+    a = argparse.Namespace(solver=None, overlay=None, engine="/bin/la", warmup=3, levels=True, ts=False,
+                           wasm=False, baselines=False)
+    solvers, _ = run.build_solvers(a, log=lambda *_: None)
+    assert [s.name for s in solvers] == ["rust", "rust-low", "rust-high"]
+    assert solvers[2].cmd.endswith("--warmup 3 --aggressiveness high")
+    p = problem([item("A", 50, 50)], placement={"offset": 2})
+    assert solvers[0].as_solved(p) is p
+    low = solvers[1].as_solved(p)
+    assert low["placement"] == {"offset": 2, "aggressiveness": "low"} and p["placement"] == {"offset": 2}
+    assert effective_options(low)["defaults"]["margin"] == "0.3em"
+    assert effective_options(p)["defaults"]["margin"] == "0.2em"
+    # only Label Anything commands set the level
+    assert run.Solver("other=/bin/x {problem} {result} --aggressiveness low").as_solved(p) is p

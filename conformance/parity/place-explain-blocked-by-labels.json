@@ -99,8 +99,6 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       }
@@ -117,7 +115,7 @@
       "iterations": 800,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 236,
+      "candidates": 104,
       "omission_order": [
         "low"
       ],

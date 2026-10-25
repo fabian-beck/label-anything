@@ -5196,8 +5196,8 @@
         "id": "m112",
         "placed": true,
         "box": {
-          "x": 686.587572106361,
-          "y": 321.1875721063611,
+          "x": 675.2738636073763,
+          "y": 309.8738636073763,
           "w": 30.480000000000018,
           "h": 12.288000000000011
         },
@@ -5236,17 +5236,17 @@
               290.07487373415296
             ],
             [
-              686.587572106361,
-              321.1875721063611
+              675.2738636073763,
+              309.8738636073763
             ]
           ],
           "style": "straight",
           "port": [
-            686.587572106361,
-            321.1875721063611
+            675.2738636073763,
+            309.8738636073763
           ]
         },
-        "cost": 2.6162022731944345,
+        "cost": 2.254630674388514,
         "degrade_steps": [
           "distant"
         ],
@@ -7180,67 +7180,29 @@
       },
       {
         "id": "m154",
-        "placed": true,
-        "box": {
-          "x": 497.5,
-          "y": 387.532,
-          "w": 30.480000000000018,
-          "h": 12.336000000000013
-        },
-        "anchor": [
-          424.0,
-          393.7
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items",
+          "labels"
         ],
-        "anchor_side": "distant",
-        "model": "distant",
-        "text": {
-          "lines": [
-            "L154"
-          ],
-          "used": "original",
-          "truncated": false,
-          "baseline_offsets": [
-            10.416
-          ],
-          "line_widths": [
-            26.88
-          ],
-          "x_offset": 1.7999999999999998,
-          "x_offsets": [
-            1.7999999999999998
-          ],
-          "align": "center",
-          "font_size": 12.0,
-          "font_family": "default",
-          "font_weight": 400,
-          "scale": 1.0
-        },
-        "leader": {
-          "points": [
-            [
-              427.5,
-              393.7
-            ],
-            [
-              497.5,
-              393.7
-            ]
-          ],
-          "style": "straight",
-          "port": [
-            497.5,
-            393.7
-          ]
-        },
-        "cost": 3.165024509803921,
-        "degrade_steps": [
-          "distant"
+        "blocked_by": [
+          "m67",
+          "m101",
+          "m160"
         ],
         "priority": {
           "tier": 0,
           "score": 0.0,
           "rank": 154
-        }
+        },
+        "degrade_steps": [
+          "alternatives",
+          "wrap",
+          "distant",
+          "evict_lower",
+          "omit"
+        ]
       },
       {
         "id": "m155",
@@ -8488,9 +8450,9 @@
         "id": "m182",
         "placed": true,
         "box": {
-          "x": 23.232427893638995,
-          "y": 314.50442789363893,
-          "w": 30.479999999999993,
+          "x": 34.546136392623765,
+          "y": 325.8181363926237,
+          "w": 30.47999999999999,
           "h": 12.408000000000015
         },
         "anchor": [
@@ -8528,17 +8490,17 @@
               358.02512626584706
             ],
             [
-              53.71242789363899,
-              326.91242789363895
+              65.02613639262376,
+              338.22613639262374
             ]
           ],
           "style": "straight",
           "port": [
-            53.71242789363899,
-            326.91242789363895
+            65.02613639262376,
+            338.22613639262374
           ]
         },
-        "cost": 2.6708502379795296,
+        "cost": 2.5150252064098475,
         "degrade_steps": [
           "distant"
         ],
@@ -8828,8 +8790,8 @@
         "id": "m189",
         "placed": true,
         "box": {
-          "x": 540.0774630373418,
-          "y": 103.20772220571388,
+          "x": 537.7813624431512,
+          "y": 108.7509994007816,
           "w": 30.480000000000018,
           "h": 12.407999999999987
         },
@@ -8868,17 +8830,17 @@
               156.26642163621048
             ],
             [
-              540.0774630373418,
-              115.61572220571387
+              537.7813624431512,
+              121.15899940078158
             ]
           ],
           "style": "straight",
           "port": [
-            540.0774630373418,
-            115.61572220571387
+            537.7813624431512,
+            121.15899940078158
           ]
         },
-        "cost": 3.1196266433363395,
+        "cost": 2.9313809685092154,
         "degrade_steps": [
           "distant"
         ],
@@ -8926,7 +8888,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.21065579798756917,
+        "cost": 0.2106557979875692,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -8943,7 +8905,6 @@
           "labels"
         ],
         "blocked_by": [
-          "m0",
           "m49",
           "m105",
           "m110",
@@ -8959,8 +8920,6 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       },
@@ -9186,7 +9145,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.21986183677321086,
+        "cost": 0.21986183677321078,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -9292,14 +9251,12 @@
         "reason": "omitted_by_priority",
         "blocking": [
           "items",
-          "labels",
-          "leaders"
+          "labels"
         ],
         "blocked_by": [
-          "m25",
-          "m61",
-          "m156",
-          "m172"
+          "m37",
+          "m83",
+          "m163"
         ],
         "priority": {
           "tier": 0,
@@ -9311,16 +9268,14 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       }
     ],
     "stats": {
-      "placed": 198,
+      "placed": 197,
       "total": 200,
-      "placed_weighted": 0.9924633762075585,
+      "placed_weighted": 0.9885211472948876,
       "required_placed": true,
       "hard_violations": 0,
       "leader_crossings": 0,
@@ -9329,15 +9284,16 @@
       "iterations": 0,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 6484,
+      "candidates": 6453,
       "omission_order": [
         "m199",
-        "m191"
+        "m191",
+        "m154"
       ],
       "priority_inversions": 0,
-      "total_cost": 56.028064546070716,
+      "total_cost": 52.157397731064066,
       "degraded": {
-        "distant": 8
+        "distant": 7
       },
       "grid": {
         "cell": 3.0,

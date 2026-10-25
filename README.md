@@ -46,6 +46,10 @@ steps through a real solve: candidates and their costs, the greedy pass, local s
   (`spec/schema/`), so it works from any language.
 * **Graded collision policy.** "Never cover outliers; covering other points costs a
   little; never cross a leader" is one line of configuration.
+* **You decide how hard it tries.** One option, `placement.aggressiveness`, trades labels
+  for calm: `high` uses every means that keeps a label clear — long leaders, fan columns,
+  smaller type — `medium` (the default) keeps the type size and short leaders, `low` keeps
+  labels next to their marks, with room around them.
 * **You decide what is omitted.** When not everything fits, a priority function (data
   attributes, outlierness, tiers, per-category coverage, or a callback) decides which
   labels are dropped and in which order — and the result explains every omission. Font
@@ -121,15 +125,16 @@ CI runs):
 
 | Topic | Default |
 |---|---|
+| Aggressiveness | `medium`: labels keep their type size and the hard classes, distant labels stay within 4 em · `low`: no leaders but short ones of the models, 0.6 em between labels · `high`: every means (long leaders, fans, smaller type, relaxed overlaps) |
 | Priority | explicit `item.priority`, else input order; omission `strict`; `evict_lower` on |
 | Text | 12 px bundled sans (Noto Sans) · padding 0.15 em · buffer 0.3 em |
 | Spacing | 1 px from the own mark · 0.2 em from other marks · 0.4 em from other labels · clearly nearer to the own mark than to any other |
-| Candidates | models adjacent + slider + distant (preset `auto`: distant only when crowded) · perceptual position order (top first) · fan labels for crowds left without labels |
+| Candidates | models adjacent + slider + distant up to 4 em (preset `auto`: distant only when crowded) · perceptual position order (top first) · fan labels for crowds left without labels |
 | Leaders | straight, crossings hard, 0.4 em clear of other marks and leaders |
 | Label vs. | labels, items, text, canvas edge: **hard** · ink 0.1 per em² · across a light–dark border of a raster background 0.5 per em² |
 | Leader vs. | labels, items, leaders **hard** |
 | Solver | time budget 100 ms (Rust) / 250 ms (TS) · seed 0 · deterministic |
-| Degradation | alternatives → wrap → distant → evict_lower → shrink 0.85 → soft_overlap → omit |
+| Degradation | alternatives → wrap → distant → evict_lower → omit (`high`: … → shrink 0.85 → soft_overlap → omit) |
 
 The complete table is `spec/defaults.md`; presets (`scatter`, `map`, `graph`,
 `illustration`, `auto`) are in `spec/presets/`.

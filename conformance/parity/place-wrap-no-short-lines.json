@@ -96,8 +96,7 @@
         "placed": false,
         "reason": "no_feasible_candidate",
         "blocking": [
-          "canvas_edge",
-          "items"
+          "canvas_edge"
         ],
         "blocked_by": [],
         "priority": {
@@ -123,7 +122,7 @@
       "iterations": 800,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 232,
+      "candidates": 234,
       "omission_order": [
         "fr"
       ],

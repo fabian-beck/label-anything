@@ -1,6 +1,6 @@
 """Benchmark runner: solve every problem with every solver, evaluate, render, report.
 
-    python bench/run.py [--suite quick|full] [--solver SPEC ...] [--engine PATH] [--baselines]
+    python bench/run.py [--suite quick|full] [--solver SPEC ...] [--engine PATH [--levels]] [--baselines]
                         [--runs 7] [--baseline-runs 1] [--scenario NN ...] [--out bench-report]
                         [--perf] [--previous OLD/results.json] [--gate] [--no-render] [--timeout 600]
 
@@ -17,9 +17,11 @@ Solvers (``--solver``, repeatable; default: the built-in baselines ``naive`` and
 Solvers named ``rust``, ``wasm`` or ``ts`` (optionally ``-suffix``) are Label Anything
 implementations: they get the performance targets, the parity table and the release
 gates. ``--engine PATH`` adds ``rust=PATH place {problem} -o {result} --warmup N`` and its debug
-overlay; ``--baselines`` adds all nine baselines (what ``label-anything bench --baselines``
-passes). ``--overlay NAME=COMMAND`` (placeholders ``{problem}``, ``{result}``, ``{svg}``)
-renders an engine debug overlay next to the benchmark rendering, from one extra untimed run.
+overlay, ``--levels`` with it ``rust-low`` and ``rust-high``, the engine at the other
+aggressiveness levels (``rust`` runs the default, ``medium``); ``--baselines`` adds all nine
+baselines (what ``label-anything bench --baselines`` passes). ``--overlay NAME=COMMAND``
+(placeholders ``{problem}``, ``{result}``, ``{svg}``) renders an engine debug overlay next to
+the benchmark rendering, from one extra untimed run.
 
 Problems are discovered from ``bench/out/problems/*/scenario.json``: the quick suite
 takes the configs marked ``quick`` (one small config per scenario) and the quick
@@ -194,6 +196,14 @@ class Solver:
             return None
         return re.sub(r"--warmup\s+\d+", "--warmup 0", self.cmd)
 
+    def as_solved(self, problem: dict) -> dict:
+        """The problem with the options the command sets on it (``--aggressiveness`` of the Label Anything
+        CLIs): its result is evaluated and drawn against what it solved."""
+        m = re.search(r"--aggressiveness[=\s]+(\w+)", self.cmd or "") if self.is_la else None
+        if m is None:
+            return problem
+        return {**problem, "placement": {**(problem.get("placement") or {}), "aggressiveness": m.group(1)}}
+
     def solve_cold(self, problem_path: Path, result_path: Path, timeout: float) -> float:
         """Wall time (ms) of one solve in a fresh process, without warm-up solves."""
         result_path.parent.mkdir(parents=True, exist_ok=True)
@@ -286,7 +296,7 @@ def _base_entry(solver: Solver, prob_entry: dict) -> dict:
 
 def run_problem(solver: Solver, prob_entry: dict, out: Path, runs: int, timeout: float, do_render: bool,
                 svg: bool = False) -> dict:
-    problem = read_json(prob_entry["path"])
+    problem = solver.as_solved(read_json(prob_entry["path"]))
     rel = Path(prob_entry["scenario"]) / prob_entry["config"]
     res_path = out / "results" / solver.name / rel.with_suffix(".json")
     walls, reported, digests, rss = [], [], [], []
@@ -437,7 +447,7 @@ def run_sequence(solver: Solver, seq: dict, out: Path, timeout: float, do_render
         except Unsupported as e:
             return {**head, "skipped": str(e)}
     for fr in man["frames"]:
-        problem = read_json(base / fr["file"])
+        problem = solver.as_solved(read_json(base / fr["file"]))
         if prev is not None and man.get("warm_start", True):
             problem = dict(problem)
             problem["warm_start"] = shifted_warm_start(prev[0], prev[1], problem)
@@ -490,6 +500,13 @@ def build_solvers(a, log=print) -> tuple[list[Solver], dict[str, str]]:
         if not any(s.split("=", 1)[0] == "rust" for s in specs):
             specs.insert(0, f"rust={eng} place {{problem}} -o {{result}} --warmup {a.warmup}")
         overlays.setdefault("rust", f"{eng} place {{problem}} -o {{result}} --debug-svg {{svg}}")
+        if getattr(a, "levels", False):
+            # the engine at the other aggressiveness levels (ADR placement/aggressiveness), around rust
+            at = next(i for i, s in enumerate(specs) if s.split("=", 1)[0] == "rust")
+            for k, lv in ((at + 1, "low"), (at + 2, "high")):
+                if not any(s.split("=", 1)[0] == f"rust-{lv}" for s in specs):
+                    specs.insert(k, f"rust-{lv}={eng} place {{problem}} -o {{result}} --warmup {a.warmup} "
+                                    f"--aggressiveness {lv}")
     # the TypeScript CLI runs both JavaScript engines; every implementation reports a
     # steady-state solve after --warmup solves in the same process (a fresh process would
     # time loading fonts, first-touch memory and, for JavaScript, compiling the engine)
@@ -528,6 +545,9 @@ def main(argv=None) -> int:
                     help="naive | greedy | textalloc | adjusttext | vega-label | ggrepel | d3fc | echarts | d3-labeler | "
                          "NAME=COMMAND (repeatable)")
     ap.add_argument("--engine", help="Rust CLI binary: adds rust=ENGINE place {problem} -o {result} and its overlay")
+    ap.add_argument("--levels", action="store_true",
+                    help="with --engine, also run it at the other aggressiveness levels as rust-low and rust-high "
+                         "(placement.aggressiveness; rust is the default, medium)")
     ap.add_argument("--ts", action="store_true",
                     help="add ts= the TypeScript engine (ts/packages/cli, built with npm run build)")
     ap.add_argument("--wasm", action="store_true",

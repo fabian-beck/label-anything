@@ -290,6 +290,11 @@ NAME=COMMAND` (`{problem}`, `{result}`, `{svg}`) renders the engine's debug over
 grids, candidates) from one extra untimed run; `--engine` sets it up for `rust` with `place
 --debug-svg`. Sequences are solved frame by frame; frame t+1 gets `warm_start.placements` =
 frame t's placements with each box (and leader) shifted by its anchor's movement.
+`--levels` (with `--engine`) adds `rust-low` and `rust-high`, the engine at the other two
+`placement.aggressiveness` levels (`rust` runs the default, `medium`; ADR
+placement/aggressiveness), for comparing labels against clutter. The result of a command
+with `--aggressiveness` is evaluated and drawn against the problem with that level set,
+whose options (such as the margin of `low`) it solved.
 Third-party baselines solve a problem with soft classes twice — avoided like hard ones and
 left out — and keep the better result by their own usable labels (`--baseline-soft best`, the
 default; see `bench/baselines/README.md`). The peak resident memory of every external solver

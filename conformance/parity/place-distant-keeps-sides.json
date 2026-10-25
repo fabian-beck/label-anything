@@ -80,8 +80,7 @@
         "placed": false,
         "reason": "no_feasible_candidate",
         "blocking": [
-          "wall",
-          "canvas_edge"
+          "wall"
         ],
         "blocked_by": [],
         "priority": {
@@ -94,8 +93,6 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       },
@@ -103,8 +100,8 @@
         "id": "b",
         "placed": true,
         "box": {
-          "x": 143.88427779428616,
-          "y": 89.53453696265825,
+          "x": 138.34100059921843,
+          "y": 91.83063755684879,
           "w": 29.23199999999997,
           "h": 12.288000000000011
         },
@@ -143,17 +140,17 @@
               118.66060798672218
             ],
             [
-              143.88427779428616,
-              101.82253696265826
+              138.34100059921843,
+              104.1186375568488
             ]
           ],
           "style": "straight",
           "port": [
-            143.88427779428616,
-            101.82253696265826
+            138.34100059921843,
+            104.1186375568488
           ]
         },
-        "cost": 3.1285631808278875,
+        "cost": 3.039054801407743,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -174,12 +171,12 @@
       "iterations": 800,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 53,
+      "candidates": 26,
       "omission_order": [
         "a"
       ],
       "priority_inversions": 0,
-      "total_cost": 3.1285631808278875,
+      "total_cost": 3.039054801407743,
       "degraded": {},
       "grid": {
         "cell": 3.0,

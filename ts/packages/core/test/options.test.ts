@@ -21,6 +21,27 @@ describe("options", () => {
     expect(auto.strings("placement.models")).toEqual(["adjacent", "slider"]);
   });
 
+  it("aggressiveness_sets_defaults_under_preset_and_problem", () => {
+    const ladder = (p: unknown) => new Opts(p).strings("degrade");
+    expect(ladder({})).toEqual(["alternatives", "wrap", "distant", "evict_lower", "omit"]);
+    const high = { placement: { aggressiveness: "high" } };
+    expect(ladder(high).length).toBe(7);
+    const o = new Opts(high);
+    expect(o.get("placement.max_distance")).toBe("8em");
+    expect(o.get("defaults.margin")).toBe("0.2em");
+    const low = new Opts({ placement: { aggressiveness: "low", max_distance: "6em" } });
+    expect(low.string("placement.fan")).toBe("off");
+    expect(low.get("defaults.margin")).toBe("0.3em");
+    // the problem's own value wins over the level's
+    expect(low.get("placement.max_distance")).toBe("6em");
+    expect(low.strings("degrade")).toEqual(["alternatives", "wrap", "evict_lower", "omit"]);
+    // keys the level does not list keep the defaults table's
+    expect(low.get("placement.min_distance")).toBe("1.5em");
+    // the level's values are copies
+    (low.get("degrade") as string[]).push("x");
+    expect(low.strings("degrade")).toEqual(["alternatives", "wrap", "evict_lower", "omit"]);
+  });
+
   it("merges only the option sections", () => {
     expect(DATA_KEYS).toEqual(["items", "obstacles", "warm_start"]);
     const problem = {

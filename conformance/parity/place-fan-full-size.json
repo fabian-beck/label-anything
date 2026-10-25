@@ -473,7 +473,7 @@
       "iterations": 2400,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 32,
+      "candidates": 29,
       "omission_order": [],
       "priority_inversions": 0,
       "total_cost": 14.903789557596694,

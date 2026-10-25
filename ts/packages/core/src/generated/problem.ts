@@ -540,6 +540,10 @@ export interface AvoidMap {
   [k: string]: AvoidValue;
 }
 export interface Placement {
+  /**
+   * How hard the engine tries to place every label: sets the defaults of degrade, placement.max_distance, placement.fan and defaults.margin (spec/defaults.md). high: every means that keeps a label clear (leaders, fans, smaller type, relaxed overlaps); medium: labels keep their type size and the hard classes, distant labels stay within 4 em; low: no leaders but short ones of the models, more room around every label.
+   */
+  aggressiveness?: "low" | "medium" | "high";
   models?: Models;
   position_order?: PositionOrder;
   /**

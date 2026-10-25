@@ -175,7 +175,8 @@ def compare(previous: dict, current: dict, threshold: float = 0.02) -> dict:
 def parity(report: dict) -> dict:
     """Deltas of every metric between the Rust implementation and each other implementation (TS, WASM)."""
     sol = report["solvers"]
-    ref = next((s for s in sol if implementation(s) == "rust"), None)
+    # the engine at its defaults; rust-low, rust-high (--levels) are other settings, not implementations
+    ref = "rust" if "rust" in sol else next((s for s in sol if implementation(s) == "rust"), None)
     others = [s for s in sol if implementation(s) in ("ts", "wasm") and s != ref]
     out = {"reference": ref, "pairs": []}
     if ref is None or not others:

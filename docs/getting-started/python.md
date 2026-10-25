@@ -47,7 +47,7 @@ Every other keyword sets a field of the [problem](../concepts/problem.md). `None
 | `y_axis`, `transform`, `preset`, `weights`, `degrade`, `warm_start` (a `Result` works) | the field of that name |
 | `font` (`la.Font`), `font_family`, `font_size`, `font_weight`, `font_style`, `line_height`, `font_file` | `defaults.font` |
 | `padding`, `buffer`, `margin`, `spacing`, `mark`, `wrap`, `truncate`, `align`; `shaping` | `defaults`; `text.shaping` |
-| every field of `placement` (`models`, `position_order`, `offset`, `max_distance`, `internal`, `boundary`, `fan`, …) | `placement` |
+| every field of `placement` (`aggressiveness`, `models`, `position_order`, `offset`, `max_distance`, `internal`, `boundary`, `fan`, …) | `placement` |
 | `leaders`: a style name or `la.Leaders(style="angles", angles=range(0, 360, 45))` | `leaders` |
 | `avoid` (labels, or a dict with `label`, `leader`, `buffer`), `avoid_leader`, `avoid_buffer`, `relaxable` | `avoid` |
 | `priority`, `tiers`, `omission`, `coverage`, `ties`, `band`, `focus`, `font_classes`; `max_labels`, `max_ink_fraction` | `priority`; `priority.budget` |

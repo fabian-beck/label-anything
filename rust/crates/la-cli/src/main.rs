@@ -98,6 +98,10 @@ enum Cmd {
         /// Preset (preset).
         #[arg(long, value_parser = ["auto", "scatter", "map", "graph", "illustration", "none"], help_heading = "Problem options")]
         preset: Option<String>,
+        /// How hard to try to place every label (placement.aggressiveness); high also uses
+        /// long leaders, smaller type and relaxed overlaps [default: medium].
+        #[arg(long, value_parser = ["low", "medium", "high"], help_heading = "Problem options")]
+        aggressiveness: Option<String>,
         /// Canvas size as WxH, e.g. 800x600 (canvas.width and canvas.height; the other canvas
         /// options are kept). Without a canvas: the background's size, else unbounded.
         #[arg(long, value_name = "WxH", value_parser = parse_canvas, help_heading = "Problem options")]
@@ -397,6 +401,7 @@ fn run(cli: Cli) -> Result<ExitCode, Failure> {
             omission,
             background,
             preset,
+            aggressiveness,
             canvas,
             font_size,
             max_labels,
@@ -452,6 +457,9 @@ fn run(cli: Cli) -> Result<ExitCode, Failure> {
             }
             if let Some(ps) = preset {
                 options.push((&["preset"], json!(ps)));
+            }
+            if let Some(a) = aggressiveness {
+                options.push((&["placement", "aggressiveness"], json!(a)));
             }
             if let Some(fs) = font_size {
                 options.push((&["defaults", "font", "size"], json!(fs)));

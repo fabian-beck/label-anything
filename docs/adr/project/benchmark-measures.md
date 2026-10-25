@@ -12,9 +12,9 @@ nearer to it than its own. The unlabeled points of a chart given as obstacles ne
 competed. Covering a mark counted only where the avoidance settings made it a violation.
 Labels 0.01 em apart passed every measure. And the benchmark's own text boxes, for the
 baselines and the removal test, spanned the font's ascender and descender: 27 % taller
-than the engine's at the median. Weighing more labels against a calmer picture needs a
-measure of what more labels cost: the number of labels and of leaders, and leader lengths,
-each tell one part.
+than the engine's at the median. Placing fewer labels to calm a picture (ADR
+placement/aggressiveness) needs a measure of what more labels cost: the number of labels
+and of leaders, and leader lengths, each tell one part.
 
 ## Decision
 - **Data points** are the marks of point items, labeled or not, and the circles of every

@@ -57,6 +57,7 @@ OPTION_PATHS: Dict[str, str] = {
     "align": "defaults.align",
     "shaping": "text.shaping",
     # placement
+    "aggressiveness": "placement.aggressiveness",
     "models": "placement.models",
     "position_order": "placement.position_order",
     "offset": "placement.offset",

@@ -35,8 +35,9 @@ const USAGE = `label-anything-ts ${VERSION} — label placement (TypeScript engi
 Usage:
   label-anything-ts place <problem.json|-> [-o <result.json|->] [--debug-svg <file>]
         [--time <ms>] [--seed <n>] [--strategy <name>] [--degrade <step,...>] [--pretty]
-        [--preset <name>] [--omission <mode>] [--max-labels <n>] [--font-size <px>]
-        [--canvas <WxH>] [--background <file>] [--engine core|wasm] [--warmup <n>]
+        [--preset <name>] [--aggressiveness low|medium|high] [--omission <mode>]
+        [--max-labels <n>] [--font-size <px>] [--canvas <WxH>] [--background <file>]
+        [--engine core|wasm] [--warmup <n>]
   label-anything-ts validate <problem.json|-> [--json]
   label-anything-ts render <problem.json> <result.json> [-o <out.svg|->]
   label-anything-ts --help | --version
@@ -91,6 +92,7 @@ const VALUED = new Set([
   "--strategy",
   "--degrade",
   "--preset",
+  "--aggressiveness",
   "--omission",
   "--max-labels",
   "--font-size",
@@ -281,6 +283,8 @@ function cmdPlace(p: Parsed, io: Io): number {
   if (maxLabels !== undefined) setOption(problem, ["priority", "budget", "max_labels"], maxLabels);
   const preset = flags.get("--preset");
   if (typeof preset === "string") setOption(problem, ["preset"], preset);
+  const aggressiveness = flags.get("--aggressiveness");
+  if (typeof aggressiveness === "string") setOption(problem, ["placement", "aggressiveness"], aggressiveness);
   const fontSize = numberFlag(flags, "--font-size");
   if (fontSize !== undefined) setOption(problem, ["defaults", "font", "size"], fontSize);
   const canvas = flags.get("--canvas");

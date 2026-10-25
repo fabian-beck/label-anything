@@ -4,7 +4,8 @@
 //   node tools/codegen.mjs          regenerate all outputs
 //   node tools/codegen.mjs --check  fail (exit 1) if any output is stale
 //
-// Inputs:  spec/defaults.md (table between defaults:begin/end), spec/presets/*.json,
+// Inputs:  spec/defaults.md (tables between defaults:begin/end and aggressiveness:begin/end),
+//          spec/presets/*.json,
 //          spec/schema/*.json, fonts/*.metrics.ttf
 // Outputs: rust/crates/la-core/src/generated/spec_data.rs
 //          ts/packages/core/src/generated/spec-data.ts
@@ -41,6 +42,45 @@ function parseDefaultsTable(md) {
   return out;
 }
 
+/**
+ * The aggressiveness table: per level (columns `low`, `medium`, `high`) the defaults of the
+ * keys it lists. The `medium` column must equal the Default column of the defaults table:
+ * `medium` is the default level.
+ */
+function parseAggressivenessTable(md, defaults) {
+  const begin = md.indexOf("<!-- aggressiveness:begin -->");
+  const end = md.indexOf("<!-- aggressiveness:end -->");
+  if (begin < 0 || end < 0) throw new Error("defaults.md: aggressiveness markers not found");
+  const lines = md.slice(begin, end).split("\n").filter((l) => l.startsWith("|"));
+  const head = lines[0].split("|").slice(1, -1).map((c) => c.trim().replace(/`/g, ""));
+  const levels = head.slice(1);
+  if (head[0] !== "Key" || levels.join() !== "low,medium,high") {
+    throw new Error(`defaults.md: aggressiveness header must be | Key | low | medium | high |, got ${head}`);
+  }
+  if (!levels.includes(defaults["placement.aggressiveness"])) {
+    throw new Error(`defaults.md: placement.aggressiveness default is not a level`);
+  }
+  const out = Object.fromEntries(levels.map((l) => [l, {}]));
+  for (const row of lines.filter((l) => l.startsWith("| `"))) {
+    const cells = [...row.matchAll(/`([^`]+)`/g)].map((m) => m[1]);
+    if (cells.length !== levels.length + 1) throw new Error(`defaults.md: cannot parse row: ${row}`);
+    const [key, ...values] = cells;
+    if (!(key in defaults)) throw new Error(`defaults.md: aggressiveness key ${key} has no default`);
+    levels.forEach((l, i) => {
+      try {
+        out[l][key] = JSON.parse(values[i]);
+      } catch (e) {
+        throw new Error(`defaults.md: bad JSON for ${key} (${l}): ${values[i]}`);
+      }
+    });
+    const def = defaults["placement.aggressiveness"];
+    if (json(out[def][key]) !== json(defaults[key])) {
+      throw new Error(`defaults.md: ${key} differs between its Default and the ${def} column`);
+    }
+  }
+  return out;
+}
+
 function readPresets() {
   const dir = join(root, "spec/presets");
   const presets = {};
@@ -60,7 +100,7 @@ function readSchema(file) {
   return JSON.parse(readFileSync(join(root, "spec/schema", file), "utf8"));
 }
 
-function rustSpecData(defaults, presets) {
+function rustSpecData(defaults, levels, presets) {
   const presetNames = Object.keys(presets);
   const lines = [];
   lines.push(`// ${banner}`);
@@ -71,6 +111,12 @@ function rustSpecData(defaults, presets) {
   lines.push("");
   lines.push("/// Flat map from dotted key to JSON default (spec/defaults.md).");
   lines.push(`pub const DEFAULTS_JSON: &str = r##"${json(defaults)}"##;`);
+  lines.push("");
+  lines.push("/// The defaults of each `placement.aggressiveness` level as (level, flat map from dotted");
+  lines.push("/// key to JSON) (spec/defaults.md, the aggressiveness table).");
+  lines.push("pub const AGGRESSIVENESS: &[(&str, &str)] = &[");
+  for (const n of Object.keys(levels)) lines.push(`    ("${n}", r##"${json(levels[n])}"##),`);
+  lines.push("];");
   lines.push("");
   lines.push("/// Presets (spec/presets/*.json) as (name, JSON).");
   lines.push("pub const PRESETS: &[(&str, &str)] = &[");
@@ -83,7 +129,7 @@ function rustSpecData(defaults, presets) {
   return lines.join("\n");
 }
 
-function tsSpecData(defaults, presets) {
+function tsSpecData(defaults, levels, presets) {
   const lines = [];
   lines.push(`// ${banner}`);
   lines.push("/** Schema version implemented. */");
@@ -91,6 +137,14 @@ function tsSpecData(defaults, presets) {
   lines.push("");
   lines.push("/** Flat map from dotted key to JSON default (spec/defaults.md). */");
   lines.push(`export const DEFAULTS: Readonly<Record<string, unknown>> = ${JSON.stringify(defaults, null, 2)};`);
+  lines.push("");
+  lines.push("/**");
+  lines.push(" * The defaults of each `placement.aggressiveness` level: flat maps from dotted key to JSON");
+  lines.push(" * (spec/defaults.md, the aggressiveness table).");
+  lines.push(" */");
+  lines.push(
+    `export const AGGRESSIVENESS: Readonly<Record<string, Readonly<Record<string, unknown>>>> = ${JSON.stringify(levels, null, 2)};`,
+  );
   lines.push("");
   lines.push("/** Presets (spec/presets/*.json). */");
   lines.push(`export const PRESETS: Readonly<Record<string, PresetData>> = ${JSON.stringify(presets, null, 2)};`);
@@ -214,11 +268,13 @@ function copyRustFonts() {
   return changed;
 }
 
-const defaults = parseDefaultsTable(readFileSync(join(root, "spec/defaults.md"), "utf8"));
+const defaultsMd = readFileSync(join(root, "spec/defaults.md"), "utf8");
+const defaults = parseDefaultsTable(defaultsMd);
+const levels = parseAggressivenessTable(defaultsMd, defaults);
 const presets = readPresets();
 let stale = false;
-stale = emit("rust/crates/la-core/src/generated/spec_data.rs", rustSpecData(defaults, presets)) || stale;
-stale = emit("ts/packages/core/src/generated/spec-data.ts", tsSpecData(defaults, presets)) || stale;
+stale = emit("rust/crates/la-core/src/generated/spec_data.rs", rustSpecData(defaults, levels, presets)) || stale;
+stale = emit("ts/packages/core/src/generated/spec-data.ts", tsSpecData(defaults, levels, presets)) || stale;
 stale = emit("ts/packages/text/src/generated/fonts.ts", tsFonts()) || stale;
 stale = copyRustFonts() || stale;
 const types = await tsTypes();

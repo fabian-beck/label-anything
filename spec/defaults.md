@@ -1,10 +1,12 @@
 # Defaults
 
 This table is **data**. `tools/codegen.mjs` parses the rows between the
-`defaults:begin` and `defaults:end` markers and generates the constants used by the
+`defaults:begin` and `defaults:end` markers, and those of the
+[aggressiveness](#aggressiveness) table between `aggressiveness:begin` and
+`aggressiveness:end`, and generates the constants used by the
 Rust (`rust/crates/la-core/src/generated/spec_data.rs`) and TypeScript
 (`ts/packages/core/src/generated/spec-data.ts`) implementations. Never copy a value by
-hand: edit this table and run `node tools/codegen.mjs`. CI fails if the generated files
+hand: edit these tables and run `node tools/codegen.mjs`. CI fails if the generated files
 are stale.
 
 * **Key** is a dotted path into the problem. `obstacles.raster.*`, `obstacles.svg.*` and
@@ -12,7 +14,8 @@ are stale.
 * **Default** is a JSON literal. Lengths may carry units (`em` = the label's font size).
   An object default for a map (`avoid.label`, ...) is merged key by key with the user's
   map; the key `"*"` is the weight of classes the map does not list.
-* Merge order: this table ← preset (`spec/presets/<name>.json`) ← the problem. Objects
+* Merge order: this table ← the column of `placement.aggressiveness`
+  ([below](#aggressiveness)) ← preset (`spec/presets/<name>.json`) ← the problem. Objects
   merge recursively, arrays and scalars replace.
 
 <!-- defaults:begin -->
@@ -33,17 +36,18 @@ are stale.
 | `defaults.font.line_height` | `1.2` | > 0 | Line pitch in em for wrapped text. |
 | `defaults.padding` | `"0.15em"` | length ≥ 0 | Label box inflation (part of the reported box). |
 | `defaults.buffer` | `"0.3em"` | length ≥ 0 | Soft ambiguity buffer ring around each label (Mumtaz et al. 2019). |
-| `defaults.margin` | `"0.2em"` | length ≥ 0 | Space a label keeps from other items' marks while `avoid.label.items` is hard (spec §4.4): not from its own mark (`placement.offset`), never more than another mark keeps from the own mark's box, half for warm-start candidates; also the least space from other labels. |
+| `defaults.margin` | `"0.2em"` | length ≥ 0 | Space a label keeps from other items' marks while `avoid.label.items` is hard (spec §4.4): not from its own mark (`placement.offset`), never more than another mark keeps from the own mark's box, half for warm-start candidates; also the least space from other labels. 0.3 em with `placement.aggressiveness` `low`. |
 | `defaults.spacing` | `null` | length ≥ 0 or null | Space a label keeps from other labels and their stubs while `avoid.label.labels` is hard (the larger of the two labels' spacings, each at least its margin; spec §4.4); `null`: twice the margin (0.4 em), so that with the padding their letters stand farther apart than the lines of one label. Half for warm-start candidates. |
 | `defaults.mark` | `{"shape":"circle","r":2}` | mark | Mark of point anchors without `anchor.mark`. |
 | `defaults.wrap` | `null` | wrap or null | No wrap settings: single line; the `wrap` ladder step may still try 2–3 lines. |
 | `defaults.truncate` | `"none"` | none \| end \| middle | Truncation when wrapped text exceeds `max_lines`. |
 | `defaults.align` | `"center"` | start \| center \| end | How the lines of a text label align in its box (spec §5.1): centered, flush left (`start`) or flush right (`end`); `label.align` sets it per label. |
 | `text.shaping` | `"auto"` | auto \| simple \| full | `simple` is identical in every implementation. |
+| `placement.aggressiveness` | `"medium"` | low \| medium \| high | How hard the engine tries to place every label (spec §2.4): sets the defaults of `degrade`, `placement.max_distance`, `placement.fan` and `defaults.margin` ([below](#aggressiveness)). `high`: every means that keeps a label clear (leaders, fans, smaller type, relaxed overlaps); `medium`: labels keep their type size and the hard classes, distant labels stay within 4 em; `low`: no leaders but short ones of the models, more room around every label. |
 | `placement.models` | `["adjacent","slider","distant"]` | list | Candidate models. Preset `auto` adds `distant` only when crowded. |
 | `placement.position_order` | `"perceptual"` | enum or list | perceptual = top, right, bottom, left, top-right, bottom-right, top-left, bottom-left. A list also keeps distant labels on its sides (spec §6.4). |
 | `placement.offset` | `1` | length ≥ 0 | Gap between the (inflated) mark and an adjacent label. |
-| `placement.max_distance` | `"8em"` | length ≥ 0 | Largest anchor–label distance of distant labels. |
+| `placement.max_distance` | `"4em"` | length ≥ 0 | Largest anchor–label distance of distant labels. 2.5 em with `placement.aggressiveness` `low`, 8 em with `high`. |
 | `placement.min_distance` | `"1.5em"` | length ≥ 0 | Innermost ring of distant candidates. |
 | `placement.slider_per_quadrant` | `4` | int ≥ 0 | Slider samples between two fixed positions. |
 | `placement.k_distant` | `24` | int ≥ 0 | Distant candidates kept per item variant (lowest static cost). |
@@ -58,7 +62,7 @@ are stale.
 | `placement.boundary.align` | `"stack"` | stack \| spread | stack: as close to the anchors as possible; spread: evenly distributed. |
 | `placement.boundary.gap` | `2` | length ≥ 0 | Gap between stacked boundary labels. |
 | `placement.boundary.margin` | `4` | length ≥ 0 | Distance of boundary labels from the canvas (region) edge. |
-| `placement.fan` | `"auto"` | auto \| always \| off | Fan labels (spec §6.8): a crowd's labels stacked in a column beside it with fanning leaders. `auto`: crowds of items left without a label, when that places more labels; `always`: every crowd of two or more items. |
+| `placement.fan` | `"auto"` | auto \| always \| off | Fan labels (spec §6.8): a crowd's labels stacked in a column beside it with fanning leaders. `auto`: crowds of items left without a label, when that places more labels; `always`: every crowd of two or more items. `off` with `placement.aggressiveness` `low`. |
 | `placement.own_nearest` | `true` | bool | A label without a distant leader comes no closer to another item's mark than to its own, and without a stub it is nearer to its own by its margin (at most by the distance between the two marks; marks it may not cover; spec §4.4). |
 | `placement.stubs` | `"off"` | off \| auto | Stubs (spec §6.9): with `auto`, a label next to its mark that another item's mark comes within `stub_reach` of stands `stub_length` farther out, joined to its mark by a short leader at a right angle to its side (`leader.stub`; in the middle of a left or right side), where that is feasible; such a crowded label without a stub costs as much as a leader (`w_leader`). |
 | `placement.stub_length` | `"0.5em"` | length ≥ 0 | How much farther out a label with a stub stands than an adjacent one. |
@@ -97,7 +101,7 @@ are stale.
 | `solver.max_iterations` | `200000` | int ≥ 0 | Cap on local-search iterations. |
 | `solver.seed` | `0` | 0 – 2³²−1 | Seed of the PCG32 generator. |
 | `solver.grid_cell` | `"auto"` | auto or > 0 | auto = clamp(min font size / 4, 1, 4) px. |
-| `degrade` | `["alternatives","wrap","distant","evict_lower","shrink:0.85","soft_overlap","omit"]` | list | Degradation ladder (spec §10.1). No `boundary` step: margin labels need leaders across the picture; use the `boundary` model or step where they are intended. |
+| `degrade` | `["alternatives","wrap","distant","evict_lower","omit"]` | list | Degradation ladder (spec §10.1). With `placement.aggressiveness` `low` without `distant`, with `high` also `shrink:0.85` and `soft_overlap` before `omit`. No `boundary` step: margin labels need leaders across the picture; use the `boundary` model or step where they are intended. |
 | `degrade_options.min_scale` | `0.7` | (0,1] | Smallest font scale of `shrink:f` steps (f, f², … ≥ min_scale), relative to the size before a smaller font class (spec §9.4). |
 | `degrade_options.wrap_max_lines` | `3` | int ≥ 1 | Line limit of the `wrap` step for labels without wrap settings. |
 | `degrade_options.soft_overlap_weight` | `10` | ≥ 0 | Weight replacing `hard` for relaxed classes. |
@@ -135,6 +139,28 @@ are stale.
 | `output.candidates` | `false` | bool | Report all candidates. |
 | `output.item_shape` | `false` | bool | Echo resolved item geometry. |
 <!-- defaults:end -->
+
+## Aggressiveness
+
+`placement.aggressiveness` sets how hard the engine tries to place every label. Each level
+is a column of defaults for the options below, merged between this table and the preset
+(spec §2.4): a preset or the problem that sets one of these options overrides the level.
+`medium` (default) is the Default column above. `high` uses every means that keeps a label
+clear of what it may not cover and nearer to its own mark than to any other: distant
+labels up to 8 em away, leaders from the ladder, fan columns, smaller type, relaxed
+overlaps; it is the behaviour of earlier versions. `medium` keeps the type size and the
+hard classes and halves how far distant labels go. `low` places a label next to its mark,
+or on a short leader where the models ask for distant labels, with half as much room
+again around it (ADR placement/aggressiveness).
+
+<!-- aggressiveness:begin -->
+| Key | `low` | `medium` | `high` |
+|---|---|---|---|
+| `degrade` | `["alternatives","wrap","evict_lower","omit"]` | `["alternatives","wrap","distant","evict_lower","omit"]` | `["alternatives","wrap","distant","evict_lower","shrink:0.85","soft_overlap","omit"]` |
+| `placement.max_distance` | `"2.5em"` | `"4em"` | `"8em"` |
+| `placement.fan` | `"off"` | `"auto"` | `"auto"` |
+| `defaults.margin` | `"0.3em"` | `"0.2em"` | `"0.2em"` |
+<!-- aggressiveness:end -->
 
 ## Notes
 

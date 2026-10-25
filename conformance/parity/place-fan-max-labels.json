@@ -284,9 +284,8 @@
         "placed": false,
         "reason": "omitted_by_priority",
         "blocking": [
-          "items",
           "labels",
-          "leaders"
+          "items"
         ],
         "blocked_by": [
           "beta",
@@ -302,8 +301,6 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       },
@@ -375,7 +372,6 @@
         "reason": "omitted_by_priority",
         "blocking": [
           "labels",
-          "leaders",
           "items"
         ],
         "blocked_by": [
@@ -392,8 +388,6 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       }
@@ -410,7 +404,7 @@
       "iterations": 2400,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 70,
+      "candidates": 37,
       "omission_order": [
         "zeta",
         "delta"

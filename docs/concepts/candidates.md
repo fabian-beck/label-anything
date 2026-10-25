@@ -4,7 +4,8 @@ The engine does not slide labels around continuously. It generates **candidate**
 positions for every label, computes what each costs, and chooses one candidate per item so
 that no hard constraint is violated, the priority is respected and the total cost is low.
 When an item has no usable candidate, the **degradation ladder** generates more — shorter,
-wrapped, distant, smaller — before the label is given up.
+wrapped, distant, smaller — before the label is given up. How far the engine goes is the
+[aggressiveness](#aggressiveness).
 
 ## Candidate models
 
@@ -41,7 +42,8 @@ point, if the label fits with `inner_padding` (0.2 em) to spare; `placement.inte
 (`auto`, `prefer`, `allow`, `never`) decides when ([shapes](../tutorials/shapes.md#internal-labels)).
 
 **`distant`** — away from the mark, with a leader: `distant_rings` (4) rings between
-`min_distance` (1.5 em) and `max_distance` (8 em), in `distant_directions` (16) directions
+`min_distance` (1.5 em) and `max_distance` (4 em; per [aggressiveness](#aggressiveness)),
+in `distant_directions` (16) directions
 (or the leader style's angles), plus free-space seeds; the `k_distant` (24) cheapest are
 kept ([leaders](../tutorials/leaders.md)).
 
@@ -90,9 +92,10 @@ If you make `labels` or `leaders` soft, their overlaps are costed the same way. 
 | `soft_overlap` | the hard classes of `avoid.relaxable` turned into weight `soft_overlap_weight` (10) |
 | `omit` | give up: the label is reported with its reason |
 
-The default ladder is `["alternatives", "wrap", "distant", "evict_lower", "shrink:0.85",
-"soft_overlap", "omit"]`. Each step adds to the label's shape cost, so a degraded label wins
-only when nothing better is free. The result lists the steps tried per label
+The default ladder is `["alternatives", "wrap", "distant", "evict_lower", "omit"]`; the
+[aggressiveness](#aggressiveness) `high` adds `shrink:0.85` and `soft_overlap` before
+`omit`, `low` drops `distant`. Each step adds to the label's shape cost, so a degraded
+label wins only when nothing better is free. The result lists the steps tried per label
 (`degrade_steps`) and counts degraded labels per kind (`stats.degraded`).
 
 `boundary` is not in the default ladder: a label that fits nowhere near its point would get
@@ -100,6 +103,34 @@ a leader across half the picture. Add it where margin labels are intended, or us
 `boundary` model, as the `illustration` preset does. Shorten the ladder to forbid what your
 output cannot show: without `shrink`, all labels keep their size; with `["omit"]` alone,
 each label is placed as specified or omitted.
+
+## Aggressiveness
+
+`placement.aggressiveness` sets how hard the engine tries to place every label, in three
+levels. Each level is a set of defaults for four options; a preset or the problem that sets
+one of them overrides it ([defaults](../reference/defaults.md#aggressiveness)):
+
+| | `low` | `medium` (default) | `high` |
+|---|---|---|---|
+| ladder (`degrade`) | alternatives, wrap, evict_lower, omit | alternatives, wrap, distant, evict_lower, omit | alternatives, wrap, distant, evict_lower, shrink:0.85, soft_overlap, omit |
+| distant labels within (`placement.max_distance`) | 2.5 em | 4 em | 8 em |
+| fan labels (`placement.fan`) | off | auto | auto |
+| label margin (`defaults.margin`) | 0.3 em (0.6 em between labels) | 0.2 em (0.4 em) | 0.2 em (0.4 em) |
+
+`high` uses every means that keeps a label clear of what it may not cover and nearer to its
+own mark than to any other: long leaders, leaders from the ladder, fan columns, smaller type
+and relaxed overlaps. It places the most labels, and the busiest pictures. `medium` keeps
+every label at its size, off the hard classes and within 4 em of its mark. `low` places a
+label next to its mark, or on a short leader where the models ask for distant labels, with
+more room around it; the `illustration` preset's margin columns keep their leaders at every
+level.
+
+On the 59 static problems of the [benchmark](../project/benchmark.md) (up to 3,221 items),
+`medium` places 5.3 % fewer labels than `high` with 10.5 % less clutter (the outline length
+of the labels and leaders per canvas pixel) and 17 % fewer leaders; `low` places 18.4 %
+fewer labels with 21.8 % less clutter and 90 % fewer leaders. The labels left out are those
+that needed a long leader, smaller type or a gap of less than 0.6 em
+([ADR placement/aggressiveness](../adr/placement/aggressiveness.md)).
 
 ## Fan labels
 
@@ -110,13 +141,13 @@ fanning out of the crowd (`model: "fan"` in the result). The column stands on a 
 items' `position_order` allows; its leaders follow the leader style and keep every hard
 rule.
 
-With `placement.fan: "auto"` (default), a crowd gets a column only if the search left some
-of its items unlabeled and the column places more labels; `"always"` gives every crowd of
-two or more items a column, `"off"` none. In a crowd surrounded by other marks, the
-leaders would cross those marks, and no column forms. The `angles` leader style, whose
-leaders keep to their rays, gets no columns, nor do items that may not have leaders. A
-label the search shrank to fit beside its mark stands in the column at its full size,
-unless only the shrunk size fits there; boundary columns do the same
-([ADR placement/columns](../adr/placement/columns.md)).
+With `placement.fan: "auto"` (default; `"off"` with aggressiveness `low`), a crowd gets a
+column only if the search left some of its items unlabeled and the column places more
+labels; `"always"` gives every crowd of two or more items a column, `"off"` none. In a
+crowd surrounded by other marks, the leaders would cross those marks, and no column forms.
+The `angles` leader style, whose leaders keep to their rays, gets no columns, nor do items
+that may not have leaders. A label the search shrank to fit beside its mark stands in the
+column at its full size, unless only the shrunk size fits there; boundary columns do the
+same ([ADR placement/columns](../adr/placement/columns.md)).
 
 How the solver picks one candidate per item: [the solver](solver.md).

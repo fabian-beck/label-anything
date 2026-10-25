@@ -4,8 +4,8 @@ import java.util.List;
 
 /**
  * Steps of the degradation ladder (spec §5.7, §10.1), tried in order for items that do not
- * fit. Default: alternatives, wrap, distant, boundary, evict_lower, shrink:0.85,
- * soft_overlap, omit.
+ * fit. Default ({@link Placement.Aggressiveness#MEDIUM}): alternatives, wrap, distant,
+ * evict_lower, omit; see {@link #defaults(Placement.Aggressiveness)}.
  */
 public final class Degrade implements JsonName {
   /** Shorter alternative texts. */
@@ -39,9 +39,18 @@ public final class Degrade implements JsonName {
     return new Degrade("shrink:" + Spec.plainNumber(factor));
   }
 
-  /** The default ladder. */
+  /** The default ladder (that of {@link Placement.Aggressiveness#MEDIUM}). */
   public static List<Degrade> defaults() {
-    return List.of(ALTERNATIVES, WRAP, DISTANT, BOUNDARY, EVICT_LOWER, shrink(0.85), SOFT_OVERLAP, OMIT);
+    return defaults(Placement.Aggressiveness.MEDIUM);
+  }
+
+  /** The default ladder of an aggressiveness level (spec/defaults.md). */
+  public static List<Degrade> defaults(Placement.Aggressiveness level) {
+    return switch (level) {
+      case LOW -> List.of(ALTERNATIVES, WRAP, EVICT_LOWER, OMIT);
+      case MEDIUM -> List.of(ALTERNATIVES, WRAP, DISTANT, EVICT_LOWER, OMIT);
+      case HIGH -> List.of(ALTERNATIVES, WRAP, DISTANT, EVICT_LOWER, shrink(0.85), SOFT_OVERLAP, OMIT);
+    };
   }
 
   @Override
