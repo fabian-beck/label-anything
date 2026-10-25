@@ -234,7 +234,7 @@ impl<'a> Solve<'a> {
                 None,
             );
             for mut c in fresh {
-                ev.eval(&mut c, v, None);
+                ev.eval_usable(&mut c, v, soft_ok);
                 if c.feasible || (soft_ok && c.relaxed) {
                     out.push(c);
                     if out.len() == k {
@@ -278,7 +278,7 @@ impl<'a> Solve<'a> {
                 continue;
             }
             let v = &self.variants[i][c.variant as usize];
-            ev.eval(&mut c, v, None);
+            ev.eval_usable(&mut c, v, soft_ok);
             if c.feasible || soft_ok && c.relaxed {
                 out.push(c);
             }

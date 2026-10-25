@@ -234,7 +234,7 @@ export class Solve {
       for (const c of fresh) {
         c.level = v.level;
         c.lshape = labelShape(c.rect, v.shape);
-        this.evaluator.eval(c, v, null);
+        this.evaluator.evalUsable(c, v, softOk);
         if (c.feasible || (softOk && c.relaxed)) {
           out.push(c);
           if (out.length === k) return out;
@@ -299,7 +299,7 @@ export class Solve {
         }
       }
       if (known) continue;
-      this.evaluator.eval(c, variants[c.variant]!, null);
+      this.evaluator.evalUsable(c, variants[c.variant]!, softOk);
       if (c.feasible || (softOk && c.relaxed)) out.push(c);
     }
     return out;

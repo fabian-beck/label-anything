@@ -20,6 +20,11 @@ pub struct Evaluator<'a> {
     buf2: Vec<u32>,
     /// Per-region areas of a label box.
     split: Vec<(u32, f64)>,
+    /// `Some(soft_ok)` while [`Evaluator::eval_usable`] runs.
+    quick: Option<bool>,
+    /// Less important items whose marks a label covers, while [`Evaluator::eval_usable`]
+    /// runs: their coverage is summed once the hard rules let the label be used.
+    lower: Vec<u32>,
 }
 
 struct Acc<'b> {
@@ -64,6 +69,15 @@ impl Acc<'_> {
             self.relax_cost += extra;
         } else {
             self.relaxed = false;
+        }
+    }
+    /// With `quick = Some(soft_ok)`: whether the candidate can no longer be used — not even
+    /// relaxed, or infeasible where relaxed candidates do not count.
+    #[inline]
+    fn unusable(&self, quick: Option<bool>) -> bool {
+        match quick {
+            Some(soft_ok) => !self.relaxed || (!soft_ok && !self.feasible),
+            None => false,
         }
     }
 }
@@ -132,7 +146,18 @@ impl<'a> Evaluator<'a> {
             buf: Vec::new(),
             buf2: Vec::new(),
             split: Vec::new(),
+            quick: None,
+            lower: Vec::new(),
         }
+    }
+
+    /// [`Evaluator::eval`] for a caller that keeps a candidate only when it is usable
+    /// (feasible, or relaxed with `soft_ok`): the evaluation stops at the first violation
+    /// that leaves it unusable, so the cost of a candidate it returns unusable is partial.
+    pub fn eval_usable(&mut self, c: &mut Cand, v: &Variant, soft_ok: bool) {
+        self.quick = Some(soft_ok);
+        self.eval(c, v, None);
+        self.quick = None;
     }
 
     /// Fill `c.cost`, `c.feasible`, `c.relaxed`, `c.relax_cost`, `c.blocked_*`.
@@ -149,6 +174,7 @@ impl<'a> Evaluator<'a> {
         let w = &model.weights;
         let dy = &obs.dynamic;
         let soft_w = model.degrade.soft_overlap_weight;
+        let quick = self.quick;
         let mut acc = Acc {
             cost: 0.0,
             feasible: true,
@@ -230,12 +256,17 @@ impl<'a> Evaluator<'a> {
         // the marks of less important items follow `lower_items` where it differs from `items`
         let lower_rule = dy.label_lower != dy.label_items;
         let mut lower_cov = 0.0;
+        self.lower.clear();
         for &j in &self.buf {
             let j = j as usize;
             let sj = &model.items[j].shape;
             let lower = lower_rule && j != i && model.is_lower(i, j);
             if lower {
-                lower_cov += obs.own_covered(j, &r);
+                if quick.is_some() {
+                    self.lower.push(j as u32);
+                } else {
+                    lower_cov += obs.own_covered(j, &r);
+                }
             }
             if j == i {
                 if c.kind == Kind::Internal {
@@ -258,6 +289,9 @@ impl<'a> Evaluator<'a> {
                     }
                     OwnMark::Ignore => {}
                 }
+                if acc.unusable(quick) {
+                    return finish(c, acc);
+                }
                 continue;
             }
             let hard = if lower {
@@ -270,6 +304,9 @@ impl<'a> Evaluator<'a> {
             }
             if c.label_overlaps_shape(sj) {
                 acc.violate(Block::Items, false, 0.0);
+                if acc.unusable(quick) {
+                    return finish(c, acc);
+                }
                 continue;
             }
             let d = sj.dist_rect(&r);
@@ -280,6 +317,9 @@ impl<'a> Evaluator<'a> {
                 && d < sj.dist_rect(&item.shape.bbox())
             {
                 acc.violate(Block::Items, false, 0.0);
+                if acc.unusable(quick) {
+                    return finish(c, acc);
+                }
             }
             // nearer to the label than its own mark, or, without a stub, not a margin farther,
             // up to the side margin for a point's mark more squarely beside a side than the own
@@ -300,7 +340,14 @@ impl<'a> Evaluator<'a> {
                 && model.group_of.get(j).copied().flatten() != Some(i)
             {
                 acc.violate(Block::Items, false, 0.0);
+                if acc.unusable(quick) {
+                    return finish(c, acc);
+                }
             }
+        }
+        // (in the order of the query, as above)
+        for &j in &self.lower {
+            lower_cov += obs.own_covered(j as usize, &r);
         }
         if let AvoidW::Soft(wt) = dy.label_items {
             let cov = obs.other_items_covered(i, &r);
@@ -351,6 +398,9 @@ impl<'a> Evaluator<'a> {
                     if hit {
                         let extra = soft_w * sat.covered_area(&obs.grid, &r) / em2;
                         acc.violate(Block::Class(ci as u16), cl.relaxable, extra);
+                        if acc.unusable(quick) {
+                            return finish(c, acc);
+                        }
                     }
                 }
                 AvoidW::Soft(wt) => {
@@ -411,6 +461,9 @@ impl<'a> Evaluator<'a> {
                 matches!(c.kind, Kind::Fan | Kind::Boundary),
                 &mut acc,
             );
+            if acc.unusable(quick) {
+                return finish(c, acc);
+            }
         }
         if !acc.relaxed {
             return finish(c, acc);
@@ -565,6 +618,9 @@ impl<'a> Evaluator<'a> {
         if let Some(ca) = obs.leader_area {
             if !l.pts.iter().all(|p| ca.contains_point(*p)) {
                 acc.violate(Block::Edge, false, 0.0);
+                if acc.unusable(self.quick) {
+                    return;
+                }
             }
         }
         let segs: Vec<(P, P)> = l.segments().collect();
@@ -582,6 +638,9 @@ impl<'a> Evaluator<'a> {
             // not into the own label except at the port (underline is on the label edge)
             if k < n_main && crate::geom::seg_overlaps_rect(a, b, &own_rect.inflate(-0.5)) {
                 acc.violate(Block::Labels, false, 0.0);
+            }
+            if acc.unusable(self.quick) {
+                return;
             }
         }
         // other items: clearance (not from the group's members, and not from a mark that
@@ -631,6 +690,9 @@ impl<'a> Evaluator<'a> {
                     };
                     if dmin < lim {
                         acc.violate(Block::Items, false, 0.0);
+                        if acc.unusable(self.quick) {
+                            return;
+                        }
                     }
                 }
                 AvoidW::Soft(wt) => {
@@ -682,6 +744,9 @@ impl<'a> Evaluator<'a> {
                             cl.relaxable,
                             model.degrade.soft_overlap_weight * extra,
                         );
+                        if acc.unusable(self.quick) {
+                            return;
+                        }
                     }
                 }
                 AvoidW::Soft(wt) => {
