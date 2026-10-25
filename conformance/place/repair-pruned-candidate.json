@@ -1,0 +1,114 @@
+{
+  "kind": "place",
+  "name": "the priority repair tries the positions the pruning dropped",
+  "$comment": "a's label stands below a, too close to h's places above h; walls (hard) take h's places left and right of it. Below h, over the soft class shade (3 per em²), its label costs about 12, so the pruning of spec §6.7 drops those places before the search. The priority repair tries them (spec §10.3): h is labeled below, where nothing more important is.",
+  "problem": {
+    "canvas": {
+      "width": 200,
+      "height": 160
+    },
+    "degrade": [
+      "omit"
+    ],
+    "placement": {
+      "models": [
+        "adjacent",
+        "slider"
+      ]
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "class": "walls",
+          "rects": [
+            [
+              58,
+              95,
+              22,
+              15
+            ],
+            [
+              120,
+              95,
+              22,
+              15
+            ]
+          ]
+        },
+        {
+          "class": "shade",
+          "rects": [
+            [
+              40,
+              103,
+              120,
+              50
+            ]
+          ]
+        }
+      ]
+    },
+    "avoid": {
+      "label": {
+        "walls": "hard",
+        "shade": 3
+      }
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        },
+        "priority": 2,
+        "placement": {
+          "position_order": [
+            "bottom"
+          ]
+        }
+      },
+      {
+        "id": "h",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        },
+        "priority": 1
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 2,
+    "anchor_side": {
+      "a": "bottom",
+      "h": "bottom"
+    },
+    "model": {
+      "h": "adjacent"
+    },
+    "box": {
+      "h": {
+        "x": 82.054,
+        "y": 103,
+        "w": 35.892,
+        "h": 15.6,
+        "tol": 0.01
+      }
+    }
+  }
+}

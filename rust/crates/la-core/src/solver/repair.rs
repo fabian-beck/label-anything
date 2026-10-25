@@ -655,9 +655,11 @@ pub fn priority_repair(s: &mut Solve) {
     }
 }
 
-/// One pass of the priority repair over the omitted items in total order. With
-/// `relocate`, an item may move one label aside (ADR priority/repair), whose old place joins
-/// `freed`; without, an item near a place in `freed` also tries its pruned level-0 candidates.
+/// One pass of the priority repair over the omitted items in total order. An item without a
+/// candidate by the first rule tries its pruned level-0 candidates by that rule: in the
+/// first pass every item, in the second those near a place in `freed`. With `relocate`, an
+/// item without one may then move one label aside (ADR priority/repair), whose old place
+/// joins `freed`.
 fn priority_pass(s: &mut Solve, relocate: bool, freed: &mut Vec<crate::geom::Rect>) {
     let soft_ok = s.model.ladder.contains(&Step::SoftOverlap);
     let keys: Vec<usize> = s.pri.prio.iter().map(|p| p.key).collect();
@@ -745,23 +747,12 @@ fn priority_pass(s: &mut Solve, relocate: bool, freed: &mut Vec<crate::geom::Rec
                 s.reasons[h] = None;
             }
             None if !relocate && near_freed(s, h, freed) => {
-                match pruned_choice(s, h, &keys, soft_ok) {
-                    Some((c, removed)) => {
-                        let id = s.cands.len() as u32;
-                        s.cands.push(c);
-                        s.by_item[h].push(id);
-                        for j in removed {
-                            s.state.unplace(j as usize, &s.cands);
-                            s.reasons[j as usize] = None;
-                        }
-                        let relaxed = !s.cands[id as usize].feasible;
-                        s.state.place(h, id, &s.cands, relaxed);
-                        s.reasons[h] = None;
-                    }
-                    None if s.reasons[h].is_none() => s.reasons[h] = Some(explain(s, h)),
-                    None => {}
+                if !place_pruned(s, h, &keys, soft_ok) && s.reasons[h].is_none() {
+                    s.reasons[h] = Some(explain(s, h));
                 }
             }
+            // an item whose only usable places the pruning dropped (spec §10.3)
+            None if relocate && place_pruned(s, h, &keys, soft_ok) => {}
             None => match relocate.then(|| relocation(s, h, &keys, soft_ok)).flatten() {
                 Some(m) => {
                     if let Some(j) = m.removed {
@@ -793,6 +784,26 @@ fn priority_pass(s: &mut Solve, relocate: bool, freed: &mut Vec<crate::geom::Rec
     }
 }
 
+/// The first rule of the priority repair over the pruned level-0 candidates of `h`
+/// ([`pruned_choice`]): `h` takes the chosen one and the labels it conflicts with are
+/// removed. Whether `h` was placed.
+fn place_pruned(s: &mut Solve, h: usize, keys: &[usize], soft_ok: bool) -> bool {
+    let Some((c, removed)) = pruned_choice(s, h, keys, soft_ok) else {
+        return false;
+    };
+    let id = s.cands.len() as u32;
+    s.cands.push(c);
+    s.by_item[h].push(id);
+    for j in removed {
+        s.state.unplace(j as usize, &s.cands);
+        s.reasons[j as usize] = None;
+    }
+    let relaxed = !s.cands[id as usize].feasible;
+    s.state.place(h, id, &s.cands, relaxed);
+    s.reasons[h] = None;
+    true
+}
+
 /// Whether the level-0 labels of item `h` (its largest box beside its mark or area, at
 /// `placement.offset`) may reach a place in `freed` (within the largest margin).
 fn near_freed(s: &Solve, h: usize, freed: &[crate::geom::Rect]) -> bool {
@@ -821,20 +832,30 @@ fn pruned_choice(
     keys: &[usize],
     soft_ok: bool,
 ) -> Option<(Cand, Vec<u32>)> {
+    // without a pruned candidate the item has its level-0 candidates already: those of the
+    // models added since, distant and boundary, are not tried here
+    if !s.pruned_level0[h] {
+        return None;
+    }
     let key_h = keys[h];
-    let fresh = s.unpruned_level0(h, soft_ok);
+    // the placed labels of at least h's priority do not depend on the static evaluation:
+    // test them first, and evaluate only the candidates they leave
+    let mut fresh = s.regenerated_level0(h);
+    fresh.retain(|cand| {
+        !matches!(cand.kind, Kind::Fan | Kind::Boundary)
+            && s.state
+                .first_conflict(cand, &s.cands, s.obs, h, |j| keys[j] <= key_h)
+                .is_none()
+    });
+    if fresh.is_empty() {
+        return None;
+    }
+    let fresh = s.usable_unpruned(h, fresh, soft_ok);
     let mut confl = Vec::new();
     // ((removed labels, their gain, cost), candidate, removed)
     type Choice = ((usize, f64, f64), usize, Vec<u32>);
     let mut best: Option<Choice> = None;
     for (k, cand) in fresh.iter().enumerate() {
-        if matches!(cand.kind, Kind::Fan | Kind::Boundary)
-            || s.state
-                .first_conflict(cand, &s.cands, s.obs, h, |j| keys[j] <= key_h)
-                .is_some()
-        {
-            continue;
-        }
         s.state.conflicts(cand, &s.cands, s.obs, h, &mut confl);
         if !confl
             .iter()

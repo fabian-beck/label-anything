@@ -750,6 +750,23 @@ CASES["search-restore-true-total"] = case(
     {"placed": 16})
 
 
+CASES["repair-pruned-candidate"] = case(
+    "the priority repair tries the positions the pruning dropped",
+    {"canvas": {"width": 200, "height": 160}, "degrade": ["omit"],
+     "placement": {"models": ["adjacent", "slider"]},
+     "obstacles": {"vector": [{"class": "walls", "rects": [[58, 95, 22, 15], [120, 95, 22, 15]]},
+                              {"class": "shade", "rects": [[40, 103, 120, 50]]}]},
+     "avoid": {"label": {"walls": "hard", "shade": 3}},
+     "items": [pt("a", 100, 60, "Alpha", priority=2, placement={"position_order": ["bottom"]}),
+               pt("h", 100, 100, "Alpha", priority=1)]},
+    {"placed": 2, "anchor_side": {"a": "bottom", "h": "bottom"}, "model": {"h": "adjacent"},
+     "box": {"h": {"x": 82.054, "y": 103, "w": 35.892, "h": 15.6, "tol": 0.01}}},
+    "a's label stands below a, too close to h's places above h; walls (hard) take h's places "
+    "left and right of it. Below h, over the soft class shade (3 per em²), its label costs "
+    "about 12, so the pruning of spec §6.7 drops those places before the search. The priority "
+    "repair tries them (spec §10.3): h is labeled below, where nothing more important is.")
+
+
 # --- aggressiveness ----------------------------------------------------------------------
 def pocket(dx, closed):
     """Hard walls around the point (100 + dx, 100): a full-size "Alpha" fits nowhere next to

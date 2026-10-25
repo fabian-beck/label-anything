@@ -554,9 +554,11 @@ export function priorityRepair(s: Solve): void {
 }
 
 /**
- * One pass of the priority repair over the omitted items in total order. With
- * `relocate`, an item may move one label aside (ADR priority/repair), whose old place joins
- * `freed`; without, an item near a place in `freed` also tries its pruned level-0 candidates.
+ * One pass of the priority repair over the omitted items in total order. An item without a
+ * candidate by the first rule tries its pruned level-0 candidates by that rule: in the
+ * first pass every item, in the second those near a place in `freed`. With `relocate`, an
+ * item without one may then move one label aside (ADR priority/repair), whose old place
+ * joins `freed`.
  */
 function priorityPass(s: Solve, relocate: boolean, freed: Rect[]): void {
   const softOk = s.model.ladder.some((x) => x.kind === "soft_overlap");
@@ -623,23 +625,11 @@ function priorityPass(s: Solve, relocate: boolean, freed: Rect[]): void {
       continue;
     }
     if (!relocate && nearFreed(s, h, freed)) {
-      const pc = prunedChoice(s, h, softOk);
-      if (pc !== null) {
-        const id = s.cands.length;
-        s.cands.push(pc.cand);
-        s.byItem[h]!.push(id);
-        for (const j of pc.removed) {
-          s.state.unplace(j, s.cands);
-          s.reasons[j] = null;
-        }
-        s.state.place(h, id, s.cands, !s.cands[id]!.feasible);
-        s.reasons[h] = null;
-        if (s.trace !== null) s.trace.pass("repair", "repair", [h, ...pc.removed]);
-      } else if (s.reasons[h] === null) {
-        s.reasons[h] = explain(s, h);
-      }
+      if (!placePruned(s, h, softOk) && s.reasons[h] === null) s.reasons[h] = explain(s, h);
       continue;
     }
+    // an item whose only usable places the pruning dropped (spec §10.3)
+    if (relocate && placePruned(s, h, softOk)) continue;
     const m = relocate ? relocation(s, h, softOk) : null;
     if (m !== null) {
       if (m.removed >= 0) {
@@ -665,6 +655,27 @@ function priorityPass(s: Solve, relocate: boolean, freed: Rect[]): void {
 }
 
 /**
+ * The first rule of the priority repair over the pruned level-0 candidates of `h`
+ * ({@link prunedChoice}): `h` takes the chosen one and the labels it conflicts with are
+ * removed. Whether `h` was placed.
+ */
+function placePruned(s: Solve, h: number, softOk: boolean): boolean {
+  const pc = prunedChoice(s, h, softOk);
+  if (pc === null) return false;
+  const id = s.cands.length;
+  s.cands.push(pc.cand);
+  s.byItem[h]!.push(id);
+  for (const j of pc.removed) {
+    s.state.unplace(j, s.cands);
+    s.reasons[j] = null;
+  }
+  s.state.place(h, id, s.cands, !s.cands[id]!.feasible);
+  s.reasons[h] = null;
+  if (s.trace !== null) s.trace.pass("repair", "repair", [h, ...pc.removed]);
+  return true;
+}
+
+/**
  * Whether the level-0 labels of item `h` (its largest box beside its mark or area, at
  * `placement.offset`) may reach a place in `freed` (within the largest margin).
  */
@@ -686,8 +697,20 @@ function nearFreed(s: Solve, h: number, freed: readonly Rect[]): boolean {
 function prunedChoice(s: Solve, h: number, softOk: boolean): { cand: Cand; removed: number[] } | null {
   const prio = s.pri.prio;
   const items = s.model.items;
+  // without a pruned candidate the item has its level-0 candidates already: those of the
+  // models added since, distant and boundary, are not tried here
+  if (!s.prunedLevel0[h]) return null;
   const keyH = prio[h]!.key;
-  const fresh = s.unprunedLevel0(h, softOk);
+  // the placed labels of at least h's priority do not depend on the static evaluation:
+  // test them first, and evaluate only the candidates they leave
+  const open: Cand[] = [];
+  for (const cand of s.regeneratedLevel0(h)) {
+    if (cand.kind === Kind.Fan || cand.kind === Kind.Boundary) continue;
+    if (s.state.firstConflict(cand, s.cands, s.obs, h, keyH) >= 0) continue;
+    open.push(cand);
+  }
+  if (open.length === 0) return null;
+  const fresh = s.usableUnpruned(h, open, softOk);
   const confl: number[] = [];
   let bestN = 0;
   let bestGain = 0;
@@ -696,8 +719,6 @@ function prunedChoice(s: Solve, h: number, softOk: boolean): { cand: Cand; remov
   let bestRemoved: number[] = [];
   for (let k = 0; k < fresh.length; k++) {
     const cand = fresh[k]!;
-    if (cand.kind === Kind.Fan || cand.kind === Kind.Boundary) continue;
-    if (s.state.firstConflict(cand, s.cands, s.obs, h, keyH) >= 0) continue;
     s.state.conflicts(cand, s.cands, s.obs, h, confl);
     if (!confl.every((j) => prio[j]!.key > keyH && !items[j]!.required)) continue;
     const maxLabels = s.model.maxLabels;

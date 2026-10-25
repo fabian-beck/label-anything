@@ -71,6 +71,10 @@ pub struct Solve<'a> {
     /// Candidates of each item dropped during generation because their box covers an item
     /// mark (reported as `items` among the blocking classes).
     pub static_dropped: Vec<u32>,
+    /// Whether the pruning of §6.7 dropped a level-0 candidate of each item other than a
+    /// distant one: only then can the item's regenerated level-0 candidates hold one of
+    /// its models at level 0 that it does not have.
+    pub pruned_level0: Vec<bool>,
     /// The warm-start candidate of each item (see `Solve::generate_warm`).
     pub warm_cand: Vec<Option<u32>>,
     /// The warm-start candidate of each item for a ladder variant, once computed (see
@@ -153,6 +157,7 @@ impl<'a> Solve<'a> {
             warm_box: vec![None; n],
             warm_nudge: vec![None; n],
             static_dropped: vec![0; n],
+            pruned_level0: vec![false; n],
             distant_dirs: crate::leaders::distant_dirs(model),
             seeds: vec![None; n],
             blocked_feasible: vec![Vec::new(); n],
@@ -249,7 +254,14 @@ impl<'a> Solve<'a> {
     /// The level-0 candidates of item `i` that the pruning of §6.7 dropped: generated
     /// again (without distant ones) and statically usable (feasible, or relaxed with
     /// `soft_ok`), none equal to one the item has. They are not added to the candidates.
-    pub fn unpruned_level0(&mut self, i: usize, soft_ok: bool) -> Vec<Cand> {
+    pub fn unpruned_level0(&self, i: usize, soft_ok: bool) -> Vec<Cand> {
+        let fresh = self.regenerated_level0(i);
+        self.usable_unpruned(i, fresh, soft_ok)
+    }
+
+    /// The level-0 candidates of item `i` generated again (without distant ones), none
+    /// equal to one the item has, not evaluated yet: those the pruning of §6.7 dropped.
+    pub fn regenerated_level0(&self, i: usize) -> Vec<Cand> {
         let item = &self.model.items[i];
         let models = Models(self.models[i].0 & !Models::DISTANT);
         let vis: Vec<usize> = (0..self.variants[i].len())
@@ -267,16 +279,23 @@ impl<'a> Solve<'a> {
             &self.distant_dirs,
             None,
         );
+        fresh
+            .into_iter()
+            .filter(|c| {
+                !self.by_item[i].iter().any(|&k| {
+                    let o = &self.cands[k as usize];
+                    o.variant == c.variant && o.kind == c.kind && o.rect == c.rect
+                })
+            })
+            .collect()
+    }
+
+    /// The candidates of `fresh` (regenerated candidates of item `i`) that are statically
+    /// usable once evaluated: feasible, or relaxed with `soft_ok`.
+    pub fn usable_unpruned(&self, i: usize, fresh: Vec<Cand>, soft_ok: bool) -> Vec<Cand> {
         let mut ev = Evaluator::new(self.model, self.obs, self.env);
         let mut out = Vec::new();
         for mut c in fresh {
-            let known = self.by_item[i].iter().any(|&k| {
-                let o = &self.cands[k as usize];
-                o.variant == c.variant && o.kind == c.kind && o.rect == c.rect
-            });
-            if known {
-                continue;
-            }
             let v = &self.variants[i][c.variant as usize];
             ev.eval(&mut c, v, None);
             if c.feasible || soft_ok && c.relaxed {
@@ -359,7 +378,8 @@ impl<'a> Solve<'a> {
             });
         }
         if !lazy {
-            fresh = evaluate_and_prune(
+            let pruned;
+            (fresh, pruned) = evaluate_and_prune(
                 self.model,
                 self.obs,
                 self.env,
@@ -367,6 +387,7 @@ impl<'a> Solve<'a> {
                 vis,
                 fresh,
             );
+            self.pruned_level0[i] |= pruned && level == 0;
         }
         let mut ids = Vec::with_capacity(fresh.len());
         for c in fresh {
@@ -391,9 +412,9 @@ impl<'a> Solve<'a> {
             .iter()
             .map(|m| Models(m.0 & !Models::DISTANT))
             .collect();
-        let per_item = |env: &dyn Env, i: usize| -> (Vec<Cand>, u32, Option<Cand>) {
+        let per_item = |env: &dyn Env, i: usize| -> (Vec<Cand>, u32, Option<Cand>, bool) {
             if matches!(model.group_of.get(i), Some(Some(r)) if *r != i) {
-                return (Vec::new(), 0, None);
+                return (Vec::new(), 0, None, false);
             }
             let item = &model.items[i];
             let vis: Vec<usize> = (0..variants[i].len()).collect();
@@ -409,21 +430,23 @@ impl<'a> Solve<'a> {
                 dirs,
                 None,
             );
-            let kept = evaluate_and_prune(model, obs, env, &variants[i], &vis, fresh);
+            let (kept, pruned) = evaluate_and_prune(model, obs, env, &variants[i], &vis, fresh);
             (
                 kept,
                 dropped,
                 warm_candidate(model, obs, env, item, &variants[i]),
+                pruned,
             )
         };
-        let generated: Vec<(Vec<Cand>, u32, Option<Cand>)> = if self.env.has_cost_callback() {
+        let generated: Vec<(Vec<Cand>, u32, Option<Cand>, bool)> = if self.env.has_cost_callback() {
             let env = self.env;
             (0..n).map(|i| per_item(env, i)).collect()
         } else {
             // without host callbacks the evaluation does not use the environment
             crate::par::map(n, |i| per_item(&crate::env::BasicEnv, i))
         };
-        for (i, (kept, dropped, warm)) in generated.into_iter().enumerate() {
+        for (i, (kept, dropped, warm, pruned)) in generated.into_iter().enumerate() {
+            self.pruned_level0[i] = pruned;
             self.warm_box[i] = warm_variant(self.model, &self.model.items[i], &self.variants[i]);
             self.distant_pending[i] = self.models[i].has(Models::DISTANT);
             self.static_dropped[i] += dropped;
@@ -758,6 +781,7 @@ fn raw_candidates(
 /// Static evaluation and pruning of an item's fresh candidates (spec §6.7): of the
 /// distant candidates the `k_distant` cheapest per variant stay, and feasible candidates
 /// costing more than `prune_factor × best + 1` are dropped.
+/// The candidates kept, and whether the cost pruning dropped one that is not distant.
 fn evaluate_and_prune(
     model: &Model,
     obs: &Obstacles,
@@ -765,7 +789,7 @@ fn evaluate_and_prune(
     variants: &[Variant],
     vis: &[usize],
     mut fresh: Vec<Cand>,
-) -> Vec<Cand> {
+) -> (Vec<Cand>, bool) {
     let mut ev = Evaluator::new(model, obs, env);
     for c in &mut fresh {
         ev.eval(c, &variants[c.variant as usize], None);
@@ -789,6 +813,7 @@ fn evaluate_and_prune(
         }
     }
     // prune expensive feasible candidates
+    let mut pruned = false;
     let best = fresh
         .iter()
         .zip(&keep)
@@ -799,15 +824,17 @@ fn evaluate_and_prune(
         let lim = model.placement.prune_factor * best.abs() + 1.0 + best.min(0.0);
         for (k, c) in fresh.iter().enumerate() {
             if c.feasible && c.cost > lim {
+                pruned |= keep[k] && c.kind != Kind::Distant;
                 keep[k] = false;
             }
         }
     }
-    fresh
+    let kept = fresh
         .into_iter()
         .zip(keep)
         .filter_map(|(c, k)| k.then_some(c))
-        .collect()
+        .collect();
+    (kept, pruned)
 }
 
 /// The level-0 variant of an item's warm-start box (width and height within 0.5 px) and

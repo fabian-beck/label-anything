@@ -20,17 +20,17 @@ need fewer means, not other weights.
 To weigh labels against clutter, the benchmark measures clutter as the edge density of the
 labels and leaders (ADR project/benchmark-measures). Restricting the means one step after
 the other, on the 59 static benchmark problems of up to 3,221 items, solved without a clock
-(12,385 labels with every means):
+(12,386 labels with every means):
 
 | Step | Labels | Clutter |
 |---|---:|---:|
 | no shrinking, no relaxed overlaps | −4.6 % | −7.7 % |
 | distant labels within 4 em instead of 8 em | −0.7 % | −3.0 % |
-| no `distant` step in the ladder, no fan columns, distant labels within 2.5 em | −5.7 % | −5.7 % |
-| a margin of 0.3 em instead of 0.2 em, so 0.6 em between labels | −8.6 % | −7.3 % |
+| no `distant` step in the ladder, no fan columns, distant labels within 2.5 em | −5.8 % | −5.7 % |
+| a margin of 0.3 em instead of 0.2 em, so 0.6 em between labels | −8.6 % | −7.4 % |
 
 Long leaders are the cheapest clutter to remove: 3 % of it for 0.7 % of the labels. Fan
-columns alone add 0.4 % of the labels and 0.5 % of the clutter.
+columns alone add 0.3 % of the labels and 0.4 % of the clutter.
 
 ## Decision
 - **`placement.aggressiveness`**: `low`, `medium` (default) or `high`. Each level is a column
@@ -55,20 +55,23 @@ On the same 59 problems:
 
 | Level | Labels | Leaders | Leader length | Clutter (mean) | Unclear labels |
 |---|---:|---:|---:|---:|---:|
-| `high` | 12,385 | 2,688 | 93,410 px | 4.67 % | 3,949 |
-| `medium` | 11,729 (−5.3 %) | 2,239 | 57,005 px | 4.18 % (−10.5 %) | 3,859 |
-| `low` | 10,104 (−18.4 %) | 276 | 14,396 px | 3.65 % (−21.8 %) | 4,172 |
+| `high` | 12,386 | 2,685 | 93,355 px | 4.67 % | 3,953 |
+| `medium` | 11,734 (−5.3 %) | 2,240 | 57,128 px | 4.18 % (−10.4 %) | 3,867 |
+| `low` | 10,108 (−18.4 %) | 276 | 14,396 px | 3.65 % (−21.8 %) | 4,193 |
 
 `medium` keeps 5 distant leaders longer than 4.5 em where `high` drew 728. The labels it
 gives up needed smaller type or a long leader: long class names (48 instead of 62 in the
 1,206-class chart) and crowded maps. With `prefix` omission the first such label ends the
-prefix: 136 instead of 193 of 250 European airports. `low` places 13–27 % fewer labels
+prefix: 136 instead of 193 of 250 European airports. `low` places 13–26 % fewer labels
 than `high` on the world maps of 300 airports or more, the city map and the stress problems
 of 500 points or more. Its share of unclear labels rises from 33 to 41 %: its labels are no
 less clear, but the leadered labels, which never are unclear, are gone, and those that
 remain stand among unlabeled airports that the own-mark rule does not see (ADR
 project/benchmark-measures). The embeddings, the illustrations and Les Misérables keep
-every label at every level.
+every label at every level. On the 46 problems with `strict` omission, the removal test
+finds no omitted label with a free place at any level: the fewer candidates of a lower
+level brought out that the pruning could drop the only free places of an item, which the
+repair now tries (ADR priority/repair).
 
 Hosts that relied on the old defaults set `aggressiveness: "high"`. Conformance cases that
 test shrinking set it too, three cases pin what each level does, and the parity tests solve
@@ -87,7 +90,7 @@ every sample problem at `low` and `high` in both implementations.
 - **One shrink step at `medium`** (`shrink:0.85` down to 0.85): 2.1 % more labels and 4 %
   more clutter than `medium`, with type sizes still mixed.
 - **A shorter `leaders.max_length` per level**: no effect beyond `placement.max_distance`
-  (11,730 against 11,729 labels), but it would cut the long leaders of problems that set
+  (11,735 against 11,734 labels), but it would cut the long leaders of problems that set
   `placement.max_distance` themselves, such as the leaders tutorial.
 - **No fans at `medium`**: 0.4 % fewer labels for 0.5 % less clutter; the columns at line
   ends are among the clearest labels.
