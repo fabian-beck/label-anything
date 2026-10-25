@@ -126,9 +126,9 @@ more room around it; the `illustration` preset's margin columns keep their leade
 level.
 
 On the 59 static problems of the [benchmark](../project/benchmark.md) (up to 3,221 items),
-`medium` places 5.3 % fewer labels than `high` with 10.4 % less clutter (the outline length
-of the labels and leaders per canvas pixel) and 17 % fewer leaders; `low` places 18.4 %
-fewer labels with 21.8 % less clutter and 90 % fewer leaders. The labels left out are those
+`medium` places 5.5 % fewer labels than `high` with 10.4 % less clutter (the outline length
+of the labels and leaders per canvas pixel) and 16 % fewer leaders; `low` places 19.5 %
+fewer labels with 22.4 % less clutter and 89 % fewer leaders. The labels left out are those
 that needed a long leader, smaller type or a gap of less than 0.6 em
 ([ADR placement/aggressiveness](../adr/placement/aggressiveness.md)).
 
