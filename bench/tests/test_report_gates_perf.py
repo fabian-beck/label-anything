@@ -138,7 +138,42 @@ def test_sequence_table_notes_a_planned_baseline():
     assert "n/a: frame 0: too large" in html
 
 
-def test_runtime_svg_small_multiples():
+def test_heat_colours_each_value_against_the_column_median():
+    # higher is better: each side of the median (80 %) scaled to its farthest value
+    hs, mid = report.heat([0.80, 0.90, 0.68, 0.40, 0.81, None], "{:.1%}", +1)
+    assert mid == pytest.approx(0.80) and hs[5] is None
+    assert hs[:5] == [(0, False), (2, True), (-1, False), (-2, False), (0, False)]
+    # differences below the floor (5 percentage points) stay near the median
+    assert report.heat([0.800, 0.805, 0.810], "{:.1%}", +1)[0] == [(0, False)] * 3
+    # counts compare by ratio, lower is better: the zeros are the best, 3 is the median
+    hs, mid = report.heat([0, 0, 3, 40, 1000], "{:d}", -1, log=True)
+    assert mid == 3 and hs == [(2, True), (2, True), (0, False), (-1, False), (-2, False)]
+    # values compare as shown: 99.96 % and 100 % are both the best
+    assert report.heat([0.9996, 1.0, 0.5, 0.6, 0.7], "{:.1%}", +1)[0] == [
+        (2, True), (2, True), (-2, False), (-1, False), (0, False)]
+    # nothing to compare: no direction, or fewer than two values
+    assert report.heat([1, 2, 3], "{:d}", 0) == ([None] * 3, None)
+    assert report.heat([0.5, None], "{:.1%}", +1) == ([None, None], None)
+
+
+def test_tables_are_coloured_per_column_with_tooltips():
+    (a, b, c) = report.heat_attrs([{"x": 0.9}, {"x": 0.5}, {"x": None}], [("x", "{:.1%}", +1, False)])
+    assert a["x"] == " class='hb2 best' title='much better than the median (70.0%), the best'"
+    assert b["x"] == " class='hw2' title='much worse than the median (70.0%)'" and c["x"] == ""
+    cur = rep(entry("rust", placed_rate=0.95), entry("greedy", placed_rate=0.6), solvers=["rust", "greedy"])
+    html = "".join(report._summary_table(cur))
+    assert "class='key heat'" in html
+    assert "<td class='hb2 best' title='much better than the median (77.5%), the best'>95.0%</td>" in html
+    assert "<td class='h0' title='near the median (0)'>0</td>" in html          # equal hard violations
+    # the problem tables compare the solvers on each problem (config) on its own
+    cur = rep(entry("rust", placed_rate=0.9), entry("greedy", placed_rate=0.5),
+              entry("rust", "c2", placed_rate=0.2, hard_violations=2), entry("greedy", "c2", placed_rate=0.6),
+              solvers=["rust", "greedy"])
+    rows = "".join(report._scenario_sections(cur)).split("<tr")[2:]
+    assert [r.count("class='hb2 best' title='much better than the median (70.0%), the best'>90.0%") for r in
+            rows] == [1, 0, 0, 0]
+    assert "class='hb2 best' title='much better than the median (40.0%), the best'>60.0%" in rows[3]
+    assert "<td class='bad'>2</td>" in rows[2]                    # a hard violation by Label Anything
     cur = rep(entry("rust", n=10), entry("rust", "c2", n=1000, runtime=50.0), entry("textalloc", n=10, runtime=80.0),
               solvers=["rust", "textalloc"])
     svg = report.runtime_svg(cur, "engine")

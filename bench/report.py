@@ -3,7 +3,9 @@
 * per-scenario metric tables — Label Anything implementations (solver names
   ``rust``, ``wasm``, ``ts``) next to the baselines; baseline rows that rely on an
   emulation are marked ≈ (the emulations are listed in the cell's tooltip and in
-  the baseline methods section), problems a baseline cannot run show "n/a",
+  the baseline methods section), problems a baseline cannot run show "n/a"; these,
+  the summary and the sequence tables colour every value against its column's
+  median (``heat``),
 * rendered images side by side (``bench/render.py`` for every solver) plus the
   engine's own debug overlay where an ``--overlay`` command is known,
 * runtime-vs-size small multiples (static SVG, also written to ``plots/``),
@@ -378,10 +380,12 @@ def write_plots(out: Path, report: dict) -> dict[str, str]:
 CSS = """
 :root{color-scheme:light dark;--bg:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;
 --line:#e1e0d9;--head:#f0efec;--bad:#d03b3b;--bad-bg:#fbeaea;--good:#006300;--good-bg:#e7f4e7;--warn-bg:#fdf3dc;
---link:#1c5cab}
+--link:#1c5cab;--ring:rgba(11,11,11,.1);
+--hw2:#ea9a93;--hw1:#f4c2be;--h0:#f0efec;--hb1:#b7d3f6;--hb2:#86b6ef}
 @media (prefers-color-scheme:dark){:root{--bg:#0d0d0d;--surface:#1a1a19;--ink:#f0efec;--ink2:#c3c2b7;--muted:#898781;
 --line:#2c2c2a;--head:#242422;--bad:#e66767;--bad-bg:#3a1f1f;--good:#0ca30c;--good-bg:#17301a;--warn-bg:#352d18;
---link:#86b6ef}}
+--link:#86b6ef;--ring:rgba(255,255,255,.1);
+--hw2:#b13e41;--hw1:#892b2e;--h0:#383835;--hb1:#184f95;--hb2:#256abf}}
 body{font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;margin:0;padding:20px 16px 48px;color:var(--ink);
 background:var(--bg)}
 main{max-width:1500px;margin:0 auto}a{color:var(--link)}
@@ -404,6 +408,10 @@ figure.na{border:1px dashed var(--line);padding:10px;align-self:start}
 nav ul{columns:2;padding-left:18px}@media (max-width:640px){nav ul{columns:1}}
 .key{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:12px;color:var(--ink2);margin:10px 0 4px}
 .key span{display:inline-flex;align-items:center;gap:8px;max-width:640px}.key svg{flex:none}
+.key span.lead{display:block}.key.heat{gap:6px 16px}
+.key .sw{flex:none;width:22px;height:14px;border-radius:2px;box-shadow:inset 0 0 0 1px var(--ring)}
+.hw2{background:var(--hw2)}.hw1{background:var(--hw1)}.h0{background:var(--h0)}.hb1{background:var(--hb1)}
+.hb2{background:var(--hb2)}td.hw2,td.hw1,td.h0,td.hb1,td.hb2{border:2px solid var(--surface)}td.best{font-weight:700}
 """
 
 
@@ -444,42 +452,135 @@ def scaling_exponent(results: list[dict], solver: str, scenario: str = SCALING_S
     return sum((x - mx) * (y - my) for x, y in pts) / den if den > 0 else None
 
 
+# Colour-coded tables: every value against the median of its column, on a diverging scale with five classes.
+HEAT_NEAR, HEAT_FAR = 0.25, 0.65  # |score| from which a value is better (worse), much better (much worse)
+HEAT_CLASS = {-2: "hw2", -1: "hw1", 0: "h0", 1: "hb1", 2: "hb2"}
+HEAT_TEXT = {-2: "much worse", -1: "worse", 0: "near the median", 1: "better", 2: "much better"}
+
+
+def _shown(v: float, f: str) -> float:
+    """``v`` as the table shows it (rounded to the format ``f``)."""
+    s = fmt(v, f).replace(",", "")
+    return float(s[:-1]) / 100 if s.endswith("%") else float(s)
+
+
+def _median(v: list[float]) -> float:
+    v = sorted(v)
+    return (v[(len(v) - 1) // 2] + v[len(v) // 2]) / 2
+
+
+def heat(values: list, f: str, direction: int, log: bool = False) -> tuple[list[tuple[int, bool] | None],
+                                                                             float | None]:
+    """Colour classes of one table column and its median: per value (None where there is none) the class from −2
+    (much worse than the median) to +2 (much better) and whether it is the column's best value.
+
+    Values are compared as the table shows them (rounded to ``f``), on log10(1 + v) with ``log`` (counts, times,
+    memory: there ratios matter, not differences). Each side of the median is scaled to its farthest value but
+    at least to a floor — 5 percentage points for rates and other fractions, a factor of two on the log scale,
+    a tenth of the column's largest value otherwise — so that small differences stay near the median. The best
+    value is marked when it is better than the median (all values shown alike)."""
+    out: list[tuple[int, bool] | None] = [None] * len(values)
+    shown = {i: _shown(v, f) for i, v in enumerate(values) if isinstance(v, (int, float)) and not isinstance(v, bool)}
+    if direction == 0 or len(shown) < 2:
+        return out, None
+    t = {i: math.log10(1 + max(v, 0.0)) if log else v for i, v in shown.items()}
+    mid = _median(list(t.values()))
+    dev = {i: direction * (x - mid) for i, x in t.items()}
+    floor = (math.log10(2) if log else 0.05 if "%" in f or f.endswith(".3f}")
+             else 0.1 * max(abs(x) for x in t.values()))
+    up = max([floor, EPS] + list(dev.values()))
+    down = max([floor, EPS] + [-d for d in dev.values()])
+    top = max(dev.values())
+    for i, d in dev.items():
+        s = d / up if d >= 0 else d / down
+        c = 0 if abs(s) < HEAT_NEAR else 1 if abs(s) < HEAT_FAR else 2
+        out[i] = (c if s > 0 else -c, s > 0 and c > 0 and d >= top - EPS)
+    return out, _median(list(shown.values()))
+
+
+def heat_attrs(rows: list[dict], cols: list[tuple[str, str, int, bool]]) -> list[dict[str, str]]:
+    """Per row and column key the attributes of the cell: its ``heat`` class among ``rows`` and a tooltip saying
+    how it compares ("" where the column has no direction or the row no value). ``cols``: (key, format,
+    direction, log scale)."""
+    out: list[dict[str, str]] = [{} for _ in rows]
+    for k, f, d, lg in cols:
+        hs, mid = heat([r.get(k) for r in rows], f, d, lg)
+        m = "" if mid is None else f"{mid:.1f}".removesuffix(".0") if "d" in f else fmt(mid, f)
+        for a, h in zip(out, hs):
+            if h is None:
+                a[k] = ""
+                continue
+            c, best = h
+            tip = f"{HEAT_TEXT[c]}{' than the median' if c else ''} ({m}){', the best' if best else ''}"
+            a[k] = f" class='{HEAT_CLASS[c]}{' best' if best else ''}' title='{esc(tip)}'"
+    return out
+
+
+def _heat_key(where: str, detail: bool = False) -> str:
+    """The legend of the table colours: each value against the median of ``where``."""
+    more = ("; counts, times and memory compare by ratio, small differences stay grey, uncoloured columns are not "
+            "ranked" if detail else "")
+    return (f"<div class='key heat'><span class='lead'><b>Colours</b>&nbsp;each value against the median of "
+            f"{esc(where)}{more}:</span>"
+            + "".join(f"<span><i class='sw {HEAT_CLASS[c]}'></i>{HEAT_TEXT[c]}</span>" for c in HEAT_CLASS)
+            + "<span><b>bold</b>&nbsp;the best value</span></div>")
+
+
+SUMMARY_COLS = [  # (key, heading, format, direction, log scale)
+    ("problems", "problems", "{:d}", 0, False),
+    ("n/a", "n/a", "{:d}", 0, False),
+    ("errors", "errors", "{:d}", -1, True),
+    ("placed_rate", "placed (mean)", "{:.1%}", +1, False),
+    ("usable_rate", "usable (mean)", "{:.1%}", +1, False),
+    ("hard_violations", "hard viol. (sum)", "{:d}", -1, True),
+    ("hard_conflicts", "conflicts (sum)", "{:d}", -1, True),
+    ("violating", "problems with hard viol.", "{:d}", -1, True),
+    ("ambiguity_rate", "ambig. (mean)", "{:.1%}", -1, False),
+    ("clarity_unclear_rate", "unclear (mean)", "{:.1%}", -1, False),
+    ("points_covered_rate", "points covered (mean)", "{:.1%}", -1, False),
+    ("labels_close_rate", "labels close (mean)", "{:.1%}", -1, False),
+    ("priority_inversions", "inversions (sum)", "{:d}", -1, True),
+    ("engine_ms", "engine ms (sum of medians)", "{:,.1f}", -1, True),
+    ("wall_ms", "wall ms (sum of medians)", "{:,.1f}", -1, True),
+    ("peak_mb", "peak MB (max)", "{:,.0f}", -1, True),
+    ("scaling", "runtime ∝ n^k", "{:.2f}", -1, False),
+]
+
+
+def _summary_values(report: dict, solver: str) -> dict:
+    """The summary row of one solver: aggregates over the problems it ran."""
+    rs = [r for r in report["results"] if r["solver"] == solver]
+    ok = [r for r in rs if "summary" in r]
+    engs = [v for v in ((r.get("runtime_reported") or {}).get("median") for r in ok) if isinstance(v, (int, float))]
+    mem = [v for v in ((r.get("peak_rss_mb") or {}).get("max") for r in ok) if isinstance(v, (int, float))]
+    row = {"problems": len(ok), "n/a": sum(1 for r in rs if "skipped" in r),
+           "errors": sum(1 for r in rs if "error" in r),
+           "violating": sum(1 for r in ok if r["summary"].get("hard_violations")),
+           "engine_ms": sum(engs) if engs else None, "wall_ms": sum(r["runtime"]["median"] for r in ok) if ok else None,
+           "peak_mb": max(mem) if mem else None, "scaling": scaling_exponent(report["results"], solver)}
+    for k in ("placed_rate", "usable_rate", "ambiguity_rate", "clarity_unclear_rate", "points_covered_rate",
+              "labels_close_rate"):
+        row[k] = _mean(_numbers(ok, k))
+    for k in ("hard_violations", "hard_conflicts", "priority_inversions"):
+        v = _numbers(ok, k)
+        row[k] = sum(v) if v else None
+    return row
+
+
 def _summary_table(report: dict) -> list[str]:
-    """One row per solver: aggregates over the problems it ran."""
-    o = ["<div class='scroll'><table><tr><th class='l'>solver</th><th class='l'>kind</th><th>problems</th>"
-         "<th>n/a</th><th>errors</th><th>placed (mean)</th><th>usable (mean)</th><th>hard viol. (sum)</th>"
-         "<th>conflicts (sum)</th><th>problems with hard viol.</th>"
-         "<th>ambig. (mean)</th><th>unclear (mean)</th><th>points covered (mean)</th><th>labels close (mean)</th>"
-         "<th>inversions (sum)</th><th>engine ms (sum of medians)</th>"
-         "<th>wall ms (sum of medians)</th><th>peak MB (max)</th>"
-         f"<th title='slope of log runtime over log items on {SCALING_SCENARIO}'>runtime ∝ n^k</th></tr>"]
-    for s in report["solvers"]:
-        rs = [r for r in report["results"] if r["solver"] == s]
-        ok = [r for r in rs if "summary" in r]
-        na = sum(1 for r in rs if "skipped" in r)
-        er = sum(1 for r in rs if "error" in r)
-        engs = [v for v in ((r.get("runtime_reported") or {}).get("median") for r in ok) if isinstance(v, (int, float))]
-        eng = sum(engs) if engs else None
-        wall = sum(r["runtime"]["median"] for r in ok) if ok else None
-        mem = [v for v in ((r.get("peak_rss_mb") or {}).get("max") for r in ok) if isinstance(v, (int, float))]
-        hv, inv = _numbers(ok, "hard_violations"), _numbers(ok, "priority_inversions")
-        conf = _numbers(ok, "hard_conflicts")
+    """One row per solver, every column coloured against its median."""
+    tips = {"scaling": f"slope of log runtime over log items on {SCALING_SCENARIO}"}
+    o = [_heat_key("its column", detail=True),
+         "<div class='scroll'><table><tr><th class='l'>solver</th><th class='l'>kind</th>"
+         + "".join(f"<th title='{esc(tips[k])}'>{esc(h)}</th>" if k in tips else f"<th>{esc(h)}</th>"
+                   for k, h, _f, _d, _l in SUMMARY_COLS) + "</tr>"]
+    rows = [_summary_values(report, s) for s in report["solvers"]]
+    attrs = heat_attrs(rows, [(k, f, d, lg) for k, _h, f, d, lg in SUMMARY_COLS])
+    for s, row, a in zip(report["solvers"], rows, attrs):
         k = kind(s)
         o.append(f"<tr class='{'la' if k == 'label-anything' else ''}'><td class='l solver'>{esc(s)}</td>"
-                 f"<td class='l'>{esc(k)}</td><td>{len(ok)}</td><td>{na}</td><td>{er}</td>"
-                 f"<td>{fmt(_mean(_numbers(ok, 'placed_rate')), '{:.1%}')}</td>"
-                 f"<td>{fmt(_mean(_numbers(ok, 'usable_rate')), '{:.1%}')}</td>"
-                 f"<td>{fmt(sum(hv) if hv else None, '{:d}')}</td>"
-                 f"<td>{fmt(sum(conf) if conf else None, '{:d}')}</td>"
-                 f"<td>{sum(1 for r in ok if r['summary'].get('hard_violations'))}</td>"
-                 f"<td>{fmt(_mean(_numbers(ok, 'ambiguity_rate')), '{:.1%}')}</td>"
-                 f"<td>{fmt(_mean(_numbers(ok, 'clarity_unclear_rate')), '{:.1%}')}</td>"
-                 f"<td>{fmt(_mean(_numbers(ok, 'points_covered_rate')), '{:.1%}')}</td>"
-                 f"<td>{fmt(_mean(_numbers(ok, 'labels_close_rate')), '{:.1%}')}</td>"
-                 f"<td>{fmt(sum(inv) if inv else None, '{:d}')}</td>"
-                 f"<td>{fmt(eng, '{:,.1f}')}</td><td>{fmt(wall, '{:,.1f}')}</td>"
-                 f"<td>{fmt(max(mem) if mem else None, '{:,.0f}')}</td>"
-                 f"<td>{fmt(scaling_exponent(report['results'], s), '{:.2f}')}</td></tr>")
+                 f"<td class='l'>{esc(k)}</td>"
+                 + "".join(f"<td{a[c]}>{fmt(row[c], f)}</td>" for c, _h, f, _d, _l in SUMMARY_COLS) + "</tr>")
     o.append("</table></div>")
     return o
 
@@ -652,10 +753,32 @@ def _marks_key() -> str:
     """The legend of the violation marks drawn over the result images (``render.VIOLATIONS``)."""
     from . import render
 
-    return ("<div class='key' id='marks'><span><b>Marks in the result images</b>&nbsp;(what the metrics count, drawn "
-            "where it happens; red × = item without a label):</span>"
+    return ("<div class='key' id='marks'><span class='lead'><b>Marks in the result images</b>&nbsp;(what the "
+            "metrics count, drawn where it happens; red × = item without a label):</span>"
             + "".join(f"<span>{render.violation_icon(k)}{esc(text)}</span>" for k, _c, text in render.VIOLATIONS)
             + "</div>")
+
+
+SCENARIO_HEAT = ([(k, META[k][1], META[k][2], "d" in META[k][1]) for k in TABLE_COLS]
+                 + [("engine_ms", "{:,.1f}", -1, True), ("wall_ms", "{:,.1f}", -1, True),
+                    ("peak_mb", "{:,.0f}", -1, True)])
+
+
+def _scenario_values(r: dict) -> dict:
+    """The values a scenario table colours: the metrics of ``TABLE_COLS``, the runtimes and the memory."""
+    return {**{k: r["summary"].get(k) for k in TABLE_COLS},
+            "engine_ms": (r.get("runtime_reported") or {}).get("median"), "wall_ms": r["runtime"]["median"],
+            "peak_mb": (r.get("peak_rss_mb") or {}).get("max")}
+
+
+def _heat_by_group(items: list[dict], group: str, values, cols: list) -> dict[int, dict[str, str]]:
+    """``heat_attrs`` per item (by id) for the columns ``cols`` of ``values(item)``, compared among the items with
+    the same ``group`` value (one problem, one sequence)."""
+    out = {}
+    for g in {it[group] for it in items}:
+        same = [it for it in items if it[group] == g]
+        out.update(zip(map(id, same), heat_attrs([values(it) for it in same], cols)))
+    return out
 
 
 def _scenario_sections(report: dict) -> list[str]:
@@ -667,11 +790,9 @@ def _scenario_sections(report: dict) -> list[str]:
     keyed = False
     for sc in sorted(by_sc):
         rows = by_sc[sc]
+        attrs = _heat_by_group([r for r in rows if "summary" in r], "config", _scenario_values, SCENARIO_HEAT)
         o.append(f"<h2 id='sc-{esc(sc)}'>{esc(sc)}</h2>")
-        if any(r.get("image") for r in rows):
-            o.append("<p class='note small'><a href='#marks'>How to read the marks in the images</a></p>" if keyed
-                     else _marks_key())
-            keyed = True
+        o.append(_heat_key("the solvers on the same problem"))
         o.append("<div class='scroll'><table><tr><th class='l'>config</th><th class='l'>solver</th><th>items</th>"
                  + "".join(f"<th>{esc(META[k][0])}</th>" for k in TABLE_COLS)
                  + "<th>engine ms</th><th>wall ms (median / p95)</th><th>peak MB</th><th>det.</th>"
@@ -680,8 +801,8 @@ def _scenario_sections(report: dict) -> list[str]:
             cls = "la" if kind(r["solver"]) == "label-anything" else ""
             head = f"<td class='l'>{esc(r['config'])}</td><td class='l solver'>{esc(r['solver'])}</td>"
             if "skipped" in r:
-                o.append(f"<tr class='na'>{head}<td>{r.get('n_items') or ''}</td><td colspan='{len(TABLE_COLS) + 4}' "
-                         f"class='l'>n/a</td><td class='l wrap small'>{esc(r['skipped'])}</td></tr>")
+                o.append(f"<tr class='na'>{head}<td>{r.get('n_items') or ''}</td><td colspan='{len(TABLE_COLS) + 5}' "
+                         f"class='l'>n/a: {esc(r['skipped'])}</td></tr>")
                 continue
             if "error" in r:
                 o.append(f"<tr class='{cls}'>{head}<td>{r.get('n_items') or ''}</td><td colspan='{len(TABLE_COLS) + 5}'"
@@ -689,18 +810,23 @@ def _scenario_sections(report: dict) -> list[str]:
                 continue
             s = r["summary"]
             rt = r["runtime"]
-            eng = (r.get("runtime_reported") or {}).get("median")
+            v, a = _scenario_values(r), attrs[id(r)]
             det = "–" if len(rt.get("runs", [])) < 2 else ("yes" if r["deterministic"] else "<b>NO</b>")
             hv = s.get("hard_violations") or 0
             cells = []
             for k in TABLE_COLS:
-                c = " class='bad'" if (k == "hard_violations" and hv and cls == "la") else ""
+                c = " class='bad'" if (k == "hard_violations" and hv and cls == "la") else a[k]
                 cells.append(f"<td{c}>{fmt(s.get(k), META[k][1])}</td>")
             o.append(f"<tr class='{cls}'>{head}<td>{r['n_items']}</td>" + "".join(cells)
-                     + f"<td>{fmt(eng, '{:,.1f}')}</td><td>{rt['median']:,.1f} / {rt['p95']:,.1f}</td>"
-                       f"<td>{fmt((r.get('peak_rss_mb') or {}).get('max'), '{:,.0f}')}</td><td>{det}</td>"
+                     + f"<td{a['engine_ms']}>{fmt(v['engine_ms'], '{:,.1f}')}</td>"
+                       f"<td{a['wall_ms']}>{rt['median']:,.1f} / {rt['p95']:,.1f}</td>"
+                       f"<td{a['peak_mb']}>{fmt(v['peak_mb'], '{:,.0f}')}</td><td>{det}</td>"
                        f"<td class='l'>{_baseline_note(r)}</td></tr>")
         o.append("</table></div>")
+        if any(r.get("image") for r in rows):
+            o.append("<p class='note small'><a href='#marks'>How to read the marks in the images</a></p>" if keyed
+                     else _marks_key())
+            keyed = True
         for cfg in sorted({r["config"] for r in rows}):
             o.append(f"<h3>{esc(cfg)}</h3><div class='imgs'>")
             for r in sorted((r for r in rows if r["config"] == cfg),
@@ -722,10 +848,22 @@ def _scenario_sections(report: dict) -> list[str]:
     return o
 
 
+SEQ_HEAT = [(k, f, d, "d" in f) for k, _l, f, d in SEQ_METRICS] + [("frame_ms", "{:,.1f}", -1, True)]
+
+
+def _frame_ms(s: dict) -> float | None:
+    """The median engine runtime of a sequence's frames."""
+    rts = sorted(f["runtime_ms"] for f in s.get("frames", []) if isinstance(f.get("runtime_ms"), (int, float)))
+    return rts[len(rts) // 2] if rts else None
+
+
 def _sequence_section(report: dict) -> list[str]:
     if not report.get("sequences"):
         return []
-    o = ["<h2 id='sequences'>Stability sequences</h2><div class='scroll'><table><tr><th class='l'>sequence</th>"
+    attrs = _heat_by_group([s for s in report["sequences"] if "metrics" in s], "sequence",
+                           lambda s: {**s["metrics"], "frame_ms": _frame_ms(s)}, SEQ_HEAT)
+    o = ["<h2 id='sequences'>Stability sequences</h2>", _heat_key("the solvers on the same sequence"),
+         "<div class='scroll'><table><tr><th class='l'>sequence</th>"
          "<th class='l'>solver</th><th>frames</th><th>displacement px (mean / median)</th><th>flip rate</th>"
          "<th>nesting rate</th><th>nesting fraction</th><th>added</th><th>removed</th><th>engine ms (median frame)"
          "</th></tr>"]
@@ -741,14 +879,15 @@ def _sequence_section(report: dict) -> list[str]:
         if "error" in s:
             o.append(f"<tr>{head}<td colspan='8' class='l err'>{esc(s['error'])}</td></tr>")
             continue
-        m = s["metrics"]
-        rts = sorted(f["runtime_ms"] for f in s.get("frames", []) if isinstance(f.get("runtime_ms"), (int, float)))
-        med = rts[len(rts) // 2] if rts else None
+        m, a = s["metrics"], attrs[id(s)]
         o.append(f"<tr class='{'la' if kind(s['solver']) == 'label-anything' else ''}'>{head}<td>{m['frames']}</td>"
-                 f"<td>{fmt(m['displacement_mean_px'], '{:.2f}')} / {fmt(m['displacement_median_px'], '{:.2f}')}</td>"
-                 f"<td>{fmt(m['flip_rate'], '{:.1%}')}</td><td>{fmt(m['nesting_rate'], '{:.1%}')}</td>"
-                 f"<td>{fmt(m['nesting_fraction_mean'], '{:.3f}')}</td><td>{m['added_total']}</td>"
-                 f"<td>{m['removed_total']}</td><td>{fmt(med, '{:,.1f}')}</td></tr>")
+                 f"<td{a['displacement_mean_px']}>{fmt(m['displacement_mean_px'], '{:.2f}')} / "
+                 f"{fmt(m['displacement_median_px'], '{:.2f}')}</td>"
+                 f"<td{a['flip_rate']}>{fmt(m['flip_rate'], '{:.1%}')}</td>"
+                 f"<td{a['nesting_rate']}>{fmt(m['nesting_rate'], '{:.1%}')}</td>"
+                 f"<td{a['nesting_fraction_mean']}>{fmt(m['nesting_fraction_mean'], '{:.3f}')}</td>"
+                 f"<td>{m['added_total']}</td><td>{m['removed_total']}</td>"
+                 f"<td{a['frame_ms']}>{fmt(_frame_ms(s), '{:,.1f}')}</td></tr>")
     o.append("</table></div>")
     for s in report["sequences"]:
         if s.get("images"):

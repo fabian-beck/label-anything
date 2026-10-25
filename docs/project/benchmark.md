@@ -127,7 +127,8 @@ rust/target/release/label-anything bench --suite quick --baselines --perf -o ben
 ```
 
 `bench-report/index.html` is the report: metrics and renderings per scenario and solver,
-performance and parity; `python -m bench.gallery` adds the gallery. CI runs the quick
+performance and parity, every table value coloured blue (better) or red (worse) against
+the median of the solvers; `python -m bench.gallery` adds the gallery. CI runs the quick
 suite on every pull request and the full suite on release tags. A release needs 0 hard
 violations, no metric regression above 2 % against the previous release unless an ADR
 accepts it, and the performance targets met

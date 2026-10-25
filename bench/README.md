@@ -421,6 +421,16 @@ more (224 against 199 ms) for 994 labels instead of 871.
   stands above the first images), plus the engine's debug overlay;
 * the stability sequences and the baseline methods with the versions that ran.
 
+The summary, scenario and sequence tables color every value against the median of its
+column — in the scenario and sequence tables, of the solvers on the same problem or
+sequence — so that differences and similarities stand out: blue better, red worse, two
+steps each way, gray near the median, the best value bold (direction per metric, as for the
+changes; the cell's tooltip names the class and the median). Counts, times and memory
+compare by ratio (log10(1 + v)), everything else by difference. Each side of the median
+spans to its farthest value, but at least 5 percentage points for rates, a factor of two on
+the log scale and a tenth of the largest value otherwise, so that small differences stay
+gray.
+
 `python -m bench.report bench-report/results.json [--previous OLD/results.json] [--gate]` rebuilds
 the analyses and `index.html` of an existing run without solving anything again. Comparisons
 happen at the precision `results.json` stores (6 decimals), so a stored run and a fresh one
