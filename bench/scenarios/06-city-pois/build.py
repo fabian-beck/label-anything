@@ -57,14 +57,15 @@ def main() -> None:
     img = O.render(d)
     png = png_bytes(img, palette=True)
     pois = O.pois(d)
-    wr = Writer(SCENARIO, "City POIs on a raster map", O.SOURCES,
+    wr = Writer(SCENARIO, "Points of interest on a raster map", O.SOURCES,
                 notes=f"Monaco, Web Mercator z16; {len(pois)} named POIs in the viewport.")
     wr.config("monaco-ink", problem(items_for(pois, False), png, "ink"), png=png, quick=True,
-              description="Composite icon+name labels over a locally rendered OSM raster, raster mode ink.")
+              description="Composite labels (icon and name) over a locally rendered OpenStreetMap raster (ink mode).")
     wr.config("monaco-saliency", problem(items_for(pois, False), png, "saliency"), png=png,
-              description="Same items, raster mode saliency (Sobel + local contrast).")
+              description="Same items, raster saliency mode (Sobel gradient and local contrast).")
     wr.config("monaco-pins-ink", problem(items_for(pois, True), png, "ink"), png=png,
-              description="POIs as pin icons (icon marks with silhouette, tip on the location), raster mode ink.")
+              description="Points of interest as pin icons (silhouette marks, tip at the location) over the raster "
+                          "(ink mode).")
     wr.finish()
 
 

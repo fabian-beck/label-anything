@@ -346,11 +346,12 @@ def build_scene(problem: dict, problem_path: str | Path | None = None, truth: di
                           | left_out)
     if soft_classes and soft == "hard":
         notes.append(Note("emulation", "soft-classes", "soft obstacle classes (" + ", ".join(soft_classes) + ") "
-                                                       "are avoided like hard ones: the tools have no soft costs"))
+                                                       "are treated as hard obstacles (no soft costs in these "
+                                                       "methods)"))
     elif soft_classes:
         notes.append(Note("emulation", "soft-classes", "soft obstacle classes (" + ", ".join(soft_classes) + ") "
-                                                       "are left out: labels may cover them (the tools have no "
-                                                       "soft costs)"))
+                                                       "are ignored: labels may cover them (no soft costs in "
+                                                       "these methods)"))
 
     positions = [p for p in position_order(opts.get("placement", {}).get("position_order", "perceptual"))]
     if any(it.raw.get("placement", {}).get("position_order") for it in prob.items):

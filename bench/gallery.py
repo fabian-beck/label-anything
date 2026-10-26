@@ -17,8 +17,8 @@ same way for every solver that ran it (the report shows them side by side), with
 stability sequences.
 
 Output (default ``<run>/gallery``, else ``bench-report/gallery``): ``gallery.json`` (the sections, the
-captions and numbers of the figures, the drawings of the run's problems, the frames, the notes on what
-the defaults still do badly) and ``img/*.svg``. Written into a run directory, the gallery rebuilds that
+captions and numbers of the figures, the drawings of the run's problems, the frames, the notes on known
+limitations) and ``img/*.svg``. Written into a run directory, the gallery rebuilds that
 run's report (``index.html``), whose chapters show it; ``gallery/index.html`` leads there. CI's
 ``baselines`` job does that, so the Pages workflow publishes it with the report at
 ``<site>/benchmark-report/``.
@@ -60,7 +60,7 @@ class Fig:
     figure's numbers (``{placed}``, ``{total}``, ``{leaders}``, ``{omitted}``, ``{fans}``,
     ``{tier_placed}``, ``{tier_total}``, ``{omitted_ids}``, ``{top_omitted}``, ``{top_placed}``, ``{first_cut}``,
     ``{first_cut_rank}``, …; see ``solve_figure``) as in str.format. ``limit``: the figure shows a
-    shortcoming (drawn with the notes of the "Where it falls short" section)."""
+    shortcoming (drawn with the notes of the "Limitations" section)."""
     key: str
     title: str
     text: str
@@ -78,143 +78,141 @@ class Section:
 
 
 SECTIONS = (
-    Section("maps", "Maps: hubs first", "the busiest airports first, the others as context",
-            "On a map of airports the busy ones matter: their labels must be there, next to their dots, and a "
-            "small airport's label is welcome only where it leaves them room. The two maps model exactly that. "
-            "The busiest airports are a tier of their own (<code>priority.tiers</code>), placed first and set "
-            "larger (<code>priority.font_classes</code>); the next ones are items too, labeled where the hubs "
-            "leave room, and a hub's label may cover their dots (<code>avoid.label.lower_items</code>), which then "
-            "go unlabeled; every other airport is a dot without a label, which a label may cover at a small cost "
-            "(<code>avoid.label.points: 0.3</code>), so the map keeps its context. What counts is the dense "
-            "regions: London, the Low Countries and the Rhine, northern Italy, the US east coast, eastern China.", (
+    Section("maps", "Maps", "airports and points of interest",
+            "On airport maps, the busiest airports must be labeled next to their marks; smaller airports are "
+            "labeled only where space remains. The maps below distinguish three classes. The busiest airports "
+            "form a priority tier, placed first and set in larger type (<code>priority.tiers</code>, "
+            "<code>priority.font_classes</code>). Further airports are labeled where space remains; hub labels may "
+            "cover their marks (<code>avoid.label.lower_items</code>), in which case they remain unlabeled. All "
+            "other airports are unlabeled points that labels may cover at a small cost "
+            "(<code>avoid.label.points: 0.3</code>). Methods differ most in dense regions such as London, the "
+            "Rhine area, northern Italy, the US East Coast and eastern China.", (
                 Fig("05-airports/europe-hubs-svg", "Europe's busiest airports",
-                    "Europe at 30 px per degree. All {tier_placed} of the {tier_total} busiest airports are "
-                    "labeled, in larger type, next to their dots, and {rest_placed} of the next {rest_total}; the "
-                    "{context} other airports of the map stay dots. The five London airports, Paris, Brussels, "
-                    "Amsterdam, Düsseldorf and Cologne keep their names close by; city names with several "
-                    "airports carry the airport's code.", wide=True),
+                    "Europe at 30 px per degree. Labeled: {tier_placed} of the {tier_total} busiest airports, in "
+                    "larger type, and {rest_placed} of the next {rest_total}; the remaining {context:,} airports are "
+                    "unlabeled points. In the densest area (London, Paris, Brussels, Amsterdam, Düsseldorf, "
+                    "Cologne), labels remain adjacent to their marks. Names of cities with several airports include "
+                    "the airport code.", wide=True),
                 Fig("05-airports/world-hubs-100-svg", "The world's 100 busiest airports",
-                    "IATA codes at 8 px on a world map at 6 px per degree, the 30 busiest a size larger; the "
-                    "{context} other served airports are dots. {tier_placed} of the {tier_total} hubs and "
-                    "{rest_placed} of the next {rest_total} are labeled; left out: {omitted_ids}. In western "
-                    "Europe's core eight hubs share a patch smaller than two labels; zoom in: the image is a vector "
-                    "graphic.", wide=True),
-                Fig("05-airports/world-iata-1000-lower-vector", "Every airport an item, the hubs first",
-                    "The 1,000 busiest airports, all of them items, as in the last figure of the page, but a "
-                    "label may now cover the dot of a less important airport (<code>avoid.label.lower_items: "
-                    "10</code>); that airport then stays unlabeled, so no label sits on a dot it does not belong "
-                    "to. {top_placed} of the ten busiest airports are labeled (left out: {top_omitted}), and "
-                    "{placed:,} of all {total:,}.", wide=True),
+                    "World map at 6 px per degree with IATA codes at 8 px; the 30 busiest airports one size larger. "
+                    "The remaining {context:,} airports with scheduled service are unlabeled points. Labeled: "
+                    "{tier_placed} of {tier_total} hubs and {rest_placed} of the next {rest_total}; omitted: "
+                    "{omitted_ids}. In western Europe, eight hubs lie within an area smaller than two labels; the "
+                    "vector image can be enlarged without loss.", wide=True),
+                Fig("05-airports/world-iata-1000-lower-vector", "All 1,000 airports as items, hubs first",
+                    "The 1,000 busiest airports, all as items (cf. the figure under Limitations). Labels may cover "
+                    "the marks of less important airports (<code>avoid.label.lower_items: 10</code>); such airports "
+                    "remain unlabeled, so no label covers the mark of another labeled item. Labeled: {top_placed} "
+                    "of the 10 busiest airports (omitted: {top_omitted}) and {placed:,} of {total:,} in total.",
+                    wide=True),
                 Fig("06-city-pois/monaco-pins-ink", "375 points of interest in Monaco",
-                    "Icon and name labels over an OpenStreetMap raster, the main sights a size larger; the "
-                    "engine reads streets and buildings from the pixels (ink mode) and keeps names off the "
-                    "busiest parts. Where the pins crowd, {omitted} labels are left out."),
-                Fig("06-city-pois/monaco-ink", "The same map with small dots instead of pins",
-                    "Composite labels (icon + name) over the same raster."),
+                    "Icon-and-name labels over an OpenStreetMap raster; main sights one size larger. The engine "
+                    "detects streets and buildings in the raster (ink mode) and keeps labels off the busiest areas. "
+                    "Where pins overlap, {omitted} labels are omitted."),
+                Fig("06-city-pois/monaco-ink", "Monaco with dot marks",
+                    "Composite labels (icon and name) over the same raster, with dots instead of pins."),
             )),
-    Section("charts", "Charts", "scatterplots, bubbles, line ends", "", (
+    Section("charts", "Charts", "scatterplots, bubble charts, line charts", "", (
         Fig("03-gapminder/y2005-svg", "Gapminder 2005",
-            "Life expectancy vs. fertility of 62 countries, bubble area by population, every bubble in the "
-            "color of its region (legend). The 40 most populous countries and the 6 farthest from the trend "
-            "are labeled, the most populous larger, big bubbles inside; {omitted} labels in the crowded "
-            "corner of rich countries are left out. The year watermark is a soft obstacle, the legend a hard "
-            "one."),
-        Fig("02-volcano/top50-svg", "Top 50 genes of a volcano plot",
-            "16,406 genes of a differential-expression table. Red and blue: genes past both dashed thresholds "
-            "(p &lt; 0.05 and at least twofold up or down). The 50 most significant genes are labeled and keep "
-            "these colors, so the grey ones among them are significant but changed less than twofold; the top "
-            "three larger."),
+            "Life expectancy versus fertility for 62 countries; bubble area encodes population, colour encodes "
+            "region (legend). Labeled: the 40 most populous countries and the 6 countries farthest from the trend; "
+            "the most populous in larger type, large bubbles internally. {omitted} labels in the dense region of "
+            "high-income countries are omitted. The year watermark is a soft obstacle, the legend a hard one."),
+        Fig("02-volcano/top50-svg", "Volcano plot: the 50 most significant genes",
+            "16,406 genes from a differential expression table. Red and blue mark genes beyond both dashed "
+            "thresholds (p &lt; 0.05 and a fold change of at least 2). The 50 most significant genes are labeled in "
+            "these colours; grey labeled genes are significant with a fold change below 2. The top three are set "
+            "larger."),
         Fig("09-line-end-labels/unemployment-14-vector", "Unemployment by industry",
-            "Labels at the right ends of 14 series, every end in its line's color: only positions right of the "
-            "ends are allowed. Where the ends crowd, the labels stand in a column beside them, in the order of "
-            "the ends, with fanning leaders ({fans} fan labels)."),
+            "End labels for 14 series in the colour of their line; only positions to the right of the line ends "
+            "are permitted. Where ends are dense, labels are stacked in a column in the order of the ends, with "
+            "fanned leaders ({fans} labels)."),
         Fig("09-line-end-labels/life-62-boundary", "Life expectancy of 62 countries",
-            "One color per region, as in the bubble chart. The labels stand in one column in the right margin "
-            "(models <code>adjacent</code> and <code>boundary</code>), stacked around the ends' heights; the "
-            "leaders are matched to the slots so that none cross. The densest band, around 75–80 years, does "
-            "not fit: {omitted} of its ends stay unlabeled ({placed:,} of {total:,} placed)."),
-        Fig("01-software-metrics/cbo-rfc-100-svg", "The 100 most unusual classes of React Native's Java code",
-            "Coupling vs. response for 1,206 classes (log scales); the 100 classes farthest from their five "
-            "nearest neighbours are labeled with their names below <code>com.facebook.react</code>, which wrap "
-            "at package dots; the five most unusual larger, the others a size smaller. The plot is an SVG whose "
-            "points, axes and tick labels the engine reads as obstacles; {omitted} labels in the top right "
-            "find no room."),
-        Fig("01-software-metrics/wmc-loc-30-raster", "A chart that is only a picture",
-            "The whole scatterplot is a PNG. The engine finds axes, points and text in the pixels "
-            "(raster ink mode) and keeps the 30 labels off them."),
+            "Colour by region, as in the bubble chart. Labels form a single column in the right margin (models "
+            "<code>adjacent</code> and <code>boundary</code>), stacked near the heights of the line ends; leaders "
+            "are assigned to slots without crossings. The densest band (75–80 years) does not fit: {omitted} line "
+            "ends remain unlabeled ({placed:,} of {total:,} placed)."),
+        Fig("01-software-metrics/cbo-rfc-100-svg", "React Native: the 100 most atypical Java classes",
+            "Coupling versus response for 1,206 classes (log scales). The 100 classes farthest from their five "
+            "nearest neighbours are labeled with their names relative to <code>com.facebook.react</code>, wrapped "
+            "at package separators; the five most atypical in larger type, the others smaller. The plot is an SVG "
+            "whose points, axes and tick labels the engine treats as obstacles. {omitted} labels in the upper right "
+            "are omitted for lack of space."),
+        Fig("01-software-metrics/wmc-loc-30-raster", "Scatterplot as a raster image",
+            "The entire scatterplot is a PNG. The engine detects axes, points and text in the pixels (raster ink "
+            "mode) and places the 30 labels clear of them."),
     )),
-    Section("images", "Photos and illustrations", "area anchors, leaders, margin labels", "", (
+    Section("images", "Photographs and illustrations", "area anchors, leaders, margin labels", "", (
         Fig("08-illustration/astronaut-boundary", "Annotated portrait",
-            "Twelve regions of a NASA portrait are area anchors (one is a ring with a hole). The preset "
-            "<code>illustration</code> charges a label over the photo per em² like a leader, so most labels "
-            "stand in the margins or beside the photo; those of regions in its middle stay close to them. "
-            "Elbow leaders end inside each region."),
+            "Twelve regions of a NASA portrait as area anchors (one is a ring with a hole). The preset "
+            "<code>illustration</code> assigns label area over the photograph a cost per em² comparable to that of "
+            "a leader, so most labels are placed in the margins or beside the photograph; labels of central regions "
+            "remain close to them. Elbow leaders end inside each region."),
         Fig("08-illustration/retina-boundary", "Fundus photograph",
-            "Ten anatomical structures of a retina image (raster at scale 2), with elbow leaders: labels "
-            "in the margins where a leader to them costs less than covering the image, the others close "
-            "to their structures."),
+            "Ten anatomical structures in a retinal image (raster at scale 2), with elbow leaders. Labels are placed "
+            "in the margins where a leader costs less than covering the image, otherwise close to their "
+            "structures."),
         Fig("08-illustration/rocket-distant", "Falcon 9 on the launch pad",
-            "Twelve parts labeled with straight leaders to positions off the rocket; duplicate label "
-            "texts are allowed."),
+            "Twelve parts labeled with straight leaders to positions off the rocket; duplicate label texts are "
+            "permitted."),
     )),
     Section("graphs", "Embeddings and networks", "", "", (
-        Fig("07-node-link/lesmis-force", "Les Misérables, as the force layout leaves it",
-            "77 characters in the d3-force layout of the benchmark's moving-node sequences, at rest: circles by "
-            "the number of co-occurring characters, colored by community, edges as wide as the "
-            "co-occurrences. Every character is named ({placed} of {total}), the most connected larger; edges "
-            "are soft obstacles."),
+        Fig("07-node-link/lesmis-force", "Les Misérables, force layout at rest",
+            "77 characters in the d3-force layout of the moving-node sequences, at rest. Circle size encodes the "
+            "number of co-occurring characters, colour the community, edge width the number of co-occurrences. "
+            "Labeled: {placed} of {total} characters, the most connected in larger type; edges are soft "
+            "obstacles."),
         Fig("04-embedding/k40-ink", "40 cluster names over 50,000 points",
-            "Long topic names wrap; the point cloud is a raster the engine reads in ink mode."),
-        Fig("07-node-link/flare-imports", "Flare's classes and their imports",
-            "220 classes of the Flare visualization toolkit in a force layout, colored by top-level package. "
-            "The 100 most connected are labeled with their class names, the other 120 are nodes labels must "
-            "not cover. The core of <code>flare.vis</code> and <code>flare.util</code> is a knot: {omitted} "
-            "labels find no room there, some others shrink.", wide=True),
+            "Long topic names are wrapped; the point cloud is a raster that the engine reads in ink mode."),
+        Fig("07-node-link/flare-imports", "Flare: classes and imports",
+            "220 classes of the Flare visualization toolkit in a force layout, coloured by top-level package. The "
+            "100 most connected classes are labeled; the other 120 nodes must not be covered. In the dense core of "
+            "<code>flare.vis</code> and <code>flare.util</code>, {omitted} labels are omitted and some are reduced "
+            "in size.", wide=True),
         Fig("04-embedding/k120-areas", "120 topics of WordNet",
-            "50,000 noun glosses embedded with t-SNE; 120 clusters are area anchors (hulls of their "
-            "cores), labeled inside or next to them over a raster of the points.", wide=True),
+            "50,000 noun glosses embedded with t-SNE; 120 clusters as area anchors (hulls of their cores), labeled "
+            "inside or adjacent, over a raster of the points.", wide=True),
     )),
-    Section("priority", "Priority decides what is left out", "",
-            "Europe's 250 busiest airports compete for room at 9 px; every other airport is a dot. Priority is "
-            "the number of routes. With <code>strict</code> omission, a label is left out only if more "
-            "important labels leave no room for it, so smaller airports fill every gap. With "
-            "<code>prefix</code>, the labels shown are exactly the top of the ranking: everything after the "
-            "first airport that does not fit is left out.", (
-                Fig("12-priority/europe-attr-strict", "strict: {placed} labels",
+    Section("priority", "Priority and omission", "",
+            "Europe's 250 busiest airports compete for space at 9 px; all other airports are unlabeled points. "
+            "Priority is the number of routes. Under <code>strict</code> omission, a label is omitted only if more "
+            "important labels leave no space for it, so smaller airports fill the remaining gaps. Under "
+            "<code>prefix</code> omission, the placed labels are exactly the top of the ranking: all items after "
+            "the first one that does not fit are omitted.", (
+                Fig("12-priority/europe-attr-strict", "Strict omission: {placed} labels",
                     "Every omitted airport is blocked by a more important label.", wide=True),
-                Fig("12-priority/europe-attr-prefix", "prefix: the {placed} busiest airports",
-                    "{first_cut}, number {first_cut_rank}, has no free position, so no airport ranked below it "
-                    "is shown: a reader can trust that every airport busier than a labeled one is labeled too.",
-                    wide=True),
+                Fig("12-priority/europe-attr-prefix", "Prefix omission: the {placed} busiest airports",
+                    "{first_cut} (rank {first_cut_rank}) has no free position, so no lower-ranked airport is "
+                    "labeled. Hence every airport busier than a labeled one is itself labeled.", wide=True),
             )),
-    Section("weak", "Where it falls short", "", "What the current defaults and models still do badly.", (
-        Fig("05-airports/world-iata-1000-vector", "Every airport an item: a hub can lose",
-            "The 1,000 busiest airports, all of them items. A label may cover the marks of less important "
-            "airports (the <code>map</code> preset), never those of more important ones, and the busiest 5 % "
-            "have larger type. Where hubs crowd, the label of a busier one may cover the dot of the next, "
-            "which then keeps no label: {top_omitted} — {n_top_omitted} of the ten busiest airports — stay "
-            "unlabeled while small airports elsewhere are labeled ({placed:,} of {total:,}). Moving the busier "
-            "label aside would cost two other labels here; the priority repair does that only when at most one "
-            "gives way (ADR priority/repair). The same type for all (<code>priority.font_classes</code>) or fewer items "
-            "would make room.", wide=True, limit=True),
+    Section("weak", "Limitations", "", "Known weaknesses of the current defaults and models.", (
+        Fig("05-airports/world-iata-1000-vector", "All 1,000 airports as items: hubs may remain unlabeled",
+            "The 1,000 busiest airports, all as items. Labels may cover the marks of less important airports "
+            "(preset <code>map</code>) but never those of more important ones; the busiest 5 % are set in larger "
+            "type. In dense hub regions, the label of one hub may cover the mark of the next, which then remains "
+            "unlabeled. Unlabeled among the 10 busiest airports: {top_omitted}; in total, {placed:,} of {total:,} "
+            "airports are labeled. Moving the busier label would displace two other labels here; the priority "
+            "repair does so only if at most one label is displaced (ADR priority/repair). A uniform type size "
+            "(<code>priority.font_classes</code>) or fewer items would free space.", wide=True, limit=True),
     )),
 )
 
-# (scenario, config, caption) of the problems the report shows with a caption next to the other labelers
+# (scenario, config, caption) of the problems the report shows with a caption next to the other methods
 COMPARISONS = (
     ("03-gapminder", "y2005-vector",
-     "The same 46 bubbles, the same obstacles, scored by the same evaluator. Hard violations count "
-     "labels on top of each other, of bubbles or of axes. adjustText never omits a label, so it "
-     "overlaps instead; ggrepel's repulsion does not always separate everything."),
+     "Identical bubbles and obstacles for all methods. Hard violations count labels that overlap other labels, "
+     "bubbles or axes. adjustText never omits labels and therefore produces overlaps; ggrepel's repulsion does not "
+     "resolve all overlaps."),
     ("02-volcano", "top20-vector",
-     "A sparse case: every tool places almost everything, and the differences are in overlaps."),
+     "A sparse problem: most methods place all or nearly all labels; they differ mainly in overlaps."),
 )
 NAMES = {"rust": "Label Anything", "ggrepel": "ggrepel (R)", "adjusttext": "adjustText", "textalloc": "textalloc",
          "vega-label": "vega-label", "echarts": "ECharts (hideOverlap)", "d3fc": "d3fc label layout",
          "d3-labeler": "D3-Labeler", "mumtaz2019": "Mumtaz et al. (2019)", "greedy": "Greedy baseline",
          "naive": "Naive (no collision test)"}
-REASONS = {"omitted_by_priority": "behind more important labels", "no_feasible_candidate": "no free position",
-           "budget_exhausted": "out of time", "keep_with": "with their set", "grouped": "in a group label"}
+REASONS = {"omitted_by_priority": "blocked by more important labels", "no_feasible_candidate": "no free position",
+           "budget_exhausted": "time budget exhausted", "keep_with": "with linked items",
+           "grouped": "merged into a group label"}
 
 
 # ---------------------------------------------------------------------------
@@ -476,7 +474,7 @@ def fig_chips(m: dict) -> list[list[str]]:
     if m["leaders"]:
         chips.append([f"{m['leaders']:,} leader{'s' if m['leaders'] != 1 else ''}", ""])
         if m.get("leader_len_max_em") is not None:
-            chips.append([f"longest {m['leader_len_max_em']:.1f} em", ""])
+            chips.append([f"longest leader {m['leader_len_max_em']:.1f} em", ""])
     hv = m["hard_violations"]
     chips.append(["no hard violations", "ok"] if hv == 0 else [f"{hv:,} hard violations", "bad"])
     for key, one, many in (("unclear", "unclear label", "unclear labels"),
@@ -511,34 +509,34 @@ def stability_text(st: dict) -> dict:
     moving = not st.get("zoom_steps") and not st.get("pan_steps")
     chips = []
     if st.get("displacement_mean_px") is not None:
-        chips.append([f"labels move {st['displacement_mean_px']:.1f} px per frame on average", ""])
+        chips.append([f"mean displacement {st['displacement_mean_px']:.1f} px per frame", ""])
     if st["displacement_median_px"] is not None:
-        chips.append([f"median movement {st['displacement_median_px']:.0f} px", ""])
+        chips.append([f"median displacement {st['displacement_median_px']:.0f} px", ""])
     if st["nesting"] is not None and not moving:
-        chips.append([f"{st['nesting'] * 100:.0f} % of labels stay when zooming in", ""])
+        chips.append([f"{st['nesting'] * 100:.0f}% of labels retained per zoom-in step", ""])
     for key, step in (("flips_pan", "pan"), ("flips_zoom", "zoom"), ("flips_tick", "layout"),
                       ("flips_drag", "drag")):
         if st.get(key) is not None:
-            chips.append([f"{st[key] * 100:.0f} % change side per {step} step", "bad" if st[key] > 0.1 else ""])
+            chips.append([f"side changes per {step} step: {st[key] * 100:.0f}%", "bad" if st[key] > 0.1 else ""])
     flips = ""
     if st["flips_zoom"] is not None and st["flips_zoom"] > 0.1:
-        flips = (f" Zooming in still makes {st['flips_zoom'] * 100:.0f} % of the labels change sides at each step, "
-                 "which a reader notices.")
+        flips = f" At each zoom step, {st['flips_zoom'] * 100:.0f}% of the labels still change sides."
     if moving:
-        title = "A force layout running: the labels follow their nodes"
-        text = (f"{n} frames of the Les Misérables graph while its d3-force layout runs, every 4th tick from the "
-                "start (the moving nodes of the tutorial's demo). Each frame is solved with the previous result as a "
-                "warm start: a label moves with its node and takes a new place only when its old one is taken.")
+        title = "Force layout in motion"
+        text = (f"{n} frames of the Les Misérables graph during its d3-force simulation (every fourth tick from the "
+                "start, as in the tutorial's moving-node demo). Each frame is solved with the previous result as "
+                "warm start: labels move with their nodes and change position only when the previous position is "
+                "occupied.")
     else:
-        title = "Zooming into a map of airports, then panning"
-        text = (f"{n} frames of an interactive map: {st['zoom_steps']} zoom steps, then {st['pan_steps']} pan "
-                "steps. Each frame is solved with the previous result as a warm start, so most labels keep their "
-                f"place.{flips}")
+        title = "Zooming and panning an airport map"
+        text = (f"{n} frames of an interactive map: {st['zoom_steps']} zoom steps followed by {st['pan_steps']} pan "
+                "steps. Each frame is solved with the previous result as warm start, so most labels keep their "
+                f"position.{flips}")
     return {"title": title, "text": text, "chips": chips, "kind": "Force layout" if moving else "Zoom sequence"}
 
 
 def notes(figs: dict[str, dict]) -> list[dict]:
-    """What the defaults still do badly, with the numbers of this build: [{"title", "html"}], linking to the
+    """Known limitations of the defaults, with the numbers of this build: [{"title", "html"}], linking to the
     figures (``#scenario--config``)."""
     def n(key: str) -> dict | None:
         return figs.get(key)
@@ -551,42 +549,41 @@ def notes(figs: dict[str, dict]) -> list[dict]:
     crowd = [(k, t) for k, t in (("06-city-pois/monaco-pins-ink", "Monaco"),
                                  ("07-node-link/flare-imports", "Flare")) if n(k)]
     if crowd:
-        out.append(("Crowds keep few labels",
-                    "Where marks overlap, a label that would need a leader across other marks or close to "
-                    f"another leader is left out rather than drawn ambiguously ({', '.join(ref(k, t) for k, t in crowd)} "
-                    "placed). Omitted items are reported with the reason; showing more of them takes a larger "
-                    "canvas, smaller text or fewer items."))
+        out.append(("Dense clusters",
+                    "Where marks overlap, labels that would require a leader across other marks or near another "
+                    "leader are omitted rather than placed ambiguously (placed: "
+                    f"{', '.join(ref(k, t) for k, t in crowd)}). Omitted items are reported with a reason. Placing "
+                    "more of them requires a larger canvas, smaller text or fewer items."))
     ends = [(k, t) for k, t in (("09-line-end-labels/unemployment-14-vector", "unemployment"),) if n(k)]
     margin = [(k, t) for k, t in (("09-line-end-labels/life-62-boundary", "life expectancy"),) if n(k)]
     if ends or margin:
-        text = ("Where line ends crowd, their labels stand in a column beside them with fanning leaders"
-                + (f" ({', '.join(ref(k, t) for k, t in ends)} placed)" if ends else "") + ". A column grows "
-                "only as far as its leaders stay within <code>leaders.max_length</code> (10 em) and clear of "
-                "the other marks; ends beyond that stay without a label. With the <code>boundary</code> model "
-                "the column stands in the margin, where leaders may be longer"
-                + (f" ({', '.join(ref(k, t) for k, t in margin)} placed)" if margin else "") + ".")
-        out.append(("Crowded line ends", text))
+        text = ("Labels of dense line ends are stacked in a column beside them, with fanned leaders"
+                + (f" (placed: {', '.join(ref(k, t) for k, t in ends)})" if ends else "") + ". A column extends "
+                "only as far as its leaders stay within <code>leaders.max_length</code> (10 em) and clear of other "
+                "marks; further ends remain unlabeled. With the <code>boundary</code> model, the column is placed in "
+                "the margin, where longer leaders are permitted"
+                + (f" (placed: {', '.join(ref(k, t) for k, t in margin)})" if margin else "") + ".")
+        out.append(("Dense line ends", text))
     split = [(k, m["split_words"]) for k, m in figs.items() if m.get("split_words")]
     if split:
         k, ex = split[0]
-        out.append(("Wrapped names can break inside a word",
-                    f"A label with wrap settings takes balanced line breaks within <code>wrap.max_width</code>, "
-                    f"at break opportunities; a word wider than <code>wrap.max_width</code> still has to end "
-                    f"a line inside it (an emergency break, spec §5.3): "
-                    f"<a href=\"#{k.replace('/', '--')}\">“{E(ex[0])}”</a>"
+        out.append(("Line breaks inside words",
+                    "Labels with wrap settings receive balanced line breaks within <code>wrap.max_width</code> at "
+                    "break opportunities. A word wider than <code>wrap.max_width</code> must be broken inside "
+                    f"(emergency break, spec §5.3): <a href=\"#{k.replace('/', '--')}\">“{E(ex[0])}”</a>"
                     + (f" and {len(ex) - 1} more" if len(ex) > 1 else "") + ". A larger "
-                    "<code>wrap.max_width</code> or a shorter text avoids it."))
+                    "<code>wrap.max_width</code> or a shorter text avoids this."))
     shrunk = [(k, t) for k, t in (("02-volcano/top50-svg", "volcano"), ("09-line-end-labels/life-62-boundary",
                                                                          "life expectancy"),
                                   ("07-node-link/flare-imports", "Flare")) if n(k)]
     if shrunk:
-        out.append(("Shrunk labels look less important",
-                    "Before a label is left out, the degradation ladder tries it a step (<code>shrink:0.85</code>) "
-                    "or more smaller, down to 70 % (" + ", ".join(f'<a href="#{k.replace("/", "--")}">{E(t)}</a>'
-                                                             for k, t in shrunk)
-                    + "). Where type size also shows importance (<code>priority.font_classes</code>), a shrunk "
-                    "label reads as a less important one. Leave <code>shrink</code> out of <code>degrade</code> "
-                    "when sizes must stay true; more labels are then omitted."))
+        out.append(("Reduced labels appear less important",
+                    "Before a label is omitted, the degradation ladder reduces its size by one step "
+                    "(<code>shrink:0.85</code>) or more, down to 70 % ("
+                    + ", ".join(f'<a href="#{k.replace("/", "--")}">{E(t)}</a>' for k, t in shrunk)
+                    + "). Where type size also encodes importance (<code>priority.font_classes</code>), a reduced "
+                    "label appears less important. Removing <code>shrink</code> from <code>degrade</code> preserves "
+                    "sizes at the cost of more omitted labels."))
     return [{"title": t, "html": h} for t, h in out]
 
 
@@ -600,7 +597,7 @@ REDIRECT = """<!doctype html>
 <link rel="canonical" href="../">
 </head>
 <body>
-<p>The gallery is part of the <a href="../#maps">benchmark report</a> now.</p>
+<p>The gallery is now part of the <a href="../#maps">benchmark report</a>.</p>
 </body>
 </html>
 """

@@ -2,7 +2,7 @@
 
 The benchmark's results are one interactive page that leads with pictures and a few
 measures, compares Label Anything with three other labelers unless the reader adds more,
-and folds the engineering details.
+and folds the technical details.
 
 ## Context
 The report was a page of tables, 17 metric columns for every labeler on every problem,
@@ -20,7 +20,7 @@ quarter of the page wide showed no label at all.
   of the other labelers, then one strip per measure (usable labels, hard violations,
   unclear labels, points covered, labels too close, time) with every labeler as a dot,
   further right always better.
-- **Chapters by kind of data** — maps, charts, photos and illustrations, embeddings and
+- **Chapters by kind of data** — maps, charts, photographs and illustrations, embeddings and
   networks, priority, scale — hold the gallery's figures and then every problem of the run
   with the labelers side by side: their images, their main numbers, and a table coloured
   against the median of all labelers on that problem.
@@ -30,10 +30,13 @@ quarter of the page wide showed no label at all.
 - **The densest part at full size**: a canvas of more than 3.2 times 600 × 400 px shows the
   600 × 400 px window holding the most items, and the viewer opens on it. Flipping between
   labelers keeps the view, so the same spot can be compared.
-- **Details on demand**: the other metric columns, the engineering details (performance
+- **Details on demand**: the other metric columns, the technical details (performance
   targets, release gates, runtime, implementation parity, changes against the previous
-  release, the other labelers' methods), what the measures mean and how to read the
-  images are folded away.
+  release, the baseline configurations), the definitions of the measures and the image
+  legend are folded away.
+- **Concise academic texts**: declarative sentences; one term per concept (method,
+  baseline, item, mark, placed, omitted); no idioms or instructions to the reader beyond
+  the controls; every measure defined in one sentence.
 - **Self-contained**: styles, script and data inline, Noto Sans next to the page, nothing
   from other servers; without JavaScript the page shows the default labelers and every
   column.
@@ -42,7 +45,7 @@ quarter of the page wide showed no label at all.
 On the quick suite the page is 0.7 MB of HTML; the drawings of all 110 results add 43 MB
 and 28 s to the CI job. The table colours and the measures' directions stay the same in
 every chapter, whichever labelers are shown. A scenario that no chapter names appears
-under "More problems" until one does. A run without the gallery still compares the
+under "Other problems" until one does. A run without the gallery still compares the
 labelers, with the run's raster images.
 
 ## Alternatives

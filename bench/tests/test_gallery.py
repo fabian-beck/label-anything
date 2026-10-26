@@ -19,7 +19,7 @@ SECTIONS = (
                     "Captions are HTML; {leaders} leaders.", wide=True),
         gallery.Fig("03-gapminder/not-built", "Never shown", "This problem was not built."),
     )),
-    gallery.Section("weak", "Where it falls short", "", "", (
+    gallery.Section("weak", "Limitations", "", "", (
         gallery.Fig("03-gapminder/y2005-vector", "Again, as a limit", "{omitted} omitted.", limit=True),
     )),
 )
@@ -68,7 +68,7 @@ def test_gallery_from_a_run(tmp_path, monkeypatch):
     assert root.get("viewBox") == "0 0 200 100" and "@font-face" in (out / fig["img"]).read_text(encoding="utf-8")
     # every problem of the run drawn for every solver that ran it, with the caption where one is written
     (cmp,) = data["comparisons"]
-    assert [c["solver"] for c in cmp["cells"]] == ["rust", "greedy", "naive"] and "46 bubbles" in cmp["text"]
+    assert [c["solver"] for c in cmp["cells"]] == ["rust", "greedy", "naive"] and "Identical bubbles" in cmp["text"]
     assert [c["img"] for c in cmp["cells"]] == [f"img/cmp/{s}/03-gapminder__y2005-vector.svg"
                                                 for s in ("rust", "greedy", "naive")]
     assert all((out / c["img"]).exists() and c["full"] == c["img"] for c in cmp["cells"])
@@ -76,7 +76,7 @@ def test_gallery_from_a_run(tmp_path, monkeypatch):
     assert 'url=../#maps' in (out / "index.html").read_text(encoding="utf-8")
     page = (rep / "index.html").read_text(encoding="utf-8")
     assert "Bubbles &amp; labels: 3 of 3" in page and "<code>markup</code>" in page and "0 leaders" in page
-    assert "id='03-gapminder--y2005-vector'" in page and "Settings of this problem" in page
+    assert "id='03-gapminder--y2005-vector'" in page and "Problem settings" in page
     assert page.count('src="gallery/img/cmp/') == 3 and "gallery/img/03-gapminder__y2005-vector.svg" in page
     assert page.index("id='tests'") < page.index("id='weak'") and "class='fig limit'" in page
     assert (f'data-w="{fig["full_size"][0]}" data-h="{fig["full_size"][1]}" data-bw="200" data-vector="1"'
@@ -106,9 +106,9 @@ def test_stability_frames(tmp_path):
     assert (st["zoom_steps"], st["pan_steps"], st["flips_zoom"], st["flips_pan"]) == (19, 10, 0.25, 0.05)
     assert all((tmp_path / "out" / f["img"]).exists() for f in st["frames"])
     st.update(gallery.stability_text(st))
-    assert ["25 % change side per zoom step", "bad"] in st["chips"] and ["80 % of labels stay when zooming in", ""] \
-        in st["chips"]
-    assert "makes 25 % of the labels change sides" in st["text"] and st["title"].startswith("Zooming")
+    assert ["side changes per zoom step: 25%", "bad"] in st["chips"]
+    assert ["80% of labels retained per zoom-in step", ""] in st["chips"]
+    assert "25% of the labels still change sides" in st["text"] and st["title"].startswith("Zooming")
     html = report_html.stability_fig(st, "gallery/")
     assert "frame 30 of 30" in html and html.count('class="shot"') == 3
 

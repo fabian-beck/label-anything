@@ -120,12 +120,12 @@ def main() -> None:
     lab40 = clusters(pts, 40)
     items40 = topic_items(syn, pts, lab40, 40, areas=False)
     wr.config("k40-ink", problem(items40, png, "ink"), png=png, quick=True,
-              description="40 cluster labels (long topic names, wrapped) over a 50k-point raster, mode ink.")
+              description="40 cluster labels (long topic names, wrapped) over a raster of 50,000 points (ink mode).")
     wr.config("k40-saliency", problem(items40, png, "saliency"), png=png,
-              description="Same items, raster mode saliency.")
+              description="Same items, raster saliency mode.")
     lab120 = clusters(pts, 120)
     wr.config("k120-areas", problem(topic_items(syn, pts, lab120, 120, areas=True), png, "ink"), png=png,
-              description="120 clusters as area anchors (convex hulls of the 75 % cores), raster mode ink.")
+              description="120 clusters as area anchors (convex hulls of the 75 % cores) over the raster (ink mode).")
     wr.finish()
 
 

@@ -22,13 +22,13 @@ def _problem():
 def test_soft_classes_are_avoided_like_hard_ones_by_default():
     sc = build_scene(_problem())
     assert sc.obstacles.classes() == ["axes", "grid"]
-    assert any(n.feature == "soft-classes" and "avoided like hard" in n.message for n in sc.notes)
+    assert any(n.feature == "soft-classes" and "treated as hard obstacles" in n.message for n in sc.notes)
 
 
 def test_soft_classes_can_be_left_out():
     sc = build_scene(_problem(), soft="ignore")
     assert sc.obstacles.classes() == ["axes"]
-    assert any(n.feature == "soft-classes" and "left out" in n.message and "grid" in n.message for n in sc.notes)
+    assert any(n.feature == "soft-classes" and "are ignored" in n.message and "grid" in n.message for n in sc.notes)
     with pytest.raises(ValueError):
         build_scene(_problem(), soft="sometimes")
 

@@ -2,23 +2,26 @@
 
 It shows a run (``results.json``) and, once ``python -m bench.gallery`` has added it, the gallery
 (``gallery/gallery.json``: figures of Label Anything with captions, the run's problems drawn as vector images
-by every solver, frames of the stability sequences, what the defaults still do badly).
+by every solver, frames of the stability sequences, notes on known limitations).
 
-* **Header**: what was run, and Label Anything's headline numbers next to the range of the others.
-* **A bar** that stays at the top: the contents, the labelers compared with Label Anything (three by
+* **Header**: what was run, and Label Anything's headline numbers next to the range of the baselines.
+* **A bar** that stays at the top: the contents, the methods compared with Label Anything (three by
   default, the others on demand: ``?vs=a,b`` in the address, remembered in the browser) and whether the tables
   show every metric or the main ones.
-* **At a glance**: where each labeler stands on six measures (a dot on a strip per measure, further right is
-  better, the others as grey dots), then, folded, the summary table coloured against the median, how to read
-  the images and what the measures mean.
-* **Chapters by kind of data** (maps, charts, photos and illustrations, embeddings and networks, priority,
-  scale): the gallery's figures, then every problem of the run with the labelers side by side and their
-  numbers (each value coloured against the median of all solvers on that problem). Selecting an image opens a
-  viewer that zooms and flips between the labelers at the same spot.
-* **Interactive use** (stability sequences), **where it falls short** (the gallery's notes and the problems
-  where another labeler does better without more violations), and, folded, the **engineering details**:
-  performance targets, release gates, runtime against size, implementation parity, changes against the
-  previous release, the baselines' methods.
+* **Summary**: where each method stands on six measures (a dot on a strip per measure, further right is
+  better, the others as grey dots), then, folded, the summary table coloured against the median, the image
+  legend and the definitions of the measures.
+* **Chapters by kind of data** (maps, charts, photographs and illustrations, embeddings and networks, priority,
+  scale): the gallery's figures, then every problem of the run with the methods side by side and their
+  numbers (each value coloured against the median of all methods on that problem). Selecting an image opens a
+  viewer that zooms and switches between the methods at the same view.
+* **Temporal stability** (stability sequences), **limitations** (the gallery's notes and the problems where a
+  baseline does better without more violations), and, folded, the **technical details**: performance targets,
+  release gates, runtime versus size, implementation parity, changes since the previous release, the baseline
+  configurations.
+
+The texts are concise and academic: declarative sentences, one term per concept (method, baseline, item, mark,
+placed, omitted), no idioms.
 
 The page loads nothing from other servers (Noto Sans is copied next to it); without JavaScript it shows the
 default labelers and every metric.
@@ -51,14 +54,16 @@ NAMES = {"rust": "Label Anything", "ts": "Label Anything (TypeScript)", "wasm": 
          "ggrepel": "ggrepel", "adjusttext": "adjustText", "textalloc": "textalloc", "vega-label": "vega-label",
          "echarts": "ECharts", "d3fc": "d3fc", "d3-labeler": "D3-Labeler", "mumtaz2019": "Mumtaz et al.",
          "greedy": "greedy", "naive": "naive"}
-ABOUT = {"ggrepel": "ggrepel for R (ggplot2): repulsion", "adjusttext": "adjustText for Python (matplotlib): "
-         "repulsion, never omits a label", "textalloc": "textalloc for Python (matplotlib): candidate positions",
-         "vega-label": "Vega's label transform (vega-label)", "echarts": "ECharts' label layout with hideOverlap",
-         "d3fc": "d3fc label layout: greedy with overlap removal", "d3-labeler": "D3-Labeler: simulated annealing, "
-         "never omits a label", "mumtaz2019": "Mumtaz et al. (EuroVis 2019), reimplemented: cost-based outlier "
-         "labeling with leaders, never omits a label",
-         "greedy": "the benchmark's greedy baseline: 8 positions, first free one wins",
-         "naive": "the benchmark's naive baseline: every label top-right, no collision test"}
+ABOUT = {"ggrepel": "ggrepel (R, ggplot2): force-based repulsion",
+         "adjusttext": "adjustText (Python, matplotlib): iterative repulsion; never omits labels",
+         "textalloc": "textalloc (Python, matplotlib): candidate positions",
+         "vega-label": "Vega label transform (vega-label)", "echarts": "Apache ECharts label layout with hideOverlap",
+         "d3fc": "d3fc label layout: greedy placement with overlap removal",
+         "d3-labeler": "D3-Labeler: simulated annealing; never omits labels",
+         "mumtaz2019": "Mumtaz et al. (EuroVis 2019), reimplemented: cost-based outlier labeling with leaders; never "
+                       "omits labels",
+         "greedy": "Benchmark baseline: the first free of 8 positions, in priority order",
+         "naive": "Benchmark baseline: every label at the top right, without collision test"}
 ORDER = ("ggrepel", "adjusttext", "textalloc", "vega-label", "echarts", "d3fc", "d3-labeler", "mumtaz2019", "greedy",
          "naive")
 DEFAULT_VS = ("ggrepel", "adjusttext", "textalloc")
@@ -127,6 +132,11 @@ def dur(ms: float | None) -> str:
     return f"{ms / 60_000:.1f} min"
 
 
+def count(n: int, noun: str) -> str:
+    """``n`` and the noun, plural unless ``n`` is 1: "1 problem", "12 problems"."""
+    return f"{n:,} {noun}{'' if n == 1 else 's'}"
+
+
 def chips(items) -> str:
     """``[text, kind]`` pairs as chips; kind "", "ok", "warn" or "bad"."""
     return '<ul class="chips">' + "".join(f'<li class="{esc(k)}">{esc(t)}</li>' if k else f"<li>{esc(t)}</li>"
@@ -156,7 +166,7 @@ def shot(m: dict, alt: str, caption: str, prefix: str = "", lazy: bool = True, c
         data += f' data-crop="{x / cw:.4f},{y / ch:.4f},{w / cw:.4f},{h / ch:.4f}"'
         style = f' style="aspect-ratio:{w:g}/{h:g}"'
         istyle = f' style="width:{cw / w * 100:.2f}%;left:{-x / w * 100:.2f}%;top:{-y / h * 100:.2f}%"'
-        badge = "<span class='badge'>the densest part · select for all of it</span>"
+        badge = "<span class='badge'>densest region · select for the full image</span>"
     return (f'<a class="{cls}" href="{esc(prefix + full)}" target="_blank" rel="noopener"{data}{vec}{style} '
             f'data-caption="{esc(caption)}"><img src="{esc(prefix + m["img"])}" alt="{esc(alt)}"{dims}{load}'
             f'{istyle}>{badge}</a>')
@@ -191,49 +201,50 @@ def _baseline_note(r: dict) -> str:
 # what the measures mean
 # ---------------------------------------------------------------------------
 GLOSSARY = {
-    "placed_rate": ("placed", "items with a label on the canvas, of all items."),
-    "usable_rate": ("usable", "the labels a reader can use: the placed ones left after dropping every label in a "
-                              "conflict, of two overlapping labels the more important one staying. A labeler that "
-                              "never leaves a label out but overlaps instead keeps few."),
-    "hard_violations": ("hard violations", "everything the problem forbids: labels over labels or over the marks "
-                                           "and obstacles they must avoid, labels off the canvas, crossing leaders, "
-                                           "leaders through labels or marks, and Label Anything's spacing rules "
-                                           "for leaders."),
-    "hard_conflicts": ("conflicts", "the hard violations every labeler must avoid: the overlaps and crossings, "
-                                    "without Label Anything's spacing rules."),
-    "clarity_unclear_rate": ("unclear", "labels without a leader whose own mark is not clearly the nearest data "
-                                        "point: another point is less than 0.2 em farther away, or nearer; of the "
-                                        "placed labels."),
-    "ambiguity_rate": ("ambiguous", "placed labels nearer to another item than to their own (a coarser measure "
-                                    "than unclear)."),
-    "points_covered_rate": ("points covered", "data points, the marks and the unlabeled points of the chart, "
-                                              "under the label of another item; of all data points."),
-    "labels_close_rate": ("labels too close", "labels less than 0.4 em from the nearest other label, which read "
-                                              "as one; of the placed labels."),
-    "priority_inversions": ("inversions", "items left out although a position was free of every more important "
-                                          "label: a less important label took their room."),
-    "ndcg_at_k": ("NDCG@k", "how closely the placed labels follow the priority order: 1 when they are exactly the "
-                            "most important ones."),
-    "leader_crossings": ("crossings", "pairs of crossing leaders."),
-    "leader_near_crossings": ("near crossings", "leaders closer than 4 px to another without crossing it: they "
-                                                "read as crossing."),
-    "leader_mark_touches": ("leader–mark", "leaders passing within 1.5 px of another item's mark."),
-    "adjacent_gap_abs_mean": ("gap px", "how far a label beside its mark stands from the intended offset, mean in "
-                                        "px; 0 is best."),
-    "position_rank_mean": ("pos. rank", "mean preference rank of the side a label takes (0 top, 1 right, 2 "
-                                        "bottom, 3 left, 4–7 the corners)."),
-    "region_coverage": ("regions labeled", "populated regions (cells 8 em wide) with at least one label: whether "
-                                           "the labels spread over the data."),
-    "soft_coverage_mean": ("soft cov.", "mean share of a label's area over soft obstacles, such as lines it may "
-                                        "cover at a cost."),
-    "engine_ms": ("engine ms", "the labeler's own timing of the solve, median over the runs."),
-    "wall_ms": ("wall ms", "a whole run as the benchmark sees it, process start and files included; median and "
+    "placed_rate": ("placed", "Share of items with a placed label."),
+    "usable_rate": ("usable", "Share of items whose label remains after conflicts are resolved in priority order: a "
+                              "label over a mark, a hard obstacle or the canvas edge is removed; of two conflicting "
+                              "labels, the more important one is kept. Methods that never omit labels but let them "
+                              "overlap score low."),
+    "hard_violations": ("hard violations", "Violations of hard constraints: labels overlapping labels, marks or hard "
+                                           "obstacles; labels outside the canvas; crossing leaders; leaders through "
+                                           "labels or marks; and Label Anything's clearance rules for leaders."),
+    "hard_conflicts": ("conflicts", "Hard violations that apply to every method: overlaps and crossings, without "
+                                    "Label Anything's clearance rules."),
+    "clarity_unclear_rate": ("unclear", "Share of placed labels without a leader whose own mark is not unambiguously "
+                                        "the nearest data point: another point is nearer, or less than 0.2 em "
+                                        "farther away."),
+    "ambiguity_rate": ("ambiguous", "Share of placed labels nearer to another item than to their own (a coarser "
+                                    "criterion than unclear)."),
+    "points_covered_rate": ("points covered", "Share of data points (marks and unlabeled points) covered by the "
+                                              "label of another item."),
+    "labels_close_rate": ("labels too close", "Share of placed labels less than 0.4 em from the nearest other "
+                                              "label; such labels are read as one."),
+    "priority_inversions": ("inversions", "Omitted items for which a position free of all more important labels "
+                                          "existed; a less important label occupies it."),
+    "ndcg_at_k": ("NDCG@k", "Normalized discounted cumulative gain of the placed labels with respect to priority; "
+                            "1 if exactly the most important items are labeled."),
+    "leader_crossings": ("crossings", "Pairs of crossing leaders."),
+    "leader_near_crossings": ("near crossings", "Pairs of leaders closer than 4 px without crossing; they are "
+                                                "perceived as crossing."),
+    "leader_mark_touches": ("leader–mark", "Leaders passing within 1.5 px of the mark of another item."),
+    "adjacent_gap_abs_mean": ("gap px", "Mean absolute deviation of adjacent labels from the intended distance to "
+                                        "their mark, in px; 0 is best."),
+    "position_rank_mean": ("pos. rank", "Mean preference rank of the chosen position (0 top, 1 right, 2 bottom, "
+                                        "3 left, 4–7 corners)."),
+    "region_coverage": ("regions labeled", "Share of populated regions (cells 8 em wide) with at least one label; "
+                                           "a measure of spatial spread."),
+    "soft_coverage_mean": ("soft cov.", "Mean share of label area over soft obstacles, e.g. lines that may be "
+                                        "covered at a cost."),
+    "engine_ms": ("engine ms", "Runtime reported by the method, median over runs."),
+    "wall_ms": ("wall ms", "Wall-clock time of a complete run, including process start-up and I/O; median and "
                            "95th percentile."),
-    "peak_mb": ("peak MB", "the peak memory of the solver's process."),
-    "displacement_mean_px": ("displacement", "how far a label moves between frames, relative to its anchor."),
-    "flip_rate": ("flip rate", "labels changing sides between frames."),
-    "nesting_rate": ("nesting rate", "zoom-in steps after which every label still in view stays."),
-    "nesting_fraction_mean": ("nesting fraction", "the share of the labels that stay when zooming in."),
+    "peak_mb": ("peak MB", "Peak memory of the method's process."),
+    "displacement_mean_px": ("displacement", "Mean label displacement between consecutive frames, relative to the "
+                                             "anchor, in px."),
+    "flip_rate": ("flip rate", "Share of labels that change side between consecutive frames."),
+    "nesting_rate": ("nesting rate", "Share of zoom-in steps after which all labels still in view remain placed."),
+    "nesting_fraction_mean": ("nesting fraction", "Mean share of labels that remain placed after a zoom-in step."),
 }
 
 
@@ -244,19 +255,19 @@ def tip(key: str) -> str:
 
 def glossary_html() -> str:
     rows = "".join(f"<dt>{esc(t)}</dt><dd>{esc(d)}</dd>" for t, d in GLOSSARY.values())
-    return (f"<dl class='gloss'>{rows}</dl><p class='small note'>Every measure counts what a reader sees, with the "
-            "engine's defaults as thresholds for every labeler; precise definitions: "
+    return (f"<dl class='gloss'>{rows}</dl><p class='small note'>All measures are computed from the drawn result, "
+            "with the engine's default thresholds applied to every method. Full definitions: "
             f"<a href='{REPO_URL}/blob/main/bench/README.md#evaluator-metrics'>bench/README.md</a>.</p>")
 
 
 def heat_key(where: str, detail: bool = False) -> str:
     """The legend of the table colours: each value against the median of ``where``."""
-    more = ("; counts, times and memory compare by ratio, small differences stay grey, uncoloured columns are not "
-            "ranked" if detail else "")
-    return (f"<div class='key heat'><span class='lead'><b>Colours</b>&nbsp;each value against the median of "
+    more = (" (counts, times and memory as ratios; small deviations grey; uncoloured columns unranked)"
+            if detail else "")
+    return (f"<div class='key heat'><span class='lead'><b>Colour scale</b>&nbsp;relative to the median of "
             f"{esc(where)}{more}:</span>"
             + "".join(f"<span><i class='sw {HEAT_CLASS[c]}'></i>{HEAT_TEXT[c]}</span>" for c in HEAT_CLASS)
-            + "<span><b>bold</b>&nbsp;the best value</span></div>")
+            + "<span><b>bold</b>&nbsp;best value</span></div>")
 
 
 def marks_key() -> str:
@@ -266,15 +277,14 @@ def marks_key() -> str:
         f'<svg width="44" height="18" viewBox="0 0 44 18" aria-hidden="true"><rect width="44" height="18" '
         f'fill="{render.OBST}"/><rect x="3" y="2" width="38" height="14" fill="#fff" '
         f'fill-opacity="{render.LABEL_FILL_OPACITY}"/><text x="22" y="13" font-size="10" text-anchor="middle" '
-        f'fill="{render.LABEL_TEXT}" font-family="Noto Sans, sans-serif">Label</text></svg>label box as the '
-        "labeler reported it",
+        f'fill="{render.LABEL_TEXT}" font-family="Noto Sans, sans-serif">Label</text></svg>label box (as reported '
+        "by the method)",
         f'<svg width="56" height="18" viewBox="0 0 56 18" aria-hidden="true"><circle cx="6" cy="12" r="4" '
         f'fill="{render.MARK_FILL}" stroke="{mark}"/><circle cx="17" cy="12" r="4" fill="#e15759" '
         f'fill-opacity="0.75" stroke="{render._darker("#e15759")}"/><polyline points="21,10 40,4 54,4" '
-        f'fill="none" stroke="{lead}" stroke-width="1.5"/></svg>item mark (in the data\'s colour where the chart '
-        "has one) and leader",
+        f'fill="none" stroke="{lead}" stroke-width="1.5"/></svg>item mark (in its data colour, if any) and leader',
         f'<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4 L14 14 M14 4 L4 14" '
-        f'stroke="{omit}" stroke-width="2.2"/></svg>item whose label was left out',
+        f'stroke="{omit}" stroke-width="2.2"/></svg>item with omitted label',
     ]
     return ("<div class='key' id='marks'>" + "".join(f"<span>{b}</span>" for b in base)
             + "".join(f"<span>{render.violation_icon(k)}{esc(text)}</span>" for k, _c, text in render.VIOLATIONS)
@@ -322,7 +332,7 @@ def _range(vals: list[float], f) -> str:
     if not vals:
         return ""
     lo, hi = min(vals), max(vals)
-    return f(lo) if f(lo) == f(hi) else f"{f(lo)} to {f(hi)}"
+    return f(lo) if f(lo) == f(hi) else f"{f(lo)}–{f(hi)}"
 
 
 def kpis_html(stats: dict[str, dict], pick: Pick) -> str:
@@ -345,19 +355,19 @@ def kpis_html(stats: dict[str, dict], pick: Pick) -> str:
     if me.get("hard_violations") is not None:
         rng = _range(vals("hard_violations"), num)
         tiles.append(("Hard violations", num(me["hard_violations"]),
-                      f"in {me['problems']} problems" + (f" · the others {rng}" if rng else "")))
+                      f"sum over {count(me['problems'], 'problem')}" + (f" · baselines {rng}" if rng else "")))
     if me.get("usable_rate") is not None:
         rng = _range(vals("usable_rate"), pct)
         tiles.append(("Usable labels", pct(me["usable_rate"]),
-                      "of all items, mean per problem" + (f" · the others {rng}" if rng else "")))
+                      "share of items, mean" + (f" · baselines {rng}" if rng else "")))
     if me.get("clarity_unclear_rate") is not None:
         rng = _range(vals("clarity_unclear_rate"), pct)
         tiles.append(("Unclear labels", pct(me["clarity_unclear_rate"]),
-                      "of the placed labels, mean" + (f" · the others {rng}" if rng else "")))
+                      "share of placed labels, mean" + (f" · baselines {rng}" if rng else "")))
     if me.get("time_ms") is not None:
         rng = _range(vals("time_ms"), dur)
-        tiles.append(("Time per problem", dur(me["time_ms"]), "median" + (f" · the others {rng}" if rng else "")))
-    return ("<div class='kpis' aria-label=\"Label Anything's headline numbers\">"
+        tiles.append(("Time per problem", dur(me["time_ms"]), "median" + (f" · baselines {rng}" if rng else "")))
+    return ("<div class='kpis' aria-label='Results of Label Anything'>"
             + "".join(f"<div class='kpi'><span class='k'>{esc(k)}</span><span class='v'>{esc(v)}</span>"
                       f"<span class='s'>{esc(s)}</span></div>" for k, v, s in tiles) + "</div>")
 
@@ -369,15 +379,15 @@ def header_html(report: dict, gallery: dict | None, stats: dict, pick: Pick) -> 
     m = report.get("machine") or {}
     machine = ", ".join(x for x in (m.get("cpu"), f"{m['cores']} cores" if m.get("cores") else "") if x)
     commit = (gallery or {}).get("meta", {}).get("commit")
-    lede = (f"{len(probs)} problems of {len(scen)} scenarios, maps, charts, photos, embeddings and networks of real "
-            f"data, labeled by Label Anything and {len(tools)} other labelers. Every labeler gets the same label "
-            "boxes, marks and obstacles; one evaluator scores every result and one renderer draws it, so the numbers "
-            "and the pictures compare like with like.")
-    meta = (f"Suite <b>{esc(report['suite'])}</b>, generated {esc(report['generated_at'])}"
-            + (f", engine at commit <code>{esc(commit)}</code>" if commit else "")
-            + (f", on {esc(machine)}" if machine else "") + ".")
+    where = count(len(probs), "problem") + (f" from {len(scen)} scenarios" if len(scen) != len(probs) else "")
+    lede = (f"Label Anything and {count(len(tools), 'baseline method')} are evaluated on {where} built from open "
+            "data: maps, charts, photographs, embeddings and networks. All methods receive identical inputs (label "
+            "sizes, marks and obstacles). One evaluator scores all results, and one renderer draws them.")
+    meta = (f"Suite: <b>{esc(report['suite'])}</b>. Generated {esc(report['generated_at'])}"
+            + (f"; engine commit <code>{esc(commit)}</code>" if commit else "")
+            + (f"; {esc(machine)}" if machine else "") + ".")
     return (f"<header class='top wrap'><p class='eyebrow'><a href='{SITE}'>Label Anything</a> · benchmark report</p>"
-            "<h1>Labels on real data, side by side</h1>"
+            "<h1>Comparison of label placement methods</h1>"
             f"<p class='lede'>{esc(lede)}</p><p class='small note' style='margin:0'>{meta}</p>"
             f"{kpis_html(stats, pick)}</header>")
 
@@ -394,16 +404,16 @@ def bar_html(toc: list[tuple[str, str, int]], pick: Pick) -> str:
     more = ("<button type='button' class='lnk' id='vs-all'>all</button>"
             "<button type='button' class='lnk' id='vs-reset'>reset</button>") if pick.sel else ""
     return (f"<div class='bar'><div class='wrap'><details class='toc'><summary>Contents</summary><nav>{links}</nav>"
-            f"</details><div class='vs' role='group' aria-label='Labelers compared'>{me}"
-            f"<span class='lbl'>{'vs' if pick.ref else 'labelers'}</span>{vs}{more}</div>"
+            f"</details><div class='vs' role='group' aria-label='Methods compared'>{me}"
+            f"<span class='lbl'>{'vs' if pick.ref else 'methods'}</span>{vs}{more}</div>"
             "<label class='allm'><input type='checkbox' id='allm'> all metrics</label></div></div>")
 
 
 # ---------------------------------------------------------------------------
-# at a glance
+# summary
 # ---------------------------------------------------------------------------
 STAND = (  # key of ``aggregates``, title, how it aggregates, format, direction (+1: more is better), log scale
-    ("usable_rate", "Usable labels", "mean per problem", "{:.1%}", +1, False),
+    ("usable_rate", "Usable labels", "mean", "{:.1%}", +1, False),
     ("hard_violations", "Hard violations", "sum", "{:,d}", -1, True),
     ("clarity_unclear_rate", "Unclear labels", "mean", "{:.1%}", -1, False),
     ("points_covered_rate", "Points covered", "mean", "{:.1%}", -1, False),
@@ -466,7 +476,7 @@ def standings_html(stats: dict[str, dict], pick: Pick, n_problems: int) -> str:
         cols.append((key, title, how, f, d, log, lo, hi, pos, [pos(v) for v in vals]))
     if not cols:
         return ""
-    o = ["<div class='scroll'><table class='stand'><thead><tr><th>labeler</th>"
+    o = ["<div class='scroll'><table class='stand'><thead><tr><th>method</th>"
          + "".join(f"<th{tip(k)}>{esc(title)}<span class='dir'>{esc(how)} · better →</span></th>"
                    for k, title, how, *_ in cols) + "</tr>"
          "<tr class='axis'><td></td>" + "".join(
@@ -476,7 +486,7 @@ def standings_html(stats: dict[str, dict], pick: Pick, n_problems: int) -> str:
     for s in rows:
         st = stats[s]
         n = st["problems"]
-        note = f"{n} problems" if n == n_problems else f"{n} of {n_problems} problems"
+        note = count(n, "problem") if n == n_problems else f"{n} of {count(n_problems, 'problem')}"
         cells = []
         for key, _t, _h, f, _d, _l, _lo, _hi, pos, field in cols:
             v = st.get(key)
@@ -515,17 +525,18 @@ SUMMARY_COLS = [  # (key, heading, format, direction, log scale)
 
 def summary_table(report: dict, stats: dict[str, dict], pick: Pick) -> str:
     """One row per solver, every column coloured against the median of all solvers."""
-    tips = {"scaling": f"slope of log runtime over log items on {SCALING_SCENARIO}"}
+    tips = {"scaling": f"Exponent k: slope of log runtime over log number of items ({SCALING_SCENARIO})"}
     solvers = sorted(report["solvers"], key=pick.rank)
-    o = ["<div class='scroll'><table><tr><th class='l'>solver</th><th class='l'>kind</th>"
+    o = ["<div class='scroll'><table><tr><th class='l'>method</th><th class='l'>type</th>"
          + "".join(f"<th title='{esc(tips[k])}'>{esc(h)}</th>" if k in tips else f"<th{tip(k)}>{esc(h)}</th>"
                    for k, h, _f, _d, _l in SUMMARY_COLS) + "</tr>"]
     rows = [stats[s] for s in solvers]
     attrs = heat_attrs(rows, [(k, f, d, lg) for k, _h, f, d, lg in SUMMARY_COLS])
     for s, row, a in zip(solvers, rows, attrs):
         k = kind(s)
+        typ = NAMES["rust"] if k == "label-anything" else k
         o.append(f"<tr class='{'la' if k == 'label-anything' else ''}'{pick.attrs(s)}><td class='l solver' "
-                 f"title='{esc(s)}'>{esc(name(s))}</td><td class='l'>{esc(k)}</td>"
+                 f"title='{esc(s)}'>{esc(name(s))}</td><td class='l'>{esc(typ)}</td>"
                  + "".join(f"<td{a[c]}>{fmt(row[c], f)}</td>" for c, _h, f, _d, _l in SUMMARY_COLS) + "</tr>")
     o.append("</table></div>")
     return "".join(o)
@@ -533,19 +544,20 @@ def summary_table(report: dict, stats: dict[str, dict], pick: Pick) -> str:
 
 def overview_html(report: dict, stats: dict[str, dict], pick: Pick) -> str:
     n = len({(r["scenario"], r["config"]) for r in report["results"]})
-    guide = ("Each row is a labeler, each strip one measure over the problems it ran: its dot among the others' "
-             "(grey), further right is better. The labelers in the bar above are shown here and in every chapter; "
-             "add the others there. Hover a heading for what it measures.")
-    return (f"<section class='chapter wrap' id='summary'><h2>At a glance <small>{n} problems</small></h2>"
+    guide = ("One row per method and one column per measure, aggregated over the problems the method ran. In each "
+             "strip, the dark dot marks the method and the grey dots mark the other methods; right is better. The "
+             "methods selected in the bar at the top appear here and in all chapters. Column headings show "
+             "definitions on hover.")
+    return (f"<section class='chapter wrap' id='summary'><h2>Summary <small>{count(n, 'problem')}</small></h2>"
             f"<p class='guide'>{esc(guide)}</p>{standings_html(stats, pick, n)}"
-            "<details class='more'><summary><b>Every summary number</b><span>the columns coloured against the "
-            "median of all solvers</span></summary><div class='in'>"
-            + heat_key("its column", detail=True) + summary_table(report, stats, pick) + "</div></details>"
-            "<details class='more'><summary><b>How to read the images</b><span>what the marks over them "
-            "show</span></summary><div class='in'><p class='small note' style='margin:0'>Every labeler's result is "
-            "drawn by the same renderer; what the measures count is marked where it happens.</p>"
+            "<details class='more'><summary><b>All summary values</b><span>coloured by deviation from the column "
+            "median</span></summary><div class='in'>"
+            + heat_key("the column", detail=True) + summary_table(report, stats, pick) + "</div></details>"
+            "<details class='more'><summary><b>Image legend</b><span>marks and violation markers</span></summary>"
+            "<div class='in'><p class='small note' style='margin:0'>All results are drawn by the same renderer. "
+            "Violations counted by the measures are marked where they occur.</p>"
             + marks_key() + "</div></details>"
-            "<details class='more'><summary><b>What the measures mean</b><span>in a sentence each</span></summary>"
+            "<details class='more'><summary><b>Definitions</b><span>all measures</span></summary>"
             f"<div class='in'>{glossary_html()}</div></details></section>")
 
 
@@ -554,21 +566,22 @@ def overview_html(report: dict, stats: dict[str, dict], pick: Pick) -> str:
 # ---------------------------------------------------------------------------
 CHAPTERS = (  # id, title, subtitle, lede, scenarios; the gallery's section of the same id gives title and lede
     ("maps", "Maps", "airports and points of interest",
-     "Dense, uneven point sets where the busy places matter most: the busiest airports of the world and of "
-     "Europe, the sights of a city over a street map.", ("05-airports", "06-city-pois")),
-    ("charts", "Charts", "scatterplots, bubbles, line ends",
-     "Labels next to their marks and clear of axes, legends and each other: outliers of a scatterplot, the bubbles "
-     "of a Gapminder chart, the genes of a volcano plot, the ends of line charts.",
+     "Dense, unevenly distributed point sets in which major locations take precedence: the busiest airports "
+     "worldwide and in Europe, and points of interest on a city map.", ("05-airports", "06-city-pois")),
+    ("charts", "Charts", "scatterplots, bubble charts, line charts",
+     "Labels adjacent to their marks and clear of axes, legends and other labels: scatterplot outliers, Gapminder "
+     "bubbles, genes in a volcano plot and line ends.",
      ("03-gapminder", "02-volcano", "09-line-end-labels", "01-software-metrics", "13-outlier-paper")),
-    ("images", "Photos and illustrations", "area anchors, leaders, margin labels",
-     "Regions of photos and drawings, labeled inside, beside or in the margin, with leaders.", ("08-illustration",)),
+    ("images", "Photographs and illustrations", "area anchors, leaders, margin labels",
+     "Regions of photographs and drawings, labeled inside, adjacent or in the margin with leaders.",
+     ("08-illustration",)),
     ("graphs", "Embeddings and networks", "clusters and nodes",
-     "Topic clusters of a text embedding over 50,000 points, the nodes of graphs.", ("04-embedding", "07-node-link")),
-    ("priority", "Priority", "what is left out",
-     "With more labels than room, the order decides which ones are shown.", ("12-priority",)),
-    ("scale", "Scale", "from hundreds to thousands of labels",
-     "The airports at ten times their density (synthetic: jittered copies of the real ones), at growing sizes; "
-     "how the time grows with the number of labels.", ("10-stress",)),
+     "Topic clusters of a text embedding with 50,000 points; nodes of graphs.", ("04-embedding", "07-node-link")),
+    ("priority", "Priority", "selection under limited space",
+     "When not all labels fit, priority determines which ones are placed.", ("12-priority",)),
+    ("scale", "Scale", "hundreds to thousands of labels",
+     "Airports at ten times their real density (jittered copies of real airports) at increasing problem sizes; "
+     "runtime as a function of the number of labels.", ("10-stress",)),
 )
 
 
@@ -577,7 +590,7 @@ def fig_html(f: dict, m: dict, prefix: str) -> str:
     scenario, _, config = f["key"].partition("/")
     cls = "fig" + (" wide" if f.get("wide") else "") + (" limit" if f.get("limit") else "")
     kind_ = "SVG" if m["img"].endswith(".svg") else "image"
-    st = (f"<details class='set'><summary>Settings of this problem</summary><pre>{esc(m['settings_json'])}</pre>"
+    st = (f"<details class='set'><summary>Problem settings</summary><pre>{esc(m['settings_json'])}</pre>"
           "</details>") if m.get("settings_json") else ""
     return (f"<figure class='{cls}' id='{esc(f['key'].replace('/', '--'))}'>"
             + shot(m, f["title"], f"{f['title']} · {scenario} · {config}", prefix)
@@ -615,7 +628,7 @@ def card_html(r: dict, cell: dict | None, out: Path, pick: Pick, caption: str, c
     if "summary" not in r:
         why = r.get("skipped") or r.get("error") or "no result"
         return (f"<figure class='card{la}'{pick.attrs(s)}>{head}<p class='naw'>"
-                f"{'Could not run this problem' if 'skipped' in r else 'Failed'}: {esc(why)}</p></figure>")
+                f"{'Not applicable' if 'skipped' in r else 'Failed'}: {esc(why)}</p></figure>")
     if cell and cell.get("img"):
         img = shot(cell, f"{name(s)}: {caption}", f"{name(s)} · {caption}", "gallery/", crop=crop, canvas=canvas)
     elif r.get("image"):
@@ -623,7 +636,7 @@ def card_html(r: dict, cell: dict | None, out: Path, pick: Pick, caption: str, c
         m = {"img": r["image"], "size": size, "full": r["image"], "full_size": size}
         img = shot(m, f"{name(s)}: {caption}", f"{name(s)} · {caption}", crop=crop, canvas=canvas)
     else:
-        img = "<p class='naw'>Not drawn in this run.</p>"
+        img = "<p class='naw'>No image in this run.</p>"
     return f"<figure class='card{la}'{pick.attrs(s)}>{head}{img}{chips(_card_chips(r))}</figure>"
 
 
@@ -705,12 +718,13 @@ def metrics_table(rows: list[dict], pick: Pick, configs: list[str]) -> str:
     extra = [k for k in TABLE_COLS if k not in KEY_COLS]
     attrs = _heat_by_group([r for r in rows if "summary" in r], "config", _scenario_values, SCENARIO_HEAT)
     many = len(configs) > 1
-    head = (("<th class='l'>config</th>" if many else "") + "<th class='l'>solver</th><th class='x'>items</th>"
+    head = (("<th class='l'>problem</th>" if many else "") + "<th class='l'>method</th><th class='x'>items</th>"
             + "".join(f"<th{tip(k)}>{esc(META[k][0])}</th>" for k in KEY_COLS)
             + f"<th{tip('engine_ms')}>time</th>"
             + "".join(f"<th class='x'{tip(k)}>{esc(META[k][0])}</th>" for k in extra)
             + f"<th class='x'{tip('wall_ms')}>wall ms (median / p95)</th><th class='x'{tip('peak_mb')}>peak MB</th>"
-              "<th class='x' title='the same result in every run'>det.</th><th class='x l'>notes</th>")
+              "<th class='x' title='Deterministic: identical result in every run'>det.</th>"
+              "<th class='x l'>notes</th>")
     o = [f"<div class='scroll'><table class='metrics'><tr>{head}</tr>"]
     ncols = len(KEY_COLS) + 1 + len(extra) + 4
     for r in sorted(rows, key=lambda r: (configs.index(r["config"]) if r["config"] in configs else 0,
@@ -779,7 +793,7 @@ def scenario_html(report: dict, sc: str, rows: list[dict], cmps: dict, out: Path
                     f"aria-selected='{'true' if k == 0 else 'false'}'>{esc(cfg)}</button>")
     bar = f"<div class='tabs' role='tablist' aria-label='Problems of {esc(title)}'>{''.join(tabs)}</div>" \
         if len(configs) > 1 else ""
-    whole = ("<button type='button' class='lnk whole' aria-pressed='false'>show the whole images</button>"
+    whole = ("<button type='button' class='lnk whole' aria-pressed='false'>show full images</button>"
              if any(crops.values()) else "")
     return (f"<article class='scenario' id='sc-{esc(sc)}'><header><h3>{esc(title)}</h3><span class='src'>{esc(sc)}"
             f"</span>{whole}</header>{bar}{''.join(panes)}{metrics_table(rows, pick, configs)}</article>")
@@ -794,16 +808,16 @@ def chapter_html(cid: str, title: str, sub: str, lede: str, figs: list[str], blo
     if figs:
         o.append(f"<div class='figs' data-group='{esc(group or 'figs-' + cid)}'>" + "".join(figs) + "</div>")
     if blocks:
-        o.append("<h3 class='subhead'>Side by side <small>the same problems for every labeler, scored by one "
-                 "evaluator and drawn by one renderer; select an image to zoom and flip between the labelers</small>"
-                 "</h3>" + heat_key("all solvers on the same problem") + "".join(blocks))
+        o.append("<h3 class='subhead'>Results by method <small>select an image to enlarge it; the arrow keys switch "
+                 "between methods at the same view</small></h3>"
+                 + heat_key("all methods on the same problem") + "".join(blocks))
     o.append(extra)
     o.append("</section>")
     return "".join(o)
 
 
 # ---------------------------------------------------------------------------
-# interactive use
+# temporal stability
 # ---------------------------------------------------------------------------
 SEQ_HEAT = [(k, f, d, "d" in f) for k, _l, f, d in SEQ_METRICS] + [("frame_ms", "{:,.1f}", -1, True)]
 
@@ -820,14 +834,14 @@ def sequence_table(report: dict, pick: Pick) -> str:
         return ""
     attrs = _heat_by_group([s for s in seqs if "metrics" in s], "sequence",
                            lambda s: {**s["metrics"], "frame_ms": _frame_ms(s)}, SEQ_HEAT)
-    o = ["<div class='scroll'><table id='sequences'><tr><th class='l'>sequence</th><th class='l'>solver</th>"
+    o = ["<div class='scroll'><table id='sequences'><tr><th class='l'>sequence</th><th class='l'>method</th>"
          f"<th>frames</th><th{tip('displacement_mean_px')}>displacement px (mean / median)</th>"
          f"<th{tip('flip_rate')}>flip rate</th><th{tip('nesting_rate')}>nesting rate</th>"
          f"<th{tip('nesting_fraction_mean')}>nesting fraction</th><th>added</th><th>removed</th>"
          "<th>time (median frame)</th></tr>"]
     for s in seqs:
         opt = s.get("options") or {}
-        tp = (f"{opt['iter_lim']} iterations per frame (the comparison budget of the sequence), "
+        tp = (f"{opt['iter_lim']} iterations per frame (comparison budget of this sequence); "
               f"lines sampled every {opt['step']:g} px" if "iter_lim" in opt and "step" in opt else "")
         note = f" <span class='em' title='{esc(tp)}'>≈</span>" if tp else ""
         la = "la" if kind(s["solver"]) == "label-anything" else ""
@@ -886,37 +900,36 @@ def frames_by_labeler(report: dict, out: Path, pick: Pick) -> str:
                          "</figure>")
         o.append(f"<h3 class='subhead'>{esc(name_)} <small>first, middle and last frame</small></h3>"
                  f"<div class='cards' data-group='frames-{esc(name_)}'>{''.join(cards)}</div>")
-    return ("<details class='more'><summary><b>The frames of every labeler</b><span>first, middle and last frame "
-            "of each sequence</span></summary><div class='in'>" + "".join(o) + "</div></details>")
+    return ("<details class='more'><summary><b>Frames of all methods</b><span>first, middle and last frame per "
+            "sequence</span></summary><div class='in'>" + "".join(o) + "</div></details>")
 
 
 def stability_chapter(report: dict, gallery: dict | None, out: Path, pick: Pick) -> str:
     if not report.get("sequences"):
         return ""
     figs = [stability_fig(st, "gallery/") for st in (gallery or {}).get("stability", [])]
-    lede = ("Maps that zoom and pan, graphs whose layout moves: every frame is labeled again, and labels that jump "
-            "or change sides are hard to follow. Label Anything solves each frame with the previous result as a warm "
+    lede = ("In interactive maps and animated graphs, every frame is labeled anew; labels that move or change sides "
+            "between frames are hard to track. Label Anything solves each frame with the previous result as warm "
             "start.")
-    extra = (heat_key("all solvers on the same sequence") + sequence_table(report, pick)
+    extra = (heat_key("all methods on the same sequence") + sequence_table(report, pick)
              + frames_by_labeler(report, out, pick))
-    return chapter_html("stability", "Interactive use", "zooming, panning, moving layouts", esc(lede), figs, [],
+    return chapter_html("stability", "Temporal stability", "zooming, panning, moving layouts", esc(lede), figs, [],
                         extra)
 
 
 # ---------------------------------------------------------------------------
-# where it falls short
+# limitations
 # ---------------------------------------------------------------------------
 def better_table(report: dict, pick: Pick) -> str:
     rows = others_better(report, pick.ref) if pick.ref else []
     if not pick.ref:
         return ""
-    head = ("<h3 class='subhead'>Where another labeler does better <small>with as many usable labels and no more hard "
-            "violations, by more than one point</small></h3>")
+    head = ("<h3 class='subhead'>Problems on which a baseline performs better <small>at least as many usable labels, "
+            "no more hard violations, a margin above one percentage point</small></h3>")
     if not rows:
-        return head + ("<p class='guide'>On no problem does another labeler with as many usable labels and no more "
-                       "hard violations do better on these measures.</p>")
+        return head + "<p class='guide'>Under these conditions, no baseline performs better on any problem.</p>"
     o = [head, "<div class='scroll'><table><tr><th class='l'>problem</th><th class='l'>measure</th>"
-               f"<th>{esc(name(pick.ref))}</th><th class='l'>better</th></tr>"]
+               f"<th>{esc(name(pick.ref))}</th><th class='l'>baseline</th></tr>"]
     for r in rows:
         f = META[r["metric"]][1]
         measure = GLOSSARY.get(r["metric"], (META[r["metric"]][0],))[0]
@@ -938,12 +951,12 @@ def weak_chapter(report: dict, gallery: dict | None, pick: Pick) -> str:
         extra += "<div class='notes'>" + "".join(f"<div class='notecard'><h3>{esc(n['title'])}</h3><p>{n['html']}</p>"
                                                  "</div>" for n in notes) + "</div>"
     extra += better_table(report, pick)
-    lede = (sec or {}).get("lede") or "What the current defaults and models still do badly."
-    return chapter_html("weak", "Where it falls short", "", lede, figs, [], extra)
+    lede = (sec or {}).get("lede") or "Known weaknesses of the current defaults and models."
+    return chapter_html("weak", "Limitations", "", lede, figs, [], extra)
 
 
 # ---------------------------------------------------------------------------
-# engineering details
+# technical details
 # ---------------------------------------------------------------------------
 def _more(id_: str, title: str, status: str, body: str) -> str:
     return (f"<details class='more' id='{esc(id_)}'><summary><b>{esc(title)}</b><span>{status}</span></summary>"
@@ -953,17 +966,18 @@ def _more(id_: str, title: str, status: str, body: str) -> str:
 def perf_html(perf: dict | None) -> str:
     if not perf or not perf.get("rows"):
         return _more("perf", "Performance targets", "not measured in this run",
-                     "<p class='note'>Use <code>--perf</code>; only solvers named rust, wasm or ts are measured.</p>")
+                     "<p class='note'>Requires <code>--perf</code>; measured for the solvers rust, wasm and ts "
+                     "only.</p>")
     m = perf.get("machine", {})
     threads = perf.get("threads")
-    thr = ("one thread, as the targets of brief §5.8" if threads == 1 else
+    thr = ("one thread (as for the targets, brief §5.8)" if threads == 1 else
            "all cores" if threads == 0 else f"{threads} threads" if threads else "the engine's default threads")
-    o = [f"<p class='note'>Median of {perf['runs']} runs of the engine's own timing "
-         f"(<code>stats.runtime_ms</code>; raster target: <code>stats.phases_ms.prepare</code>), not process "
-         f"wall time; the native engine on {thr}. Machine: {esc(m.get('cpu', '?'))}, "
+    o = [f"<p class='note'>Median of {perf['runs']} runs of the engine-reported time "
+         f"(<code>stats.runtime_ms</code>; raster target: <code>stats.phases_ms.prepare</code>), excluding process "
+         f"overhead; native engine on {thr}. Machine: {esc(m.get('cpu', '?'))}, "
          f"{esc(m.get('cores', '?'))} cores, {esc(m.get('platform', ''))}. Problems: "
          "<code>python -m bench.perf generate</code> (deterministic).</p>",
-         "<div class='scroll'><table><tr><th class='l'>problem</th><th class='l'>solver</th>"
+         "<div class='scroll'><table><tr><th class='l'>problem</th><th class='l'>implementation</th>"
          "<th class='l'>metric</th><th>median ms</th><th>target ms</th><th>ratio</th><th>runs (ms)</th>"
          "<th class='l'>result</th></tr>"]
     for r in perf["rows"]:
@@ -987,7 +1001,7 @@ def perf_html(perf: dict | None) -> str:
 def gates_html(gate: dict | None) -> str:
     if not gate:
         return _more("gates", "Release gates", "not evaluated in this run",
-                     "<p class='note'>Run with <code>--gate</code>, or <code>python -m bench.gates results.json "
+                     "<p class='note'>Requires <code>--gate</code>, or <code>python -m bench.gates results.json "
                      "--previous previous/results.json</code>.</p>")
     o = ["<div class='scroll'><table><tr><th class='l'>gate</th><th class='l'>result</th>"
          "<th class='l'>details</th></tr>"]
@@ -998,19 +1012,19 @@ def gates_html(gate: dict | None) -> str:
             det += f"<br>… {len(c['details']) - 40} more"
         o.append(f"<tr><td class='l'>{esc(c['name'])}</td>{res}<td class='l wrap small'>{det}</td></tr>")
     o.append("</table></div>")
-    status = ("<b class='good'>✓ all gates pass</b>" if gate["passed"] else "<b class='bad'>✗ gates failed</b>")
+    status = ("<b class='good'>✓ all gates passed</b>" if gate["passed"] else "<b class='bad'>✗ gates failed</b>")
     return _more("gates", "Release gates", status, "".join(o))
 
 
 def runtime_html(report: dict, plots: dict) -> str:
     if not plots:
-        return _more("runtime", "Runtime against problem size", "no runtimes to plot", "")
-    o = ["<p class='note'>One dot per problem (median over the runs), log–log axes shared by all panels; the line "
-         "follows scenario 10 (stress sizes) when more than one size ran. Label Anything implementations keep their "
-         "colour in every panel; each other panel shows one baseline (grey) against the reference implementation. "
-         "Hover a dot for its problem.</p>"]
-    for which, title in (("engine", "Engine-reported runtime (stats.runtime_ms: the solve or the tool call itself)"),
-                         ("wall", "Wall-clock time per run (process start-up and I/O included)")):
+        return _more("runtime", "Runtime versus problem size", "no runtimes to plot", "")
+    o = ["<p class='note'>One dot per problem (median over runs); log–log axes shared by all panels. Lines connect "
+         "the sizes of scenario 10 (stress) when several sizes ran. Label Anything implementations keep their colour "
+         "in all panels; each other panel shows one baseline (grey) with the reference implementation. Tooltips "
+         "identify the problem.</p>"]
+    for which, title in (("engine", "Engine-reported runtime (stats.runtime_ms: the solve or the tool call)"),
+                         ("wall", "Wall-clock time per run (including process start-up and I/O)")):
         if which not in plots:
             continue
         o.append(f"<h3 class='subhead'>{esc(title)}</h3><div class='chart'>{runtime_svg(report, which)}</div>"
@@ -1018,7 +1032,7 @@ def runtime_html(report: dict, plots: dict) -> str:
     pts_e = runtime_points(report, "engine")
     pts_w = runtime_points(report, "wall")
     o.append("<details><summary class='small'>Table view</summary><div class='scroll'><table><tr><th class='l'>"
-             "solver</th><th class='l'>problem</th><th>items</th><th>engine ms</th><th>wall ms</th></tr>")
+             "method</th><th class='l'>problem</th><th>items</th><th>engine ms</th><th>wall ms</th></tr>")
     for s in report["solvers"]:
         wall = {(p["scenario"], p["config"]): p["ms"] for p in pts_w.get(s, [])}
         eng = {(p["scenario"], p["config"]): p["ms"] for p in pts_e.get(s, [])}
@@ -1029,20 +1043,21 @@ def runtime_html(report: dict, plots: dict) -> str:
                      f"<td>{r.get('n_items') or '–'}</td><td>{fmt(eng.get(key), '{:,.1f}')}</td>"
                      f"<td>{fmt(wall.get(key), '{:,.1f}')}</td></tr>")
     o.append("</table></div></details>")
-    return _more("runtime", "Runtime against problem size", "every solver, engine and wall time", "".join(o))
+    return _more("runtime", "Runtime versus problem size", "all methods; engine-reported and wall-clock time",
+                 "".join(o))
 
 
 def parity_html(par: dict | None) -> str:
     if not par or not par.get("pairs"):
-        return _more("parity", "Implementation parity", "needs Rust and TypeScript or WebAssembly in one run",
-                     "<p class='note'>Run the Rust implementation and at least one other (solver names rust and ts "
-                     "or wasm) together.</p>")
+        return _more("parity", "Implementation parity", "requires Rust and TypeScript or WebAssembly in one run",
+                     "<p class='note'>Requires the Rust implementation and at least one other (solvers rust and ts "
+                     "or wasm) in the same run.</p>")
     o = []
     for pair in par["pairs"]:
         o.append(f"<h3 class='subhead'>{esc(pair['solver'])} − {esc(par['reference'])}</h3><p class='note'>"
                  f"{pair['identical']} of {pair['compared']} problems with identical placements (ids, boxes, "
-                 f"leaders). Cells show {esc(pair['solver'])} minus {esc(par['reference'])}; non-zero deltas are "
-                 "highlighted.</p>")
+                 f"leaders). Cells show {esc(pair['solver'])} minus {esc(par['reference'])}; non-zero differences "
+                 "are highlighted.</p>")
         keys = [k for k, _l, _f, _d in METRICS if k in pair["max_abs_delta"]]
         o.append("<div class='scroll'><table><tr><th class='l'>problem</th><th>identical</th>"
                  + "".join(f"<th>Δ {esc(META[k][0])}</th>" for k in keys) + "</tr>")
@@ -1066,19 +1081,20 @@ def parity_html(par: dict | None) -> str:
 
 def diff_html(diff: dict | None) -> str:
     if not diff:
-        return _more("diff", "Changes against the previous release", "no previous results given",
-                     "<p class='note'>Give them with <code>--previous path/to/results.json</code>.</p>")
+        return _more("diff", "Changes since the previous release", "no previous results",
+                     "<p class='note'>Requires <code>--previous path/to/results.json</code>.</p>")
     pv = diff["previous"]
-    o = [f"<p class='note'>Previous: {esc(pv.get('generated_at'))}, suite {esc(pv.get('suite'))}, solvers "
-         f"{esc(', '.join(pv.get('solvers') or []))}. Threshold {diff['threshold']:.0%} relative (any change from 0 "
-         f"counts). <span class='bad'>{diff['regressions']} regressions</span>, <span class='good'>"
-         f"{diff['improvements']} improvements</span>; runtimes are not compared here (the performance targets cover "
-         "them).</p>"]
+    o = [f"<p class='note'>Previous run: {esc(pv.get('generated_at'))}; suite {esc(pv.get('suite'))}; methods "
+         f"{esc(', '.join(pv.get('solvers') or []))}. Threshold: {diff['threshold']:.0%} relative change (any change "
+         f"from 0 counts). <span class='bad'>{diff['regressions']} regressions</span>, <span class='good'>"
+         f"{diff['improvements']} improvements</span>. Runtimes are excluded (covered by the performance "
+         "targets).</p>"]
     rows = sorted(diff["rows"], key=lambda r: ({"regression": 0, "improvement": 1}.get(r["status"], 2), r["solver"],
                                               r["scenario"], r["config"], r["metric"]))
     if rows:
-        o.append("<div class='scroll'><table><tr><th class='l'>solver</th><th class='l'>problem</th>"
-                 "<th class='l'>metric</th><th>previous</th><th>now</th><th>change</th><th class='l'>status</th></tr>")
+        o.append("<div class='scroll'><table><tr><th class='l'>method</th><th class='l'>problem</th>"
+                 "<th class='l'>metric</th><th>previous</th><th>current</th><th>change</th><th class='l'>status</th>"
+                 "</tr>")
         for r in rows:
             label, f, _d = META[r["metric"]]
             rel = "new ≠ 0" if r["relative"] is None else f"{r['relative']:+.1%}".replace("+", "")
@@ -1092,34 +1108,35 @@ def diff_html(diff: dict | None) -> str:
     else:
         o.append("<p>No metric changed.</p>")
     if diff.get("missing"):
-        o.append("<p class='note small'>In the previous run only: " + esc(", ".join(diff["missing"][:50])) + "</p>")
+        o.append("<p class='note small'>Previous run only: " + esc(", ".join(diff["missing"][:50])) + "</p>")
     status = (f"<span class='bad'>{diff['regressions']} regressions</span>, <span class='good'>"
               f"{diff['improvements']} improvements</span>")
-    return _more("diff", "Changes against the previous release", status, "".join(o))
+    return _more("diff", "Changes since the previous release", status, "".join(o))
 
 
 BASELINE_METHODS = {
-    "naive": "every label top-right of its true shape, no collision handling (bench/solvers/naive.py).",
-    "greedy": "reference priority order × the 8 fixed adjacent positions, first free one wins "
+    "naive": "Every label at the top right of its shape; no collision handling (bench/solvers/naive.py).",
+    "greedy": "Items in priority order; each label at the first free one of 8 adjacent positions "
               "(bench/solvers/greedy.py).",
-    "textalloc": "textalloc.allocate in matplotlib display space: anchors in priority order, marks and points as "
-                 "x_scatter/y_scatter with sizes, polylines and outlines as x_lines/y_lines, connector lines on, "
+    "textalloc": "textalloc.allocate in matplotlib display space: anchors in priority order; marks and points as "
+                 "x_scatter/y_scatter with sizes; polylines and outlines as x_lines/y_lines; connector lines on; "
                  "draw_all=False.",
-    "adjusttext": "adjust_text with every label at its anchor, mark/obstacle boxes as objects, lines as sampled "
-                  "points, arrows on, a fixed iteration budget; never omits labels.",
-    "vega-label": "Vega's label transform, headless: base mark = the labeled marks, avoidMarks = obstacle layers "
-                  "(raster masks as pixel-run paths), anchors in the problem's position order, sort = priority; no "
+    "adjusttext": "adjust_text with every label starting at its anchor; mark and obstacle boxes as objects; lines as "
+                  "sampled points; arrows on; fixed iteration budget; never omits labels.",
+    "vega-label": "Vega label transform, headless: base mark = the labeled marks; avoidMarks = obstacle layers "
+                  "(raster masks as pixel-run paths); anchors in the problem's position order; sort = priority; no "
                   "leaders.",
     "ggrepel": "geom_text_repel on a png(type='cairo') device of canvas size at 288 dpi; positions read from the "
-               "text grobs after grid.force(); obstacles as empty-label points; default max.overlaps.",
-    "d3fc": "d3fc-label-layout layoutRemoveOverlaps(layoutGreedy()) in Node: labels in priority order, grown by mark "
-            "radius + offset, 8 positions at the anchor, bounds = label area; labels only (no obstacles), no leaders.",
-    "echarts": "ECharts scatter series rendered server-side, every label at one position at the offset, "
-               "labelLayout.hideOverlap (larger symbols first, then priority order); labels only, no leaders.",
-    "d3-labeler": "D3-Labeler's simulated annealing (labeler.js, vendored), 1,000 sweeps, seeded: labels start at "
-                  "their anchors; labels and labeled anchors only; never omits labels; leaders to the anchor.",
-    "mumtaz2019": "Mumtaz et al. (EuroVis 2019), reimplemented: labels in priority order, each at the cheapest "
-                  "of 20 × 100 positions on rings around its point (radius + 30 % per ring); cost = covered "
+               "text grobs after grid.force(); obstacles as points with empty labels; default max.overlaps.",
+    "d3fc": "d3fc-label-layout layoutRemoveOverlaps(layoutGreedy()) in Node: labels in priority order, enlarged by "
+            "mark radius plus offset; 8 positions at the anchor; bounds = label area; avoids labels only (no "
+            "obstacles); no leaders.",
+    "echarts": "ECharts scatter series rendered server-side; every label at one position at the offset; "
+               "labelLayout.hideOverlap (larger symbols first, then priority order); avoids labels only; no leaders.",
+    "d3-labeler": "D3-Labeler simulated annealing (labeler.js, vendored), 1,000 sweeps, seeded; labels start at "
+                  "their anchors; avoids labels and labeled anchors only; never omits labels; leaders to the anchor.",
+    "mumtaz2019": "Mumtaz et al. (EuroVis 2019), reimplemented: labels in priority order, each at the lowest-cost "
+                  "of 20 × 100 positions on rings around its point (radius + 30 % per ring); cost terms: covered "
                   "outliers, points and labels, label and leader buffers, leader length, outward position; "
                   "never omits labels; leaders to the box centre.",
 }
@@ -1129,11 +1146,11 @@ def baselines_html(report: dict) -> str:
     present = [s for s in report["solvers"] if s in BASELINE_METHODS]
     if not present:
         return ""
-    o = ["<p class='note'>Every tool is handed the problem's own label boxes (spec §5 measurement, padding "
-         "included), canvas pixel coordinates and the items in the problem's priority order (input order; vega-label: "
-         "<code>sort</code>); results are scored by the same evaluator and drawn by the same renderer. Details, "
-         "parameters and every emulation: <code>bench/baselines/README.md</code>.</p><div class='scroll'><table><tr>"
-         "<th class='l'>solver</th><th class='l'>version</th><th class='l'>method</th></tr>"]
+    o = ["<p class='note'>Each baseline receives the problem's label boxes (measured per spec §5, padding "
+         "included), canvas pixel coordinates and the items in priority order (as input order; vega-label: "
+         "<code>sort</code>). All results are scored by the same evaluator and drawn by the same renderer. "
+         "Parameters and emulations: <code>bench/baselines/README.md</code>.</p><div class='scroll'><table><tr>"
+         "<th class='l'>baseline</th><th class='l'>version</th><th class='l'>configuration</th></tr>"]
     vers = report.get("baseline_versions", {})
     for s in present:
         o.append(f"<tr><td class='l'>{esc(s)}</td><td class='l small'>{esc(vers.get(s, ''))}</td>"
@@ -1143,14 +1160,13 @@ def baselines_html(report: dict) -> str:
     if skipped:
         o.append("<p class='note'>Not run (toolchain missing): " + "; ".join(
             f"<b>{esc(k)}</b>: {esc(v)}" for k, v in skipped.items()) + "</p>")
-    return _more("baselines", "The other labelers' methods", f"{len(present)} tools and their versions", "".join(o))
+    return _more("baselines", "Baseline configurations", f"{len(present)} baselines with versions", "".join(o))
 
 
 def details_chapter(report: dict, plots: dict) -> str:
-    lede = ("For the engine's developers: the performance targets and release gates, the runtime of every problem, "
-            "whether the implementations agree, what changed against the previous release, and how each other "
-            "labeler was run.")
-    return (f"<section class='chapter wrap' id='details'><h2>Engineering details</h2><p class='lede'>{esc(lede)}</p>"
+    lede = ("Performance targets, release gates, runtime versus problem size, agreement between implementations, "
+            "changes since the previous release, and baseline configurations.")
+    return (f"<section class='chapter wrap' id='details'><h2>Technical details</h2><p class='lede'>{esc(lede)}</p>"
             + perf_html(report.get("perf")) + gates_html(report.get("gate")) + runtime_html(report, plots)
             + parity_html(report.get("parity")) + diff_html(report.get("diff")) + baselines_html(report)
             + "</section>")
@@ -1163,9 +1179,9 @@ VIEWER_HTML = f"""<dialog class="viewer" id="viewer" aria-label="Image viewer">
   <div class="stage" id="v-stage"><img id="v-img" alt="" draggable="false"></div>
   <div class="vbar top">
     <div class="vtitle"><p class="vcap" id="v-cap"></p>
-      <p class="vhint"><span class="touch">Pinch or double-tap to zoom, swipe for the next labeler or image</span><span
-        class="fine">Scroll or double-click to zoom, drag to pan, arrow keys for the next labeler or image: the view
-        stays where it is</span></p></div>
+      <p class="vhint"><span class="touch">Pinch or double-tap to zoom; swipe to switch images</span><span
+        class="fine">Scroll or double-click to zoom; drag to pan; arrow keys switch images and keep the
+        view</span></p></div>
     <button type="button" class="vbtn" id="v-close" aria-label="Close">{_icon("M5 5L15 15M15 5L5 15")}</button>
   </div>
   <div class="vbar bottom">
@@ -1197,7 +1213,7 @@ def page(out: Path, report: dict, plots: dict, gallery: dict | None = None) -> s
     cmps = {(c["scenario"], c["config"]): c for c in (gallery or {}).get("comparisons", [])}
     gsecs = {s["id"]: s for s in (gallery or {}).get("sections", [])}
     gfigs = (gallery or {}).get("figures", {})
-    toc = [("summary", "At a glance", 0)]
+    toc = [("summary", "Summary", 0)]
     body = [overview_html(report, stats, pick)]
     chapters = list(CHAPTERS)
     known = {sc for *_x, scs in chapters for sc in scs}
@@ -1207,7 +1223,7 @@ def page(out: Path, report: dict, plots: dict, gallery: dict | None = None) -> s
                  if g["id"] not in ids]
     rest = tuple(sorted(sc for sc in by_sc if sc not in known))
     if rest:
-        chapters.append(("more", "More problems", "", "", rest))
+        chapters.append(("more", "Other problems", "", "", rest))
     for cid, title, sub, lede, scs in chapters:
         g = gsecs.get(cid)
         figs = [fig_html(f, gfigs[f["key"]], "gallery/") for f in (g or {}).get("figures", []) if f["key"] in gfigs]
@@ -1227,27 +1243,28 @@ def page(out: Path, report: dict, plots: dict, gallery: dict | None = None) -> s
                                  (g or {}).get("lede") or esc(lede), figs, blocks, extra))
     st = stability_chapter(report, gallery, out, pick)
     if st:
-        toc.append(("stability", "Interactive use", 0))
+        toc.append(("stability", "Temporal stability", 0))
         body.append(st)
-    toc.append(("weak", "Where it falls short", 0))
+    toc.append(("weak", "Limitations", 0))
     body.append(weak_chapter(report, gallery, pick))
-    toc.append(("details", "Engineering details", 0))
+    toc.append(("details", "Technical details", 0))
     body.append(details_chapter(report, plots))
     css = (ASSETS / "report.css").read_text(encoding="utf-8")
     js = (ASSETS / "report.js").read_text(encoding="utf-8")
-    shown = f" Figures of the gallery: engine at commit <code>{esc(gallery['meta']['commit'])}</code>, " \
+    shown = f" Figures: engine commit <code>{esc(gallery['meta']['commit'])}</code>, " \
             f"{esc(gallery['meta']['date'])}." if gallery else ""
-    footer = (f"<footer class='wrap'><p>Times are each labeler's own (median over the runs) unless marked wall; the "
-              f"figures' times are the engine's after three warm-up solves.{shown} Hard violations are counted by the "
-              "benchmark's evaluator, independent of the labelers.</p><p>Reproduce: <code>python bench/run.py "
-              "--suite quick --engine rust/target/release/label-anything --baselines</code>, then <code>python -m "
-              "bench.gallery --engine rust/target/release/label-anything --run bench-report</code> "
-              f"(<a href='{REPO_URL}/blob/main/bench/README.md'>bench/README.md</a>). Source: <a href='{REPO_URL}'>"
-              f"{esc(REPO_URL.removeprefix('https://'))}</a>.</p></footer>")
+    footer = (f"<footer class='wrap'><p>Times are method-reported medians over runs unless marked as wall-clock "
+              f"time; figure times are engine-reported after three warm-up runs.{shown} Hard violations are counted "
+              "by the benchmark's evaluator, independently of the methods.</p><p>Reproduction: <code>python "
+              "bench/run.py --suite quick --engine rust/target/release/label-anything --baselines</code>, then "
+              "<code>python -m bench.gallery --engine rust/target/release/label-anything --run bench-report</code> "
+              f"(<a href='{REPO_URL}/blob/main/bench/README.md'>bench/README.md</a>). Source code: "
+              f"<a href='{REPO_URL}'>{esc(REPO_URL.removeprefix('https://'))}</a>.</p></footer>")
     return ("<!doctype html>\n<html lang='en'>\n<head>\n<meta charset='utf-8'>\n"
             "<meta name='viewport' content='width=device-width, initial-scale=1'>\n"
-            "<title>Label Anything benchmark</title>\n<meta name='description' content='Label Anything and other "
-            "labelers on real data: maps, charts, photos, embeddings and networks, side by side and measured.'>\n"
+            "<title>Label Anything benchmark report</title>\n<meta name='description' content='Comparison of Label "
+            "Anything with baseline label placement methods on maps, charts, photographs, embeddings and "
+            "networks.'>\n"
             f"<style>{css}</style>\n</head>\n<body>\n" + header_html(report, gallery, stats, pick)
             + bar_html(toc, pick) + "<main>" + "\n".join(body) + "</main>" + footer + VIEWER_HTML
             + f"\n<script>\n{js}</script>\n</body>\n</html>\n")
@@ -1259,8 +1276,8 @@ def scale_extra(report: dict, pick: Pick) -> str:
     if not panels:
         return ""
     figs = "".join(f"<div class='chart'{pick.attrs(s) if s else ''}>{svg}</div>" for s, svg in panels)
-    return ("<h3 class='subhead'>Time against the number of labels <small>every problem of the run, each labeler's "
-            "own timing, log–log; the line follows the sizes of this scenario</small></h3>"
+    return ("<h3 class='subhead'>Runtime versus number of items <small>all problems of the run; method-reported "
+            "time; log–log axes; lines connect the sizes of this scenario</small></h3>"
             f"<div class='panels'>{figs}</div>")
 
 

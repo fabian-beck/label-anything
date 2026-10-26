@@ -136,7 +136,7 @@ def test_sequence_table_notes_a_planned_baseline():
     cur = rep(sequences=seqs, solvers=["adjusttext", "textalloc", "ggrepel"])
     html = report_html.sequence_table(cur, report_html.Pick(cur["solvers"]))
     assert html.count("class='em'") == 1
-    assert "18 iterations per frame (the comparison budget of the sequence), lines sampled every 32 px" in html
+    assert "18 iterations per frame (comparison budget of this sequence); lines sampled every 32 px" in html
     assert "n/a: frame 0: too large" in html
 
 
@@ -160,13 +160,13 @@ def test_heat_colours_each_value_against_the_column_median():
 
 def test_tables_are_coloured_per_column_with_tooltips(tmp_path):
     (a, b, c) = report.heat_attrs([{"x": 0.9}, {"x": 0.5}, {"x": None}], [("x", "{:.1%}", +1, False)])
-    assert a["x"] == " class='hb2 best' title='much better than the median (70.0%), the best'"
+    assert a["x"] == " class='hb2 best' title='much better than the median (70.0%); best value'"
     assert b["x"] == " class='hw2' title='much worse than the median (70.0%)'" and c["x"] == ""
     cur = rep(entry("rust", placed_rate=0.95), entry("greedy", placed_rate=0.6), solvers=["rust", "greedy"])
     pick = report_html.Pick(cur["solvers"])
     stats = {s: report_html.aggregates(cur, s) for s in cur["solvers"]}
     html = report_html.summary_table(cur, stats, pick)
-    assert "<td class='hb2 best' title='much better than the median (77.5%), the best'>95.0%</td>" in html
+    assert "<td class='hb2 best' title='much better than the median (77.5%); best value'>95.0%</td>" in html
     assert "<td class='h0' title='near the median (0)'>0</td>" in html          # equal hard violations
     # the problem tables compare the solvers on each problem (config) on its own
     cur = rep(entry("rust", placed_rate=0.9), entry("greedy", placed_rate=0.5),
@@ -175,9 +175,9 @@ def test_tables_are_coloured_per_column_with_tooltips(tmp_path):
     pick = report_html.Pick(cur["solvers"])
     block = report_html.scenario_html(cur, "01-x", cur["results"], {}, tmp_path, pick)
     rows = block.split("<table class='metrics'>")[1].split("<tr")[2:]
-    assert [r.count("class='hb2 best' title='much better than the median (70.0%), the best'>90.0%") for r in
+    assert [r.count("class='hb2 best' title='much better than the median (70.0%); best value'>90.0%") for r in
             rows] == [1, 0, 0, 0]
-    assert "class='hb2 best' title='much better than the median (40.0%), the best'>60.0%" in rows[3]
+    assert "class='hb2 best' title='much better than the median (40.0%); best value'>60.0%" in rows[3]
     assert "<td class='bad'>2</td>" in rows[2]                    # a hard violation by Label Anything
     # one config at a time: a tab per config
     assert block.count("class='tab'") == 2 and "aria-controls='cfg-01-x-c2'" in block
@@ -196,12 +196,15 @@ def test_report_page_shows_three_labelers_by_default_and_folds_the_details(tmp_p
     assert ' data-solver="naive" hidden' in html and ' data-solver="greedy" hidden' in html
     assert ' data-solver="ggrepel" hidden' not in html and ' data-solver="rust" hidden' not in html
     # Label Anything's numbers next to the range of the others; where each labeler stands
-    assert "class='kpis'" in html and "the others 80.0%" in html and "<table class='stand'>" in html
-    # a scenario no chapter names comes under "More problems", with its title and description
+    assert "class='kpis'" in html and "baselines 80.0%" in html and "<table class='stand'>" in html
+    # a scenario no chapter names comes under "Other problems", with its title and description
     for anchor in ("id='summary'", "id='more'", "id='sc-01-x'", "id='weak'", "id='details'", "id='perf'",
                    "id='gates'", "id='runtime'", "id='parity'", "id='diff'"):
         assert anchor in html
     assert "Tiny scatter" in html and "Ten points. · 10 items" in html
+    # concise wording, singular where it is one
+    assert "Label Anything and 5 baseline methods are evaluated on 1 problem built from open data" in html
+    assert all(f">{t}</a>" in html for t in ("Summary", "Other problems", "Limitations", "Technical details"))
     # self-contained: styles and script inline, fonts next to the page
     assert "<script src" not in html and "<link rel=" not in html and "fonts/NotoSans-Bold.ttf" in html
     # without the tools, the first three others are shown

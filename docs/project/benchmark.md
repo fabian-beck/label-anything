@@ -115,7 +115,7 @@ parentheses where that is more ("n/a": the tool cannot run the problem; commit 2
 
 The [benchmark report](https://fabian-beck.github.io/label-anything/benchmark-report/) shows
 where each labeler stands, every problem with the labelers side by side (three by default,
-the others on demand) and what the defaults still do badly
+the others on demand) and the known limitations
 ([ADR project/benchmark-report](../adr/project/benchmark-report.md)). Its images mark what
 the measures count, where it happens:
 conflicts in red, ambiguous labels in orange (a line to the point a label may be taken

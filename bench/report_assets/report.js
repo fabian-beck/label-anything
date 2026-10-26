@@ -92,7 +92,7 @@
     const on = !art.classList.contains("whole");
     art.classList.toggle("whole", on);
     b.setAttribute("aria-pressed", on ? "true" : "false");
-    b.textContent = on ? "show the densest parts" : "show the whole images";
+    b.textContent = on ? "show densest regions" : "show full images";
   }));
 
   // --- contents: close the menu after a jump

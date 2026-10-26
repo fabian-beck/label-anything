@@ -67,14 +67,14 @@ MARK_W = 1.5
 RING_W = 1.0
 """Stroke width of the rings around covered points (often many: thinner)."""
 VIOLATIONS = [
-    ("conflict", CONFLICT, "conflict: two labels overlap (filled), a label lies over a mark, an obstacle or the "
-                           "canvas edge (outlined), a leader runs through a label or a mark, leaders cross (ring)"),
-    ("ambiguous", AMBIGUOUS, "ambiguous label: outlined, with a line to the point it may be taken for; solid where "
-                             "that point is nearer than its own (misattributed), dashed where it is about as near, "
-                             "less than 0.2 em farther (unclear), or comes that near a label with a leader"),
+    ("conflict", CONFLICT, "conflict: overlapping labels (filled); label over a mark, an obstacle or the canvas "
+                           "edge (outlined); leader through a label or a mark; crossing leaders (ring)"),
+    ("ambiguous", AMBIGUOUS, "ambiguous label (outlined), with a line to the competing data point: solid if that "
+                             "point is nearer than the label's own (misattributed); dashed if it is less than 0.2 em "
+                             "farther (unclear), also for labels with leaders"),
     ("covered", COVERED, "data point covered by the label of another item"),
-    ("close", CLOSE, "labels less than 0.4 em apart (a line across the gap, a dot where they touch); a leader "
-                     "nearer than the clearance to another leader or a mark (dashed)"),
+    ("close", CLOSE, "labels less than 0.4 em apart (line across the gap; dot where they touch); leader within the "
+                     "clearance of another leader or a mark (dashed)"),
 ]
 """The violation marks: key, color and meaning (for the legends of the report and the gallery)."""
 

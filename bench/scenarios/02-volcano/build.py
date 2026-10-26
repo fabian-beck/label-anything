@@ -169,7 +169,7 @@ def main() -> None:
                 {"svg": svg_source(sc)})
     merge_avoid(p, {"grid": 0.2}, {"grid": 0.1}, ignore_background=True)
     wr.config("top50-svg", p, truth=sc.truth(), svg=sc.svg(), png=png_bytes(sc.png()),
-              description="Top 50 genes on an SVG volcano plot (colored significant genes, dashed thresholds).")
+              description="Top 50 genes on an SVG volcano plot (significant genes coloured, thresholds dashed).")
     # data units with transform + y_axis up
     sx = (PLOT[2] - PLOT[0]) / (ax.xdom[1] - ax.xdom[0])
     sy = (PLOT[3] - PLOT[1]) / (ax.ydom[1] - ax.ydom[0])
@@ -181,7 +181,7 @@ def main() -> None:
                 {"vector": [{"class": "points", "points": pts, "r": 1.8}]},
                 transform=[round(sx, 6), 0, 0, round(sy, 6), round(ex, 6), round(ey, 6)], y_axis="up")
     wr.config("top30-transform", p, png=png_bytes(scene_for(dense, ax, sel, False, None).png()),
-              description="Top 30 genes, anchors and points in data units mapped by transform + y_axis up.")
+              description="Top 30 genes; anchors and points in data units, mapped by a transform with the y axis up.")
     p, sc = vector_config(small, 20)
     wr.config("nfcore-top20-vector", p, svg=sc.svg(), png=png_bytes(sc.png()),
               description="Top 20 of 977 genes of an nf-core DESeq2 result table, vector layers.")

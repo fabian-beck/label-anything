@@ -388,7 +388,7 @@ def runtime_panels(report: dict, which: str = "engine", name=str) -> list[tuple[
     out = []
     for solver, title, sub, series in panels:
         if solver is not None:
-            title, sub = name(solver), f"and {name(la[0])}" if la else ""
+            title, sub = name(solver), f"compared with {name(la[0])}" if la else ""
         o = [f'<svg xmlns="http://www.w3.org/2000/svg" class="rt" viewBox="0 0 {PANEL_W} {PANEL_H}" '
              f'width="{PANEL_W}" height="{PANEL_H}" role="img" aria-label="{esc(title)}: runtime against problem '
              f'size">', SVG_STYLE, f'<rect class="bg" width="{PANEL_W}" height="{PANEL_H}"/>']
@@ -502,7 +502,7 @@ def heat_attrs(rows: list[dict], cols: list[tuple[str, str, int, bool]]) -> list
                 a[k] = ""
                 continue
             c, best = h
-            tip = f"{HEAT_TEXT[c]}{' than the median' if c else ''} ({m}){', the best' if best else ''}"
+            tip = f"{HEAT_TEXT[c]}{' than the median' if c else ''} ({m}){'; best value' if best else ''}"
             a[k] = f" class='{HEAT_CLASS[c]}{' best' if best else ''}' title='{esc(tip)}'"
     return out
 

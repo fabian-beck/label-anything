@@ -43,7 +43,7 @@ def pool():
 
 def main() -> None:
     entries = pool()
-    wr = Writer(SCENARIO, "Stress and scale (synthetic from real)", A.SOURCES,
+    wr = Writer(SCENARIO, "Stress test (synthetic, derived from real airports)", A.SOURCES,
                 notes=f"SYNTHETIC: {len(entries)} = 10 x served airports (originals + 9 jittered copies, "
                       f"sigma {SIGMA} deg, seed 10); nested prefixes of a fixed permutation.")
     for n in SIZES:
@@ -59,7 +59,7 @@ def main() -> None:
         p["items"] = items
         p["priority"] = {"terms": [{"attr": "routes", "transform": "log1p", "normalize": "minmax"}]}
         wr.config(f"n{n:05d}", p, quick=(n == 200), synthetic=True,
-                  description=f"{n} airport anchors (10x density pool), no background.")
+                  description=f"{n} airports drawn from a pool at ten times the real density; no background.")
     wr.finish()
 
 

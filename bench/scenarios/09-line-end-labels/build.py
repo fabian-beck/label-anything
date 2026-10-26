@@ -95,7 +95,8 @@ def main() -> None:
     p["priority"] = {"terms": [{"attr": "last"}]}
     merge_avoid(p, {"lines": 2.0, "grid": 0.2}, {"lines": 0.5, "grid": 0.1})
     wr.config("unemployment-14-vector", p, quick=True, svg=sc.svg(), png=png_bytes(sc.png()),
-              description="14 industries, labels at the series ends (right-side positions only, distant allowed).")
+              description="14 industries; labels at the series ends (positions to the right only; distant labels "
+                          "allowed).")
     # 2. stocks on an SVG chart
     rows = list(csv.DictReader(io.StringIO(member("stocks.csv").decode("utf-8"))))
     series = {}
