@@ -73,12 +73,12 @@ def test_gallery_from_a_run(tmp_path, monkeypatch):
                                                 for s in ("rust", "greedy", "naive")]
     assert all((out / c["img"]).exists() and c["full"] == c["img"] for c in cmp["cells"])
     # the gallery's address leads to the report, which shows the figures, the drawings and the limits
-    assert 'url=../#maps' in (out / "index.html").read_text(encoding="utf-8")
+    assert 'url=../#cases' in (out / "index.html").read_text(encoding="utf-8")
     page = (rep / "index.html").read_text(encoding="utf-8")
     assert "Bubbles &amp; labels: 3 of 3" in page and "<code>markup</code>" in page and "0 leaders" in page
     assert "id='03-gapminder--y2005-vector'" in page and "Problem settings" in page
     assert page.count('src="gallery/img/cmp/') == 3 and "gallery/img/03-gapminder__y2005-vector.svg" in page
-    assert page.index("id='tests'") < page.index("id='weak'") and "class='fig limit'" in page
+    assert page.index("id='case-tests'") < page.index("id='weak'") and "class='fig limit'" in page
     assert (f'data-w="{fig["full_size"][0]}" data-h="{fig["full_size"][1]}" data-bw="200" data-vector="1"'
             in page)
     assert '<dialog class="viewer" id="viewer"' in page and "dlg.showModal()" in page

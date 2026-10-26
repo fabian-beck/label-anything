@@ -85,8 +85,8 @@ SECTIONS = (
             "<code>priority.font_classes</code>). Further airports are labeled where space remains; hub labels may "
             "cover their marks (<code>avoid.label.lower_items</code>), in which case they remain unlabeled. All "
             "other airports are unlabeled points that labels may cover at a small cost "
-            "(<code>avoid.label.points: 0.3</code>). Methods differ most in dense regions such as London, the "
-            "Rhine area, northern Italy, the US East Coast and eastern China.", (
+            "(<code>avoid.label.points: 0.3</code>). The dense regions are the most demanding: London, the Rhine "
+            "area, northern Italy, the US East Coast and eastern China.", (
                 Fig("05-airports/europe-hubs-svg", "Europe's busiest airports",
                     "Europe at 30 px per degree. Labeled: {tier_placed} of the {tier_total} busiest airports, in "
                     "larger type, and {rest_placed} of the next {rest_total}; the remaining {context:,} airports are "
@@ -593,11 +593,11 @@ REDIRECT = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Label Anything benchmark report</title>
-<meta http-equiv="refresh" content="0; url=../#maps">
+<meta http-equiv="refresh" content="0; url=../#cases">
 <link rel="canonical" href="../">
 </head>
 <body>
-<p>The gallery is now part of the <a href="../#maps">benchmark report</a>.</p>
+<p>The gallery is now part of the <a href="../#cases">benchmark report</a>.</p>
 </body>
 </html>
 """

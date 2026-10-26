@@ -113,9 +113,10 @@ parentheses where that is more ("n/a": the tool cannot run the problem; commit 2
   ([where the time goes](gh:bench/README.md#where-they-stand)). Memory grows with the
   number of candidates: at most 97 MB for 2,000 labels, 580 MB for 20,000.
 
-The [benchmark report](https://fabian-beck.github.io/label-anything/benchmark-report/) shows
-where each labeler stands, every problem with the labelers side by side (three by default,
-the others on demand) and the known limitations
+The [benchmark report](https://fabian-beck.github.io/label-anything/benchmark-report/) states
+the questions and the benchmark design, answers the questions with the results per question
+and per problem (three labelers side by side by default, the others on demand), and
+presents case studies and the limitations
 ([ADR project/benchmark-report](../adr/project/benchmark-report.md)). Its images mark what
 the measures count, where it happens:
 conflicts in red, ambiguous labels in orange (a line to the point a label may be taken

@@ -183,9 +183,9 @@ def test_tables_are_coloured_per_column_with_tooltips(tmp_path):
     assert block.count("class='tab'") == 2 and "aria-controls='cfg-01-x-c2'" in block
 
 
-def test_report_page_shows_three_labelers_by_default_and_folds_the_details(tmp_path):
+def test_report_page_is_a_report_with_three_labelers_by_default(tmp_path):
     tools = ["ggrepel", "adjusttext", "textalloc"]
-    cur = rep(*(entry(s, usable_rate=0.8) for s in ["rust", "naive", "greedy"] + tools),
+    cur = rep(*(entry(s, usable_rate=0.9 if s == "rust" else 0.8) for s in ["rust", "naive", "greedy"] + tools),
               solvers=["rust", "naive", "greedy"] + tools,
               problems=[{"scenario": "01-x", "config": "c1", "title": "Tiny scatter", "description": "Ten points.",
                          "n_items": 10}])
@@ -195,16 +195,24 @@ def test_report_page_shows_three_labelers_by_default_and_folds_the_details(tmp_p
     assert on == tools and html.count("data-default='0' aria-pressed='false'") == 2
     assert ' data-solver="naive" hidden' in html and ' data-solver="greedy" hidden' in html
     assert ' data-solver="ggrepel" hidden' not in html and ' data-solver="rust" hidden' not in html
-    # Label Anything's numbers next to the range of the others; where each labeler stands
-    assert "class='kpis'" in html and "baselines 80.0%" in html and "<table class='stand'>" in html
-    # a scenario no chapter names comes under "Other problems", with its title and description
-    for anchor in ("id='summary'", "id='more'", "id='sc-01-x'", "id='weak'", "id='details'", "id='perf'",
-                   "id='gates'", "id='runtime'", "id='parity'", "id='diff'"):
-        assert anchor in html
-    assert "Tiny scatter" in html and "Ten points. · 10 items" in html
-    # concise wording, singular where it is one
-    assert "Label Anything and 5 baseline methods are evaluated on 1 problem built from open data" in html
-    assert all(f">{t}</a>" in html for t in ("Summary", "Other problems", "Limitations", "Technical details"))
+    # the abstract and the findings are computed from the results, singular where it is one
+    assert "This report compares Label Anything with 5 baseline methods on 1 problem built from open data" in html
+    assert ("On average, 90.0% of the items received a usable label (baselines: 80.0%, each over the problems it "
+            "ran)") in html
+    assert "Label Anything produced no hard violations on the one problem." in html
+    assert "It had the highest share of usable labels on the one problem." in html
+    # numbered chapters in the order of a report, the appendices last; numbered tables and per-problem tables
+    order = ["introduction", "design", "methods", "problems", "measures", "procedure", "results", "summary",
+             "validity", "clarity", "priorities", "efficiency", "by-problem", "more", "sc-01-x", "limitations",
+             "better", "threats", "conclusion", "details", "perf", "gates", "parity", "diff", "measurements",
+             "runtime", "reproduction"]
+    pos = [html.index(f"id='{a}'") for a in order]
+    assert pos == sorted(pos)
+    assert "<span class='num'>3.2</span>Validity and completeness" in html
+    assert "<span class='num'>A</span>Release engineering" in html and "<b>Table 1.</b> Compared methods." in html
+    assert "<table class='matrix'>" in html and "best value (problems)" in html and "<table class='stand'>" in html
+    # a scenario no data type names comes under "Other problems", with its title and description
+    assert ">Other problems<" in html and "Tiny scatter" in html and "Ten points. · 10 items" in html
     # self-contained: styles and script inline, fonts next to the page
     assert "<script src" not in html and "<link rel=" not in html and "fonts/NotoSans-Bold.ttf" in html
     # without the tools, the first three others are shown

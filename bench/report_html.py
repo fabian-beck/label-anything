@@ -40,7 +40,7 @@ from .common.jsonio import read_json
 from .common.model import load_problem
 from .perf import implementation
 from .report import (EPS, HEAT_CLASS, HEAT_TEXT, META, METRICS, SCALING_SCENARIO, SEQ_METRICS, TABLE_COLS, _compact,
-                     _mean, _numbers, esc, fmt, heat_attrs, kind, others_better, runtime_panels, runtime_points,
+                     _mean, _numbers, esc, fmt, heat, heat_attrs, kind, others_better, runtime_panels, runtime_points,
                      runtime_svg, scaling_exponent)
 
 ASSETS = Path(__file__).resolve().parent / "report_assets"
@@ -54,16 +54,23 @@ NAMES = {"rust": "Label Anything", "ts": "Label Anything (TypeScript)", "wasm": 
          "ggrepel": "ggrepel", "adjusttext": "adjustText", "textalloc": "textalloc", "vega-label": "vega-label",
          "echarts": "ECharts", "d3fc": "d3fc", "d3-labeler": "D3-Labeler", "mumtaz2019": "Mumtaz et al.",
          "greedy": "greedy", "naive": "naive"}
-ABOUT = {"ggrepel": "ggrepel (R, ggplot2): force-based repulsion",
-         "adjusttext": "adjustText (Python, matplotlib): iterative repulsion; never omits labels",
-         "textalloc": "textalloc (Python, matplotlib): candidate positions",
-         "vega-label": "Vega label transform (vega-label)", "echarts": "Apache ECharts label layout with hideOverlap",
-         "d3fc": "d3fc label layout: greedy placement with overlap removal",
-         "d3-labeler": "D3-Labeler: simulated annealing; never omits labels",
-         "mumtaz2019": "Mumtaz et al. (EuroVis 2019), reimplemented: cost-based outlier labeling with leaders; never "
-                       "omits labels",
-         "greedy": "Benchmark baseline: the first free of 8 positions, in priority order",
-         "naive": "Benchmark baseline: every label at the top right, without collision test"}
+APPROACH = {  # solver: (platform, approach) for the table of methods and the tooltips
+    "ggrepel": ("R, ggplot2", "force-based repulsion"),
+    "adjusttext": ("Python, matplotlib", "iterative repulsion; never omits labels"),
+    "textalloc": ("Python, matplotlib", "candidate positions around each point"),
+    "vega-label": ("JavaScript, Vega", "candidate positions with an occupancy bitmap"),
+    "echarts": ("JavaScript, Apache ECharts", "one position per label; overlapping labels hidden"),
+    "d3fc": ("JavaScript, d3fc", "greedy placement with overlap removal"),
+    "d3-labeler": ("JavaScript, D3", "simulated annealing; never omits labels"),
+    "mumtaz2019": ("Python, reimplementation", "cost-based outlier labeling with leaders (Mumtaz et al., EuroVis "
+                                               "2019); never omits labels"),
+    "greedy": ("Python, this benchmark", "the first free of 8 positions, in priority order"),
+    "naive": ("Python, this benchmark", "every label at the top right; no collision test"),
+}
+LA_APPROACH = ("candidate positions with costs: greedy placement in priority order, local search and, for small "
+               "problems, exact search; hard constraints verified exactly")
+
+
 ORDER = ("ggrepel", "adjusttext", "textalloc", "vega-label", "echarts", "d3fc", "d3-labeler", "mumtaz2019", "greedy",
          "naive")
 DEFAULT_VS = ("ggrepel", "adjusttext", "textalloc")
@@ -74,6 +81,14 @@ def name(s: str) -> str:
     if s in NAMES:
         return NAMES[s]
     return f"Label Anything ({s})" if implementation(s) else s
+
+
+def about(s: str) -> str:
+    """One line on a method, its platform and approach (tooltips)."""
+    if implementation(s):
+        return f"{name(s)}: {LA_APPROACH}"
+    plat, appr = APPROACH.get(s, ("", ""))
+    return f"{name(s)} ({plat}): {appr}" if plat else name(s)
 
 
 def reference(solvers: list[str]) -> str | None:
@@ -130,6 +145,10 @@ def dur(ms: float | None) -> str:
     if ms < 60_000:
         return f"{ms / 1000:.1f} s"
     return f"{ms / 60_000:.1f} min"
+
+
+def _fnum(num: int | None) -> str:
+    return f"<span class='fnum'>Figure {num}.</span> " if num else ""
 
 
 def count(n: int, noun: str) -> str:
@@ -253,11 +272,7 @@ def tip(key: str) -> str:
     return f' title="{esc(g[1])}"' if g else ""
 
 
-def glossary_html() -> str:
-    rows = "".join(f"<dt>{esc(t)}</dt><dd>{esc(d)}</dd>" for t, d in GLOSSARY.values())
-    return (f"<dl class='gloss'>{rows}</dl><p class='small note'>All measures are computed from the drawn result, "
-            "with the engine's default thresholds applied to every method. Full definitions: "
-            f"<a href='{REPO_URL}/blob/main/bench/README.md#evaluator-metrics'>bench/README.md</a>.</p>")
+
 
 
 def heat_key(where: str, detail: bool = False) -> str:
@@ -328,79 +343,48 @@ def aggregates(report: dict, solver: str) -> dict:
 # ---------------------------------------------------------------------------
 # header
 # ---------------------------------------------------------------------------
-def _range(vals: list[float], f) -> str:
-    if not vals:
-        return ""
-    lo, hi = min(vals), max(vals)
-    return f(lo) if f(lo) == f(hi) else f"{f(lo)}–{f(hi)}"
+def contents_html(toc: list[tuple[str, str, str, int]]) -> str:
+    """The contents: the chapters and their sections, numbered."""
+    parts: list[tuple[tuple, list]] = []
+    for e in toc:
+        if e[3] == 0:
+            parts.append((e, []))
+        elif e[3] == 1 and parts:
+            parts[-1][1].append(e)
+
+    def link(e: tuple) -> str:
+        return f"<a href='#{esc(e[0])}'><span class='num'>{e[1]}</span>{esc(e[2])}</a>"
+    items = "".join(f"<li>{link(c)}" + (f"<ul>{''.join(f'<li>{link(s)}</li>' for s in subs)}</ul>" if subs else "")
+                    + "</li>" for c, subs in parts)
+    return f"<nav class='contents' aria-label='Contents'><p class='h'>Contents</p><ul>{items}</ul></nav>"
 
 
-def kpis_html(stats: dict[str, dict], pick: Pick) -> str:
-    """Label Anything's headline numbers, each next to the range of the other labelers."""
-    ref = pick.ref
-    if ref is None or not stats[ref]["problems"]:
-        return ""
-    me = stats[ref]
-    others = [s for s in pick.sel if not implementation(s) and stats[s]["problems"]]
-
-    def vals(k):
-        return [stats[s][k] for s in others if stats[s].get(k) is not None]
-
-    pct = "{:.1%}".format
-
-    def num(v):
-        return f"{v:,.0f}"
-
-    tiles = []
-    if me.get("hard_violations") is not None:
-        rng = _range(vals("hard_violations"), num)
-        tiles.append(("Hard violations", num(me["hard_violations"]),
-                      f"sum over {count(me['problems'], 'problem')}" + (f" · baselines {rng}" if rng else "")))
-    if me.get("usable_rate") is not None:
-        rng = _range(vals("usable_rate"), pct)
-        tiles.append(("Usable labels", pct(me["usable_rate"]),
-                      "share of items, mean" + (f" · baselines {rng}" if rng else "")))
-    if me.get("clarity_unclear_rate") is not None:
-        rng = _range(vals("clarity_unclear_rate"), pct)
-        tiles.append(("Unclear labels", pct(me["clarity_unclear_rate"]),
-                      "share of placed labels, mean" + (f" · baselines {rng}" if rng else "")))
-    if me.get("time_ms") is not None:
-        rng = _range(vals("time_ms"), dur)
-        tiles.append(("Time per problem", dur(me["time_ms"]), "median" + (f" · baselines {rng}" if rng else "")))
-    return ("<div class='kpis' aria-label='Results of Label Anything'>"
-            + "".join(f"<div class='kpi'><span class='k'>{esc(k)}</span><span class='v'>{esc(v)}</span>"
-                      f"<span class='s'>{esc(s)}</span></div>" for k, v, s in tiles) + "</div>")
-
-
-def header_html(report: dict, gallery: dict | None, stats: dict, pick: Pick) -> str:
-    probs = {(r["scenario"], r["config"]) for r in report["results"]}
-    scen = {sc for sc, _ in probs}
-    tools = [s for s in report["solvers"] if not implementation(s)]
+def header_html(report: dict, gallery: dict | None, abstract: str, toc: list[tuple[str, str, str, int]]) -> str:
+    """The title, the run, the abstract and the contents."""
     m = report.get("machine") or {}
     machine = ", ".join(x for x in (m.get("cpu"), f"{m['cores']} cores" if m.get("cores") else "") if x)
     commit = (gallery or {}).get("meta", {}).get("commit")
-    where = count(len(probs), "problem") + (f" from {len(scen)} scenarios" if len(scen) != len(probs) else "")
-    lede = (f"Label Anything and {count(len(tools), 'baseline method')} are evaluated on {where} built from open "
-            "data: maps, charts, photographs, embeddings and networks. All methods receive identical inputs (label "
-            "sizes, marks and obstacles). One evaluator scores all results, and one renderer draws them.")
     meta = (f"Suite: <b>{esc(report['suite'])}</b>. Generated {esc(report['generated_at'])}"
             + (f"; engine commit <code>{esc(commit)}</code>" if commit else "")
             + (f"; {esc(machine)}" if machine else "") + ".")
     return (f"<header class='top wrap'><p class='eyebrow'><a href='{SITE}'>Label Anything</a> · benchmark report</p>"
             "<h1>Comparison of label placement methods</h1>"
-            f"<p class='lede'>{esc(lede)}</p><p class='small note' style='margin:0'>{meta}</p>"
-            f"{kpis_html(stats, pick)}</header>")
+            f"<p class='small note' style='margin:0'>{meta}</p><p class='abstract'><b>Abstract.</b> {abstract}</p>"
+            f"{contents_html(toc)}</header>")
+
+
 
 
 # ---------------------------------------------------------------------------
 # the bar
 # ---------------------------------------------------------------------------
-def bar_html(toc: list[tuple[str, str, int]], pick: Pick) -> str:
-    links = "".join(f"<a href='#{esc(i)}'{' class=sub' if lvl else ''}>{esc(t)}</a>" for i, t, lvl in toc)
+def bar_html(toc: list[tuple[str, str, str, int]], pick: Pick) -> str:
+    links = "".join(f"<a href='#{esc(i)}'{' class=sub' if lvl else ''}><span class='num'>{num}</span>{esc(t)}</a>"
+                    for i, num, t, lvl in toc if lvl < 2)
     me = f"<span class='me'>{esc(name(pick.ref))}</span>" if pick.ref else ""
     vs = "".join(f"<button type='button' class='chip' data-solver='{esc(s)}' data-default='"
                  f"{'1' if s in pick.on else '0'}' aria-pressed='{'true' if s in pick.on else 'false'}' "
-                 f"title='{esc(ABOUT.get(s, name(s)))}'>{esc(name(s))}</button>" for s in pick.sel)
+                 f"title='{esc(about(s))}'>{esc(name(s))}</button>" for s in pick.sel)
     more = ("<button type='button' class='lnk' id='vs-all'>all</button>"
             "<button type='button' class='lnk' id='vs-reset'>reset</button>") if pick.sel else ""
     return (f"<div class='bar'><div class='wrap'><details class='toc'><summary>Contents</summary><nav>{links}</nav>"
@@ -496,7 +480,7 @@ def standings_html(stats: dict[str, dict], pick: Pick, n_problems: int) -> str:
             text = dur(v) if f is None else fmt(v, f)
             cells.append(f"<td class='v'><span>{esc(text)}</span>{_strip(field, pos(v))}</td>")
         cls = " class='la'" if s == pick.ref or implementation(s) else ""
-        o.append(f"<tr{cls}{pick.attrs(s)}><td class='solver' title='{esc(ABOUT.get(s, name(s)))}'>{esc(name(s))}"
+        o.append(f"<tr{cls}{pick.attrs(s)}><td class='solver' title='{esc(about(s))}'>{esc(name(s))}"
                  f"<small>{esc(note)}</small></td>" + "".join(cells) + "</tr>")
     o.append("</tbody></table></div>")
     return "".join(o)
@@ -542,23 +526,7 @@ def summary_table(report: dict, stats: dict[str, dict], pick: Pick) -> str:
     return "".join(o)
 
 
-def overview_html(report: dict, stats: dict[str, dict], pick: Pick) -> str:
-    n = len({(r["scenario"], r["config"]) for r in report["results"]})
-    guide = ("One row per method and one column per measure, aggregated over the problems the method ran. In each "
-             "strip, the dark dot marks the method and the grey dots mark the other methods; right is better. The "
-             "methods selected in the bar at the top appear here and in all chapters. Column headings show "
-             "definitions on hover.")
-    return (f"<section class='chapter wrap' id='summary'><h2>Summary <small>{count(n, 'problem')}</small></h2>"
-            f"<p class='guide'>{esc(guide)}</p>{standings_html(stats, pick, n)}"
-            "<details class='more'><summary><b>All summary values</b><span>coloured by deviation from the column "
-            "median</span></summary><div class='in'>"
-            + heat_key("the column", detail=True) + summary_table(report, stats, pick) + "</div></details>"
-            "<details class='more'><summary><b>Image legend</b><span>marks and violation markers</span></summary>"
-            "<div class='in'><p class='small note' style='margin:0'>All results are drawn by the same renderer. "
-            "Violations counted by the measures are marked where they occur.</p>"
-            + marks_key() + "</div></details>"
-            "<details class='more'><summary><b>Definitions</b><span>all measures</span></summary>"
-            f"<div class='in'>{glossary_html()}</div></details></section>")
+
 
 
 # ---------------------------------------------------------------------------
@@ -585,8 +553,8 @@ CHAPTERS = (  # id, title, subtitle, lede, scenarios; the gallery's section of t
 )
 
 
-def fig_html(f: dict, m: dict, prefix: str) -> str:
-    """A figure of the gallery: the image, its problem, title, caption, numbers and settings."""
+def fig_html(f: dict, m: dict, prefix: str, num: int | None = None) -> str:
+    """A figure of the gallery, numbered ``num``: the image, its problem, title, caption, numbers and settings."""
     scenario, _, config = f["key"].partition("/")
     cls = "fig" + (" wide" if f.get("wide") else "") + (" limit" if f.get("limit") else "")
     kind_ = "SVG" if m["img"].endswith(".svg") else "image"
@@ -595,7 +563,7 @@ def fig_html(f: dict, m: dict, prefix: str) -> str:
     return (f"<figure class='{cls}' id='{esc(f['key'].replace('/', '--'))}'>"
             + shot(m, f["title"], f"{f['title']} · {scenario} · {config}", prefix)
             + f"<figcaption><div class='srcrow'><span class='src'>{esc(scenario)} · {esc(config)}</span>"
-              f"<a href='{esc(prefix + m['img'])}' download>{kind_}</a></div><h3>{esc(f['title'])}</h3>"
+              f"<a href='{esc(prefix + m['img'])}' download>{kind_}</a></div><h4>{_fnum(num)}{esc(f['title'])}</h4>"
               f"<p>{f['text']}</p>{chips(m.get('chips') or [])}{st}</figcaption></figure>")
 
 
@@ -623,7 +591,7 @@ def card_html(r: dict, cell: dict | None, out: Path, pick: Pick, caption: str, c
     s = r["solver"]
     la = " la" if s == pick.ref or implementation(s) else ""
     note = _baseline_note(r)
-    head = (f"<figcaption class='ch'><span title='{esc(ABOUT.get(s, name(s)))}'>{esc(name(s))}</span>"
+    head = (f"<figcaption class='ch'><span title='{esc(about(s))}'>{esc(name(s))}</span>"
             f"{note}</figcaption>")
     if "summary" not in r:
         why = r.get("skipped") or r.get("error") or "no result"
@@ -764,7 +732,8 @@ def _x(attrs: str) -> str:
     return f"<td class='x'{attrs}>"
 
 
-def scenario_html(report: dict, sc: str, rows: list[dict], cmps: dict, out: Path, pick: Pick) -> str:
+def scenario_html(report: dict, sc: str, rows: list[dict], cmps: dict, out: Path, pick: Pick,
+                  num: str = "") -> str:
     """One scenario of the run: per config the labelers side by side (one config at a time, tabs), then the
     numbers of all configs."""
     probs = [p for p in report.get("problems", []) if p.get("scenario") == sc]
@@ -795,25 +764,13 @@ def scenario_html(report: dict, sc: str, rows: list[dict], cmps: dict, out: Path
         if len(configs) > 1 else ""
     whole = ("<button type='button' class='lnk whole' aria-pressed='false'>show full images</button>"
              if any(crops.values()) else "")
-    return (f"<article class='scenario' id='sc-{esc(sc)}'><header><h3>{esc(title)}</h3><span class='src'>{esc(sc)}"
+    num_ = f"<span class='num'>{num}</span>" if num else ""
+    return (f"<article class='scenario' id='sc-{esc(sc)}'><header><h4>{num_}{esc(title)}</h4>"
+            f"<span class='src'>{esc(sc)}"
             f"</span>{whole}</header>{bar}{''.join(panes)}{metrics_table(rows, pick, configs)}</article>")
 
 
-def chapter_html(cid: str, title: str, sub: str, lede: str, figs: list[str], blocks: list[str], extra: str = "",
-                 group: str = "") -> str:
-    o = [f"<section class='chapter wrap' id='{esc(cid)}'><h2>{esc(title)}"
-         + (f" <small>{esc(sub)}</small>" if sub else "") + "</h2>"]
-    if lede:
-        o.append(f"<p class='lede'>{lede}</p>")
-    if figs:
-        o.append(f"<div class='figs' data-group='{esc(group or 'figs-' + cid)}'>" + "".join(figs) + "</div>")
-    if blocks:
-        o.append("<h3 class='subhead'>Results by method <small>select an image to enlarge it; the arrow keys switch "
-                 "between methods at the same view</small></h3>"
-                 + heat_key("all methods on the same problem") + "".join(blocks))
-    o.append(extra)
-    o.append("</section>")
-    return "".join(o)
+
 
 
 # ---------------------------------------------------------------------------
@@ -866,7 +823,7 @@ def sequence_table(report: dict, pick: Pick) -> str:
     return "".join(o)
 
 
-def stability_fig(st: dict, prefix: str) -> str:
+def stability_fig(st: dict, prefix: str, num: int | None = None) -> str:
     n = st.get("n_frames") or len(st["frames"])
     frames = "".join(shot(f, f"{st.get('kind', 'Sequence')}, frame {f['frame']} of {n}",
                           f"{st.get('title', st['sequence'])} · frame {f['frame']} of {n}", prefix)
@@ -875,7 +832,7 @@ def stability_fig(st: dict, prefix: str) -> str:
             f"data-group='seq-{esc(st['sequence'])}'>{frames}</div><figcaption><div class='srcrow'><span class='src'>"
             f"{esc(st['scenario'])} · {esc(st['sequence'])} · frames "
             + ", ".join(str(f["frame"]) for f in st["frames"]) + f" of {n}</span></div>"
-            f"<h3>{esc(st.get('title', st['sequence']))}</h3><p>{st.get('text', '')}</p>"
+            f"<h4>{_fnum(num)}{esc(st.get('title', st['sequence']))}</h4><p>{st.get('text', '')}</p>"
             f"{chips(st.get('chips') or [])}</figcaption></figure>")
 
 
@@ -904,55 +861,32 @@ def frames_by_labeler(report: dict, out: Path, pick: Pick) -> str:
             "sequence</span></summary><div class='in'>" + "".join(o) + "</div></details>")
 
 
-def stability_chapter(report: dict, gallery: dict | None, out: Path, pick: Pick) -> str:
-    if not report.get("sequences"):
-        return ""
-    figs = [stability_fig(st, "gallery/") for st in (gallery or {}).get("stability", [])]
-    lede = ("In interactive maps and animated graphs, every frame is labeled anew; labels that move or change sides "
-            "between frames are hard to track. Label Anything solves each frame with the previous result as warm "
-            "start.")
-    extra = (heat_key("all methods on the same sequence") + sequence_table(report, pick)
-             + frames_by_labeler(report, out, pick))
-    return chapter_html("stability", "Temporal stability", "zooming, panning, moving layouts", esc(lede), figs, [],
-                        extra)
+
 
 
 # ---------------------------------------------------------------------------
 # limitations
 # ---------------------------------------------------------------------------
-def better_table(report: dict, pick: Pick) -> str:
-    rows = others_better(report, pick.ref) if pick.ref else []
+def better_table(report: dict, pick: Pick, rows: list[dict] | None = None) -> str:
+    """The problems and measures on which a baseline does better than Label Anything (``others_better``)."""
     if not pick.ref:
         return ""
-    head = ("<h3 class='subhead'>Problems on which a baseline performs better <small>at least as many usable labels, "
-            "no more hard violations, a margin above one percentage point</small></h3>")
+    rows = others_better(report, pick.ref) if rows is None else rows
     if not rows:
-        return head + "<p class='guide'>Under these conditions, no baseline performs better on any problem.</p>"
-    o = [head, "<div class='scroll'><table><tr><th class='l'>problem</th><th class='l'>measure</th>"
-               f"<th>{esc(name(pick.ref))}</th><th class='l'>baseline</th></tr>"]
+        return ""
+    o = ["<div class='scroll'><table><tr><th class='l'>problem</th><th class='l'>measure</th>"
+         f"<th>{esc(name(pick.ref))}</th><th class='l'>baseline</th></tr>"]
     for r in rows:
         f = META[r["metric"]][1]
         measure = GLOSSARY.get(r["metric"], (META[r["metric"]][0],))[0]
-        o.append(f"<tr><td class='l'><a href='#sc-{esc(r['scenario'])}'>{esc(r['scenario'])}</a> · "
-                 f"{esc(r['config'])}</td><td class='l'{tip(r['metric'])}>{esc(measure)}</td>"
-                 f"<td>{fmt(r['ref_value'], f)}</td><td class='l'>{esc(name(r['solver']))}: {fmt(r['value'], f)}</td>"
-                 "</tr>")
+        o.append(f"<tr><td class='l'><a href='#sc-{esc(r['scenario'])}'>{esc(scenario_title(report, r['scenario']))}"
+                 f"</a> <span class='src'>{esc(r['config'])}</span></td><td class='l'{tip(r['metric'])}>{esc(measure)}"
+                 f"</td><td>{fmt(r['ref_value'], f)}</td><td class='l'>{esc(name(r['solver']))}: "
+                 f"{fmt(r['value'], f)}</td></tr>")
     o.append("</table></div>")
     return "".join(o)
 
 
-def weak_chapter(report: dict, gallery: dict | None, pick: Pick) -> str:
-    sec = next((s for s in (gallery or {}).get("sections", []) if s["id"] == "weak"), None)
-    figs = [fig_html(f, gallery["figures"][f["key"]], "gallery/") for f in (sec or {}).get("figures", [])
-            if f["key"] in gallery["figures"]] if sec else []
-    notes = (gallery or {}).get("notes") or []
-    extra = ""
-    if notes:
-        extra += "<div class='notes'>" + "".join(f"<div class='notecard'><h3>{esc(n['title'])}</h3><p>{n['html']}</p>"
-                                                 "</div>" for n in notes) + "</div>"
-    extra += better_table(report, pick)
-    lede = (sec or {}).get("lede") or "Known weaknesses of the current defaults and models."
-    return chapter_html("weak", "Limitations", "", lede, figs, [], extra)
 
 
 # ---------------------------------------------------------------------------
@@ -1160,16 +1094,768 @@ def baselines_html(report: dict) -> str:
     if skipped:
         o.append("<p class='note'>Not run (toolchain missing): " + "; ".join(
             f"<b>{esc(k)}</b>: {esc(v)}" for k, v in skipped.items()) + "</p>")
-    return _more("baselines", "Baseline configurations", f"{len(present)} baselines with versions", "".join(o))
+    return _more("baselines", "Configuration of each baseline", f"{count(len(present), 'baseline')}", "".join(o))
 
 
-def details_chapter(report: dict, plots: dict) -> str:
-    lede = ("Performance targets, release gates, runtime versus problem size, agreement between implementations, "
-            "changes since the previous release, and baseline configurations.")
-    return (f"<section class='chapter wrap' id='details'><h2>Technical details</h2><p class='lede'>{esc(lede)}</p>"
-            + perf_html(report.get("perf")) + gates_html(report.get("gate")) + runtime_html(report, plots)
-            + parity_html(report.get("parity")) + diff_html(report.get("diff")) + baselines_html(report)
-            + "</section>")
+# ---------------------------------------------------------------------------
+# the report: numbering, questions, per-problem tables, findings
+# ---------------------------------------------------------------------------
+class Doc:
+    """The numbering of the report: chapters, sections and subsections (1, 1.1, 1.1.1; appendices A, A.1), tables and
+    figures, in the order the page shows them. ``toc`` lists the sections for the contents."""
+
+    def __init__(self):
+        self.toc: list[tuple[str, str, str, int]] = []  # (id, number, title, level)
+        self.at = [0, 0, 0]
+        self.appendix = False
+        self.tables = 0
+        self.figures = 0
+
+    def add(self, id_: str, title: str, level: int) -> str:
+        """Numbers a chapter (level 0), section (1) or subsection (2), lists it and returns its number."""
+        self.at[level] += 1
+        self.at[level + 1:] = [0] * (2 - level)
+        head = chr(ord("A") + self.at[0] - 1) if self.appendix else str(self.at[0])
+        num = ".".join([head] + [str(n) for n in self.at[1:level + 1]])
+        self.toc.append((id_, num, title, level))
+        return num
+
+    def start_appendix(self) -> None:
+        self.appendix, self.at = True, [0, 0, 0]
+
+    def number(self, id_: str) -> str:
+        """The number of the listed section ``id_``, "" if there is none."""
+        return next((num for i, num, _t, _l in self.toc if i == id_), "")
+
+    def chapter(self, id_: str, title: str) -> str:
+        """The opening tag of a chapter and its numbered heading."""
+        num = self.add(id_, title, 0)
+        return f"<section class='chapter wrap' id='{esc(id_)}'><h2><span class='num'>{num}</span>{esc(title)}</h2>"
+
+    def section(self, id_: str, title: str, sub: str = "") -> str:
+        """The numbered heading of a section."""
+        num = self.add(id_, title, 1)
+        small = f" <small>{esc(sub)}</small>" if sub else ""
+        return f"<h3 class='subhead' id='{esc(id_)}'><span class='num'>{num}</span>{esc(title)}{small}</h3>"
+
+    def table(self, text: str) -> str:
+        """The caption of the next table, placed above it; ``text`` is HTML."""
+        self.tables += 1
+        return f"<p class='cap'><b>Table {self.tables}.</b> {text}</p>"
+
+    def figure(self, text: str) -> str:
+        """The caption of the next figure, placed below it; ``text`` is HTML."""
+        self.figures += 1
+        return f"<p class='cap'><b>Figure {self.figures}.</b> {text}</p>"
+
+    def figure_number(self) -> int:
+        """The number of the next figure, for a figure that sets its own caption."""
+        self.figures += 1
+        return self.figures
+
+    def next_figures(self, k: int) -> str:
+        """How the text names the next ``k`` figures: "Figure 4", "Figures 4 and 5", "Figures 4–7"."""
+        a, b = self.figures + 1, self.figures + k
+        return f"Figure {a}" if k == 1 else f"Figures {a} and {b}" if k == 2 else f"Figures {a}–{b}"
+
+
+QUESTIONS = (  # id, aspect, question
+    ("Q1", "Validity", "Do the methods avoid hard violations, such as overlapping labels and crossing leaders?"),
+    ("Q2", "Completeness", "How many items receive a usable label, and are the most important items among them?"),
+    ("Q3", "Clarity", "Is each label unambiguously associated with its item?"),
+    ("Q4", "Efficiency", "How long does labeling take, and how does the runtime grow with the problem size?"),
+    ("Q5", "Stability", "How far do labels move between the frames of an interactive view?"),
+)
+MEASURES = {  # the per-problem tables: key, label, format, direction (+1: higher is better), log scale
+    "usable_rate": ("Usable labels", "{:.1%}", +1, False),
+    "hard_violations": ("Hard violations", "{:d}", -1, True),
+    "placed_rate": ("Placed labels", "{:.1%}", +1, False),
+    "clarity_unclear_rate": ("Unclear labels", "{:.1%}", -1, False),
+    "points_covered_rate": ("Points covered", "{:.1%}", -1, False),
+    "labels_close_rate": ("Labels too close", "{:.1%}", -1, False),
+    "priority_inversions": ("Inversions", "{:d}", -1, True),
+    "ndcg_at_k": ("NDCG@k", "{:.3f}", +1, False),
+    "time_ms": ("Runtime", "{:,.1f}", -1, True),
+}
+MAIN_MEASURES = ("usable_rate", "placed_rate", "hard_violations", "hard_conflicts", "clarity_unclear_rate",
+                 "points_covered_rate", "labels_close_rate", "priority_inversions", "ndcg_at_k", "engine_ms")
+FINDINGS = ("usable_rate", "hard_violations", "clarity_unclear_rate", "points_covered_rate", "labels_close_rate",
+            "priority_inversions", "time_ms")
+
+
+def _join(items: list[str]) -> str:
+    """"a", "a and b", "a, b and c"."""
+    if len(items) < 2:
+        return "".join(items)
+    return ", ".join(items[:-1]) + " and " + items[-1]
+
+
+def _pct(v: float | None) -> str:
+    return "–" if v is None else f"{v:.1%}"
+
+
+def _between(r: tuple | None, f) -> str:
+    """A range of values as ``f`` formats them, "12.2%–46.3%", or one value."""
+    if not r:
+        return "–"
+    a, b = f(r[0]), f(r[1])
+    return a if a == b else f"{a}–{b}"
+
+
+def _any(n: int) -> str:
+    """"any of the 11 problems"; "the one problem"."""
+    return "the one problem" if n == 1 else f"any of the {n} problems"
+
+
+def _on(w: int, n: int, what: str, negated: str) -> str:
+    """The clause ``what`` (such as "it was the fastest method") for ``w`` of ``n`` problems; ``negated`` for none."""
+    if w == 0:
+        return f"{negated} on {_any(n)}"
+    return f"{what} on " + ("the one problem" if n == 1 else f"all {n} problems" if w == n else f"{w} of {n} problems")
+
+
+def per_problem(report: dict) -> dict[tuple[str, str], dict[str, dict]]:
+    """Every result of the run by problem and solver: {(scenario, config): {solver: result}}."""
+    by: dict[tuple[str, str], dict[str, dict]] = {}
+    for r in report["results"]:
+        by.setdefault((r["scenario"], r["config"]), {})[r["solver"]] = r
+    return by
+
+
+def chapters(report: dict) -> list[tuple[str, str, str, str, list[str]]]:
+    """The data types of the run's problems: (id, title, subtitle, lede, the run's scenarios); the scenarios that no
+    data type names under "Other problems"."""
+    present = {r["scenario"] for r in report["results"]}
+    known = {sc for *_x, scs in CHAPTERS for sc in scs}
+    out = [(cid, title, sub, lede, [sc for sc in scs if sc in present]) for cid, title, sub, lede, scs in CHAPTERS]
+    out.append(("more", "Other problems", "", "", sorted(sc for sc in present if sc not in known)))
+    return [c for c in out if c[4]]
+
+
+def scenario_title(report: dict, sc: str) -> str:
+    return next((p["title"] for p in report.get("problems", []) if p.get("scenario") == sc and p.get("title")), sc)
+
+
+def problems_of(report: dict) -> list[tuple[str, str, str, str, dict]]:
+    """Every problem of the run in the order of the report: (data type, scenario, config, scenario title, the
+    problem's entry in ``report["problems"]``)."""
+    entries = {(p["scenario"], p["config"]): p for p in report.get("problems", [])}
+    order = list(entries)
+    out = []
+    for _cid, chapter, _sub, _lede, scs in chapters(report):
+        for sc in scs:
+            cfgs = sorted({r["config"] for r in report["results"] if r["scenario"] == sc},
+                          key=lambda c, sc=sc: (order.index((sc, c)) if (sc, c) in entries else len(order), c))
+            out += [(chapter, sc, cfg, scenario_title(report, sc), entries.get((sc, cfg), {})) for cfg in cfgs]
+    return out
+
+
+def _value(r: dict, key: str) -> float | None:
+    """A result's value of ``key``; ``time_ms`` is the runtime the solver reports."""
+    return engine_ms(r) if key == "time_ms" else (r.get("summary") or {}).get(key)
+
+
+def _best(values: dict[str, float], f: str, d: int, log: bool) -> set[str]:
+    """The solvers whose value the tables mark as the best: the best of ``values`` (direction ``d``, compared as the
+    format ``f`` shows them) when it is better than the median of all of them."""
+    solvers = list(values)
+    marks, _mid = heat([values[s] for s in solvers], f, d, log)
+    return {s for s, m in zip(solvers, marks) if m and m[1]}
+
+
+def matrix(report: dict, pick: Pick, keys: list[str], tid: str) -> str:
+    """Per measure of ``keys`` a table with a row per problem, grouped by data type, and a column per method; every
+    value is coloured against the median of all methods on that problem, and the last row counts the problems on
+    which a method has the best value. Several measures are tabs."""
+    probs, by, cols = problems_of(report), per_problem(report), pick.order
+    panes, tabs = [], []
+    for k, key in enumerate(keys):
+        label, f, d, lg = MEASURES[key]
+        head = "<tr><th class='l'>problem</th>" + "".join(
+            f"<th{' class=la' if implementation(s) else ''}{pick.attrs(s)} title='{esc(about(s))}'>{esc(name(s))}</th>"
+            for s in cols) + "</tr>"
+        best, rows, group = dict.fromkeys(cols, 0), [], None
+        for chapter, sc, cfg, title, _p in probs:
+            if chapter != group:
+                group = chapter
+                rows.append(f"<tr class='grp'><th class='l'>{esc(chapter)}</th>"
+                            + "".join(f"<td{pick.attrs(s)}></td>" for s in cols) + "</tr>")
+            rs = by.get((sc, cfg), {})
+            vals = [_value(rs[s], key) if s in rs and "summary" in rs[s] else None for s in cols]
+            attrs = heat_attrs([{key: v} for v in vals], [(key, f, d, lg)])
+            cells = []
+            for s, v, a in zip(cols, vals, attrs):
+                r, at = rs.get(s), a.get(key, "")
+                best[s] += " best" in at
+                if r is None:
+                    cells.append(f"<td{pick.attrs(s)}></td>")
+                elif "summary" not in r:
+                    why = r.get("skipped") or r.get("error") or ""
+                    cells.append(f"<td class='na' title='{esc(why)}'{pick.attrs(s)}>"
+                                 f"{'n/a' if 'skipped' in r else 'error'}</td>")
+                else:
+                    cells.append(f"<td{at}{pick.attrs(s)}>{esc(dur(v) if key == 'time_ms' else fmt(v, f))}</td>")
+            rows.append(f"<tr><td class='l'><a href='#sc-{esc(sc)}'>{esc(title)}</a> <span class='src'>{esc(cfg)}"
+                        "</span></td>" + "".join(cells) + "</tr>")
+        foot = ("<tr class='sum'><th class='l'>best value (problems)</th>"
+                + "".join(f"<td{pick.attrs(s)}>{best[s]}</td>" for s in cols) + "</tr>")
+        pid = f"{tid}-{key}"
+        panes.append(f"<div class='cfg' id='{esc(pid)}' role='tabpanel'><div class='scroll'><table class='matrix'>"
+                     f"{head}{''.join(rows)}{foot}</table></div></div>")
+        tabs.append(f"<button type='button' class='tab' role='tab' aria-controls='{esc(pid)}' "
+                    f"aria-selected='{'true' if k == 0 else 'false'}'>{esc(label)}</button>")
+    bar = f"<div class='tabs' role='tablist' aria-label='Measures'>{''.join(tabs)}</div>" if len(keys) > 1 else ""
+    return bar + "".join(panes)
+
+
+def sequence_means(report: dict, ref: str, base: list[str]) -> dict | None:
+    """Mean displacement and flip rate over the stability sequences: Label Anything's (``me``), the range of the
+    baselines' means and the number of sequences; None without a sequence of Label Anything."""
+    per: dict[str, dict[str, list[float]]] = {}
+    for s in report.get("sequences") or []:
+        m = s.get("metrics") or {}
+        for k in ("displacement_mean_px", "flip_rate"):
+            if isinstance(m.get(k), (int, float)):
+                per.setdefault(s["solver"], {}).setdefault(k, []).append(m[k])
+    if ref not in per:
+        return None
+    mean = {s: {k: sum(v) / len(v) for k, v in d.items()} for s, d in per.items()}
+    out = {"me": mean[ref], "n": len({s["sequence"] for s in report["sequences"]
+                                     if s.get("solver") == ref and s.get("metrics")})}
+    for k in ("displacement_mean_px", "flip_rate"):
+        v = [mean[s][k] for s in base if k in mean.get(s, {})]
+        out[k] = (min(v), max(v)) if v else None
+    return out
+
+
+def findings(report: dict, stats: dict[str, dict], pick: Pick) -> dict | None:
+    """The numbers that answer the questions: Label Anything's aggregates (``me``), the range of the baselines'
+    aggregates (``range``), on how many problems Label Anything has the best value among itself and the baselines
+    (``wins``: (wins, problems), ties included), how many baselines produced hard violations, and the stability
+    sequences (``seq``). None without results of Label Anything."""
+    ref = pick.ref
+    if ref is None or not stats[ref]["problems"]:
+        return None
+    base = [s for s in report["solvers"] if not implementation(s) and stats[s]["problems"]]
+    by = per_problem(report)
+    wins, ranges = {}, {}
+    for key in FINDINGS:  # the best value as the per-problem tables mark it: among all methods, above the median
+        _label, f, d, lg = MEASURES[key]
+        w = n = 0
+        for rs in by.values():
+            vals = {s: _value(r, key) for s, r in rs.items() if "summary" in r}
+            vals = {s: v for s, v in vals.items() if isinstance(v, (int, float))}
+            if ref in vals and len(vals) > 1:
+                n += 1
+                w += ref in _best(vals, f, d, lg)
+        wins[key] = (w, n)
+        v = [stats[s][key] for s in base if stats[s].get(key) is not None]
+        ranges[key] = (min(v), max(v)) if v else None
+    return {"me": stats[ref], "base": base, "wins": wins, "range": ranges,
+            "violating": sum(1 for s in base if stats[s]["violating"]), "seq": sequence_means(report, ref, base)}
+
+
+def answer(fd: dict | None, q: str) -> str:
+    """The finding on question ``q`` (Q1–Q5; QP: priority) as HTML sentences; "" without the numbers."""
+    if not fd:
+        return ""
+    me, rg, wins, nb = fd["me"], fd["range"], fd["wins"], len(fd["base"])
+    if q == "Q1":
+        hv, n = me["hard_violations"] or 0, me["problems"]
+        s = (f"Label Anything produced no hard violations on {_any(n)}." if hv == 0 else
+             f"Label Anything produced {hv:,} hard violations on {me['violating']} of {count(n, 'problem')}.")
+        if nb:
+            s += (f" {fd['violating']} of the {count(nb, 'baseline')} produced hard violations on at least one "
+                  "problem." if fd["violating"] else f" None of the {count(nb, 'baseline')} produced hard violations.")
+        return s
+    if q == "Q2":
+        w, n = wins["usable_rate"]
+        s = (f"On average, {_pct(me['usable_rate'])} of the items received a usable label from Label Anything "
+             f"(baselines: {_between(rg['usable_rate'], _pct)}, each over the problems it ran).")
+        best = _on(w, n, "It had the highest share of usable labels",
+                   "It did not have the highest share of usable labels")
+        return s + (f" {best}." if n else "")
+    if q == "QP":
+        inv = me.get("priority_inversions")
+        if inv is None:
+            return ""
+        what = "no priority inversions" if inv == 0 else f"{inv:,} priority inversions"
+        return (f"It produced {what} (baselines: "
+                f"{_between(rg['priority_inversions'], lambda v: f'{v:,}')} in total).")
+    if q == "Q3":
+        w, n = wins["clarity_unclear_rate"]
+        s = (f"On average, {_pct(me['clarity_unclear_rate'])} of the labels placed by Label Anything were unclear "
+             f"(baselines: {_between(rg['clarity_unclear_rate'], _pct)})")
+        best = _on(w, n, "its share of unclear labels was the lowest", "its share of unclear labels was not the lowest")
+        s += f"; {best}." if n else "."
+        if me.get("points_covered_rate") is not None and me.get("labels_close_rate") is not None:
+            s += (f" Its labels covered {_pct(me['points_covered_rate'])} of the data points (baselines: "
+                  f"{_between(rg['points_covered_rate'], _pct)}), and {_pct(me['labels_close_rate'])} of them were "
+                  f"too close to another label (baselines: {_between(rg['labels_close_rate'], _pct)}).")
+        return s
+    if q == "Q4":
+        if me.get("time_ms") is None:
+            return ""
+        w, n = wins["time_ms"]
+        s = (f"The median runtime of Label Anything per problem was {dur(me['time_ms'])} (baselines: "
+             f"{_between(rg['time_ms'], dur)})")
+        best = _on(w, n, "it was the fastest method", "it was not the fastest method")
+        s += f"; {best}." if n else "."
+        if me.get("scaling") is not None:
+            s += (" On the problems of the stress scenario, its runtime grew approximately as "
+                  f"n<sup>{me['scaling']:.2f}</sup> with the number of items n.")
+        return s
+    if q == "Q5":
+        sq = fd.get("seq")
+        if not sq:
+            return ""
+        d, fl = sq["me"].get("displacement_mean_px"), sq["me"].get("flip_rate")
+        parts = []
+        if d is not None:
+            parts.append(f"labels placed by Label Anything moved {d:.1f} px per frame on average (baselines: "
+                         f"{_between(sq['displacement_mean_px'], lambda v: f'{v:.1f} px')})")
+        if fl is not None:
+            parts.append(f"{_pct(fl)} of them changed sides between consecutive frames (baselines: "
+                         f"{_between(sq['flip_rate'], _pct)})")
+        return (f"Across {count(sq['n'], 'sequence')}, " + ", and ".join(parts) + ".") if parts else ""
+    return ""
+
+
+def abstract_text(report: dict, fd: dict | None, doc: Doc, n_better: int) -> str:
+    """The abstract: what was compared, the main findings, and where the limitations are discussed."""
+    probs = {(r["scenario"], r["config"]) for r in report["results"]}
+    scen = {sc for sc, _ in probs}
+    nb = len([s for s in report["solvers"] if not implementation(s)])
+    where = count(len(probs), "problem") + (f" from {len(scen)} scenarios" if len(scen) != len(probs) else "")
+    s = (f"This report compares Label Anything with {count(nb, 'baseline method')} on {where} built from open data: "
+         "maps, charts, photographs, embeddings and networks. All methods receive identical inputs, and one evaluator "
+         "scores all results.")
+    if fd:
+        me, rg = fd["me"], fd["range"]
+        hv = me["hard_violations"] or 0
+        s += " Label Anything produced " + ("no hard violations" if hv == 0 else f"{hv:,} hard violations")
+        s += (f"; {fd['violating']} of the {count(len(fd['base']), 'baseline')} produced hard violations on at least "
+              "one problem." if fd["base"] else ".")
+        s += (f" On average, {_pct(me['usable_rate'])} of the items received a usable label (baselines: "
+              f"{_between(rg['usable_rate'], _pct)}, each over the problems it ran), and "
+              f"{_pct(me['clarity_unclear_rate'])} of the placed labels were unclear (baselines: "
+              f"{_between(rg['clarity_unclear_rate'], _pct)}).")
+        if me.get("time_ms") is not None:
+            s += (f" The median runtime per problem was {dur(me['time_ms'])} (baselines: "
+                  f"{_between(rg['time_ms'], dur)}).")
+    lim = doc.number("limitations")
+    if lim:
+        which = ("the one problem–measure combination in which a baseline performs better" if n_better == 1 else
+                 f"the {n_better} problem–measure combinations in which a baseline performs better")
+        s += (f" Section {lim} lists {which}, together with known weaknesses and the limitations of the benchmark."
+              if n_better else f" Section {lim} discusses known weaknesses and the limitations of the benchmark.")
+    return s
+
+
+# ---------------------------------------------------------------------------
+# the chapters
+# ---------------------------------------------------------------------------
+def _cases(gallery: dict | None) -> list[dict]:
+    """The gallery's sections that the case studies show (priority and the limitations have their own places)."""
+    figs = (gallery or {}).get("figures", {})
+    return [s for s in (gallery or {}).get("sections", []) if s["id"] not in ("priority", "weak")
+            and any(f["key"] in figs for f in s.get("figures", []))]
+
+
+def introduction(doc: Doc, report: dict, gallery: dict | None) -> str:
+    qs = [q for q in QUESTIONS if q[0] != "Q5" or report.get("sequences")]
+    items = "".join(f"<li><b>{q} {esc(a)}.</b> {esc(t)}</li>" for q, a, t in qs)
+    cases = " presents case studies of Label Anything," if _cases(gallery) else ""
+    return (doc.chapter("introduction", "Introduction")
+            + "<div class='prose'><p>Label placement positions text labels next to graphical items such that the "
+              "labels are legible, free of overlaps and unambiguously associated with their items. Label Anything is "
+              "a label placement engine for maps, charts, photographs and diagrams. This report compares it with "
+              f"established label placement methods on problems built from open data and addresses "
+              f"{count(len(qs), 'question')}:</p>"
+            + f"<ul class='qs'>{items}</ul><p>The report first describes the benchmark design. It then reports the "
+              f"results per question and per problem,{cases} discusses the limitations and summarizes the findings. "
+              "The appendices document release engineering, runtime measurements and the reproduction of the "
+              "results.</p></div></section>")
+
+
+def methods_table(report: dict, gallery: dict | None, pick: Pick) -> str:
+    vers = report.get("baseline_versions") or {}
+    commit = (gallery or {}).get("meta", {}).get("commit")
+    rows = []
+    for s in pick.order:
+        impl = implementation(s)
+        if impl:
+            plat = {"rust": "Rust", "ts": "TypeScript", "wasm": "WebAssembly (from Rust)"}.get(impl, impl)
+            appr = LA_APPROACH if s == pick.ref else "the same algorithm in another implementation"
+            ver = f"commit {commit}" if commit else ""
+        else:
+            plat, appr = APPROACH.get(s, ("", ""))
+            ver = vers.get(s, "")
+        rows.append(f"<tr{' class=la' if impl else ''}><td class='l solver'>{esc(name(s))}</td>"
+                    f"<td class='l'>{esc(plat)}</td><td class='l wrap'>{esc(appr)}</td>"
+                    f"<td class='l'>{esc(ver) or '–'}</td></tr>")
+    return ("<div class='scroll'><table><tr><th class='l'>method</th><th class='l'>platform</th>"
+            "<th class='l'>approach</th><th class='l'>version</th></tr>" + "".join(rows) + "</table></div>")
+
+
+def problems_table(report: dict) -> str:
+    items = {(r["scenario"], r["config"]): r["n_items"] for r in report["results"] if r.get("n_items")}
+    rows, group = [], None
+    for chapter, sc, cfg, title, p in problems_of(report):
+        if chapter != group:
+            group = chapter
+            rows.append(f"<tr class='grp'><th class='l' colspan='3'>{esc(chapter)}</th></tr>")
+        n = p.get("n_items") or items.get((sc, cfg))
+        rows.append(f"<tr><td class='l'><a href='#sc-{esc(sc)}'>{esc(title)}</a> <span class='src'>{esc(cfg)}"
+                    f"</span></td><td>{f'{n:,}' if n else '–'}</td><td class='l wrap'>"
+                    f"{esc(p.get('description') or '')}</td></tr>")
+    return ("<div class='scroll'><table class='matrix'><tr><th class='l'>problem</th><th>items</th>"
+            "<th class='l'>description</th></tr>" + "".join(rows) + "</table></div>")
+
+
+def measures_table(keys) -> str:
+    def better(k: str) -> str:
+        d = META[k][2] if k in META else -1
+        return "higher" if d > 0 else "lower" if d < 0 else "–"
+    rows = "".join(f"<tr><td class='l'>{esc(GLOSSARY[k][0])}</td><td class='l wrap'>{esc(GLOSSARY[k][1])}</td>"
+                   f"<td class='l'>{better(k)}</td></tr>" for k in keys if k in GLOSSARY)
+    return ("<div class='scroll'><table><tr><th class='l'>measure</th><th class='l'>definition</th>"
+            "<th class='l'>better</th></tr>" + rows + "</table></div>")
+
+
+def design(doc: Doc, report: dict, gallery: dict | None, pick: Pick) -> str:
+    probs = problems_of(report)
+    scen = {sc for _c, sc, *_r in probs}
+    o = [doc.chapter("design", "Benchmark design")]
+    # methods
+    nb = len([s for s in pick.sel if not implementation(s)])
+    ni = len([s for s in pick.sel if implementation(s)])
+    shown = [name(s) for s in pick.sel if s in pick.on]
+    why = (", the most widely used tools for R and Python" if pick.on == set(DEFAULT_VS) & set(pick.sel) else "")
+    text = (f"Table {doc.tables + 1} lists the compared methods: Label Anything and {count(nb, 'baseline method')}"
+            + (f", and {count(ni, 'further implementation')} of Label Anything" if ni else "") + ".")
+    if shown:
+        text += (f" By default, the tables and figures show Label Anything together with {_join(shown)}{why}; the bar "
+                 "at the top adds or removes methods.")
+    o += [doc.section("methods", "Methods"), f"<div class='prose'><p>{esc(text)}</p></div>",
+          doc.table("Compared methods."), methods_table(report, gallery, pick), baselines_html(report)]
+    # problems
+    synth = (" The problems of the stress scenario consist of jittered copies of real airports."
+             if "10-stress" in scen else "")
+    text = (f"The {report.get('suite', '')} suite comprises {count(len(probs), 'problem')} from "
+            f"{count(len(scen), 'scenario')}, built from open data (Table {doc.tables + 1}). Each problem specifies "
+            "the canvas, the items with their label texts and marks, the obstacles, such as axes, legends and raster "
+            f"images, and the placement options.{synth}")
+    o += [doc.section("problems", "Problems"), f"<div class='prose'><p>{esc(text)}</p></div>",
+          doc.table("Problems of the run, grouped by data type."), problems_table(report)]
+    # measures
+    o += [doc.section("measures", "Measures"),
+          f"<div class='prose'><p>Table {doc.tables + 1} defines the main measures. All measures are computed from "
+          "the drawn results, and the engine's default thresholds apply to every method; "
+          f"<a href='{REPO_URL}/blob/main/bench/README.md#evaluator-metrics'>bench/README.md</a> gives the full "
+          "definitions.</p></div>",
+          doc.table("Main measures."), measures_table(MAIN_MEASURES),
+          "<details class='more'><summary><b>Further measures</b><span>leaders, positions, coverage, memory, "
+          "stability</span></summary><div class='in'>"
+          + measures_table([k for k in GLOSSARY if k not in MAIN_MEASURES]) + "</div></details>"]
+    # procedure
+    m = report.get("machine") or {}
+    machine = ", ".join(x for x in (m.get("cpu"), f"{m['cores']} cores" if m.get("cores") else "", m.get("platform"))
+                        if x)
+    runs = report.get("runs") or 1
+    o += [doc.section("procedure", "Procedure"),
+          "<div class='prose'><p>Every method receives the same input per problem: the label boxes (measured as "
+          "specified in spec §5, padding included), the item marks, the obstacles and the priority order, which is "
+          "passed as input order where a method has no priority parameter. Features that a baseline does not support "
+          "are emulated where possible and otherwise omitted; the tables mark affected results with ≈ and name the "
+          "emulation in a tooltip.</p><p>One evaluator (<code>bench/eval</code>) scores every result with exact "
+          "geometry. One renderer (<code>bench/render.py</code>) draws every result and marks the violations that "
+          f"the measures count (Figure {doc.figures + 1}). Each problem was solved "
+          f"{'once' if runs == 1 else f'{runs} times'} per method; runtimes are the medians of the times that the "
+          "methods report, and wall-clock times additionally include process start-up and input/output."
+          + (f" Machine: {esc(machine)}." if machine else "") + "</p><p>Tables colour each value by its deviation "
+          "from the median of all methods on the same problem: blue is better, red is worse, grey is close to the "
+          "median, and the best value is bold.</p></div>",
+          marks_key(), doc.figure("Markers in the result images: label boxes, marks and leaders as each method placed "
+                                  "them, and the violations that the measures count."),
+          "</section>"]
+    return "".join(o)
+
+
+def results(doc: Doc, report: dict, gallery: dict | None, stats: dict, pick: Pick, fd: dict | None,
+            out: Path) -> str:
+    n = len({(r["scenario"], r["config"]) for r in report["results"]})
+    gsec = {s["id"]: s for s in (gallery or {}).get("sections", [])}
+    gfigs = (gallery or {}).get("figures", {})
+    key = heat_key("all methods on the same problem")
+    o = [doc.chapter("results", "Results"),
+         "<div class='prose'><p>This chapter answers the questions with the aggregated results of every method and "
+         "with the values per problem. Aggregated values are means or sums over the problems that each method ran; "
+         "a method that could not run a problem is compared on fewer problems. In the per-problem tables, rows are "
+         "problems, grouped by data type, and columns are methods; the bar at the top selects the methods shown, and "
+         "the last row counts the problems on which a method has the best value.</p></div>"]
+    # overview
+    o += [doc.section("summary", "Overview"),
+          f"<div class='prose'><p>Figure {doc.figures + 1} places every method on six measures, aggregated over the "
+          f"problems that the method ran; on every scale, right is better. Table {doc.tables + 1} lists all aggregated "
+          "values.</p></div>",
+          standings_html(stats, pick, n),
+          doc.figure("Aggregated results per method. In each strip, the dark dot marks the method of the row and the "
+                     "grey dots mark the other methods. The column headings show the definitions as tooltips."),
+          f"<details class='more'><summary><b>Table {doc.tables + 1}</b><span>all aggregated values</span></summary>"
+          "<div class='in'>"
+          + doc.table("Aggregated values per method: means of the rates, sums of the counts and runtimes, the largest "
+                      "peak memory, and the exponent k of the runtime's growth with the number of items.")
+          + heat_key("the column", detail=True) + summary_table(report, stats, pick) + "</div></details>"]
+    # validity and completeness
+    o += [doc.section("validity", "Validity and completeness", "Q1, Q2"),
+          f"<div class='prose'><p>{answer(fd, 'Q1')} {answer(fd, 'Q2')} Table {doc.tables + 1} lists the values per "
+          "problem.</p></div>",
+          doc.table("Usable labels, hard violations and placed labels per problem and method; the tabs select the "
+                    "measure."), key,
+          matrix(report, pick, ["usable_rate", "hard_violations", "placed_rate"], "mx-valid")]
+    # clarity
+    o += [doc.section("clarity", "Clarity", "Q3"),
+          f"<div class='prose'><p>{answer(fd, 'Q3')} Table {doc.tables + 1} lists the values per problem.</p></div>",
+          doc.table("Unclear labels, data points covered and labels too close per problem and method; the tabs "
+                    "select the measure."), key,
+          matrix(report, pick, ["clarity_unclear_rate", "points_covered_rate", "labels_close_rate"], "mx-clear")]
+    # priority
+    sec = gsec.get("priority") or {}
+    pf = [f for f in sec.get("figures", []) if f["key"] in gfigs]
+    text = (f"{answer(fd, 'QP')} Table {doc.tables + 1} lists the priority inversions and the normalized discounted "
+            "cumulative gain per problem.")
+    o += [doc.section("priorities", "Priority", "Q2"), f"<div class='prose'><p>{text}</p></div>",
+          doc.table("Priority inversions and NDCG@k per problem and method; the tabs select the measure."), key,
+          matrix(report, pick, ["priority_inversions", "ndcg_at_k"], "mx-prio")]
+    if pf:
+        verb = "shows" if len(pf) == 1 else "show"
+        o += [f"<div class='prose'><p>{doc.next_figures(len(pf))} {verb} the omission modes of Label Anything. "
+              f"{sec.get('lede') or ''}</p></div>",
+              "<div class='figs' data-group='figs-priority'>"
+              + "".join(fig_html(f, gfigs[f["key"]], "gallery/", doc.figure_number()) for f in pf) + "</div>"]
+    # efficiency
+    panels = runtime_panels_html(report, pick)
+    text = f"{answer(fd, 'Q4')} Table {doc.tables + 1} lists the runtime per problem"
+    o += [doc.section("efficiency", "Efficiency", "Q4"),
+          f"<div class='prose'><p>{text}" + (f"; Figure {doc.figures + 1} shows how the runtime grows with the "
+                                             "number of items." if panels else ".") + "</p></div>",
+          doc.table("Runtime per problem and method, as reported by the method (median over the runs)."), key,
+          matrix(report, pick, ["time_ms"], "mx-time")]
+    if panels:
+        o += [panels, doc.figure("Runtime against the number of items, one panel per method, on shared log–log axes; "
+                                 "lines connect the sizes of the stress scenario. Appendix B lists the engine-reported "
+                                 "and wall-clock times.")]
+    # stability
+    if report.get("sequences"):
+        sf = (gallery or {}).get("stability", [])
+        text = ("In interactive maps and animated graphs, every frame is labeled anew; labels that move or change "
+                "sides between frames are hard to track. Label Anything solves each frame with the previous result as "
+                f"warm start. {answer(fd, 'Q5')} Table {doc.tables + 1} lists the measures per sequence and method.")
+        if sf:
+            text += f" {doc.next_figures(len(sf))} {'shows' if len(sf) == 1 else 'show'} frames of Label Anything."
+        o += [doc.section("stability", "Stability", "Q5"), f"<div class='prose'><p>{text}</p></div>",
+              doc.table("Stability measures per sequence and method."),
+              heat_key("all methods on the same sequence"), sequence_table(report, pick)]
+        o += [stability_fig(st, "gallery/", doc.figure_number()) for st in sf]
+        o.append(frames_by_labeler(report, out, pick))
+    o.append("</section>")
+    return "".join(o)
+
+
+def by_problem(doc: Doc, report: dict, gallery: dict | None, out: Path, pick: Pick) -> str:
+    cmps = {(c["scenario"], c["config"]): c for c in (gallery or {}).get("comparisons", [])}
+    by_sc: dict[str, list] = {}
+    for r in report["results"]:
+        by_sc.setdefault(r["scenario"], []).append(r)
+    o = [doc.chapter("by-problem", "Results by problem"),
+         "<div class='prose'><p>This chapter shows the result of every method on every problem, grouped by data type. "
+         "Each problem shows the images of the selected methods and a table of their measures. Large canvases show "
+         "their densest region; selecting an image opens it in full, and the arrow keys switch between the methods "
+         "at the same view.</p></div>", heat_key("all methods on the same problem")]
+    for cid, title, sub, lede, scs in chapters(report):
+        o.append(doc.section(cid, title, sub))
+        if lede:
+            o.append(f"<p class='lede'>{esc(lede)}</p>")
+        for sc in scs:
+            num = doc.add(f"sc-{sc}", scenario_title(report, sc), 2)
+            o.append(scenario_html(report, sc, by_sc[sc], cmps, out, pick, num))
+    o.append("</section>")
+    return "".join(o)
+
+
+def case_studies(doc: Doc, gallery: dict | None) -> str:
+    secs = _cases(gallery)
+    if not secs:
+        return ""
+    figs = gallery["figures"]
+    o = [doc.chapter("cases", "Case studies"),
+         "<div class='prose'><p>The figures of this chapter show Label Anything on selected problems of the full "
+         "suite, solved with each problem's settings and the engine's defaults. They illustrate features that the "
+         "comparison does not cover: priority tiers and type sizes, area anchors, margin labels with leaders, and "
+         "obstacles read from raster images. Each caption lists the evaluator's measures; the settings of the problem "
+         "are folded below it.</p></div>"]
+    for s in secs:
+        o.append(doc.section(f"case-{s['id']}", s["title"], s.get("sub") or ""))
+        if s.get("lede"):
+            o.append(f"<p class='lede'>{s['lede']}</p>")
+        o.append(f"<div class='figs' data-group='figs-{esc(s['id'])}'>"
+                 + "".join(fig_html(f, figs[f["key"]], "gallery/", doc.figure_number()) for f in s["figures"]
+                           if f["key"] in figs) + "</div>")
+    o.append("</section>")
+    return "".join(o)
+
+
+FEATURES = (  # the last part of an unsupported feature's key (bench/baselines) and the feature
+    ("obstacles", "avoiding marks and obstacles"),
+    ("leaders", "leader lines"),
+    ("style", "leader styles other than straight lines"),
+    ("boundary", "labels in the margin"),
+    ("internal", "labels inside their marks"),
+    ("positions", "alternative positions per label"),
+    ("variants", "text variants (wrapped or shortened)"),
+    ("priority", "the priority order"),
+    ("omission", "omitting labels"),
+)
+
+
+def benchmark_limits(doc: Doc, report: dict, pick: Pick) -> str:
+    """What limits the comparison: features that baselines lack, results that are missing, the size of the suite and
+    how the runtimes were measured."""
+    unsup: dict[str, dict[str, str]] = {}  # feature: {solver: what the baseline reports}
+    emul: dict[str, int] = {}
+    for r in report["results"]:
+        b = r.get("baseline") or {}
+        for u in b.get("unsupported", []):
+            key, _, msg = u.partition(": ")
+            unsup.setdefault(key.rsplit("-", 1)[-1], {}).setdefault(r["solver"], msg or key)
+        if b.get("emulations"):
+            emul[r["solver"]] = emul.get(r["solver"], 0) + 1
+    na = [r for r in report["results"] if "summary" not in r]
+    items, tables = [], []
+    if unsup or emul:
+        items.append(f"Several baselines do not support all features of the problems (Table {doc.tables + 1}). Their "
+                     "inputs are emulated where possible, for example obstacles as sampled points, and the tables mark "
+                     "results with emulated inputs with ≈.")
+        cols = [s for s in pick.order if s in emul or any(s in d for d in unsup.values())]
+        known = [k for k, _t in FEATURES if k in unsup] + sorted(k for k in unsup if k not in dict(FEATURES))
+        rows = "".join(f"<tr><td class='l'>{esc(dict(FEATURES).get(k, k))}</td>" + "".join(
+            f"<td title='{esc(unsup[k][s])}'>✗</td>" if s in unsup[k] else "<td></td>" for s in cols) + "</tr>"
+            for k in known)
+        rows += ("<tr class='sum'><th class='l'>problems with emulated inputs</th>"
+                 + "".join(f"<td>{emul.get(s, 0)}</td>" for s in cols) + "</tr>")
+        tables.append(doc.table("Features of the problems that the baselines do not support (✗; the tooltip gives "
+                                "the baseline's reason), and the number of problems with emulated inputs.")
+                      + "<div class='scroll'><table class='matrix'><tr><th class='l'>feature</th>"
+                      + "".join(f"<th>{esc(name(s))}</th>" for s in cols) + "</tr>" + rows + "</table></div>")
+    if na:
+        items.append(f"{count(len(na), 'result')} {'is' if len(na) == 1 else 'are'} not available "
+                     f"(Table {doc.tables + 1}); the aggregated values of the affected methods cover fewer problems.")
+        rows = "".join(f"<tr><td class='l solver'>{esc(name(r['solver']))}</td><td class='l'><a href='#sc-"
+                       f"{esc(r['scenario'])}'>{esc(scenario_title(report, r['scenario']))}</a> <span class='src'>"
+                       f"{esc(r['config'])}</span></td><td class='l wrap'>"
+                       f"{esc(r.get('skipped') or r.get('error') or '')}</td></tr>"
+                       for r in sorted(na, key=lambda r: (pick.rank(r["solver"]), r["scenario"], r["config"])))
+        tables.append(doc.table("Results that are not available, with the reason.")
+                      + "<div class='scroll'><table><tr><th class='l'>method</th><th class='l'>problem</th>"
+                        "<th class='l'>reason</th></tr>" + rows + "</table></div>")
+    m = report.get("machine") or {}
+    machine = ", ".join(x for x in (m.get("cpu"), f"{m['cores']} cores" if m.get("cores") else "") if x)
+    runs = report.get("runs") or 1
+    probs = len({(r["scenario"], r["config"]) for r in report["results"]})
+    items.append(f"The {report.get('suite', '')} suite comprises {count(probs, 'problem')}; each problem was solved "
+                 f"{'once' if runs == 1 else f'{runs} times'} per method on one machine"
+                 + (f" ({esc(machine)})" if machine else "") + ".")
+    return ("<div class='prose'><ul class='qs'>" + "".join(f"<li>{x}</li>" for x in items) + "</ul></div>"
+            + "".join(tables))
+
+
+def limitations(doc: Doc, report: dict, gallery: dict | None, pick: Pick) -> tuple[str, int]:
+    """The limitations chapter and the number of problem–measure combinations in which a baseline performs better."""
+    rows = others_better(report, pick.ref) if pick.ref else []
+    o = [doc.chapter("limitations", "Limitations")]
+    if pick.ref:
+        o.append(doc.section("better", "Problems on which a baseline performs better"))
+        if rows:
+            o += [f"<div class='prose'><p>Table {doc.tables + 1} lists the problems and measures for which a baseline "
+                  "achieves a value better than that of Label Anything by more than one percentage point, with at "
+                  "least as many usable labels and no more hard violations.</p></div>",
+                  doc.table("Problems and measures on which a baseline performs better than Label Anything."),
+                  better_table(report, pick, rows)]
+        else:
+            o.append("<div class='prose'><p>No baseline achieves a value better than that of Label Anything by more "
+                     "than one percentage point with at least as many usable labels and no more hard violations."
+                     "</p></div>")
+    sec = next((s for s in (gallery or {}).get("sections", []) if s["id"] == "weak"), None) or {}
+    figs = (gallery or {}).get("figures", {})
+    wf = [f for f in sec.get("figures", []) if f["key"] in figs]
+    notes = (gallery or {}).get("notes") or []
+    if wf or notes:
+        text = sec.get("lede") or "Known weaknesses of the current defaults and models."
+        if wf:
+            text += (f" {doc.next_figures(len(wf))} {'shows' if len(wf) == 1 else 'show'} an example"
+                     + ("; the notes below describe further cases." if notes else "."))
+        o += [doc.section("weak", "Known weaknesses of Label Anything"), f"<div class='prose'><p>{text}</p></div>"]
+        if wf:
+            o.append("<div class='figs' data-group='figs-weak'>"
+                     + "".join(fig_html(f, figs[f["key"]], "gallery/", doc.figure_number()) for f in wf) + "</div>")
+        if notes:
+            o.append("<div class='notes'>" + "".join(f"<div class='notecard'><h4>{esc(n['title'])}</h4><p>{n['html']}"
+                                                     "</p></div>" for n in notes) + "</div>")
+    o += [doc.section("threats", "Limitations of the benchmark"), benchmark_limits(doc, report, pick), "</section>"]
+    return "".join(o), len(rows)
+
+
+def conclusion(doc: Doc, report: dict, fd: dict | None) -> str:
+    if not fd:
+        return ""
+    items = []
+    for q, aspect, _t in QUESTIONS:
+        if q == "Q5" and not report.get("sequences"):
+            continue
+        a = answer(fd, q) + (" " + answer(fd, "QP") if q == "Q2" else "")
+        if a.strip():
+            items.append(f"<li><b>{q} {esc(aspect)}.</b> {a}</li>")
+    lim = doc.number("limitations")
+    return (doc.chapter("conclusion", "Conclusion")
+            + "<div class='prose'><p>The results answer the questions of the introduction as follows.</p>"
+            + f"<ul class='qs'>{''.join(items)}</ul>"
+            + (f"<p>Section {lim} lists the cases in which a baseline performs better, the known weaknesses of Label "
+               "Anything and the limitations of the benchmark.</p>" if lim else "")
+            + "</div></section>")
+
+
+def appendices(doc: Doc, report: dict, plots: dict) -> str:
+    doc.start_appendix()
+    suite = esc(report.get("suite") or "quick")
+    return (doc.chapter("details", "Release engineering")
+            + "<div class='prose'><p>Results that concern the development of Label Anything: its performance targets, "
+              "the release gates, the agreement between its implementations, and the changes since the previous "
+              "release.</p></div>"
+            + perf_html(report.get("perf")) + gates_html(report.get("gate")) + parity_html(report.get("parity"))
+            + diff_html(report.get("diff")) + "</section>"
+            + doc.chapter("measurements", "Runtime measurements")
+            + "<div class='prose'><p>The runtime of every method on every problem, as reported by the method and as "
+              "wall-clock time, against the number of items.</p></div>" + runtime_html(report, plots) + "</section>"
+            + doc.chapter("reproduction", "Reproduction")
+            + f"<div class='prose'><p>The run is reproduced with <code>python bench/run.py --suite {suite} --engine "
+              "rust/target/release/label-anything --baselines</code>, followed by <code>python -m bench.gallery "
+              "--engine rust/target/release/label-anything --run bench-report</code> for the figures of Label "
+              f"Anything; <a href='{REPO_URL}/blob/main/bench/README.md'>bench/README.md</a> describes the "
+              "requirements and the data sources. Times are the medians of the method-reported times unless marked "
+              "as wall-clock time; the times in the figures of Label Anything are engine-reported after three warm-up "
+              "runs.</p></div></section>")
+
+
+def runtime_panels_html(report: dict, pick: Pick) -> str:
+    """The runtime panels on shared axes: Label Anything's and one per baseline, hidden with the baseline."""
+    panels = sorted(runtime_panels(report, "engine", name), key=lambda p: -1 if p[0] is None else pick.rank(p[0]))
+    if not panels:
+        return ""
+    return ("<div class='panels'>" + "".join(f"<div class='chart'{pick.attrs(s) if s else ''}>{svg}</div>"
+                                             for s, svg in panels) + "</div>")
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -1205,80 +1891,33 @@ def load_gallery(out: Path) -> dict | None:
 
 
 def page(out: Path, report: dict, plots: dict, gallery: dict | None = None) -> str:
+    """The report: abstract and contents, then the chapters in order — introduction, benchmark design, results by
+    question, results by problem, case studies, limitations, conclusion — and the appendices."""
     pick = Pick(report["solvers"])
     stats = {s: aggregates(report, s) for s in report["solvers"]}
-    by_sc: dict[str, list] = {}
-    for r in report["results"]:
-        by_sc.setdefault(r["scenario"], []).append(r)
-    cmps = {(c["scenario"], c["config"]): c for c in (gallery or {}).get("comparisons", [])}
-    gsecs = {s["id"]: s for s in (gallery or {}).get("sections", [])}
-    gfigs = (gallery or {}).get("figures", {})
-    toc = [("summary", "Summary", 0)]
-    body = [overview_html(report, stats, pick)]
-    chapters = list(CHAPTERS)
-    known = {sc for *_x, scs in chapters for sc in scs}
-    # the gallery's sections no chapter names, then the scenarios no chapter names
-    ids = {c[0] for c in chapters} | {"weak"}
-    chapters += [(g["id"], g["title"], g.get("sub", ""), "", ()) for g in (gallery or {}).get("sections", [])
-                 if g["id"] not in ids]
-    rest = tuple(sorted(sc for sc in by_sc if sc not in known))
-    if rest:
-        chapters.append(("more", "Other problems", "", "", rest))
-    for cid, title, sub, lede, scs in chapters:
-        g = gsecs.get(cid)
-        figs = [fig_html(f, gfigs[f["key"]], "gallery/") for f in (g or {}).get("figures", []) if f["key"] in gfigs]
-        blocks = []
-        for sc in scs:
-            if sc in by_sc:
-                blocks.append(scenario_html(report, sc, by_sc[sc], cmps, out, pick))
-        if not figs and not blocks:
-            continue
-        extra = ""
-        if cid == "scale":
-            extra = scale_extra(report, pick)
-        toc.append((cid, (g or {}).get("title") or title, 0))
-        toc += [(f"sc-{sc}", next((p["title"] for p in report.get("problems", []) if p.get("scenario") == sc
-                                   and p.get("title")), sc), 1) for sc in scs if sc in by_sc]
-        body.append(chapter_html(cid, (g or {}).get("title") or title, (g or {}).get("sub") or sub,
-                                 (g or {}).get("lede") or esc(lede), figs, blocks, extra))
-    st = stability_chapter(report, gallery, out, pick)
-    if st:
-        toc.append(("stability", "Temporal stability", 0))
-        body.append(st)
-    toc.append(("weak", "Limitations", 0))
-    body.append(weak_chapter(report, gallery, pick))
-    toc.append(("details", "Technical details", 0))
-    body.append(details_chapter(report, plots))
+    fd = findings(report, stats, pick)
+    doc = Doc()
+    body = [introduction(doc, report, gallery), design(doc, report, gallery, pick),
+            results(doc, report, gallery, stats, pick, fd, out), by_problem(doc, report, gallery, out, pick),
+            case_studies(doc, gallery)]
+    lim, n_better = limitations(doc, report, gallery, pick)
+    body += [lim, conclusion(doc, report, fd), appendices(doc, report, plots)]
     css = (ASSETS / "report.css").read_text(encoding="utf-8")
     js = (ASSETS / "report.js").read_text(encoding="utf-8")
-    shown = f" Figures: engine commit <code>{esc(gallery['meta']['commit'])}</code>, " \
-            f"{esc(gallery['meta']['date'])}." if gallery else ""
-    footer = (f"<footer class='wrap'><p>Times are method-reported medians over runs unless marked as wall-clock "
-              f"time; figure times are engine-reported after three warm-up runs.{shown} Hard violations are counted "
-              "by the benchmark's evaluator, independently of the methods.</p><p>Reproduction: <code>python "
-              "bench/run.py --suite quick --engine rust/target/release/label-anything --baselines</code>, then "
-              "<code>python -m bench.gallery --engine rust/target/release/label-anything --run bench-report</code> "
-              f"(<a href='{REPO_URL}/blob/main/bench/README.md'>bench/README.md</a>). Source code: "
-              f"<a href='{REPO_URL}'>{esc(REPO_URL.removeprefix('https://'))}</a>.</p></footer>")
+    footer = (f"<footer class='wrap'><p>Label Anything benchmark report, {esc(report['suite'])} suite, generated "
+              f"{esc(report['generated_at'])}. Source code: <a href='{REPO_URL}'>"
+              f"{esc(REPO_URL.removeprefix('https://'))}</a>.</p></footer>")
     return ("<!doctype html>\n<html lang='en'>\n<head>\n<meta charset='utf-8'>\n"
             "<meta name='viewport' content='width=device-width, initial-scale=1'>\n"
             "<title>Label Anything benchmark report</title>\n<meta name='description' content='Comparison of Label "
             "Anything with baseline label placement methods on maps, charts, photographs, embeddings and "
             "networks.'>\n"
-            f"<style>{css}</style>\n</head>\n<body>\n" + header_html(report, gallery, stats, pick)
-            + bar_html(toc, pick) + "<main>" + "\n".join(body) + "</main>" + footer + VIEWER_HTML
+            f"<style>{css}</style>\n</head>\n<body>\n"
+            + header_html(report, gallery, abstract_text(report, fd, doc, n_better), doc.toc)
+            + bar_html(doc.toc, pick) + "<main>" + "\n".join(b for b in body if b) + "</main>" + footer + VIEWER_HTML
             + f"\n<script>\n{js}</script>\n</body>\n</html>\n")
 
 
-def scale_extra(report: dict, pick: Pick) -> str:
-    """How the time grows: the runtime panels on shared axes, Label Anything's and those of the labelers shown."""
-    panels = sorted(runtime_panels(report, "engine", name), key=lambda p: -1 if p[0] is None else pick.rank(p[0]))
-    if not panels:
-        return ""
-    figs = "".join(f"<div class='chart'{pick.attrs(s) if s else ''}>{svg}</div>" for s, svg in panels)
-    return ("<h3 class='subhead'>Runtime versus number of items <small>all problems of the run; method-reported "
-            "time; log–log axes; lines connect the sizes of this scenario</small></h3>"
-            f"<div class='panels'>{figs}</div>")
 
 
 def write_page(out: Path, report: dict, plots: dict | None) -> Path:

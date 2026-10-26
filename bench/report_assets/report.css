@@ -42,12 +42,17 @@ header.top { padding-top: 40px; padding-bottom: 28px; display: grid; gap: 16px; 
 .eyebrow a:hover { text-decoration: underline; }
 h1 { font-size: clamp(2rem, 4.4vw, 3.1rem); line-height: 1.1; margin: 0; letter-spacing: -0.02em; text-wrap: balance; font-weight: 400; }
 .lede { margin: 0; color: var(--ink2); max-width: 78ch; font-size: 16px; }
-.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 12px; margin-top: 6px; }
-.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px 13px; display: grid; gap: 2px; align-content: start; }
-.kpi .k { font-size: 13px; color: var(--ink2); }
-.kpi .v { font-size: 30px; line-height: 1.15; letter-spacing: -0.01em; }
-.kpi .v small { font-size: 15px; color: var(--ink2); letter-spacing: 0; }
-.kpi .s { font-size: 12.5px; color: var(--ink2); }
+.abstract { margin: 0; max-width: 80ch; font-size: 15.5px; }
+.contents { border-top: 1px solid var(--line); padding-top: 14px; font-size: 14.5px; }
+.contents .h { margin: 0 0 8px; font-size: 12px; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.08em; }
+.contents ul { list-style: none; margin: 0; padding: 0; }
+.contents > ul { columns: 2 320px; column-gap: 40px; }
+.contents > ul > li { break-inside: avoid; margin-bottom: 8px; }
+.contents ul ul { padding-left: 1.9em; font-size: 13.5px; }
+.contents a { color: var(--ink); text-decoration: none; }
+.contents ul ul a { color: var(--ink2); }
+.contents a:hover { text-decoration: underline; }
+.num { color: var(--muted); margin-right: 0.5em; font-variant-numeric: tabular-nums; }
 
 /* the bar: contents, the labelers compared, all metrics */
 .bar { position: sticky; top: 0; z-index: 10; background: var(--page); border-bottom: 1px solid var(--line); }
@@ -87,7 +92,12 @@ section.chapter > h2 { margin: 0; padding-top: 18px; border-top: 1px solid var(-
   font-weight: 400; letter-spacing: -0.015em; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
 section.chapter > h2 small { font-size: 14px; color: var(--ink2); letter-spacing: 0; }
 section.chapter > .lede { margin-top: -6px; }
-h3 { font-weight: 400; }
+h3, h4 { font-weight: 400; }
+.prose { display: grid; gap: 10px; max-width: 80ch; }
+.prose p { margin: 0; }
+ul.qs { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; }
+.cap { margin: 0; font-size: 13.5px; color: var(--ink2); max-width: 90ch; }
+.cap b, .fnum { color: var(--ink); font-weight: 700; }
 .subhead { margin: 10px 0 0; font-size: 1.25rem; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
 .subhead small { font-size: 13px; color: var(--ink2); }
 .guide { margin: 0; color: var(--ink2); max-width: 80ch; }
@@ -99,7 +109,7 @@ h3 { font-weight: 400; }
 .fig.wide { grid-column: 1 / -1; }
 .fig.limit { border-left: 3px solid var(--bad); }
 .fig figcaption { padding: 12px 16px 14px; display: grid; gap: 6px; min-width: 0; }
-.fig h3 { margin: 0; font-size: 1.15rem; line-height: 1.3; text-wrap: balance; }
+.fig h4 { margin: 0; font-size: 1.15rem; line-height: 1.3; text-wrap: balance; }
 .fig p { margin: 0; color: var(--ink2); max-width: 78ch; }
 .srcrow { display: flex; flex-wrap: wrap; gap: 2px 12px; align-items: baseline; justify-content: space-between; }
 .srcrow a { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
@@ -128,7 +138,7 @@ details.set pre { margin: 6px 0 0; padding: 10px 12px; background: var(--head); 
 /* head to head: one problem, the labelers side by side */
 .scenario { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
 .scenario > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
-.scenario > header h3 { margin: 0; font-size: 1.2rem; }
+.scenario > header h4 { margin: 0; font-size: 1.2rem; }
 .scenario .desc { margin: 0; color: var(--ink2); max-width: 90ch; }
 .tabs { display: flex; flex-wrap: wrap; gap: 6px; }
 .tab { font: 400 12.5px/1.2 var(--mono); padding: 4px 9px; border-radius: 4px; border: 1px solid var(--line); background: var(--page); color: var(--ink2); cursor: pointer; }
@@ -167,6 +177,10 @@ html:not(.js) .x { display: table-cell; }
 .hw2 { background: var(--hw2); } .hw1 { background: var(--hw1); } .h0 { background: var(--h0); } .hb1 { background: var(--hb1); } .hb2 { background: var(--hb2); }
 td.hw2, td.hw1, td.h0, td.hb1, td.hb2 { border: 2px solid var(--surface); }
 td.best { font-weight: 700; }
+td.na { color: var(--muted); font-style: italic; }
+table.matrix th.la { color: var(--accent-ink); font-weight: 700; }
+table.matrix tr.grp th, table.matrix tr.grp td { background: var(--page); color: var(--ink); text-align: left; padding-top: 8px; }
+table.matrix tr.sum th, table.matrix tr.sum td { border-top: 2px solid var(--ink2); }
 
 /* where each labeler stands: one strip per measure, better to the right */
 table.stand { font-size: 14px; }
@@ -208,7 +222,7 @@ dl.gloss dd { margin: 0; color: var(--ink2); max-width: 80ch; }
 .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 18px; }
 .notecard { margin: 0; background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--bad);
   border-radius: 6px; padding: 12px 16px 14px; display: grid; gap: 6px; align-content: start; min-width: 0; }
-.notecard h3 { margin: 0; font-size: 1.1rem; }
+.notecard h4 { margin: 0; font-size: 1.1rem; }
 .notecard p { margin: 0; color: var(--ink2); }
 .chart svg { max-width: 100%; height: auto; }
 .panels { display: flex; flex-wrap: wrap; gap: 8px; }
