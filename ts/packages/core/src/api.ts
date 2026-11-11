@@ -77,20 +77,24 @@ export interface PlaceOptions {
    * `null` to fall back to the built-in measurement for this text.
    */
   measure?: (text: string, font: FontSpec) => TextMetrics | null;
-  /** Progress notifications (`phase` is e.g. "prepare", "greedy", "local", "verify"). */
+  /** Progress notifications (`phase` is "greedy", "local" or "exact"). */
   progress?: (phase: string, fraction: number) => void;
   /**
    * Cancellation: when aborted, the solver stops improving and returns the best valid
-   * result found so far (the greedy result at the latest).
+   * result found so far (the greedy result at the latest). An `AbortSignal`, or any object
+   * whose `aborted` turns `true`.
    */
-  signal?: AbortSignal;
+  signal?: { readonly aborted: boolean };
   /**
    * Raster background pixels supplied directly: they replace the image of the first
    * `obstacles.raster` source, or add a raster source with default options.
    */
   raster?: RgbaPixels;
-  /** Reads files referenced by path (`svg.path`, raster `source`, font `file`); Node only. */
-  readFile?: (path: string) => Uint8Array;
+  /**
+   * Reads the files a problem names (`svg.path`, raster `source`, font `file`): the bytes,
+   * or the text of a UTF-8 file. Without it, naming a file is an error.
+   */
+  readFile?: (path: string) => Uint8Array | string;
 }
 
 /** Outcome of {@link validate}. */
