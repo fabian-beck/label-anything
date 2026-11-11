@@ -885,6 +885,11 @@ class Problem:
         return len(self._items)
 
     def __repr__(self) -> str:
-        c = self._doc.get("canvas", {})
-        size = f"{c.get('width'):g}×{c.get('height'):g}" if "width" in c else "unbounded"
+        c = self._doc.get("canvas") or {}
+        w, h = c.get("width"), c.get("height")
+
+        def number(v: Any) -> str:
+            return f"{v:g}" if isinstance(v, (int, float)) else "?"
+
+        size = "unbounded" if w is None and h is None else f"{number(w)}×{number(h)}"
         return f"<Problem items={len(self._items)} canvas={size}>"

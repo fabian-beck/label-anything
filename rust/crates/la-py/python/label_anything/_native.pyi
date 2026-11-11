@@ -1,9 +1,10 @@
 """Type stub of the extension module ``label_anything._native`` (rust/crates/la-py/src)."""
 
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, final
 
 __version__: str
 
+@final
 class CancelToken:
     """A thread-safe cancellation flag, polled by the solver without the GIL."""
 
