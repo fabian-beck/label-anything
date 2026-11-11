@@ -11,6 +11,7 @@
 //          ts/packages/core/src/generated/problem.ts, result.ts   (types from the schemas)
 //          ts/packages/text/src/generated/fonts.ts                 (base64 metrics fonts)
 //          rust/crates/la-text/assets/                             (copies of the metrics fonts + OFL.txt)
+//          LICENSE (and OFL.txt where the font is embedded) in every published package
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -188,18 +189,27 @@ function emit(rel, content) {
   return true;
 }
 
-// Published crates cannot include files outside their directory, so la-text embeds copies
-// of the metrics fonts (and their license) from rust/crates/la-text/assets/, and the CLI
-// the fonts with outlines (for PNG rendering) from rust/crates/la-cli/assets/.
-function copyRustFonts() {
+// Published packages cannot include files outside their directory, so they get copies:
+// la-text embeds the metrics fonts (and their license) from rust/crates/la-text/assets/,
+// the CLI the fonts with outlines (for PNG rendering) from rust/crates/la-cli/assets/;
+// every crate, npm package and Python package carries the MIT license text (which asks to
+// be included in all copies), and those that embed the font carry its license as well.
+function copyPackageFiles() {
   let changed = false;
+  const crates = ["la-capi", "la-cli", "la-core", "la-expr", "la-py", "la-raster", "la-render", "la-svg", "la-text",
+    "la-wasm", "label-anything"].map((c) => `rust/crates/${c}`);
+  const npm = ["core", "text", "svg", "raster", "cli", "wasm-adapter"].map((p) => `ts/packages/${p}`);
   const copies = [
-    ...["NotoSans-Regular.metrics.ttf", "NotoSans-Bold.metrics.ttf", "OFL.txt"].map((f) => [f, "la-text"]),
-    ...["NotoSans-Regular.ttf", "NotoSans-Bold.ttf", "OFL.txt"].map((f) => [f, "la-cli"]),
+    ...["NotoSans-Regular.metrics.ttf", "NotoSans-Bold.metrics.ttf", "OFL.txt"].map((f) => [`fonts/${f}`, `rust/crates/la-text/assets/${f}`]),
+    ...["NotoSans-Regular.ttf", "NotoSans-Bold.ttf", "OFL.txt"].map((f) => [`fonts/${f}`, `rust/crates/la-cli/assets/${f}`]),
+    ...[...crates, ...npm, "bindings/js-extras", "bindings/python-extras", "bindings/java"].map((d) => ["LICENSE", `${d}/LICENSE`]),
+    // the font is embedded in the text package, the WebAssembly module, the Python wheel
+    // and the native library of the JAR
+    ...["ts/packages/text", "ts/packages/wasm-adapter", "rust/crates/la-py", "bindings/java"].map((d) => ["fonts/OFL.txt", `${d}/OFL.txt`]),
+    ...["rust/crates/la-py", "bindings/java"].map((d) => ["NOTICE", `${d}/NOTICE`]),
   ];
-  for (const [file, crate] of copies) {
-    const rel = `rust/crates/${crate}/assets/${file}`;
-    const source = readFileSync(join(root, "fonts", file));
+  for (const [from, rel] of copies) {
+    const source = readFileSync(join(root, from));
     const target = join(root, rel);
     if (existsSync(target) && readFileSync(target).equals(source)) continue;
     changed = true;
@@ -220,7 +230,7 @@ let stale = false;
 stale = emit("rust/crates/la-core/src/generated/spec_data.rs", rustSpecData(defaults, presets)) || stale;
 stale = emit("ts/packages/core/src/generated/spec-data.ts", tsSpecData(defaults, presets)) || stale;
 stale = emit("ts/packages/text/src/generated/fonts.ts", tsFonts()) || stale;
-stale = copyRustFonts() || stale;
+stale = copyPackageFiles() || stale;
 const types = await tsTypes();
 stale = emit("ts/packages/core/src/generated/problem.ts", types.problem) || stale;
 stale = emit("ts/packages/core/src/generated/result.ts", types.result) || stale;

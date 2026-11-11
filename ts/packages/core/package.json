@@ -6,11 +6,17 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
-  "files": ["dist", "src"],
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "src", "!dist/conformance", "!src/conformance"],
   "sideEffects": false,
   "repository": { "type": "git", "url": "https://github.com/fabian-beck/label-anything", "directory": "ts/packages/core" },
+  "homepage": "https://fabian-beck.github.io/label-anything/",
+  "bugs": "https://github.com/fabian-beck/label-anything/issues",
+  "publishConfig": { "access": "public" },
   "keywords": ["label placement", "labeling", "visualization", "leader lines"],
-  "scripts": { "build": "tsc -b", "test": "vitest run" },
+  "scripts": { "build": "tsc -b", "test": "vitest run", "prepack": "tsc -b" },
   "dependencies": { "@label-anything/text": "0.1.0", "@label-anything/svg": "0.1.0", "@label-anything/raster": "0.1.0" }
 }
