@@ -26,12 +26,15 @@ pub use la_core::geom::{Rect, P};
 pub use la_core::validate::{Issue, Report};
 pub use la_core::{model, PlaceError, VERSION};
 pub use la_render as render;
+/// The JSON library of the problems and results of this crate.
+pub use serde_json;
 
 use serde_json::Value;
 use std::path::PathBuf;
 
 /// The native environment: system clock, file access relative to a base directory, and
 /// the SVG/raster backends compiled into this build.
+#[derive(Clone, Debug)]
 pub struct NativeEnv {
     #[cfg(feature = "std-clock")]
     start: std::time::Instant,
@@ -53,9 +56,11 @@ impl Default for NativeEnv {
 }
 
 impl NativeEnv {
+    /// An environment that reads files relative to the working directory.
     pub fn new() -> NativeEnv {
         NativeEnv::default()
     }
+    /// An environment that reads relative file paths relative to `dir`.
     pub fn with_base_dir(dir: impl Into<PathBuf>) -> NativeEnv {
         NativeEnv {
             base_dir: Some(dir.into()),
@@ -120,12 +125,18 @@ pub fn place_with(problem: &Value, env: &dyn Env) -> Result<Value, PlaceError> {
     place_validated(problem, env, report)
 }
 
-/// Solve a problem whose validation report is already known (must be valid).
+/// Solve a problem whose validation report is already known. The report of an invalid
+/// problem is returned as the error.
 pub fn place_validated(
     problem: &Value,
     env: &dyn Env,
     report: Report,
 ) -> Result<Value, PlaceError> {
+    if !report.valid {
+        return Err(PlaceError {
+            errors: report.errors,
+        });
+    }
     let (mut result, debug) = la_core::place_validated(problem, env, report.warnings)?;
     if let Some(d) = debug {
         let model = la_core::model::build(problem, env).ok();
@@ -141,6 +152,7 @@ pub fn place_json(problem: &str) -> Result<String, String> {
     place_json_with(problem, &NativeEnv::new())
 }
 
+/// [`place_json`] with a custom environment.
 pub fn place_json_with(problem: &str, env: &dyn Env) -> Result<String, String> {
     let v: Value = serde_json::from_str(problem).map_err(|e| {
         serde_json::to_string(&vec![Issue::new("", "parse", format!("invalid JSON: {e}"))])

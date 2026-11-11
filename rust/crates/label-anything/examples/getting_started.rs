@@ -3,10 +3,10 @@
 //!
 //!   cargo run --manifest-path rust/Cargo.toml -p label-anything --example getting_started
 
+use label_anything::serde_json::json;
 use label_anything::{
     place, place_with, render_svg, validate, Env, FontSpec, NativeEnv, TextMetrics,
 };
-use serde_json::json;
 
 fn main() {
     // --8<-- [start:place]

@@ -3,7 +3,8 @@
 The crate `label-anything` is the engine itself: the other packages are bindings to it.
 It takes a problem as a `serde_json::Value` (or as JSON text) and returns the result the
 same way; the [problem](../concepts/problem.md) and [result](../concepts/result.md)
-formats are those of every other language.
+formats are those of every other language. The crate exports the `serde_json` it uses
+(`label_anything::serde_json`), so a dependency of your own on it is optional.
 
 ## Install
 
