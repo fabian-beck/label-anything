@@ -307,7 +307,7 @@ fn touch_from_support(s: P, d: P, hw: f64, hh: f64) -> P {
 
 /// Support points of an item's inflated mark (`S ⊕ o`) in the directions of the fixed
 /// positions and of the gap tables. They do not depend on the label size, so all
-/// variants of the item share them ([`support_table`]).
+/// variants of the item share them (`support_table`).
 #[derive(Clone, Debug)]
 pub struct SupportTable {
     /// By angular index of the fixed positions.
@@ -375,7 +375,7 @@ fn push_in(shape: &Shape, o: f64, c: P, hw: f64, hh: f64) -> P {
 /// candidate on the side its center points to when it touches the inflated mark (gap
 /// ≤ offset + 1 px), else a distant candidate with a straight leader (straight style,
 /// within the leader length limits) or with the leader it came with (see
-/// [`warm_leader`]). `None` when neither applies.
+/// `warm_leader`). `None` when neither applies.
 pub fn warm(
     model: &crate::model::Model,
     item: &Item,

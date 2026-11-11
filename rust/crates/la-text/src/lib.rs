@@ -98,3 +98,8 @@ pub use wrap::{
     balanced_wrap, extra_wrap_variants, greedy_wrap, truncate_end, truncate_middle, wrap_variants,
     Measure, TextVariant, Truncate, WrapOptions,
 };
+
+/// The examples of the README are tested with the documentation.
+#[cfg(all(doctest, feature = "bundled-font"))]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;

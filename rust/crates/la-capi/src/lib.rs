@@ -67,9 +67,25 @@ unsafe fn read_str(ptr: *const c_char) -> Result<String, String> {
         .map_err(|e| format!("invalid UTF-8: {e}"))
 }
 
+/// Runs `f`. A panic becomes `LA_ERROR` with an `internal` error: unwinding out of an
+/// `extern "C"` function would abort the caller's process.
+fn guarded(what: &str, f: impl FnOnce() -> (i32, String)) -> (i32, String) {
+    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)) {
+        Ok(reply) => reply,
+        Err(_) => (
+            LA_ERROR,
+            error_json("internal", &format!("internal error (panic) in {what}")),
+        ),
+    }
+}
+
 /// Solve a problem given as JSON text, with an optional raster override. Returns the
 /// return code and the result JSON (or the JSON array of errors).
 pub(crate) fn place_text(text: &str, img: Option<RgbaImage>) -> (i32, String) {
+    guarded("label placement", || place_text_unguarded(text, img))
+}
+
+fn place_text_unguarded(text: &str, img: Option<RgbaImage>) -> (i32, String) {
     let env = CEnv {
         inner: NativeEnv::new(),
         rgba: img,
@@ -90,23 +106,21 @@ pub(crate) fn place_text(text: &str, img: Option<RgbaImage>) -> (i32, String) {
             serde_json::to_string(&report.errors).unwrap_or_default(),
         );
     }
-    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        label_anything::place_validated(&v, &env, report)
-    })) {
-        Ok(Ok(r)) => (LA_OK, serde_json::to_string(&r).unwrap_or_default()),
-        Ok(Err(e)) => (
+    match label_anything::place_validated(&v, &env, report) {
+        Ok(r) => (LA_OK, serde_json::to_string(&r).unwrap_or_default()),
+        Err(e) => (
             LA_INVALID,
             serde_json::to_string(&e.errors).unwrap_or_default(),
-        ),
-        Err(_) => (
-            LA_ERROR,
-            error_json("internal", "internal error (panic) in label placement"),
         ),
     }
 }
 
 /// Validate a problem given as JSON text: return code and the report JSON.
 pub(crate) fn validate_text(text: &str) -> (i32, String) {
+    guarded("validation", || validate_text_unguarded(text))
+}
+
+fn validate_text_unguarded(text: &str) -> (i32, String) {
     let r = match serde_json::from_str::<Value>(text) {
         Ok(v) => label_anything::validate(&v),
         Err(e) => label_anything::Report {
@@ -130,6 +144,10 @@ pub(crate) fn validate_unreadable(message: &str) -> String {
 
 /// Render the debug SVG of a problem and a result given as JSON text.
 pub(crate) fn render_text(problem: &str, result: &str) -> (i32, String) {
+    guarded("rendering", || render_text_unguarded(problem, result))
+}
+
+fn render_text_unguarded(problem: &str, result: &str) -> (i32, String) {
     match (
         serde_json::from_str::<Value>(problem),
         serde_json::from_str::<Value>(result),

@@ -17,6 +17,8 @@
 //! assert_eq!(result["stats"]["hard_violations"], 0);
 //! ```
 
+#![forbid(unsafe_code)]
+
 pub use la_core::env::{
     self, Env, FontSpec, Geom, RasterMode, RasterOpts, RgbaImage, SvgBackend, SvgDoc, TextMetrics,
 };
@@ -155,3 +157,8 @@ pub fn render_svg(problem: &Value, result: &Value, env: &dyn Env) -> String {
     let model = la_core::model::build(problem, env).ok();
     la_render::debug_svg(model.as_ref(), result, None)
 }
+
+/// The examples of the README are tested with the documentation.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;

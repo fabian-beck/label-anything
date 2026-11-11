@@ -311,3 +311,8 @@ impl Scene {
         }
     }
 }
+
+/// The examples of the README are tested with the documentation.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;
