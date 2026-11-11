@@ -128,7 +128,7 @@ ok("d3-force settled", force.result(), 15);
 assert.ok(force.result().stats.flicker, "settled warm-started");
 
 // Web Worker (stand-in: the worker side runs serveEngine in this thread)
-const workerListeners = { message: [], error: [] };
+const workerListeners = { message: [], error: [], messageerror: [] };
 const scope = { onmessage: null, postMessage: (m) => setTimeout(() => workerListeners.message.forEach((f) => f({ data: m }))) };
 serve(scope);
 const worker = {

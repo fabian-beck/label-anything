@@ -147,12 +147,51 @@ function draft07Tuples(node) {
   return out;
 }
 
+// The schemas describe a tagged union as `allOf: [{if: {tag: const}, then: {...}}, ...]`,
+// which says exactly what each variant allows. json-schema-to-typescript drops `if`/`then`
+// and would type such a value as "any object with a tag", so an anchor without
+// coordinates would type-check. Rewrite those to `oneOf` of closed objects (for the types
+// only: validation is hand-written against the real schema).
+function taggedUnions(node) {
+  if (Array.isArray(node)) return node.map(taggedUnions);
+  if (node === null || typeof node !== "object") return node;
+  const out = {};
+  for (const [k, v] of Object.entries(node)) out[k] = taggedUnions(v);
+  const all = out.allOf;
+  const tagOf = (branch) => {
+    const props = Object.entries(branch.if?.properties ?? {});
+    return branch.then && props.length === 1 && "const" in props[0][1] ? [props[0][0], props[0][1].const] : null;
+  };
+  if (!Array.isArray(all) || all.length === 0 || !all.every((b) => tagOf(b) !== null)) return out;
+  const tag = tagOf(all[0])[0];
+  if (!all.every((b) => tagOf(b)[0] === tag)) return out;
+  const { allOf: _allOf, properties, required, type: _type, ...rest } = out;
+  // a variant that asks for one of several properties (`oneOf: [{required}, ...]`) is one
+  // variant per alternative
+  const alternatives = (then) => {
+    const { oneOf, ...plain } = then;
+    const alts = Array.isArray(oneOf) && oneOf.every((o) => Object.keys(o).join() === "required") ? oneOf : null;
+    return alts ? alts.map((o) => ({ ...plain, required: [...(plain.required ?? []), ...o.required] })) : [then];
+  };
+  return {
+    ...rest,
+    oneOf: all.flatMap((b) =>
+      alternatives(b.then).map((then) => ({
+        type: "object",
+        ...then,
+        required: [...new Set([tag, ...(then.required ?? [])])],
+        properties: { ...then.properties, [tag]: { const: tagOf(b)[1] } },
+      })),
+    ),
+  };
+}
+
 async function tsTypes() {
   const require = createRequire(join(root, "package.json"));
   const { compile } = require("json-schema-to-typescript");
   const out = {};
   for (const [name, file] of [["problem", "problem.v1.json"], ["result", "result.v1.json"]]) {
-    const schema = draft07Tuples(JSON.parse(readFileSync(join(root, "spec/schema", file), "utf8")));
+    const schema = taggedUnions(draft07Tuples(JSON.parse(readFileSync(join(root, "spec/schema", file), "utf8"))));
     if (name === "problem") {
       // TypeScript requires named properties to match the index signature; widen the
       // index type of avoid.label so `own_mark` (partial:f) type-checks. Validation is
