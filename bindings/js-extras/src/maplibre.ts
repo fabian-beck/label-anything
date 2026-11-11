@@ -71,7 +71,8 @@ export function labelMapLibre<D>(map: MapLibreLike, data: readonly D[], options:
     const c = map.getCanvas();
     return [c.clientWidth, c.clientHeight] as const;
   };
-  const collect = (): OverlayItem[] => {
+  /** The labeled rows at their projected positions: those in the view, or all of them. */
+  const collect = (all = false): OverlayItem[] => {
     const [w, h] = size();
     const out: OverlayItem[] = [];
     rows.forEach((d, i) => {
@@ -79,7 +80,7 @@ export function labelMapLibre<D>(map: MapLibreLike, data: readonly D[], options:
       const label = ll ? labelOf(options, d, i) : null;
       if (!ll || !label) return;
       const p = map.project(ll);
-      if (!(p.x >= 0 && p.y >= 0 && p.x <= w && p.y <= h)) return;
+      if (!all && !(p.x >= 0 && p.y >= 0 && p.x <= w && p.y <= h)) return;
       const mark = typeof options.mark === "function" ? options.mark(d, i) : (options.mark ?? { shape: "circle", r: 4 });
       out.push({ id: idOf(options, d, i), x: p.x, y: p.y, label, mark, extras: itemExtras(options, d, i) });
     });
@@ -97,7 +98,9 @@ export function labelMapLibre<D>(map: MapLibreLike, data: readonly D[], options:
     font,
     render: { halo: "white", ...options },
     size,
-    collect,
+    collect: () => collect(),
+    // while the map moves, a label follows its anchor out of the view
+    positions: () => new Map(collect(true).map((it) => [it.id, [it.x, it.y] as const])),
     obstacles,
     transition: options.transition,
     onResult: options.onResult,
