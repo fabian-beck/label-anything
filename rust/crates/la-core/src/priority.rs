@@ -131,7 +131,8 @@ fn knn_gaps(model: &Model, k: usize) -> Vec<f64> {
     }
     let bbox = crate::geom::bbox_of(&pts.iter().map(|p| p.0).collect::<Vec<_>>());
     let tree = KdTree::new(&pts);
-    let mut best = Vec::with_capacity(k + 1);
+    // `k` is the problem's: no room for more neighbours than there are points
+    let mut best = Vec::with_capacity(k.min(pts.len()) + 1);
     let mut stack = Vec::new();
     let mut out = Vec::with_capacity(model.items.len());
     for (i, it) in model.items.iter().enumerate() {

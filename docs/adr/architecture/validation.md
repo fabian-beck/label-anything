@@ -21,6 +21,11 @@ check what the schema cannot express.
   semantic checks such as duplicate ids, unknown `keep_with` references, expression syntax
   and unknown classes (a warning). Errors are `{pointer, code, message}`; the codes are
   shared and listed in `conformance/README.md`.
+- **Counts have an upper limit** in the schema (lines of a wrapped label, slider
+  positions, distant rings and directions, distant candidates kept): the work of a solve
+  grows with them, and a problem of a hundred bytes that asks for a billion candidates
+  would take the host's memory. The limits are far above any use (1,000 lines, 3,600
+  directions); a larger value is a `range` error.
 - **Cross-check**: CI validates every conformance problem with the reference validator
   (Python `jsonschema`, Draft 2020-12) and checks that both hand-written validators agree
   on what is valid.

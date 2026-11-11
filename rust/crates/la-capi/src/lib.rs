@@ -183,7 +183,17 @@ pub unsafe extern "C" fn la_place_json(
     let img = if rgba.is_null() || width == 0 || height == 0 {
         None
     } else {
-        let len = width as usize * height as usize * 4;
+        // u32 × u32 × 4 does not fit a usize on every platform
+        let len = (width as usize)
+            .checked_mul(height as usize)
+            .and_then(|n| n.checked_mul(4));
+        let Some(len) = len else {
+            out_string(
+                result,
+                error_json("limit", "width * height * 4 is too large"),
+            );
+            return LA_ERROR;
+        };
         Some(RgbaImage {
             width,
             height,

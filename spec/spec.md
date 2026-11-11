@@ -767,8 +767,9 @@ labels of a line chart off the lines to the left.
 ### 6.5 Area anchors
 
 Internal candidates at the polygon's pole of inaccessibility and at grid samples
-(spacing = label height) inside the polygon where the label box (+ `inner_padding`) fits,
-ordered by clearance. If none fit, the item falls back to a point-like item at the pole
+(spacing = label height, at least 4 px, and at least √(w · h / 65536) for a polygon whose
+bounding box is w × h, which bounds the work for a polygon far larger than the picture)
+inside the polygon where the label box (+ `inner_padding`) fits, ordered by clearance. If none fit, the item falls back to a point-like item at the pole
 with mark `anchor.dot` (default circle r = 2), with external candidates and leaders. Area
 polygons are not obstacles of other labels.
 

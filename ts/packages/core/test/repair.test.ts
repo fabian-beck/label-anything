@@ -24,4 +24,15 @@ describe("solver::repair", () => {
     a.forEach((j, i) => (total += c[i]![j]!));
     expect(total).toBe(5);
   });
+
+  // Costs that are not finite have no minimum: the assignment is the identity, and the
+  // search ends.
+  it("hungarian_without_finite_costs", () => {
+    const inf = Infinity;
+    expect(hungarian([[inf, inf], [inf, inf]])).toEqual([0, 1]);
+    expect(hungarian([[NaN, NaN], [1, 2]])).toEqual([0, 1]);
+    expect(hungarian([[1, 2], [inf, inf]])).toEqual([0, 1]);
+    // a row with one finite cost is still assigned
+    expect(hungarian([[inf, 1], [1, inf]])).toEqual([1, 0]);
+  });
 });
