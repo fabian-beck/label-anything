@@ -36,13 +36,21 @@ such problems:
 * JavaScript (`@label-anything/core`, `@label-anything/wasm`): files are read only
   through the `readFile` option; leave it out;
 * the HTTP server (`label-anything serve`) reads files only while it listens on a
-  loopback address, or with `--allow-files`;
+  loopback address, or with `--allow-files`, and never for a request from a web page (one
+  with an `Origin` header);
 * Python, Java and the C ABI always read the files a problem names: reject problems that
   name files (or validate the paths) before you pass them on.
 
-**The HTTP server has no authentication** and allows requests from any origin. It is made
-for the local machine and for trusted networks. Put a reverse proxy in front of it for
-anything else, and limit the size and rate of requests there.
+**The HTTP server has no authentication** and allows requests from any origin: any page
+in a browser on the machine can ask it to solve a problem. It is made for the local
+machine and for trusted networks. It limits the size of a request (`--max-body`) but not
+the number of connections, the time a client takes to send its request, or the time
+budget a problem asks for: put a reverse proxy in front of it for anything else.
+
+**A problem can ask for a lot of work.** The counts of the format have upper limits, but
+a problem may still be large, set a long `solver.time_budget_ms`, or carry geometry that
+takes long to prepare. A service that solves problems of strangers should limit the size
+of a problem, run solves in a process it can stop, and stop them after a time of its own.
 
 **Callbacks run your code.** Priority expressions (`priority.terms[].expr`) are a small,
 side-effect-free language and safe to take from anyone; the `priority`, `cost` and
