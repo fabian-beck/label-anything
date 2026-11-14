@@ -133,9 +133,10 @@ problems of the full suite without animations, 2026-10-25):
 * On 10,000 and 20,000 stress anchors, `medium` places more labels than `high` (1,092
   against 977, 990 against 914): `high` spends the time budget on its further means.
 
-The [benchmark report](https://fabian-beck.github.io/label-anything/benchmark-report/) shows
-where each labeler stands, every problem with the labelers side by side (three by default,
-the others on demand) and what the defaults still do badly
+The [benchmark report](https://fabian-beck.github.io/label-anything/benchmark-report/) states
+the questions and the benchmark design, answers the questions with the results per question
+and per problem (three labelers side by side by default, the others on demand), and
+presents case studies and the limitations
 ([ADR project/benchmark-report](../adr/project/benchmark-report.md)). Its images mark what
 the measures count, where it happens:
 conflicts in red, ambiguous labels in orange (a line to the point a label may be taken

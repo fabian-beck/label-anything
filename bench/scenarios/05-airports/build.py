@@ -136,16 +136,17 @@ def main() -> None:
 
     # 1. quick: top 300, no background
     wr.config("world-iata-300-none", world_problem(300), quick=True,
-              description="Top 300 airports by routes, IATA codes, no background; other airports as soft points.")
+              description="300 airports with the most routes, labeled with IATA codes; other airports as soft "
+                          "points; no background.")
     # 2. vector outlines
     osc = outline_scene(A.WORLD, W, H, countries)
     wr.config("world-iata-1000-vector", world_problem(1000, osc.vector_layers()),
               svg=osc.svg(), png=png_bytes(osc.png()),
-              description="Top 1000 airports, country outlines and graticule as soft 'lines' vector layers.")
+              description="1,000 airports with the most routes; country outlines and graticule as soft line layers.")
     p = world_problem(1000, osc.vector_layers())
     merge_avoid(p, LOWER["label"], LOWER["leader"])
     wr.config("world-iata-1000-lower-vector", p, svg=osc.svg(), png=png_bytes(osc.png()),
-              description="The same 1000 airports; labels may cover the marks of less important airports.")
+              description="The same 1,000 airports; labels may cover the marks of less important airports.")
     # 3. SVG world map with 3000 anchors
     sc = A.map_scene(A.WORLD, W, H, countries, title="World airports by number of routes")
     for a in aps[3000:]:
@@ -157,7 +158,8 @@ def main() -> None:
     merge_avoid(p, {"points": 0.3}, {"points": 0.2}, ignore_background=True)
     p["obstacles"] = {"svg": svg_source(sc)}
     wr.config("world-iata-3000-svg", p, truth=sc.truth(), svg=sc.svg(), png=png_bytes(sc.png()),
-              description="Top 3000 airports on an SVG world map (countries, graticule, title, credit).")
+              description="3,000 airports with the most routes on an SVG world map (countries, graticule, title, "
+                          "credit).")
     # 4. Europe with city names
     eu = Equirect(-12.0, 32.0, 61.0, 35.0, 1320.0, 780.0)
     eu_aps = [a for a in aps if in_window(a, eu, eu.width, eu.height)]
@@ -185,13 +187,15 @@ def main() -> None:
         cities[a.city] = cities.get(a.city, 0) + 1
     p, sc = hubs_problem(eu, eu_aps, 30, 100, city_label, ids, 10.0, "Europe's busiest airports", 10.0, 0.4)
     wr.config("europe-hubs-svg", p, truth=sc.truth(), svg=sc.svg(), png=png_bytes(sc.png()),
-              description="Hubs first: 30 hubs (tier 1, 1.2 ×), 70 more where they fit, other airports as dots.")
+              description="30 hubs placed first (tier 1, type size 1.2×), 70 further airports where space remains, "
+                          "other airports as points.")
     world6 = Equirect(-180.0, 180.0, 84.0, -58.0, 2160.0, 852.0)
     vis = [a for a in aps if in_window(a, world6, world6.width, world6.height)]
     p, sc = hubs_problem(world6, vis, 30, 100, lambda a: a.code, ids, 8.0, "The world's busiest airports",
                          30.0, 0.35)
     wr.config("world-hubs-100-svg", p, truth=sc.truth(), svg=sc.svg(), png=png_bytes(sc.png()),
-              description="Hubs first on a world map: the 100 busiest airports (top 30 a tier), others as dots.")
+              description="World map: the 100 busiest airports (the top 30 as a tier placed first), other airports "
+                          "as points.")
     wr.finish()
 
 

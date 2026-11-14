@@ -108,7 +108,8 @@ def main() -> None:
     sel = order[:10]
     p = problem_with(make_items(ms, pts, outl, sel), {"obstacles": {"vector": [points_layer(set(sel))]}})
     wr.config("cbo-rfc-10-none", p, quick=True,
-              description="10 k-NN outliers labeled with FQCNs; other classes as soft points; no axes.")
+              description="10 outliers by k-nearest-neighbour distance, labeled with fully qualified class names; "
+                          "other classes as soft points; no axes.")
     # 2. 30 outliers with vector chart decorations
     sel = order[:30]
     sc = decorated_scene(ax, xt, yt, "Coupling between objects (CBO)", "Response for a class (RFC)")
@@ -125,7 +126,8 @@ def main() -> None:
                      {"obstacles": {"svg": svg_source(sc)}})
     merge_avoid(p, {"grid": 0.2}, {"grid": 0.1}, ignore_background=True)
     wr.config("cbo-rfc-100-svg", p, truth=sc.truth(), svg=sc.svg(), png=png_bytes(sc.png()),
-              description="100 outliers on an SVG scatterplot; names below com.facebook(.react) wrap at package dots.")
+              description="100 outliers on an SVG scatterplot; names relative to com.facebook(.react), wrapped at "
+                          "package separators.")
     # 4. WMC vs LOC on a raster background
     ax2, pts2, xt2, yt2 = chart(ms, lambda m: m.wmc, lambda m: m.loc, "WMC", "LOC")
     outl2 = M.knn_outlierness(pts2, 5)
@@ -136,7 +138,7 @@ def main() -> None:
     p = problem_with(make_items(ms, pts2, outl2, sel, name=short_name),
                      {"obstacles": {"raster": {"source": data_url(png), "mode": "ink", "class": "ink"}}})
     wr.config("wmc-loc-30-raster", p, png=png,
-              description="WMC vs LOC, 30 outliers; the whole chart is a PNG background (raster mode ink).")
+              description="WMC versus LOC, 30 outliers; the entire chart is a PNG background (raster ink mode).")
     wr.finish()
 
 

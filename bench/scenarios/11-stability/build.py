@@ -138,7 +138,7 @@ def graph_sequences(wr: Writer) -> list[dict]:
 def main() -> None:
     aps = [a for a in A.load_airports() if A.WORLD.lat1 <= a.lat <= A.WORLD.lat0]
     ids = B.unique_ids(aps)
-    wr = Writer(SCENARIO, "Interactive stability (pan/zoom, force layout)", A.SOURCES + G07.SOURCES[:1],
+    wr = Writer(SCENARIO, "Temporal stability (zoom and pan, force layout)", A.SOURCES + G07.SOURCES[:1],
                 notes="Frame sequences; consecutive frames are solved with warm_start by the runner.")
     seqs = []
     for n, quick in ((1000, True), (3000, False)):

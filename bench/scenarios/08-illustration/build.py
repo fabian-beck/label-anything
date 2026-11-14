@@ -87,15 +87,17 @@ def main() -> None:
     p, bg = config(polys["astronaut"], (1000.0, 600.0), (244.0, 44.0), 1.0, models=["boundary", "distant"],
                    leaders=elbow, boundary={"sides": ["left", "right"], "align": "stack"})
     wr.config("astronaut-boundary", p, png=_png(bg), quick=True,
-              description="Astronaut portrait, 12 area anchors (incl. a ring with a hole), elbow leaders, boundary labels.")
+              description="Astronaut portrait: 12 area anchors (one a ring with a hole), elbow leaders, margin labels.")
     p, bg = config(polys["retina"], (1180.0, 746.0), (237.0, 20.0), 2.0, models=["boundary", "distant"],
                    leaders=elbow, boundary={"sides": ["left", "right"], "align": "stack"})
     wr.config("retina-boundary", p, png=_png(bg),
-              description="Fundus photograph (raster scale 2), 10 anatomical structures, elbow leaders, boundary.")
+              description="Fundus photograph (raster at scale 2): 10 anatomical structures, elbow leaders, margin "
+                          "labels.")
     p, bg = config(polys["rocket"], (1000.0, 560.0), (180.0, 66.0), 1.0, models=["distant"],
                    leaders={"style": "straight", "port": "nearest"})
     wr.config("rocket-distant", p, png=_png(bg),
-              description="Falcon 9 launch pad, 12 parts (duplicate label texts), distant labels with straight leaders.")
+              description="Falcon 9 on the launch pad: 12 parts (duplicate label texts), distant labels with "
+                          "straight leaders.")
     wr.finish()
 
 

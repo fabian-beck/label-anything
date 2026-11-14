@@ -43,8 +43,8 @@ def scene_json(scene: Scene) -> tuple[dict, list[Note]]:
               for lab in scene.labels]
     notes = [Note("unsupported", "d3fc-obstacles", "d3fc-label-layout avoids only other labels: marks and obstacle "
                                                    "classes are not avoided"),
-             Note("emulation", "d3fc-margin", "each label is handed over grown by its mark radius + offset on "
-                                              "every side (d3fc puts labels at their anchor point)"),
+             Note("emulation", "d3fc-margin", "each label is enlarged by its mark radius plus offset on every "
+                                              "side (d3fc places labels at their anchor point)"),
              Note("unsupported", "d3fc-leaders", "d3fc-label-layout draws no leader lines (8 fixed positions)")]
     return {"area": [a.x0, a.y0, a.x1, a.y1], "labels": labels}, notes
 
