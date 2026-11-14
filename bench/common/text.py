@@ -27,6 +27,7 @@ from dataclasses import dataclass, field
 from fontTools.ttLib import TTFont
 
 from . import paths
+from .spec import length
 from .unicode_data import COMBINING_MARKS
 
 ELLIPSIS = "…"
@@ -168,38 +169,9 @@ class Font:
     def glyphs(self, text: str) -> list[int]:
         return [self.cmap.get(ord(ch), 0) for ch in text]
 
-    @functools.lru_cache(maxsize=200000)
-    def units(self, text: str) -> int:
-        g = self.glyphs(text)
-        total = sum(self.adv[x] for x in g)
-        n = len(g)
-        for ignore_marks, subs in self.lookups:
-            i = 0
-            while i < n:
-                if ignore_marks and g[i] in self.marks:
-                    i += 1
-                    continue
-                j = i + 1
-                while j < n and ignore_marks and g[j] in self.marks:
-                    j += 1
-                if j >= n:
-                    break
-                for st in subs:
-                    r = self._match(st, g[i], g[j])
-                    if r is not None:
-                        total += r[0] + r[1]
-                        i = j + 1 if r[2] else j
-                        break
-                else:
-                    i += 1
-        return total
-
-    def width(self, text: str, size: float) -> float:
-        return self.units(text) * size / self.upem
-
-    def pen_positions(self, text: str, size: float) -> list[float]:
-        """x offset (px) of every character's pen position, kerning included (for drawing)."""
-        g = self.glyphs(text)
+    def _pair_adjustments(self, g: list[int]) -> list[int]:
+        """The kerning of the glyph run ``g`` per glyph, in font units: of each matching pair, ``XAdvance`` of
+        value record 1 on its first glyph and of value record 2 on its second (see the module docstring)."""
         n = len(g)
         adj = [0] * n
         for ignore_marks, subs in self.lookups:
@@ -222,8 +194,22 @@ class Font:
                         break
                 else:
                     i += 1
+        return adj
+
+    @functools.lru_cache(maxsize=200000)
+    def units(self, text: str) -> int:
+        g = self.glyphs(text)
+        return sum(self.adv[x] for x in g) + sum(self._pair_adjustments(g))
+
+    def width(self, text: str, size: float) -> float:
+        return self.units(text) * size / self.upem
+
+    def pen_positions(self, text: str, size: float) -> list[float]:
+        """x offset (px) of every character's pen position, kerning included (for drawing)."""
+        g = self.glyphs(text)
+        adj = self._pair_adjustments(g)
         out, x = [], 0
-        for k in range(n):
+        for k in range(len(g)):
             out.append(x * size / self.upem)
             x += self.adv[g[k]] + adj[k]
         return out
@@ -252,11 +238,13 @@ class Font:
 
 
 @functools.lru_cache(maxsize=None)
-def font(weight: int = 400, family: str = "default") -> Font:
-    """Bundled Noto Sans (nearest of 400/700). Other families fall back to it."""
-    w = 700 if resolve_weight(weight) >= 550 else 400
-    name = "NotoSans-Bold.ttf" if w == 700 else "NotoSans-Regular.ttf"
-    return Font(str(paths.FONTS / name))
+def _font_at(path: str) -> Font:
+    return Font(path)
+
+
+def font(weight: int = 400) -> Font:
+    """Bundled Noto Sans (nearest of 400/700), for every family."""
+    return _font_at(font_file(weight))
 
 
 def resolve_weight(w) -> int:
@@ -536,7 +524,6 @@ class TextLayout:
     height: float         # content height
     ascent: float
     descent: float
-    line_pitch: float
     font_size: float
     font_weight: int
     used: str = "original"
@@ -564,7 +551,7 @@ def layout_lines(lines: list[str], size: float, weight: int, line_height: float,
     pitch = line_height * size
     h = top + bottom + (max(len(lines), 1) - 1) * pitch
     return TextLayout(lines=list(lines), line_widths=widths, width=max(widths) if widths else 0.0, height=h,
-                      ascent=asc, descent=desc, line_pitch=pitch, font_size=size, font_weight=weight,
+                      ascent=asc, descent=desc, font_size=size, font_weight=weight,
                       baselines=[top + i * pitch for i in range(len(lines))])
 
 
@@ -577,7 +564,6 @@ def normal_variant(text: str, size: float, weight: int, line_height: float, wrap
                    truncate: str = "none", em: float | None = None, ink: bool = True) -> TextLayout:
     """The first normal variant of a text label (spec §5.3): its lines between line feeds if it has
     any, without wrap settings the single line, else the first of ``wrap_variants``."""
-    from .spec import length  # local import to avoid a cycle
 
     def lay_out(lines):
         return layout_lines(lines, size, weight, line_height, ink)

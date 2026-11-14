@@ -1,7 +1,8 @@
 # Playground
 
 The documentation site runs the real engines in the browser — a playground, and a live
-logo on the home page — so readers can try options without installing anything.
+logo and live examples on the home page — so readers can try options without installing
+anything.
 
 ## Context
 The documentation showed the engine through static figures, the gallery and the benchmark
@@ -26,11 +27,25 @@ starts had to install a binding first.
   drawing takes over without a jump. Then more things come, one at a time, so that the
   reader sees it is live; once the reader does something (or the header is full), nothing
   moves until they do.
+- The home page's examples are live as well. Each shows its static figure first and
+  replaces it once the same problem is solved in the browser, with the same labels, so
+  nothing jumps and a page without the script keeps its figures. What a reader can change
+  is what the picture is about: the chart's variables, the map's view, the graph's layout,
+  the photograph's margins and leaders. A hover names every mark, labeled or not. An
+  example loads its data and solves only when it comes near the viewport.
+- A view that changes step by step (a panned map, a dragged node) is solved from the
+  labels shown, with a small budget while it moves; a state that changes as a whole (other
+  variables, the whole map again, a reset layout) is solved afresh, so it has the labels a
+  first visit shows.
 
 ## Consequences
 The `wasm` CI job type-checks, builds and browser-tests the playground: every scene solves
 without overlaps and both engines agree. The home page loads about 0.9 MB more after the
-page itself (the worker and the font). A world map takes about 100 ms per solve in
+page itself (the worker and the font), and as its examples come into view the examples'
+script (60 kB), the bold font (0.24 MB) and their data (the world's countries 0.46 MB, the
+module graph 0.2 MB, the photograph), about a third of that compressed. The chart and the
+map exist twice, as Python scripts that make the static figures and as their ports in the
+browser; a browser test holds the ports to the committed problems. A world map takes about 100 ms per solve in
 WebAssembly and three to four times as long in TypeScript; maps clip their outlines to the
 view before each solve.
 
@@ -38,3 +53,8 @@ view before each solve.
 - **Recordings or precomputed frames**: cannot show an option the reader picks.
 - **Solving on the main thread**: stalls the animation for the length of each solve.
 - **WebAssembly for the home page**: adds the module's download to every visit.
+- **The home page's figures static, with a hover drawn over the image**: shows nothing of
+  what the engine does when the picture changes.
+- **The wheel zooming the home page's map without a modifier key**: the map would catch a
+  reader who scrolls the page. The wheel zooms with Ctrl or ⌘ held; a pinch, a double
+  click and the buttons zoom too.

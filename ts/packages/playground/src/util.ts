@@ -1,6 +1,6 @@
-/** Small helpers: problem merging (the engine's merge rule), dotted paths, random numbers. */
+/** Small helpers: problem merging (the engine's merge rule), dotted paths, random numbers, rings, warm starts. */
+import type { LabelResult } from "@label-anything/core";
 
-export type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
 export type Obj = Record<string, unknown>;
 
 export function isObject(v: unknown): v is Obj {
@@ -81,7 +81,8 @@ export function gauss(r: () => number): number {
 }
 
 export const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
-export const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
+/** Rounded to two decimals: coordinates as they go into a problem. */
+export const round2 = (v: number): number => Math.round(v * 100) / 100;
 export const easeInOut = (t: number): number => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 /** `"0.2em"` → 0.2; numbers pass through; anything else → `fallback`. */
@@ -101,13 +102,35 @@ export function fmt(v: number, digits = 1): string {
   return v.toFixed(digits).replace(/\.0+$/, "");
 }
 
-/** Compact large numbers: 1.4 B, 38 M, 920 k. */
-export function compact(v: number): string {
-  const a = Math.abs(v);
-  if (a >= 1e9) return `${(v / 1e9).toFixed(a >= 1e10 ? 0 : 1)} B`;
-  if (a >= 1e6) return `${(v / 1e6).toFixed(a >= 1e7 ? 0 : 1)} M`;
-  if (a >= 1e3) return `${(v / 1e3).toFixed(a >= 1e4 ? 0 : 1)} k`;
-  return String(Math.round(v));
+type Ring = readonly (readonly [number, number])[];
+
+/** Signed area of a ring (shoelace formula). */
+export function ringArea(r: Ring): number {
+  let s = 0;
+  for (let i = 0, j = r.length - 1; i < r.length; j = i++) s += r[j]![0] * r[i]![1] - r[i]![0] * r[j]![1];
+  return s / 2;
+}
+
+/** Whether `p` is inside a ring (even-odd rule). */
+export function inRing(p: readonly [number, number], ring: Ring): boolean {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i]!;
+    const [xj, yj] = ring[j]!;
+    if (yi > p[1] !== yj > p[1] && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/** What `warm_start` needs of a placement: the box, where it was placed for, its leader. */
+export function warmPlacement(p: LabelResult["placements"][number]): Obj {
+  const out: Obj = { id: p.id, placed: p.placed };
+  if (p.placed && p.box) {
+    out.box = p.box;
+    if (p.anchor) out.anchor = p.anchor;
+    if (p.leader) out.leader = { points: p.leader.points, style: p.leader.style };
+  }
+  return out;
 }
 
 /** Base64url of UTF-8 text (for the share link) and back. */

@@ -1,7 +1,7 @@
 {
   "name": "label-anything-bench-baselines",
   "private": true,
-  "description": "Node baseline of the Label Anything benchmark: Vega's label transform (vega-label) run headless. Install with `npm ci --prefix bench/baselines`.",
+  "description": "Node baselines of the Label Anything benchmark, run headless: Vega's label transform (vega-label), d3fc-label-layout and ECharts (d3-scale and d3-selection are peer dependencies of d3fc). Install with `npm ci --prefix bench/baselines`.",
   "license": "MIT",
   "type": "module",
   "engines": {

@@ -137,10 +137,9 @@ export function boundaryCandidates(
   keep: KeepFn,
   out: Cand[],
 ): void {
-  const area = obs.labelArea ?? model.canvas;
+  const area = slotArea(model, obs);
   if (area === null) return;
   const margin = item.len.boundaryMargin;
-  const style = model.leaders.style;
   const it = item.index;
   for (const vi of vis) {
     const v = variants[vi]!;
@@ -200,11 +199,9 @@ export function boundaryCandidates(
         if (!keep(vi)) continue;
         const rect = new Rect(rx0, ry0, rx1, ry1);
         const port = new P(px, py);
-        const start = leaderStart(model, item, port);
-        const pts = boundaryPoints(style, vertical, start, port);
         const c = new Cand(it, vi, v.level, Kind.Boundary, SIDE_BOUNDARY, 9 + k * 0.25, rect);
         c.bside = sideCode(side);
-        const l = new Leader(pts, style);
+        const l = boundaryLeader(model, item, c.bside, port);
         if (l.len > 0) c.leaders.push(l);
         out.push(c);
       }

@@ -18,7 +18,6 @@ import sys
 from pathlib import Path
 
 from ..common.jsonio import write_json
-from . import TARGETS
 from .generate import main as generate_main
 from .runner import passed, run_perf
 
@@ -74,5 +73,3 @@ def main(argv=None) -> int:
 if __name__ == "__main__":
     raise SystemExit(main())
 
-
-__all__ = ["main", "TARGETS"]

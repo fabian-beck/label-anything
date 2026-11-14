@@ -133,6 +133,26 @@ describe("label-anything-ts", () => {
     expect(malformed.err).toMatch(/^error {3}\/ \[parse\] invalid JSON/);
   });
 
+  it("reports malformed JSON with the message of the Rust CLI", () => {
+    // `printf '{"items": [' | label-anything validate -` prints the same line
+    for (const cmd of ["validate", "place"]) {
+      const t = io('{"items": [');
+      expect(run([cmd, "-"], t)).toBe(1);
+      expect(t.err).toBe("error   / [parse] invalid JSON: EOF while parsing a list at line 1 column 11\n");
+    }
+  });
+
+  it("rejects a document that is a JSON string, as the Rust CLI does", () => {
+    // the string holds a valid problem: it must not be read as a second layer of JSON text
+    const doc = JSON.stringify(JSON.stringify({ items: [] }));
+    for (const args of [["validate", "-"], ["place", "-"], ["render", "-", join(tmp, "no-result.json")]]) {
+      const t = io(doc);
+      expect(run(args, t)).toBe(1);
+      expect(t.out).toBe("");
+      expect(t.err).toBe("error   / [type] expected object, got string\n");
+    }
+  });
+
   it("reports options on sections of the wrong type as invalid problems", () => {
     const t = io(JSON.stringify({ solver: "fast", items: [] }));
     expect(run(["place", "-", "--time", "50"], t)).toBe(1);

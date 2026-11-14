@@ -1,6 +1,8 @@
 # Benchmark tooling (not distributed with Label Anything). Python 3.13.
-# All licenses are permissive: BSD-3-Clause (numpy, scipy, scikit-learn, networkx,
-# threadpoolctl), MIT-CMU (Pillow), MIT (jsonschema, fonttools, pytest).
+# Exact versions, transitive dependencies included (a clean install of this file). All licenses are
+# permissive: BSD-3-Clause (numpy, scipy, scikit-learn, networkx, threadpoolctl, joblib, cloudpickle),
+# BSD-2-Clause (Pygments), MIT-CMU (Pillow), MIT (jsonschema, jsonschema-specifications, referencing,
+# rpds-py, attrs, fonttools, narwhals, pytest, pluggy, iniconfig), Apache-2.0/BSD-2-Clause (packaging).
 #   python3 -m venv bench/.venv && bench/.venv/bin/pip install -r bench/requirements.txt
 numpy==2.5.4
 scipy==1.18.1
@@ -11,3 +13,17 @@ threadpoolctl==3.7.0
 jsonschema==4.26.0
 fonttools==4.67.0
 pytest==9.1.1
+# transitive: scikit-learn
+joblib==1.6.0
+cloudpickle==3.1.2
+narwhals==2.28.0
+# transitive: jsonschema
+attrs==26.1.0
+jsonschema-specifications==2025.9.1
+referencing==0.37.0
+rpds-py==2026.9.1
+# transitive: pytest
+iniconfig==2.3.1
+packaging==26.3
+pluggy==1.7.0
+Pygments==2.21.0

@@ -2,9 +2,15 @@
 # generated fixtures byte for byte)
 * text=auto eol=lf
 *.ttf binary
+*.otf binary
+*.ttc binary
+*.woff2 binary
 *.png binary
 *.jpg binary
 *.webp binary
 # Generated files: collapse in diffs
 rust/crates/la-core/src/generated/** linguist-generated=true
 ts/packages/*/src/generated/** linguist-generated=true
+rust/crates/la-raster/src/srgb_lut.rs linguist-generated=true
+rust/crates/la-text/src/unicode_data.rs linguist-generated=true
+ts/packages/raster/src/srgb-lut.ts linguist-generated=true

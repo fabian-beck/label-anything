@@ -15,11 +15,15 @@
  * integer/float distinction (`1` vs `1.0`), which JavaScript cannot see, never matters.
  *
  * {@link validateStr} parses JSON text exactly like `serde_json::from_str` (see
- * {@link parseJson}), including its error messages and positions.
+ * {@link parseJson}), including its error messages and positions. The public `validate`
+ * and `place` (`place.ts`) read JSON text with the engine's `JSON.parse` and use
+ * `parseJson` only for the message of a text that it rejects ({@link parseIssue}), so that
+ * a `parse` error reads exactly as in Rust.
  */
 import { compareCodePoints } from "./expr/index.js";
 import { checkExpr } from "./expr-check.js";
 import { PRESETS, PROBLEM_SCHEMA } from "./generated/spec-data.js";
+import { type JsonObject, asU64, errorMessage, fmtF64, get, isObject } from "./json.js";
 
 /** One validation error or warning. */
 export class Issue {
@@ -44,22 +48,11 @@ export interface Report {
 /** Reserved obstacle classes. */
 export const RESERVED_CLASSES: readonly string[] = ["items", "labels", "leaders", "canvas_edge", "ink", "text"];
 
-type JsonObject = Record<string, unknown>;
-
 const hasOwnProperty = Object.prototype.hasOwnProperty;
-
-function isObject(v: unknown): v is JsonObject {
-  return typeof v === "object" && v !== null && !Array.isArray(v);
-}
-
-/** `v.get(k)`: the property `k` of a JSON object (`undefined` if absent or not an object). */
-function getKey(v: unknown, k: string): unknown {
-  return isObject(v) && hasOwnProperty.call(v, k) ? v[k] : undefined;
-}
 
 /** `v.pointer("/k1/k2")` for non-numeric tokens. */
 function getPath(v: unknown, k1: string, k2: string): unknown {
-  return getKey(getKey(v, k1), k2);
+  return get(get(v, k1), k2);
 }
 
 /** Escape one JSON-pointer reference token (RFC 6901). */
@@ -83,6 +76,21 @@ export function validateStr(text: string): Report {
     return { valid: false, errors: [new Issue("", "parse", `invalid JSON: ${e.message}`)], warnings: [] };
   }
   return validate(v);
+}
+
+/**
+ * The `parse` issue of a text that `JSON.parse` rejected with the error `e`. Its message is
+ * serde_json's (from {@link parseJson}), as in Rust: `invalid JSON: EOF while parsing a list
+ * at line 1 column 11`. Should `parseJson` accept the text, it is the engine's own message.
+ */
+export function parseIssue(text: string, e: unknown): Issue {
+  let message = errorMessage(e);
+  try {
+    parseJson(text);
+  } catch (pe) {
+    if (pe instanceof JsonError) message = pe.message;
+  }
+  return new Issue("", "parse", `invalid JSON: ${message}`);
 }
 
 /** Validate a problem value. */
@@ -311,35 +319,6 @@ function fewerCodePoints(s: string, m: number): boolean {
   return true;
 }
 
-/** `Value::as_u64` of a schema value (the schema writes these as integers). */
-function asU64(m: unknown): number | null {
-  return typeof m === "number" && Number.isInteger(m) && m >= 0 ? m : null;
-}
-
-/** Rust `Display` of an `f64`: shortest round-trip digits, never in exponent notation. */
-function fmtF64(x: number): string {
-  if (Number.isNaN(x)) return "NaN";
-  if (x === Infinity) return "inf";
-  if (x === -Infinity) return "-inf";
-  if (x === 0) return Object.is(x, -0) ? "-0" : "0";
-  const s = String(x);
-  const e = s.indexOf("e");
-  if (e < 0) return s;
-  let mant = s.slice(0, e);
-  const exp = Number(s.slice(e + 1));
-  let sign = "";
-  if (mant.charCodeAt(0) === 0x2d) {
-    sign = "-";
-    mant = mant.slice(1);
-  }
-  const dot = mant.indexOf(".");
-  const digits = dot < 0 ? mant : mant.slice(0, dot) + mant.slice(dot + 1);
-  const point = (dot < 0 ? mant.length : dot) + exp;
-  if (point <= 0) return sign + "0." + "0".repeat(-point) + digits;
-  if (point >= digits.length) return sign + digits + "0".repeat(point - digits.length);
-  return sign + digits.slice(0, point) + "." + digits.slice(point);
-}
-
 const QUICK_FAIL = new Issue("", "", "");
 
 /** Where errors go: collected with pointers, or just "did anything fail" (fail fast). */
@@ -389,7 +368,7 @@ class Interp {
     if (r.startsWith("#/")) {
       cur = this.root;
       for (const tok of r.slice(2).split("/")) {
-        cur = getKey(cur, tok.indexOf("~") >= 0 ? tok.replace(/~1/g, "/").replace(/~0/g, "~") : tok);
+        cur = get(cur, tok.indexOf("~") >= 0 ? tok.replace(/~1/g, "/").replace(/~0/g, "~") : tok);
         if (cur === undefined) break;
       }
     }
@@ -544,7 +523,7 @@ class Interp {
       const is = o["items"];
       if (is !== undefined) {
         // fast path for the common `[x, y]` point arrays
-        const isPoint = getKey(is, "$ref") === "#/$defs/point";
+        const isPoint = get(is, "$ref") === "#/$defs/point";
         for (let i = start; i < a.length; i++) {
           const item = a[i];
           if (
@@ -575,7 +554,7 @@ class Interp {
       const req = o["required"];
       if (Array.isArray(req)) {
         for (const rq of req) {
-          if (typeof rq === "string" && getKey(m, rq) === undefined) {
+          if (typeof rq === "string" && get(m, rq) === undefined) {
             sink.err(keyPath(ptr, rq), "required", () => `missing required property '${rq}'`);
           }
         }
@@ -622,11 +601,11 @@ class Interp {
       const dr = o["dependentRequired"];
       if (isObject(dr)) {
         for (const k of Object.keys(dr)) {
-          if (getKey(m, k) === undefined) continue;
+          if (get(m, k) === undefined) continue;
           const deps = dr[k];
           if (!Array.isArray(deps)) continue;
           for (const d of deps) {
-            if (typeof d === "string" && getKey(m, d) === undefined) {
+            if (typeof d === "string" && get(m, d) === undefined) {
               sink.err(keyPath(ptr, d), "required", () => `'${d}' is required when '${k}' is given`);
             }
           }
@@ -650,7 +629,7 @@ class Interp {
         if (sink.out !== null) {
           const p = render(ptr);
           if (requiredOnly(any)) {
-            const first = getKey(any[0], "required");
+            const first = get(any[0], "required");
             const name = Array.isArray(first) && typeof first[0] === "string" ? first[0] : "";
             sink.push(new Issue(ptrJoin(p, name), "required", `one of ${requiredNames(any)} is required`));
           } else {
@@ -744,7 +723,7 @@ function requiredOnly(alts: unknown[]): boolean {
 function requiredNames(alts: unknown[]): string {
   return alts
     .map((a) => {
-      const r = getKey(a, "required");
+      const r = get(a, "required");
       return Array.isArray(r) ? r.filter((x): x is string => typeof x === "string").join("+") : "";
     })
     .join(" | ");
@@ -811,7 +790,7 @@ function withArticle(t: string): string {
 function semantic(p: unknown, errors: Issue[], warnings: Issue[]): void {
   if (!isObject(p)) return;
   const root = p;
-  const itemsValue = getKey(root, "items");
+  const itemsValue = get(root, "items");
   const items = Array.isArray(itemsValue) ? itemsValue : null;
   // anchor type "line" is reserved for v2
   if (items !== null) {
@@ -830,7 +809,7 @@ function semantic(p: unknown, errors: Issue[], warnings: Issue[]): void {
   const ids = new Map<string, number>();
   if (items !== null) {
     for (let i = 0; i < items.length; i++) {
-      const v = getKey(items[i], "id");
+      const v = get(items[i], "id");
       const [id, ptr] = typeof v === "string" ? [v, `/items/${i}/id`] : [String(i), `/items/${i}`];
       const first = ids.get(id);
       if (first !== undefined) {
@@ -841,7 +820,7 @@ function semantic(p: unknown, errors: Issue[], warnings: Issue[]): void {
     }
     for (let i = 0; i < items.length; i++) {
       const it = items[i];
-      const kw = getKey(it, "keep_with");
+      const kw = get(it, "keep_with");
       if (Array.isArray(kw)) {
         for (let j = 0; j < kw.length; j++) {
           const r = kw[j];
@@ -851,9 +830,9 @@ function semantic(p: unknown, errors: Issue[], warnings: Issue[]): void {
         }
       }
       // icon/box with shape polygon need polygon points
-      const label = getKey(it, "label");
+      const label = get(it, "label");
       checkPoly(label, `/items/${i}/label`, errors);
-      const parts = getKey(label, "parts");
+      const parts = get(label, "parts");
       if (Array.isArray(parts)) {
         for (let j = 0; j < parts.length; j++) checkPoly(parts[j], `/items/${i}/label/parts/${j}`, errors);
       }
@@ -892,20 +871,20 @@ function semantic(p: unknown, errors: Issue[], warnings: Issue[]): void {
       if (e !== null) errors.push(new Issue(ptr, e.code, e.message));
     }
   };
-  const pr = getKey(root, "priority");
+  const pr = get(root, "priority");
   if (pr !== undefined) {
-    const tiers = getKey(pr, "tiers");
+    const tiers = get(pr, "tiers");
     if (Array.isArray(tiers)) {
-      for (let i = 0; i < tiers.length; i++) checkExprAt(`/priority/tiers/${i}/where`, getKey(tiers[i], "where"));
+      for (let i = 0; i < tiers.length; i++) checkExprAt(`/priority/tiers/${i}/where`, get(tiers[i], "where"));
     }
-    const terms = getKey(pr, "terms");
+    const terms = get(pr, "terms");
     if (Array.isArray(terms)) {
-      for (let i = 0; i < terms.length; i++) checkExprAt(`/priority/terms/${i}/expr`, getKey(terms[i], "expr"));
+      for (let i = 0; i < terms.length; i++) checkExprAt(`/priority/terms/${i}/expr`, get(terms[i], "expr"));
     }
     checkExprAt("/priority/coverage/by", getPath(pr, "coverage", "by"));
   }
   // y_axis "up" needs a canvas height (explicit or from a background)
-  if (getKey(root, "y_axis") === "up" && getKey(root, "canvas") === undefined) {
+  if (get(root, "y_axis") === "up" && get(root, "canvas") === undefined) {
     const hasBg = getPath(p, "obstacles", "raster") !== undefined || getPath(p, "obstacles", "svg") !== undefined;
     if (!hasBg) {
       errors.push(new Issue("/canvas", "required", "y_axis 'up' needs a canvas (or a background) to flip y"));
@@ -913,10 +892,10 @@ function semantic(p: unknown, errors: Issue[], warnings: Issue[]): void {
   }
   // unknown classes in avoid → warnings
   const known = knownClasses(root);
-  const av = getKey(root, "avoid");
+  const av = get(root, "avoid");
   if (isObject(av)) {
     for (const section of ["label", "leader", "buffer"]) {
-      const m = getKey(av, section);
+      const m = get(av, section);
       if (!isObject(m)) continue;
       for (const k of Object.keys(m)) {
         if (m[k] === undefined) continue;
@@ -926,7 +905,7 @@ function semantic(p: unknown, errors: Issue[], warnings: Issue[]): void {
         );
       }
     }
-    const rel = getKey(av, "relaxable");
+    const rel = get(av, "relaxable");
     if (Array.isArray(rel)) {
       for (let i = 0; i < rel.length; i++) {
         const k = rel[i];
@@ -938,7 +917,7 @@ function semantic(p: unknown, errors: Issue[], warnings: Issue[]): void {
   }
   // degradation steps: name the steps instead of quoting the pattern
   const steps = ["alternatives", "wrap", "truncate", "distant", "boundary", "evict_lower", "soft_overlap", "omit"];
-  const degrade = getKey(root, "degrade");
+  const degrade = get(root, "degrade");
   for (const e of errors) {
     if (!e.pointer.startsWith("/degrade/") || e.code !== "pattern" || e.pointer.indexOf("/", "/degrade/".length) >= 0) continue;
     const step = Array.isArray(degrade) ? degrade[Number(e.pointer.slice("/degrade/".length))] : undefined;
@@ -953,11 +932,11 @@ function semantic(p: unknown, errors: Issue[], warnings: Issue[]): void {
     }
   }
   // priority terms on attributes that no item has → warnings (the term is 0 everywhere)
-  const terms = getKey(getKey(root, "priority"), "terms");
+  const terms = get(get(root, "priority"), "terms");
   if (Array.isArray(terms)) {
-    const has = (name: string): boolean => items !== null && items.some((it) => getKey(getKey(it, "attrs"), name) !== undefined);
+    const has = (name: string): boolean => items !== null && items.some((it) => get(get(it, "attrs"), name) !== undefined);
     for (let i = 0; i < terms.length; i++) {
-      const name = getKey(terms[i], "attr");
+      const name = get(terms[i], "attr");
       if (typeof name === "string" && !has(name)) {
         warnings.push(
           new Issue(`/priority/terms/${i}/attr`, "unknown_attr", `no item has the attribute '${name}' (in attrs): the term is 0 for every item`),
@@ -968,7 +947,7 @@ function semantic(p: unknown, errors: Issue[], warnings: Issue[]): void {
 }
 
 function checkPoly(lab: unknown, base: string, errors: Issue[]): void {
-  if (getKey(lab, "shape") === "polygon" && getKey(lab, "polygon") === undefined) {
+  if (get(lab, "shape") === "polygon" && get(lab, "polygon") === undefined) {
     errors.push(new Issue(`${base}/polygon`, "required", "shape 'polygon' needs 'polygon' points"));
   }
 }
@@ -981,37 +960,37 @@ function oneOrMany(v: unknown): unknown[] {
 /** Classes produced by the problem's obstacle sources, plus reserved classes. */
 function knownClasses(root: JsonObject): Set<string> {
   const k = new Set<string>(RESERVED_CLASSES);
-  const pv = getKey(root, "preset");
+  const pv = get(root, "preset");
   const preset = typeof pv === "string" ? pv : "auto";
-  const obs = getKey(root, "obstacles");
+  const obs = get(root, "obstacles");
   if (obs !== undefined) {
-    const layers = getKey(obs, "vector");
+    const layers = get(obs, "vector");
     if (Array.isArray(layers)) {
       for (const l of layers) {
-        const c = getKey(l, "class");
+        const c = get(l, "class");
         if (typeof c === "string") k.add(c);
       }
     }
-    for (const s of oneOrMany(getKey(obs, "svg"))) {
-      const rules = getKey(s, "classes");
+    for (const s of oneOrMany(get(obs, "svg"))) {
+      const rules = get(s, "classes");
       if (Array.isArray(rules)) {
         for (const r of rules) {
-          const c = getKey(r, "class");
+          const c = get(r, "class");
           if (typeof c === "string") k.add(c);
         }
       } else if (hasOwnProperty.call(PRESETS, preset)) {
         for (const r of PRESETS[preset]!.svg_classes) {
-          const c = getKey(r, "class");
+          const c = get(r, "class");
           if (typeof c === "string") k.add(c);
         }
       }
-      const c = getKey(s, "default_class");
+      const c = get(s, "default_class");
       if (typeof c === "string") k.add(c);
     }
-    for (const r of oneOrMany(getKey(obs, "raster"))) {
-      const c = getKey(r, "class");
+    for (const r of oneOrMany(get(obs, "raster"))) {
+      const c = get(r, "class");
       if (typeof c === "string") k.add(c);
-      const cm = getKey(r, "classmap");
+      const cm = get(r, "classmap");
       if (isObject(cm)) {
         for (const key of Object.keys(cm)) {
           const x = cm[key];

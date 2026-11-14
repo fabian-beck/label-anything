@@ -3,13 +3,12 @@
 // mutants`; the full fuzzing is `node tools/validate/parity.mjs fuzz`), and properties:
 // validate/validateStr never throw on arbitrary JSON values and texts.
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { compareCodePoints } from "../src/expr/index.js";
 import { parseJson, validate, validateStr, type Report } from "../src/validate.js";
+import { CONF } from "./util.js";
 
-const CONF = fileURLToPath(new URL("../../../../conformance/", import.meta.url));
 
 interface MutantCase {
   name: string;

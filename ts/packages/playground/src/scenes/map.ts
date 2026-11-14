@@ -8,7 +8,7 @@
 import { geoEqualEarth, geoGraticule10, geoInterpolate, geoPath, type GeoProjection } from "d3-geo";
 import type { LabelResult } from "@label-anything/core";
 import { FONT_CLASSES, type Control } from "../controls.js";
-import { clamp, rng, type Obj } from "../util.js";
+import { clamp, inRing, ringArea, rng, round2, type Obj } from "../util.js";
 import type { Anchors, DrawState, Item, PointerInfo, Scene, SceneHost } from "./scene.js";
 
 type P = [number, number];
@@ -325,7 +325,7 @@ export class MapScene implements Scene {
         // a country of a few pixels: a point at its label point
         const s = this.#toScreen(c.labelXY);
         if (s[0] < 0 || s[1] < 0 || s[0] > this.#w || s[1] > this.#h) continue;
-        anchor = { type: "point", x: round(s[0]), y: round(s[1]), mark: { shape: "circle", r: 2 } };
+        anchor = { type: "point", x: round2(s[0]), y: round2(s[1]), mark: { shape: "circle", r: 2 } };
       }
       const label: Record<string, unknown> = { type: "text", text: c.name };
       if (this.params.abbrev && c.abbrev) label.alternatives = [c.abbrev];
@@ -337,7 +337,7 @@ export class MapScene implements Scene {
       if (!s || s[0] < 0 || s[1] < 0 || s[0] > this.#w || s[1] > this.#h) continue;
       out.push({
         id: f.id,
-        anchor: { type: "point", x: round(s[0]), y: round(s[1]), mark: { shape: "circle", r: 3.5 } },
+        anchor: { type: "point", x: round2(s[0]), y: round2(s[1]), mark: { shape: "circle", r: 3.5 } },
         label: { type: "text", text: f.code, font: { size: 10 } },
         tier: flightsFirst ? 1 : 0,
         priority: 0,
@@ -388,11 +388,11 @@ export class MapScene implements Scene {
     for (const c of this.#countries) {
       const base = this.#poles.get(c.id) ?? c.labelXY;
       const s = this.#toScreen(base);
-      m.set(c.id, [round(s[0]), round(s[1])]);
+      m.set(c.id, [round2(s[0]), round2(s[1])]);
     }
     for (const f of this.#flights) {
       const s = this.#flightXY(f);
-      if (s) m.set(f.id, [round(s[0]), round(s[1])]);
+      if (s) m.set(f.id, [round2(s[0]), round2(s[1])]);
     }
     return m;
   }
@@ -572,27 +572,10 @@ function clipRing(ring: P[], [x0, y0, x1, y1]: [number, number, number, number])
   return pts.filter((p, i) => i === 0 || p[0] !== pts[i - 1]![0] || p[1] !== pts[i - 1]![1]);
 }
 
-function ringArea(r: P[]): number {
-  let s = 0;
-  for (let i = 0, j = r.length - 1; i < r.length; j = i++) s += r[j]![0] * r[i]![1] - r[i]![0] * r[j]![1];
-  return s / 2;
-}
-
-function inRing(p: P, ring: P[]): boolean {
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i]!;
-    const [xj, yj] = ring[j]!;
-    if (yi > p[1] !== yj > p[1] && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
-}
-
 function angularDistance(a: P, b: P): number {
   const r = Math.PI / 180;
   const s = Math.sin(((b[1] - a[1]) * r) / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(((b[0] - a[0]) * r) / 2) ** 2;
   return 2 * Math.asin(Math.min(1, Math.sqrt(s)));
 }
 
-const round = (v: number) => Math.round(v * 100) / 100;
-const roundP = (p: P): P => [round(p[0]), round(p[1])];
+const roundP = (p: P): P => [round2(p[0]), round2(p[1])];

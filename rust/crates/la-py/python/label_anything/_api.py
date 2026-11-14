@@ -256,6 +256,7 @@ def place(
     avoid_buffer: Optional[Mapping[str, float]] = None,
     relaxable: Optional[Iterable[str]] = None,
     # --- placement models ---
+    aggressiveness: Optional[str] = None,
     models: Union[str, Iterable[str], None] = None,
     position_order: Union[str, Iterable[str], None] = None,
     offset: Optional[Length] = None,

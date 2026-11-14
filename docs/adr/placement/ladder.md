@@ -13,9 +13,10 @@ ran every step, each generating hundreds of candidates of which over 95 % overla
 labels already placed; creating, storing and re-checking them dominated the solve.
 
 ## Decision
-- **Default ladder**: `alternatives`, `wrap`, `distant`, `evict_lower`, `shrink:0.85`,
-  `soft_overlap`, `omit`. Margin labels remain a model and an explicit step for layouts
-  that intend them, such as the `illustration` preset.
+- **Default ladder**: `alternatives`, `wrap`, `distant`, `evict_lower`, `omit`; with
+  `placement.aggressiveness` `high` also `shrink:0.85` and `soft_overlap` before `omit`,
+  with `low` without `distant` (ADR placement/aggressiveness). Margin labels remain a model
+  and an explicit step for layouts that intend them, such as the `illustration` preset.
 - **The `auto` preset** starts with adjacent and slider positions and adds distant ones
   when more than 30 % of the items have no statically free position, unless the problem
   sets `placement.models`. The ladder's `distant` step still gives single items a leader.

@@ -22,11 +22,10 @@ positions back (method: bench/baselines/ggrepel.R). Translation:
   contains it. A segment drawn by ggrepel becomes a leader from the mark to the
   point where the segment enters the reported box.
 
-    python -m bench.baselines.ggrepel_baseline problem.json -o result.json
+    python -m bench.baselines ggrepel problem.json -o result.json
 """
 from __future__ import annotations
 
-import argparse
 import json
 import os
 import shutil
@@ -37,11 +36,9 @@ from pathlib import Path
 from ..common import paths
 from ..common import text as textmod
 from ..common.geom import Box
-from ..common.jsonio import read_json, write_json
 from .results import build_result
 from .scene import Note, Scene, build_scene, nearest_on_box, polygon_points, sample_polyline, segment_entry
 
-TOOL = "ggrepel"
 HERE = Path(__file__).resolve().parent
 SCRIPT = HERE / "ggrepel.R"
 PINS = {"ggrepel": "0.9.5", "ggplot2": "3.4.4", "jsonlite": "1.8.8"}   # bench/baselines/install-r.sh
@@ -216,16 +213,3 @@ def solve(problem: dict, problem_path=None, options: dict | None = None) -> dict
                                                   "whose ggrepel boxes contain every label box)"))
     impl = f"ggrepel/{v.get('ggrepel')} (ggplot2 {v.get('ggplot2')}, R {v.get('R')})"
     return build_result(scene, boxes, ports, float(out.get("runtime_ms", 0.0)), impl, notes)
-
-
-def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("problem")
-    ap.add_argument("-o", "--out", required=True)
-    a = ap.parse_args(argv)
-    write_json(a.out, solve(read_json(a.problem), a.problem), nd=3)
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

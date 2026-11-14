@@ -1,6 +1,6 @@
 """Benchmark runner: solve every problem with every solver, evaluate, render, report.
 
-    python bench/run.py [--suite quick|full] [--solver SPEC ...] [--engine PATH] [--baselines]
+    python bench/run.py [--suite quick|full] [--solver SPEC ...] [--engine PATH [--levels]] [--baselines]
                         [--runs 7] [--baseline-runs 1] [--scenario NN ...] [--out bench-report]
                         [--perf] [--previous OLD/results.json] [--gate] [--no-render] [--timeout 600]
 
@@ -19,9 +19,11 @@ Solvers (``--solver``, repeatable; default: the built-in baselines ``naive`` and
 Solvers named ``rust``, ``wasm`` or ``ts`` (optionally ``-suffix``) are Label Anything
 implementations: they get the performance targets, the parity table and the release
 gates. ``--engine PATH`` adds ``rust=PATH place {problem} -o {result} --warmup N`` and its debug
-overlay; ``--baselines`` adds all ten baselines (what ``label-anything bench --baselines``
-passes). ``--overlay NAME=COMMAND`` (placeholders ``{problem}``, ``{result}``, ``{svg}``)
-renders an engine debug overlay next to the benchmark rendering, from one extra untimed run.
+overlay, ``--levels`` with it ``rust-low`` and ``rust-high``, the engine at the other
+aggressiveness levels (``rust`` runs the default, ``medium``); ``--baselines`` adds all ten
+baselines (what ``label-anything bench --baselines`` passes). ``--overlay NAME=COMMAND``
+(placeholders ``{problem}``, ``{result}``, ``{svg}``) renders an engine debug overlay next to
+the benchmark rendering, from one extra untimed run.
 
 Problems are discovered from ``bench/out/problems/*/scenario.json``: the quick suite
 takes the configs marked ``quick`` (one small config per scenario) and the quick
@@ -62,10 +64,11 @@ from pathlib import Path
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from bench import render  # noqa: E402
+from bench import gates, render  # noqa: E402
 from bench import report as rep  # noqa: E402
 from bench.baselines import BASELINES, Unsupported  # noqa: E402
 from bench.baselines.results import baseline_info  # noqa: E402
+from bench.baselines.scene import SOFT_MODES, build_scene  # noqa: E402
 from bench.common import paths  # noqa: E402
 from bench.common.jsonio import read_json, write_json  # noqa: E402
 from bench.common.model import load_problem  # noqa: E402
@@ -197,6 +200,14 @@ class Solver:
             return None
         return re.sub(r"--warmup\s+\d+", "--warmup 0", self.cmd)
 
+    def as_solved(self, problem: dict) -> dict:
+        """The problem with the options the command sets on it (``--aggressiveness`` of the Label Anything
+        CLIs): its result is evaluated and drawn against what it solved."""
+        m = re.search(r"--aggressiveness[=\s]+(\w+)", self.cmd or "") if self.is_la else None
+        if m is None:
+            return problem
+        return {**problem, "placement": {**(problem.get("placement") or {}), "aggressiveness": m.group(1)}}
+
     def solve_cold(self, problem_path: Path, result_path: Path, timeout: float) -> float:
         """Wall time (ms) of one solve in a fresh process, without warm-up solves."""
         result_path.parent.mkdir(parents=True, exist_ok=True)
@@ -236,14 +247,9 @@ class Solver:
             raise RuntimeError(f"overlay failed ({r.returncode}): {r.stderr.strip()[:300]}")
 
 
-SOFT_MODES = ("hard", "ignore")
-
-
 def has_soft_classes(problem: dict, problem_path: Path) -> bool:
     """Whether the problem has obstacle classes with a cost (neither hard nor ignored) for labels: only then do
     the two soft emulations of the baselines differ."""
-    from bench.baselines.scene import build_scene
-
     return any(n.feature == "soft-classes" for n in build_scene(problem, problem_path, soft="ignore").notes)
 
 
@@ -289,7 +295,7 @@ def _base_entry(solver: Solver, prob_entry: dict) -> dict:
 
 def run_problem(solver: Solver, prob_entry: dict, out: Path, runs: int, timeout: float, do_render: bool,
                 svg: bool = False) -> dict:
-    problem = read_json(prob_entry["path"])
+    problem = solver.as_solved(read_json(prob_entry["path"]))
     rel = Path(prob_entry["scenario"]) / prob_entry["config"]
     res_path = out / "results" / solver.name / rel.with_suffix(".json")
     walls, reported, digests, rss = [], [], [], []
@@ -440,7 +446,7 @@ def run_sequence(solver: Solver, seq: dict, out: Path, timeout: float, do_render
         except Unsupported as e:
             return {**head, "skipped": str(e)}
     for fr in man["frames"]:
-        problem = read_json(base / fr["file"])
+        problem = solver.as_solved(read_json(base / fr["file"]))
         if prev is not None and man.get("warm_start", True):
             problem = dict(problem)
             problem["warm_start"] = shifted_warm_start(prev[0], prev[1], problem)
@@ -477,13 +483,6 @@ def run_sequence(solver: Solver, seq: dict, out: Path, timeout: float, do_render
     return entry
 
 
-# ---------------------------------------------------------------------------
-# report (kept for callers of the old API)
-# ---------------------------------------------------------------------------
-def write_html(out: Path, report: dict) -> Path:
-    return rep.write_html(out, report)
-
-
 def build_solvers(a, log=print) -> tuple[list[Solver], dict[str, str]]:
     """Solvers from --solver / --engine / --baselines; baselines whose toolchain is missing are skipped."""
     specs: list[str] = list(a.solver or [])
@@ -493,6 +492,13 @@ def build_solvers(a, log=print) -> tuple[list[Solver], dict[str, str]]:
         if not any(s.split("=", 1)[0] == "rust" for s in specs):
             specs.insert(0, f"rust={eng} place {{problem}} -o {{result}} --warmup {a.warmup}")
         overlays.setdefault("rust", f"{eng} place {{problem}} -o {{result}} --debug-svg {{svg}}")
+        if getattr(a, "levels", False):
+            # the engine at the other aggressiveness levels (ADR placement/aggressiveness), around rust
+            at = next(i for i, s in enumerate(specs) if s.split("=", 1)[0] == "rust")
+            for k, lv in ((at + 1, "low"), (at + 2, "high")):
+                if not any(s.split("=", 1)[0] == f"rust-{lv}" for s in specs):
+                    specs.insert(k, f"rust-{lv}={eng} place {{problem}} -o {{result}} --warmup {a.warmup} "
+                                    f"--aggressiveness {lv}")
     # the TypeScript CLI runs both JavaScript engines; every implementation reports a
     # steady-state solve after --warmup solves in the same process (a fresh process would
     # time loading fonts, first-touch memory and, for JavaScript, compiling the engine)
@@ -532,13 +538,16 @@ def main(argv=None) -> int:
                          "mumtaz2019 | "
                          "NAME=COMMAND (repeatable)")
     ap.add_argument("--engine", help="Rust CLI binary: adds rust=ENGINE place {problem} -o {result} and its overlay")
+    ap.add_argument("--levels", action="store_true",
+                    help="with --engine, also run it at the other aggressiveness levels as rust-low and rust-high "
+                         "(placement.aggressiveness; rust is the default, medium)")
     ap.add_argument("--ts", action="store_true",
                     help="add ts= the TypeScript engine (ts/packages/cli, built with npm run build)")
     ap.add_argument("--wasm", action="store_true",
                     help="add wasm= the WebAssembly engine through the TypeScript CLI (npm run build:wasm)")
     ap.add_argument("--warmup", type=int, default=3,
                     help="warm-up solves before each timed rust/ts/wasm solve (steady state; default 3)")
-    ap.add_argument("--baselines", action="store_true", help="add all baselines (naive, greedy and the seven tools)")
+    ap.add_argument("--baselines", action="store_true", help="add all baselines (naive, greedy and the eight others)")
     ap.add_argument("--require-baselines", action="store_true",
                     help="fail instead of skipping a requested baseline whose toolchain is missing")
     ap.add_argument("--overlay", action="append",
@@ -619,8 +628,6 @@ def main(argv=None) -> int:
     report["parity"] = rep.parity(report)
     gate = None
     if a.gate:
-        from bench import gates
-
         allow, problems_allow = gates.load_allow(a.gates_allow)
         gate = gates.check(report, previous, allow, problems_allow, a.threshold)
         report["gate"] = gate
@@ -634,8 +641,6 @@ def main(argv=None) -> int:
     shutil.rmtree(out / "tmp", ignore_errors=True)
     print(f"wrote {out / 'results.json'} and {page}")
     if gate is not None:
-        from bench import gates
-
         print("\n".join(gates.summary_lines(gate)))
         return 0 if gate["passed"] else 1
     return 0 if not any("error" in r for r in report["results"] + report["sequences"]) else 1

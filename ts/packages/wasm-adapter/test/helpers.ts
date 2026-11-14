@@ -68,7 +68,8 @@ export function scatter(n: number, extra: Record<string, unknown> = {}): AnyProb
  * byte-identical to the Rust decoder.
  */
 export function rasterOptions(features: string[], problem: AnyProblem): PlaceOptions | undefined {
-  const src = problem.obstacles?.raster?.source;
+  const raster = problem.obstacles?.raster;
+  const src = Array.isArray(raster) ? undefined : raster?.source;
   if (typeof src !== "string" || features.includes("decode")) return undefined;
   const img = decodeSource(src);
   return { raster: { width: img.width, height: img.height, data: img.data } };

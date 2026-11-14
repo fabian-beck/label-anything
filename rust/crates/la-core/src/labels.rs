@@ -95,6 +95,16 @@ pub struct Measurer<'a> {
 }
 
 impl<'a> Measurer<'a> {
+    /// Whether `text` is measured with full shaping: shaping `full`, or `auto` for a text
+    /// with complex scripts.
+    fn full_shaping(&self, text: &str) -> bool {
+        match self.shaping {
+            "full" => true,
+            "auto" => la_text::needs_complex_shaping(text),
+            _ => false,
+        }
+    }
+
     pub fn width(&self, font: &FontSel, scale: f64, text: &str) -> f64 {
         let spec = font.spec(scale);
         if let Some(m) = self.env.measure(text, &spec) {
@@ -103,12 +113,7 @@ impl<'a> Measurer<'a> {
         let f = self
             .fonts
             .font(self.fonts.resolve(&font.family, font.weight, font.italic));
-        let full = match self.shaping {
-            "full" => true,
-            "auto" => la_text::needs_complex_shaping(text),
-            _ => false,
-        };
-        if full {
+        if self.full_shaping(text) {
             f.width_shaped(text, spec.size)
         } else {
             f.width(text, spec.size)
@@ -127,12 +132,7 @@ impl<'a> Measurer<'a> {
         text: &str,
         width: &'m dyn Fn(&str) -> f64,
     ) -> la_text::Measure<'m> {
-        let simple = !self.env.has_measure_callback()
-            && match self.shaping {
-                "full" => false,
-                "auto" => !la_text::needs_complex_shaping(text),
-                _ => true,
-            };
+        let simple = !self.env.has_measure_callback() && !self.full_shaping(text);
         if !simple {
             return la_text::Measure::Callback(width);
         }
@@ -149,11 +149,7 @@ impl<'a> Measurer<'a> {
     /// simple shaping, its font has glyph bounds and a glyph of it has an outline; else
     /// `None`. For boxes whose vertical metrics are the font's, not the host's.
     pub fn ink(&self, font: &FontSel, scale: f64, text: &str) -> Option<(f64, f64)> {
-        if match self.shaping {
-            "full" => true,
-            "auto" => la_text::needs_complex_shaping(text),
-            _ => false,
-        } {
+        if self.full_shaping(text) {
             return None;
         }
         let spec = font.spec(scale);
@@ -670,34 +666,11 @@ fn composite_variant(
 
 /// Normal (level-0) variants of an item.
 pub fn base_variants(m: &Measurer, item: &Item) -> Vec<Variant> {
-    variants_at_scale(m, item, 1.0, false)
-}
-
-fn variants_at_scale(
-    m: &Measurer,
-    item: &Item,
-    scale: f64,
-    with_alternatives: bool,
-) -> Vec<Variant> {
     let pad = item.len.padding;
     match &item.label {
-        LabelSpec::Text(spec) => {
-            let mut v = text_variants(m, spec, &spec.text, pad, scale, "original");
-            if with_alternatives {
-                for (k, alt) in spec.alternatives.iter().enumerate() {
-                    for mut a in
-                        text_variants(m, spec, alt, pad, scale, &format!("alternative:{k}"))
-                    {
-                        a.penalty += 0.5 * (k as f64 + 1.0);
-                        a.steps.insert(0, "alternatives".into());
-                        v.push(a);
-                    }
-                }
-            }
-            v
-        }
+        LabelSpec::Text(spec) => text_variants(m, spec, &spec.text, pad, 1.0, "original"),
         LabelSpec::Fixed { kind, w, h, shape } => {
-            vec![fixed_variant(*kind, *w, *h, shape, pad, scale)]
+            vec![fixed_variant(*kind, *w, *h, shape, pad, 1.0)]
         }
         LabelSpec::Composite {
             row,
@@ -711,7 +684,7 @@ fn variants_at_scale(
             align,
             parts,
             pad,
-            scale,
+            1.0,
         )],
     }
 }

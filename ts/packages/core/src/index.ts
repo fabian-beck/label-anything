@@ -50,7 +50,7 @@ export type {
 import type { LabelResult, ValidationReport } from "./api.js";
 import type { Env } from "./env.js";
 import { PlaceError } from "./api.js";
-import { placeReported, placeTracedWith, placeWith as placeWithImpl, type BudgetProfile } from "./place.js";
+import { solveReported, solveTraced, solveWith, type BudgetProfile } from "./place.js";
 import type { SolveTrace } from "./trace.js";
 import { Issue } from "./validate.js";
 
@@ -60,7 +60,7 @@ import { Issue } from "./validate.js";
  * constants (default time budget and moves per ms), for parity tests.
  */
 export function placeWith(env: Env, problem: unknown, profile: BudgetProfile = "ts"): LabelResult {
-  return placeWithImpl(problem, env, profile) as unknown as LabelResult;
+  return solveWith(problem, env, profile) as unknown as LabelResult;
 }
 
 /**
@@ -71,7 +71,7 @@ export function placeWith(env: Env, problem: unknown, profile: BudgetProfile = "
  * problem is invalid.
  */
 export function placeTraced(env: Env, problem: unknown, profile: BudgetProfile = "ts"): { result: LabelResult; trace: SolveTrace } {
-  const { result, trace } = placeTracedWith(problem, env, profile);
+  const { result, trace } = solveTraced(problem, env, profile);
   return { result: result as unknown as LabelResult, trace };
 }
 
@@ -83,5 +83,5 @@ export function placeTraced(env: Env, problem: unknown, profile: BudgetProfile =
 export function placeValidated(env: Env, problem: unknown, report: ValidationReport, profile: BudgetProfile = "ts"): LabelResult {
   if (!report.valid) throw new PlaceError(report.errors);
   const warnings = report.warnings.map((w) => new Issue(w.pointer ?? "", w.code, w.message));
-  return placeReported(problem, env, warnings, profile) as unknown as LabelResult;
+  return solveReported(problem, env, warnings, profile) as unknown as LabelResult;
 }

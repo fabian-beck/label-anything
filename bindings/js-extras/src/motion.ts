@@ -35,6 +35,7 @@
  * (every one free of overlaps); only what is drawn, and when, changes.
  */
 import type { LabelResult } from "@label-anything/core";
+import { leadersOf } from "./render.js";
 import type { Anchors } from "./stable.js";
 
 type Placement = LabelResult["placements"][number];
@@ -151,8 +152,6 @@ interface Label {
   oldOpacity: number;
 }
 
-const leadersOf = (p: Placement): Leader[] => p.leaders ?? (p.leader ? [p.leader] : []);
-
 function anchorOf(p: Placement, anchors: Anchors | undefined): Pt {
   if (p.anchor) return [p.anchor[0], p.anchor[1]];
   const a = anchors?.get(p.id);
@@ -175,10 +174,7 @@ function inFrame(l: { fixed: boolean }, o: Pt, t: Target): Pt {
   return t.fixed ? [o[0] + t.a[0], o[1] + t.a[1]] : [o[0] - t.a[0], o[1] - t.a[1]];
 }
 
-const rankOf = (p: Placement): number => {
-  const r = (p.priority as { rank?: number } | undefined)?.rank;
-  return typeof r === "number" ? r : Number.POSITIVE_INFINITY;
-};
+const rankOf = (p: Placement): number => p.priority?.rank ?? Number.POSITIVE_INFINITY;
 
 /** One spring component: exact solution of the critically damped oscillator over `dt`. */
 function spring(x: Pt, v: Pt, target: Pt, dt: number, w: number): void {

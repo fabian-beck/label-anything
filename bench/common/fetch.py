@@ -8,7 +8,6 @@ downloaded archives are untrusted input.
 from __future__ import annotations
 
 import hashlib
-import io
 import os
 import shutil
 import sys
@@ -144,11 +143,3 @@ def read_zip_member(archive: str | Path, member: str) -> bytes:
     with zipfile.ZipFile(archive) as z:
         return z.read(_safe_name(member))
 
-
-def list_zip(archive: str | Path) -> list[str]:
-    with zipfile.ZipFile(archive) as z:
-        return [i.filename for i in z.infolist() if not i.is_dir()]
-
-
-def text_of(data: bytes) -> io.StringIO:
-    return io.StringIO(data.decode("utf-8"))
