@@ -62,5 +62,8 @@ for them, so the release gate compares them from the next release on.
 
 Counting every leader pair (2026-11-14) can only raise the near crossings and the parallel
 leaders, and only for results with bent or underlined leaders or with labels of different
-font sizes. Values measured before are lower bounds, among them the near crossings quoted
-in ADR placement/leaders.
+font sizes; values measured before are lower bounds. For Label Anything's results on the
+66 static problems of the full suite nothing changes: 34 near crossings and no parallel
+leaders among 3,786 leaders, before and after, because only 14 of the leaders have a bend
+and none an underline. The baselines draw straight leaders of two points without
+underlines (`bench/baselines/results.py`), so their near crossings do not change either.
