@@ -378,3 +378,301 @@
 .md-typeset .grid.cards .twemoji.lg {
   color: var(--md-typeset-a-color);
 }
+
+/* --- the home page's live examples (playground/showcase.js, figure[data-la-example]) ----- */
+.md-typeset figure.is-live {
+  width: 100%;
+}
+
+.la-example {
+  max-width: 960px;
+  margin: 0 auto;
+  font-size: 0.65rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.la-example[hidden] {
+  display: none;
+}
+
+.la-example__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.7rem;
+  margin-bottom: 0.4rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.la-example__live {
+  padding: 0 0.35rem;
+  border-radius: 1rem;
+  background: var(--md-accent-fg-color--transparent);
+  color: var(--md-default-fg-color);
+  font-weight: 700;
+}
+
+.la-example__live::before {
+  content: "";
+  display: inline-block;
+  width: 0.35rem;
+  height: 0.35rem;
+  margin-right: 0.25rem;
+  border-radius: 50%;
+  background: var(--md-accent-fg-color);
+  vertical-align: 0.05rem;
+}
+
+.la-example__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.7rem;
+}
+
+.la-example__field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.la-example__field select {
+  max-width: 11rem;
+  padding: 0.1rem 0.25rem;
+  border: 0.05rem solid var(--md-default-fg-color--lighter);
+  border-radius: 0.2rem;
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+  font: inherit;
+  cursor: pointer;
+}
+
+.la-example__segments {
+  display: inline-flex;
+  gap: 0.15rem;
+}
+
+.la-example__segments button,
+.la-example__button {
+  padding: 0 0.4rem;
+  border: 0.05rem solid var(--md-default-fg-color--lighter);
+  border-radius: 1rem;
+  background: none;
+  color: var(--md-default-fg-color);
+  font: inherit;
+  cursor: pointer;
+}
+
+.la-example__segments button[aria-pressed="true"] {
+  border-color: var(--md-primary-fg-color);
+  background: var(--md-primary-fg-color);
+  color: var(--md-primary-bg-color);
+}
+
+.la-example__button:hover:not(:disabled),
+.la-example__button:focus-visible {
+  border-color: var(--md-accent-fg-color);
+  color: var(--md-accent-fg-color);
+}
+
+.la-example__button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.la-example__status {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* the drawings have their own colours, on white, in both colour schemes */
+.la-example__stage {
+  position: relative;
+  overflow: hidden;
+  border: 0.05rem solid var(--md-default-fg-color--lightest);
+  border-radius: 0.2rem;
+  background: #ffffff;
+}
+
+.la-example__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.la-example__svg text {
+  font-family: "LA Noto Sans", "Noto Sans", sans-serif;
+  white-space: pre;
+}
+
+.md-typeset .la-example__hint {
+  margin: 0.3rem 0 0;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.6rem;
+  text-align: center;
+}
+
+.la-example__tip {
+  position: absolute;
+  z-index: 2;
+  max-width: 15rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.2rem;
+  background: rgba(31, 35, 40, 0.94);
+  color: #ffffff;
+  font-size: 0.6rem;
+  line-height: 1.4;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.la-example__tip[hidden] {
+  display: none;
+}
+
+.la-example__tip-title,
+.la-example__tip-sub {
+  display: block;
+}
+
+.la-example__tip-sub {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.md-typeset .la-example__tip dl {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0 0.6rem;
+  margin: 0.2rem 0 0;
+}
+
+.md-typeset .la-example__tip dt {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 400;
+}
+
+.md-typeset .la-example__tip dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* the map's zoom buttons, on the drawing, and the note on how to zoom with the wheel */
+.la-example__zoom {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.la-example__zoom .la-example__button {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border-color: rgba(31, 35, 40, 0.3);
+  border-radius: 0.2rem;
+  background: #ffffff;
+  color: #1f2328;
+  font-size: 0.85rem;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.la-example__note {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(31, 35, 40, 0.45);
+  color: #ffffff;
+  font-size: 0.8rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.la-example__note[hidden] {
+  display: none;
+}
+
+/* the whole map lets the page scroll under a finger; a zoomed map is panned */
+.la-example--europe .la-example__svg {
+  touch-action: pan-x pan-y;
+}
+
+.la-example--europe .la-example__svg.is-zoomed {
+  cursor: grab;
+  touch-action: none;
+}
+
+.la-example--europe .la-example__svg.is-panning {
+  cursor: grabbing;
+}
+
+/* hover: the item's label, leader and mark stand out, the others step back */
+.la-example .la-item,
+.la-example .la-leader,
+.la-example .la-ex-fade {
+  transition: opacity 0.12s, fill-opacity 0.12s, stroke-opacity 0.12s;
+}
+
+.la-example.has-hover .la-item:not(.is-hover) {
+  opacity: 0.3;
+}
+
+.la-example.has-hover .la-leader:not(.is-hover) {
+  opacity: 0.25;
+}
+
+.la-example .la-leader.is-hover {
+  stroke: #1f2328;
+  stroke-width: 1.5px;
+}
+
+/* the white casing under a photograph's leaders stays white */
+.la-example .la-ex-casing .la-leader.is-hover {
+  stroke: #ffffff;
+  stroke-width: 3.5px;
+}
+
+.la-example.has-hover .la-ex-fade:not(.is-hover) {
+  fill-opacity: 0.25;
+  stroke-opacity: 0.25;
+}
+
+/* a stub joins a label to a bubble among other bubbles */
+.la-example--economies .la-stub {
+  stroke-width: 1px;
+  stroke-linecap: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .la-example .la-item,
+  .la-example .la-leader,
+  .la-example .la-ex-fade {
+    transition: none;
+  }
+}
+
+/* a graph's node can be dragged; the labels of a hovered node's neighbours stay readable */
+.la-example--modules .la-example__svg {
+  touch-action: pan-y;
+}
+
+.la-example--modules .la-example__svg.is-dragging {
+  cursor: grabbing;
+}
+
+.la-example.has-hover .la-item.is-related {
+  opacity: 0.85;
+}
+
+.la-example.has-hover .la-leader.is-related {
+  opacity: 0.6;
+}

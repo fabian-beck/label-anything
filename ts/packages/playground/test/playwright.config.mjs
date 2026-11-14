@@ -2,7 +2,7 @@
 // built dist/ (npm run test:browser -w @label-anything/playground).
 // CHROMIUM_PATH selects a browser executable when the installed Playwright browsers do
 // not match the version of @playwright/test.
-// The explainer's tests, and those of the home page's header, run after the playground's:
+// The explainer's tests, and those of the home page's header and examples, run after the playground's:
 // the playground compares the two engines, which agree only while no wall-clock guard
 // fires (ADR solver/time-budget), and solves running beside them would take the CPU they need.
 import { defineConfig } from "@playwright/test";
@@ -20,6 +20,7 @@ export default defineConfig({
     { name: "playground", testMatch: /playground\.pw\.mjs$/ },
     { name: "explainer", testMatch: /explain\.pw\.mjs$/, dependencies: ["playground"] },
     { name: "hero", testMatch: /hero\.pw\.mjs$/, dependencies: ["playground"] },
+    { name: "showcase", testMatch: /showcase\.pw\.mjs$/, dependencies: ["playground"] },
   ],
   use: {
     browserName: "chromium",

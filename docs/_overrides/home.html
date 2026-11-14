@@ -9,6 +9,11 @@
   With `data-la-hero-reveal`, more things come by themselves, one at a time, once the page
   has loaded, until the user takes over; otherwise nothing moves unless the user drags,
   adds, shuffles or resets. Without it (e.g. under `mkdocs serve`) the static logo stays.
+
+  The page's examples are live too: playground/showcase.js
+  (ts/packages/playground/src/showcase) solves each figure marked `data-la-example` in
+  the browser and puts a drawing one can hover, change, pan and drag in the place of the
+  static picture, which stays where the script is missing.
 -#}
 {% extends "main.html" %}
 
@@ -66,4 +71,5 @@
 {% block scripts %}
   {{ super() }}
   <script type="module" src="{{ 'playground/hero.js' | url }}"></script>
+  <script type="module" src="{{ 'playground/showcase.js' | url }}"></script>
 {% endblock %}
