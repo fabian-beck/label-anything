@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ..common import geom, spec
-from ..common.geom import Box, GridIndex, Point
+from ..common.geom import TOL, Box, GridIndex, Point
 from ..common.model import (DIRECTIONS, PERCEPTUAL, Item, Problem, adjacent_box, load_problem,
                             position_order)
 from . import association as assoc
@@ -24,10 +24,9 @@ from . import classes as clsmod
 from . import priority as pr
 from . import visual as vis
 
-TOL = 0.5
 SIDES = tuple(DIRECTIONS)
 PERCEPT_RANK = {s: i for i, s in enumerate(PERCEPTUAL)}
-RESERVED = ("items", "labels", "leaders", "canvas_edge")
+RESERVED = spec.NON_OBSTACLE_CLASSES
 
 
 def lower_policy(amap: dict) -> Any:
@@ -91,6 +90,23 @@ def _segments(pl: list[Point]):
 
 def _mean(v: list[float]) -> float | None:
     return float(statistics.fmean(v)) if v else None
+
+
+def _coverage_entry(vals: list[float], a_label: dict, name: str) -> dict:
+    """The coverage of class ``name`` under the placed labels (``vals``: covered share per label)."""
+    return {"mean": _mean(vals), "max": max(vals) if vals else None,
+            "touching": (sum(1 for v in vals if v > 1e-3) / len(vals)) if vals else None,
+            "hard": spec.is_hard(a_label, name), "weight": spec.avoid_value(a_label, name)}
+
+
+def _prefix_len(order: list[Item], ids: set[str]) -> int:
+    """How many items at the start of ``order`` are in ``ids``."""
+    n = 0
+    for it in order:
+        if it.id not in ids:
+            break
+        n += 1
+    return n
 
 
 def _parse_placed(prob: Problem, result: dict, checks: dict) -> tuple[list[Placed], dict[str, dict]]:
@@ -161,7 +177,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     placed_ids = set(pidx)
 
     # ---------------------------------------------------------------- priority / ranks
-    infos = pr.from_result(result.get("placements", []))
+    infos = engine
     rank_source = "result"
     if infos is None or set(infos) != {it.id for it in prob.items}:
         infos = pr.reference(prob)
@@ -295,10 +311,10 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
             for a, b in _segments(pl):
                 sid = len(segs)
                 segs.append((k, a, b))
-                seg_index.insert(sid, Box(min(a[0], b[0]), min(a[1], b[1]), max(a[0], b[0]), max(a[1], b[1])))
+                seg_index.insert(sid, geom.segment_bbox(a, b))
     crossing_pairs = set()
     for sid, (k, a, b) in enumerate(segs):
-        q = Box(min(a[0], b[0]), min(a[1], b[1]), max(a[0], b[0]), max(a[1], b[1]))
+        q = geom.segment_bbox(a, b)
         for tid in seg_index.query(q):
             if tid <= sid:
                 continue
@@ -313,7 +329,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     lopts = opts.get("leaders", {})
 
     def clearance(it):
-        return spec.length(lopts.get("clearance", 3), it.label.em)
+        return spec.length(lopts["clearance"], it.label.em)
 
     if spec.is_hard(a_leader, "leaders"):
         hard["leader_leader"] = leader_crossings
@@ -374,16 +390,15 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
         own_sb = p.box.shrink(tol)
         for pl in p.underlines:  # the underline is part of the leader (spec §7): other labels only
             for a, b in _segments(pl):
-                q = Box(min(a[0], b[0]), min(a[1], b[1]), max(a[0], b[0]), max(a[1], b[1]))
+                q = geom.segment_bbox(a, b)
                 for j in box_index.query(q):
                     if j != k and geom.seg_box_intersects(a, b, placed[j].box.shrink(tol)):
                         leader_label_pairs.add((k, j))
-        for li, pl in enumerate(p.leaders):
+        for pl in p.leaders:
             lengths_em.append(geom.polyline_length(pl) / p.item.label.em)
             bends.append(max(0, len(pl) - 2))
             # with port "baseline" the leader ends at the underline below the first line, which can lie
             # inside the box: its last segment is exempt; every other leader must stay out of its label
-            port_inside = baseline_port
             if canvas is not None and not all(canvas.grow(tol).contains_point(e) for e in pl):
                 hard["leader_canvas"] += 1
                 note("leader_canvas", p.id)
@@ -391,13 +406,13 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                 leader_bad.add(k)
             seglist = list(_segments(pl))
             for si, (a, b) in enumerate(seglist):
-                q = Box(min(a[0], b[0]), min(a[1], b[1]), max(a[0], b[0]), max(a[1], b[1]))
+                q = geom.segment_bbox(a, b)
                 for j in box_index.query(q):
                     if j == k:
                         continue
                     if geom.seg_box_intersects(a, b, placed[j].box.shrink(tol)):
                         leader_label_pairs.add((k, j))
-                if not (port_inside and si == len(seglist) - 1) and geom.seg_box_intersects(a, b, own_sb):
+                if not (baseline_port and si == len(seglist) - 1) and geom.seg_box_intersects(a, b, own_sb):
                     hard["leader_own_label"] += 1
                     note("leader_own_label", p.id)
                     conf_unary.add(k)
@@ -461,11 +476,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
         if spec.avoid_value(a_label, c) == "ignore":
             coverage[c] = {"mean": None, "max": None, "touching": None, "hard": False, "weight": "ignore"}
             continue
-        vals = [oc.covered(p.box) / p.box.area for p in placed if p.box.area > 0]
-        coverage[c] = {"mean": _mean(vals), "max": max(vals) if vals else None,
-                       "touching": (sum(1 for v in vals if v > 1e-3) / len(vals)) if vals else None,
-                       "hard": spec.is_hard(a_label, c),
-                       "weight": spec.avoid_value(a_label, c)}
+        coverage[c] = _coverage_entry([oc.covered(p.box) / p.box.area for p in placed if p.box.area > 0], a_label, c)
     vals_items, vals_labels = [], []
     for k, p in enumerate(placed):
         if p.box.area <= 0:
@@ -482,9 +493,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
                 s += p.box.intersection_area(placed[j].box)
         vals_labels.append(min(1.0, s / p.box.area))
     for name, vals in (("items", vals_items), ("labels", vals_labels)):
-        coverage[name] = {"mean": _mean(vals), "max": max(vals) if vals else None,
-                          "touching": (sum(1 for v in vals if v > 1e-3) / len(vals)) if vals else None,
-                          "hard": spec.is_hard(a_label, name), "weight": spec.avoid_value(a_label, name)}
+        coverage[name] = _coverage_entry(vals, a_label, name)
 
     # ---------------------------------------------------------------- ambiguity
     ambiguous = []
@@ -534,19 +543,8 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
 
     # ---------------------------------------------------------------- priority fidelity
     order = sorted(prob.items, key=lambda it: ranks[it.id])
-    prefix = 0
-    for it in order:
-        if it.id in placed_ids:
-            prefix += 1
-        else:
-            break
-    usable_ids = {placed[k].id for k in usable}
-    usable_prefix = 0
-    for it in order:
-        if it.id in usable_ids:
-            usable_prefix += 1
-        else:
-            break
+    prefix = _prefix_len(order, placed_ids)
+    usable_prefix = _prefix_len(order, {placed[k].id for k in usable})
     ndcg = pr.ndcg_at_k([ranks[i] for i in placed_ids], list(ranks.values()))
     inversions = None
     inversion_ids: list[str] = []
@@ -754,15 +752,11 @@ def _candidate_positions(it: Item) -> list[tuple[str, Box]]:
     return out
 
 
-def _box_gap(a: Box, b: Box) -> float:
-    """Distance between two boxes (0 when they touch or overlap)."""
-    return math.hypot(max(0.0, a.x0 - b.x1, b.x0 - a.x1), max(0.0, a.y0 - b.y1, b.y0 - a.y1))
-
-
 def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dict, hard_classes: list[str],
-                  tol: float) -> list[str]:
+                  tol: float) -> tuple[list[str], list[str]]:
     """Omitted items that have a feasible adjacent position given only the placed items of
-    higher or equal key (spec §9.2 removal test, 8 adjacent positions + area pole).
+    higher or equal key (spec §9.2 removal test, 8 adjacent positions + area pole), and the
+    omitted items without any such candidate (untestable).
 
     Conservative: a position counts as feasible only if the label box *grown* by ``tol``
     is free, so contacts within the tolerance never produce an inversion. Hard labels keep
@@ -812,7 +806,7 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
         box_index.insert(k, p.box)
         for pl in p.leaders + p.underlines:
             for a, b in _segments(pl):
-                seg_index.insert(len(seg_list), Box(min(a[0], b[0]), min(a[1], b[1]), max(a[0], b[0]), max(a[1], b[1])))
+                seg_index.insert(len(seg_list), geom.segment_bbox(a, b))
                 seg_list.append((k, a, b))
     # the unlabeled points (circles of the classes labels do not ignore, not drawn at an item's point)
     unlabeled = [shape for shape, owner in assoc.data_points(prob, classes, a_label) if owner is None] \
@@ -869,7 +863,8 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
             if labels_hard:
                 for k in box_index.query(g.grow(g_h + g_max)):
                     o = order[k]
-                    if keys[o.id] >= kh and (o.box.overlaps(g) or _box_gap(o.box, b) < max(g_h, label_gap(o.item)) + tol):
+                    if keys[o.id] >= kh and (o.box.overlaps(g) or geom.box_box_dist(o.box, b)
+                                             < max(g_h, label_gap(o.item)) + tol):
                         ok = False
                         break
             if ok and leader_labels_hard:
@@ -917,9 +912,3 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
                 break
     return out, untestable
 
-
-def evaluate_files(problem_path: str, result_path: str, truth_path: str | None = None, **kw) -> dict:
-    from ..common.jsonio import read_json
-
-    truth = read_json(truth_path) if truth_path else None
-    return evaluate(read_json(problem_path), read_json(result_path), truth, **kw)

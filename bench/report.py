@@ -6,8 +6,7 @@
   the baseline methods section), problems a baseline cannot run show "n/a"; these,
   the summary and the sequence tables colour every value against its column's
   median (``heat``),
-* rendered images side by side (``bench/render.py`` for every solver) plus the
-  engine's own debug overlay where an ``--overlay`` command is known,
+* rendered images side by side (``bench/render.py`` for every solver),
 * runtime-vs-size small multiples (static SVG, also written to ``plots/``),
 * changes against a previous ``results.json`` (regressions beyond the threshold
   highlighted), implementation parity (Rust vs TS / WASM deltas on every metric),

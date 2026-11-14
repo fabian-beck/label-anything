@@ -18,20 +18,17 @@ Translation (see bench/baselines/README.md):
   are reported unplaced), bounds = the label area, other parameters default
   (``nbr_candidates=200``, ``max_distance=0.2``).
 
-    python -m bench.baselines.textalloc_baseline problem.json -o result.json
+    python -m bench.baselines textalloc problem.json -o result.json
 """
 from __future__ import annotations
 
-import argparse
 import time
 from collections import defaultdict, deque
 
-from ..common.jsonio import read_json, write_json
 from .mpl import Canvas, ensure_matplotlib, fix_extent, px_to_pt
 from .results import build_result
 from .scene import Note, build_scene, choose_cell
 
-TOOL = "textalloc"
 MARGIN_PX = 0.5
 
 
@@ -169,16 +166,3 @@ def solve(problem: dict, problem_path=None, options: dict | None = None) -> dict
     finally:
         cv.close()
     return build_result(scene, boxes, ports, runtime, f"textalloc/{version()}", tool_notes)
-
-
-def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("problem")
-    ap.add_argument("-o", "--out", required=True)
-    a = ap.parse_args(argv)
-    write_json(a.out, solve(read_json(a.problem), a.problem), nd=3)
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

@@ -63,11 +63,7 @@ def load_nfcore():
             if fc is None or p is None or p <= 0:
                 continue
             rows.append({"gene": names.get(r["gene_id"], r["gene_id"]), "fc": fc, "p": p, "padj": _f(r["padj"])})
-    # gene symbols are not unique in general: keep ids unique
-    seen: dict[str, int] = {}
-    for r in rows:
-        seen[r["gene"]] = seen.get(r["gene"], 0) + 1
-    return rows
+    return rows  # gene symbols are not unique in general: ``items_for`` keeps the ids unique
 
 
 def axes_for(rows) -> Axes:

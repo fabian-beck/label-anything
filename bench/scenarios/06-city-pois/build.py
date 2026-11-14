@@ -29,10 +29,8 @@ PIN = {"shape": "icon", "w": 10, "h": 14, "tip": [5, 14],
 
 def items_for(pois, pins: bool) -> list[dict]:
     out = []
-    seen: dict[str, int] = {}
     for p in pois:
         imp = O.CATEGORIES[p["cat"]][1]
-        seen[p["name"]] = seen.get(p["name"], 0) + 1
         iid = p["osm"]
         mark = dict(PIN) if pins else {"shape": "circle", "r": 3.0}
         out.append({"id": iid,

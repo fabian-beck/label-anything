@@ -8,7 +8,6 @@ water, buildings, roads (casing + fill by class), railways. No map text.
 """
 from __future__ import annotations
 
-import math
 import sys
 from pathlib import Path
 
@@ -65,7 +64,7 @@ def category(t: dict) -> str | None:
     if am in ("bank", "pharmacy", "post_office", "police", "hospital", "school", "townhall", "fuel", "courthouse",
               "embassy", "clinic", "doctors", "university", "college", "marketplace", "bus_station"):
         return "service"
-    if le in ("park", "garden", "stadium", "sports_centre", "marina", "beach_resort") or to == "information" and False:
+    if le in ("park", "garden", "stadium", "sports_centre", "marina", "beach_resort"):
         return "leisure"
     if to == "artwork" or hi in ("memorial", "monument"):
         return "artwork"

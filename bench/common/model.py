@@ -335,7 +335,7 @@ def make_mark(mark: dict, ref: Point, tx: Callable[[float, float], Point], defau
     raise ValueError(f"unknown mark shape {shp!r}")
 
 
-def _layers(problem: dict, opts: dict, tx) -> dict[str, list[Primitive]]:
+def _layers(problem: dict, tx) -> dict[str, list[Primitive]]:
     out: dict[str, list[Primitive]] = {}
     obs = problem.get("obstacles") or {}
     dr = float(spec.element_default("obstacles.vector.r"))
@@ -387,7 +387,7 @@ def load_problem(problem: dict, ranks: dict[str, int] | None = None) -> Problem:
         label = resolve_label(it["label"], opts)
         ip = it.get("placement", {}) or {}
         em = label.em
-        offset = spec.length(ip.get("offset", pl.get("offset", 2)), em)
+        offset = spec.length(ip.get("offset", pl["offset"]), em)
         common = dict(label=label, attrs=it.get("attrs", {}) or {}, priority=it.get("priority"),
                       tier=it.get("tier"), required=bool(it.get("required", False)), offset=offset,
                       internal=ip.get("internal", pl.get("internal", "auto")),
@@ -409,7 +409,7 @@ def load_problem(problem: dict, ranks: dict[str, int] | None = None) -> Problem:
             area.ref = pole
             dot = make_mark(a.get("dot", {"shape": "circle", "r": 2}), pole, tx)
             items.append(Item(i, iid, "area", pole, None, area, dot, **common))
-    vectors = _layers(problem, opts, tx)
+    vectors = _layers(problem, tx)
     prob = Problem(problem, opts, width, height, padding, region_box, allow_outside, items, vectors, tx, warnings)
     classes = (opts.get("priority", {}) or {}).get("font_classes") or []
     if classes:
@@ -495,7 +495,7 @@ def apply_font_classes(prob: Problem, classes: list[dict], ranks: dict[str, int]
             continue
         it.label = resolve_label(scaled_label(it.raw["label"], prob.opts, scale, weight), prob.opts)
         ip = it.raw.get("placement", {}) or {}
-        it.offset = spec.length(ip.get("offset", pl.get("offset", 2)), it.label.em)
+        it.offset = spec.length(ip.get("offset", pl["offset"]), it.label.em)
 
 
 # ---------------------------------------------------------------------------

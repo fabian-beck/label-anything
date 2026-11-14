@@ -31,7 +31,6 @@ from bench.scenarios import load_module  # noqa: E402
 
 SCENARIO = "09-line-end-labels"
 SOURCES = ["vega-datasets-3.2.1"]
-TGZ = None
 COLORS = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f",
           "#bab0ac", "#86bcb6", "#d37295", "#8cd17d", "#a0cbe8"]
 

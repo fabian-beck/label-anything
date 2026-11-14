@@ -11,11 +11,9 @@ is not a leader. Emulations and unsupported features are listed in
 """
 from __future__ import annotations
 
-from ..common.geom import Box, Point
+from ..common.geom import TOL, Box, Point
 from ..solvers.common import parts_info, text_info
 from .scene import LabelItem, Scene, clip_start, side_of
-
-TOL = 0.5
 
 
 def leader_for(lab: LabelItem, box: Box, port: Point | None) -> dict | None:
