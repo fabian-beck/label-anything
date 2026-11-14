@@ -247,26 +247,45 @@ export class Evaluator {
         continue;
       }
       otherFound = true;
-      if (!(lower ? labelLowerHard : labelItemsHard)) continue;
-      if (c.labelOverlapsShape(sj)) {
-        acc.violate(BLOCK_ITEMS, false, 0);
-        if (acc.unusable(quick)) return finish(c, acc);
-        continue;
-      }
-      const d = c.distShape(sj);
-      // the margin (up to rounding), but never more than the mark keeps from the own mark's
-      // box
-      if (margin > EPS && d < margin - EPS && d < sj.distRect(item.shape.bbox())) {
-        acc.violate(BLOCK_ITEMS, false, 0);
-        if (acc.unusable(quick)) return finish(c, acc);
+      const hard = lower ? labelLowerHard : labelItemsHard;
+      let d: number;
+      if (hard) {
+        if (c.labelOverlapsShape(sj)) {
+          acc.violate(BLOCK_ITEMS, false, 0);
+          if (acc.unusable(quick)) return finish(c, acc);
+          continue;
+        }
+        d = c.distShape(sj);
+        // the margin (up to rounding), but never more than the mark keeps from the own
+        // mark's box
+        if (margin > EPS && d < margin - EPS && d < sj.distRect(item.shape.bbox())) {
+          acc.violate(BLOCK_ITEMS, false, 0);
+          if (acc.unusable(quick)) return finish(c, acc);
+        }
+      } else {
+        // of the marks the label may cover, that of a less important item (`lower_items`
+        // given and not hard) competes with the own mark unless the label hides it entirely:
+        // no reader takes a hidden mark for the label's, and its item goes unlabeled. Only
+        // for an item with a place beside its mark that hides or keeps clear of such marks
+        // (spec §4.4)
+        if (
+          !nearRule ||
+          obs.lowerRule[i] !== true ||
+          !model.isLower(i, j) ||
+          (r.containsRect(sj.bbox()) && c.labelOverlapsShape(sj))
+        ) {
+          continue;
+        }
+        d = c.distShape(sj);
       }
       // nearer to the label than its own mark, or, without a stub, not a margin farther, up to
-      // the side margin for a point's mark more squarely beside a side than the own (at most as
-      // far as the two marks' reference points lie apart; the marks of the item's group aside)
+      // the side margin for the point's mark of an item it may not cover that lies more
+      // squarely beside a side than the own (at most as far as the two marks' reference
+      // points lie apart; the marks of the item's group aside)
       let sep = 0;
       if (clear > 0) {
         const need =
-          side > clear && model.items[j]!.area === null
+          hard && side > clear && model.items[j]!.area === null
             ? clear + (side - clear) * maxf(facing(r, sj.reference()) - ownFacing, 0)
             : clear;
         sep = minf(need, sj.reference().dist(item.shape.reference()));

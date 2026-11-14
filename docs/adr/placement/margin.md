@@ -42,7 +42,10 @@ one at a corner is not.
   than to its own. Without a stub it must be nearer its own by its margin, capped by the
   distance between the two marks: infeasible when
   `dist(mark_j, box) < dist(mark_i, box) + min(m, |p_j − p_i|) − EPS`. Internal labels and
-  labels on distant leaders are exempt.
+  labels on distant leaders are exempt. Where a place beside the mark can keep it, the
+  rule also holds against the marks of less important items that a label may cover but
+  does not hide (ADR priority/lower-items) and against unlabeled points (ADR
+  placement/unlabeled-points).
 - **Side margin** (`defaults.side_margin`, 0.5 em): from a point's mark that lies more
   squarely beside a side of the label than the label's own mark, the label must be farther
   by up to the side margin: `m` becomes `m + (k − m) · max(0, f_j − f_i)`, where
@@ -52,8 +55,10 @@ one at a corner is not.
   too, and so do unlabeled points (ADR placement/unlabeled-points): a label may hide those,
   and with the side margin it hid more of them rather than stand clear (over the
   benchmark without a clock, 59 more labels nearer to another point than to their own, 65
-  more unclear, 6 fewer placed). The arithmetic is `+ − × ÷` only, identical in Rust and
-  TypeScript.
+  more unclear, 6 fewer placed). The marks of less important items that a label may cover
+  keep the margin as well: the rule holds against them only where one of the item's fixed
+  places meets it, and that test uses the margin. The arithmetic is `+ − × ÷` only,
+  identical in Rust and TypeScript.
 - Warm-start candidates need only half the margin and spacing (ADR motion/warm-starts).
 
 ## Consequences

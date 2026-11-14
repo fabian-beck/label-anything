@@ -72,12 +72,13 @@ marks overlap or touch. Without a stub it must be *clearly* nearer: by its margi
 (0.2 em), or, for marks closer together than that, by the distance between them. A label
 below two touching points thus stands on the side away from the other point, takes a stub
 or a leader, or is left out — it is never as near to a neighbour's point as to its own.
-A point beside the middle of a side of the label stands where that point's own label would
-go: where it lies more squarely beside the label than the label's own mark — a label
-hanging below and left of its mark's corner, starting right beside another point — it
-must be farther by up to `defaults.side_margin` (0.5 em).
-The rule protects the marks a label may not cover (hard `items`, or hard `lower_items`);
-internal labels and labels on leaders are exempt
+A mark that a label may not cover, beside the middle of a side of the label, stands where
+that mark's own label would go: where it lies more squarely beside the label than the
+label's own mark — a label hanging below and left of its mark's corner, starting right
+beside another point — it must be farther by up to `defaults.side_margin` (0.5 em).
+The rule protects the marks a label may not cover (hard `items`, or hard `lower_items`)
+and the marks of less important items it may cover but does not hide (below, by the
+margin alone); internal labels and labels on leaders are exempt
 ([ADR placement/margin](../adr/placement/margin.md)).
 
 The unlabeled points of a chart count too: the discs of vector layers and the shapes an SVG
@@ -94,7 +95,11 @@ rule to items' marks ([ADR placement/unlabeled-points](../adr/placement/unlabele
 and the marks of items with a *lower* priority key; it defaults to that of `items`, and is
 10 in the `map` preset and in the helpers given a priority. A weight lets important labels
 claim the space of the minor marks around them. A covered mark is never mislabeled: its
-item is omitted (`omitted_by_priority`). `avoid.leader.lower_items` does the same for
+item is omitted (`omitted_by_priority`). A label next to its mark hides such a mark
+entirely or keeps clear of it, by the own-mark rule above: beside a minor mark, or partly
+on it, the label could be that mark's. Among minor marks so dense that none of an item's
+fixed positions can do either, the rule cannot be met and does not hold for that item, as
+with unlabeled points. `avoid.leader.lower_items` does the same for
 leaders ([priority](../tutorials/priority.md#important-labels-over-minor-marks)).
 
 ## Merging

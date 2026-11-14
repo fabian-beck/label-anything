@@ -35,12 +35,8 @@
         "id": "minor",
         "anchor": {
           "type": "point",
-          "x": 85,
-          "y": 50,
-          "mark": {
-            "shape": "circle",
-            "r": 12
-          }
+          "x": 86,
+          "y": 50
         },
         "label": {
           "type": "text",
@@ -48,9 +44,7 @@
         },
         "priority": 1.0,
         "placement": {
-          "position_order": [
-            "top"
-          ]
+          "offset": 8
         }
       },
       {

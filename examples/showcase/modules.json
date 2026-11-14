@@ -16752,14 +16752,14 @@
     "y": 307.8,
     "mark": {
      "shape": "circle",
-     "r": 5.16
+     "r": 5.21
     }
    },
    "label": {
     "type": "text",
     "text": "cost"
    },
-   "priority": 4.00586
+   "priority": 4.00605
   },
   {
    "id": "core/detmath",
@@ -17211,14 +17211,14 @@
     "y": 441.0,
     "mark": {
      "shape": "circle",
-     "r": 5.57
+     "r": 5.67
     }
    },
    "label": {
     "type": "text",
     "text": "obstacles"
    },
-   "priority": 7.0078
+   "priority": 7.00831
   },
   {
    "id": "core/options",
@@ -17269,7 +17269,7 @@
     "type": "text",
     "text": "place"
    },
-   "priority": 1.00428
+   "priority": 1.00429
   },
   {
    "id": "core/priority",

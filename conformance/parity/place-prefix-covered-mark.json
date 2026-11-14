@@ -34,12 +34,8 @@
         "id": "minor",
         "anchor": {
           "type": "point",
-          "x": 85,
-          "y": 50,
-          "mark": {
-            "shape": "circle",
-            "r": 12
-          }
+          "x": 86,
+          "y": 50
         },
         "label": {
           "type": "text",
@@ -47,9 +43,7 @@
         },
         "priority": 1.0,
         "placement": {
-          "position_order": [
-            "top"
-          ]
+          "offset": 8
         }
       },
       {
@@ -116,7 +110,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 4.058814346692478,
+        "cost": 0.7803921568627459,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -207,7 +201,7 @@
         "minor"
       ],
       "priority_inversions": 0,
-      "total_cost": 4.1195476800258115,
+      "total_cost": 0.8411254901960792,
       "degraded": {},
       "grid": {
         "cell": 3.0,

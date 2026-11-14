@@ -317,34 +317,48 @@ impl<'a> Evaluator<'a> {
             } else {
                 dy.label_items.is_hard()
             };
-            if !hard {
-                continue;
-            }
-            if c.label_overlaps_shape(sj) {
-                acc.violate(Block::Items, false, 0.0);
-                if acc.unusable(quick) {
-                    return finish(c, acc);
+            let d = if hard {
+                if c.label_overlaps_shape(sj) {
+                    acc.violate(Block::Items, false, 0.0);
+                    if acc.unusable(quick) {
+                        return finish(c, acc);
+                    }
+                    continue;
                 }
-                continue;
-            }
-            let d = c.dist_shape(sj);
-            // the margin (up to rounding), but never more than the mark keeps from the own
-            // mark's box
-            if margin > crate::geom::EPS
-                && d < margin - crate::geom::EPS
-                && d < sj.dist_rect(&item.shape.bbox())
-            {
-                acc.violate(Block::Items, false, 0.0);
-                if acc.unusable(quick) {
-                    return finish(c, acc);
+                let d = c.dist_shape(sj);
+                // the margin (up to rounding), but never more than the mark keeps from the
+                // own mark's box
+                if margin > crate::geom::EPS
+                    && d < margin - crate::geom::EPS
+                    && d < sj.dist_rect(&item.shape.bbox())
+                {
+                    acc.violate(Block::Items, false, 0.0);
+                    if acc.unusable(quick) {
+                        return finish(c, acc);
+                    }
                 }
-            }
+                d
+            } else {
+                // of the marks the label may cover, that of a less important item
+                // (`lower_items` given and not hard) competes with the own mark unless the
+                // label hides it entirely: no reader takes a hidden mark for the label's, and
+                // its item goes unlabeled. Only for an item with a place beside its mark that
+                // hides or keeps clear of such marks (spec §4.4)
+                if !near_rule
+                    || !obs.lower_rule.get(i).copied().unwrap_or(false)
+                    || !model.is_lower(i, j)
+                    || (r.contains_rect(&sj.bbox()) && c.label_overlaps_shape(sj))
+                {
+                    continue;
+                }
+                c.dist_shape(sj)
+            };
             // nearer to the label than its own mark, or, without a stub, not a margin farther,
-            // up to the side margin for a point's mark more squarely beside a side than the own
-            // (at most as far as the two marks' reference points lie apart; the marks of the
-            // item's group aside)
+            // up to the side margin for the point's mark of an item it may not cover that lies
+            // more squarely beside a side than the own (at most as far as the two marks'
+            // reference points lie apart; the marks of the item's group aside)
             let sep = if clear > 0.0 {
-                let need = if side > clear && model.items[j].area.is_none() {
+                let need = if hard && side > clear && model.items[j].area.is_none() {
                     clear + (side - clear) * maxf(facing(&r, sj.reference()) - own_facing, 0.0)
                 } else {
                     clear

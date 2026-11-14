@@ -58,17 +58,17 @@ turned), and a solve takes 28 ms instead of 25 (Rust) and 120 ms instead of 87
 (TypeScript). Results of problems
 with area anchors change. Soft costs of turned labels are approximate (the cover is wider
 than the label; rings, contrast, the region terms and the label budget use the bounding
-box), always on the safe side for hard rules.
+box), always on the safe side for hard rules. Turned labels are text in a rectangular box;
+icons, composite labels and labels of other shapes stay upright.
 
 A part the label fits in within less than two grid spacings gets the rows (columns)
 between the grid's: on the home page's map of Europe, Czechia's name fitted in a single
 row, the one through Prague's dot, which it covered (the `map` preset lets important
 labels cover lesser marks), so that Prague lost its label; with the rows between, the name
-sits below the dot and Prague keeps its label (87 instead of 86 of 90 labels, and 6 %
-fewer instructions for the solve). No problem of the benchmark changes (their areas fit
-the label in three rows or more, or nowhere), and the extra samples add no measurable
-work there. Turned labels are text in a rectangular box; icons, composite
-labels and labels of other shapes stay upright.
+sits below the dot and Prague keeps its label (87 instead of 86 of 90 labels when this
+was decided, and 6 % fewer instructions for the solve). No problem of the benchmark
+changes (their areas fit the label in three rows or more, or nowhere), and the extra
+samples add no measurable work there.
 
 ## Alternatives
 - **A finer grid everywhere** (spacing half the label height): four times the samples

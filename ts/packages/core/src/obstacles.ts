@@ -137,6 +137,13 @@ export class Obstacles {
    * positions of its first variant keeps clear of them ({@link setPointsRule}).
    */
   pointsRule: boolean[] = [];
+  /**
+   * Per item, whether the rule holds against the marks of less important items that its
+   * labels may cover: one of the fixed positions of its first variant hides or keeps clear
+   * of them ({@link setLowerRule}). Empty when labels may not cover such marks, or without
+   * `placement.own_nearest`.
+   */
+  lowerRule: boolean[] = [];
   /** {@link itemsSat} and {@link own} once built. */
   private itemsSatCache: Sat | null = null;
   private ownCache: ([GridSpec, Sat] | null)[] | null = null;
@@ -318,6 +325,50 @@ export class Obstacles {
         const c = touchCenter(it.shape, it.len.offset, dirOf(45 * k), hw, hh);
         const b = Rect.fromCenter(c, hw, hh);
         if (this.pointNearer(it, b, it.shape.distRect(b), it.len.margin) === null) return true;
+      }
+      return false;
+    });
+  }
+
+  /**
+   * Whether the mark of a less important item (not of the item's group) that the label box
+   * `r` of `item` does not hide comes nearer to it than its own mark (`dOwn`) plus `clear`,
+   * at most the distance between the two marks' reference points (spec §4.4; Rust
+   * `Obstacles::lower_nearer`).
+   */
+  lowerNearer(model: Model, item: Item, r: Rect, dOwn: number, clear: number): boolean {
+    const i = item.index;
+    const ownRef = item.shape.reference();
+    const hit = this.itemIndex.find(r.inflate(dOwn + clear), (j) => {
+      if (j === i || !model.isLower(i, j) || model.groupRep(j) === i) return false;
+      const sj = model.items[j]!.shape;
+      // a mark entirely under the label is hidden, not a competitor
+      if (r.containsRect(sj.bbox()) && sj.overlapsRect(r)) return false;
+      const sep = clear > 0 ? minf(clear, sj.reference().dist(ownRef)) : 0;
+      return sj.distRect(r) < dOwn + sep - EPS;
+    });
+    return hit >= 0;
+  }
+
+  /**
+   * Whether the rule holds against the marks of less important items that labels may cover
+   * (`avoid.label.lower_items` given and not hard), per item (spec §4.4): when one of the 8
+   * fixed positions (spec §6.1) of the item's first variant hides or keeps clear of them by
+   * its margin. Among marks so dense that none does, no place beside the mark could, and the
+   * item's labels follow the rule for the marks they may not cover only (Rust
+   * `Obstacles::set_lower_rule`).
+   */
+  setLowerRule(model: Model, variants: readonly (readonly Variant[])[]): void {
+    if (!this.dynamic.lowerCover || !model.placement.ownNearest) return;
+    this.lowerRule = model.items.map((it, i) => {
+      const v = variants[i]?.[0];
+      if (v === undefined) return false;
+      const hw = 0.5 * v.w;
+      const hh = 0.5 * v.h;
+      for (let k = 0; k < 8; k++) {
+        const c = touchCenter(it.shape, it.len.offset, dirOf(45 * k), hw, hh);
+        const b = Rect.fromCenter(c, hw, hh);
+        if (!this.lowerNearer(model, it, b, it.shape.distRect(b), it.len.margin)) return true;
       }
       return false;
     });

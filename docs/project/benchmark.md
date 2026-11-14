@@ -52,26 +52,29 @@ The evaluator re-checks every result with exact geometry. Its main measures:
 ## What the results show
 
 The **usable labels** of each tool on the quick suite, with the labels it placed in
-parentheses where that is more ("n/a": the tool cannot run the problem; 2026-10-25, Label
-Anything with the rule of the unlabeled points, at its default
+parentheses where that is more ("n/a": the tool cannot run the problem; the other tools on
+2026-10-25, Label Anything on 2026-11-14, at its default
 [aggressiveness](../concepts/candidates.md#aggressiveness) `medium` and at `high`):
 
 | Problem | Label Anything | `high` | greedy | textalloc | adjustText | vega-label | ggrepel | ECharts | d3fc | D3-Labeler |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | Gapminder 2005, 46 bubbles | **27** | 32 | 21 | 22 (32) | 20 (46) | 23 | 21 (31) | 12 (24) | 12 (20) | 24 (46) |
-| 300 airports, world map | **222** | 228 | 200 | 209 (224) | 185 (300) | 182 (183) | 191 (262) | 126 (182) | 110 (135) | 211 (300) |
-| 375 POIs on Monaco tiles | **186** | 187 | 170 | 172 (187) | n/a | 154 | 185 (217) | 84 (113) | 84 (121) | 129 (375) |
+| 300 airports, world map | **228** | 229 | 200 | 209 (224) | 185 (300) | 182 (183) | 191 (262) | 126 (182) | 110 (135) | 211 (300) |
+| 375 POIs on Monaco tiles | 180 | 183 | 170 | 172 (187) | n/a | 154 | **185** (217) | 84 (113) | 84 (121) | 129 (375) |
 | Les Misérables, 77 nodes | **77** | 77 | 77 | 77 | 74 (77) | 77 | 76 (77) | 62 (74) | 73 | 76 (77) |
-| 200 points, stress | **200** | 200 | 191 | 195 (199) | 188 (200) | 182 | 190 (200) | 140 (153) | 162 (173) | 189 (200) |
+| 200 points, stress | **199** | 200 | 191 | 195 (199) | 188 (200) | 182 | 190 (200) | 140 (153) | 162 (173) | 189 (200) |
 | 1,206 classes, strict priority | 48 | 62 | **51** | 30 (49) | n/a | 47 | 16 (28) | 9 (58) | 19 (58) | 20 (1,206) |
 
 **Where Label Anything is ahead:**
 
-* **The most usable labels** on every problem above but one: 3 % more than the next tool
-  on the random points, 5 % on the world map, 27 against 24 among the Gapminder bubbles,
-  one more than ggrepel on the city map. On the class chart, greedy keeps 51 labels to its
-  48, but 45 % of greedy's are unclear and nearly a quarter stand nearer another class's
-  point than their own; with `high`, Label Anything keeps 62. With every means, as `high`
+* **The most usable labels** on every problem above but two: 2 % more than the next tool
+  on the random points, 8 % on the world map, 27 against 24 among the Gapminder bubbles.
+  On the city map, ggrepel keeps 185 labels to its 180: there a label hides the dot of a
+  less important place or keeps clear of it where a place beside its mark can
+  ([ADR priority/lower-items](../adr/priority/lower-items.md)). On the class chart, greedy
+  keeps 51 labels to its 48, but 45 % of greedy's are unclear and nearly a quarter stand
+  nearer another class's point than their own; with `high`, Label Anything keeps 62. With
+  every means, as `high`
   now selects, it led on all 55 problems of the full suite with `strict` or `weighted`
   omission (2026-10-18), from 10 outliers to 20,000 stress anchors, against the six other
   tools fast enough to run it; with `prefix` omission, on five of seven problems, tying on
@@ -94,17 +97,18 @@ Anything with the rule of the unlabeled points, at its default
 
 **Where it falls short:**
 
-* **Dense data loses labels.** Of 1,000 airports on the world map, 554 get a label (563
-  with `high`); of 2,000 random points, 921 (972). The space between labels
+* **Dense data loses labels.** Of 1,000 airports on the world map, 550 get a label (562
+  with `high`); of 2,000 random points, 902 (943). The space between labels
   ([ADR placement/margin](../adr/placement/margin.md)) costs a few percent of the labels in
   typical scenes. Where hubs crowd, a big airport's label may cover a smaller hub's dot,
   which then stays unlabeled.
 * **Unlabeled points still compete.** Among the 2,917 unlabeled airports of the 300-airport
-  map, 39 % of its labels are unclear (textalloc 66 %, ggrepel 68 %, vega-label 92 %): the
-  rule that keeps a label clearly nearer its own point sees the background points too
-  ([ADR placement/unlabeled-points](../adr/placement/unlabeled-points.md)), but not the
-  dots of less important items that the `map` preset lets labels cover, and where the
-  points stand too dense for any place beside a mark, only the marks of items.
+  map, 30 % of its labels are unclear (textalloc 66 %, ggrepel 68 %, vega-label 92 %): the
+  rule that keeps a label clearly nearer its own point sees the background points
+  ([ADR placement/unlabeled-points](../adr/placement/unlabeled-points.md)) and the dots of
+  less important items that the `map` preset lets labels cover
+  ([ADR priority/lower-items](../adr/priority/lower-items.md)), but where they stand too
+  dense for any place beside a mark, only the marks a label may not cover.
 * **More labels cover more.** Label Anything covers more of what it may cover — 1.3
   background points per label on the airport map, textalloc 1.2. Raise
   `avoid.label.points` where hidden data points matter more.
@@ -112,7 +116,7 @@ Anything with the rule of the unlabeled points, at its default
   sit on leaders, up to 4 em long (`high`: 15 of 32 and 49 of 149, up to 8 em). At the
   crowded ends of the life-expectancy chart, 40 of 62 lines get a label, in a column.
 * **Moving labels jump sides.** Re-solved frame by frame from the previous result, labels
-  move 1.6–3.6 px per frame, nearly all of it from the 6–20 % that switch to another side
+  move 1.6–4.1 px per frame, nearly all of it from the 6–19 % that switch to another side
   when a neighbour takes their place. Other tools move as much or more, or keep fewer
   labels.
 * **Speed misses its targets for large problems.** Hundreds of labels take milliseconds;
