@@ -5,8 +5,9 @@
  *   node build.mjs            # dist/: app.js, engine-ts.js, engine-wasm.js, the WebAssembly
  *                             #        module, fonts, data, index.html, style.css, the
  *                             #        explainer (explain.html, explain.js, explain-worker.js)
- *                             #        and hero.js (the live header of the documentation's
- *                             #        home page, which solves with engine-ts.js)
+ *                             #        hero.js and showcase.js (the live header and the
+ *                             #        live examples of the documentation's home page,
+ *                             #        which solve with engine-ts.js)
  *   node build.mjs --serve    # rebuild on change and serve on http://127.0.0.1:8000/
  *
  * Needs the built packages (`npm run build` at the repository root) and, for the
@@ -50,6 +51,9 @@ mkdirSync(join(OUT, "data"), { recursive: true });
 for (const f of ["index.html", "style.css", "explain.html", "explain.css"]) copyFileSync(join(HERE, f), join(OUT, f));
 for (const f of ["NotoSans-Regular.ttf", "NotoSans-Bold.ttf", "OFL.txt"]) copyFileSync(join(REPO, "fonts", f), join(OUT, "fonts", f));
 copyDir(join(HERE, "data"), join(OUT, "data"));
+// the problems the home page's live examples start from (examples/showcase)
+mkdirSync(join(OUT, "data/showcase"), { recursive: true });
+for (const f of ["modules.json", "retina.json"]) copyFileSync(join(REPO, "examples/showcase", f), join(OUT, "data/showcase", f));
 if (hasWasm) copyFileSync(WASM, join(OUT, "label_anything_bg.wasm"));
 else console.warn("warning: no WebAssembly build (npm run build:wasm -w @label-anything/wasm): the playground uses the TypeScript engine only");
 writeFileSync(join(OUT, "data/modules.json"), JSON.stringify(moduleGraph()));
@@ -72,6 +76,7 @@ const entries = [
   { in: "src/explain/main.ts", out: "explain" },
   { in: "src/explain/worker.ts", out: "explain-worker" },
   { in: "src/hero.ts", out: "hero" },
+  { in: "src/showcase/main.ts", out: "showcase" },
 ];
 if (hasWasm) entries.push({ in: "src/worker-wasm.ts", out: "engine-wasm" });
 const options = { ...common, entryPoints: entries, outdir: OUT };
@@ -85,7 +90,7 @@ if (serve) {
   const result = await esbuild.build({ ...options, metafile: true });
   writeFileSync(join(OUT, "THIRD-PARTY-NOTICES.txt"), notices(result.metafile));
   const size = (f) => (existsSync(join(OUT, f)) ? `${(statSync(join(OUT, f)).size / 1024).toFixed(0)} KB` : "–");
-  console.log(`dist/: app.js ${size("app.js")}, engine-ts.js ${size("engine-ts.js")}, engine-wasm.js ${size("engine-wasm.js")}, label_anything_bg.wasm ${size("label_anything_bg.wasm")}, hero.js ${size("hero.js")}`);
+  console.log(`dist/: app.js ${size("app.js")}, engine-ts.js ${size("engine-ts.js")}, engine-wasm.js ${size("engine-wasm.js")}, label_anything_bg.wasm ${size("label_anything_bg.wasm")}, hero.js ${size("hero.js")}, showcase.js ${size("showcase.js")}`);
 }
 
 /** The licenses of the npm packages bundled into the scripts (from esbuild's metafile). */
