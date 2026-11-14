@@ -85,7 +85,6 @@ export class Modules implements Example {
   #base: LabelProblem;
   #nodes = new Map<string, Node>();
   #edges: Edge[] = [];
-  #legend: number[];
   #stage!: Stage;
   #circles = new Map<string, SVGCircleElement>();
   #edgeLayer!: SVGGElement;
@@ -97,7 +96,6 @@ export class Modules implements Example {
   constructor(base: LabelProblem) {
     this.#base = base;
     const vector = (base.obstacles as { vector: Vector[] }).vector;
-    this.#legend = vector.find((v) => v.class === "legend")!.rects![0]!;
     const at = new Map<string, Node>();
     for (const it of base.items as unknown as Item[]) {
       const [pkg, ...rest] = it.id.split("/");
