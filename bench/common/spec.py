@@ -1,8 +1,9 @@
 """Spec data for the benchmark tools: schemas, the defaults table, presets and
-the effective-options merge of spec §2.4 (defaults ← preset ← problem).
+the effective-options merge of spec §2.4 (defaults ← aggressiveness level ← preset ←
+problem).
 
-The defaults are parsed from ``spec/defaults.md`` (the same table the engine's
-code generator reads), so the evaluator never drifts from the spec.
+The defaults and the levels are parsed from ``spec/defaults.md`` (the same tables the
+engine's code generator reads), so the evaluator never drifts from the spec.
 """
 from __future__ import annotations
 
@@ -43,6 +44,30 @@ def defaults_table() -> dict[str, Any]:
             raise ValueError(f"defaults.md: cannot parse row {row!r}")
         out[m.group(1)] = json.loads(m.group(2))
     return out
+
+
+@functools.lru_cache(maxsize=None)
+def _aggressiveness_json() -> str:
+    md = (paths.SPEC / "defaults.md").read_text(encoding="utf-8")
+    begin = md.index("<!-- aggressiveness:begin -->")
+    end = md.index("<!-- aggressiveness:end -->")
+    rows = [r for r in md[begin:end].splitlines() if r.startswith("|")]
+    levels = [c.strip().strip("`") for c in rows[0].split("|")[2:-1]]
+    out: dict[str, dict[str, Any]] = {lv: {} for lv in levels}
+    for row in rows:
+        cells = re.findall(r"`([^`]+)`", row)
+        if not row.startswith("| `"):
+            continue
+        if len(cells) != len(levels) + 1:
+            raise ValueError(f"defaults.md: cannot parse aggressiveness row {row!r}")
+        for lv, val in zip(levels, cells[1:]):
+            out[lv][cells[0]] = json.loads(val)
+    return json.dumps(out)
+
+
+def aggressiveness_table() -> dict[str, dict[str, Any]]:
+    """Per ``placement.aggressiveness`` level, the flat map dotted key -> default it sets."""
+    return json.loads(_aggressiveness_json())
 
 
 def element_default(key: str) -> Any:
@@ -95,10 +120,16 @@ def merge(base: Any, over: Any) -> Any:
 
 
 def effective_options(problem: dict) -> dict:
-    """Effective options = defaults.md ← presets/<preset>.json#options ← problem."""
+    """Effective options = defaults.md ← the aggressiveness level's column ←
+    presets/<preset>.json#options ← problem."""
     opts = nested_defaults()
     preset = problem.get("preset", opts.get("preset", "auto"))
     pdata = presets().get(preset, {})
+    level = ((problem.get("placement") or {}).get("aggressiveness")
+             or ((pdata.get("options") or {}).get("placement") or {}).get("aggressiveness")
+             or opts["placement"]["aggressiveness"])
+    for key, val in aggressiveness_table().get(level, {}).items():
+        _set_path(opts, key, val)
     if preset != "none":
         opts = merge(opts, pdata.get("options", {}))
     for sec in OPTION_SECTIONS:
@@ -109,10 +140,6 @@ def effective_options(problem: dict) -> dict:
                 opts[sec] = copy.deepcopy(problem[sec])
     opts["preset"] = preset
     return opts
-
-
-def preset_svg_classes(preset: str) -> list[dict]:
-    return presets().get(preset, {}).get("svg_classes", [])
 
 
 # ---------------------------------------------------------------------------
@@ -152,4 +179,7 @@ def is_hard(amap: dict, cls: str) -> bool:
     return avoid_value(amap, cls) == "hard"
 
 
-RESERVED_CLASSES = ("items", "labels", "leaders", "canvas_edge", "ink", "text")
+NON_OBSTACLE_CLASSES = ("items", "labels", "leaders", "canvas_edge")
+"""The keys of ``avoid`` maps that name no obstacle class of the problem (spec §4.4): the other items' marks,
+the labels, the leaders and the canvas edge, which the evaluator tests by themselves. (Not the engine's reserved
+class names, which also hold ``ink`` and ``text``: those are obstacle classes.)"""

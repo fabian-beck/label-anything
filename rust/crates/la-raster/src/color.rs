@@ -16,14 +16,7 @@ use crate::srgb_lut::SRGB_TO_LINEAR;
 /// assert_eq!(parse_hex_color("fa0"), None);
 /// ```
 pub fn parse_hex_color(s: &str) -> Option<[u8; 3]> {
-    fn hex(c: u8) -> Option<u8> {
-        match c {
-            b'0'..=b'9' => Some(c - b'0'),
-            b'a'..=b'f' => Some(c - b'a' + 10),
-            b'A'..=b'F' => Some(c - b'A' + 10),
-            _ => None,
-        }
-    }
+    use crate::base64::hex_value as hex;
     let digits = s.as_bytes().strip_prefix(b"#")?;
     match digits.len() {
         3 => Some([

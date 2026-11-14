@@ -4,7 +4,7 @@
  * margin (boundary labels); the lines are soft obstacles. Generated data.
  */
 import type { Control } from "../controls.js";
-import { gauss, nameGen, rng, type Obj } from "../util.js";
+import { gauss, nameGen, rng, round2, type Obj } from "../util.js";
 import type { Anchors, DrawState, Item, Scene, SceneHost } from "./scene.js";
 
 interface Series {
@@ -130,7 +130,7 @@ export class LinesScene implements Scene {
     return new Map(this.#series.map((s) => {
       const pts = this.#points(s, range);
       const e = pts[pts.length - 1]!;
-      return [s.id, [round(e[0]), round(e[1])]];
+      return [s.id, [round2(e[0]), round2(e[1])]];
     }));
   }
 
@@ -164,7 +164,7 @@ export class LinesScene implements Scene {
         id: s.id,
         anchor: { type: "point", x: e[0], y: e[1], mark: { shape: "circle", r: 2.5 } },
         label: { type: "text", text: vals ? `${s.name} ${v.toFixed(0)}` : s.name },
-        priority: round(v),
+        priority: round2(v),
       };
     });
   }
@@ -175,7 +175,7 @@ export class LinesScene implements Scene {
       vector: [{
         class: "lines",
         width: 1.5,
-        polylines: this.#series.map((s) => simplify(this.#points(s, range)).map((p) => [round(p[0]), round(p[1])] as [number, number])) as never,
+        polylines: this.#series.map((s) => simplify(this.#points(s, range)).map((p) => [round2(p[0]), round2(p[1])] as [number, number])) as never,
       }],
     };
   }
@@ -266,5 +266,3 @@ function niceTicks(lo: number, hi: number, n: number): number[] {
   for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) out.push(Math.round(v * 1e6) / 1e6);
   return out;
 }
-
-const round = (v: number) => Math.round(v * 100) / 100;

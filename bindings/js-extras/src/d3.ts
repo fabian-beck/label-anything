@@ -19,10 +19,16 @@ import { buildProblem, idOf, itemExtras, labelOf, placeOptionsOf, resolveFont, t
 import { renderLabels, type RenderOptions } from "./render.js";
 import { inverseTransform, markBoxes, snapshotSvg, SVG_NS, viewBoxMatrix } from "./svg.js";
 
-/** The parts of a d3 selection used here. */
+/**
+ * The parts of a d3 selection used here. `nodes()` may hold entries that are not elements
+ * (d3 types a joined selection's nodes as `Element | EnterElement | Document | Window |
+ * null`); only elements with a label are used.
+ */
 export interface SelectionLike<D> {
-  nodes(): Element[];
+  nodes(): ArrayLike<unknown>;
   data(): D[];
+  /** Never called: d3's `data` is overloaded, so TypeScript infers the datum type `D` from `each`. */
+  each?(f: (d: D, i: number) => void): unknown;
 }
 
 export interface LabelSelectionOptions<D> extends LabelOptions<D>, Omit<RenderOptions, "font"> {
@@ -58,7 +64,7 @@ export function labelSelection<D>(
   options: LabelSelectionOptions<D> = {},
 ): LabelResult | Promise<LabelResult> {
   const opts: LabelSelectionOptions<D> = { ...options, text: text ?? options.text };
-  const nodes = selection.nodes();
+  const nodes = Array.from(selection.nodes()) as (Element | null)[];
   const data = selection.data();
   const svg = ownerSvg(nodes);
   if (!svg) throw new Error("labelSelection: the selection is empty or not inside an <svg>");
@@ -115,7 +121,7 @@ export function labelSelection<D>(
   });
 }
 
-function ownerSvg(nodes: Element[]): SVGSVGElement | null {
+function ownerSvg(nodes: readonly (Element | null)[]): SVGSVGElement | null {
   for (const n of nodes) {
     if (!n) continue;
     let e: Element | null = n;

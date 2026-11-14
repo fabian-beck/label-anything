@@ -18,9 +18,8 @@ Third-party dependencies
 ---------------------------------------------------------------------------
 All runtime dependencies are licensed under MIT, Apache-2.0, BSD, ISC, Zlib or
 compatible permissive licenses. tools/check-licenses.mjs verifies this for the
-Rust workspace (cargo metadata) and the npm workspace (package.json "license"),
-and CI runs it on every change. The authoritative per-dependency list is
-produced by that script (see docs/licenses.md).
+Rust workspace (cargo metadata) and the npm workspace (package-lock.json), and
+CI runs it on every change.
 
 ---------------------------------------------------------------------------
 Benchmark data

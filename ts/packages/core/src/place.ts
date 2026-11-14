@@ -15,7 +15,7 @@ import { FontError, Measurer, baseVariants, bundledFonts, userFonts } from "./la
 import { maxf, minf, toIndex } from "./math.js";
 import { BuildError, type Model, Strategy, build } from "./model/index.js";
 import { MAX_GRID_CELLS, gridCell, gridCells, prepare } from "./obstacles.js";
-import { fmtF64 } from "./json.js";
+import { errorMessage, fmtF64 } from "./json.js";
 import { compute, fontClasses } from "./priority.js";
 import { type DebugData, debugSvg } from "./render.js";
 import { build as buildResult } from "./result.js";
@@ -27,7 +27,7 @@ import * as local from "./solver/local.js";
 import * as repair from "./solver/repair.js";
 import { verify } from "./solver/verify.js";
 import { type SolveTrace, Tracer } from "./trace.js";
-import { Issue, validate as validateProblem } from "./validate.js";
+import { Issue, parseIssue, validate as validateProblem } from "./validate.js";
 
 /**
  * Which implementation's per-implementation constants a solve uses: `ts` (the defaults of
@@ -37,7 +37,7 @@ import { Issue, validate as validateProblem } from "./validate.js";
  */
 export type BudgetProfile = "ts" | "rust";
 
-/** The outcome of {@link placeValidated}. */
+/** The outcome of {@link solveValidated}. */
 export interface Placed {
   result: Record<string, unknown>;
   /** Grid data for the debug overlay (only when `output.debug_svg` is set). */
@@ -51,7 +51,7 @@ export interface Placed {
  * Throws {@link PlaceError} when the problem cannot be prepared. `trace` records the
  * solver's decisions (ADR project/solve-traces).
  */
-export function placeValidated(
+export function solveValidated(
   problem: unknown,
   env: Env,
   warnings: Issue[],
@@ -116,7 +116,7 @@ export function placeValidated(
   const obs = prepare(m, minFont);
   obs.setPointsRule(m, variants);
   const t1 = envNow(env);
-  const s = new Solve(m, obs, env, pri, measurer, variants, t0);
+  const s = new Solve(m, obs, env, pri, measurer, variants);
   if (trace !== null) {
     s.trace = trace;
     trace.begin(s);
@@ -203,30 +203,30 @@ export function placeValidated(
 
 /**
  * Solve a problem and record the solver's decisions (ADR project/solve-traces): the result,
- * identical to {@link placeWith}'s, and the trace (`trace.ts`).
+ * identical to {@link solveWith}'s, and the trace (`trace.ts`).
  */
-export function placeTracedWith(problem: unknown, env: Env, profile: BudgetProfile = "ts"): { result: Record<string, unknown>; trace: SolveTrace } {
+export function solveTraced(problem: unknown, env: Env, profile: BudgetProfile = "ts"): { result: Record<string, unknown>; trace: SolveTrace } {
   const report = validateProblem(problem);
   if (!report.valid) throw new PlaceError(report.errors);
   const tracer = new Tracer();
-  const { result, debug, model } = placeValidated(problem, env, report.warnings, profile, tracer);
+  const { result, debug, model } = solveValidated(problem, env, report.warnings, profile, tracer);
   if (debug !== null) result.debug_svg = debugSvg(model, result, debug);
   return { result, trace: tracer.finish() };
 }
 
 /** Solve a problem with an environment; fills `debug_svg` when `output.debug_svg` is set. */
-export function placeWith(problem: unknown, env: Env, profile: BudgetProfile = "ts"): Record<string, unknown> {
+export function solveWith(problem: unknown, env: Env, profile: BudgetProfile = "ts"): Record<string, unknown> {
   const report = validateProblem(problem);
   if (!report.valid) throw new PlaceError(report.errors);
-  return placeReported(problem, env, report.warnings, profile);
+  return solveReported(problem, env, report.warnings, profile);
 }
 
 /**
  * Solve a problem whose validation report is already known (it must be valid; its
  * warnings are passed through). Fills `debug_svg` when `output.debug_svg` is set.
  */
-export function placeReported(problem: unknown, env: Env, warnings: Issue[], profile: BudgetProfile = "ts"): Record<string, unknown> {
-  const { result, debug, model } = placeValidated(problem, env, warnings, profile);
+export function solveReported(problem: unknown, env: Env, warnings: Issue[], profile: BudgetProfile = "ts"): Record<string, unknown> {
+  const { result, debug, model } = solveValidated(problem, env, warnings, profile);
   if (debug !== null) result.debug_svg = debugSvg(model, result, debug);
   return result;
 }
@@ -369,7 +369,7 @@ export class OptionsEnv implements Env {
     try {
       content = rf(path);
     } catch (e) {
-      throw new Error(`cannot read ${path}: ${e instanceof Error ? e.message : String(e)}`);
+      throw new Error(`cannot read ${path}: ${errorMessage(e)}`);
     }
     if (typeof content === "string") return new TextEncoder().encode(content);
     const bytes = byteView(content);
@@ -378,19 +378,22 @@ export class OptionsEnv implements Env {
   }
 }
 
-/** Parse problem JSON text, throwing a {@link PlaceError} with code `parse`. */
+/**
+ * Parse problem JSON text with the engine's `JSON.parse`. Throws a {@link PlaceError} with
+ * code `parse` for malformed text; its message is the one of Rust ({@link parseIssue}).
+ */
 function parseProblem(text: string): unknown {
   try {
     return JSON.parse(text);
   } catch (e) {
-    throw new PlaceError([new Issue("", "parse", `invalid JSON: ${e instanceof Error ? e.message : String(e)}`)]);
+    throw new PlaceError([parseIssue(text, e)]);
   }
 }
 
 /** Solve a problem (an object or JSON text). Throws {@link PlaceError} if invalid. */
 export function place(problem: LabelProblem | string, options: PlaceOptions = {}): LabelResult {
   const p = typeof problem === "string" ? parseProblem(problem) : problem;
-  return placeWith(p, new OptionsEnv(options)) as unknown as LabelResult;
+  return solveWith(p, new OptionsEnv(options)) as unknown as LabelResult;
 }
 
 /**
@@ -401,10 +404,10 @@ export function validate(problem: unknown): ValidationReport {
   let p = problem;
   if (typeof problem === "string") {
     try {
-      p = JSON.parse(problem);
+      p = parseProblem(problem);
     } catch (e) {
-      const issue = new Issue("", "parse", `invalid JSON: ${e instanceof Error ? e.message : String(e)}`);
-      return { valid: false, errors: [issue], warnings: [] };
+      if (!(e instanceof PlaceError)) throw e;
+      return { valid: false, errors: e.errors, warnings: [] };
     }
   }
   const r = validateProblem(p);

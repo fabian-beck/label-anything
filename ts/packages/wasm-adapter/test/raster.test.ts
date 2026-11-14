@@ -48,7 +48,7 @@ describe.skipIf(!built)("raster pixels", () => {
     // without a raster source, they add one with default options
     const added = la.place(problem(), { raster: { width: W, height: H, data: new Uint8Array(px.buffer) } });
     expect(added.placements).toEqual(inline.placements);
-    expect(added.stats.grid.classes).toContain("ink");
+    expect(added.stats.grid!.classes).toContain("ink");
   });
 
   it("accept views and ImageData-like objects", () => {

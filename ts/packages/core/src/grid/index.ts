@@ -69,11 +69,6 @@ export class GridSpec {
     cellRangeInto(this, r);
     return [RANGE[0]!, RANGE[1]!, RANGE[2]!, RANGE[3]!];
   }
-
-  /** `self == o` (field equality). */
-  eq(o: GridSpec): boolean {
-    return this.ox === o.ox && this.oy === o.oy && this.cell === o.cell && this.cols === o.cols && this.rows === o.rows;
-  }
 }
 
 /** Output of {@link cellRangeInto}: `[c0, c1, r0, r1]`. */

@@ -74,9 +74,9 @@ fn parse_error(what: &str, e: serde_json::Error) -> String {
 
 fn place_impl(problem_json: &str, options: &JsValue) -> Result<String, JsValue> {
     let env = JsEnv::from_options(options)?;
-    let problem: Value = match serde_json::from_str(problem_json) {
+    let problem = match label_anything::parse_json(problem_json) {
         Ok(v) => v,
-        Err(e) => return Ok(parse_error("", e)),
+        Err(e) => return Ok(issues_json(&[e])),
     };
     let report = label_anything::validate(&problem);
     if !report.valid {
@@ -108,14 +108,7 @@ pub fn place(problem_json: &str, options: &JsValue) -> Result<String, JsValue> {
 #[wasm_bindgen]
 pub fn validate(problem_json: &str) -> String {
     counted(|| {
-        let report = match serde_json::from_str::<Value>(problem_json) {
-            Ok(v) => label_anything::validate(&v),
-            Err(e) => label_anything::Report {
-                valid: false,
-                errors: vec![Issue::new("", "parse", format!("invalid JSON: {e}"))],
-                warnings: vec![],
-            },
-        };
+        let report = label_anything::validate_json(problem_json);
         serde_json::to_string(&report).unwrap_or_else(|_| {
             r#"{"valid":false,"errors":[{"pointer":"","code":"internal","message":"cannot serialize the report"}],"warnings":[]}"#.into()
         })
@@ -152,9 +145,7 @@ pub fn features() -> Vec<String> {
     if cfg!(feature = "decode") {
         f.push("decode".into());
     }
-    if label_anything::svg_backend().is_some() {
-        f.push("svg".into());
-    }
+    f.push("svg".into());
     f
 }
 

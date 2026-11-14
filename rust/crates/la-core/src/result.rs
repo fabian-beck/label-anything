@@ -177,15 +177,7 @@ pub fn build(
                         );
                     }
                 }
-                let dynamic = s.state.dynamic_cost(
-                    &c,
-                    &s.cands,
-                    s.obs,
-                    item.len.buffer,
-                    item.len.clearance,
-                    model.leaders.width,
-                    i,
-                );
+                let dynamic = s.dynamic_cost(i, cid);
                 let relax = if s.state.relaxed[i] {
                     c.relax_cost
                 } else {

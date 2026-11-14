@@ -17,6 +17,6 @@
   "bugs": "https://github.com/fabian-beck/label-anything/issues",
   "publishConfig": { "access": "public" },
   "keywords": ["label placement", "labeling", "visualization", "leader lines"],
-  "scripts": { "build": "tsc -b", "test": "vitest run", "prepack": "tsc -b" },
+  "scripts": { "build": "tsc -b", "test": "vitest run --root ../../.. ts/packages/core", "prepack": "tsc -b" },
   "dependencies": { "@label-anything/text": "0.1.0", "@label-anything/svg": "0.1.0", "@label-anything/raster": "0.1.0" }
 }

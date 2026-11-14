@@ -6,8 +6,7 @@
   the baseline methods section), problems a baseline cannot run show "n/a"; these,
   the summary and the sequence tables colour every value against its column's
   median (``heat``),
-* rendered images side by side (``bench/render.py`` for every solver) plus the
-  engine's own debug overlay where an ``--overlay`` command is known,
+* rendered images side by side (``bench/render.py`` for every solver),
 * runtime-vs-size small multiples (static SVG, also written to ``plots/``),
 * changes against a previous ``results.json`` (regressions beyond the threshold
   highlighted), implementation parity (Rust vs TS / WASM deltas on every metric),
@@ -63,11 +62,14 @@ METRICS = [
     ("label_points_hidden", "points hidden", "{:d}", -1),
     ("label_lines_em", "lines hidden em", "{:.1f}", -1),
     ("labels_on_contrast_border", "contrast border", "{:d}", -1),
+    ("clutter", "clutter", "{:.2%}", 0),
+    ("clutter_leader_share", "clutter by leaders", "{:.1%}", 0),
+    ("clutter_per_label_em", "edges per label em", "{:.1f}", 0),
     ("schema_errors", "schema err.", "{:d}", -1),
 ]
 TABLE_COLS = ["placed_rate", "usable_rate", "hard_violations", "hard_conflicts", "leader_crossings",
               "leader_near_crossings", "leader_mark_touches", "ambiguity_rate", "clarity_unclear_rate",
-              "points_covered_rate", "labels_close_rate", "priority_inversions", "ndcg_at_k",
+              "points_covered_rate", "labels_close_rate", "clutter", "priority_inversions", "ndcg_at_k",
               "adjacent_gap_abs_mean", "position_rank_mean", "region_coverage", "soft_coverage_mean"]
 SEQ_METRICS = [
     ("displacement_mean_px", "displacement px", "{:.2f}", -1),
@@ -174,7 +176,8 @@ def compare(previous: dict, current: dict, threshold: float = 0.02) -> dict:
 def parity(report: dict) -> dict:
     """Deltas of every metric between the Rust implementation and each other implementation (TS, WASM)."""
     sol = report["solvers"]
-    ref = next((s for s in sol if implementation(s) == "rust"), None)
+    # the engine at its defaults; rust-low, rust-high (--levels) are other settings, not implementations
+    ref = "rust" if "rust" in sol else next((s for s in sol if implementation(s) == "rust"), None)
     others = [s for s in sol if implementation(s) in ("ts", "wasm") and s != ref]
     out = {"reference": ref, "pairs": []}
     if ref is None or not others:
@@ -388,7 +391,7 @@ def runtime_panels(report: dict, which: str = "engine", name=str) -> list[tuple[
     out = []
     for solver, title, sub, series in panels:
         if solver is not None:
-            title, sub = name(solver), f"and {name(la[0])}" if la else ""
+            title, sub = name(solver), f"compared with {name(la[0])}" if la else ""
         o = [f'<svg xmlns="http://www.w3.org/2000/svg" class="rt" viewBox="0 0 {PANEL_W} {PANEL_H}" '
              f'width="{PANEL_W}" height="{PANEL_H}" role="img" aria-label="{esc(title)}: runtime against problem '
              f'size">', SVG_STYLE, f'<rect class="bg" width="{PANEL_W}" height="{PANEL_H}"/>']
@@ -502,7 +505,7 @@ def heat_attrs(rows: list[dict], cols: list[tuple[str, str, int, bool]]) -> list
                 a[k] = ""
                 continue
             c, best = h
-            tip = f"{HEAT_TEXT[c]}{' than the median' if c else ''} ({m}){', the best' if best else ''}"
+            tip = f"{HEAT_TEXT[c]}{' than the median' if c else ''} ({m}){'; best value' if best else ''}"
             a[k] = f" class='{HEAT_CLASS[c]}{' best' if best else ''}' title='{esc(tip)}'"
     return out
 

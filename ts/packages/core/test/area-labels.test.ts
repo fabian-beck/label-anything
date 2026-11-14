@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest";
 import type { Env } from "../src/env.js";
 import { areaAngle } from "../src/model/index.js";
-import { placeWith } from "../src/place.js";
+import { solveWith } from "../src/place.js";
 
 /** No clock: the solve is deterministic. */
 const NO_CLOCK: Env = {};
@@ -74,7 +74,7 @@ function inside(poly: Pt[], [x, y]: Pt): boolean {
   return odd;
 }
 
-const solve = (p: unknown): Res => placeWith(p, NO_CLOCK, "rust") as Res;
+const solve = (p: unknown): Res => solveWith(p, NO_CLOCK, "rust") as unknown as Res;
 
 describe("labels of area anchors", () => {
   it("candidates_of_a_roomy_area_are_inside_it_and_apart", () => {

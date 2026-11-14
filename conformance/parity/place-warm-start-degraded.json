@@ -9,7 +9,8 @@
       "models": [
         "adjacent",
         "slider"
-      ]
+      ],
+      "aggressiveness": "high"
     },
     "obstacles": {
       "vector": [

@@ -23,7 +23,7 @@ from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 import label_anything as la
 from label_anything.problem import avoid_dict, merge
 
-from ._defaults import default_avoid
+from ._defaults import default_avoid, item_ids, take_per_item
 
 __all__ = ["PlotlyLabels", "label_points"]
 
@@ -217,28 +217,10 @@ def label_points(
     keep = [i for i in range(n) if all(math.isfinite(v) for v in to_canvas(xs[i], ys[i]))]
     anchors = [to_canvas(xs[i], ys[i]) for i in keep]
 
-    ids_opt = opts.pop("ids", None)
-    ids = [str(i) for i in (ids_opt if ids_opt is not None else range(n))]
+    ids = item_ids(opts, n)
     sizes = _sizes(6.0 if marker_size is None else marker_size, n)
     marks = [la.Mark.circle(sizes[i] / 2.0) for i in keep]
-
-    def pick(v: Any) -> Any:
-        if v is None:
-            return None
-        if isinstance(v, Mapping):
-            return {k: [list(col)[i] for i in keep] for k, col in v.items()}
-        if hasattr(v, "iloc"):
-            return v.iloc[keep]
-        vals = list(v)
-        return [vals[i] for i in keep]
-
-    per_item = {k: pick(opts.pop(k)) for k in ("attrs", "required", "groups", "keep_with", "item_placement") if k in opts}
-    for k in ("priority", "tiers"):
-        v = opts.get(k)
-        if v is not None and not isinstance(v, (str, Mapping, la.Priority)) and not callable(v):
-            vals = list(v)
-            if len(vals) == n:
-                opts[k] = [vals[i] for i in keep]
+    per_item = take_per_item(opts, keep, n, ("attrs", "required", "groups", "keep_with", "item_placement"))
 
     vector: List[Dict[str, Any]] = list(opts.pop("vector", None) or [])
     if avoid_traces:

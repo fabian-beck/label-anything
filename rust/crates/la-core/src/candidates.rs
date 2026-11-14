@@ -378,6 +378,12 @@ impl Cand {
             warm: false,
         }
     }
+    /// The static cost, with the extra cost of the relaxed classes when the candidate is
+    /// only feasible with them relaxed.
+    #[inline]
+    pub fn relaxed_cost(&self) -> f64 {
+        self.cost + if self.feasible { 0.0 } else { self.relax_cost }
+    }
     /// The label has a stub (spec §6.9).
     pub fn has_stub(&self) -> bool {
         self.leaders.first().is_some_and(|l| l.stub)
@@ -980,7 +986,6 @@ fn gap_table(k: usize) -> &'static GapTable {
 
 /// Boundary of `(S ⊕ o) ⊕ (−B)` over gap `k` (between two fixed positions), written to
 /// `verts`; returns the number of vertices.
-#[allow(clippy::too_many_arguments)]
 fn cspace_path(
     shape: &Shape,
     o: f64,
@@ -1028,7 +1033,6 @@ fn cspace_path(
 
 /// `k` samples at equal arc length, excluding the endpoints: `emit(j, point)` for
 /// `j` in `0..k` (none for degenerate paths).
-#[allow(clippy::too_many_arguments)]
 fn sample_path(
     path: &[CVertex],
     k: usize,

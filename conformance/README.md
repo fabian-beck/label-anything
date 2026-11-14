@@ -6,13 +6,13 @@ Language-neutral test cases shared by every implementation. Runners:
 * TypeScript: `npm run conformance` from the repository root after `npm run build` (the
   `place` cases, with the same independent re-checks); `npx vitest run` runs the
   `validate`, `place`, `parity` and the other suites of the TypeScript packages
-* Python (schema cross-check + evaluator): `python3 conformance/check_schema.py`
+* Python (schema cross-check): `python3 conformance/check_schema.py`
 
 Every file is one JSON object with a `kind`:
 
 | directory | kind | what is tested |
 |---|---|---|
-| `problems/` | — | sample problems (valid). Referenced by cases, used by `validate` acceptance (M0). |
+| `problems/` | — | sample problems (valid). Referenced by cases, used by `validate` acceptance. |
 | `validate/` | `validate` | `validate(problem)` → valid flag, error/warning pointers and codes |
 | `place/` | `place` | `place(problem)` → properties of the result |
 | `text/` | `text` | text widths (±0.01 px), line breaking, wrapping, truncation |
@@ -72,6 +72,10 @@ points at the offending property; for `required` at the missing property (e.g.
 
 `check_schema.py` validates every problem with the JSON Schema itself (Python
 `jsonschema`, Draft 2020-12) and checks that the expected `valid` flags agree with it.
+
+The sample problems in `problems/` and most `validate` cases are written by
+`tools/conformance/make_samples.py` (`--check` verifies that the committed files are
+current; the CI `generated` job runs it); the other `validate` cases are written by hand.
 
 ## `place` cases
 
@@ -192,4 +196,4 @@ ordinary whitespace (no mandatory breaks).
 * `error`: the parse must fail with this code; `offset` (optional): the error offset in
   code points. Messages are not compared.
 * `note` is a comment. Runners: `cargo test -p label-anything-expr --test conformance_expr`,
-  `npx vitest run packages/core/test/expr` (from `ts/`).
+  `npx vitest run ts/packages/core/test/expr` (from the repository root).

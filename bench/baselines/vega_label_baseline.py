@@ -19,58 +19,27 @@ Translation (see bench/baselines/README.md and vega_label.mjs):
 vega-label draws no leader lines; labels it cannot place get opacity 0 and are
 reported unplaced.
 
-    python -m bench.baselines.vega_label_baseline problem.json -o result.json
+    python -m bench.baselines vega-label problem.json -o result.json
 """
 from __future__ import annotations
 
-import argparse
-import json
 import math
-import shutil
-import subprocess
-import tempfile
-from pathlib import Path
 
 from ..common.geom import Box, Circle
-from ..common.jsonio import read_json, write_json
+from . import node
 from .results import build_result
 from .scene import Note, Scene, build_scene
 
-TOOL = "vega-label"
-HERE = Path(__file__).resolve().parent
-SCRIPT = HERE / "vega_label.mjs"
-NODE_MODULES = HERE / "node_modules"
 MAX_RUNS = 400_000  # pixel runs per raster mask before falling back to 2-px cells
-TIMEOUT = 900.0
-
-
-def _pkg_version(name: str) -> str | None:
-    try:
-        return json.loads((NODE_MODULES / name / "package.json").read_text(encoding="utf-8"))["version"]
-    except (OSError, ValueError, KeyError):
-        return None
 
 
 def version() -> str | None:
-    v = _pkg_version("vega-label")
-    return f"{v} (vega {_pkg_version('vega')})" if v else None
+    v = node.pkg_version("vega-label")
+    return f"{v} (vega {node.pkg_version('vega')})" if v else None
 
 
 def available() -> str | None:
-    node = shutil.which("node")
-    if node is None:
-        return "node is not on PATH (Node ≥ 20 is required)"
-    try:
-        out = subprocess.run([node, "--version"], capture_output=True, text=True, timeout=30).stdout.strip()
-        major = int(out.lstrip("v").split(".")[0])
-    except (OSError, ValueError, subprocess.SubprocessError):
-        return "cannot run node --version"
-    if major < 20:
-        return f"node {out} is older than 20"
-    for pkg in ("vega", "vega-label", "canvas"):
-        if _pkg_version(pkg) is None:
-            return f"{pkg} is not installed (npm ci --prefix bench/baselines)"
-    return None
+    return node.available(("vega", "vega-label", "canvas"))
 
 
 def _fmt(v: float) -> str:
@@ -155,14 +124,7 @@ def solve(problem: dict, problem_path=None, options: dict | None = None) -> dict
     """``options``: ``soft`` (``hard`` or ``ignore``), how soft classes reach the tool (``build_scene``)."""
     scene = build_scene(problem, problem_path, soft=(options or {}).get("soft", "hard"))
     js, notes = scene_json(scene)
-    with tempfile.TemporaryDirectory(prefix="la-vega-") as d:
-        sp, op = Path(d) / "scene.json", Path(d) / "out.json"
-        sp.write_text(json.dumps(js), encoding="utf-8")
-        r = subprocess.run([shutil.which("node") or "node", str(SCRIPT), str(sp), str(op)], capture_output=True,
-                           text=True, timeout=TIMEOUT)
-        if r.returncode != 0:
-            raise RuntimeError(f"vega_label.mjs failed ({r.returncode}): {r.stderr.strip()[-800:]}")
-        out = json.loads(op.read_text(encoding="utf-8"))
+    out = node.run("vega_label.mjs", js, "la-vega-")
     by_id = {lab.id: lab for lab in scene.labels}
     boxes = {}
     for e in out["labels"]:
@@ -174,16 +136,3 @@ def solve(problem: dict, problem_path=None, options: dict | None = None) -> dict
     v = out.get("versions", {})
     impl = f"vega-label/{v.get('vega-label')} (vega {v.get('vega')}, canvas {v.get('canvas')})"
     return build_result(scene, boxes, {}, float(out.get("runtime_ms", 0.0)), impl, notes)
-
-
-def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("problem")
-    ap.add_argument("-o", "--out", required=True)
-    a = ap.parse_args(argv)
-    write_json(a.out, solve(read_json(a.problem), a.problem), nd=3)
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

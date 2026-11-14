@@ -10,19 +10,15 @@ Translation (see bench/baselines/README.md and d3fc_layout.mjs):
 * d3fc knows only the labels: marks and obstacle classes are not avoided (unsupported), labels may cover
   them; hidden labels are reported unplaced. No leader lines.
 
-    python -m bench.baselines.d3fc_baseline problem.json -o result.json
+    python -m bench.baselines d3fc problem.json -o result.json
 """
 from __future__ import annotations
 
-import argparse
-
 from ..common.geom import Box
-from ..common.jsonio import read_json, write_json
 from . import node
 from .results import build_result
 from .scene import Note, Scene, build_scene, without_obstacles
 
-TOOL = "d3fc"
 OBSTACLES = False  # the tool is told no obstacle classes: soft emulations do not differ
 PACKAGE = "@d3fc/d3fc-label-layout"
 MAX_N = 2500  # removeOverlaps compares every visible pair once per hidden label: O(n³) in dense problems
@@ -43,8 +39,8 @@ def scene_json(scene: Scene) -> tuple[dict, list[Note]]:
               for lab in scene.labels]
     notes = [Note("unsupported", "d3fc-obstacles", "d3fc-label-layout avoids only other labels: marks and obstacle "
                                                    "classes are not avoided"),
-             Note("emulation", "d3fc-margin", "each label is handed over grown by its mark radius + offset on "
-                                              "every side (d3fc puts labels at their anchor point)"),
+             Note("emulation", "d3fc-margin", "each label is enlarged by its mark radius plus offset on every "
+                                              "side (d3fc places labels at their anchor point)"),
              Note("unsupported", "d3fc-leaders", "d3fc-label-layout draws no leader lines (8 fixed positions)")]
     return {"area": [a.x0, a.y0, a.x1, a.y1], "labels": labels}, notes
 
@@ -69,16 +65,3 @@ def solve(problem: dict, problem_path=None, options: dict | None = None) -> dict
     v = out.get("versions", {})
     return build_result(scene, boxes, {}, float(out.get("runtime_ms", 0.0)),
                         f"d3fc-label-layout/{v.get('d3fc-label-layout')}", notes)
-
-
-def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("problem")
-    ap.add_argument("-o", "--out", required=True)
-    a = ap.parse_args(argv)
-    write_json(a.out, solve(read_json(a.problem), a.problem), nd=3)
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

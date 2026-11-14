@@ -2,7 +2,7 @@
 // @label-anything/wasm (rust/crates/la-wasm/src/env.rs, js.rs): a wrong type is a
 // TypeError, a wrong pixel count a RangeError — not an exception from inside the solver.
 import { describe, expect, it } from "vitest";
-import { place, validate, type LabelProblem, type PlaceOptions } from "../src/index.js";
+import { PlaceError, place, validate, type LabelProblem, type PlaceOptions } from "../src/index.js";
 
 const problem: LabelProblem = {
   canvas: { width: 200, height: 100 },
@@ -62,5 +62,24 @@ describe("validate", () => {
     const report = validate("{ not json");
     expect(report.valid).toBe(false);
     expect(report.errors[0]).toMatchObject({ pointer: "", code: "parse" });
+  });
+
+  it("reports malformed JSON text with the message of the Rust core", () => {
+    // `printf '{"items": [' | label-anything validate -` prints this message (serde_json's)
+    const issue = { pointer: "", code: "parse", message: "invalid JSON: EOF while parsing a list at line 1 column 11" };
+    expect(validate('{"items": [')).toEqual({ valid: false, errors: [issue], warnings: [] });
+    let error: unknown;
+    try {
+      place('{"items": [');
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeInstanceOf(PlaceError);
+    expect((error as PlaceError).errors).toEqual([issue]);
+  });
+
+  it("reads a JSON text that holds a string as that string, not as a second layer of text", () => {
+    const report = validate(JSON.stringify(JSON.stringify(problem)));
+    expect(report.errors).toEqual([{ pointer: "", code: "type", message: "expected object, got string" }]);
   });
 });

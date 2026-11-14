@@ -80,11 +80,12 @@ def europe_problems(wr: Writer) -> None:
         p, sc = B5.hubs_problem(eu, aps, 0, 250, label, ids, 9.0, None, 10.0, 0.4)
         p["priority"]["omission"] = mode
         wr.config(f"europe-attr-{mode}", p, truth=sc.truth(), svg=sc.svg(), png=png_bytes(sc.png()),
-                  description=f"europe: 250 busiest airports + context dots, priority 'attr', omission '{mode}'.")
+                  description=f"Europe: the 250 busiest airports and unlabeled context points; priority by "
+                              f"attribute, {mode} omission.")
 
 
 def main() -> None:
-    wr = Writer(SCENARIO, "Priority and omission showcase", M.SOURCES + A.SOURCES,
+    wr = Writer(SCENARIO, "Priority types and omission modes", M.SOURCES + A.SOURCES,
                 notes="All items labeled; priority terms x omission modes decide the placed set.")
     datasets = {
         "metrics": (metrics_items(), (B1.W, B1.H), "scatter", 10.0),
@@ -98,7 +99,7 @@ def main() -> None:
                 p["priority"] = dict(prio, omission=mode)
                 name = f"{ds}-{ptype}-{mode}"
                 wr.config(name, p, quick=(name == "metrics-attr-strict"),
-                          description=f"{ds}: {len(items)} items, priority '{ptype}', omission '{mode}'.")
+                          description=f"{ds}: {len(items):,} items; priority type {ptype}, {mode} omission.")
     europe_problems(wr)
     wr.finish()
 
