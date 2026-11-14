@@ -33,7 +33,9 @@ labels read as one.
   than to its own. Without a stub it must be nearer its own by its margin, capped by the
   distance between the two marks: infeasible when
   `dist(mark_j, box) < dist(mark_i, box) + min(m, |p_j − p_i|) − EPS`. Internal labels and
-  labels on distant leaders are exempt.
+  labels on distant leaders are exempt. The rule also holds against the marks of less
+  important items that a label may cover but does not hide (ADR priority/lower-items) and
+  against unlabeled points (ADR placement/unlabeled-points).
 - Warm-start candidates need only half the margin and spacing (ADR motion/warm-starts).
 
 ## Consequences

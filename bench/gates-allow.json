@@ -712,6 +712,1398 @@
       "solver": "rust*",
       "adr": "placement/unlabeled-points",
       "reason": "an item whose only places stand nearer an unlabeled point than its mark is left out"
+    },
+    {
+      "metric": "clarity_unclear_background",
+      "scenario": "05-airports",
+      "config": "world-hubs-100-svg",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels that leave places beside less important marks stand by unlabeled points where the rule for those does not hold"
+    },
+    {
+      "metric": "clarity_unclear_background",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels that leave places beside less important marks stand by unlabeled points where the rule for those does not hold"
+    },
+    {
+      "metric": "clarity_unclear_background",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels that leave places beside less important marks stand by unlabeled points where the rule for those does not hold"
+    },
+    {
+      "metric": "clarity_unclear_background",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels that leave places beside less important marks stand by unlabeled points where the rule for those does not hold"
+    },
+    {
+      "metric": "clarity_weak_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "the prefix ends earlier, and of the fewer labels a larger share is weak"
+    },
+    {
+      "metric": "coverage_satisfaction",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "displacement_mean_px",
+      "scenario": "11-stability",
+      "config": "zoom-pan-1000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "between frames a mark hidden under a label comes out at its edge, or one beside it comes nearer: the label moves or goes"
+    },
+    {
+      "metric": "displacement_mean_px",
+      "scenario": "11-stability",
+      "config": "zoom-pan-3000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "between frames a mark hidden under a label comes out at its edge, or one beside it comes nearer: the label moves or goes"
+    },
+    {
+      "metric": "label_lines_em",
+      "scenario": "05-airports",
+      "config": "europe-names-400-svg",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels that leave places beside or partly on less important marks cover more of the background"
+    },
+    {
+      "metric": "label_points_hidden",
+      "scenario": "05-airports",
+      "config": "europe-names-400-svg",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "a label hides a less important mark entirely rather than stand beside it or partly on it"
+    },
+    {
+      "metric": "label_points_hidden",
+      "scenario": "12-priority",
+      "config": "europe-attr-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "a label hides a less important mark entirely rather than stand beside it or partly on it"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "10-stress",
+      "config": "n00500",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "a label hides a less important mark entirely rather than stand beside it or partly on it"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "a label hides a less important mark entirely rather than stand beside it or partly on it"
+    },
+    {
+      "metric": "labels_covering_points_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "a label hides a less important mark entirely rather than stand beside it or partly on it"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "05-airports",
+      "config": "world-hubs-100-svg",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "06-city-pois",
+      "config": "monaco-ink",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_len_p90_em",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "05-airports",
+      "config": "europe-names-400-svg",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "05-airports",
+      "config": "world-hubs-100-svg",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "06-city-pois",
+      "config": "monaco-ink",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "06-city-pois",
+      "config": "monaco-saliency",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "10-stress",
+      "config": "n00500",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "10-stress",
+      "config": "n05000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "10-stress",
+      "config": "n10000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "10-stress",
+      "config": "n20000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "12-priority",
+      "config": "airports-attr-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "12-priority",
+      "config": "airports-coverage-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "12-priority",
+      "config": "airports-outlier-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_mark_touches",
+      "scenario": "12-priority",
+      "config": "europe-attr-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "10-stress",
+      "config": "n05000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "10-stress",
+      "config": "n10000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "10-stress",
+      "config": "n20000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leader_near_crossings",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "05-airports",
+      "config": "europe-names-400-svg",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-ink",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-saliency",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "10-stress",
+      "config": "n00500",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "10-stress",
+      "config": "n05000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "10-stress",
+      "config": "n10000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "10-stress",
+      "config": "n20000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "leadered_unclear_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "more labels on leaders: places beside a mark that stand beside or partly on a less important mark are infeasible"
+    },
+    {
+      "metric": "nesting_fraction_mean",
+      "scenario": "11-stability",
+      "config": "zoom-pan-3000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "between frames a mark hidden under a label comes out at its edge, or one beside it comes nearer: the label moves or goes"
+    },
+    {
+      "metric": "nesting_rate",
+      "scenario": "11-stability",
+      "config": "zoom-pan-1000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "between frames a mark hidden under a label comes out at its edge, or one beside it comes nearer: the label moves or goes"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "10-stress",
+      "config": "n05000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "10-stress",
+      "config": "n10000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "10-stress",
+      "config": "n20000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "10-stress",
+      "config": "n05000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "10-stress",
+      "config": "n10000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "10-stress",
+      "config": "n20000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "airports-outlier-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "placed_weighted",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "points_covered_rate",
+      "scenario": "10-stress",
+      "config": "n00500",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "a label hides a less important mark entirely rather than stand beside it or partly on it"
+    },
+    {
+      "metric": "points_covered_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "a label hides a less important mark entirely rather than stand beside it or partly on it"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "06-city-pois",
+      "config": "monaco-ink",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "a label hides a less important mark entirely rather than stand beside it or partly on it"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "a label hides a less important mark entirely rather than stand beside it or partly on it"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "06-city-pois",
+      "config": "monaco-saliency",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "a label hides a less important mark entirely rather than stand beside it or partly on it"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "10-stress",
+      "config": "n00500",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "a label hides a less important mark entirely rather than stand beside it or partly on it"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "a label hides a less important mark entirely rather than stand beside it or partly on it"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "a label hides a less important mark entirely rather than stand beside it or partly on it"
+    },
+    {
+      "metric": "points_inside_labels",
+      "scenario": "12-priority",
+      "config": "europe-attr-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "a label hides a less important mark entirely rather than stand beside it or partly on it"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-lower-vector",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels leave preferred places that stand beside or partly on a less important mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "05-airports",
+      "config": "world-iata-1000-vector",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels leave preferred places that stand beside or partly on a less important mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "05-airports",
+      "config": "world-iata-300-none",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels leave preferred places that stand beside or partly on a less important mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels leave preferred places that stand beside or partly on a less important mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels leave preferred places that stand beside or partly on a less important mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "10-stress",
+      "config": "n05000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels leave preferred places that stand beside or partly on a less important mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "10-stress",
+      "config": "n10000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels leave preferred places that stand beside or partly on a less important mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "10-stress",
+      "config": "n20000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels leave preferred places that stand beside or partly on a less important mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "12-priority",
+      "config": "airports-attr-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels leave preferred places that stand beside or partly on a less important mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels leave preferred places that stand beside or partly on a less important mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels leave preferred places that stand beside or partly on a less important mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels leave preferred places that stand beside or partly on a less important mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels leave preferred places that stand beside or partly on a less important mark"
+    },
+    {
+      "metric": "position_rank_mean",
+      "scenario": "12-priority",
+      "config": "airports-outlier-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels leave preferred places that stand beside or partly on a less important mark"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "the first item without a label comes earlier: a more important label hides its mark, or none of its places is clear of less important marks"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "the first item without a label comes earlier: a more important label hides its mark, or none of its places is clear of less important marks"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "the first item without a label comes earlier: a more important label hides its mark, or none of its places is clear of less important marks"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "the first item without a label comes earlier: a more important label hides its mark, or none of its places is clear of less important marks"
+    },
+    {
+      "metric": "prefix_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "the first item without a label comes earlier: a more important label hides its mark, or none of its places is clear of less important marks"
+    },
+    {
+      "metric": "priority_inversions",
+      "scenario": "12-priority",
+      "config": "airports-outlier-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "the first item without a label comes earlier: a more important label hides its mark, or none of its places is clear of less important marks"
+    },
+    {
+      "metric": "priority_inversions",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "the first item without a label comes earlier: a more important label hides its mark, or none of its places is clear of less important marks"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "10-stress",
+      "config": "n20000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "airports-outlier-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "region_coverage",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "soft_coverage_mean",
+      "scenario": "05-airports",
+      "config": "europe-names-400-svg",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "labels that leave places beside or partly on less important marks cover more of the background"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "10-stress",
+      "config": "n05000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "10-stress",
+      "config": "n10000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "10-stress",
+      "config": "n20000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_rate",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "05-airports",
+      "config": "world-iata-3000-svg",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "06-city-pois",
+      "config": "monaco-pins-ink",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "10-stress",
+      "config": "n01000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "10-stress",
+      "config": "n02000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "10-stress",
+      "config": "n05000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "10-stress",
+      "config": "n10000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "10-stress",
+      "config": "n20000",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "airports-attr-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "airports-attr-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "airports-coverage-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "airports-coverage-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "airports-outlier-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "airports-outlier-strict",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "airports-outlier-weighted",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
+    },
+    {
+      "metric": "usable_weighted",
+      "scenario": "12-priority",
+      "config": "europe-attr-prefix",
+      "solver": "rust*",
+      "adr": "priority/lower-items",
+      "reason": "an item whose places beside its mark all stand beside or partly on a less important mark takes a leader or is left out"
     }
   ]
 }

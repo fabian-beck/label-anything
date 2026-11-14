@@ -88,16 +88,20 @@ parentheses where that is more ("n/a": the tool cannot run the problem; commit 2
 
 **Where it falls short:**
 
-* **Dense data loses labels.** Of 1,000 airports on the world map, about 580 get a label;
-  of 2,000 random points, 1,003. The space between labels
+* **Dense data loses labels.** Of 1,000 airports on the world map, about 540 get a label;
+  of 2,000 random points, about 900 (2026-11-14). The space between labels
   ([ADR placement/margin](../adr/placement/margin.md)) costs a few percent of the labels in
-  typical scenes. Where hubs crowd, a big airport's label may cover a smaller hub's dot,
-  which then stays unlabeled.
-* **Unlabeled points still compete.** Among the 2,917 unlabeled airports of the 300-airport
-  map, every tool leaves half or more of its labels unclear (Label Anything 62 %, textalloc
-  66 %, ggrepel 68 %, vega-label 92 %): the rule that keeps a label clearly nearer its own
-  point sees only the marks of items, not background points given as obstacles, nor the
-  dots of less important items that the `map` preset lets labels cover.
+  typical scenes. Where hubs crowd, a big airport's label may hide a smaller hub's dot,
+  which then stays unlabeled; it may not stand beside the dot or partly on it, which costs
+  9 % of the labels on the suite's maps
+  ([ADR priority/lower-items](../adr/priority/lower-items.md)).
+* **Unlabeled points still compete in dense fields.** Among the 2,917 unlabeled airports
+  of the 300-airport map, a fifth of Label Anything's labels are unclear (46 of 228 on
+  2026-11-14; 62 % on 2026-10-24, when textalloc left 66 %, ggrepel 68 % and vega-label
+  92 % unclear): the rule that keeps a label clearly nearer its own point holds against
+  unlabeled points only for an item with a clear place beside its mark
+  ([ADR placement/unlabeled-points](../adr/placement/unlabeled-points.md)). No label is
+  unclear because of another item's mark.
 * **More labels cover more.** Label Anything covers more of what it may cover — 1.5
   background points per label on the airport map, textalloc 1.2. Raise
   `avoid.label.points` where hidden data points matter more.
