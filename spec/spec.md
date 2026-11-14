@@ -254,11 +254,11 @@ unless `placement.own_nearest` is `"items"`: the discs of vector layers (`points
 background puts there under the presets' rules), of classes labels do not `ignore`, whose
 centre (of the bounding box) lies at least 0.5 px from every item's reference point — a
 point drawn under an item's mark is that mark. The label is infeasible when
-`dist(point, box) < dist(mark_i, box) + s − EPS`, `s` as above (with the side margin) with
-the point's centre for `p_j`. A point entirely inside the label box is hidden, not a competitor: what hiding it
+`dist(point, box) < dist(mark_i, box) + s − EPS`, `s` as above with the point's centre for
+`p_j` but without the side margin (`k = m`). A point entirely inside the label box is hidden, not a competitor: what hiding it
 costs is its class's cost (§8). The rule holds against the unlabeled points only for an item
 of which one of the 8 fixed positions (§6.1) of its first variant keeps clear of them by
-this test with its margin and side margin: in a field of points so dense that no place beside the mark
+this test with its margin: in a field of points so dense that no place beside the mark
 could, its labels follow the rule for items' marks only. With `false` the rule does not
 apply at all.
 

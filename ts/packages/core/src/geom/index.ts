@@ -312,18 +312,6 @@ export class Affine {
 // Segments
 // ---------------------------------------------------------------------------------
 
-/**
- * How squarely the point `p` lies beside a side of `r`, where a label of a mark at `p` would
- * go: 1 straight across a side (or inside `r`), 0 on the diagonal of a corner, and
- * `|dx² − dy²| / (dx² + dy²)` for the offset `(dx, dy)` of `p` from `r` (spec §4.4).
- */
-export function facing(r: Rect, p: P): number {
-  const dx = p.x < r.x0 ? r.x0 - p.x : p.x > r.x1 ? p.x - r.x1 : 0;
-  const dy = p.y < r.y0 ? r.y0 - p.y : p.y > r.y1 ? p.y - r.y1 : 0;
-  const s = dx * dx + dy * dy;
-  return s > 0 ? Math.abs(dx * dx - dy * dy) / s : 1;
-}
-
 /** Orientation of the triangle (a, b, c): > 0 counter-clockwise in math orientation. */
 export function orient(a: P, b: P, c: P): number {
   return orientXY(a.x, a.y, b.x, b.y, c.x, c.y);

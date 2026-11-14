@@ -12,7 +12,6 @@ import {
   P,
   Rect,
   distPointSegXY,
-  facing,
   distSegRectXY,
   rectDistPointXY,
   sampleRangeInRect,
@@ -289,30 +288,21 @@ export class Obstacles {
 
   /**
    * The class of the first unlabeled point that the label box `r` of `item` does not hide
-   * and that comes nearer to it than its own mark (`dOwn`) plus `clear`, up to the side
-   * margin `side` for a point more squarely beside a side of the box than the own mark
-   * (`ownFacing`, see {@link facing}), at most the distance between the point's centre and
-   * the own mark's reference point (spec §4.4); `null` if there is none (Rust
-   * `Obstacles::point_nearer`).
+   * and that comes nearer to it than its own mark (`dOwn`) plus `clear`, at most the
+   * distance between the point's centre and the own mark's reference point (spec §4.4);
+   * `null` if there is none (Rust `Obstacles::point_nearer`).
    */
-  pointNearer(item: Item, r: Rect, dOwn: number, clear: number, side: number, ownFacing: number): number | null {
+  pointNearer(item: Item, r: Rect, dOwn: number, clear: number): number | null {
     const flag = this.pointFlags();
     const prims = this.prims();
     const ownRef = item.shape.reference();
-    // no point needs more than the side margin's share the own mark leaves
-    const reach = dOwn + clear + (side - clear) * (1 - ownFacing);
-    const k = this.primIndex().find(r.inflate(reach), (k) => {
+    const k = this.primIndex().find(r.inflate(dOwn + clear), (k) => {
       if (flag[k] !== 1) return false;
       const p = prims[k]![1];
       const b = primBbox(p);
       // a point entirely under the label is hidden, not a competitor
       if (r.containsRect(b)) return false;
-      let sep = 0;
-      if (clear > 0) {
-        const c = b.center();
-        const need = side > clear ? clear + (side - clear) * maxf(facing(r, c) - ownFacing, 0) : clear;
-        sep = minf(need, c.dist(ownRef));
-      }
+      const sep = clear > 0 ? minf(clear, b.center().dist(ownRef)) : 0;
       return primDistRect(p, r) < dOwn + sep - EPS;
     });
     return k < 0 ? null : prims[k]![0];
@@ -321,8 +311,8 @@ export class Obstacles {
   /**
    * Whether the rule holds against the unlabeled points, per item (spec §4.4): when one of
    * the 8 fixed positions (spec §6.1) of the item's first variant keeps clear of them by its
-   * margin (and side margin). In a field of points so dense that none does, no place beside
-   * the mark could, and the item's labels follow the rule for items' marks only (Rust
+   * margin. In a field of points so dense that none does, no place beside the mark could,
+   * and the item's labels follow the rule for items' marks only (Rust
    * `Obstacles::set_points_rule`).
    */
   setPointsRule(model: Model, variants: readonly (readonly Variant[])[]): void {
@@ -332,14 +322,10 @@ export class Obstacles {
       if (v === undefined) return false;
       const hw = 0.5 * v.w;
       const hh = 0.5 * v.h;
-      // the test of the evaluator for a label beside its mark, without a stub
-      const m = it.len.margin;
-      const side = maxf(it.len.sideMargin, m);
       for (let k = 0; k < 8; k++) {
         const c = touchCenter(it.shape, it.len.offset, dirOf(45 * k), hw, hh);
         const b = Rect.fromCenter(c, hw, hh);
-        const ownFacing = side > m ? facing(b, it.shape.reference()) : 1;
-        if (this.pointNearer(it, b, it.shape.distRect(b), m, side, ownFacing) === null) return true;
+        if (this.pointNearer(it, b, it.shape.distRect(b), it.len.margin) === null) return true;
       }
       return false;
     });

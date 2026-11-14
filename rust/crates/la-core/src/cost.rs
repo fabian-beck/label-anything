@@ -2,7 +2,7 @@
 
 use crate::candidates::{Block, Cand, Kind, Leader};
 use crate::env::Env;
-use crate::geom::{facing, Rect, EPS, P};
+use crate::geom::{Rect, EPS, P};
 use crate::labels::Variant;
 use crate::math::{clampf, maxf, minf};
 use crate::model::{Item, Model};
@@ -100,6 +100,32 @@ pub fn crowded(model: &Model, obs: &Obstacles, item: &Item, r: &Rect, buf: &mut 
             && model.group_of.get(j).copied().flatten() != Some(i)
             && model.items[j].shape.dist_rect(r) < reach
     })
+}
+
+/// How squarely the point `p` lies beside a side of `r`, where a label of a mark at `p`
+/// would go: 1 straight across a side (or inside `r`), 0 on the diagonal of a corner, and
+/// `|dx² − dy²| / (dx² + dy²)` for the offset `(dx, dy)` of `p` from `r` (spec §4.4).
+pub fn facing(r: &Rect, p: P) -> f64 {
+    let dx = if p.x < r.x0 {
+        r.x0 - p.x
+    } else if p.x > r.x1 {
+        p.x - r.x1
+    } else {
+        0.0
+    };
+    let dy = if p.y < r.y0 {
+        r.y0 - p.y
+    } else if p.y > r.y1 {
+        p.y - r.y1
+    } else {
+        0.0
+    };
+    let s = dx * dx + dy * dy;
+    if s > 0.0 {
+        (dx * dx - dy * dy).abs() / s
+    } else {
+        1.0
+    }
 }
 
 fn finish(c: &mut Cand, acc: Acc) {
@@ -322,7 +348,7 @@ impl<'a> Evaluator<'a> {
         // nor to an unlabeled point, where some place beside the mark keeps clear of them
         // (spec §4.4)
         if near_rule && acc.feasible && obs.points_rule.get(i).copied().unwrap_or(false) {
-            if let Some(pc) = obs.point_nearer(item, &r, d_own, clear, side, own_facing) {
+            if let Some(pc) = obs.point_nearer(item, &r, d_own, clear) {
                 acc.violate(Block::Class(pc as u16), false, 0.0);
                 if acc.unusable(quick) {
                     return finish(c, acc);

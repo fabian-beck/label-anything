@@ -468,8 +468,8 @@
         "id": "o10",
         "placed": true,
         "box": {
-          "x": 584.4580000000001,
-          "y": 112.25999999999999,
+          "x": 546.1056227717856,
+          "y": 95.47271051849602,
           "w": 59.483999999999924,
           "h": 12.840000000000003
         },
@@ -477,8 +477,8 @@
           614.2,
           129.1
         ],
-        "anchor_side": "top",
-        "model": "adjacent",
+        "anchor_side": "distant",
+        "model": "distant",
         "text": {
           "lines": [
             "Outlier 10"
@@ -501,9 +501,27 @@
           "font_weight": 400,
           "scale": 1.0
         },
-        "leader": null,
-        "cost": 0.047654411764705785,
-        "degrade_steps": [],
+        "leader": {
+          "points": [
+            [
+              612.4779245543572,
+              124.9425421036992
+            ],
+            [
+              605.5896227717856,
+              108.31271051849602
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            605.5896227717856,
+            108.31271051849602
+          ]
+        },
+        "cost": 1.979276776208843,
+        "degrade_steps": [
+          "distant"
+        ],
         "priority": {
           "tier": 0,
           "score": 0.0,
@@ -569,11 +587,13 @@
       "iterations": 4800,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 459,
+      "candidates": 505,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 1.8072338594318686,
-      "degraded": {},
+      "total_cost": 3.738856223876006,
+      "degraded": {
+        "distant": 1
+      },
       "grid": {
         "cell": 3.0,
         "cols": 267,

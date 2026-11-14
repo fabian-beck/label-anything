@@ -148,24 +148,12 @@ pub struct FreeSpace {
 
 impl Obstacles {
     /// The class of the first unlabeled point that the label box `r` of `item` does not hide
-    /// and that comes nearer to it than its own mark (`d_own`) plus `clear`, up to the side
-    /// margin `side` for a point more squarely beside a side of the box than the own mark
-    /// (`own_facing`, see [`crate::geom::facing`]), at most the distance between the point's
-    /// centre and the own mark's reference point (spec §4.4).
-    pub fn point_nearer(
-        &self,
-        item: &Item,
-        r: &Rect,
-        d_own: f64,
-        clear: f64,
-        side: f64,
-        own_facing: f64,
-    ) -> Option<usize> {
+    /// and that comes nearer to it than its own mark (`d_own`) plus `clear`, at most the
+    /// distance between the point's centre and the own mark's reference point (spec §4.4).
+    pub fn point_nearer(&self, item: &Item, r: &Rect, d_own: f64, clear: f64) -> Option<usize> {
         let own_ref = item.shape.reference();
-        // no point needs more than the side margin's share the own mark leaves
-        let reach = d_own + clear + (side - clear) * (1.0 - own_facing);
         self.prim_index
-            .find(&r.inflate(reach), |k| {
+            .find(&r.inflate(d_own + clear), |k| {
                 if !self.point_flag[k as usize] {
                     return false;
                 }
@@ -176,13 +164,7 @@ impl Obstacles {
                     return false;
                 }
                 let sep = if clear > 0.0 {
-                    let p = b.center();
-                    let need = if side > clear {
-                        clear + (side - clear) * maxf(crate::geom::facing(r, p) - own_facing, 0.0)
-                    } else {
-                        clear
-                    };
-                    minf(need, p.dist(own_ref))
+                    minf(clear, b.center().dist(own_ref))
                 } else {
                     0.0
                 };
@@ -193,9 +175,8 @@ impl Obstacles {
 
     /// Whether the rule holds against the unlabeled points, per item (spec §4.4): when one
     /// of the 8 fixed positions (spec §6.1) of the item's first variant keeps clear of them
-    /// by its margin (and side margin). In a field of points so dense that none does, no
-    /// place beside the mark could, and the item's labels follow the rule for items' marks
-    /// only.
+    /// by its margin. In a field of points so dense that none does, no place beside the mark
+    /// could, and the item's labels follow the rule for items' marks only.
     pub fn set_points_rule(&mut self, model: &Model, variants: &[Vec<Variant>]) {
         if self.point_flag.is_empty() {
             return;
@@ -209,21 +190,12 @@ impl Obstacles {
                     return false;
                 };
                 let (hw, hh) = (0.5 * v.w, 0.5 * v.h);
-                // the test of the evaluator for a label beside its mark, without a stub
-                let m = it.len.margin;
-                let side = maxf(it.len.side_margin, m);
                 (0..8).any(|k| {
                     let d = crate::candidates::dir_of(45.0 * k as f64);
                     let c = crate::candidates::touch_center(&it.shape, it.len.offset, d, hw, hh);
                     let b = Rect::from_center(c, hw, hh);
                     let d_own = it.shape.dist_rect(&b);
-                    let own_facing = if side > m {
-                        crate::geom::facing(&b, it.shape.reference())
-                    } else {
-                        1.0
-                    };
-                    self.point_nearer(it, &b, d_own, m, side, own_facing)
-                        .is_none()
+                    self.point_nearer(it, &b, d_own, it.len.margin).is_none()
                 })
             })
             .collect();

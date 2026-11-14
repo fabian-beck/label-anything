@@ -18,7 +18,7 @@ import {
 } from "./candidates.js";
 import type { Env } from "./env.js";
 import type { SplitScratch } from "./grid/regions.js";
-import { EPS, P, Rect, facing, segOverlapsRectXY } from "./geom/index.js";
+import { EPS, P, Rect, segOverlapsRectXY } from "./geom/index.js";
 import type { Variant } from "./labels.js";
 import { clampf, maxf, minf } from "./math.js";
 import type { Item, Model } from "./model/index.js";
@@ -88,6 +88,18 @@ export function crowded(model: Model, obs: Obstacles, item: Item, r: Rect, buf: 
     if (j !== i && (model.groupOf[j] ?? null) !== i && model.items[j]!.shape.distRect(r) < reach) return true;
   }
   return false;
+}
+
+/**
+ * How squarely the point `p` lies beside a side of `r`, where a label of a mark at `p` would
+ * go: 1 straight across a side (or inside `r`), 0 on the diagonal of a corner, and
+ * `|dx² − dy²| / (dx² + dy²)` for the offset `(dx, dy)` of `p` from `r` (spec §4.4).
+ */
+export function facing(r: Rect, p: P): number {
+  const dx = p.x < r.x0 ? r.x0 - p.x : p.x > r.x1 ? p.x - r.x1 : 0;
+  const dy = p.y < r.y0 ? r.y0 - p.y : p.y > r.y1 ? p.y - r.y1 : 0;
+  const s = dx * dx + dy * dy;
+  return s > 0 ? Math.abs(dx * dx - dy * dy) / s : 1;
 }
 
 function finish(c: Cand, acc: Acc): void {
@@ -241,7 +253,7 @@ export class Evaluator {
     // nor to an unlabeled point, where some place beside the mark keeps clear of them (spec
     // §4.4)
     if (nearRule && acc.feasible && obs.pointsRule[i] === true) {
-      const pc = obs.pointNearer(item, r, dOwn, clear, side, ownFacing);
+      const pc = obs.pointNearer(item, r, dOwn, clear);
       if (pc !== null) {
         acc.violate(pc, false, 0);
         if (acc.unusable(quick)) return finish(c, acc);

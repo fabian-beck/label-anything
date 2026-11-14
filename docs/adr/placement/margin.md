@@ -48,8 +48,11 @@ one at a corner is not.
   `f = |dx² − dy²| / (dx² + dy²)` for the offset of a mark's reference point from the box is
   1 straight across a side and 0 on a corner's diagonal. A label whose own mark faces a
   side as squarely keeps the margin; area items' dots, which a host need not draw, keep it
-  too. Unlabeled points (ADR placement/unlabeled-points) need the side margin as points'
-  marks do. The arithmetic is `+ − × ÷` only, identical in Rust and TypeScript.
+  too, and so do unlabeled points (ADR placement/unlabeled-points): a label may hide those,
+  and with the side margin it hid more of them rather than stand clear (over the
+  benchmark without a clock, 59 more labels nearer to another point than to their own, 65
+  more unclear, 6 fewer placed). The arithmetic is `+ − × ÷` only, identical in Rust and
+  TypeScript.
 - Warm-start candidates need only half the margin and spacing (ADR motion/warm-starts).
 
 ## Consequences

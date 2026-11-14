@@ -23,11 +23,9 @@ buffer ring around labels and softer forms of the rule (below) left most of them
 ## Decision
 - **The rule**: an adjacent or slider label, with or without a stub, is infeasible when an
   unlabeled point comes nearer to its box than its own mark plus `s`, the `s` of the own-mark
-  rule: the margin without a stub, up to the side margin for a point more squarely beside a
-  side of the box than the own mark (it stands where a label of its own would go, as a point
-  item's mark does), at most the distance between the point's centre and the own mark's
-  reference point; 0 with a stub. Labels on distant leaders and internal labels are exempt,
-  as before.
+  rule: the margin without a stub (not the side margin of ADR placement/margin), at most the
+  distance between the point's centre and the own mark's reference point; 0 with a stub.
+  Labels on distant leaders and internal labels are exempt, as before.
 - **Unlabeled points** are the discs of vector layers (`points`, `circles`) and the closed
   shapes of class `points` (an SVG background's circles and small markers under the presets'
   rules), of classes labels do not ignore, whose centre lies at least 0.5 px from every item's
