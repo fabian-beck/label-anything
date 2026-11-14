@@ -3,6 +3,8 @@
  * from the previous result, so labels keep their places while you pan and zoom. The map is
  * a window on a larger drawing: points a little beyond its edge are labeled too
  * (`overscan`), and a label at the edge is cut there instead of being pushed inside.
+ * While the map is only panned, no label moves at all (`pin`): labels come where the map
+ * moves on, and the others stay until the next zoom.
  *
  * ```js
  * import L from "leaflet";
@@ -17,7 +19,7 @@
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
 import type { LabelOptions, Mark, Overscan } from "./options.js";
-import { idOf, inView, itemExtras, labelOf, resolveFont, resolveOverscan } from "./options.js";
+import { idOf, inView, itemExtras, labelOf, marksMargin, resolveFont, resolveOverscan } from "./options.js";
 import { Overlay, type OverlayItem } from "./overlay.js";
 import type { RenderOptions } from "./render.js";
 
@@ -32,6 +34,7 @@ export interface LeafletMapLike {
   getPane(name: string): HTMLElement | undefined;
   createPane(name: string): HTMLElement;
   getBounds?(): { contains(latlng: LatLngLike): boolean };
+  getZoom?(): number;
 }
 
 /** The parts of the Leaflet namespace used here (`import L from "leaflet"`). */
@@ -51,6 +54,13 @@ export interface LeafletLabelOptions<D> extends LabelOptions<D>, Omit<RenderOpti
    * the edge. `false`: only points in view are labeled, every label inside the map.
    */
   overscan?: Overscan;
+  /**
+   * While the map is only panned, the labels keep their places exactly: none moves, and
+   * labels are added where the map moves on (default `true`; needs `overscan`). After a
+   * zoom every label may move. `false`: labels may move after every pan as well, as the
+   * priorities ask.
+   */
+  pin?: boolean;
   /** Map pane for the labels (created with z-index 640 if missing). */
   pane?: string;
   /** Obstacles in container px, e.g. from other layers. */
@@ -96,7 +106,7 @@ export function labelLayer<D>(L: LeafletLike, data: readonly D[], options: Leafl
       if (!ll || !label) return;
       const layer = map!.latLngToLayerPoint(ll);
       const p = { x: layer.x - origin.x, y: layer.y - origin.y };
-      if (!inView(p.x, p.y, size.x, size.y, overscan)) return;
+      if (!inView(p.x, p.y, size.x, size.y, marksMargin(overscan))) return;
       const mark = typeof options.mark === "function" ? options.mark(d, i) : (options.mark ?? { shape: "circle", r: 4 });
       out.push({ id: idOf(options, d, i), x: p.x, y: p.y, label, mark, extras: itemExtras(options, d, i) });
     });
@@ -129,6 +139,8 @@ export function labelLayer<D>(L: LeafletLike, data: readonly D[], options: Leafl
           return [s.x, s.y];
         },
         overscan,
+        viewKey: () => m.getZoom?.(),
+        pin: options.pin,
         collect,
         obstacles: options.obstacles ? () => options.obstacles!(m) : undefined,
         transition: options.transition,

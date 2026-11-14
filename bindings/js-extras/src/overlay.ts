@@ -37,7 +37,18 @@ export interface OverlayConfig<D> {
    * inside the view.
    */
   overscan?: number | null;
-  /** The items to label, at their current positions (overlay px). */
+  /**
+   * What stays the same while the view only pans: its zoom, its rotation. While it does,
+   * the labels of a window are pinned (`warm_start.pin`): none moves, the solve only adds
+   * labels where the view moves on. Without it, or with `pin: false`, every solve may move
+   * labels, as after a zoom.
+   */
+  viewKey?(): unknown;
+  pin?: boolean;
+  /**
+   * The items to label, at their current positions (overlay px). For a window: the
+   * points up to `marksMargin(overscan)` beyond the view.
+   */
   collect(): OverlayItem[];
   /**
    * Where the items are now, for moving their labels along between solves (default: the
@@ -65,6 +76,8 @@ export class Overlay<D> {
   readonly runner: LatestRunner;
   #config: OverlayConfig<D>;
   #frame: number | undefined;
+  /** The `viewKey` of the view the remembered result was solved for. */
+  #solvedKey: unknown;
 
   constructor(config: OverlayConfig<D>) {
     this.#config = config;
@@ -97,7 +110,11 @@ export class Overlay<D> {
     if (!(w > 0 && h > 0)) return;
     const items = c.collect();
     const anchors = this.#anchors(items);
-    const warm = this.memory.warmStart(anchors);
+    const key = c.viewKey?.();
+    // the view only moved since the labels were placed: they stay where they are
+    const pin = c.pin !== false && typeof c.overscan === "number" && key !== undefined && key === this.#solvedKey;
+    const placed = this.memory.warmStart(anchors);
+    const warm = placed && pin ? { ...placed, pin: true } : placed;
     const obstacles = c.obstacles?.();
     const problem = buildProblem(
       {
@@ -119,6 +136,7 @@ export class Overlay<D> {
       placeOptionsOf(c.options),
       (result) => {
         this.memory.remember(result, anchors);
+        this.#solvedKey = key;
         this.motion.target(result, anchors);
         this.follow();
         c.onResult?.(result);
@@ -175,6 +193,7 @@ export class Overlay<D> {
     this.runner.cancel();
     this.svg.remove();
     this.memory.clear();
+    this.#solvedKey = undefined;
     this.motion.clear();
   }
 }

@@ -49,6 +49,8 @@ describe("Leaflet labelLayer", () => {
     const second = engine.last.problem;
     expect(engine.calls.length).toBeGreaterThan(1);
     expect(second.warm_start?.placements.map((p) => p.id)).toEqual(["ba", "n", "er"]);
+    // the map only moved: its labels are pinned, none may move
+    expect(second.warm_start?.pin).toBe(true);
     // the warm boxes moved with the anchors
     const before = first.items[0]!.anchor as { x: number; y: number };
     const after = second.items[0]!.anchor as { x: number; y: number };
@@ -57,34 +59,91 @@ describe("Leaflet labelLayer", () => {
     const prev = layer.result!.placements[0]!.box!;
     expect(warm.x).toBeCloseTo(prev.x, 6);
 
+    // after a zoom the labels are placed anew, from the previous ones (Leaflet may report
+    // the new view more than once: the first solve of it counts)
+    const solved = engine.calls.length;
+    map.setView([49.6, 11.0], 9, { animate: false });
+    const zoomed = engine.calls[solved]!.problem;
+    expect(zoomed.warm_start?.placements.length).toBeGreaterThan(0);
+    expect(zoomed.warm_start?.pin).toBeUndefined();
+    map.panBy([-20, 0], { animate: false });
+    expect(engine.last.problem.warm_start?.pin).toBe(true);
+
     layer.setData(towns.slice(0, 2));
     expect(engine.last.problem.items.length).toBe(2);
     layer.remove();
     expect(pane.querySelector("svg")).toBeNull();
   });
 
-  it("labels points a little beyond the map's edge, unless the labels are to stay inside", () => {
+  it("does not pin the labels of a map that keeps them inside, or with pin: false", () => {
+    for (const off of [{ overscan: false as const }, { pin: false }]) {
+      const map = leafletMap();
+      const engine = fakeEngine();
+      labelLayer(L, towns, { engine, latLng: (d) => [d.lat, d.lng], text: (d) => d.name, id: (d) => d.id, measure: false, ...off }).addTo(map);
+      map.panBy([30, 10], { animate: false });
+      expect(engine.last.problem.warm_start?.placements.length).toBe(3);
+      expect(engine.last.problem.warm_start?.pin).toBeUndefined();
+    }
+  });
+
+  it("passes the points near the map: labeled in the overscan, marks only beyond it", () => {
     const map = leafletMap();
     const at = (x: number, y: number) => map.containerPointToLatLng([x, y]);
-    const [near, beyond] = [at(460, 150), at(520, 150)];
+    const [near, beyond, farther] = [at(460, 150), at(600, 150), at(720, 150)];
     const data = [
       ...towns,
       { id: "near", name: "Near", lat: near.lat, lng: near.lng, pop: 5 },
       { id: "beyond", name: "Beyond", lat: beyond.lat, lng: beyond.lng, pop: 5 },
+      { id: "farther", name: "Farther", lat: farther.lat, lng: farther.lng, pop: 5 },
     ];
     const common = { latLng: (d: (typeof data)[number]) => [d.lat, d.lng] as [number, number], text: (d: (typeof data)[number]) => d.name, id: (d: (typeof data)[number]) => d.id, measure: false as const };
     const engine = fakeEngine();
     const layer = labelLayer(L, data, { engine, ...common }).addTo(map);
-    // 60 px beyond the right edge: within the overscan of 96 px; 120 px beyond: not
-    expect(engine.last.problem.items.map((i) => i.id)).toEqual(["ba", "n", "er", "near"]);
+    // the overscan is 96 px: the engine labels "near" (60 px beyond the right edge); "beyond"
+    // (200 px) is passed as a mark, up to three times the overscan; "farther" (320 px) is not
+    expect(engine.last.problem.canvas).toEqual({ width: 400, height: 300, overscan: 96 });
+    expect(engine.last.problem.items.map((i) => i.id)).toEqual(["ba", "n", "er", "near", "beyond"]);
     layer.remove();
     const wide = labelLayer(L, data, { engine, ...common, overscan: 150 }).addTo(map);
     expect(engine.last.problem.canvas).toEqual({ width: 400, height: 300, overscan: 150 });
-    expect(engine.last.problem.items.map((i) => i.id)).toEqual(["ba", "n", "er", "near", "beyond"]);
+    expect(engine.last.problem.items.map((i) => i.id)).toEqual(["ba", "n", "er", "near", "beyond", "farther"]);
     wide.remove();
     labelLayer(L, data, { engine, ...common, overscan: false }).addTo(map);
     expect(engine.last.problem.canvas).toEqual({ width: 400, height: 300 });
     expect(engine.last.problem.items.map((i) => i.id)).toEqual(["ba", "n", "er"]);
+  });
+
+  it.skipIf(!cliEngine)("moves no label while the map is panned, and labels what comes in", () => {
+    const map = leafletMap();
+    // towns all over the map and beyond it
+    const data: { id: string; name: string; lat: number; lng: number; pop: number }[] = [];
+    for (let i = 0; i < 90; i++) {
+      const ll = map.containerPointToLatLng([-300 + ((i * 97) % 1000), -200 + ((i * 53) % 700)]);
+      data.push({ id: `t${i}`, name: `Town ${i}`, lat: ll.lat, lng: ll.lng, pop: (i * 31) % 17 });
+    }
+    const layer = labelLayer(L, data, { engine: cliEngine!, latLng: (d) => [d.lat, d.lng], text: (d) => d.name, id: (d) => d.id, priority: (d) => d.pop, measure: false }).addTo(map);
+    const offsets = () =>
+      new Map(layer.result!.placements.filter((p) => p.placed).map((p) => [p.id, [p.box!.x - p.anchor![0]!, p.box!.y - p.anchor![1]!] as const]));
+    const outside = () => new Set(layer.result!.placements.filter((p) => p.reason === "outside").map((p) => p.id));
+    let before = offsets();
+    expect(before.size).toBeGreaterThan(20);
+    expect(outside().size).toBeGreaterThan(5);
+    let came = 0;
+    for (let step = 0; step < 6; step++) {
+      map.panBy([35, 12], { animate: false });
+      const after = offsets();
+      const marks = outside();
+      for (const [id, a] of before) {
+        const b = after.get(id);
+        // a town that left the overscan is a mark only; every other label is where it was
+        if (!b) expect(marks.has(id), `${id} lost its label at step ${step}`).toBe(true);
+        else expect(Math.hypot(b[0] - a[0], b[1] - a[1]), `${id} moved at step ${step}`).toBeLessThan(1e-6);
+      }
+      for (const id of after.keys()) if (!before.has(id)) came++;
+      expect(overlaps(layer.result!)).toEqual([]);
+      before = after;
+    }
+    expect(came).toBeGreaterThan(3);
   });
 
   it.skipIf(!cliEngine)("lets a label at the map's edge cross it, where the map cuts it", () => {
@@ -204,7 +263,7 @@ describe("label transitions", () => {
 function fakeMap() {
   const listeners = new Map<string, Set<() => void>>();
   const container = document.createElement("div");
-  const state = { dx: 0, dy: 0, scale: 100 };
+  const state = { dx: 0, dy: 0, scale: 100, zoom: 7 };
   const map: MapLibreLike & { fire(e: string): void; state: typeof state } = {
     state,
     project: (ll) => {
@@ -213,6 +272,7 @@ function fakeMap() {
     },
     getCanvasContainer: () => container,
     getCanvas: () => ({ clientWidth: 400, clientHeight: 300 }),
+    getZoom: () => state.zoom,
     on: (e, f) => listeners.set(e, (listeners.get(e) ?? new Set()).add(f)),
     off: (e, f) => listeners.get(e)?.delete(f),
     fire: (e) => listeners.get(e)?.forEach((f) => f()),
@@ -257,19 +317,28 @@ describe("MapLibre labels", () => {
     map.fire("moveend");
     expect(engine.calls.length).toBe(2);
     expect(engine.last.problem.warm_start?.placements.length).toBe(3);
+    // the map only moved: its labels are pinned; after a zoom they are placed anew
+    expect(engine.last.problem.warm_start?.pin).toBe(true);
+    map.state.zoom = 8;
+    map.fire("moveend");
+    expect(engine.last.problem.warm_start?.pin).toBeUndefined();
+    map.fire("moveend");
+    expect(engine.last.problem.warm_start?.pin).toBe(true);
+    expect(engine.calls.length).toBe(4);
     labels.remove();
     expect(map.getCanvasContainer().querySelector("svg")).toBeNull();
     map.fire("moveend");
-    expect(engine.calls.length).toBe(2);
+    expect(engine.calls.length).toBe(4);
   });
 
-  it("labels points a little beyond the map's edge, unless the labels are to stay inside", () => {
+  it("passes the points near the map, unless the labels are to stay inside", () => {
     const map = fakeMap();
     const engine = fakeEngine();
-    // x = 450 and 520 px in a map of 400 px: 50 and 120 px beyond its right edge
-    const data = [...towns, { id: "near", name: "Near", lat: 49.5, lng: 13.0, pop: 5 }, { id: "beyond", name: "Beyond", lat: 49.5, lng: 13.7, pop: 5 }];
+    // x = 450 and 720 px in a map of 400 px: 50 and 320 px beyond its right edge
+    const data = [...towns, { id: "near", name: "Near", lat: 49.5, lng: 13.0, pop: 5 }, { id: "farther", name: "Farther", lat: 49.5, lng: 15.7, pop: 5 }];
     const common = { engine, lngLat: (d: (typeof data)[number]) => [d.lng, d.lat] as [number, number], text: "name", id: (d: (typeof data)[number]) => d.id, measure: false as const };
     labelMapLibre(map, data, common).remove();
+    // up to three times the overscan of 96 px
     expect(engine.last.problem.items.map((i) => i.id)).toEqual(["ba", "n", "er", "near"]);
     labelMapLibre(map, data, { ...common, overscan: false }).remove();
     expect(engine.last.problem.canvas).toEqual({ width: 400, height: 300 });

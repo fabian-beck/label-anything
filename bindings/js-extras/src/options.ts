@@ -93,10 +93,21 @@ export function resolveOverscan(overscan: Overscan | undefined, font: CssFont): 
   return Number.isFinite(overscan) && overscan > 0 ? overscan : 0;
 }
 
-/** Whether (x, y) lies in a view of w × h px or at most `overscan` px beyond it. */
-export function inView(x: number, y: number, w: number, h: number, overscan: number | null): boolean {
-  const m = overscan ?? 0;
+/** Whether (x, y) lies in a view of w × h px or at most `margin` px beyond it. */
+export function inView(x: number, y: number, w: number, h: number, margin: number | null): boolean {
+  const m = margin ?? 0;
   return x >= -m && y >= -m && x <= w + m && y <= h + m;
+}
+
+/**
+ * How far beyond a view its points are passed to the engine, in px: three times the
+ * overscan. The engine labels those within the overscan; the points beyond it are marks
+ * only (reason `outside`), known two overscans ahead, so that the labels in the overscan
+ * keep off them before they come in and none has to make way later. `null` (no window):
+ * the view alone.
+ */
+export function marksMargin(overscan: number | null): number | null {
+  return overscan === null ? null : 3 * overscan;
 }
 
 /** The label of a datum (`null` when it has no text). */

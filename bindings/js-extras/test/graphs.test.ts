@@ -77,7 +77,13 @@ function fakeSigma() {
   };
   const settings: Record<string, unknown> = { labelFont: "Arial", labelSize: 14, labelWeight: "normal", defaultDrawNodeLabel: () => {}, nodeReducer: null };
   const cam = new Map<string, () => void>();
-  const camera = { x: 0, on: (e: string, f: () => void) => cam.set(e, f), removeListener: (e: string) => cam.delete(e) };
+  const camera = {
+    x: 0,
+    ratio: 1,
+    on: (e: string, f: () => void) => cam.set(e, f),
+    removeListener: (e: string) => cam.delete(e),
+    getState: () => ({ ratio: camera.ratio, angle: 0 }),
+  };
   let refreshes = 0;
   const renderer: SigmaLike & { fire(): void; camera: typeof camera; refreshes(): number; settings: typeof settings } = {
     settings,
@@ -128,6 +134,13 @@ describe("sigma labels", () => {
     await new Promise((res) => setTimeout(res, 20));
     expect(engine.calls.length).toBe(2);
     expect(engine.last.problem.warm_start?.placements.length).toBe(3);
+    // the camera only panned: the labels are pinned; after a zoom they are placed anew
+    expect(engine.last.problem.warm_start?.pin).toBe(true);
+    r.camera.ratio = 0.5;
+    r.fire();
+    await new Promise((res) => setTimeout(res, 20));
+    expect(engine.calls.length).toBe(3);
+    expect(engine.last.problem.warm_start?.pin).toBeUndefined();
     labels.remove();
     expect(r.settings.nodeReducer).toBeNull();
   });

@@ -10,7 +10,7 @@
  * runs in viewport pixels: after camera moves and graph changes (debounced), warm-started
  * from the previous result. The viewport is a window on the graph: nodes a little beyond
  * its edge are labeled too (`overscan`), and a label at the edge is cut there instead of
- * being pushed inside. In between, labels follow their nodes; after a solve they glide
+ * being pushed inside. While the camera only pans, no label moves at all (`pin`). In between, labels follow their nodes; after a solve they glide
  * into their new places and fade in and out (`transition`). Labels are drawn by a
  * replacement of sigma's label renderer; omitted labels are hidden via `nodeReducer`.
  */
@@ -18,7 +18,7 @@ import type { LabelProblem, LabelResult } from "@label-anything/core";
 import { errorHandler, LatestRunner, resolveEngine } from "./engine.js";
 import { cssFont, numericWeight } from "./measure.js";
 import { LabelMotion } from "./motion.js";
-import { buildProblem, inView, itemExtras, labelOf, placeOptionsOf, resolveFont, resolveOverscan, type LabelOptions, type Overscan, type VectorLayer } from "./options.js";
+import { buildProblem, inView, itemExtras, labelOf, marksMargin, placeOptionsOf, resolveFont, resolveOverscan, type LabelOptions, type Overscan, type VectorLayer } from "./options.js";
 import { leadersOf, lineStart } from "./render.js";
 import { LabelMemory } from "./stable.js";
 
@@ -45,7 +45,12 @@ export interface SigmaLike {
   getDimensions(): { width: number; height: number };
   getSetting(key: string): unknown;
   setSetting(key: string, value: unknown): unknown;
-  getCamera(): { on(e: string, f: () => void): unknown; removeListener?(e: string, f: () => void): unknown; off?(e: string, f: () => void): unknown };
+  getCamera(): {
+    on(e: string, f: () => void): unknown;
+    removeListener?(e: string, f: () => void): unknown;
+    off?(e: string, f: () => void): unknown;
+    getState?(): { ratio?: number; angle?: number };
+  };
   on(e: string, f: () => void): unknown;
   removeListener?(e: string, f: () => void): unknown;
   off?(e: string, f: () => void): unknown;
@@ -70,6 +75,12 @@ export interface SigmaLabelOptions extends Omit<LabelOptions<SigmaNode>, "id" | 
    * cut at the edge. `false`: only nodes in view are labeled, every label inside the viewport.
    */
   overscan?: Overscan;
+  /**
+   * While the camera only pans (the same zoom and angle, the same graph), the labels keep
+   * their places exactly: none moves, and labels are added where the view moves on
+   * (default `true`; needs `overscan`). `false`: labels may move after every pan as well.
+   */
+  pin?: boolean;
   /** Edges as obstacles (default `true`). */
   avoidEdges?: boolean;
   /** Re-solve delay after camera moves and graph changes in ms (default 120). */
@@ -181,6 +192,9 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
     return shown.has(key) ? { ...out, forceLabel: true } : { ...out, label: null };
   });
 
+  // the camera state the remembered labels were placed for, and whether the graph changed since
+  let solvedKey: string | undefined;
+  let graphChanged = false;
   const solve = () => {
     const { width, height } = renderer.getDimensions();
     if (!(width > 0 && height > 0)) return;
@@ -191,7 +205,7 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
       const d = viewport(key);
       if (!d) return;
       pos.set(key, d);
-      if (!inView(d.x, d.y, width, height, overscan)) return;
+      if (!inView(d.x, d.y, width, height, marksMargin(overscan))) return;
       // the label sigma would show (our reducer hides omitted ones in the display data)
       const shown = previousReducer ? previousReducer(key, attrs) : attrs;
       const text = options.text ? options.text(key, attrs) : (shown.label as string | null | undefined);
@@ -209,7 +223,13 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
         if (a && b) polylines.push([[a.x, a.y], [b.x, b.y]]);
       });
     }
-    const warm = memory.warmStart(anchors);
+    // the camera only panned since the labels were placed, over the same graph: they stay
+    const state = renderer.getCamera().getState?.();
+    const key = state ? `${state.ratio}/${state.angle}` : undefined;
+    const pin = options.pin !== false && overscan !== null && key !== undefined && key === solvedKey && !graphChanged;
+    graphChanged = false;
+    const placed = memory.warmStart(anchors);
+    const warm = placed && pin ? { ...placed, pin: true } : placed;
     const problem = buildProblem(
       {
         canvas: overscan === null ? { width, height } : { width, height, overscan },
@@ -225,6 +245,7 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
       placeOptionsOf(helper),
       (r) => {
         memory.remember(r, anchors);
+        solvedKey = key;
         motion.target(r, anchors);
         snapshot();
         renderer.refresh?.();
@@ -247,7 +268,11 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
   const graphEvents = ["nodeAdded", "nodeDropped", "edgeAdded", "edgeDropped", "nodeAttributesUpdated", "cleared"];
   camera.on("updated", schedule);
   renderer.on("resize", schedule);
-  for (const e of graphEvents) graph.on?.(e, schedule);
+  const changed = () => {
+    graphChanged = true;
+    schedule();
+  };
+  for (const e of graphEvents) graph.on?.(e, changed);
   solve();
 
   const off = (target: { removeListener?(e: string, f: () => void): unknown; off?(e: string, f: () => void): unknown }, e: string, f: () => void) =>
@@ -263,7 +288,7 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
       runner.cancel();
       off(camera, "updated", schedule);
       off(renderer, "resize", schedule);
-      for (const e of graphEvents) off(graph, e, schedule);
+      for (const e of graphEvents) off(graph, e, changed);
       renderer.setSetting(drawKey, previousDraw);
       renderer.setSetting("nodeReducer", previousReducer ?? null);
       shown = new Map();
