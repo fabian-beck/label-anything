@@ -1,0 +1,1592 @@
+{
+  "kind": "place",
+  "name": "among minor marks where no place beside the mark is clear, the rule for less important marks does not hold",
+  "$comment": "Every one of the hub's 8 fixed positions has a minor mark within its margin that it does not hide: the rule could not be met anywhere beside the mark (spec §4.4), and the hub keeps the place its priority gives it.",
+  "problem": {
+    "canvas": {
+      "width": 200,
+      "height": 120
+    },
+    "degrade": [
+      "omit"
+    ],
+    "placement": {
+      "models": [
+        "adjacent"
+      ]
+    },
+    "avoid": {
+      "label": {
+        "lower_items": 2.0
+      }
+    },
+    "priority": {
+      "budget": {
+        "max_labels": 1
+      }
+    },
+    "items": [
+      {
+        "id": "hub",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Hub"
+        },
+        "priority": 2.0,
+        "placement": {
+          "position_order": [
+            "top"
+          ]
+        }
+      },
+      {
+        "id": "m0",
+        "anchor": {
+          "type": "point",
+          "x": 64,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m1",
+        "anchor": {
+          "type": "point",
+          "x": 64,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m2",
+        "anchor": {
+          "type": "point",
+          "x": 64,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m3",
+        "anchor": {
+          "type": "point",
+          "x": 64,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m4",
+        "anchor": {
+          "type": "point",
+          "x": 64,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m5",
+        "anchor": {
+          "type": "point",
+          "x": 64,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m6",
+        "anchor": {
+          "type": "point",
+          "x": 64,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m7",
+        "anchor": {
+          "type": "point",
+          "x": 70,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m8",
+        "anchor": {
+          "type": "point",
+          "x": 70,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m9",
+        "anchor": {
+          "type": "point",
+          "x": 70,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m10",
+        "anchor": {
+          "type": "point",
+          "x": 70,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m11",
+        "anchor": {
+          "type": "point",
+          "x": 70,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m12",
+        "anchor": {
+          "type": "point",
+          "x": 70,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m13",
+        "anchor": {
+          "type": "point",
+          "x": 70,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m14",
+        "anchor": {
+          "type": "point",
+          "x": 76,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m15",
+        "anchor": {
+          "type": "point",
+          "x": 76,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m16",
+        "anchor": {
+          "type": "point",
+          "x": 76,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m17",
+        "anchor": {
+          "type": "point",
+          "x": 76,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m18",
+        "anchor": {
+          "type": "point",
+          "x": 76,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m19",
+        "anchor": {
+          "type": "point",
+          "x": 76,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m20",
+        "anchor": {
+          "type": "point",
+          "x": 76,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m21",
+        "anchor": {
+          "type": "point",
+          "x": 82,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m22",
+        "anchor": {
+          "type": "point",
+          "x": 82,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m23",
+        "anchor": {
+          "type": "point",
+          "x": 82,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m24",
+        "anchor": {
+          "type": "point",
+          "x": 82,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m25",
+        "anchor": {
+          "type": "point",
+          "x": 82,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m26",
+        "anchor": {
+          "type": "point",
+          "x": 82,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m27",
+        "anchor": {
+          "type": "point",
+          "x": 82,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m28",
+        "anchor": {
+          "type": "point",
+          "x": 88,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m29",
+        "anchor": {
+          "type": "point",
+          "x": 88,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m30",
+        "anchor": {
+          "type": "point",
+          "x": 88,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m31",
+        "anchor": {
+          "type": "point",
+          "x": 88,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m32",
+        "anchor": {
+          "type": "point",
+          "x": 88,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m33",
+        "anchor": {
+          "type": "point",
+          "x": 88,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m34",
+        "anchor": {
+          "type": "point",
+          "x": 88,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m35",
+        "anchor": {
+          "type": "point",
+          "x": 94,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m36",
+        "anchor": {
+          "type": "point",
+          "x": 94,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m37",
+        "anchor": {
+          "type": "point",
+          "x": 94,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m38",
+        "anchor": {
+          "type": "point",
+          "x": 94,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m39",
+        "anchor": {
+          "type": "point",
+          "x": 94,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m40",
+        "anchor": {
+          "type": "point",
+          "x": 94,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m41",
+        "anchor": {
+          "type": "point",
+          "x": 94,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m42",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m43",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m44",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m45",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m46",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m47",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m48",
+        "anchor": {
+          "type": "point",
+          "x": 106,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m49",
+        "anchor": {
+          "type": "point",
+          "x": 106,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m50",
+        "anchor": {
+          "type": "point",
+          "x": 106,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m51",
+        "anchor": {
+          "type": "point",
+          "x": 106,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m52",
+        "anchor": {
+          "type": "point",
+          "x": 106,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m53",
+        "anchor": {
+          "type": "point",
+          "x": 106,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m54",
+        "anchor": {
+          "type": "point",
+          "x": 106,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m55",
+        "anchor": {
+          "type": "point",
+          "x": 112,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m56",
+        "anchor": {
+          "type": "point",
+          "x": 112,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m57",
+        "anchor": {
+          "type": "point",
+          "x": 112,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m58",
+        "anchor": {
+          "type": "point",
+          "x": 112,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m59",
+        "anchor": {
+          "type": "point",
+          "x": 112,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m60",
+        "anchor": {
+          "type": "point",
+          "x": 112,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m61",
+        "anchor": {
+          "type": "point",
+          "x": 112,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m62",
+        "anchor": {
+          "type": "point",
+          "x": 118,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m63",
+        "anchor": {
+          "type": "point",
+          "x": 118,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m64",
+        "anchor": {
+          "type": "point",
+          "x": 118,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m65",
+        "anchor": {
+          "type": "point",
+          "x": 118,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m66",
+        "anchor": {
+          "type": "point",
+          "x": 118,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m67",
+        "anchor": {
+          "type": "point",
+          "x": 118,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m68",
+        "anchor": {
+          "type": "point",
+          "x": 118,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m69",
+        "anchor": {
+          "type": "point",
+          "x": 124,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m70",
+        "anchor": {
+          "type": "point",
+          "x": 124,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m71",
+        "anchor": {
+          "type": "point",
+          "x": 124,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m72",
+        "anchor": {
+          "type": "point",
+          "x": 124,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m73",
+        "anchor": {
+          "type": "point",
+          "x": 124,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m74",
+        "anchor": {
+          "type": "point",
+          "x": 124,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m75",
+        "anchor": {
+          "type": "point",
+          "x": 124,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m76",
+        "anchor": {
+          "type": "point",
+          "x": 130,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m77",
+        "anchor": {
+          "type": "point",
+          "x": 130,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m78",
+        "anchor": {
+          "type": "point",
+          "x": 130,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m79",
+        "anchor": {
+          "type": "point",
+          "x": 130,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m80",
+        "anchor": {
+          "type": "point",
+          "x": 130,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m81",
+        "anchor": {
+          "type": "point",
+          "x": 130,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m82",
+        "anchor": {
+          "type": "point",
+          "x": 130,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m83",
+        "anchor": {
+          "type": "point",
+          "x": 136,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m84",
+        "anchor": {
+          "type": "point",
+          "x": 136,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m85",
+        "anchor": {
+          "type": "point",
+          "x": 136,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m86",
+        "anchor": {
+          "type": "point",
+          "x": 136,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m87",
+        "anchor": {
+          "type": "point",
+          "x": 136,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m88",
+        "anchor": {
+          "type": "point",
+          "x": 136,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m89",
+        "anchor": {
+          "type": "point",
+          "x": 136,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "placed_ids": [
+      "hub"
+    ],
+    "anchor_side": {
+      "hub": "top"
+    }
+  }
+}

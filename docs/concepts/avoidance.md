@@ -93,7 +93,9 @@ and the marks of items with a *lower* priority key; it defaults to that of `item
 claim the space of the minor marks around them. A covered mark is never mislabeled: its
 item is omitted (`omitted_by_priority`). A label next to its mark hides such a mark
 entirely or keeps clear of it, by the own-mark rule above: beside a minor mark, or partly
-on it, the label could be that mark's. `avoid.leader.lower_items` does the same for
+on it, the label could be that mark's. Among minor marks so dense that none of an item's
+fixed positions can do either, the rule cannot be met and does not hold for that item, as
+with unlabeled points. `avoid.leader.lower_items` does the same for
 leaders ([priority](../tutorials/priority.md#important-labels-over-minor-marks)).
 
 ## Merging

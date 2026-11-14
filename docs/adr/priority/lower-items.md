@@ -1,8 +1,8 @@
 # Lower items
 
-A label may hide the marks of less important items, which then go unlabeled, but stands
-neither beside such a mark nor partly on it; maps and the plotting helpers do this by
-default.
+A label may hide the marks of less important items, which then go unlabeled; where a place
+beside its mark allows it, it stands neither beside such a mark nor partly on it. Maps and
+the plotting helpers let labels cover such marks by default.
 
 ## Context
 With `avoid.label.items` hard, every mark blocks every label, whatever the items'
@@ -37,8 +37,13 @@ that two labels competed for one dot.
   hidden when its bounding box lies inside the label box. A label thus hides a minor mark
   entirely or keeps clear of it, as with unlabeled points (ADR placement/unlabeled-points).
   Internal labels and labels on distant leaders are exempt, as from the rule itself.
-- The rule holds for every item, and has no option of its own: `placement.own_nearest:
-  false` gives the labels before.
+- **Only where it can be met.** The rule holds for an item when one of the 8 fixed
+  positions (spec §6.1) of its first variant hides or keeps clear of the less important
+  marks by it, as the rule for unlabeled points does. Among minor marks so dense that none
+  does, the item keeps the place its priority gives it: that is the hub in a crowd of
+  minor marks, which `lower_items` is for.
+- The rule has no option of its own: `placement.own_nearest: false` gives the labels
+  before.
 - Marks that are soft through `items` alone stay outside the rule: hiding one does not
   stop its item from being labeled.
 - The `map` preset and the Python and JavaScript plotting helpers, whenever a priority is
@@ -46,39 +51,40 @@ that two labels competed for one dot.
   The engine's default stays as before.
 
 ## Consequences
-Important places keep their labels: all of the 30 busiest airports on the 1,000-airport
-map, against 17 with every mark hard and 28 before the own-mark rule reached these marks
-(AMS lay partly under LHR's label). The price: a less important point whose mark a more
-important label hides goes unlabeled even where it had room of its own. Problems that do
+Important places keep their labels: 28 of the 30 busiest airports on the 1,000-airport
+map, against 16 with every mark hard. The price: a less important point whose mark a more
+important label covers goes unlabeled even where it had room of its own. Problems that do
 not let labels cover less important marks keep their results.
 
-No label is unclear because of another item's mark any more. On the quick suite (12
-problems, 2,319 items) unclear labels fall from 132 to 47, those caused by an item's mark
-from 80 to 0, the rest by unlabeled points alone (52 before); 898 labels are placed and
-usable instead of 901, 232 of them on leaders (165), in 404 ms instead of 414 (the sum of
-the median solve times). Of the full suite's 66 problems the 28 with the `map` preset
-change (75,214 items): there such labels fall from 4,223 to 0 and the data points under
-labels from 18,550 to 12,046.
+Where a clear place exists, labels take it. On the quick suite (12 problems, 2,319 items,
+the default aggressiveness) the labels that an item's mark makes unclear fall from 81 to
+32, unclear labels in all from 130 to 84; 874 labels are placed and usable instead of 875,
+171 of them on leaders (148), in 266 ms instead of 278 (the sum of the median solve
+times). Of the full suite's 66 problems the 28 with the `map` preset change (75,214
+items): there such labels fall from 4,021 to 2,347 — the rest belong to items among marks
+too dense for the rule — and 12,836 labels are placed instead of 13,325 (3.7 % fewer),
+4,181 of them on leaders (3,440). The most important labels stay as they were: of the 10
+most important items of each of these problems, 272 are labeled (273 before), 23 of them
+on leaders (22). With `high` 4.1 % fewer labels are placed, with `low`, which has no
+leaders to fall back on, 6.8 % fewer.
 
-Dense maps pay for it: those 28 problems place 12,416 labels instead of 13,703 (9.4 %
-fewer), 5,843 of them on leaders (3,450), and 2,732 labels on leaders end within 0.2 em
-of another point (1,226). The most important labels gain, as above, and the tail loses:
-of the 100 busiest airports 87 are labeled (83), of all 1,000 543 (563); of 3,000
-airports 966 (1,063); of 20,000 stress anchors, where the time guard leaves most items
-only the places beside their marks, 706 (914). The densest solves take longer, as more
-items run the ladder: 175 ms instead of 155 for the 1,000 airports. With `prefix` omission
-one such item ends the prefix: 89 instead of 193 of 250 European cities, where Manchester's
-label, 2 px from two minor dots before, now hides Liverpool's dot. Between the frames of
-a zoom a hidden mark comes out at a label's edge: over 1,000 airports labels move 4.2 px
-per frame instead of 3.7, and 288 disappear over 30 frames instead of 237. The release
-gate's allow-list names the configurations whose measures this moves by more than 2 %.
+With `prefix` omission the first label without a clear place, or whose mark a more
+important label now hides, ends the prefix: 89 instead of 136 of 250 European cities,
+where Manchester's label, 0.3 px beside Liverpool's dot before, now hides it; 70 instead
+of 167 of the airports ordered by outlierness. Between the frames of a zoom, marks move
+in and out from under labels: over 1,000 airports labels move 3.3 px per frame instead of
+2.8, and 235 disappear over 30 frames instead of 191. Solve times stay as they were
+(117 ms for the 1,000 airports). The release gate's allow-list names the configurations
+whose measures this moves by more than 2 %.
 
 ## Alternatives
-- **Partly covered marks**, which conflict with their item's label anyway (the state
-  before): 42 of the 91 unclear labels lay on such a mark, which shows from under the
-  label's edge like one beside it.
-- **Only where a fixed position can meet it**, as for unlabeled points: on 11 map problems
-  it left 158 of 383 such labels unclear and saved 20 of the 153 labels the rule costs
-  there.
+- **The rule for every item**: no label is unclear because of an item's mark, but the
+  important labels pay. Over the 28 map problems 8.7 % fewer labels are placed, and of the
+  10 most important items of each, 140 of 278 labels stand on leaders (22 of 273 before);
+  with `low`, without leaders, 130 of those items keep a label instead of 251, and 27 % of
+  all labels are lost.
+- **Partly covered marks allowed**, as they conflict with their item's label anyway, the
+  rule only against marks beside the label: on five map problems it left 189 of 314 such
+  labels unclear and lost as many labels as the rule for every item (52 and 53 of 1,913).
 - **Marks soft through `items` too**: with no priority between the two items, a hidden
   mark's item may still be labeled, so hiding the mark would not settle whose the label is.

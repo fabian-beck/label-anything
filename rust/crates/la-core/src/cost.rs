@@ -255,9 +255,10 @@ impl<'a> Evaluator<'a> {
                 // of the marks the label may cover, that of a less important item
                 // (`lower_items` given and not hard) competes with the own mark unless the
                 // label hides it entirely: no reader takes a hidden mark for the label's, and
-                // its item goes unlabeled
+                // its item goes unlabeled. Only for an item with a place beside its mark that
+                // hides or keeps clear of such marks (spec §4.4)
                 if !near_rule
-                    || !dy.lower_cover
+                    || !obs.lower_rule.get(i).copied().unwrap_or(false)
                     || !model.is_lower(i, j)
                     || (r.contains_rect(&sj.bbox()) && c.label_overlaps_shape(sj))
                 {

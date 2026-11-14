@@ -115,6 +115,7 @@ export function solveValidated(
   }
   const obs = prepare(m, minFont);
   obs.setPointsRule(m, variants);
+  obs.setLowerRule(m, variants);
   const t1 = envNow(env);
   const s = new Solve(m, obs, env, pri, measurer, variants);
   if (trace !== null) {

@@ -736,11 +736,28 @@ CASES["own-nearest-lower-coincident"] = case(
      "items": [pt("hub", 100, 40, "Hub", priority=2.0, placement={"position_order": ["right"]}),
                pt("minor", 100, 40, "Minor", priority=1.0, placement={"position_order": ["left"]})]},
     {"placed": 2, "anchor_side": {"hub": "right", "minor": "left"}, "own_nearest": True})
+# The marks of 90 minor items every 6 px around the hub's mark: none of the hub's 8 fixed
+# positions hides or keeps clear of all of them, so the rule does not hold for the hub, and
+# its label stands above its mark among them (covering marks at the cost of lower_items).
+MINOR_FIELD = [(x, y) for x in range(64, 137, 6) for y in range(42, 79, 6) if math.hypot(x - 100, y - 60) > 4]
+CASES["own-nearest-lower-field"] = case(
+    "among minor marks where no place beside the mark is clear, the rule for less important marks does not hold",
+    {"canvas": {"width": 200, "height": 120}, "degrade": ["omit"], "placement": {"models": ["adjacent"]},
+     "avoid": {"label": {"lower_items": 2.0}}, "priority": {"budget": {"max_labels": 1}},
+     "items": [pt("hub", 100, 60, "Hub", priority=2.0, placement={"position_order": ["top"]})]
+     + [{**pt(f"m{k}", x, y, "m", priority=1.0),
+         "anchor": {"type": "point", "x": x, "y": y, "mark": {"shape": "circle", "r": 0.5}}}
+        for k, (x, y) in enumerate(MINOR_FIELD)]},
+    {"placed": 1, "placed_ids": ["hub"], "anchor_side": {"hub": "top"}},
+    "Every one of the hub's 8 fixed positions has a minor mark within its margin that it does "
+    "not hide: the rule could not be met anywhere beside the mark (spec §4.4), and the hub "
+    "keeps the place its priority gives it.")
 # A crowd of 36 marks on a spiral, the innermost the most important, with the avoidance of the
-# `map` preset for labels: every label hides the less important marks under it or keeps clear
-# of them (the runners re-check that no mark a label does not hide is nearer than its own).
+# `map` preset for labels: the rule holds for the items with a clear place beside their mark
+# and not for the others. The parity fixture of this case holds the mix, which TypeScript
+# must reproduce.
 CASES["own-nearest-lower-crowd"] = case(
-    "in a crowd, labels hide the marks of less important items or stand clearly nearer to their own",
+    "in a crowd, labels hide or keep clear of the marks of less important items where a place beside their mark can",
     {"canvas": {"width": 320, "height": 240},
      "placement": {"models": ["adjacent", "slider"]},
      "avoid": {"label": {"lower_items": 10}},
@@ -749,7 +766,7 @@ CASES["own-nearest-lower-crowd"] = case(
                   ["Ash", "Birch", "Cedar", "Elm", "Fir", "Hazel", "Oak", "Pine", "Yew"][k % 9],
                   priority=36 - k)
                for k in range(36)]},
-    {"placed_min": 18, "own_nearest": True})
+    {"placed_min": 18})
 
 # Alpha may only stand right of its point; Beta's point, 16 px below it, comes within the
 # stub reach (0.75 em = 9 px) of that place: Alpha stands 0.5 em farther right, joined to its
