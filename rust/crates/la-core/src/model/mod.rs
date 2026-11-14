@@ -535,6 +535,8 @@ pub struct Model {
     pub leader_area: Option<Rect>,
     /// Extent of the grid: the canvas, grown by `canvas.overscan` in a window (spec §2.3).
     pub extent: Rect,
+    /// The canvas is a window on a larger drawing (`canvas.overscan`, spec §2.3).
+    pub window: bool,
     pub items: Vec<Item>,
     /// Vector obstacle primitives (problem vector layers and SVG geometry) with their
     /// class (names shared between primitives).
@@ -590,6 +592,12 @@ impl Model {
     /// window the working extent (spec §2.3); `None` without a canvas.
     pub fn ink_area(&self) -> Option<f64> {
         self.canvas.map(|_| self.extent.area())
+    }
+
+    /// In a window, the working extent: where the labels of areas are looked for (spec
+    /// §6.5). `None`: everywhere in the area.
+    pub fn area_view(&self) -> Option<Rect> {
+        self.window.then_some(self.extent)
     }
 
     /// Whether item `j` has a lower priority key than item `i` (spec §9.1): the
@@ -1387,6 +1395,7 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         canvas,
         label_area,
         leader_area,
+        window,
         extent,
         items,
         vector,

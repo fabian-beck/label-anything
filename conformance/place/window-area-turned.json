@@ -1,0 +1,64 @@
+{
+  "kind": "place",
+  "name": "window: a slanted area through the view has its turned label at its pole, as without a window",
+  "$comment": "The canvas is a window on a larger drawing: with canvas.overscan, labels are placed as if the drawing went on beyond its edges. A 1400 × 26 px strip at 30° through the view; its pole lies beyond the view.",
+  "problem": {
+    "canvas": {
+      "width": 160,
+      "height": 100,
+      "overscan": 40
+    },
+    "items": [
+      {
+        "id": "fjord",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              -179.718,
+              -141.258
+            ],
+            [
+              1032.718,
+              558.742
+            ],
+            [
+              1019.718,
+              581.258
+            ],
+            [
+              -192.718,
+              -118.742
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Long Fjord"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "model": {
+      "fjord": "internal"
+    },
+    "rotation": {
+      "fjord": 30
+    },
+    "box": {
+      "fjord": {
+        "x": 388.128,
+        "y": 212.2,
+        "w": 63.744,
+        "h": 15.6,
+        "tol": 0.01
+      }
+    }
+  }
+}

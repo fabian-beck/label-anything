@@ -260,7 +260,7 @@ export class Solve {
   private areaCandidates(item: Item, vi: number, v: Variant, models: Models, fresh: Cand[], adjKeep: KeepFn | null): void {
     const inside: Cand[] = [];
     const rank = areaRank(item);
-    if (rank !== null) area(item, vi, v, rank, inside);
+    if (rank !== null) area(item, vi, v, rank, this.model.areaView(), inside);
     if (inside.length === 0) {
       adjacent(item, vi, v, this.model.placement.sliderPerGap, models, this.stubs, fresh, adjKeep);
     } else if (Models.has(models, Models.ADJACENT) || Models.has(models, Models.SLIDER) || Models.has(models, Models.INTERNAL)) {

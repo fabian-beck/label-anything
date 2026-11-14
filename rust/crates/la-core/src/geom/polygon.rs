@@ -394,6 +394,48 @@ pub fn main_axis(rings: &[Vec<P>], origin: P) -> Option<f64> {
 /// the smaller (an axis ratio of about 1.41).
 pub const MAIN_AXIS_RATIO: f64 = 2.0;
 
+/// A ring cut to a rectangle (Sutherland–Hodgman: against the left, right, top and bottom
+/// side in this order; a vertex on a side counts as inside). Where the ring leaves the
+/// rectangle, the result runs along its sides instead: inside the rectangle the polygon
+/// covers the same points, with the same winding, and its boundary is the same (spec
+/// §6.5). Empty when nothing of the ring is left.
+pub fn clip_ring(ring: &[P], r: &Rect) -> Vec<P> {
+    let mut pts: Vec<P> = ring.to_vec();
+    for side in 0..4 {
+        if pts.is_empty() {
+            break;
+        }
+        let inside = |p: P| match side {
+            0 => p.x >= r.x0,
+            1 => p.x <= r.x1,
+            2 => p.y >= r.y0,
+            _ => p.y <= r.y1,
+        };
+        let cut = |a: P, b: P| match side {
+            0 => P::new(r.x0, a.y + (b.y - a.y) * (r.x0 - a.x) / (b.x - a.x)),
+            1 => P::new(r.x1, a.y + (b.y - a.y) * (r.x1 - a.x) / (b.x - a.x)),
+            2 => P::new(a.x + (b.x - a.x) * (r.y0 - a.y) / (b.y - a.y), r.y0),
+            _ => P::new(a.x + (b.x - a.x) * (r.y1 - a.y) / (b.y - a.y), r.y1),
+        };
+        let n = pts.len();
+        let mut out = Vec::with_capacity(n + 4);
+        for i in 0..n {
+            let a = pts[(i + n - 1) % n];
+            let b = pts[i];
+            if inside(b) {
+                if !inside(a) {
+                    out.push(cut(a, b));
+                }
+                out.push(b);
+            } else if inside(a) {
+                out.push(cut(a, b));
+            }
+        }
+        pts = out;
+    }
+    pts
+}
+
 /// The room of rectangle `r` inside the polygon: its distance from the polygon's boundary
 /// (0 when an edge touches or crosses it). For a rectangle inside the polygon.
 pub fn room_rect(rings: &[Vec<P>], r: &Rect) -> f64 {

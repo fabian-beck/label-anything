@@ -1,0 +1,117 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 160,
+      "height": 100,
+      "overscan": 40
+    },
+    "items": [
+      {
+        "id": "fjord",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              -179.718,
+              -141.258
+            ],
+            [
+              1032.718,
+              558.742
+            ],
+            [
+              1019.718,
+              581.258
+            ],
+            [
+              -192.718,
+              -118.742
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Long Fjord"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "fjord",
+        "placed": true,
+        "box": {
+          "x": 388.1280000000004,
+          "y": 212.20000000000022,
+          "w": 63.74400000000003,
+          "h": 15.600000000000023
+        },
+        "rotation": 29.999990850641684,
+        "anchor": [
+          420.0000000000004,
+          220.00000000000023
+        ],
+        "anchor_side": "internal",
+        "model": "internal",
+        "text": {
+          "lines": [
+            "Long Fjord"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            60.144
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.17834046155843308,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 1,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 1,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.17834046155843308,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 80,
+        "rows": 60,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

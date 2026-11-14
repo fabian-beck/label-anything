@@ -4,7 +4,7 @@
 use crate::geom::shape::{sign_dir, Shape};
 use crate::geom::{dist_point_seg, Rect, P};
 use crate::labels::Variant;
-use crate::math::{maxf, sin_cos_deg};
+use crate::math::{maxf, minf, sin_cos_deg};
 use crate::model::opts::{InternalPolicy, LeaderStyle, Models, Pos};
 use crate::model::Item;
 
@@ -320,7 +320,7 @@ impl Cand {
     pub fn dist_shape(&self, s: &Shape) -> f64 {
         let mut d = f64::INFINITY;
         for b in self.boxes() {
-            d = crate::math::minf(d, s.dist_rect(b));
+            d = minf(d, s.dist_rect(b));
         }
         d
     }
@@ -1132,6 +1132,9 @@ pub fn area_rank(item: &Item) -> Option<f64> {
 /// turned labels: turned back), with the label size.
 struct AreaFrame<'a> {
     shape: &'a Shape,
+    /// In a window (spec §6.5): the view, which the label box of a grid sample touches, and
+    /// the polygon cut to the view's surroundings, for the tests of boxes that touch it.
+    near: Option<(Rect, Vec<Vec<P>>)>,
     pole: P,
     radius: f64,
     em: f64,
@@ -1141,11 +1144,45 @@ struct AreaFrame<'a> {
 }
 
 impl AreaFrame<'_> {
+    /// The view and the polygon near it, for labels of this frame's size: the polygon cut
+    /// to the view grown by the label's size twice, 1 em, the inner padding and 1 px. A
+    /// box that touches the view is as much inside the cut polygon as inside the whole
+    /// one, and has the same room up to 1 em (spec §6.5).
+    fn near(shape: &Shape, view: Rect, hw: f64, hh: f64, em: f64, pad: f64) -> (Rect, Vec<Vec<P>>) {
+        let Shape::Polygon(p) = shape else {
+            return (view, Vec::new());
+        };
+        let (gx, gy) = (2.0 * hw + em + pad + 1.0, 2.0 * hh + em + pad + 1.0);
+        let cut = Rect::new(view.x0 - gx, view.y0 - gy, view.x1 + gx, view.y1 + gy);
+        let rings = p
+            .rings
+            .iter()
+            .map(|r| crate::geom::polygon::clip_ring(r, &cut))
+            .filter(|r| r.len() >= 3)
+            .collect();
+        (view, rings)
+    }
+    /// The rings to test the box `r` against: the polygon cut to the view's surroundings
+    /// for a box that touches the view, else the whole polygon.
+    fn rings(&self, r: &Rect) -> Option<&[Vec<P>]> {
+        match (&self.near, self.shape) {
+            (Some((view, cut)), _) if view.touches(r) => Some(cut),
+            (_, Shape::Polygon(p)) => Some(&p.rings),
+            _ => None,
+        }
+    }
     fn fits(&self, c: P) -> bool {
         let r = Rect::from_center(c, self.hw, self.hh);
         // (a box inside the polygon lies in its bounding box: the cheap test first)
-        self.shape.bbox().contains_rect(&r.inflate(self.pad))
-            && self.shape.contains_rect(&r, self.pad)
+        if !self.shape.bbox().contains_rect(&r.inflate(self.pad)) {
+            return false;
+        }
+        match (self.rings(&r), self.shape) {
+            (Some(rings), Shape::Polygon(p)) => {
+                crate::geom::polygon::contains_rect(rings, p.even_odd, &r, self.pad)
+            }
+            _ => self.shape.contains_rect(&r, self.pad),
+        }
     }
     /// What the place `c` lacks (spec §6.5): the room the label lacks to 1 em from the
     /// polygon's boundary, in em, plus its distance from the pole relative to the
@@ -1155,11 +1192,11 @@ impl AreaFrame<'_> {
     }
     /// The room the label lacks at `c` to 1 em from the polygon's boundary, in em.
     fn tight(&self, c: P) -> f64 {
-        let Shape::Polygon(p) = self.shape else {
+        let r = Rect::from_center(c, self.hw, self.hh);
+        let Some(rings) = self.rings(&r) else {
             return 0.0;
         };
-        let room =
-            crate::geom::polygon::room_rect(&p.rings, &Rect::from_center(c, self.hw, self.hh));
+        let room = crate::geom::polygon::room_rect(rings, &r);
         maxf(0.0, 1.0 - room / self.em)
     }
     /// The distance of `c` from `from` relative to the polygon's size.
@@ -1183,33 +1220,79 @@ impl AreaFrame<'_> {
             let t = self.tight(c);
             (c, t + self.off(c, self.pole), t)
         };
+        // (in a window: a pole beyond the view is a place, but not one of the view's)
+        let mut far_pole = false;
         if self.fits(self.pole) {
             pts.push(sample(self.pole));
+            far_pole = self
+                .near
+                .as_ref()
+                .is_some_and(|(view, _)| !view.touches(&Rect::from_center(self.pole, hw, hh)));
         }
-        // grid samples where the label fits; an area far larger than any picture (a
-        // country beyond the view of a map) is sampled more coarsely, at about
-        // `AREA_SAMPLES` places
         let bb = self.shape.bbox();
-        let step = maxf(maxf(2.0 * hh, 4.0), (bb.w() * bb.h() / AREA_SAMPLES).sqrt());
-        let mut y = bb.y0 + hh;
-        while y <= bb.y1 - hh + 1e-9 {
-            let mut x = bb.x0 + hw;
-            while x <= bb.x1 - hw + 1e-9 {
-                let c = P::new(x, y);
-                if self.fits(c) {
-                    pts.push(sample(c));
+        let step = match &self.near {
+            // grid samples where the label fits; an area far larger than any picture is
+            // sampled more coarsely, at about `AREA_SAMPLES` places
+            None => {
+                let step = maxf(maxf(2.0 * hh, 4.0), (bb.w() * bb.h() / AREA_SAMPLES).sqrt());
+                let mut y = bb.y0 + hh;
+                while y <= bb.y1 - hh + 1e-9 {
+                    let mut x = bb.x0 + hw;
+                    while x <= bb.x1 - hw + 1e-9 {
+                        let c = P::new(x, y);
+                        if self.fits(c) {
+                            pts.push(sample(c));
+                        }
+                        // coordinates so large that a step no longer changes them
+                        if x + step <= x {
+                            break;
+                        }
+                        x += step;
+                    }
+                    if y + step <= y {
+                        break;
+                    }
+                    y += step;
                 }
-                // coordinates so large that a step no longer changes them
-                if x + step <= x {
-                    break;
+                step
+            }
+            // in a window: the samples of the same grid whose label box touches the view,
+            // however large the area is
+            Some((view, _)) => {
+                let step = maxf(2.0 * hh, 4.0);
+                let (x0, y0) = (bb.x0 + hw, bb.y0 + hh);
+                // the last row and column before the view (the first of the grid at least)
+                let first = |lo: f64, o: f64| maxf(crate::math::floor_fast((lo - o) / step), 0.0);
+                let (xl, yl) = (
+                    minf(bb.x1 - hw, view.x1 + hw) + 1e-9,
+                    minf(bb.y1 - hh, view.y1 + hh) + 1e-9,
+                );
+                let mut j = first(view.y0 - hh, y0);
+                let mut y = y0 + j * step;
+                while y <= yl {
+                    let mut i = first(view.x0 - hw, x0);
+                    let mut x = x0 + i * step;
+                    while x <= xl {
+                        let c = P::new(x, y);
+                        if view.touches(&Rect::from_center(c, hw, hh)) && self.fits(c) {
+                            pts.push(sample(c));
+                        }
+                        i += 1.0;
+                        // coordinates so large that a step no longer changes them
+                        if x0 + i * step <= x {
+                            break;
+                        }
+                        x = x0 + i * step;
+                    }
+                    j += 1.0;
+                    if y0 + j * step <= y {
+                        break;
+                    }
+                    y = y0 + j * step;
                 }
-                x += step;
+                step
             }
-            if y + step <= y {
-                break;
-            }
-            y += step;
-        }
+        };
         if pts.is_empty() {
             return Vec::new();
         }
@@ -1219,7 +1302,9 @@ impl AreaFrame<'_> {
             if g < pts[best].1 {
                 best = k;
             }
-            sb = sb.add_point(c);
+            if !(far_pole && k == 0) {
+                sb = sb.add_point(c);
+            }
         }
         // one sample of each cell: near the cell's middle, where the label has room
         let cell = |v: f64, lo: f64, hi: f64| {
@@ -1290,19 +1375,29 @@ impl AreaFrame<'_> {
 }
 
 /// Internal candidates of an area anchor for one variant (spec §6.5): upright ones, then
-/// the ones turned along the polygon's main axis.
-pub fn area(item: &Item, vi: usize, v: &Variant, rank: f64, out: &mut Vec<Cand>) {
+/// the ones turned along the polygon's main axis. `view`: in a window, the working
+/// extent, where the grid's places are looked for.
+pub fn area(
+    item: &Item,
+    vi: usize,
+    v: &Variant,
+    rank: f64,
+    view: Option<Rect>,
+    out: &mut Vec<Cand>,
+) {
     let Some(area) = &item.area else { return };
     let (hw, hh) = (v.w * 0.5, v.h * 0.5);
     let it = item.index as u32;
-    let frame = |shape| AreaFrame {
+    let (em, pad) = (item.em(), item.len.inner_padding);
+    let frame = |shape, view: Option<Rect>| AreaFrame {
         shape,
+        near: view.map(|view| AreaFrame::near(shape, view, hw, hh, em, pad)),
         pole: area.pole,
         radius: area.radius,
-        em: item.em(),
+        em,
         hw,
         hh,
-        pad: item.len.inner_padding,
+        pad,
     };
     let cand = |rect| {
         Cand::new(
@@ -1315,7 +1410,7 @@ pub fn area(item: &Item, vi: usize, v: &Variant, rank: f64, out: &mut Vec<Cand>)
             rect,
         )
     };
-    for (c, g) in frame(&area.shape).places() {
+    for (c, g) in frame(&area.shape, view).places() {
         let mut cd = cand(Rect::from_center(c, hw, hh));
         cd.inside = g;
         out.push(cd);
@@ -1323,7 +1418,13 @@ pub fn area(item: &Item, vi: usize, v: &Variant, rank: f64, out: &mut Vec<Cand>)
     let Some(t) = area.turn.as_ref().filter(|_| can_turn(v)) else {
         return;
     };
-    for (c, g) in frame(&t.shape).places() {
+    // the view in the frame of the turned labels: the bounding box of the view turned back
+    let turned_view = view.map(|view| {
+        view.corners().iter().fold(Rect::EMPTY, |bb, &q| {
+            bb.add_point(area.pole + (q - area.pole).unrotate(t.cos, t.sin))
+        })
+    });
+    for (c, g) in frame(&t.shape, turned_view).places() {
         let c = area.pole + (c - area.pole).rotate(t.cos, t.sin);
         let (bbox, turn, shape) = Turn::of(c, hw, hh, t.angle, t.cos, t.sin);
         let mut cd = cand(bbox);
@@ -1359,6 +1460,7 @@ fn area_warm(
     );
     let frame = |shape, pole| AreaFrame {
         shape,
+        near: None,
         pole,
         radius: area.radius,
         em: item.em(),
@@ -1446,6 +1548,80 @@ mod tests {
 
     fn gap_to(shape: &Shape, r: &Rect, o: f64) -> f64 {
         shape.dist_rect(r) - o
+    }
+
+    /// An outline with bays and capes around (`cx`, `cy`), `n` vertices.
+    fn coast(cx: f64, cy: f64, rx: f64, ry: f64, n: usize) -> Vec<P> {
+        (0..n)
+            .map(|i| {
+                let a = i as f64 / n as f64 * std::f64::consts::TAU;
+                let w = 1.0 + 0.25 * (7.0 * a).sin() + 0.1 * (23.0 * a + 1.0).sin();
+                P::new(cx + rx * w * a.cos(), cy + ry * w * a.sin())
+            })
+            .collect()
+    }
+
+    /// In a window, a box that touches the view is tested against the polygon cut to the
+    /// view's surroundings (spec §6.5): it fits there exactly when it fits in the whole
+    /// polygon, and lacks the same.
+    #[test]
+    fn the_polygon_cut_to_the_view_serves_the_boxes_that_touch_it() {
+        let mut rng = la_expr::det_math::Pcg32::new(7);
+        let mut unit = move || f64::from(rng.next_u32()) / 4294967296.0;
+        let (mut inside, mut tight) = (0, 0);
+        for round in 0..40 {
+            // an area several times the view, the view over its middle, a coast or a corner
+            let outer = coast(
+                300.0 + 900.0 * unit(),
+                200.0 + 600.0 * unit(),
+                500.0 + 900.0 * unit(),
+                300.0 + 500.0 * unit(),
+                240,
+            );
+            let lake = coast(250.0, 180.0, 40.0, 25.0, 24);
+            let mut rings = vec![outer, lake];
+            crate::geom::polygon::orient_holes(&mut rings);
+            let pole = P::new(300.0, 200.0);
+            let shape = Shape::polygon(rings, false, pole);
+            let view = Rect::new(-48.0, -48.0, 448.0, 348.0);
+            let (hw, hh) = (10.0 + 40.0 * unit(), 5.0 + 6.0 * unit());
+            let (em, pad) = (12.0, if round % 2 == 0 { 2.4 } else { 0.0 });
+            let frame = |near| AreaFrame {
+                shape: &shape,
+                near,
+                pole,
+                radius: 800.0,
+                em,
+                hw,
+                hh,
+                pad,
+            };
+            let whole = frame(None);
+            let cut = frame(Some(AreaFrame::near(&shape, view, hw, hh, em, pad)));
+            for _ in 0..400 {
+                // centers whose boxes touch the view, up to its very edge
+                let c = P::new(
+                    view.x0 - hw + (view.w() + 2.0 * hw) * unit(),
+                    view.y0 - hh + (view.h() + 2.0 * hh) * unit(),
+                );
+                assert!(view.touches(&Rect::from_center(c, hw, hh)));
+                assert_eq!(whole.fits(c), cut.fits(c), "round {round}: fits at {c:?}");
+                if whole.fits(c) {
+                    inside += 1;
+                    let (a, b) = (whole.tight(c), cut.tight(c));
+                    assert!(
+                        (a - b).abs() < 1e-9,
+                        "round {round}: lacks {a} and {b} at {c:?}"
+                    );
+                    tight += usize::from(a > 0.0);
+                }
+            }
+        }
+        // the test saw both: boxes with room to spare and boxes near the boundary
+        assert!(
+            inside > 2000 && tight > 200,
+            "{inside} inside, {tight} tight"
+        );
     }
 
     #[test]

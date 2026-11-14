@@ -146,6 +146,34 @@ describe("windows (canvas.overscan)", () => {
     }
   });
 
+  /** An outline with bays and capes around (`cx`, `cy`), `n` vertices. */
+  const coast = (cx: number, cy: number, rx: number, ry: number, n: number): [number, number][] =>
+    Array.from({ length: n }, (_, i) => {
+      const a = (i / n) * 2 * Math.PI;
+      const w = 1.0 + 0.2 * Math.sin(5.0 * a) + 0.08 * Math.sin(11.0 * a + 1.0);
+      return [Math.round(cx + rx * w * Math.cos(a)), Math.round(cy + ry * w * Math.sin(a))];
+    });
+
+  // only the places near the view are tried (spec §6.5)
+  it("a large area, passed whole, is labeled where the whole area has its label", () => {
+    const label = { type: "text", text: "Area", width: 60, height: 14, padding: 0 };
+    // the view over the area's middle, its coast, and far from both
+    for (const [zoom, cx, cy] of [
+      [1, 220, 160],
+      [4, 300, 100],
+      [12, -900, 400],
+      [40, 9000, -3000],
+    ]) {
+      const polygon = coast(cx!, cy!, 150 * zoom!, 90 * zoom!, 48);
+      const solveIn = (canvas: Obj): Box =>
+        boxOf(solve({ version: "1", canvas, items: [{ id: "a", anchor: { type: "area", polygon }, label }] }), "a")!;
+      const window = solveIn({ width: 400, height: 300, overscan: 48 });
+      const whole = solveIn({ width: 400, height: 300, allow_outside: true });
+      expect(Math.abs(window.x - whole.x), `zoom ${zoom}`).toBeLessThan(1e-6);
+      expect(Math.abs(window.y - whole.y), `zoom ${zoom}`).toBeLessThan(1e-6);
+    }
+  });
+
   // the greedy pass alone: it is the pass that keeps to this budget
   it("the ink budget is a fraction of the working extent", () => {
     // labels of 40 × 20 px: 2 % of the extent of 200 × 200 px, 8 % of the canvas

@@ -121,6 +121,11 @@
       "errors": [],
       "warnings": []
     },
+    "problems/window.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
     "problems/y-up-transform.json": {
       "valid": true,
       "errors": [],
@@ -386,6 +391,17 @@
       "errors": [
         {
           "pointer": "/placement/offset",
+          "code": "range",
+          "message": "must be >= 0"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/overscan-range.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/canvas/overscan",
           "code": "range",
           "message": "must be >= 0"
         }

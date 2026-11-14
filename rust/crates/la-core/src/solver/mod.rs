@@ -761,7 +761,7 @@ fn raw_candidates(
             // (the ladder's `distant` and `boundary` steps) makes none of them again.
             let mut inside: Vec<Cand> = Vec::new();
             if let Some(rank) = candidates::area_rank(item) {
-                candidates::area(item, vi, v, rank, &mut inside);
+                candidates::area(item, vi, v, rank, model.area_view(), &mut inside);
             }
             if inside.is_empty() {
                 candidates::adjacent(

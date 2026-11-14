@@ -845,6 +845,28 @@ ascending lack. So a label has places all over the part of the polygon it fits i
 best one first. Upright candidates come before turned ones; all are `internal`
 (rank −1, with `internal: allow` 0; none with `never`).
 
+**In a window** (§2.3) the area is passed whole and may be far larger than the view, so
+the work keeps to the view. With `E` the working extent (for turned labels: the bounding
+box of `E` turned back by `α` about the pole):
+
+* The grid's samples are those whose label box touches `E`: `(x₀ + i · s, y₀ + j · s)`
+  with `(x₀, y₀)` the bounding box's top-left corner plus half the label size, `s` the
+  label height, at least 4 px (no coarser for a large polygon), `i` from
+  `max(0, ⌊(E.x0 − w/2 − x₀) / s⌋)` while `x ≤ min(x1 − w/2, E.x1 + w/2) + 10⁻⁹`, `j`
+  likewise. The pole is a sample wherever it lies, and the best sample is improved as
+  above; the 3 × 3 cells divide the bounding box of the samples' centers without a pole
+  whose box does not touch `E`. So an area whose pole has room for the label is labeled
+  there, in view or not, and the other places are near the view.
+* For a box that touches `E`, containment and room are those of the polygon **cut** to
+  `E` grown by `w + em + inner_padding + 1` px to the left and right and by
+  `h + em + inner_padding + 1` px above and below: every ring by Sutherland–Hodgman
+  against the left, right, top and bottom side in this order (a vertex on a side counts
+  as inside; an edge from `a` to `b` is cut at `a + (b − a) · (side − a) / (b − a)` in the
+  other coordinate), rings left with fewer than 3 vertices dropped. The cut polygon
+  contains such a box exactly when the whole one does, and the box has the same room in
+  both up to 1 em, where the lack ends. Other boxes (a pole beyond `E`, the places its
+  improvement tries, a warm-start box) are tested against the whole polygon.
+
 **Cost.** An area label has no gap to its mark; its `w_distance` term is `w_distance ·
 lack`. A turned label adds `|α| / 180` to the shape penalty of its variant (§5.4): a
 turned label takes the place of an upright one only where it has clearly more room.

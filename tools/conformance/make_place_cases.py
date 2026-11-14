@@ -943,6 +943,33 @@ CASES["window-area"] = case(
     WINDOW_ABOUT + " The area is passed whole; its label is in its middle, beyond the right edge of the "
     "canvas, not in the part in view.")
 
+CASES["window-area-large"] = case(
+    "window: an area far larger than the view is labeled at its pole, far beyond the view",
+    {"canvas": WINDOW,
+     "items": [_area("a", [[-300, -400], [4000, -200], [4200, 2600], [-500, 2400]], "Area")]},
+    {"placed": 1, "model": {"a": "internal"},
+     "box": {"a": {"x": 985.624, "y": 1056.118, "w": 29.484, "h": 12.324, "tol": 0.01}}},
+    WINDOW_ABOUT + " Only the grid's places near the view are tried besides the pole (spec §6.5): the work "
+    "does not grow with the area.")
+
+CASES["window-area-near-view"] = case(
+    "window: where the pole of a large area is taken, its label goes to a place near the view",
+    {"canvas": WINDOW, "obstacles": {"vector": [{"class": "wall", "rects": [[20, 20, 120, 60]]}]},
+     "avoid": {"label": {"wall": "hard"}},
+     "items": [_area("a", [[-900, -700], [1060, -700], [1060, 800], [-900, 800]], "Area")]},
+    {"placed": 1, "model": {"a": "internal"},
+     "box": {"a": {"x": 61.272, "y": -22.18, "w": 29.484, "h": 12.324, "tol": 0.01}}},
+    WINDOW_ABOUT + " The pole is in the middle of the view, under the wall; the label takes the place of "
+    "the grid nearest to it, in the overscan above the view. That place is tested against the polygon "
+    "cut to the view's surroundings.")
+
+CASES["window-area-turned"] = case(
+    "window: a slanted area through the view has its turned label at its pole, as without a window",
+    {"canvas": WINDOW, "items": [_area("fjord", _slab(420, 220, 1400, 26, 30), "Long Fjord")]},
+    {"placed": 1, "model": {"fjord": "internal"}, "rotation": {"fjord": 30},
+     "box": {"fjord": {"x": 388.128, "y": 212.2, "w": 63.744, "h": 15.6, "tol": 0.01}}},
+    WINDOW_ABOUT + " A 1400 × 26 px strip at 30° through the view; its pole lies beyond the view.")
+
 CASES["window-raster"] = case(
     "window: a raster background keeps its place on the canvas, and its borders count as without overscan",
     {"canvas": {"width": 300, "height": 120, "overscan": 30}, "obstacles": {"raster": BLACK_STRIP},

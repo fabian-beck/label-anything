@@ -1,0 +1,81 @@
+{
+  "kind": "place",
+  "name": "window: where the pole of a large area is taken, its label goes to a place near the view",
+  "$comment": "The canvas is a window on a larger drawing: with canvas.overscan, labels are placed as if the drawing went on beyond its edges. The pole is in the middle of the view, under the wall; the label takes the place of the grid nearest to it, in the overscan above the view. That place is tested against the polygon cut to the view's surroundings.",
+  "problem": {
+    "canvas": {
+      "width": 160,
+      "height": 100,
+      "overscan": 40
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "class": "wall",
+          "rects": [
+            [
+              20,
+              20,
+              120,
+              60
+            ]
+          ]
+        }
+      ]
+    },
+    "avoid": {
+      "label": {
+        "wall": "hard"
+      }
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              -900,
+              -700
+            ],
+            [
+              1060,
+              -700
+            ],
+            [
+              1060,
+              800
+            ],
+            [
+              -900,
+              800
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Area"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "model": {
+      "a": "internal"
+    },
+    "box": {
+      "a": {
+        "x": 61.272,
+        "y": -22.18,
+        "w": 29.484,
+        "h": 12.324,
+        "tol": 0.01
+      }
+    }
+  }
+}

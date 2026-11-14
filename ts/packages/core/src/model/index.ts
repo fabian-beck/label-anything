@@ -459,6 +459,8 @@ export class Model {
   leaderArea: Rect | null = null;
   /** Extent of the grid: the canvas, grown by `canvas.overscan` in a window (spec §2.3). */
   extent: Rect = new Rect(0, 0, 1, 1);
+  /** The canvas is a window on a larger drawing (`canvas.overscan`, spec §2.3). */
+  window = false;
   items: Item[] = [];
   /** Vector obstacles by class (problem vector layers and SVG geometry). */
   vector: [string, Prim][] = [];
@@ -514,6 +516,14 @@ export class Model {
    */
   inkArea(): number | null {
     return this.canvas !== null ? this.extent.area() : null;
+  }
+
+  /**
+   * In a window, the working extent: where the labels of areas are looked for (spec §6.5).
+   * `null`: everywhere in the area.
+   */
+  areaView(): Rect | null {
+    return this.window ? this.extent : null;
   }
 
   /**
@@ -1137,6 +1147,7 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.labelArea = labelArea;
   m.leaderArea = leaderArea;
   m.extent = extent;
+  m.window = window;
   m.items = items;
   m.vector = vector;
   m.rasters = rasters;

@@ -181,6 +181,50 @@ fn an_area_label_stays_with_its_area() {
     }
 }
 
+/// An outline with bays and capes around (`cx`, `cy`), `n` vertices.
+fn coast(cx: f64, cy: f64, rx: f64, ry: f64, n: usize) -> Vec<[f64; 2]> {
+    (0..n)
+        .map(|i| {
+            let a = i as f64 / n as f64 * std::f64::consts::TAU;
+            let w = 1.0 + 0.2 * (5.0 * a).sin() + 0.08 * (11.0 * a + 1.0).sin();
+            [
+                (cx + rx * w * a.cos()).round(),
+                (cy + ry * w * a.sin()).round(),
+            ]
+        })
+        .collect()
+}
+
+/// An area is passed whole, however large (spec §6.5): its label is where the whole area
+/// has it, although only the places near the view are tried.
+#[test]
+fn a_large_area_is_labeled_where_the_whole_area_is() {
+    let label = json!({"type": "text", "text": "Area", "width": 60, "height": 14, "padding": 0});
+    // the view over the area's middle, its coast, and far from both
+    for (zoom, cx, cy) in [
+        (1.0, 220.0, 160.0),
+        (4.0, 300.0, 100.0),
+        (12.0, -900.0, 400.0),
+        (40.0, 9000.0, -3000.0),
+    ] {
+        let poly = coast(cx, cy, 150.0 * zoom, 90.0 * zoom, 48);
+        let solve_in = |canvas: Value| {
+            let r = solve(&json!({"version": "1", "canvas": canvas,
+                "items": [{"id": "a", "anchor": {"type": "area", "polygon": poly}, "label": label}]}));
+            box_of(&r, "a").expect("placed").clone()
+        };
+        let window = solve_in(json!({"width": 400, "height": 300, "overscan": 48}));
+        let whole = solve_in(json!({"width": 400, "height": 300, "allow_outside": true}));
+        for k in ["x", "y"] {
+            let (a, b) = (window[k].as_f64().unwrap(), whole[k].as_f64().unwrap());
+            assert!(
+                (a - b).abs() < 1e-6,
+                "zoom {zoom}: {window} in the window, {whole} whole"
+            );
+        }
+    }
+}
+
 /// `priority.budget.max_ink_fraction` is a fraction of the working extent in a window: the
 /// labels in the overscan count, and so does its area. (The greedy pass alone: it is the
 /// pass that keeps to this budget.)

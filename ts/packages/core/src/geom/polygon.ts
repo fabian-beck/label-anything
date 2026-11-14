@@ -484,6 +484,41 @@ export function mainAxis(rings: readonly Ring[], origin: P): number | null {
 }
 
 /**
+ * A ring cut to a rectangle (Sutherland–Hodgman: against the left, right, top and bottom
+ * side in this order; a vertex on a side counts as inside). Where the ring leaves the
+ * rectangle, the result runs along its sides instead: inside the rectangle the polygon
+ * covers the same points, with the same winding, and its boundary is the same (spec §6.5).
+ * Empty when nothing of the ring is left.
+ */
+export function clipRing(ring: Ring, r: Rect): P[] {
+  let pts: readonly P[] = ring;
+  for (let side = 0; side < 4; side++) {
+    if (pts.length === 0) break;
+    const inside = (q: P): boolean => (side === 0 ? q.x >= r.x0 : side === 1 ? q.x <= r.x1 : side === 2 ? q.y >= r.y0 : q.y <= r.y1);
+    const cut = (a: P, b: P): P =>
+      side === 0
+        ? new P(r.x0, a.y + ((b.y - a.y) * (r.x0 - a.x)) / (b.x - a.x))
+        : side === 1
+          ? new P(r.x1, a.y + ((b.y - a.y) * (r.x1 - a.x)) / (b.x - a.x))
+          : side === 2
+            ? new P(a.x + ((b.x - a.x) * (r.y0 - a.y)) / (b.y - a.y), r.y0)
+            : new P(a.x + ((b.x - a.x) * (r.y1 - a.y)) / (b.y - a.y), r.y1);
+    const n = pts.length;
+    const out: P[] = [];
+    for (let i = 0; i < n; i++) {
+      const a = pts[(i + n - 1) % n]!;
+      const b = pts[i]!;
+      if (inside(b)) {
+        if (!inside(a)) out.push(cut(a, b));
+        out.push(b);
+      } else if (inside(a)) out.push(cut(a, b));
+    }
+    pts = out;
+  }
+  return pts === ring ? ring.slice() : (pts as P[]);
+}
+
+/**
  * The room of rectangle `r` inside the polygon: its distance from the polygon's boundary
  * (0 when an edge touches or crosses it). For a rectangle inside the polygon.
  */
