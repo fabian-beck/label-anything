@@ -75,6 +75,27 @@ of all geometry grown by `max(placement.max_distance, 20 em)`.
 `canvas.allow_outside`. This is the `canvas_edge` class. Leaders may leave the region,
 but not the canvas.
 
+**Windows.** With `canvas.overscan` (a length, not `null`) the canvas is a **window** on
+a larger drawing, as the view of a map that pans and zooms (ADR motion/windows). The
+drawing goes on beyond the canvas edges: the host passes the items and obstacles up to
+`overscan` beyond them, areas and lines whole, and cuts the labels and leaders it draws
+at the edges. Then:
+
+* The canvas bounds neither labels nor leaders. Labels must lie inside `canvas.region`
+  shrunk by the padding when a region is given: the bounds of the whole drawing in canvas
+  coordinates, which may reach beyond the canvas. Without a region there is no label
+  area: no `canvas_edge` class and no edge term (§8).
+* The **working extent** is the canvas grown by `overscan` on every side. The grids
+  (§4.1) cover it, so a label is placed in the overscan as it is on the canvas, and keeps
+  its place when the view moves it across an edge.
+* Beyond the working extent, as beyond the canvas with `allow_outside`, the exact tests
+  hold (§4.3) and the grids are empty: no coverage costs, no free-space seeds.
+
+Everything else that refers to the canvas keeps to it: the default `priority.focus`, the
+sides of the boundary model (§6.6), the position of raster backgrounds. Only
+`priority.budget.max_ink_fraction` counts the labels of the whole working extent, as a
+fraction of its area.
+
 `canvas.background` (default white) is the colour of the canvas where no raster lies. It
 only enters the backdrop luma of the `contrast` cost term (§4.6, §8): labels avoid
 straddling the edge between a dark raster and a light canvas.
@@ -154,8 +175,10 @@ intersection tests.
 
 Cell size `c = solver.grid_cell`, or `auto` = `clamp(min_font_size / 4, 1, 4)` where
 `min_font_size` is the smallest effective font size of all labels. The grid covers the
-canvas (or the unbounded working extent) with `cols = ceil(W / c)`, `rows = ceil(H / c)`
-cells, origin at the canvas origin (or the extent's top-left).
+working extent, `W × H` px — the canvas, in a window the canvas grown by the overscan,
+without a canvas the unbounded extent (§2.3) — with `cols = ceil(W / c)`,
+`rows = ceil(H / c)` cells, origin at the extent's top-left (the canvas origin, without
+overscan).
 
 The grid has at most 16 000 000 cells. When the `auto` cell size would exceed that (a
 canvas of more than about 16 000 × 16 000 px), `c` becomes `max(c, sqrt(W·H / 16·10⁶))`
@@ -1146,6 +1169,9 @@ cost = Σ_class w_label[class] · covered(label_k, class) / em²
   which hides what lies under it: they have no soft class costs (hard classes still
   apply).
 * `ring_k` = the label box grown by `buffer`, minus the label box.
+* `dist_to_label_area_edge` = the least distance of the label box's sides from the sides
+  of the label area (§2.3), at least 0; the term is 0 where there is no label area (no
+  canvas, `allow_outside`, a window without a region).
 * `D(label_k)` (ADR obstacles/contrast): how much the backdrop luma `s` (§4.6) varies under the label
   box, `D = I₂ − I₁ · I₁ / A`, with `I₁` and `I₂` the exact integrals of `s` and `s²` over
   the box on the backdrop grid (as covered areas, §4.1, in backdrop cells) and `A` the

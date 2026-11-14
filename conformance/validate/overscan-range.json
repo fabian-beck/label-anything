@@ -1,0 +1,22 @@
+{
+  "kind": "validate",
+  "name": "overscan-range",
+  "problem": {
+    "canvas": {
+      "width": 10,
+      "height": 10,
+      "overscan": -1
+    },
+    "items": []
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/canvas/overscan",
+        "code": "range"
+      }
+    ],
+    "warnings": []
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "kind": "place",
+  "name": "window: a raster background keeps its place on the canvas, and its borders count as without overscan",
+  "$comment": "The canvas is a window on a larger drawing: with canvas.overscan, labels are placed as if the drawing went on beyond its edges. As in contrast-border, a keeps off the edge between the black raster and the white canvas: the grids begin 30 px left of and above the canvas, the raster at the canvas origin.",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 120,
+      "overscan": 30
+    },
+    "obstacles": {
+      "raster": {
+        "rgba": {
+          "width": 10,
+          "height": 12,
+          "data": "AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/"
+        },
+        "scale": 0.1
+      }
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Border"
+        }
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 310,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Beyond"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 2,
+    "anchor_side": {
+      "a": "right",
+      "b": "top"
+    }
+  }
+}

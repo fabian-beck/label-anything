@@ -461,7 +461,7 @@ pub fn boundary_fill(s: &mut Solve) {
 /// Whether the labels `cands` (replacing the members' own) keep the label area within
 /// `priority.budget.max_ink_fraction`.
 fn within_ink(s: &Solve, cands: &[(usize, Cand)]) -> bool {
-    let (Some(f), Some(canvas)) = (s.model.max_ink_fraction, s.model.canvas) else {
+    let (Some(f), Some(whole)) = (s.model.max_ink_fraction, s.model.ink_area()) else {
         return true;
     };
     let mut ink = s.state.label_area_sum;
@@ -471,7 +471,7 @@ fn within_ink(s: &Solve, cands: &[(usize, Cand)]) -> bool {
         }
         ink += c.rect.area();
     }
-    ink / canvas.area().max(1e-9) <= f
+    ink / whole.max(1e-9) <= f
 }
 
 /// Lay out a boundary column of `members` (`column_cands`, `full` as there) and test it
@@ -999,14 +999,14 @@ fn relocation(s: &mut Solve, h: usize, keys: &[usize], soft_ok: bool) -> Option<
                     continue;
                 }
             }
-            if let (Some(f), Some(canvas)) = (s.model.max_ink_fraction, s.model.canvas) {
+            if let (Some(f), Some(whole)) = (s.model.max_ink_fraction, s.model.ink_area()) {
                 let mut area = s.state.label_area_sum - s.cands[old as usize].rect.area()
                     + place.rect.area()
                     + ch.rect.area();
                 for &j in &removed {
                     area -= s.cands[s.state.placed[j].unwrap() as usize].rect.area();
                 }
-                if area / canvas.area().max(1e-9) > f {
+                if area / whole.max(1e-9) > f {
                     continue;
                 }
             }

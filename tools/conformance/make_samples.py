@@ -244,6 +244,18 @@ problems["region"] = {
     "avoid": {"label": {"axes": "hard"}, "leader": {"axes": "ignore"}},
 }
 
+# a window on a larger drawing (canvas.overscan, spec §2.3): points, an area and a road that
+# go on beyond the canvas, labels that cross its edges
+problems["window"] = {
+    "canvas": {"width": 480, "height": 320, "overscan": "6em"},
+    "preset": "map",
+    "items": [pt(f"w{i}", -60 + (i * 97) % 600, -60 + (i * 53) % 440, f"Place {i}", priority=(i * 31) % 17)
+              for i in range(48)]
+             + [{"id": "lake", "anchor": {"type": "area", "polygon": [[380, 120], [640, 150], [620, 260], [400, 240]]},
+                 "label": {"type": "text", "text": "Lake"}, "priority": 20}],
+    "obstacles": {"vector": [{"class": "lines", "polylines": [[[-200, 40], [200, 180], [700, 120]]], "width": 2}]},
+}
+
 problems["groups-keepwith"] = {
     "canvas": {"width": 400, "height": 300},
     "items": [
@@ -322,6 +334,7 @@ invalid = {
     "keep-with-unknown": ({"items": [pt("a", 1, 1, "A", keep_with=["zz"])]}, [("/items/0/keep_with/0", "unknown_ref")], []),
     "type-error": ({"items": [{"anchor": {"type": "point", "x": "1", "y": 2}, "label": {"type": "text", "text": "A"}}]}, [("/items/0/anchor/x", "type")], []),
     "canvas-range": ({"canvas": {"width": 0, "height": 10}, "items": []}, [("/canvas/width", "range")], []),
+    "overscan-range": ({"canvas": {"width": 10, "height": 10, "overscan": -1}, "items": []}, [("/canvas/overscan", "range")], []),
     "unknown-class-warning": ({"items": [], "avoid": {"label": {"outlierz": "hard"}}}, [], [("/avoid/label/outlierz", "unknown_class")]),
     "unknown-attr-warning": ({"items": [pt("a", 1, 1, "A", attrs={"pop": 3})],
                               "priority": {"terms": [{"attr": "pop"}, {"attr": "poop"}]}},

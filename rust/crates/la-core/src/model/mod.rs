@@ -533,7 +533,7 @@ pub struct Model {
     pub label_area: Option<Rect>,
     /// Leaders must stay inside (the canvas); `None` = unbounded.
     pub leader_area: Option<Rect>,
-    /// Extent of the grid.
+    /// Extent of the grid: the canvas, grown by `canvas.overscan` in a window (spec §2.3).
     pub extent: Rect,
     pub items: Vec<Item>,
     /// Vector obstacle primitives (problem vector layers and SVG geometry) with their
@@ -586,6 +586,12 @@ pub struct Model {
 }
 
 impl Model {
+    /// The area `priority.budget.max_ink_fraction` is a fraction of: the canvas, in a
+    /// window the working extent (spec §2.3); `None` without a canvas.
+    pub fn ink_area(&self) -> Option<f64> {
+        self.canvas.map(|_| self.extent.area())
+    }
+
     /// Whether item `j` has a lower priority key than item `i` (spec §9.1): the
     /// `lower_items` policy applies to its mark for the labels and leaders of `i`.
     pub fn is_lower(&self, i: usize, j: usize) -> bool {
@@ -1200,9 +1206,16 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     }
 
     // --- extent ---
+    // a window (spec §2.3): the canvas shows part of a larger drawing, and the working
+    // extent reaches `canvas.overscan` beyond its edges
+    let overscan = match problem.get("canvas") {
+        Some(_) => Length::from_value(&o.get("canvas.overscan"))
+            .map(|l| crate::math::maxf(l.px(default_em), 0.0)),
+        None => None,
+    };
     let max_dist_global = o.length("placement.max_distance").px(default_em);
     let extent = match canvas {
-        Some(c) => c,
+        Some(c) => c.inflate(overscan.unwrap_or(0.0)),
         None => {
             let mut bb = Rect::EMPTY;
             for it in &items {
@@ -1232,14 +1245,22 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
             let v: Vec<f64> = r.iter().filter_map(|x| x.as_f64()).collect();
             (v.len() == 4).then(|| Rect::xywh(v[0], v[1], v[2], v[3]))
         });
+    // the canvas bounds the labels and the leaders, unless it is a window: then only a
+    // region bounds the labels (the drawing's own bounds)
+    let window = overscan.is_some();
     let label_area = match (canvas, allow_outside) {
+        (Some(_), false) if window => region.map(|r| r.inflate(-pad)),
         (Some(c), false) => {
             let base = region.unwrap_or(c);
             Some(base.inflate(-pad))
         }
         _ => None,
     };
-    let leader_area = if allow_outside { None } else { canvas };
+    let leader_area = if allow_outside || window {
+        None
+    } else {
+        canvas
+    };
 
     // --- priority options ---
     let omission = match o.string("priority.omission").as_str() {

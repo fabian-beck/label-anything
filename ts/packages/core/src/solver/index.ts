@@ -591,11 +591,11 @@ export class Solve {
     const m = this.model.maxLabels;
     if (m !== null && this.state.nPlaced + 1 > m + removed.length) return false;
     const f = this.model.maxInkFraction;
-    const canvas = this.model.canvas;
-    if (f !== null && canvas !== null) {
+    const whole = this.model.inkArea();
+    if (f !== null && whole !== null) {
       let area = this.state.labelAreaSum;
       for (const j of removed) area -= this.cands[this.state.placed[j]!]!.rect.area();
-      if ((area + c.rect.area()) / maxf(canvas.area(), 1e-9) > f) return false;
+      if ((area + c.rect.area()) / maxf(whole, 1e-9) > f) return false;
     }
     return true;
   }

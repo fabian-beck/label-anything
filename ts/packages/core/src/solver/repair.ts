@@ -387,15 +387,15 @@ export function boundaryFill(s: Solve): void {
  */
 function withinInk(s: Solve, cands: readonly [number, Cand][]): boolean {
   const f = s.model.maxInkFraction;
-  const canvas = s.model.canvas;
-  if (f === null || canvas === null) return true;
+  const whole = s.model.inkArea();
+  if (f === null || whole === null) return true;
   let ink = s.state.labelAreaSum;
   for (const [j, c] of cands) {
     const p = s.state.placed[j]!;
     if (p >= 0) ink -= s.cands[p]!.rect.area();
     ink += c.rect.area();
   }
-  return ink / maxf(canvas.area(), 1e-9) <= f;
+  return ink / maxf(whole, 1e-9) <= f;
 }
 
 /**
@@ -850,11 +850,11 @@ function relocation(s: Solve, h: number, softOk: boolean): Relocation | null {
       const maxLabels = s.model.maxLabels;
       if (maxLabels !== null && s.state.nPlaced + 1 > maxLabels + uniq.length) continue;
       const fr = s.model.maxInkFraction;
-      const canvas = s.model.canvas;
-      if (fr !== null && canvas !== null) {
+      const whole = s.model.inkArea();
+      if (fr !== null && whole !== null) {
         let area = s.state.labelAreaSum - s.cands[old]!.rect.area() + place.rect.area() + ch.rect.area();
         for (const j of uniq) area -= s.cands[s.state.placed[j]!]!.rect.area();
-        if (area / maxf(canvas.area(), 1e-9) > fr) continue;
+        if (area / maxf(whole, 1e-9) > fr) continue;
       }
       let gain = -0;
       for (const j of uniq) gain += prio[j]!.gain;

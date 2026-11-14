@@ -26,6 +26,7 @@
     "../problems/units.json",
     "../problems/warm-start.json",
     "../problems/weighted-coverage.json",
+    "../problems/window.json",
     "../problems/y-up-transform.json"
   ],
   "expect": {

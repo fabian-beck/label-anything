@@ -523,14 +523,14 @@ impl<'a> Solve<'a> {
                 return false;
             }
         }
-        if let (Some(f), Some(canvas)) = (self.model.max_ink_fraction, self.model.canvas) {
+        if let (Some(f), Some(whole)) = (self.model.max_ink_fraction, self.model.ink_area()) {
             let mut area = self.state.label_area_sum;
             for &j in removed {
                 area -= self.cands[self.state.placed[j as usize].unwrap() as usize]
                     .rect
                     .area();
             }
-            if (area + c.rect.area()) / canvas.area().max(1e-9) > f {
+            if (area + c.rect.area()) / whole.max(1e-9) > f {
                 return false;
             }
         }

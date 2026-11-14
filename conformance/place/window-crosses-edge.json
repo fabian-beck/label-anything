@@ -1,0 +1,69 @@
+{
+  "kind": "place",
+  "name": "window: a label next to the canvas edge keeps its first position and crosses the edge",
+  "$comment": "The canvas is a window on a larger drawing: with canvas.overscan, labels are placed as if the drawing went on beyond its edges. Without the overscan, r would go to the left and t below (case canvas-edge).",
+  "problem": {
+    "canvas": {
+      "width": 160,
+      "height": 100,
+      "overscan": 40
+    },
+    "items": [
+      {
+        "id": "r",
+        "anchor": {
+          "type": "point",
+          "x": 150,
+          "y": 50
+        },
+        "label": {
+          "type": "text",
+          "text": "RightEdge"
+        }
+      },
+      {
+        "id": "t",
+        "anchor": {
+          "type": "point",
+          "x": 80,
+          "y": 3
+        },
+        "label": {
+          "type": "text",
+          "text": "TopEdge"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 2,
+    "anchor_side": {
+      "r": "top",
+      "t": "top"
+    },
+    "model": {
+      "r": "adjacent",
+      "t": "adjacent"
+    },
+    "box": {
+      "r": {
+        "x": 119.256,
+        "y": 31.4,
+        "w": 61.488,
+        "h": 15.6,
+        "tol": 0.01
+      },
+      "t": {
+        "x": 53.864,
+        "y": -15.6,
+        "w": 52.272,
+        "h": 15.6,
+        "tol": 0.01
+      }
+    }
+  }
+}

@@ -253,6 +253,17 @@
           "type": "boolean",
           "description": "Allow labels outside the canvas (disables the canvas_edge class)."
         },
+        "overscan": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/nonNegLength"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A length makes the canvas a window on a larger drawing, for views that pan and zoom (spec §2.3): labels are placed this far beyond every edge as on the canvas and may cross the edges, where the host cuts them; they stay inside canvas.region when one is given. null: labels stay inside the canvas."
+        },
         "device_pixel_ratio": {
           "type": "number",
           "exclusiveMinimum": 0,
@@ -267,7 +278,7 @@
               "type": "null"
             }
           ],
-          "description": "Sub-rectangle [x,y,w,h] that labels must stay inside (leaders may leave it)."
+          "description": "Rectangle [x,y,w,h] that labels must stay inside (leaders may leave it). In a window (canvas.overscan): the bounds of the whole drawing, which may reach beyond the canvas."
         },
         "background": {
           "$ref": "#/$defs/color",

@@ -895,6 +895,67 @@ CASES["region"] = case(
     {"problem_file": "../problems/region.json"},
     {"placed_min": 9})
 
+# --- windows (canvas.overscan, spec §2.3) --------------------------------------------------
+WINDOW = {"width": 160, "height": 100, "overscan": 40}
+WINDOW_ABOUT = ("The canvas is a window on a larger drawing: with canvas.overscan, labels are placed as if "
+                "the drawing went on beyond its edges.")
+
+CASES["window-crosses-edge"] = case(
+    "window: a label next to the canvas edge keeps its first position and crosses the edge",
+    {"canvas": WINDOW, "items": [pt("r", 150, 50, "RightEdge"), pt("t", 80, 3, "TopEdge")]},
+    {"placed": 2, "anchor_side": {"r": "top", "t": "top"}, "model": {"r": "adjacent", "t": "adjacent"},
+     "box": {"r": {"x": 119.256, "y": 31.4, "w": 61.488, "h": 15.6, "tol": 0.01},
+             "t": {"x": 53.864, "y": -15.6, "w": 52.272, "h": 15.6, "tol": 0.01}}},
+    WINDOW_ABOUT + " Without the overscan, r would go to the left and t below (case canvas-edge).")
+
+CASES["window-overscan-item"] = case(
+    "window: the label of an item beyond the canvas takes its place, and labels in view keep off it",
+    {"canvas": WINDOW,
+     "items": [pt("out", 190, 50, "Outside", priority=2, placement={"position_order": ["left"]}),
+               pt("in", 130, 50, "Inside", priority=1, placement={"position_order": ["right", "left"]})]},
+    {"placed": 2, "anchor_side": {"out": "left", "in": "left"}, "model": {"out": "adjacent", "in": "adjacent"}},
+    WINDOW_ABOUT + " out is 30 px beyond the right edge; its label reaches into the canvas, where in's first "
+    "position (right) would cover it.")
+
+CASES["window-obstacle-beyond-edge"] = case(
+    "window: an obstacle is avoided beyond the canvas edge as well",
+    {"canvas": WINDOW, "obstacles": {"vector": [{"class": "wall", "rects": [[162, 20, 40, 26]]}]},
+     "avoid": {"label": {"wall": "hard"}}, "items": [pt("r", 150, 50, "RightEdge")]},
+    {"placed": 1, "anchor_side": {"r": "bottom"}},
+    WINDOW_ABOUT + " The wall lies beyond the right edge; the top position would cross the edge into it.")
+
+CASES["window-region"] = case(
+    "window: labels stay inside canvas.region, the bounds of the whole drawing, and may cross the canvas edge",
+    {"canvas": {"width": 160, "height": 100, "overscan": 60, "region": [-50, 0, 260, 100], "padding": 4},
+     "items": [pt("c", 155, 80, "Crossing"), pt("e", 205, 30, "EdgeOfDrawing"), pt("top", 60, 3, "TopOfDrawing")]},
+    {"placed": 3, "anchor_side": {"c": "top", "e": "left", "top": "bottom"},
+     "box": {"c": {"x": 128.726, "y": 61.676, "w": 52.548, "h": 15.324, "tol": 0.01}}},
+    WINDOW_ABOUT + " The drawing is 260 px wide and begins 50 px left of the canvas: c crosses the canvas edge, "
+    "e and top keep 4 px inside the drawing's right and top edges.")
+
+CASES["window-area"] = case(
+    "window: the label of an area that reaches beyond the canvas stays where the whole area has room",
+    {"canvas": WINDOW,
+     "items": [{"id": "a", "anchor": {"type": "area", "polygon": [[100, 20], [300, 20], [300, 80], [100, 80]]},
+                "label": {"type": "text", "text": "Area"}}]},
+    {"placed": 1, "model": {"a": "internal"},
+     "box": {"a": {"x": 185.258, "y": 43.838, "w": 29.484, "h": 12.324, "tol": 0.01}}},
+    WINDOW_ABOUT + " The area is passed whole; its label is in its middle, beyond the right edge of the "
+    "canvas, not in the part in view.")
+
+CASES["window-raster"] = case(
+    "window: a raster background keeps its place on the canvas, and its borders count as without overscan",
+    {"canvas": {"width": 300, "height": 120, "overscan": 30}, "obstacles": {"raster": BLACK_STRIP},
+     "items": [pt("a", 100, 60, "Border"), pt("b", 310, 60, "Beyond")]},
+    {"placed": 2, "anchor_side": {"a": "right", "b": "top"}},
+    WINDOW_ABOUT + " As in contrast-border, a keeps off the edge between the black raster and the white "
+    "canvas: the grids begin 30 px left of and above the canvas, the raster at the canvas origin.")
+
+CASES["window"] = case(
+    "window: a view of a map with items, an area and a road beyond its edges",
+    {"problem_file": "../problems/window.json"},
+    {"placed_min": 40})
+
 CASES["scatter-basic"] = case(
     "scatter preset over points and a trend line",
     {"problem_file": "../problems/scatter-basic.json"},

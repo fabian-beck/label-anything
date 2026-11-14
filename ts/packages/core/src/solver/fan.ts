@@ -267,15 +267,15 @@ function column(s: Solve, pass: Pass, area: Rect, crowd: readonly number[], righ
     const fails = r.fails;
     if (fails === null) {
       const f = s.model.maxInkFraction;
-      const canvas = s.model.canvas;
-      if (f !== null && canvas !== null) {
+      const whole = s.model.inkArea();
+      if (f !== null && whole !== null) {
         let ink = s.state.labelAreaSum;
         for (const [j, c] of r.cands) {
           const p = s.state.placed[j]!;
           if (p >= 0) ink -= s.cands[p]!.rect.area();
           ink += c.rect.area();
         }
-        if (ink / maxf(canvas.area(), 1e-9) > f) {
+        if (ink / maxf(whole, 1e-9) > f) {
           if (!dropLowestUnlabeled(s, members)) return null;
           continue;
         }

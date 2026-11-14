@@ -1,0 +1,116 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 160,
+      "height": 100,
+      "overscan": 40
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              100,
+              20
+            ],
+            [
+              300,
+              20
+            ],
+            [
+              300,
+              80
+            ],
+            [
+              100,
+              80
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Area"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "a",
+        "placed": true,
+        "box": {
+          "x": 185.258,
+          "y": 43.838,
+          "w": 29.48399999999998,
+          "h": 12.323999999999998
+        },
+        "anchor": [
+          200.0,
+          50.0
+        ],
+        "anchor_side": "internal",
+        "model": "internal",
+        "text": {
+          "lines": [
+            "Area"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.404
+          ],
+          "line_widths": [
+            25.884
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": -0.075,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 1,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 10,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": -0.075,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 80,
+        "rows": 60,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

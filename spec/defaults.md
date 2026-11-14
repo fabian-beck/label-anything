@@ -23,8 +23,9 @@ are stale.
 |---|---|---|---|
 | `canvas.padding` | `4` | length ≥ 0 | Keep labels this far inside the canvas (or `canvas.region`). |
 | `canvas.allow_outside` | `false` | bool | Allow labels outside the canvas; disables the `canvas_edge` class. |
+| `canvas.overscan` | `null` | length ≥ 0 or null | A length makes the canvas a window on a larger drawing, for views that pan and zoom (spec §2.3): labels are placed this far beyond every edge as on the canvas, may cross the edges, where the host cuts them, and stay inside `canvas.region` when one is given. |
 | `canvas.device_pixel_ratio` | `1` | > 0 | Informational. Raster resolution is set per source with `obstacles.raster.scale`. |
-| `canvas.region` | `null` | rect or null | Sub-rectangle labels must stay inside; leaders may leave it. |
+| `canvas.region` | `null` | rect or null | Rectangle labels must stay inside; leaders may leave it. In a window (`canvas.overscan`) the bounds of the whole drawing, which may reach beyond the canvas. |
 | `canvas.background` | `"#ffffff"` | #rrggbb | Colour of the canvas where no raster lies: the backdrop of labels there (`contrast` cost term). |
 | `y_axis` | `"down"` | down \| up | `up` flips input y: y_px = canvas.height − y (after `transform`). |
 | `transform` | `null` | 6 numbers or null | Affine data→pixel map `[a,b,c,d,e,f]`. |
@@ -90,7 +91,7 @@ are stale.
 | `priority.ties` | `"input_order"` | enum | Deterministic tie-breaker. |
 | `priority.band` | `0` | ≥ 0 | Scores within `band` form one equal-key band (0 = exact ties only). |
 | `priority.budget.max_labels` | `null` | int or null | Cap on placed labels, by priority order. |
-| `priority.budget.max_ink_fraction` | `null` | 0–1 or null | Cap on the canvas fraction covered by labels. |
+| `priority.budget.max_ink_fraction` | `null` | 0–1 or null | Cap on the canvas fraction covered by labels (in a window, `canvas.overscan`: the fraction of the working extent, spec §2.3). |
 | `priority.focus` | `null` | point or null | Focus point of the `centrality` term (default: canvas center). |
 | `priority.font_classes` | `[]` | list | Font sizes by priority: classes `{first, scale, weight}` over the total order (spec §9.4). |
 | `priority.term.k` | `5` | int ≥ 1 | Neighbour count of `outlierness`. |
@@ -112,7 +113,7 @@ are stale.
 | `weights.leader_length` | `0.25` | ≥ 0 | × leader length in em. |
 | `weights.bends` | `0.3` | ≥ 0 | × number of leader bends. |
 | `weights.shape` | `0.5` | ≥ 0 | × shape penalty (wrap, alternative, truncate, shrink, relaxed overlap, a turned area label). |
-| `weights.edge` | `0.2` | ≥ 0 | × proximity to the canvas edge (1 at the edge, 0 at ≥ 1 em). |
+| `weights.edge` | `0.2` | ≥ 0 | × proximity to the edge of the label area (1 at the edge, 0 at ≥ 1 em); none where labels are not bounded (`canvas.allow_outside`, a window without a region). |
 | `weights.ambiguity` | `1.0` | ≥ 0 | Label closer to another item's shape than to its own. |
 | `weights.lookahead` | `0.3` | ≥ 0 | × Σ fraction of other unplaced items' candidates invalidated. |
 | `weights.starve` | `2.0` | ≥ 0 | × number of unplaced items whose last candidates would be invalidated. |
