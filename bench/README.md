@@ -248,6 +248,11 @@ ink bottom of its last, ADR text/measurement) and §5.3 line breaking with fontT
 Sans; the label box is the first normal variant (`balanced(L_min)` under wrap settings),
 its lines aligned per `align` (default `center`, ADR text/line-breaking).
 
+The expression evaluator is held to the repository's conformance cases
+(`bench/tests/test_conformance.py`): every case of `conformance/expr/` with its value bit
+for bit or its error code and offset. The expression functions `log` and `log1p` are the
+platform's, not the engine's deterministic ones (spec §10.4), so their last bit can differ.
+
 ## Renderer
 
 `bench/render.py` draws, identically for every solver: background (embedded raster, SVG
