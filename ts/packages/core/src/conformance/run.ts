@@ -416,7 +416,8 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
   }
   if (get(exp, "own_nearest") === true) {
     // circle marks: no other item's mark is nearer to a label without a distant leader
-    // (adjacent or slider, with or without a stub) than its own mark
+    // (adjacent or slider, with or without a stub) than its own mark, unless the label hides
+    // it entirely (the mark of a less important item under the label)
     const dm = pointer(problem, "/defaults/mark");
     const defaultMark = dm !== undefined ? dm : defaultOf("defaults.mark", "rust");
     const circles: [string, number, number, number][] = [];
@@ -441,8 +442,11 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
       };
       const own = dist(ax, ay, ar);
       for (const [jd, x, y, rr] of circles) {
+        const hidden = x - rr >= b.x0 && x + rr <= b.x1 && y - rr >= b.y0 && y + rr <= b.y1;
         const d = dist(x, y, rr);
-        if (jd !== id && d < own - 1e-6) f.push(`own_nearest: ${id} is ${d} from ${jd}, ${own} from its mark`);
+        if (jd !== id && !hidden && d < own - 1e-6) {
+          f.push(`own_nearest: ${id} is ${d} from ${jd}, ${own} from its mark`);
+        }
       }
     }
   }

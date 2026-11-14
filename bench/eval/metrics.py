@@ -769,10 +769,12 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
     the label gap (the spacing, at least the margin) and hard marks the label margin
     (spec §4.4) from it, by ``tol`` more; with ``placement.own_nearest`` the position must
     be nearer to the item's own mark than to any other mark it may not cover by the margin
-    (or the distance between the marks), by ``tol`` more, and likewise than to any unlabeled
-    point it does not hide entirely where one of the item's 8 fixed positions keeps clear of
-    them: the engine leaves such an item out rather than place a label that could be another's
-    (ADR placement/margin, placement/unlabeled-points).
+    (or the distance between the marks), by ``tol`` more, likewise than to the mark of any
+    less important item it may cover (``lower_items`` given and not hard) but does not hide
+    entirely, and than to any unlabeled point it does not hide entirely where one of the
+    item's 8 fixed positions keeps clear of them: the engine leaves such an item out rather
+    than place a label that could be another's (ADR placement/margin, priority/lower-items,
+    placement/unlabeled-points).
     """
     opts = prob.opts
     margin_opt = (opts.get("defaults") or {}).get("margin", "0.2em")
@@ -899,8 +901,11 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
                     other = prob.items[j]
                     if other.id == it.id or same_group(it, other):
                         continue
-                    if not (lower_hard if keys[other.id] < kh else items_hard):
-                        continue
+                    lower = keys[other.id] < kh
+                    if not (lower_hard if lower else items_hard):
+                        # a less important mark it may cover competes unless it hides it entirely
+                        if not (lower and covers_lower) or b.shrink(tol).contains_box(other.shape.bbox()):
+                            continue
                     s = min(m_h, math.dist(other.ref, it.ref))
                     if other.shape.sdist_box(b) < d_own + s + tol:
                         ok = False

@@ -1,6 +1,7 @@
 {
   "kind": "place",
-  "name": "with lower_items soft a label covers the mark of a less important item, which stays unlabeled",
+  "name": "with lower_items soft a label hides the mark of a less important item, which stays unlabeled",
+  "$comment": "The minor item's mark lies inside the hub's label box: hidden, it does not compete with the hub's own mark (spec §4.4), and no label of the minor item may stand (its box would be 5.7 px from the hub's, clear of it).",
   "problem": {
     "canvas": {
       "width": 200,
@@ -35,12 +36,8 @@
         "id": "minor",
         "anchor": {
           "type": "point",
-          "x": 85,
-          "y": 50,
-          "mark": {
-            "shape": "circle",
-            "r": 12
-          }
+          "x": 86,
+          "y": 50
         },
         "label": {
           "type": "text",
@@ -48,9 +45,7 @@
         },
         "priority": 1.0,
         "placement": {
-          "position_order": [
-            "top"
-          ]
+          "offset": 8
         }
       }
     ],
@@ -74,6 +69,7 @@
     ],
     "reasons": {
       "minor": "omitted_by_priority"
-    }
+    },
+    "own_nearest": true
   }
 }

@@ -221,19 +221,23 @@ CASES["weighted-insert"] = case(
     "weighted omission: an insertion leaves no more important item blocked only by less important labels",
     WEIGHTED_INSERT, {"placed_min": 20})
 
-# the hub's only position covers the mark of a minor item: by default the mark blocks it; with
-# lower_items soft the hub is labeled and the minor item, whose top position is free, is not
+# the hub's only position (27.288 × 12.84 px, from x = 63) hides the mark of a minor item (r 2 at
+# (86, 50)) entirely: by default the mark blocks it; with lower_items soft the hub is labeled
+# and the minor item is not, though its own position, 8 px right of its mark, is free
 LOWER = {"canvas": {"width": 200, "height": 80}, "placement": ONE_SLOT, "degrade": ["omit"],
          "items": [pt("hub", 60, 50, "Hub", priority=2.0),
-                   {**pt("minor", 85, 50, "Minor", priority=1.0, placement={"position_order": ["top"]}),
-                    "anchor": {"type": "point", "x": 85, "y": 50, "mark": {"shape": "circle", "r": 12}}}]}
+                   pt("minor", 86, 50, "Minor", priority=1.0, placement={"offset": 8})]}
 CASES["lower-items-default"] = case(
     "by default a label avoids the marks of less important items",
     LOWER, {"placed": 1, "placed_ids": ["minor"], "unplaced_ids": ["hub"], "reasons": {"hub": "no_feasible_candidate"}})
 CASES["lower-items-cover"] = case(
-    "with lower_items soft a label covers the mark of a less important item, which stays unlabeled",
+    "with lower_items soft a label hides the mark of a less important item, which stays unlabeled",
     {**LOWER, "avoid": {"label": {"lower_items": 2.0}}},
-    {"placed": 1, "placed_ids": ["hub"], "unplaced_ids": ["minor"], "reasons": {"minor": "omitted_by_priority"}})
+    {"placed": 1, "placed_ids": ["hub"], "unplaced_ids": ["minor"], "reasons": {"minor": "omitted_by_priority"},
+     "own_nearest": True},
+    "The minor item's mark lies inside the hub's label box: hidden, it does not compete with "
+    "the hub's own mark (spec §4.4), and no label of the minor item may stand (its box would "
+    "be 5.7 px from the hub's, clear of it).")
 
 CASES["max-labels"] = case(
     "a label budget keeps the highest priorities",
@@ -633,6 +637,66 @@ CASES["own-nearest-points-hidden"] = case(
     {"placed_ids": ["a"], "anchor_side": {"a": "top"}},
     "The point lies inside the label box above Alpha's mark: the label hides it (at the cost of "
     "its class) rather than stand nearer to it than to its own mark.")
+
+# The marks of less important items that a label may cover (lower_items soft) compete with its
+# own mark unless it hides them entirely. The hub's label right of its mark spans x 63–90.288
+# and y 43.58–56.42, 1 px from its mark; the minor item's mark (r 2 at (93.5, 50)) is 1.212 px
+# from that box, not the margin (0.2 em = 2.4 px) farther than the hub's own.
+BESIDE = {"canvas": {"width": 200, "height": 80}, "degrade": ["omit"], "placement": {"models": ["adjacent"]},
+          "avoid": {"label": {"lower_items": 2.0}},
+          "items": [pt("hub", 60, 50, "Hub", priority=2.0, placement={"position_order": ["right"]}),
+                    pt("minor", 93.5, 50, "Minor", priority=1.0, placement={"position_order": ["right"]})]}
+CASES["own-nearest-lower"] = case(
+    "a label is clearly nearer to its own mark than to the mark of a less important item beside it",
+    BESIDE,
+    {"placed_ids": ["minor"], "unplaced_ids": ["hub"], "reasons": {"hub": "no_feasible_candidate"},
+     "own_nearest": True},
+    "In its only position the hub's label could be the minor item's, whose own label stands "
+    "right of its mark (spec §4.4).")
+CASES["own-nearest-lower-off"] = case(
+    "without own_nearest a label may stand beside the mark of a less important item",
+    {**BESIDE, "placement": {**BESIDE["placement"], "own_nearest": False}},
+    {"placed": 2, "anchor_side": {"hub": "right", "minor": "right"}})
+# The minor item's mark (r 12 at (85, 50)) is too large for the hub's label to hide: the label
+# would lie partly on it.
+PARTLY = {"canvas": {"width": 200, "height": 80}, "placement": ONE_SLOT, "degrade": ["omit"],
+          "avoid": {"label": {"lower_items": 2.0}},
+          "items": [pt("hub", 60, 50, "Hub", priority=2.0),
+                    {**pt("minor", 85, 50, "Minor", priority=1.0, placement={"position_order": ["top"]}),
+                     "anchor": {"type": "point", "x": 85, "y": 50, "mark": {"shape": "circle", "r": 12}}}]}
+CASES["own-nearest-lower-partly"] = case(
+    "a label hides the mark of a less important item entirely or keeps clear of it",
+    PARTLY,
+    {"placed": 1, "placed_ids": ["minor"], "unplaced_ids": ["hub"], "reasons": {"hub": "no_feasible_candidate"}},
+    "The hub's only position covers part of the minor item's mark, which would show beside the "
+    "label: a reader could take the label for that mark's (spec §4.4).")
+CASES["own-nearest-lower-partly-off"] = case(
+    "without own_nearest a label may lie partly on the mark of a less important item, which stays unlabeled",
+    {**PARTLY, "placement": {**ONE_SLOT, "own_nearest": False}},
+    {"placed": 1, "placed_ids": ["hub"], "unplaced_ids": ["minor"], "reasons": {"minor": "omitted_by_priority"}})
+# Two marks at one point: the label of either names the spot (the margin is capped by the
+# distance between the marks), whichever is more important.
+CASES["own-nearest-lower-coincident"] = case(
+    "the label of one of two coincident marks may stand beside the other, less important one",
+    {"canvas": {"width": 200, "height": 80}, "degrade": ["omit"], "placement": {"models": ["adjacent"]},
+     "avoid": {"label": {"lower_items": 2.0}},
+     "items": [pt("hub", 100, 40, "Hub", priority=2.0, placement={"position_order": ["right"]}),
+               pt("minor", 100, 40, "Minor", priority=1.0, placement={"position_order": ["left"]})]},
+    {"placed": 2, "anchor_side": {"hub": "right", "minor": "left"}, "own_nearest": True})
+# A crowd of 36 marks on a spiral, the innermost the most important, with the avoidance of the
+# `map` preset for labels: every label hides the less important marks under it or keeps clear
+# of them (the runners re-check that no mark a label does not hide is nearer than its own).
+CASES["own-nearest-lower-crowd"] = case(
+    "in a crowd, labels hide the marks of less important items or stand clearly nearer to their own",
+    {"canvas": {"width": 320, "height": 240},
+     "placement": {"models": ["adjacent", "slider"]},
+     "avoid": {"label": {"lower_items": 10}},
+     "items": [pt(f"m{k}", round(160 + 9.5 * math.sqrt(k) * math.sin(2.4 * k), 2),
+                  round(120 + 9.5 * math.sqrt(k) * math.cos(2.4 * k), 2),
+                  ["Ash", "Birch", "Cedar", "Elm", "Fir", "Hazel", "Oak", "Pine", "Yew"][k % 9],
+                  priority=36 - k)
+               for k in range(36)]},
+    {"placed_min": 18, "own_nearest": True})
 
 # Alpha may only stand right of its point; Beta's point, 16 px below it, comes within the
 # stub reach (0.75 em = 9 px) of that place: Alpha stands 0.5 em farther right, joined to its

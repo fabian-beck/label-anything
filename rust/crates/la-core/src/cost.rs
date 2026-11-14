@@ -218,22 +218,35 @@ impl<'a> Evaluator<'a> {
             } else {
                 dy.label_items.is_hard()
             };
-            if !hard {
-                continue;
-            }
-            if c.label_overlaps_shape(sj) {
-                acc.violate(Block::Items, false, 0.0);
-                continue;
-            }
-            let d = sj.dist_rect(&r);
-            // the margin (up to rounding), but never more than the mark keeps from the own
-            // mark's box
-            if margin > crate::geom::EPS
-                && d < margin - crate::geom::EPS
-                && d < sj.dist_rect(&item.shape.bbox())
-            {
-                acc.violate(Block::Items, false, 0.0);
-            }
+            let d = if hard {
+                if c.label_overlaps_shape(sj) {
+                    acc.violate(Block::Items, false, 0.0);
+                    continue;
+                }
+                let d = sj.dist_rect(&r);
+                // the margin (up to rounding), but never more than the mark keeps from the
+                // own mark's box
+                if margin > crate::geom::EPS
+                    && d < margin - crate::geom::EPS
+                    && d < sj.dist_rect(&item.shape.bbox())
+                {
+                    acc.violate(Block::Items, false, 0.0);
+                }
+                d
+            } else {
+                // of the marks the label may cover, that of a less important item
+                // (`lower_items` given and not hard) competes with the own mark unless the
+                // label hides it entirely: no reader takes a hidden mark for the label's, and
+                // its item goes unlabeled
+                if !near_rule
+                    || !dy.lower_cover
+                    || !model.is_lower(i, j)
+                    || (r.contains_rect(&sj.bbox()) && c.label_overlaps_shape(sj))
+                {
+                    continue;
+                }
+                sj.dist_rect(&r)
+            };
             // nearer to the label than its own mark, or, without a stub, not a margin farther
             // (at most as far as the two marks' reference points lie apart; the marks of the
             // item's group aside)

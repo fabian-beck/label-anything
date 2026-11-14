@@ -263,6 +263,23 @@ def test_removal_test_needs_the_own_mark_clearly_nearest():
     assert evaluate(prob, result([omitted("lo"), placed("x", 142.5, 45, side="right")]))["priority"]["inversions"] == 1
 
 
+def test_removal_test_needs_the_own_mark_nearer_than_lower_marks_it_does_not_hide():
+    # lo's only position [103, 45, 133, 55] is 1 px from its mark; with lower_items soft it may
+    # cover the mark of the less important x, but not stand beside or partly on it (spec §4.4,
+    # ADR priority/lower-items)
+    def inversions(x, **placement):
+        items = [item("lo", 100, 50, priority=2), item("x", x, 50, priority=1)]
+        prob = problem(items, placement={"position_order": ["right"], **placement},
+                       avoid={"label": {"lower_items": 2.0}})
+        return evaluate(prob, result([omitted("lo"), omitted("x")]))["priority"]["inversions"]
+
+    assert inversions(138) == 1                       # x itself; lo's box is 3 px from x's mark
+    assert inversions(138, own_nearest=False) == 2
+    assert inversions(139.5) == 2                     # 4.5 px: clearly nearer to its own
+    assert inversions(133) == 1                       # partly on x's mark
+    assert inversions(118) == 2                       # x's mark hidden entirely under lo's box
+
+
 def test_removal_test_needs_the_own_mark_nearer_than_unlabeled_points():
     # lo's only position [103, 45, 133, 55] is 1 px from its mark; an unlabeled point 1 px from
     # the box is not farther than lo's own mark by the margin (spec §4.4, ADR
