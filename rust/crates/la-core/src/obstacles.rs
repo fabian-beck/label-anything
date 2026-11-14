@@ -40,13 +40,6 @@ impl AvoidW {
     pub fn is_hard(self) -> bool {
         self == AvoidW::Hard
     }
-    #[inline]
-    pub fn weight(self) -> f64 {
-        match self {
-            AvoidW::Soft(w) => w,
-            _ => 0.0,
-        }
-    }
 }
 
 /// Own-mark policy for external labels.

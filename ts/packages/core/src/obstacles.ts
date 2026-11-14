@@ -66,16 +66,8 @@ export class AvoidW {
     return this.kind === o.kind && this.w === o.w;
   }
 
-  isSoft(): boolean {
-    return this.kind === AvoidKind.Soft;
-  }
-
   isIgnore(): boolean {
     return this.kind === AvoidKind.Ignore;
-  }
-
-  weight(): number {
-    return this.kind === AvoidKind.Soft ? this.w : 0;
   }
 }
 

@@ -357,7 +357,6 @@ pub struct Item {
     pub required: bool,
     pub group: Option<String>,
     pub keep_with: Option<KeepWith>,
-    pub svg_id: Option<String>,
     /// The original item JSON (for callbacks).
     pub raw: Value,
     /// Pole of inaccessibility of a polygon mark (computed on first use).
@@ -466,7 +465,6 @@ pub struct Model {
     pub leader_area: Option<Rect>,
     /// Extent of the grid.
     pub extent: Rect,
-    pub to_px: Affine,
     pub items: Vec<Item>,
     /// Vector obstacles by class (problem vector layers and SVG geometry).
     /// Vector obstacle primitives with their class (names shared between primitives).
@@ -509,7 +507,6 @@ pub struct Model {
     /// `orthogonal` leader styles (the entry's `leader` of the same style; spec §6.7).
     pub warm_leaders: BTreeMap<String, Vec<P>>,
     pub warnings: Vec<Issue>,
-    pub preset_name: String,
     /// Groups of items sharing one label: (representative, members incl. the representative).
     pub groups: Vec<(usize, Vec<usize>)>,
     /// For each item: the representative of its group (itself for representatives).
@@ -667,7 +664,7 @@ pub fn build(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     Ok(m)
 }
 
-/// Merge items sharing a `group` id into one label (spec §5.7 "groups"): the first member
+/// Merge items sharing a `group` id into one label (docs/concepts/problem.md): the first member
 /// (input order) represents the group; its mark becomes the convex hull of all member
 /// marks, its anchor their centroid, and its text lists the distinct member texts.
 fn resolve_groups(m: &mut Model) {
@@ -1276,7 +1273,6 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         label_area,
         leader_area,
         extent,
-        to_px,
         items,
         vector,
         rasters,
@@ -1316,7 +1312,6 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         warm,
         warm_leaders,
         warnings,
-        preset_name: o.preset_name.clone(),
         groups: Vec::new(),
         group_of: Vec::new(),
     })
@@ -1894,7 +1889,6 @@ fn build_item(
             .unwrap_or(false),
         group: it.get("group").and_then(|v| v.as_str()).map(str::to_string),
         keep_with,
-        svg_id,
         raw: it.clone(),
         pole: std::sync::OnceLock::new(),
         supports: std::sync::OnceLock::new(),

@@ -118,7 +118,6 @@ export class Solve {
     readonly pri: Priorities,
     readonly measurer: Measurer,
     public variants: Variant[][],
-    readonly startMs: number,
   ) {
     const n = model.items.length;
     this.byItem = [];

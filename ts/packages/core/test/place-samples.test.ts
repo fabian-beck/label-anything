@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { BasicEnv } from "../src/env.js";
-import { placeWith } from "../src/place.js";
+import { solveWith } from "../src/place.js";
 
 const DIR = fileURLToPath(new URL("../../../../conformance/problems/", import.meta.url));
 
@@ -16,11 +16,11 @@ describe("place_samples", () => {
   for (const f of files) {
     it(`samples_place_without_violations: ${f}`, () => {
       const p = JSON.parse(readFileSync(join(DIR, f), "utf8"));
-      const r = placeWith(p, new BasicEnv()) as { placements: unknown; stats: Record<string, unknown> };
+      const r = solveWith(p, new BasicEnv()) as { placements: unknown; stats: Record<string, unknown> };
       expect(r.stats.hard_violations).toBe(0);
       expect(r.stats.priority_inversions).toBe(0);
       expect(r.stats.leader_crossings).toBe(0);
-      const r2 = placeWith(p, new BasicEnv()) as { placements: unknown };
+      const r2 = solveWith(p, new BasicEnv()) as { placements: unknown };
       expect(r2.placements, "not deterministic").toEqual(r.placements);
     });
   }

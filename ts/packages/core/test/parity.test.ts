@@ -6,13 +6,12 @@
 // timing fields and the implementation name.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { BasicEnv } from "../src/env.js";
-import { placeWith } from "../src/place.js";
+import { solveWith } from "../src/place.js";
 import { jsonDiff, withoutTiming } from "./parity-util.js";
+import { CONF } from "./util.js";
 
-const CONF = fileURLToPath(new URL("../../../../conformance/", import.meta.url));
 const DIR = join(CONF, "parity");
 
 interface Fixture {
@@ -41,7 +40,7 @@ describe("parity with the Rust core (conformance/parity)", () => {
       const fx = JSON.parse(readFileSync(join(DIR, f), "utf8")) as Fixture;
       expect(fx.kind).toBe("parity");
       const problem = fx.problem ?? JSON.parse(readFileSync(join(DIR, fx.problem_file!), "utf8"));
-      const r = withoutTiming(placeWith(problem, new BasicEnv(), "rust"));
+      const r = withoutTiming(solveWith(problem, new BasicEnv(), "rust"));
       expect(jsonDiff(r, fx.result)).toEqual([]);
     });
   }

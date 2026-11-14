@@ -186,7 +186,7 @@ pub fn place_validated(
         env,
         shaping: &m.shaping,
     };
-    let mut s = solver::Solve::new(&m, &obs, env, &pri, measurer, variants, t0);
+    let mut s = solver::Solve::new(&m, &obs, env, &pri, measurer, variants);
     s.generate_level0();
     let t2 = env.now_ms();
     env.progress("greedy", 0.0);

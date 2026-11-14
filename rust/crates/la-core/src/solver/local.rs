@@ -23,7 +23,6 @@ const CHAIN_TRIES: usize = 16;
 pub struct LocalStats {
     pub iterations: u64,
     pub accepted: u64,
-    pub inserted: u64,
 }
 
 /// Total cost of item `i` at candidate `c` given the other placed labels.
@@ -81,7 +80,6 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
     let mut st = LocalStats {
         iterations: 0,
         accepted: 0,
-        inserted: 0,
     };
     if n == 0 || iterations == 0 {
         return st;
@@ -200,7 +198,6 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
                 continue;
             }
             if try_insert(s, u, soft_ok, &sets, &mut rng, &mut scratch) {
-                st.inserted += 1;
                 st.accepted += 1;
                 // the priority objective improved: this state becomes the new reference
                 cur = total(s);

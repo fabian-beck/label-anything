@@ -30,7 +30,6 @@ export const MOVES_PER_MS_RUST = 100;
 export interface LocalStats {
   iterations: number;
   accepted: number;
-  inserted: number;
 }
 
 /** Total cost of item `i` at candidate `c` given the other placed labels. */
@@ -91,7 +90,7 @@ function sameArray(a: Int32Array, b: Int32Array): boolean {
 
 export function run(s: Solve, iterations: number, deadlineMs: number): LocalStats {
   const n = s.model.items.length;
-  const st: LocalStats = { iterations: 0, accepted: 0, inserted: 0 };
+  const st: LocalStats = { iterations: 0, accepted: 0 };
   if (n === 0 || iterations === 0) return st;
   const softOk = s.model.ladder.some((x) => x.kind === "soft_overlap");
   const mode = s.model.omission;
@@ -180,7 +179,6 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
         continue;
       }
       if (tryInsert(s, u, softOk, sets, rng, scratch)) {
-        st.inserted += 1;
         st.accepted += 1;
         // the priority objective improved: this state becomes the new reference
         cur = total(s);

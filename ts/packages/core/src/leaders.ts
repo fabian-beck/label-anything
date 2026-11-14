@@ -585,13 +585,6 @@ export function curvePoints(a: P, b: P, bow: number): P[] {
   return out;
 }
 
-/** Leader length helper for tests. */
-export function polylineLen(pts: readonly P[]): number {
-  let l = 0;
-  for (let i = 0; i + 1 < pts.length; i++) l += pts[i]!.dist(pts[i + 1]!);
-  return maxf(minf(l, Number.MAX_VALUE), 0);
-}
-
 /** Spacing rules between the leaders of two items (spec §7). */
 export interface Spacing {
   /** `leaders.clearance` (the larger of the two items'). */

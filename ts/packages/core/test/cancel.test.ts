@@ -3,7 +3,7 @@
 // or a duck-typed `{ aborted }` object cancels.
 import { describe, expect, it } from "vitest";
 import type { Env } from "../src/env.js";
-import { place, placeWith } from "../src/place.js";
+import { place, solveWith } from "../src/place.js";
 
 /** Cancels after `after` polls and records progress reports. */
 class CancelAfter implements Env {
@@ -39,11 +39,11 @@ type R = { placements: { reason?: string }[]; stats: Record<string, number | boo
 describe("cancel", () => {
   it("cancelled_solve_is_valid_and_reported", () => {
     const p = crowded();
-    const full = placeWith(p, new CancelAfter(Number.MAX_SAFE_INTEGER)) as unknown as R;
+    const full = solveWith(p, new CancelAfter(Number.MAX_SAFE_INTEGER)) as unknown as R;
     expect(full.stats.cancelled).toBe(false);
     for (const after of [0, 1, 3, 10]) {
       const env = new CancelAfter(after);
-      const r = placeWith(p, env) as unknown as R;
+      const r = solveWith(p, env) as unknown as R;
       const st = r.stats;
       expect(st.cancelled, `after ${after}`).toBe(true);
       expect(st.hard_violations, `after ${after}`).toBe(0);

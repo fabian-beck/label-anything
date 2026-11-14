@@ -23,7 +23,7 @@ import { Affine, P, Rect, bboxOf } from "../geom/index.js";
 import { PathError, flatten } from "../geom/path.js";
 import { convexHull, orientHoles, polylabel } from "../geom/polygon.js";
 import { Shape } from "../geom/shape.js";
-import { asArray, asBool, asF64, asI64, asStr, asU64, at, get, isObject, items as itemsOf, parseRustF64 } from "../json.js";
+import { asArray, asBool, asF64, asI64, asStr, asU64, at, errorMessage, get, isObject, items as itemsOf, parseRustF64 } from "../json.js";
 import { clampf, maxf, minf } from "../math.js";
 import { Opts, lookup, sourceOpt } from "../options.js";
 import { Length } from "../units.js";
@@ -66,21 +66,6 @@ export function labelShapeParse(s: string | null, polygon: unknown): LabelShape 
   if (s === "polygon") return { kind: "polygon", pts: pointsOf(polygon === undefined ? null : polygon) };
   if (s !== null && s.startsWith("rounded:")) return { kind: "rounded", r: parseRustF64(s.slice(8)) ?? 0 };
   return { kind: "rect" };
-}
-
-/** Rust's derived `PartialEq` of `LabelShape`. */
-export function labelShapeEq(a: LabelShape, b: LabelShape): boolean {
-  if (a.kind !== b.kind) return false;
-  switch (a.kind) {
-    case "rounded":
-      return a.r === (b as { r: number }).r;
-    case "polygon": {
-      const q = (b as { pts: P[] }).pts;
-      return a.pts.length === q.length && a.pts.every((p, i) => p.eq(q[i]!));
-    }
-    default:
-      return true;
-  }
 }
 
 export type Truncate = "none" | "end" | "middle";
@@ -328,7 +313,6 @@ export class Item {
     public required: boolean,
     public group: string | null,
     public keepWith: KeepWith | null,
-    public svgId: string | null,
     /** The original item JSON (for callbacks). */
     public raw: unknown,
   ) {}
@@ -426,7 +410,6 @@ export class Model {
   leaderArea: Rect | null = null;
   /** Extent of the grid. */
   extent: Rect = new Rect(0, 0, 1, 1);
-  toPx: Affine = Affine.IDENTITY;
   items: Item[] = [];
   /** Vector obstacles by class (problem vector layers and SVG geometry). */
   vector: [string, Prim][] = [];
@@ -469,7 +452,6 @@ export class Model {
    */
   warmLeaders: Map<string, P[]> = new Map();
   warnings: Issue[] = [];
-  presetName = "auto";
   /** Groups of items sharing one label: (representative, members incl. the representative). */
   groups: [number, number[]][] = [];
   /** For each item: the representative of its group (itself for representatives). */
@@ -639,7 +621,7 @@ export function build(problem: unknown, env: Env, implementation: "ts" | "rust" 
 }
 
 /**
- * Merge items sharing a `group` id into one label (spec §5.7 "groups"): the first member
+ * Merge items sharing a `group` id into one label (docs/concepts/problem.md): the first member
  * (input order) represents the group; its mark becomes the convex hull of all member
  * marks, its anchor their centroid, and its text lists the distinct member texts.
  */
@@ -696,10 +678,6 @@ function rasterErr(at: string, e: unknown): BuildError {
     return err(at, e.code === "unsupported" ? "unsupported" : "invalid_value", `${e.message} (${e.code})`);
   }
   throw e;
-}
-
-function errorMessage(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
 }
 
 const utf8Lossy = new TextDecoder("utf-8", { fatal: false, ignoreBOM: true });
@@ -1069,7 +1047,6 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.labelArea = labelArea;
   m.leaderArea = leaderArea;
   m.extent = extent;
-  m.toPx = toPx;
   m.items = items;
   m.vector = vector;
   m.rasters = rasters;
@@ -1104,7 +1081,6 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.warm = warm;
   m.warmLeaders = warmLeaders;
   m.warnings = warnings;
-  m.presetName = o.presetName;
   return m;
 }
 
@@ -1536,7 +1512,6 @@ function buildItem(
     asBool(get(it, "required")) ?? false,
     asStr(get(it, "group")),
     keepWith,
-    svgId,
     it,
   );
 }

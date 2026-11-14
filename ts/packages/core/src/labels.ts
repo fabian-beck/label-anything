@@ -23,7 +23,7 @@ import {
 } from "@label-anything/text";
 import { type Env, envHasMeasureCallback, envReadFile } from "./env.js";
 import { P, Rect } from "./geom/index.js";
-import { fmtFixed } from "./json.js";
+import { errorMessage, fmtFixed } from "./json.js";
 import { maxf, minf } from "./math.js";
 import {
   FixedKind,
@@ -95,7 +95,7 @@ export function userFonts(model: Model, env: Env): FontBook | null {
         try {
           bytes = envReadFile(env, file);
         } catch (e) {
-          throw new FontError(ptr, e instanceof Error ? e.message : String(e));
+          throw new FontError(ptr, errorMessage(e));
         }
       }
       const family = asciiEqIgnoreCase(f.family, "default") ? `user-font-${loaded.length}` : f.family;
@@ -103,7 +103,7 @@ export function userFonts(model: Model, env: Env): FontBook | null {
       try {
         book.register(family, f.weight, f.italic, bytes);
       } catch (e) {
-        throw new FontError(ptr, e instanceof Error ? e.message : String(e));
+        throw new FontError(ptr, errorMessage(e));
       }
       f.family = family;
       loaded.push([file, family]);

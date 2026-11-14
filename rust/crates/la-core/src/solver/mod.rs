@@ -92,7 +92,6 @@ pub struct Solve<'a> {
     pub time_guard_hit: bool,
     /// The host cancelled the solve (sticky once seen; see [`Solve::poll_cancel`]).
     pub cancelled: bool,
-    pub start_ms: f64,
 }
 
 impl<'a> Solve<'a> {
@@ -104,7 +103,6 @@ impl<'a> Solve<'a> {
         pri: &'a Priorities,
         measurer: Measurer<'a>,
         variants: Vec<Vec<Variant>>,
-        start_ms: f64,
     ) -> Solve<'a> {
         let n = model.items.len();
         Solve {
@@ -159,7 +157,6 @@ impl<'a> Solve<'a> {
             iterations: 0,
             time_guard_hit: false,
             cancelled: false,
-            start_ms,
         }
     }
 

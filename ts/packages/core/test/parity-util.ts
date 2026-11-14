@@ -1,4 +1,32 @@
-// Helpers of the parity tests: exact comparison of results with the Rust ones.
+// Helpers of the parity tests: the Rust CLI and the exact comparison of results with the
+// Rust ones.
+import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+/** The Rust CLI (release build) and whether it has been built. */
+export const RUST_CLI = fileURLToPath(new URL("../../../../rust/target/release/label-anything", import.meta.url));
+export const HAS_RUST_CLI = existsSync(RUST_CLI);
+
+/**
+ * The Rust CLI's result of problem `p` without a clock (null if this build lacks
+ * `--no-clock`); files the problem names are relative to `cwd`.
+ */
+export function rustResult(p: unknown, cwd?: string): unknown {
+  try {
+    const out = execFileSync(RUST_CLI, ["place", "-", "--no-clock"], {
+      input: JSON.stringify(p),
+      cwd,
+      maxBuffer: 1 << 28,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    return JSON.parse(out.toString());
+  } catch (e) {
+    const msg = String((e as { stderr?: unknown }).stderr ?? e);
+    if (msg.includes("--no-clock")) return null;
+    throw e;
+  }
+}
 
 /** Result fields that depend on the clock or name the implementation. */
 export function withoutTiming(r: unknown): Record<string, unknown> {

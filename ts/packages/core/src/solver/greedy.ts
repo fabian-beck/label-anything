@@ -47,10 +47,6 @@ class ItemHeap {
     this.item.length = 0;
   }
 
-  get size(): number {
-    return this.item.length;
-  }
-
   /** Entry `a` has priority over entry `b`. */
   private above(a: number, b: number): boolean {
     const la = this.live[a]!;

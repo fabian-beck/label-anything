@@ -1,4 +1,4 @@
-//! Exact search (spec §5.6 "exact"): branch and bound over items in priority order on the
+//! Exact search (ADR solver/search): branch and bound over items in priority order on the
 //! candidate conflict graph (a maximum-weight independent set). The objective is the
 //! omission mode's priority objective, then the total static cost. The search is limited
 //! by a node budget (deterministic) and never returns worse than the incumbent.
