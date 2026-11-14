@@ -55,7 +55,10 @@ in both.
 - **Measured as the engine does**: text boxes fit the ink (from the outlines' `glyf`
   bounds) with the lines aligned per `align`, and the removal test keeps the engine's
   label spacing and own-mark rule, granting the circles of an SVG background the engine's
-  flattening tolerance.
+  flattening tolerance. Wrapped labels break where the specification says (§5.3): the
+  benchmark's own line breaking is tested against the conformance cases of the engines
+  (`conformance/text/wrap-*.json`), and so is its expression evaluator
+  (`conformance/expr/`).
 - The report and the regression check of the release gate include the new measures, and
   the images of the report mark every instance where it happens, with the
   conflicts: a reader sees what a number counts.
@@ -89,3 +92,14 @@ font sizes; values measured before are lower bounds. For Label Anything's result
 leaders among 3,654 leaders, before and after, because only 11 of the leaders have a bend
 and none an underline. The baselines draw straight leaders of two points without
 underlines (`bench/baselines/results.py`), so their near crossings do not change either.
+
+The benchmark's line breaking had drifted from the specification (no acronym rule, among
+others: 21 of the 158 break, greedy and balanced cases of a font failed), which the
+conformance cases now prevent. Of the 228 problems of the full suite four have wrapped
+labels, and one had other boxes than the engine's: on `cbo-rfc-100-svg` two of the 100
+class names broke one segment early (`uimanager.` · `UIImplementationProvider` for
+`uimanager.UI` · `ImplementationProvider`), 9 and 10 px too wide. With the engine's boxes
+(2026-11-14) the other tools place and count differently there (usable labels: textalloc
+66 instead of 68, adjustText 55 instead of 59, the others as before; ggrepel not measured),
+still behind the engine's 74, whose own numbers do not change. No problem of the quick
+suite is affected.

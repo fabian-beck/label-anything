@@ -48,6 +48,7 @@ from PIL import Image  # noqa: E402
 from bench import render  # noqa: E402
 from bench.common import paths  # noqa: E402
 from bench.common.jsonio import read_json, write_json  # noqa: E402
+from bench.common.text import break_opportunities, is_space  # noqa: E402
 from bench.eval import evaluate  # noqa: E402
 
 E = html.escape
@@ -293,24 +294,21 @@ def settings(problem: dict) -> dict:
     return out
 
 
-def _cjk(ch: str) -> bool:
-    o = ord(ch)
-    return 0x2E80 <= o <= 0x9FFF or 0xAC00 <= o <= 0xD7AF or 0xF900 <= o <= 0xFAFF or 0xFF00 <= o <= 0xFFEF or \
-        0x20000 <= o <= 0x2FFFF
-
-
 def split_word(text: dict | None, original: str) -> bool:
     """Whether a placed label's lines end where the text has no break opportunity (spec §5.3: white space,
     punctuation, camelCase, acronym, CJK), i.e. inside a word: an emergency break."""
     lines = (text or {}).get("lines") or []
+    breaks = set(break_opportunities(original))
+    at = 0
     for a, b in zip(lines, lines[1:]):
-        if not a or not b or a + b not in original:
-            continue  # broken at white space (or not a line pair of this text)
-        x, y, z = a[-1], b[0], b[1:2]
-        if x in "/\\._-,;:|" or (x.islower() and y.isupper()) or (x.isupper() and y.isupper() and z.islower()) \
-                or (_cjk(x) and _cjk(y)):
-            continue
-        return True
+        start = original.find(a, at) if a and b else -1
+        if start < 0:
+            continue  # not a line of this text (truncated, an alternative text)
+        end = at = start + len(a)
+        while at < len(original) and is_space(original[at]):
+            at += 1  # the next line starts after the white space the line's end was trimmed of
+        if original.startswith(b, at) and not any(k in breaks for k in range(end - 1, at)):
+            return True
     return False
 
 
