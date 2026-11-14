@@ -141,6 +141,16 @@ def _shape_svg(shp, fill: str, stroke: str, opacity: float = 0.55, dash: str | N
     return f'<path d="{d}" fill-rule="evenodd" {style}/>'
 
 
+def _turn(p: dict) -> str:
+    """The SVG ``transform`` attribute of a turned label (the name of an area along it,
+    ``rotation`` in degrees clockwise about the center of its box); empty when upright."""
+    r = p.get("rotation")
+    if not r:
+        return ""
+    b = p["box"]
+    return f' transform="rotate({_fmt(r)} {_fmt(b["x"] + b["w"] / 2)} {_fmt(b["y"] + b["h"] / 2)})"'
+
+
 def _line_starts(t: dict) -> list[float]:
     """Where each line of a text layout starts, relative to the box: ``x_offsets`` (the lines
     aligned per ``align``), or the text block's left edge for results without them."""
@@ -296,6 +306,9 @@ def render_svg(problem: dict, result: dict, font_href: str | None = None, show_o
         if not p or not p.get("placed") or "box" not in p:
             continue
         b = p["box"]
+        turn = _turn(p)
+        if turn:
+            o.append(f"<g{turn}>")
         o.append(f'<rect x="{_fmt(b["x"])}" y="{_fmt(b["y"])}" width="{_fmt(b["w"])}" height="{_fmt(b["h"])}" '
                  f'fill="#ffffff" fill-opacity="{LABEL_FILL_OPACITY}"/>')
         if p.get("text"):
@@ -308,6 +321,8 @@ def render_svg(problem: dict, result: dict, font_href: str | None = None, show_o
                 o.append(f'<rect x="{_fmt(pb["x"])}" y="{_fmt(pb["y"])}" width="{_fmt(pb["w"])}" '
                          f'height="{_fmt(pb["h"])}" rx="{_fmt(min(pb["w"], pb["h"]) / 4)}" fill="{LABEL_TEXT}" '
                          f'fill-opacity="0.5"/>')
+        if turn:
+            o.append("</g>")
     o.append("</g>")
     o.append(f'<g class="unplaced" stroke="{UNPLACED}" stroke-width="1.2">')
     for it in prob.items:
@@ -497,7 +512,7 @@ def render_png(problem: dict, result: dict, background_png: str | Path | None = 
                 dr.line([(x * s, y * s) for x, y in L["underline"]], fill=_hex(LEADER), width=max(1, int(round(s))))
     for it in prob.items:
         p = by_id.get(it.id)
-        if not p or not p.get("placed") or "box" not in p:
+        if not p or not p.get("placed") or "box" not in p or p.get("rotation"):
             continue
         b = p["box"]
         dr.rectangle([b["x"] * s, b["y"] * s, (b["x"] + b["w"]) * s, (b["y"] + b["h"]) * s],
@@ -513,7 +528,21 @@ def render_png(problem: dict, result: dict, background_png: str | Path | None = 
         p = by_id.get(it.id)
         if not p:
             continue
-        if p.get("placed") and "box" in p:
+        if p.get("placed") and "box" in p and p.get("rotation"):
+            # a turned label (the name of an area along it): drawn upright on a layer of its
+            # own, which is turned about the center of the box
+            b = p["box"]
+            layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+            ld = ImageDraw.Draw(layer)
+            ld.rectangle([b["x"] * s, b["y"] * s, (b["x"] + b["w"]) * s, (b["y"] + b["h"]) * s],
+                         fill=(255, 255, 255, round(255 * LABEL_FILL_OPACITY)))
+            if p.get("text"):
+                _draw_text(ld, b["x"], b["y"], p["text"], s)
+            layer = layer.rotate(-p["rotation"], resample=Image.BICUBIC,
+                                 center=((b["x"] + b["w"] / 2) * s, (b["y"] + b["h"] / 2) * s))
+            img.alpha_composite(layer)
+            dr = ImageDraw.Draw(img)
+        elif p.get("placed") and "box" in p:
             b = p["box"]
             if p.get("text"):
                 _draw_text(dr, b["x"], b["y"], p["text"], s)
@@ -703,6 +732,9 @@ def standalone_svg(problem: dict, result: dict, background_svg: str | Path | Non
         if not p or not p.get("placed") or "box" not in p:
             continue
         b = p["box"]
+        turn = _turn(p)
+        if turn:
+            o.append(f"<g{turn}>")
         o.append(f'<rect x="{_fmt(b["x"])}" y="{_fmt(b["y"])}" width="{_fmt(b["w"])}" height="{_fmt(b["h"])}" '
                  f'fill="#ffffff" fill-opacity="{LABEL_FILL_OPACITY}"/>')
         if p.get("text"):
@@ -715,6 +747,8 @@ def standalone_svg(problem: dict, result: dict, background_svg: str | Path | Non
                 o.append(f'<rect x="{_fmt(pb["x"])}" y="{_fmt(pb["y"])}" width="{_fmt(pb["w"])}" '
                          f'height="{_fmt(pb["h"])}" rx="{_fmt(min(pb["w"], pb["h"]) / 4)}" fill="{LABEL_TEXT}" '
                          f'fill-opacity="0.5"/>')
+        if turn:
+            o.append("</g>")
     o.append("</g>")
     o.append(f'<g class="unplaced" stroke="{UNPLACED}" stroke-width="1.2" stroke-linecap="round">')
     for it in prob.items:
