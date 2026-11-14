@@ -105,6 +105,49 @@ def test_leaders_starting_together():
     assert m["hard"]["leader_near"] == 0
 
 
+def test_near_crossings_do_not_depend_on_the_item_order():
+    # B's straight leader ends 3 px below the first segment of A's elbow leader: a near
+    # crossing whichever of the two comes first (the index once kept only the box of a
+    # leader's last segment, and missed A when it was the later leader of the pair)
+    ia, ib = item("A", 20, 50), item("B", 60, 90)
+    pa = placed("A", 120, 10, side="distant", model="distant",
+                leader={"points": [[22, 50], [120, 50], [120, 20]], "style": "elbow", "port": [120, 20]})
+    pb = placed("B", 45, 20, side="distant", model="distant",
+                leader={"points": [[60, 88], [60, 53]], "style": "straight", "port": [60, 53]})
+    for items, placements in (([ia, ib], [pa, pb]), ([ib, ia], [pb, pa])):
+        m = evaluate(problem(items, height=120), result(placements))
+        assert m["hard"]["leader_near"] == 1
+        assert m["visual"]["near_crossings"]["count"] == 1
+        assert m["visual"]["near_crossings"]["min_px"] == pytest.approx(3.0)
+    # the same with a straight leader that ends in an underline (its last segment): B ends
+    # 2.7 px below the leader itself, far from the underline
+    pa = placed("A", 90, 10, w=60, side="distant", model="distant",
+                leader={"points": [[22, 50], [90, 20]], "style": "straight", "port": [90, 20],
+                        "underline": [[90, 20], [150, 20]]})
+    pb = placed("B", 41, 60, side="distant", model="distant",
+                leader={"points": [[56, 88], [56, 38]], "style": "straight", "port": [56, 38]})
+    ib = item("B", 56, 90)
+    for items, placements in (([ia, ib], [pa, pb]), ([ib, ia], [pb, pa])):
+        m = evaluate(problem(items, height=120), result(placements))
+        assert m["visual"]["near_crossings"]["count"] == 1
+
+
+def test_parallel_leaders_do_not_depend_on_the_item_order():
+    # the leaders start 14 px apart, within 1 em of the larger font (20 px) but not of the
+    # smaller (12 px): the pair counts whichever item comes first
+    ia, ib = item("A", 20, 40), item("B", 20, 54)
+    ia["label"]["font"] = {"size": 12}
+    ib["label"]["font"] = {"size": 20}
+    pa = placed("A", 120, 30, side="distant", model="distant",
+                leader={"points": [[22, 40], [120, 40]], "style": "straight", "port": [120, 40]})
+    pb = placed("B", 120, 54, side="distant", model="distant",
+                leader={"points": [[22, 54], [120, 54]], "style": "straight", "port": [120, 54]})
+    for items, placements in (([ia, ib], [pa, pb]), ([ib, ia], [pb, pa])):
+        m = evaluate(problem(items, height=120), result(placements))
+        assert m["hard"]["leader_angle"] == 1
+        assert m["visual"]["near_crossings"]["parallel"] == 1
+
+
 def test_fan_leaders_leave_crowded_marks():
     # A's leader leaves the crowd up and to the right; B's mark is 2.2 px from its start and
     # 1.7 px from the leader: a distant leader keeps the clearance, a fan or boundary leader
