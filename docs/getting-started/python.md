@@ -46,7 +46,7 @@ Every other keyword sets a field of the [problem](../concepts/problem.md). `None
 | `canvas=(w, h)` or a dict; `canvas_padding`, `allow_outside`, `region`, `device_pixel_ratio`, `canvas_background` | `canvas` |
 | `y_axis`, `transform`, `preset`, `weights`, `degrade`, `warm_start` (a `Result` works) | the field of that name |
 | `font` (`la.Font`), `font_family`, `font_size`, `font_weight`, `font_style`, `line_height`, `font_file` | `defaults.font` |
-| `padding`, `buffer`, `margin`, `spacing`, `mark`, `wrap`, `truncate`, `align`; `shaping` | `defaults`; `text.shaping` |
+| `padding`, `buffer`, `margin`, `spacing`, `side_margin`, `mark`, `wrap`, `truncate`, `align`; `shaping` | `defaults`; `text.shaping` |
 | every field of `placement` (`aggressiveness`, `models`, `position_order`, `offset`, `max_distance`, `internal`, `boundary`, `fan`, …) | `placement` |
 | `leaders`: a style name or `la.Leaders(style="angles", angles=range(0, 360, 45))` | `leaders` |
 | `avoid` (labels, or a dict with `label`, `leader`, `buffer`), `avoid_leader`, `avoid_buffer`, `relaxable` | `avoid` |
