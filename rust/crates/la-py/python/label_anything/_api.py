@@ -270,6 +270,7 @@ def place(
     internal: Optional[str] = None,
     inner_padding: Optional[Length] = None,
     internal_circle_ratio: Optional[float] = None,
+    area_rotation: Optional[float] = None,
     prune_factor: Optional[float] = None,
     boundary: Any = None,
     fan: Optional[str] = None,

@@ -5,7 +5,7 @@
  * @module
  */
 
-import { Cand, KEEP_BOX, type KeepFn, Kind, Leader, SIDE_DISTANT, dirOf, labelShape } from "./candidates.js";
+import { Cand, KEEP_BOX, type KeepFn, Kind, Leader, SIDE_DISTANT, dirOf } from "./candidates.js";
 import { Evaluator, crowded } from "./cost.js";
 import { BasicEnv } from "./env.js";
 import { EPS, P, Rect, distPointSeg, distSegRect, segIntersects, segOverlapsRect } from "./geom/index.js";
@@ -91,7 +91,7 @@ export class Stubs {
     const l = stubLeader(item, c.rect);
     if (l === null) return null;
     c.leaders.push(l);
-    c.lshape = labelShape(c.rect, v.shape);
+    c.setLshape(v.shape);
     this.ev.eval(c, v, null);
     // evaluated again with the item's other candidates
     c.evaluated = false;

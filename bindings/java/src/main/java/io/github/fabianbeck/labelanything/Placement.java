@@ -266,6 +266,14 @@ public final class Placement extends Spec {
     return with("max_foreign", share);
   }
 
+  /**
+   * The label of an area anchor may be turned along the area's main axis by this many degrees at
+   * most (0–90, default 45; 0: always upright). See {@link LabelPlacement#rotation()}.
+   */
+  public Placement areaRotation(double degrees) {
+    return with("area_rotation", degrees);
+  }
+
   /** Drop candidates costing more than factor × the item's best + 1 (default 4). */
   public Placement pruneFactor(double factor) {
     return with("prune_factor", factor);

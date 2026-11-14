@@ -65,7 +65,7 @@ impl<'a> Stubs<'a> {
     /// otherwise.
     pub fn stubbed(&self, item: &Item, v: &Variant, mut c: Cand) -> Option<Cand> {
         c.leaders.push(stub_leader(item, &c.rect)?);
-        c.lshape = crate::candidates::label_shape(&c.rect, &v.shape);
+        c.set_lshape(&v.shape);
         self.ev.borrow_mut().eval(&mut c, v, None);
         // evaluated again with the item's other candidates
         c.evaluated = false;

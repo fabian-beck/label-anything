@@ -54,10 +54,10 @@
         "id": "B",
         "placed": true,
         "box": {
-          "x": 204.57600000000002,
-          "y": 69.15199999999999,
-          "w": 53.45999999999998,
-          "h": 12.288000000000011
+          "x": 213.27,
+          "y": 63.856,
+          "w": 53.46000000000001,
+          "h": 12.288000000000004
         },
         "anchor": [
           240.0,
@@ -134,7 +134,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": -0.075,
+        "cost": 0.043349999999999514,
         "degrade_steps": [],
         "priority": {
           "tier": 1,
@@ -293,10 +293,10 @@
       "iterations": 2400,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 179,
+      "candidates": 84,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 2.873885485762734,
+      "total_cost": 2.9922354857627336,
       "degraded": {},
       "grid": {
         "cell": 3.0,

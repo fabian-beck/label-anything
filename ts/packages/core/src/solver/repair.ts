@@ -209,7 +209,7 @@ function columnCands(
     const rank = p === null ? 9 : p.rank;
     const c = columnCandidate(model, area, item, vis[k]!, v, side, positions[assign[k]!]!, depth, rank);
     c.level = p !== null ? p.level : (item.models & Models.BOUNDARY) !== 0 ? v.level : stepLevel;
-    c.lshape = labelShape(c.rect, v.shape);
+    c.setLshape(v.shape);
     s.evaluator.eval(c, v, null);
     fresh.push([j, c]);
   }

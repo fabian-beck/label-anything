@@ -815,7 +815,8 @@ font at its scale (`France 3` in two lines would strand the `3`).
 
 A **variant** is one concrete label shape: text lines (or fixed size), font scale and
 its shape penalty `shape_penalty` (sum): `0.25` per extra line, `0.5` per alternative
-index + 0.5, `1.0` if truncated, `2·(1 − scale)` for shrinking, `+2` for soft overlap.
+index + 0.5, `1.0` if truncated, `2·(1 − scale)` for shrinking, `+2` for soft overlap. A
+candidate that turns the label (§6.5) adds `|rotation| / 180`.
 
 ---
 
@@ -857,7 +858,8 @@ If `models` contains `internal` and the internal policy allows it (`auto`: prefe
 rect, ellipse, polygon, path marks and area anchors; allow for circles with
 `r ≥ internal_circle_ratio × label height`; never for icons and r < that), candidates
 at the pole of inaccessibility (polylabel, precision 0.5 px) and at the reference point,
-accepted iff the label box grown by `inner_padding` lies inside the shape. `prefer` gives
+accepted iff the label box grown by `inner_padding` lies inside the shape (area anchors:
+§6.5). `prefer` gives
 them rank −1 (before all external positions); `allow` gives rank 8.
 
 ### 6.4 Distant (with leader)
@@ -878,12 +880,62 @@ left.
 
 ### 6.5 Area anchors
 
-Internal candidates at the polygon's pole of inaccessibility and at grid samples
-(spacing = label height, at least 4 px, and at least √(w · h / 65536) for a polygon whose
-bounding box is w × h, which bounds the work for a polygon far larger than the picture)
-inside the polygon where the label box (+ `inner_padding`) fits, ordered by clearance. If none fit, the item falls back to a point-like item at the pole
-with mark `anchor.dot` (default circle r = 2), with external candidates and leaders. Area
-polygons are not obstacles of other labels.
+The label of an area anchor lies inside the polygon, where it has room, and not beside a
+point (ADR placement/areas). Area polygons are not obstacles of other labels.
+
+**Directions.** A label is upright or, with `placement.area_rotation` > 0, **turned**
+along the polygon's **main axis**: the direction of the largest second moment of area of
+the polygon (holes cut out) about its centroid, `α = ½ · atan2(2·μ_xy, μ_xx − μ_yy)` in
+degrees, clockwise on screen (y down), in (−90°, 90°]; 90° reads upwards (−90°). A polygon
+has no main axis when it is degenerate or its larger principal moment is less than twice
+the smaller (an axis ratio below about 1.41), and no label is turned by a main axis less
+than 10° from the horizontal. A label is turned by `area_rotation` at most: a steeper
+main axis gives `± area_rotation`. Only text labels in a rectangular box without parts
+are turned. A turned label is its box turned by `α` about its center; in the polygon
+turned back by `α` about the pole it is an upright box, and everything below holds for
+it in that frame.
+
+**Places.** Per direction, the samples are the pole of inaccessibility and the points of
+a grid (spacing = label height, at least 4 px, and at least √(w · h / 65536) for a polygon
+whose bounding box is w × h, which bounds the work for a polygon far larger than the
+picture; from the bounding box's top-left corner plus half the label size) where the
+label box grown by `inner_padding` lies inside the polygon. Each has a **lack**:
+
+```
+lack = max(0, 1 − room / em) + |center − pole| / R
+```
+
+`room` is the distance between the label box and the polygon's boundary, `R` half the
+diagonal of the polygon's bounding box (0: no second term). The candidates of a direction
+are, in this order: the sample of least lack (the first on ties), **improved** — it moves
+by `s` = half the grid spacing along +x, −x, +y, −y to the first place where the label
+fits with a lack smaller by more than 10⁻⁹, at most 16 times, then `s` halves, while
+`s` ≥ 0.5 px —, then one sample of each of the 3 × 3 equal cells of the bounding box of
+the samples' centers: the one with the least `max(0, 1 − room / em) + |center − middle of
+the cell| / R` (the first on ties; without the sample that was improved), these by
+ascending lack. So a label has places all over the part of the polygon it fits in, the
+best one first. Upright candidates come before turned ones; all are `internal`
+(rank −1, with `internal: allow` 0; none with `never`).
+
+**Cost.** An area label has no gap to its mark; its `w_distance` term is `w_distance ·
+lack`. A turned label adds `|α| / 180` to the shape penalty of its variant (§5.4): a
+turned label takes the place of an upright one only where it has clearly more room.
+
+**Tests of a turned label.** Its bounding box stands for it in the canvas and edge
+terms, the buffer rings, the contrast term, the region terms (§4.8), the spatial queries
+and the label budget.
+Against item marks and other labels it is tested exactly (its interior, §4.4). Where a
+distance or a coverage is needed — the margin from other marks, the gap to other labels,
+leaders through it, hard and soft classes — its **cover** stands for it: the label is cut
+along its length into `n = clamp(⌈w / h⌉, 1, 32)` equal pieces, and the cover is their
+bounding boxes. A distance is the least over the cover's boxes, a hard class is touched
+when one box touches it, and a covered area is the sum over the boxes × (w · h / the sum
+of the boxes' areas).
+
+**Fallback.** A variant that fits nowhere inside (in no direction) makes the item
+point-like for that variant: a point at the pole with mark `anchor.dot` (default circle
+r = 2), with adjacent and slider candidates. Distant candidates and the ladder's leader
+steps lead to that point in either case.
 
 ### 6.6 Boundary
 
@@ -961,7 +1013,10 @@ Filtering while generating (ADR placement/ladder), always exact:
   `warm_start` entry with an `anchor` (the anchor point it was placed for, as a result
   reports it) is first moved by the item's anchor movement: `box + (reference − anchor)`,
   the reference point of §11. The same box can become a candidate of a ladder variant
-  (§10.1).
+  (§10.1). The warm-start box of an area item that lies inside the polygon (grown by
+  `inner_padding`) is an internal candidate instead (§6.5), turned by the entry's
+  `rotation` (not 0, at most 90° either way; a label that can be turned), whatever
+  `area_rotation` and the main axis are now.
 * The leader of a distant warm-start candidate, within the leader length limits: with
   the `straight` style, a straight leader to the box; with `angles`, `elbow` and
   `orthogonal`, the entry's `leader` (its `points`, when its `style` is the one in use
@@ -1173,8 +1228,8 @@ cost = Σ_class w_label[class] · covered(label_k, class) / em²
      + [leader] (w_leader + w_leader_length · len/em + w_bends · bends
                  + w_leader_borders · borders + Σ_class w_leader[class] · covered_len/em)
      + w_position · rank / n_positions
-     + w_distance · gap(label_k, S_i) / em
-     + w_shape · shape_penalty(variant)
+     + w_distance · gap(label_k, S_i) / em   (inside an area: w_distance · lack, §6.5)
+     + w_shape · shape_penalty(variant)       (+ |rotation| / 180 for a turned label)
      + w_edge · max(0, 1 − dist_to_label_area_edge / em)
      + w_ambiguity · ambiguity_k
      + [stubs, crowded] w_leader
@@ -1502,4 +1557,8 @@ total cost of the label (static + dynamic). `stats.hard_violations` and
 `stats.leader_crossings` are computed by the independent verification pass. A placed
 label reports `anchor`, its item's reference point in canvas px (point items: the
 anchor; area items: the pole of their polygon, §6.5), so that a result passed as
-`warm_start` moves with the anchors (§6.7).
+`warm_start` moves with the anchors (§6.7). A turned label (§6.5) reports `rotation`, in
+degrees clockwise on screen, and as `box` the label before it is turned about the box's
+center: a host draws the text in `box` as for any label and turns it
+(SVG: `transform="rotate(rotation, box.x + box.w/2, box.y + box.h/2)"`). The same holds
+for `candidates`.

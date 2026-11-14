@@ -1,0 +1,77 @@
+{
+  "kind": "place",
+  "name": "the label of an area moves inside it, away from the marks in its middle",
+  "problem": {
+    "canvas": {
+      "width": 400,
+      "height": 300
+    },
+    "items": [
+      {
+        "id": "land",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              40,
+              40
+            ],
+            [
+              360,
+              30
+            ],
+            [
+              370,
+              260
+            ],
+            [
+              30,
+              270
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Hinterland"
+        }
+      },
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 200,
+          "y": 150
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 214,
+          "y": 156
+        },
+        "label": {
+          "type": "text",
+          "text": "Beta"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 3,
+    "model": {
+      "land": "internal"
+    },
+    "rotation": {
+      "land": 0
+    }
+  }
+}

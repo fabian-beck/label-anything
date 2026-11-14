@@ -22,11 +22,11 @@ import {
 } from "../env.js";
 import { Affine, P, Rect, bboxOf } from "../geom/index.js";
 import { PathError, flatten } from "../geom/path.js";
-import { convexHull, orientHoles, polylabel } from "../geom/polygon.js";
+import { convexHull, mainAxis, orientHoles, polylabel } from "../geom/polygon.js";
 import { Shape } from "../geom/shape.js";
 import type { RegionFill } from "../grid/regions.js";
 import { asArray, asBool, asF64, asI64, asStr, asU64, at, errorMessage, get, isObject, items as itemsOf, parseRustF64 } from "../json.js";
-import { clampf, maxf, minf } from "../math.js";
+import { clampf, len2d, maxf, minf, sinCosDeg } from "../math.js";
 import { Opts, lookup, sourceOpt } from "../options.js";
 import { Length } from "../units.js";
 import { Issue } from "../validate.js";
@@ -159,6 +159,55 @@ export interface Area {
   shape: Shape;
   pole: P;
   poleDist: number;
+  /**
+   * Half the diagonal of the polygon's bounding box: the scale of a label's distance from
+   * the pole (spec §6.5).
+   */
+  radius: number;
+  /** The frame of labels turned along the polygon's main axis (null: horizontal labels only). */
+  turn: AreaTurn | null;
+}
+
+/**
+ * The frame of an area's turned labels (spec §6.5): the polygon turned back about the
+ * pole by the labels' angle, in which such a label is an upright box.
+ */
+export interface AreaTurn {
+  /** Degrees, clockwise on screen. */
+  angle: number;
+  cos: number;
+  sin: number;
+  shape: Shape;
+}
+
+/** A main axis less than this far from the horizontal turns no label (degrees). */
+export const AREA_TURN_MIN = 10.0;
+
+/** `Area::new`. */
+export function newArea(rings: P[][], maxRotation: number): Area {
+  const [pole, poleDist] = polylabel(rings, false, 0.5);
+  const angle = areaAngle(mainAxis(rings, pole), maxRotation);
+  let turn: AreaTurn | null = null;
+  if (angle !== null) {
+    const [sin, cos] = sinCosDeg(angle);
+    const turned = rings.map((r) => r.map((q) => pole.add(q.sub(pole).unrotate(cos, sin))));
+    turn = { angle, cos, sin, shape: Shape.polygon(turned, false, pole) };
+  }
+  const shape = Shape.polygon(rings, false, pole);
+  const bb = shape.bbox();
+  return { radius: 0.5 * len2d(bb.w(), bb.h()), shape, pole, poleDist, turn };
+}
+
+/**
+ * The angle of an area's turned labels (spec §6.5): the main axis, read upwards when it is
+ * vertical, none when it is less than {@link AREA_TURN_MIN} from the horizontal, and at
+ * most `max` degrees.
+ */
+export function areaAngle(axis: number | null, max: number): number | null {
+  if (axis === null) return null;
+  const a = axis >= 90.0 ? -90.0 : axis;
+  if (!(max > 0.0) || !(Math.abs(a) >= AREA_TURN_MIN)) return null;
+  return a > max ? max : a < -max ? -max : a;
 }
 
 /** Per-item resolved lengths (px). */
@@ -466,6 +515,8 @@ export class Model {
    * `orthogonal` leader styles (the entry's `leader` of the same style; spec §6.7).
    */
   warmLeaders: Map<string, P[]> = new Map();
+  /** The rotation of each turned warm-start box (degrees, not 0). */
+  warmRotation: Map<string, number> = new Map();
   warnings: Issue[] = [];
   /** Groups of items sharing one label: (representative, members incl. the representative). */
   groups: [number, number[]][] = [];
@@ -1108,6 +1159,7 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
     ls === LeaderStyle.Angles || ls === LeaderStyle.Elbow || ls === LeaderStyle.Orthogonal ? leaderStyleName(ls) : null;
   const warm = new Map<string, Rect | null>();
   const warmLeaders = new Map<string, P[]>();
+  const warmRotation = new Map<string, number>();
   for (const p of itemsOf(lookup(problem, "warm_start.placements"))) {
     const id = asStr(get(p, "id"));
     if (id === null) continue;
@@ -1149,6 +1201,8 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
         warmLeaders.set(id, pts);
       }
     }
+    const rot = asF64(get(p, "rotation"));
+    if (placed && rect !== null && rot !== null && rot !== 0 && Math.abs(rot) <= 90.0) warmRotation.set(id, rot);
     warm.set(id, placed ? rect : null);
   }
 
@@ -1192,6 +1246,7 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.shaping = o.string("text.shaping");
   m.warm = warm;
   m.warmLeaders = warmLeaders;
+  m.warmRotation = warmRotation;
   m.warnings = warnings;
   return m;
 }
@@ -1472,6 +1527,7 @@ interface ItemDefaults {
   align: string;
   internal: string;
   positionOrder: unknown;
+  areaRotation: number;
 }
 
 function itemDefaults(o: Opts): ItemDefaults {
@@ -1501,6 +1557,7 @@ function itemDefaults(o: Opts): ItemDefaults {
     align: o.string("defaults.align"),
     internal: o.string("placement.internal"),
     positionOrder: o.get("placement.position_order"),
+    areaRotation: o.f64("placement.area_rotation"),
   };
 }
 
@@ -1542,13 +1599,12 @@ function buildItem(
     const rings: P[][] = [pointsOf(pv === undefined ? null : pv).map((p) => toPx.apply(p))];
     for (const h of itemsOf(get(anchorV, "holes"))) rings.push(pointsOf(h).map((p) => toPx.apply(p)));
     orientHoles(rings);
-    const [pole, poleDist] = polylabel(rings, false, 0.5);
-    const areaShape = Shape.polygon(rings, false, pole);
+    area = newArea(rings, defs.areaRotation);
+    const pole = area.pole;
     const dotV = get(anchorV, "dot");
     const dot = dotV !== undefined ? markShape(dotV, pole, toPx, svgs, warnings, `${ptr}/anchor/dot`)[0] : Shape.circle(pole, 2);
     anchor = pole;
     shape = dot;
-    area = { shape: areaShape, pole, poleDist };
   } else {
     const atp = toPx.apply(new P(asF64(get(anchorV, "x")) ?? 0, asF64(get(anchorV, "y")) ?? 0));
     const markV = get(anchorV, "mark");

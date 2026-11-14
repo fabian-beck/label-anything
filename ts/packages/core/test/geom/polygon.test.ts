@@ -8,15 +8,65 @@ import {
   convexHull,
   distRect,
   edges,
+  mainAxis,
   overlapsRect,
   polylabel,
   ringCentroid,
+  roomRect,
   signedArea,
 } from "../../src/geom/polygon.js";
+import { sinCosDeg } from "../../src/math.js";
 
 function square(x: number, y: number, s: number): P[] {
   return [new P(x, y), new P(x + s, y), new P(x + s, y + s), new P(x, y + s)];
 }
+
+/** A `w` × `h` rectangle around (`cx`, `cy`), turned by `deg` (clockwise on screen). */
+function slab(cx: number, cy: number, w: number, h: number, deg: number): P[] {
+  const [sin, cos] = sinCosDeg(deg);
+  return (
+    [
+      [-w, -h],
+      [w, -h],
+      [w, h],
+      [-w, h],
+    ] as [number, number][]
+  ).map(([x, y]) => new P(cx, cy).add(new P(x * 0.5, y * 0.5).rotate(cos, sin)));
+}
+
+describe("area labels (spec §6.5)", () => {
+  it("main_axis_follows_the_long_side", () => {
+    const o = new P(0, 0);
+    for (const deg of [-60, -35, 0, 20, 45, 80]) {
+      const a = mainAxis([slab(300, 200, 200, 40, deg)], o)!;
+      expect(Math.abs(a - deg), String(deg)).toBeLessThan(1e-9);
+    }
+    // an upright strip: 90°, whichever way it is wound
+    const up = slab(10, 10, 20, 300, 0);
+    expect(mainAxis([up], o)).toBe(90);
+    expect(mainAxis([up.slice().reverse()], o)).toBe(90);
+    // compact and degenerate polygons have none
+    expect(mainAxis([square(5, 5, 40)], o)).toBeNull();
+    expect(mainAxis([slab(0, 0, 50, 40, 30)], o)).toBeNull();
+    expect(mainAxis([[o, new P(10, 0), new P(20, 0)]], o)).toBeNull();
+    expect(mainAxis([], o)).toBeNull();
+    // a hole (wound the other way) counts: two blocks side by side have an axis
+    const outer = slab(0, 0, 100, 80, 0);
+    const hole = slab(0, 0, 30, 76, 0).reverse();
+    expect(mainAxis([outer], o)).toBeNull();
+    expect(Math.abs(mainAxis([outer, hole], o)!)).toBeLessThan(1e-9);
+  });
+
+  it("room_rect_is_the_distance_from_the_boundary", () => {
+    const sq = [square(0, 0, 100)];
+    expect(roomRect(sq, new Rect(40, 45, 60, 55))).toBe(40);
+    expect(roomRect(sq, new Rect(10, 45, 60, 55))).toBe(10);
+    expect(roomRect(sq, new Rect(0, 45, 60, 55))).toBe(0);
+    // a hole counts
+    const holed = [square(0, 0, 100), square(70, 40, 10)];
+    expect(roomRect(holed, new Rect(40, 45, 60, 55))).toBe(10);
+  });
+});
 
 describe("geom::polygon", () => {
   it("containment_rules", () => {

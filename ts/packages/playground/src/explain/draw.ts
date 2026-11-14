@@ -4,7 +4,7 @@
  * free ones shaded by cost, ruled-out ones crossed, the chosen one bold, a move's arrow.
  */
 import type { LabelResult, TraceCandidate } from "@label-anything/core";
-import { drawLabels, roundRect, type Placement } from "../render.js";
+import { drawLabels, roundRect, turned, type Placement } from "../render.js";
 import type { Explained, Move } from "./model.js";
 
 export interface View {
@@ -243,6 +243,7 @@ export function placementsAt(ex: Explained, k: number): Placement[] {
       id: tr.items[i]!.id,
       placed: true,
       box: { x: t.box[0], y: t.box[1], w: t.box[2], h: t.box[3] },
+      ...(t.rotation ? { rotation: t.rotation } : {}),
       text: (v?.text ?? undefined) as Placement["text"],
       leader: (t.leaders[0] ?? null) as unknown as Placement["leader"],
       leaders: (t.leaders.length > 1 ? t.leaders : undefined) as Placement["leaders"],
@@ -348,8 +349,10 @@ export function drawStage(
     const c = placed[i]!;
     if (c < 0) continue;
     const b = tr.candidates[c]!.box;
-    roundRect(ctx, b[0] - px, b[1] - px, b[2] + 2 * px, b[3] + 2 * px, 2);
-    ctx.stroke();
+    turnedCand(ctx, tr.candidates[c]!, () => {
+      roundRect(ctx, b[0] - px, b[1] - px, b[2] + 2 * px, b[3] + 2 * px, 2);
+      ctx.stroke();
+    });
   }
   ctx.restore();
 
@@ -387,11 +390,34 @@ export function drawStage(
     if (c >= 0) {
       const b = tr.candidates[c]!.box;
       ctx.strokeStyle = AMBER;
-      roundRect(ctx, b[0] - px, b[1] - px, b[2] + 2 * px, b[3] + 2 * px, 2);
-      ctx.stroke();
+      turnedCand(ctx, tr.candidates[c]!, () => {
+        roundRect(ctx, b[0] - px, b[1] - px, b[2] + 2 * px, b[3] + 2 * px, 2);
+        ctx.stroke();
+      });
     }
   }
   ctx.restore();
+}
+
+/** Runs `draw` with the canvas turned as the candidate's label is (a turned area label). */
+function turnedCand(ctx: CanvasRenderingContext2D, c: TraceCandidate, draw: () => void): void {
+  turned(ctx, { x: c.box[0], y: c.box[1], w: c.box[2], h: c.box[3] }, c.rotation, draw);
+}
+
+/** A point turned about the center of the candidate's box: by its rotation, or back. */
+function turnPoint(c: TraceCandidate, x: number, y: number, back: boolean): [number, number] {
+  if (!c.rotation) return [x, y];
+  const a = ((back ? -c.rotation : c.rotation) * Math.PI) / 180;
+  const cx = c.box[0] + c.box[2] / 2;
+  const cy = c.box[1] + c.box[3] / 2;
+  return [cx + (x - cx) * Math.cos(a) - (y - cy) * Math.sin(a), cy + (x - cx) * Math.sin(a) + (y - cy) * Math.cos(a)];
+}
+
+/** Whether the point lies on the candidate's (turned) box. */
+function onBox(c: TraceCandidate, x: number, y: number): boolean {
+  const [qx, qy] = turnPoint(c, x, y, true);
+  const [bx, by, bw, bh] = c.box;
+  return qx >= bx && qx <= bx + bw && qy >= by && qy <= by + bh;
 }
 
 function leaderPath(ctx: CanvasRenderingContext2D, c: TraceCandidate): void {
@@ -468,22 +494,24 @@ function drawCand(ctx: CanvasRenderingContext2D, c: TraceCandidate, o: OverlayCa
     leaderPath(ctx, c);
     ctx.globalAlpha = 1;
   }
-  if (fill) {
-    ctx.fillStyle = fill;
-    ctx.fillRect(x, y, w, h);
-  }
-  ctx.strokeRect(x, y, w, h);
-  if (cross) {
-    ctx.setLineDash([]);
-    ctx.lineWidth = 0.7 * px;
-    ctx.globalAlpha = 0.6;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + w, y + h);
-    ctx.moveTo(x + w, y);
-    ctx.lineTo(x, y + h);
-    ctx.stroke();
-  }
+  turnedCand(ctx, c, () => {
+    if (fill) {
+      ctx.fillStyle = fill;
+      ctx.fillRect(x, y, w, h);
+    }
+    ctx.strokeRect(x, y, w, h);
+    if (cross) {
+      ctx.setLineDash([]);
+      ctx.lineWidth = 0.7 * px;
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + w, y + h);
+      ctx.moveTo(x + w, y);
+      ctx.lineTo(x, y + h);
+      ctx.stroke();
+    }
+  });
   ctx.restore();
 }
 
@@ -514,8 +542,7 @@ function drawArrow(ctx: CanvasRenderingContext2D, a: [number, number], b: [numbe
 
 function drawBadge(ctx: CanvasRenderingContext2D, c: TraceCandidate, text: string, strong: boolean, px: number): void {
   const r = 6.5 * px;
-  const x = c.box[0];
-  const y = c.box[1];
+  const [x, y] = turnPoint(c, c.box[0], c.box[1], false);
   ctx.save();
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
@@ -538,8 +565,8 @@ export function hitTest(ex: Explained, k: number, ov: Overlay, x: number, y: num
   let best: number | null = null;
   let bestArea = Infinity;
   for (const o of ov.cands) {
-    const [bx, by, bw, bh] = tr.candidates[o.cand]!.box;
-    if (x >= bx && x <= bx + bw && y >= by && y <= by + bh && bw * bh < bestArea) {
+    const [, , bw, bh] = tr.candidates[o.cand]!.box;
+    if (onBox(tr.candidates[o.cand]!, x, y) && bw * bh < bestArea) {
       best = o.cand;
       bestArea = bw * bh;
     }
@@ -559,8 +586,7 @@ export function hitTest(ex: Explained, k: number, ov: Overlay, x: number, y: num
   for (let i = placed.length - 1; i >= 0; i--) {
     const c = placed[i]!;
     if (c < 0) continue;
-    const [bx, by, bw, bh] = tr.candidates[c]!.box;
-    if (x >= bx && x <= bx + bw && y >= by && y <= by + bh) return { cand: null, item: i };
+    if (onBox(tr.candidates[c]!, x, y)) return { cand: null, item: i };
   }
   return { cand: null, item: null };
 }

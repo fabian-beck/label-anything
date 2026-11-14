@@ -1,0 +1,21 @@
+{
+  "kind": "validate",
+  "name": "area-rotation",
+  "problem": {
+    "items": [],
+    "placement": {
+      "area_rotation": 91
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/placement/area_rotation",
+        "code": "range"
+      }
+    ],
+    "warnings": [],
+    "exact": true
+  }
+}
