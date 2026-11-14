@@ -34,6 +34,13 @@ export interface OverlayConfig<D> {
   size(): readonly [number, number];
   /** The items to label, at their current positions (overlay px). */
   collect(): OverlayItem[];
+  /**
+   * Where the items are now, for moving their labels along between solves (default: the
+   * positions of `collect()`). A view that leaves items outside it unlabeled gives their
+   * positions here all the same: a label whose anchor is not listed stays where the last
+   * solve put it, and would stand still while the view moves on.
+   */
+  positions?(): Anchors;
   /** Obstacles of the current view (overlay px). */
   obstacles?(): LabelProblem["obstacles"] | undefined;
   /**
@@ -126,7 +133,8 @@ export class Overlay<D> {
 
   #draw(anchors?: Anchors): void {
     if (!this.motion.result) return;
-    const f = this.motion.frame(anchors ?? this.#anchors(this.#config.collect()));
+    const c = this.#config;
+    const f = this.motion.frame(anchors ?? c.positions?.() ?? this.#anchors(c.collect()));
     renderLabels(this.group, f.result, {
       ...this.#config.render,
       font: this.#config.font,

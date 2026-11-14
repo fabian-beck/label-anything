@@ -14,6 +14,9 @@ categories.workspace = true
 [[bin]]
 name = "label-anything"
 path = "src/main.rs"
+# `cargo doc` would write the binary's pages where the pages of the `label-anything`
+# crate go
+doc = false
 
 [features]
 default = ["png", "mimalloc"]

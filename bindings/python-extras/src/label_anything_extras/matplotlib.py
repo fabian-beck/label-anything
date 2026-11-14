@@ -35,7 +35,7 @@ from matplotlib.axes import Axes
 from matplotlib.backends.backend_agg import FigureCanvasAgg, RendererAgg
 from matplotlib.colors import to_hex, to_rgba
 from matplotlib.figure import Figure
-from matplotlib.font_manager import FontProperties
+from matplotlib.font_manager import FontProperties, weight_dict
 from matplotlib.lines import Line2D
 from matplotlib.text import Text
 
@@ -173,15 +173,21 @@ def _agg_canvas(fig: Figure) -> Iterator[Any]:
 
 @contextlib.contextmanager
 def _without_text(fig: Figure, renderer: RendererAgg) -> Iterator[None]:
-    """Hide every visible text artist (and mute the renderer's text calls)."""
+    """Draw no visible text artist (and mute the renderer's text calls).
+
+    The texts stay visible and only their drawing is skipped: a layout engine
+    (constrained, tight, compressed) runs with every draw, and it would give the room of
+    hidden tick labels and titles to the axes, so that the figure read here would not be
+    the figure the labels are drawn into.
+    """
     hidden = [t for t in fig.findobj(match=Text) if t.get_visible()]
-    for t in hidden:
-        t.set_visible(False)
-    muted = ("draw_text", "draw_tex")
 
     def _nothing(*args: Any, **kwargs: Any) -> None:
         return None
 
+    for t in hidden:
+        setattr(t, "draw", _nothing)  # on the instance: shadows Text.draw
+    muted = ("draw_text", "draw_tex")
     for name in muted:
         setattr(renderer, name, _nothing)
     try:
@@ -191,7 +197,15 @@ def _without_text(fig: Figure, renderer: RendererAgg) -> Iterator[None]:
             with contextlib.suppress(AttributeError):
                 delattr(renderer, name)
         for t in hidden:
-            t.set_visible(True)
+            with contextlib.suppress(AttributeError):
+                delattr(t, "draw")
+
+
+def _engine_weight(weight: Union[int, str, None]) -> Union[int, str, None]:
+    """A matplotlib font weight as the engine takes it: ``normal``, ``bold`` or a number."""
+    if isinstance(weight, str) and weight not in ("normal", "bold"):
+        return int(weight_dict.get(weight, weight))  # 'semibold' -> 600; '600' -> 600
+    return weight
 
 
 def _facecolor(*colors: Any) -> str:
@@ -557,7 +571,7 @@ def label_points(
     place_opts.update(
         font_size=font_px,
         font_family=fontfamily,
-        font_weight=fontweight,
+        font_weight=_engine_weight(fontweight),
         font_style="italic" if fontstyle in ("italic", "oblique") else None,
         preset=preset,
         vector=vector or None,

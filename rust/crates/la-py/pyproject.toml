@@ -8,6 +8,8 @@ description = "Label Anything: a label placement engine for charts, maps and dia
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
+# the wheel embeds the metrics of the bundled font (SIL OFL 1.1)
+license-files = ["LICENSE", "NOTICE", "OFL.txt"]
 authors = [{ name = "Label Anything contributors" }]
 keywords = ["label-placement", "labeling", "visualization", "leader-lines", "cartography", "matplotlib", "plotly"]
 classifiers = [
@@ -23,12 +25,14 @@ dynamic = ["version"]
 # NumPy is optional: raster backgrounds also accept bytes and PIL images
 dependencies = []
 
+# The plotting helpers use internals of this package: both are released together, with
+# the same version (tools/version.mjs).
 [project.optional-dependencies]
 numpy = ["numpy>=1.21"]
-matplotlib = ["label-anything-extras>=0.1", "matplotlib>=3.5", "numpy>=1.21"]
-plotly = ["label-anything-extras>=0.1", "plotly>=5"]
-seaborn = ["label-anything-extras>=0.1", "seaborn>=0.12", "matplotlib>=3.5", "numpy>=1.21"]
-all = ["label-anything-extras>=0.1", "matplotlib>=3.5", "plotly>=5", "seaborn>=0.12", "numpy>=1.21"]
+matplotlib = ["label-anything-extras==0.1.0", "matplotlib>=3.5", "numpy>=1.21"]
+plotly = ["label-anything-extras==0.1.0", "plotly>=5"]
+seaborn = ["label-anything-extras==0.1.0", "seaborn>=0.12", "matplotlib>=3.5", "numpy>=1.21"]
+all = ["label-anything-extras==0.1.0", "matplotlib>=3.5", "plotly>=5", "seaborn>=0.12", "numpy>=1.21"]
 test = ["pytest>=7", "numpy>=1.21", "pillow>=9"]
 
 [project.urls]

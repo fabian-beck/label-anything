@@ -185,6 +185,8 @@ The Maven build bundles the library of the platform it runs on (property
 * Relative file paths in JSON text (`obstacles.raster.source`, `obstacles.svg.path`,
   `font.file`) resolve against the process's working directory; the builder sends absolute
   paths.
+* A solve cannot be cancelled: interrupting its thread has no effect. The time budget
+  (`solver.time_budget_ms`) bounds it.
 
 The programs on this page are in [`examples/tutorials/java`](gh:examples/tutorials/java);
 the [outliers tutorial](../tutorials/outliers.md) has a complete one that reads a CSV file

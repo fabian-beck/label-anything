@@ -90,11 +90,15 @@ exit code 1
 | `POST /validate` | the report (malformed JSON is a `parse` error in it) |
 | `GET /health` | `{"name": "label-anything", "version": …}` |
 
-* It listens on 127.0.0.1:7077 (`--host`, `--port`) and allows any origin (CORS).
+* It listens on 127.0.0.1:7077 (`--host`, `--port`) and allows any origin (CORS), so a
+  web page can use it.
 * Problems may read files (backgrounds, fonts) only while it listens on a loopback address,
   or with `--allow-files`: on another `--host`, anyone who can reach the server could
-  otherwise read files of the machine. Relative paths resolve against its working
-  directory.
+  otherwise read files of the machine. A request from a web page (one with an `Origin`
+  header) never reads files, for the same reason: any page in your browser can reach the
+  server. Relative paths resolve against its working directory.
+* A request body may have 64 MiB (`--max-body`); a larger one is answered with HTTP 413.
+  An error inside the engine is HTTP 500 with `{"errors": [...]}`.
 * Requests are solved side by side, one per worker (`--workers`, default: the number of
   CPUs).
 

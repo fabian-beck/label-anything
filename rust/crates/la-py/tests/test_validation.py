@@ -136,3 +136,21 @@ def test_length_mismatch() -> None:
         la.place([(1, 1)], "a")
     with pytest.raises(ValueError, match="ids"):
         la.place([(1, 1)], ["a"], ids=["x", "y"])
+
+
+def test_every_error_has_one_line() -> None:
+    with pytest.raises(la.ValidationError) as info:
+        la.place_problem(BAD)
+    err = info.value
+    lines = str(err).splitlines()
+    assert lines[0] == f"invalid problem: {len(err.errors)} errors"
+    assert len(lines) == 1 + len(err.errors)
+    assert len(set(lines)) == len(lines)  # the first error is not named twice
+    one = la.ValidationError.single("/items/0", "required", "missing")
+    assert str(one) == "invalid problem: /items/0: missing (required)"
+
+
+def test_repr_of_a_problem_with_half_a_canvas() -> None:
+    assert repr(la.Problem(canvas={"width": 5})) == "<Problem items=0 canvas=5×?>"
+    assert repr(la.Problem(canvas=(400, 300))) == "<Problem items=0 canvas=400×300>"
+    assert repr(la.Problem()) == "<Problem items=0 canvas=unbounded>"

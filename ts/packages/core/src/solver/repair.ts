@@ -61,7 +61,9 @@ export function stack(desired: readonly number[], gaps: readonly number[], lo: n
 
 /**
  * Minimum-cost perfect assignment of rows to columns (square cost matrix), Hungarian
- * algorithm with potentials (O(n³)). Ties resolve deterministically by index.
+ * algorithm with potentials (O(n³)). Ties resolve deterministically by index. A matrix
+ * with a row that has no finite cost left (infinite or NaN costs, from geometry beyond
+ * what a double holds) has no such assignment: rows keep their columns (the identity).
  */
 export function hungarian(cost: readonly (readonly number[])[]): number[] {
   const n = cost.length;
@@ -94,6 +96,8 @@ export function hungarian(cost: readonly (readonly number[])[]): number[] {
           }
         }
       }
+      // no free column at a finite cost: the search below would never end
+      if (j1 === 0) return Array.from({ length: n }, (_, k) => k);
       for (let j = 0; j <= n; j++) {
         if (used[j]) {
           u[p[j]!] += delta;

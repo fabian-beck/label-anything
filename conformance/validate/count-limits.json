@@ -1,0 +1,62 @@
+{
+  "kind": "validate",
+  "name": "count-limits",
+  "problem": {
+    "canvas": {
+      "width": 400,
+      "height": 300
+    },
+    "placement": {
+      "slider_per_quadrant": 1000000000,
+      "k_distant": 10000,
+      "distant_rings": 101,
+      "distant_directions": 3601
+    },
+    "degrade_options": {
+      "wrap_max_lines": 1001
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 10,
+          "y": 10
+        },
+        "label": {
+          "type": "text",
+          "text": "A",
+          "wrap": {
+            "max_lines": 1000000000000000
+          }
+        }
+      }
+    ]
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/placement/slider_per_quadrant",
+        "code": "range"
+      },
+      {
+        "pointer": "/placement/distant_rings",
+        "code": "range"
+      },
+      {
+        "pointer": "/placement/distant_directions",
+        "code": "range"
+      },
+      {
+        "pointer": "/degrade_options/wrap_max_lines",
+        "code": "range"
+      },
+      {
+        "pointer": "/items/0/label/wrap/max_lines",
+        "code": "range"
+      }
+    ],
+    "warnings": []
+  }
+}

@@ -119,6 +119,7 @@ nav:
       - Python: getting-started/python.md
       - JavaScript and TypeScript: getting-started/javascript.md
       - Java: getting-started/java.md
+      - Rust: getting-started/rust.md
       - C and Go: getting-started/c-go.md
       - CLI and HTTP server: getting-started/cli.md
   - Tutorials:

@@ -413,3 +413,75 @@ fn serve_answers_while_a_request_is_in_progress() {
         "{bad_validate}"
     );
 }
+
+#[test]
+fn serve_reads_no_files_for_web_pages_and_limits_bodies() {
+    let port = std::net::TcpListener::bind("127.0.0.1:0")
+        .unwrap()
+        .local_addr()
+        .unwrap()
+        .port();
+    let mut server = Command::new(BIN)
+        .args(["serve", "--port", &port.to_string(), "--max-body", "1"])
+        .stderr(Stdio::null())
+        .spawn()
+        .unwrap();
+    let health = "GET /health HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+    let ready = (0..100).any(|_| {
+        let up = http(port, health).is_some();
+        if !up {
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
+        up
+    });
+    // a problem that names a file: read for a program, refused for a web page, which may
+    // ask this server anything (CORS) and must not learn about the machine's files
+    let image = format!("{}/../../../fonts/README.md", env!("CARGO_MANIFEST_DIR"));
+    let problem =
+        json!({"items": [], "obstacles": {"raster": {"source": image}}, "output": {"debug_svg": true}})
+            .to_string();
+    let from_program = http(port, &post("/place", &problem));
+    let from_page = http(
+        port,
+        &post("/place", &problem).replacen(
+            "Host: localhost\r\n",
+            "Host: localhost\r\nOrigin: https://example.com\r\nContent-Type: text/plain\r\n",
+            1,
+        ),
+    );
+    // a page may still solve a problem that names no file
+    let plain = json!({"items": [point("a", 10.0, 10.0, "A")]}).to_string();
+    let page_plain = http(
+        port,
+        &post("/place", &plain).replacen(
+            "Host: localhost\r\n",
+            "Host: localhost\r\nOrigin: https://example.com\r\n",
+            1,
+        ),
+    );
+    // a body over the limit (1 MiB here)
+    let large = http(port, &post("/place", &" ".repeat((1 << 20) + 1)));
+    let after = http(port, health);
+    let _ = server.kill();
+    let _ = server.wait();
+    assert!(ready, "the server answers");
+    // the file was read (and is no image)
+    let from_program = from_program.expect("an answer");
+    assert!(from_program.starts_with("HTTP/1.1 422"), "{from_program}");
+    assert!(
+        !from_program.contains("file access disabled"),
+        "{from_program}"
+    );
+    let from_page = from_page.expect("an answer");
+    assert!(from_page.starts_with("HTTP/1.1 422"), "{from_page}");
+    assert!(from_page.contains("file access disabled"), "{from_page}");
+    let page_plain = page_plain.expect("an answer");
+    assert!(page_plain.starts_with("HTTP/1.1 200"), "{page_plain}");
+    assert!(
+        page_plain.contains("Access-Control-Allow-Origin: *"),
+        "{page_plain}"
+    );
+    let large = large.expect("an answer");
+    assert!(large.starts_with("HTTP/1.1 413"), "{large}");
+    assert!(after.is_some_and(|a| a.starts_with("HTTP/1.1 200")));
+}

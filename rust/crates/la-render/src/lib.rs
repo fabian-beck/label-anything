@@ -4,6 +4,8 @@
 //! Layers are SVG groups with ids (`background`, `obstacles`, `heatmap-<class>`,
 //! `candidates`, `items`, `leaders`, `labels`, `unplaced`) so they can be toggled.
 
+#![forbid(unsafe_code)]
+
 use la_core::geom::shape::Shape;
 use la_core::geom::{Rect, P};
 use la_core::model::{Model, Prim};

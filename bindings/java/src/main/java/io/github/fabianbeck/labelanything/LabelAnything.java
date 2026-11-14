@@ -46,6 +46,7 @@ public final class LabelAnything {
    */
   public static LabelResult place(String problemJson, Raster pixels) {
     Objects.requireNonNull(problemJson, "problemJson");
+    Objects.requireNonNull(pixels, "pixels");
     if (!pixels.isPixels()) {
       throw new IllegalArgumentException("expected a Raster.pixels(...) or Raster.argb(...) raster");
     }
@@ -60,6 +61,7 @@ public final class LabelAnything {
 
   /** Validate a problem (never throws for invalid problems: see {@link ValidationReport}). */
   public static ValidationReport validate(LabelProblem problem) {
+    Objects.requireNonNull(problem, "problem");
     return validate(problem.toJson());
   }
 
@@ -75,6 +77,8 @@ public final class LabelAnything {
 
   /** The debug SVG overlay of a problem and its result. */
   public static String renderSvg(LabelProblem problem, LabelResult result) {
+    Objects.requireNonNull(problem, "problem");
+    Objects.requireNonNull(result, "result");
     return renderSvg(problem.toPortableJson(), result.json());
   }
 

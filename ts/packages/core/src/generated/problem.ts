@@ -19,22 +19,167 @@ export type Affine = [number, number, number, number, number, number];
  */
 export type NonNegLength = number | string;
 /**
- * Mark used for point anchors without an explicit mark.
+ * @minItems 3
  */
-export type Mark = {
-  [k: string]: unknown | undefined;
-} & {
-  shape: "circle" | "ellipse" | "rect" | "polygon" | "path" | "icon" | "from_svg";
-};
+export type Ring = [Point, Point, Point, ...Point[]];
+/**
+ * @minItems 2
+ * @maxItems 2
+ */
+export type Point = [number, number];
+/**
+ * Tip position [dx,dy] inside the icon, from its top-left corner. The tip sits on the anchor. Default: bottom-center [w/2, h].
+ *
+ * @minItems 2
+ * @maxItems 2
+ */
+export type Point1 = [number, number];
+/**
+ * Optional outline, relative to the icon's top-left corner.
+ *
+ * @minItems 3
+ */
+export type Ring1 = [Point, Point, Point, ...Point[]];
 export type Truncate = "none" | "end" | "middle";
-export type Anchor = {
-  [k: string]: unknown | undefined;
-} & {
-  /**
-   * "line" is reserved for v2 and rejected in v1.
-   */
-  type: "point" | "area";
-};
+export type Anchor =
+  | {
+      type: "point";
+      x: number;
+      y: number;
+      /**
+       * Geometry of a labeled feature (or of an unlabeled obstacle shape). Reference point = the anchor (center for circle/ellipse/rect).
+       */
+      mark?:
+        | {
+            shape: "circle";
+            r?: number;
+          }
+        | {
+            shape: "ellipse";
+            rx: number;
+            ry: number;
+            /**
+             * Degrees, clockwise on screen (SVG convention).
+             */
+            rotation?: number;
+          }
+        | {
+            shape: "rect";
+            w: number;
+            h: number;
+            corner_radius?: number;
+            /**
+             * Degrees, clockwise on screen, around the anchor.
+             */
+            rotation?: number;
+          }
+        | {
+            shape: "polygon";
+            points: Ring;
+            holes?: Ring[];
+            /**
+             * true: points are px offsets from the anchor; false (default): absolute input coordinates.
+             */
+            relative?: boolean;
+          }
+        | {
+            shape: "path";
+            /**
+             * SVG path data, flattened with 0.25 px tolerance.
+             */
+            d: string;
+            /**
+             * true: path coordinates are px offsets from the anchor.
+             */
+            relative?: boolean;
+          }
+        | {
+            shape: "icon";
+            w: number;
+            h: number;
+            tip?: Point1;
+            silhouette?: Ring1;
+          }
+        | {
+            shape: "from_svg";
+            svg_id: string;
+            selector?: string;
+          }
+        | {
+            shape: "from_svg";
+            svg_id?: string;
+            selector: string;
+          };
+    }
+  | {
+      type: "area";
+      polygon: Ring;
+      holes?: Ring[];
+      /**
+       * Geometry of a labeled feature (or of an unlabeled obstacle shape). Reference point = the anchor (center for circle/ellipse/rect).
+       */
+      dot?:
+        | {
+            shape: "circle";
+            r?: number;
+          }
+        | {
+            shape: "ellipse";
+            rx: number;
+            ry: number;
+            /**
+             * Degrees, clockwise on screen (SVG convention).
+             */
+            rotation?: number;
+          }
+        | {
+            shape: "rect";
+            w: number;
+            h: number;
+            corner_radius?: number;
+            /**
+             * Degrees, clockwise on screen, around the anchor.
+             */
+            rotation?: number;
+          }
+        | {
+            shape: "polygon";
+            points: Ring;
+            holes?: Ring[];
+            /**
+             * true: points are px offsets from the anchor; false (default): absolute input coordinates.
+             */
+            relative?: boolean;
+          }
+        | {
+            shape: "path";
+            /**
+             * SVG path data, flattened with 0.25 px tolerance.
+             */
+            d: string;
+            /**
+             * true: path coordinates are px offsets from the anchor.
+             */
+            relative?: boolean;
+          }
+        | {
+            shape: "icon";
+            w: number;
+            h: number;
+            tip?: Point1;
+            silhouette?: Ring1;
+          }
+        | {
+            shape: "from_svg";
+            svg_id: string;
+            selector?: string;
+          }
+        | {
+            shape: "from_svg";
+            svg_id?: string;
+            selector: string;
+          };
+    };
 export type Label = TextLabel | SizedLabel | CompositeLabel;
 export type TextLabel = TextLabel1 & {
   type: "text";
@@ -73,12 +218,7 @@ export type IconShape = string;
  *
  * @minItems 3
  */
-export type Ring = [Point, Point, Point, ...Point[]];
-/**
- * @minItems 2
- * @maxItems 2
- */
-export type Point = [number, number];
+export type Ring2 = [Point, Point, Point, ...Point[]];
 export type Models = ("adjacent" | "slider" | "internal" | "distant" | "boundary")[];
 export type InternalPolicy = "auto" | "prefer" | "allow" | "never";
 export type PositionOrder = ("perceptual" | "cartographic") | [PositionName, ...PositionName[]];
@@ -93,21 +233,73 @@ export type ClassName = string;
  */
 export type Polyline = [Point, Point, ...Point[]];
 /**
- * @minItems 3
- */
-export type Ring1 = [Point, Point, Point, ...Point[]];
-/**
  * A mark shape whose reference point (center for circle/ellipse/rect, tip for icons) is at (x, y). Used for unlabeled obstacles.
  */
 export type PositionedShape = MarkBase & {
   x: number;
   y: number;
 };
-export type MarkBase = {
-  [k: string]: unknown | undefined;
-} & {
-  shape: "circle" | "ellipse" | "rect" | "polygon" | "path" | "icon" | "from_svg";
-};
+export type MarkBase =
+  | {
+      shape: "circle";
+      r?: number;
+    }
+  | {
+      shape: "ellipse";
+      rx: number;
+      ry: number;
+      /**
+       * Degrees, clockwise on screen (SVG convention).
+       */
+      rotation?: number;
+    }
+  | {
+      shape: "rect";
+      w: number;
+      h: number;
+      corner_radius?: number;
+      /**
+       * Degrees, clockwise on screen, around the anchor.
+       */
+      rotation?: number;
+    }
+  | {
+      shape: "polygon";
+      points: Ring;
+      holes?: Ring[];
+      /**
+       * true: points are px offsets from the anchor; false (default): absolute input coordinates.
+       */
+      relative?: boolean;
+    }
+  | {
+      shape: "path";
+      /**
+       * SVG path data, flattened with 0.25 px tolerance.
+       */
+      d: string;
+      /**
+       * true: path coordinates are px offsets from the anchor.
+       */
+      relative?: boolean;
+    }
+  | {
+      shape: "icon";
+      w: number;
+      h: number;
+      tip?: Point1;
+      silhouette?: Ring1;
+    }
+  | {
+      shape: "from_svg";
+      svg_id: string;
+      selector?: string;
+    }
+  | {
+      shape: "from_svg";
+      svg_id?: string;
+      selector: string;
+    };
 export type SvgSource = {
   /**
    * SVG markup.
@@ -178,7 +370,7 @@ export type RasterSource = {
    * Raster pixels per canvas pixel.
    */
   scale?: number;
-  offset?: Point1;
+  offset?: Point2;
 } & RasterSource1;
 export type Color = string;
 /**
@@ -187,7 +379,7 @@ export type Color = string;
  * @minItems 2
  * @maxItems 2
  */
-export type Point1 = [number, number];
+export type Point2 = [number, number];
 export type RasterSource1 = {
   [k: string]: unknown | undefined;
 };
@@ -234,7 +426,7 @@ export type WarmStart = {
   placements: {
     id: string;
     placed?: boolean;
-    anchor?: Point2;
+    anchor?: Point3;
     /**
      * The leader the box was placed with, as in a result. With the angles, elbow and orthogonal styles, a leader of the style in use moves with the box and is kept while it still fits (spec §6.7).
      */
@@ -256,12 +448,12 @@ export type WarmStart = {
  * @minItems 2
  * @maxItems 2
  */
-export type Point2 = [number, number];
+export type Point3 = [number, number];
 export type WarmStart1 = {
   placements: {
     id: string;
     placed?: boolean;
-    anchor?: Point2;
+    anchor?: Point3;
     /**
      * The leader the box was placed with, as in a result. With the angles, elbow and orthogonal styles, a leader of the style in use moves with the box and is kept while it still fits (spec §6.7).
      */
@@ -354,7 +546,70 @@ export interface ItemDefaults {
    * Space a label keeps from other labels and their stubs while avoid.label.labels is hard (the larger of the two labels' spacings, each at least its margin; spec §4.4); null: twice the margin. Half for warm-start candidates.
    */
   spacing?: NonNegLength | null;
-  mark?: Mark;
+  /**
+   * Mark used for point anchors without an explicit mark.
+   */
+  mark?:
+    | {
+        shape: "circle";
+        r?: number;
+      }
+    | {
+        shape: "ellipse";
+        rx: number;
+        ry: number;
+        /**
+         * Degrees, clockwise on screen (SVG convention).
+         */
+        rotation?: number;
+      }
+    | {
+        shape: "rect";
+        w: number;
+        h: number;
+        corner_radius?: number;
+        /**
+         * Degrees, clockwise on screen, around the anchor.
+         */
+        rotation?: number;
+      }
+    | {
+        shape: "polygon";
+        points: Ring;
+        holes?: Ring[];
+        /**
+         * true: points are px offsets from the anchor; false (default): absolute input coordinates.
+         */
+        relative?: boolean;
+      }
+    | {
+        shape: "path";
+        /**
+         * SVG path data, flattened with 0.25 px tolerance.
+         */
+        d: string;
+        /**
+         * true: path coordinates are px offsets from the anchor.
+         */
+        relative?: boolean;
+      }
+    | {
+        shape: "icon";
+        w: number;
+        h: number;
+        tip?: Point1;
+        silhouette?: Ring1;
+      }
+    | {
+        shape: "from_svg";
+        svg_id: string;
+        selector?: string;
+      }
+    | {
+        shape: "from_svg";
+        svg_id?: string;
+        selector: string;
+      };
   wrap?: Wrap | null;
   truncate?: Truncate;
   /**
@@ -435,7 +690,7 @@ export interface SizedLabel {
   width: number;
   height: number;
   shape?: IconShape;
-  polygon?: Ring;
+  polygon?: Ring2;
   padding?: NonNegLength;
   font?: Font1;
 }
@@ -501,7 +756,7 @@ export interface VectorLayer {
    * Stroke width for polylines (px).
    */
   width?: number;
-  polygons?: Ring1[];
+  polygons?: Ring[];
   fill_rule?: "nonzero" | "evenodd";
   rects?: Rect4[];
   shapes?: PositionedShape[];

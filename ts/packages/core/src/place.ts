@@ -233,9 +233,65 @@ export function placeReported(problem: unknown, env: Env, warnings: Issue[], pro
 const now: () => number =
   typeof performance !== "undefined" && typeof performance.now === "function" ? () => performance.now() : () => Date.now();
 
+const CALLBACKS = ["priority", "cost", "measure", "progress", "readFile"] as const;
+
+/** The bytes of an ArrayBuffer view or an ArrayBuffer, without copying. */
+function byteView(v: unknown): Uint8Array | null {
+  if (v instanceof Uint8Array) return v;
+  if (ArrayBuffer.isView(v)) return new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
+  if (v instanceof ArrayBuffer) return new Uint8Array(v);
+  return null;
+}
+
+/**
+ * Checks the options of a solve, with the errors of `@label-anything/wasm`: a wrong type
+ * is a `TypeError`, a wrong pixel count a `RangeError`. `null` counts as not set.
+ */
+function checkOptions(options: unknown): PlaceOptions {
+  if (options === undefined || options === null) return {};
+  if (typeof options !== "object" || Array.isArray(options)) {
+    throw new TypeError("label-anything: the options must be an object (PlaceOptions)");
+  }
+  const o = options as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const key of CALLBACKS) {
+    const f = o[key];
+    if (f === undefined || f === null) continue;
+    if (typeof f !== "function") throw new TypeError(`label-anything: options.${key} must be a function`);
+    out[key] = f;
+  }
+  if (o.signal !== undefined && o.signal !== null) {
+    if (typeof o.signal !== "object") throw new TypeError("label-anything: options.signal must be an AbortSignal or an object with `aborted`");
+    out.signal = o.signal;
+  }
+  const r = o.raster;
+  if (r !== undefined && r !== null) {
+    if (typeof r !== "object") throw new TypeError("label-anything: options.raster must be {width, height, data}");
+    const { width, height, data } = r as Record<string, unknown>;
+    for (const [key, v] of [["width", width], ["height", height]] as const) {
+      if (typeof v !== "number" || !Number.isInteger(v) || v < 1 || v > 0xffffffff) {
+        throw new TypeError(`label-anything: options.raster.${key} must be a positive integer`);
+      }
+    }
+    const bytes = byteView(data);
+    if (bytes === null) throw new TypeError("label-anything: options.raster.data must be a Uint8Array or Uint8ClampedArray");
+    const expected = (width as number) * (height as number) * 4;
+    if (bytes.length !== expected) {
+      throw new RangeError(`label-anything: options.raster.data has ${bytes.length} bytes, width * height * 4 = ${expected}`);
+    }
+    out.raster = { width, height, data: bytes };
+  }
+  return out as PlaceOptions;
+}
+
 /** The environment of a {@link place} call: clock, callbacks and host data. */
 export class OptionsEnv implements Env {
-  constructor(private readonly options: PlaceOptions) {}
+  private readonly options: PlaceOptions;
+
+  /** Throws a `TypeError` or `RangeError` for options of the wrong kind. */
+  constructor(options: PlaceOptions = {}) {
+    this.options = checkOptions(options);
+  }
 
   nowMs(): number {
     return now();
@@ -245,7 +301,11 @@ export class OptionsEnv implements Env {
     const m = this.options.measure;
     if (m === undefined) return null;
     const r = m(text, font);
-    return r ?? null;
+    if (r === null || r === undefined) return null;
+    if (!Number.isFinite(r.width) || !Number.isFinite(r.ascent) || !Number.isFinite(r.descent)) {
+      throw new TypeError("label-anything: the measure callback must return null or {width, ascent, descent} with finite numbers");
+    }
+    return r;
   }
 
   hasMeasureCallback(): boolean {
@@ -256,12 +316,14 @@ export class OptionsEnv implements Env {
     const p = this.options.priority;
     if (p === undefined) return null;
     const v = p(item as LabelProblem["items"][number], index);
-    if (typeof v === "number") return [null, v];
-    if (Array.isArray(v)) {
-      const t = v[0];
-      return [typeof t === "number" && Number.isFinite(t) ? Math.trunc(t) : null, Number(v[1])];
+    if (typeof v === "number" && Number.isFinite(v)) return [null, v];
+    if (Array.isArray(v) && v.length === 2 && Number.isInteger(v[0]) && typeof v[1] === "number" && Number.isFinite(v[1])) {
+      return [v[0] as number, v[1] as number];
     }
-    return null;
+    throw new TypeError(
+      `label-anything: the priority callback must return a finite number or [tier, score] ` +
+        `with an integer tier (item ${index} got ${String(v)})`,
+    );
   }
 
   hasPriorityCallback(): boolean {
@@ -272,7 +334,11 @@ export class OptionsEnv implements Env {
     const c = this.options.cost;
     if (c === undefined) return 0;
     const info: CandidateInfo = { itemId, box: { x: bbox.x0, y: bbox.y0, w: bbox.w(), h: bbox.h() }, leader };
-    return c(info);
+    const v = c(info);
+    if (typeof v !== "number" || !Number.isFinite(v)) {
+      throw new TypeError(`label-anything: the cost callback must return a finite number (got ${String(v)} for item "${itemId}")`);
+    }
+    return v;
   }
 
   hasCostCallback(): boolean {
@@ -298,11 +364,16 @@ export class OptionsEnv implements Env {
   readFile(path: string): Uint8Array {
     const rf = this.options.readFile;
     if (rf === undefined) throw new Error(`file access is not available in this environment (${path})`);
+    let content: unknown;
     try {
-      return rf(path);
+      content = rf(path);
     } catch (e) {
       throw new Error(`cannot read ${path}: ${e instanceof Error ? e.message : String(e)}`);
     }
+    if (typeof content === "string") return new TextEncoder().encode(content);
+    const bytes = byteView(content);
+    if (bytes === null) throw new TypeError(`label-anything: readFile must return a Uint8Array or a string (path ${path})`);
+    return bytes;
   }
 }
 
@@ -318,12 +389,24 @@ function parseProblem(text: string): unknown {
 /** Solve a problem (an object or JSON text). Throws {@link PlaceError} if invalid. */
 export function place(problem: LabelProblem | string, options: PlaceOptions = {}): LabelResult {
   const p = typeof problem === "string" ? parseProblem(problem) : problem;
-  return placeWith(p, new OptionsEnv(options ?? {})) as unknown as LabelResult;
+  return placeWith(p, new OptionsEnv(options)) as unknown as LabelResult;
 }
 
-/** Validate a problem against the schema and the semantic rules. */
+/**
+ * Validate a problem (an object or JSON text) against the schema and the semantic rules.
+ * Text that is not JSON is a `parse` error of the report.
+ */
 export function validate(problem: unknown): ValidationReport {
-  const r = validateProblem(problem);
+  let p = problem;
+  if (typeof problem === "string") {
+    try {
+      p = JSON.parse(problem);
+    } catch (e) {
+      const issue = new Issue("", "parse", `invalid JSON: ${e instanceof Error ? e.message : String(e)}`);
+      return { valid: false, errors: [issue], warnings: [] };
+    }
+  }
+  const r = validateProblem(p);
   return { valid: r.valid, errors: r.errors, warnings: r.warnings };
 }
 

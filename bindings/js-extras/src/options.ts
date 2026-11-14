@@ -8,7 +8,7 @@ export type Label = Item["label"];
 export type LeaderStyle = NonNullable<NonNullable<LabelProblem["leaders"]>["style"]>;
 /** Geometry of a labeled feature (spec §3.2). */
 export type Mark = NonNullable<NonNullable<LabelProblem["defaults"]>["mark"]>;
-/** A point anchor (the generated `Anchor` type does not discriminate point and area). */
+/** A point anchor: the `type: "point"` variant of the problem's `Anchor`. */
 export interface PointAnchor {
   type: "point";
   x: number;

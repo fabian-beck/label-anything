@@ -307,7 +307,7 @@ fn touch_from_support(s: P, d: P, hw: f64, hh: f64) -> P {
 
 /// Support points of an item's inflated mark (`S ⊕ o`) in the directions of the fixed
 /// positions and of the gap tables. They do not depend on the label size, so all
-/// variants of the item share them ([`support_table`]).
+/// variants of the item share them (`support_table`).
 #[derive(Clone, Debug)]
 pub struct SupportTable {
     /// By angular index of the fixed positions.
@@ -375,7 +375,7 @@ fn push_in(shape: &Shape, o: f64, c: P, hw: f64, hh: f64) -> P {
 /// candidate on the side its center points to when it touches the inflated mark (gap
 /// ≤ offset + 1 px), else a distant candidate with a straight leader (straight style,
 /// within the leader length limits) or with the leader it came with (see
-/// [`warm_leader`]). `None` when neither applies.
+/// `warm_leader`). `None` when neither applies.
 pub fn warm(
     model: &crate::model::Model,
     item: &Item,
@@ -990,6 +990,10 @@ pub fn internal_rank(item: &Item, v: &Variant, models: Models, circle_ratio: f64
     }
 }
 
+/// The grid of an area anchor's internal candidates has about this many samples at most
+/// (spec §6.5).
+const AREA_SAMPLES: f64 = 65536.0;
+
 /// Internal candidates of one variant (spec §6.3, §6.5).
 pub fn internal(item: &Item, vi: usize, v: &Variant, rank: f64, out: &mut Vec<Cand>) {
     let hw = v.w * 0.5;
@@ -1019,9 +1023,11 @@ pub fn internal(item: &Item, vi: usize, v: &Variant, rank: f64, out: &mut Vec<Ca
         if shape.contains_rect(&Rect::from_center(area.pole, hw, hh), pad) {
             pts.push((area.pole_dist, area.pole));
         }
-        // grid samples where the label fits, by clearance
+        // grid samples where the label fits, by clearance; an area far larger than any
+        // picture (a country beyond the view of a map) is sampled more coarsely, at about
+        // `AREA_SAMPLES` places (spec §6.5)
         let bb = shape.bbox();
-        let step = maxf(v.h, 4.0);
+        let step = maxf(maxf(v.h, 4.0), (bb.w() * bb.h() / AREA_SAMPLES).sqrt());
         let mut y = bb.y0 + hh;
         while y <= bb.y1 - hh + 1e-9 {
             let mut x = bb.x0 + hw;
@@ -1030,7 +1036,14 @@ pub fn internal(item: &Item, vi: usize, v: &Variant, rank: f64, out: &mut Vec<Ca
                 if shape.contains_rect(&Rect::from_center(c, hw, hh), pad) {
                     pts.push((-shape.signed_distance(c), c));
                 }
+                // coordinates so large that a step no longer changes them
+                if x + step <= x {
+                    break;
+                }
                 x += step;
+            }
+            if y + step <= y {
+                break;
             }
             y += step;
         }

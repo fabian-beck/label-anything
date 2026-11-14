@@ -16,6 +16,8 @@
 //! for bit with the TypeScript implementation (`ts/packages/core/src/detmath.ts`,
 //! `pcg.ts`, `expr/`).
 
+#![forbid(unsafe_code)]
+
 mod ast;
 pub mod det_math;
 mod error;
@@ -78,3 +80,8 @@ impl std::str::FromStr for Expr {
 
 #[cfg(test)]
 mod tests;
+
+/// The examples of the README are tested with the documentation.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;
