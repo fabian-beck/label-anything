@@ -753,14 +753,7 @@ impl Obstacles {
         let n = ((len / step).ceil() as usize).max(1);
         // only the samples that can fall on the grid (the others never count; the margin
         // of one cell absorbs rounding)
-        let g = &self.grid;
-        let area = Rect {
-            x0: g.ox,
-            y0: g.oy,
-            x1: g.ox + g.cols as f64 * step,
-            y1: g.oy + g.rows as f64 * step,
-        }
-        .inflate(step);
+        let area = self.grid.extent().inflate(step);
         let (k0, k1) = crate::geom::sample_range_in_rect(a, b, n, &area);
         let mut acc = 0.0;
         for k in k0..k1 {

@@ -614,31 +614,15 @@ function compositeVariant(
 
 /** Normal (level-0) variants of an item. */
 export function baseVariants(m: Measurer, item: Item): Variant[] {
-  return variantsAtScale(m, item, 1, false);
-}
-
-function variantsAtScale(m: Measurer, item: Item, scale: number, withAlternatives: boolean): Variant[] {
   const pad = item.len.padding;
   const label = item.label;
   switch (label.kind) {
-    case "text": {
-      const spec = label.spec;
-      const v = textVariants(m, spec, spec.text, pad, scale, "original");
-      if (withAlternatives) {
-        spec.alternatives.forEach((alt, k) => {
-          for (const a of textVariants(m, spec, alt, pad, scale, `alternative:${k}`)) {
-            a.penalty += 0.5 * (k + 1);
-            a.steps.unshift("alternatives");
-            v.push(a);
-          }
-        });
-      }
-      return v;
-    }
+    case "text":
+      return textVariants(m, label.spec, label.spec.text, pad, 1, "original");
     case "fixed":
-      return [fixedVariant(label.fixed, label.w, label.h, label.shape, pad, scale)];
+      return [fixedVariant(label.fixed, label.w, label.h, label.shape, pad, 1)];
     case "composite":
-      return [compositeVariant(m, label.row, label.gap.px(item.em()), label.align, label.parts, pad, scale)];
+      return [compositeVariant(m, label.row, label.gap.px(item.em()), label.align, label.parts, pad, 1)];
   }
 }
 

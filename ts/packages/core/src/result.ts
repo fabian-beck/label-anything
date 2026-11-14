@@ -174,7 +174,7 @@ export function build(s: Solve, ver: Verification, phases: readonly [string, num
         m.leader = leaderJson(c.leaders[0]!, s);
         m.leaders = c.leaders.map((l) => leaderJson(l, s));
       }
-      const dynamic = s.state.dynamicCost(c, s.cands, s.obs, item.len.buffer, item.len.clearance, model.leaders.width, i);
+      const dynamic = s.dynamicCost(i, cid);
       const relax = s.state.relaxed[i] === 1 ? c.relaxCost : 0;
       const cost = c.cost + dynamic + relax;
       totalCost += cost;

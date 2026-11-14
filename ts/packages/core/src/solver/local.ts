@@ -34,11 +34,9 @@ export interface LocalStats {
 
 /** Total cost of item `i` at candidate `c` given the other placed labels. */
 function itemCost(s: Solve, i: number, c: number): number {
-  const item = s.model.items[i]!;
+  const d = s.dynamicCost(i, c);
   const cand = s.cands[c]!;
-  const relax = !cand.feasible ? cand.relaxCost : 0;
-  const d = s.state.dynamicCost(cand, s.cands, s.obs, item.len.buffer, item.len.clearance, s.model.leaders.width, i);
-  return cand.cost + relax + d;
+  return cand.relaxedCost() + d;
 }
 
 /** Whether item `i` may use candidate `c` statically. */
@@ -167,8 +165,7 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
         if (tr !== null) tr.move(it, "insert", u, -1, -1, -1, -1, 0, null, temp, "idle", "excluded", cur, best);
         continue;
       }
-      const m = s.model.maxLabels;
-      if (m !== null && s.state.nPlaced >= m && mode !== Omission.Strict) {
+      if (s.labelCapReached() && mode !== Omission.Strict) {
         if (tr !== null) tr.move(it, "insert", u, -1, -1, -1, -1, 0, null, temp, "idle", "cap", cur, best);
         continue;
       }
@@ -187,7 +184,7 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
         snapReasons = s.reasons.slice();
         if (tr !== null) tr.move(it, "insert", u, -1, s.state.placed[u]!, -1, -1, 0, null, temp, "inserted", null, cur, best);
       } else {
-        if (!capFull(s)) failedAt[u] = st.accepted;
+        if (!s.labelCapReached()) failedAt[u] = st.accepted;
         if (tr !== null) tr.move(it, "insert", u, -1, -1, -1, -1, 0, null, temp, "not_inserted", null, cur, best);
       }
       continue;
@@ -357,7 +354,7 @@ function tryInsert(s: Solve, u: number, softOk: boolean, sets: readonly boolean[
   for (const c of ids) {
     if (!usable(s, c, softOk)) continue;
     const cand = s.cands[c]!;
-    scoredCost.push(cand.cost + (cand.feasible ? 0 : cand.relaxCost));
+    scoredCost.push(cand.relaxedCost());
     scoredId.push(c);
   }
   const idx: number[] = [];
@@ -373,7 +370,7 @@ function tryInsert(s: Solve, u: number, softOk: boolean, sets: readonly boolean[
     const blockers = scratch.slice();
     if (blockers.length === 0) {
       const tx = new Tx();
-      if (capFull(s) && !evictOneLower(s, u, sets, tx)) return false;
+      if (s.labelCapReached() && !evictOneLower(s, u, sets, tx)) return false;
       tx.place(s, u, c);
       if (inverts(s, tx)) {
         tx.rollback(s);
@@ -476,11 +473,6 @@ function tierLe(a: { required: boolean; tier: number; reserved: boolean }, b: { 
   if (a.tier !== b.tier) return a.tier < b.tier;
   if (a.reserved !== b.reserved) return !a.reserved;
   return true;
-}
-
-function capFull(s: Solve): boolean {
-  const m = s.model.maxLabels;
-  return m !== null && s.state.nPlaced >= m;
 }
 
 function capFullAfterInsert(s: Solve): boolean {

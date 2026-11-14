@@ -95,7 +95,6 @@ pub struct Solve<'a> {
 }
 
 impl<'a> Solve<'a> {
-    #[allow(clippy::too_many_arguments)]
     pub fn new(
         model: &'a Model,
         obs: &'a Obstacles,
@@ -133,9 +132,7 @@ impl<'a> Solve<'a> {
                 obs.dynamic.lower_cover.then(|| {
                     LowerMarks::new(
                         model.items.iter().map(|it| it.shape.clone()).collect(),
-                        (0..n)
-                            .map(|k| model.group_of.get(k).copied().flatten())
-                            .collect(),
+                        (0..n).map(|k| model.group_rep(k)).collect(),
                         &model.extent,
                         obs.index_cell,
                     )
@@ -181,12 +178,24 @@ impl<'a> Solve<'a> {
         })
     }
 
-    /// Generate and evaluate candidates for `variants[vi_range]` of item `i` with `models`.
+    /// Generate and evaluate candidates for the variants `vis` of item `i` with `models`.
     pub fn generate(&mut self, i: usize, vis: &[usize], models: Models, level: u8) -> Vec<u32> {
-        if matches!(self.model.group_of.get(i), Some(Some(r)) if *r != i) {
+        if self.model.is_group_member(i) {
             return vec![];
         }
         self.generate_mode(i, vis, models, level, false)
+    }
+
+    /// Collect the free-space seeds near item `i` (once), when `models` has distant
+    /// candidates that use them.
+    fn ensure_seeds(&mut self, i: usize, models: Models) {
+        if models.has(Models::DISTANT)
+            && self.model.placement.free_space_seeds
+            && self.seeds[i].is_none()
+        {
+            let fs = self.obs.free_space(self.model);
+            self.seeds[i] = Some(crate::leaders::item_seeds(fs, &self.model.items[i]));
+        }
     }
 
     /// Up to `k` statically feasible candidates of item `i` (or, with the `soft_overlap`
@@ -199,13 +208,7 @@ impl<'a> Solve<'a> {
     pub fn feasible_unfiltered(&mut self, i: usize, k: usize) -> Vec<Cand> {
         let item = &self.model.items[i];
         let models = self.models[i];
-        if models.has(Models::DISTANT)
-            && self.model.placement.free_space_seeds
-            && self.seeds[i].is_none()
-        {
-            let fs = self.obs.free_space(self.model);
-            self.seeds[i] = Some(crate::leaders::item_seeds(fs, item));
-        }
+        self.ensure_seeds(i, models);
         // level-0 variants: their adjacent, slider, internal and boundary candidates were
         // generated before any label was placed (all kept); distant candidates on demand
         let level0 = Models((models.0 & !item.models.0) | (models.0 & Models::DISTANT));
@@ -288,21 +291,9 @@ impl<'a> Solve<'a> {
         if self.cands[cid as usize].evaluated {
             return;
         }
-        let mut c = std::mem::replace(
-            &mut self.cands[cid as usize],
-            Cand::new(
-                0,
-                0,
-                0,
-                Kind::Adjacent,
-                candidates::Side::Internal,
-                0.0,
-                crate::geom::Rect::EMPTY,
-            ),
-        );
+        let c = &mut self.cands[cid as usize];
         let v = &self.variants[c.item as usize][c.variant as usize];
-        Evaluator::new(self.model, self.obs, self.env).eval(&mut c, v, None);
-        self.cands[cid as usize] = c;
+        Evaluator::new(self.model, self.obs, self.env).eval(c, v, None);
     }
 
     /// `lazy`: skip static evaluation and pruning (ladder candidates; see `ensure_eval`).
@@ -315,13 +306,7 @@ impl<'a> Solve<'a> {
         lazy: bool,
     ) -> Vec<u32> {
         let item = &self.model.items[i];
-        if models.has(Models::DISTANT)
-            && self.model.placement.free_space_seeds
-            && self.seeds[i].is_none()
-        {
-            let fs = self.obs.free_space(self.model);
-            self.seeds[i] = Some(crate::leaders::item_seeds(fs, item));
-        }
+        self.ensure_seeds(i, models);
         // While labels are placed (ladder steps, on-demand distant candidates), candidates
         // blocked (hard) by a placed label or leader of higher or equal priority are
         // dropped (spec §6.7): they cannot be used while that label stays, and they can
@@ -389,7 +374,7 @@ impl<'a> Solve<'a> {
             .map(|m| Models(m.0 & !Models::DISTANT))
             .collect();
         let per_item = |env: &dyn Env, i: usize| -> (Vec<Cand>, u32, Option<Cand>) {
-            if matches!(model.group_of.get(i), Some(Some(r)) if *r != i) {
+            if model.is_group_member(i) {
                 return (Vec::new(), 0, None);
             }
             let item = &model.items[i];
@@ -480,6 +465,53 @@ impl<'a> Solve<'a> {
             .filter(|&v| self.variants[i][v].level == 0)
             .collect();
         self.generate(i, &vis, Models(Models::DISTANT), 0)
+    }
+
+    /// Soft costs of candidate `c` of item `i` against the placed labels and leaders
+    /// (`State::dynamic_cost` with the item's buffer and clearance).
+    #[inline]
+    pub fn dynamic_cost(&mut self, i: usize, c: u32) -> f64 {
+        let item = &self.model.items[i];
+        self.state.dynamic_cost(
+            &self.cands[c as usize],
+            &self.cands,
+            self.obs,
+            item.len.buffer,
+            item.len.clearance,
+            self.model.leaders.width,
+            i,
+        )
+    }
+
+    /// Whether `priority.budget.max_labels` labels are placed.
+    #[inline]
+    pub fn label_cap_reached(&self) -> bool {
+        self.model
+            .max_labels
+            .is_some_and(|m| self.state.n_placed >= m)
+    }
+
+    /// Whether the budget (`priority.budget`: `max_labels` and `max_ink_fraction`) allows
+    /// one more label with the box of `c`, once the labels of the placed items `removed`
+    /// are removed.
+    pub fn budget_allows(&self, c: &Cand, removed: &[u32]) -> bool {
+        if let Some(m) = self.model.max_labels {
+            if self.state.n_placed + 1 > m + removed.len() {
+                return false;
+            }
+        }
+        if let (Some(f), Some(canvas)) = (self.model.max_ink_fraction, self.model.canvas) {
+            let mut area = self.state.label_area_sum;
+            for &j in removed {
+                area -= self.cands[self.state.placed[j as usize].unwrap() as usize]
+                    .rect
+                    .area();
+            }
+            if (area + c.rect.area()) / canvas.area().max(1e-9) > f {
+                return false;
+            }
+        }
+        true
     }
 
     /// Lower bound of the static cost of any leadered candidate of item `i`.
@@ -814,7 +846,7 @@ fn warm_variant(
     item: &crate::model::Item,
     variants: &[Variant],
 ) -> Option<(usize, Rect)> {
-    if matches!(model.group_of.get(item.index), Some(Some(r)) if *r != item.index) {
+    if model.is_group_member(item.index) {
         return None;
     }
     let Some(Some(b)) = model.warm.get(&item.id) else {

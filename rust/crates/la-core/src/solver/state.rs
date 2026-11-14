@@ -456,14 +456,7 @@ impl State {
 
     /// Whether candidate `c` conflicts with nothing placed (except `skip`); stops at the
     /// first conflict.
-    pub fn is_free(
-        &mut self,
-        c: &Cand,
-        cands: &[Cand],
-        obs: &Obstacles,
-        skip: usize,
-        _scratch: &mut Vec<u32>,
-    ) -> bool {
+    pub fn is_free(&mut self, c: &Cand, cands: &[Cand], obs: &Obstacles, skip: usize) -> bool {
         self.first_conflict(c, cands, obs, skip, |_| true).is_none()
     }
 

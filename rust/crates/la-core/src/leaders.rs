@@ -8,7 +8,7 @@ use crate::model::opts::{Attach, LeaderStyle, Port};
 use crate::model::{Item, Model};
 use crate::obstacles::FreeSpace;
 
-/// Leader start on the item for direction `d` (boundary + gap, center or tip).
+/// Leader start on the item for a leader toward `toward` (boundary + gap, center or tip).
 pub fn leader_start(model: &Model, item: &Item, toward: P) -> P {
     let attach = match model.leaders.attach {
         Attach::Auto => {

@@ -6,7 +6,7 @@
  * @module
  */
 
-import { RasterError, decode, decodeSource, rgbaFromBase64 } from "@label-anything/raster";
+import { RasterError, decode, decodeSource, parseHexColor, rgbaFromBase64 } from "@label-anything/raster";
 import type { FontSpec } from "../api.js";
 import {
   type Env,
@@ -463,6 +463,23 @@ export class Model {
    */
   isLower(i: number, j: number): boolean {
     return this.keyLevel.length > 0 && this.keyLevel[j]! > this.keyLevel[i]!;
+  }
+
+  /**
+   * The representative of the group of item `j` (itself for a representative); `null` for
+   * an item without a group.
+   */
+  groupRep(j: number): number | null {
+    return this.groupOf[j] ?? null;
+  }
+
+  /**
+   * Whether another item represents the group of item `i`: its representative's label is
+   * its label.
+   */
+  isGroupMember(i: number): boolean {
+    const r = this.groupOf[i];
+    return r !== undefined && r !== null && r !== i;
   }
 
   /** Members of the group represented by `rep` (empty if `rep` is not a representative). */
@@ -1050,7 +1067,7 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.items = items;
   m.vector = vector;
   m.rasters = rasters;
-  m.background = parseColor(o.string("canvas.background")) ?? [255, 255, 255];
+  m.background = parseHexColor(o.string("canvas.background")) ?? [255, 255, 255];
   m.avoidLabel = o.map("avoid.label");
   m.avoidLeader = o.map("avoid.leader");
   m.avoidBuffer = o.map("avoid.buffer");
@@ -1097,48 +1114,11 @@ function looksBase64(s: string): boolean {
   return true;
 }
 
-/** `parse_color`: `#rgb` or `#rrggbb`. */
-function parseColor(s: string): [number, number, number] | null {
-  if (!s.startsWith("#")) return null;
-  const h = utf8.encode(s.slice(1));
-  // u8::from_str_radix on a 1- or 2-byte slice
-  const hex = (i: number, n: number): number => {
-    const d = (c: number): number =>
-      c >= 0x30 && c <= 0x39 ? c - 0x30 : c >= 0x61 && c <= 0x66 ? c - 0x57 : c >= 0x41 && c <= 0x46 ? c - 0x37 : -1;
-    let k = i;
-    const end = i + n;
-    if (h[k] === 0x2b) k++;
-    if (k >= end) return -1;
-    let v = 0;
-    for (; k < end; k++) {
-      const x = d(h[k]!);
-      if (x < 0) return -1;
-      v = v * 16 + x;
-    }
-    return v;
-  };
-  if (h.length === 3) {
-    const r = hex(0, 1);
-    const g = hex(1, 1);
-    const b = hex(2, 1);
-    if (r < 0 || g < 0 || b < 0) return null;
-    return [r * 17, g * 17, b * 17];
-  }
-  if (h.length === 6) {
-    const r = hex(0, 2);
-    const g = hex(2, 2);
-    const b = hex(4, 2);
-    if (r < 0 || g < 0 || b < 0) return null;
-    return [r, g, b];
-  }
-  return null;
-}
-
 function rasterOpts(src: unknown, ptr: string): RasterOpts {
   const g = (k: string): unknown => sourceOpt(src, "obstacles.raster", k);
   const mode = asStr(g("mode")) ?? "ink";
   const bgs = asStr(g("ink.background"));
-  const background = bgs !== null ? parseColor(bgs) : null;
+  const background = bgs !== null ? parseHexColor(bgs) : null;
   const inkThreshold = asF64(g("ink.threshold")) ?? 0.12;
   let m: RasterOpts["mode"];
   switch (mode) {
@@ -1158,7 +1138,7 @@ function rasterOpts(src: unknown, ptr: string): RasterOpts {
         for (const k of Object.keys(cm)) {
           const v = cm[k];
           if (v === undefined) continue;
-          const c = parseColor(k);
+          const c = parseHexColor(k);
           if (c === null) throw err(`${ptr}/classmap`, "pattern", `invalid colour ${k}`);
           palette.push([c, asStr(v) ?? "ink"]);
         }

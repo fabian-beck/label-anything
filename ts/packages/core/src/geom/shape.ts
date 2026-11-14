@@ -290,12 +290,6 @@ export abstract class ShapeBase {
     }
   }
 
-  /** Segment `ab` passes within `clearance` of the shape (interior when 0). */
-  nearSegment(this: Shape, a: P, b: P, clearance: number): boolean {
-    const d = this.distSegmentXY(a.x, a.y, b.x, b.y);
-    return d < clearance - EPS || (clearance <= 0 && d < -EPS);
-  }
-
   /**
    * Signed-ish distance between segment `ab` and the shape: 0 if they intersect,
    * otherwise the gap.

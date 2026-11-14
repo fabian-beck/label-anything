@@ -15,7 +15,7 @@ import { Attach, type Item, LeaderStyle, type Model, Port, posDir } from "./mode
 import type { Obstacles } from "./obstacles.js";
 import { IdList } from "./spatial.js";
 
-/** Leader start on the item for direction `d` (boundary + gap, center or tip). */
+/** Leader start on the item for a leader toward `toward` (boundary + gap, center or tip). */
 export function leaderStart(model: Model, item: Item, toward: P): P {
   LS[0] = toward.x;
   LS[1] = toward.y;
