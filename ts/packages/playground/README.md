@@ -53,6 +53,7 @@ The build also makes `dist/hero.js`, the live header of the documentation's home
 | Path | |
 |---|---|
 | `src/app.ts` | state, problem building, the solve loop (cold, warm and settle solves), drawing, pointer handling, share links |
+| `src/view.ts` | the playground's own settings (solve scheduling, label transitions, display) and their defaults |
 | `src/engines.ts`, `src/worker-*.ts` | the WebAssembly and TypeScript engines in Web Workers (`createWorkerEngine` of `@label-anything/extras`) |
 | `src/controls.ts`, `src/ui/` | the option controls (one problem field each) and the Options, Inspect and Code tabs |
 | `src/render.ts` | canvas drawing of labels, leaders and the diagnostic overlays |

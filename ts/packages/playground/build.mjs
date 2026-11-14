@@ -146,7 +146,6 @@ function moduleGraph() {
     wasm: "ts/packages/wasm-adapter/src",
     cli: "ts/packages/cli/src",
   };
-  const pkgOf = { core: "core", text: "text", svg: "svg", raster: "raster", extras: "extras", wasm: "wasm", cli: "cli" };
   const nodes = new Map();
   const edges = [];
   const walk = (dir, out) => {
@@ -174,7 +173,7 @@ function moduleGraph() {
           edges.push([id, `${pkg}/${relative(dir, target).replace(/\\/g, "/")}`]);
         } else if (t.startsWith("@label-anything/")) {
           const name = t.split("/")[1];
-          if (pkgOf[name]) edges.push([id, `${pkgOf[name]}/index`]);
+          if (name in roots) edges.push([id, `${name}/index`]);
         }
       }
     }

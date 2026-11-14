@@ -15,8 +15,8 @@
  * ```
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
-import type { LabelOptions, Mark } from "./options.js";
-import { idOf, itemExtras, labelOf, resolveFont } from "./options.js";
+import type { LabelOptions, Mark, VectorLayer } from "./options.js";
+import { idOf, itemExtras, labelOf, obstacleClass, resolveFont } from "./options.js";
 import { Overlay, type OverlayItem } from "./overlay.js";
 import type { RenderOptions } from "./render.js";
 
@@ -130,8 +130,6 @@ export function labelMapLibre<D>(map: MapLibreLike, data: readonly D[], options:
   };
 }
 
-type VectorLayer = NonNullable<NonNullable<LabelProblem["obstacles"]>["vector"]>[number];
-
 function featureObstacles(map: MapLibreLike, layers: string[], lineWidth: number, pointRadius: number): VectorLayer[] {
   if (!map.queryRenderedFeatures) return [];
   const byClass = new Map<string, { polylines: [number, number][][]; polygons: [number, number][][]; points: [number, number][] }>();
@@ -167,8 +165,7 @@ function featureObstacles(map: MapLibreLike, layers: string[], lineWidth: number
     }
   };
   for (const f of map.queryRenderedFeatures(undefined, { layers })) {
-    const id = f.layer?.id ?? "features";
-    add(/^[A-Za-z_][A-Za-z0-9_.:-]*$/.test(id) ? id : "features", f.geometry);
+    add(obstacleClass(f.layer?.id, "features"), f.geometry);
   }
   const out: VectorLayer[] = [];
   for (const [cls, e] of byClass) {

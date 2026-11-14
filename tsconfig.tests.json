@@ -1,0 +1,16 @@
+{
+  // Type-checks the tests of every TypeScript package and of the JavaScript helpers
+  // (`npm run typecheck:tests`, after `npm run build`): vitest runs them without checking
+  // types, and the packages' own tsconfig.json files cover only src/. Nothing is emitted.
+  "extends": "./ts/tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "noEmit": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"]
+  },
+  "include": ["ts/packages/*/test/**/*.ts", "bindings/js-extras/test/**/*.ts"]
+}
