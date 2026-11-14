@@ -979,6 +979,15 @@ CASES["window-marks-only"] = case(
     "is where near's first position (top) would be. When the view moves on and far comes in, near's "
     "label is not in its way.")
 
+CASES["window-label-still-shows"] = case(
+    "window: a point beyond the working extent keeps the label that still reaches into the canvas",
+    {"canvas": WINDOW,
+     "items": [pt("far", 215, 50, "Far", label={"type": "text", "text": "Far", "width": 70, "height": 14, "padding": 0})],
+     "warm_start": {"pin": True, "placements": [{"id": "far", "placed": True, "box": {"x": 142, "y": 43, "w": 70, "h": 14}}]}},
+    {"placed": 1, "anchor_side": {"far": "left"}, "box": {"far": {"x": 142, "y": 43, "w": 70, "h": 14, "tol": 0.001}}},
+    WINDOW_ABOUT + " far lies 15 px beyond the working extent, and would be a mark only (case "
+    "window-marks-only); its label of the previous solve begins 18 px inside the canvas, so it stays.")
+
 # --- pinned labels (warm_start.pin, spec §10.1) ---------------------------------------------
 PIN_ABOUT = ("With warm_start.pin every label keeps its warm-start box, moved with its anchor, where the hard "
              "rules still allow it, whatever its priority; the solve only adds labels around the pinned ones.")

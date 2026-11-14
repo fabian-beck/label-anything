@@ -1163,8 +1163,6 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.leaderArea = leaderArea;
   m.extent = extent;
   m.window = window;
-  // in a window, a point beyond the working extent is a mark only (spec §2.3)
-  m.beyond = items.map((it) => overscan !== null && it.area === null && !extent.touches(it.shape.bbox()));
   m.items = items;
   m.vector = vector;
   m.rasters = rasters;
@@ -1197,6 +1195,13 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.defaultEm = defaultEm;
   m.shaping = o.string("text.shaping");
   m.warm = warm;
+  // in a window, a point beyond the working extent is a mark only (spec §2.3), unless the
+  // label it comes with still shows: that one is not taken away
+  m.beyond = items.map((it) => {
+    if (overscan === null || it.area !== null || extent.touches(it.shape.bbox())) return false;
+    const b = warm.get(it.id);
+    return !(b !== undefined && b !== null && canvas !== null && canvas.touches(b));
+  });
   m.warmPin = lookup(problem, "warm_start.pin") === true;
   m.warmLeaders = warmLeaders;
   m.warmRotation = warmRotation;

@@ -1256,12 +1256,6 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         }
     };
 
-    // in a window, a point beyond the working extent is a mark only (spec §2.3)
-    let beyond: Vec<bool> = items
-        .iter()
-        .map(|it| overscan.is_some() && it.area.is_none() && !extent.touches(&it.shape.bbox()))
-        .collect();
-
     // --- label area ---
     let allow_outside = o.bool("canvas.allow_outside");
     let pad = o.length("canvas.padding").px(default_em);
@@ -1407,6 +1401,19 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
             warm.insert(id.to_string(), if placed { b } else { None });
         }
     }
+
+    // in a window, a point beyond the working extent is a mark only (spec §2.3), unless
+    // the label it comes with still shows: that one is not taken away
+    let beyond: Vec<bool> = items
+        .iter()
+        .map(|it| {
+            let shows = || match (warm.get(&it.id), canvas) {
+                (Some(Some(b)), Some(c)) => c.touches(b),
+                _ => false,
+            };
+            overscan.is_some() && it.area.is_none() && !extent.touches(&it.shape.bbox()) && !shows()
+        })
+        .collect();
 
     let grid_cell = o.get("solver.grid_cell").as_f64();
 

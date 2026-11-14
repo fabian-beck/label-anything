@@ -92,6 +92,8 @@ export class App {
   #coldPending = true;
   #positionsDirty = false;
   #needsSettle = false;
+  /** The scene's snapshot of the problem that `result` solved. */
+  #resultSnapshot: unknown;
   #lastStart = -1e9;
   #lastMoveAt = 0;
   #redraw = true;
@@ -338,7 +340,9 @@ export class App {
     }
     if (kind !== "cold" && this.view.warmStart && this.result) {
       const now = s.anchorsFromResults ? s.anchors() : undefined;
-      p.warm_start = { placements: this.result.placements.map((q) => warmPlacement(q, now?.get(q.id))) };
+      // a view that only moved since the labels were placed: they are pinned, none moves
+      const pin = kind === "warm" && this.view.pin && this.#resultSnapshot !== undefined && s.pannedSince?.(this.#resultSnapshot) === true;
+      p.warm_start = { ...(pin ? { pin: true } : {}), placements: this.result.placements.map((q) => warmPlacement(q, now?.get(q.id))) };
     }
     if (kind === "settle") {
       const stability = lookup(this.effectiveOptions(), "weights.stability");
@@ -408,6 +412,7 @@ export class App {
         this.#hideToast();
         this.result = result;
         this.problem = built.problem;
+        this.#resultSnapshot = snapshot;
         this.scene.onResult?.(result, snapshot);
         this.#motion.target(result, anchors);
         const st = result.stats;
@@ -416,7 +421,9 @@ export class App {
           moved: st.flicker?.mean_displacement, at: performance.now(),
         });
         if (this.history.length > 240) this.history.splice(0, this.history.length - 240);
-        if (kind === "warm" && this.view.settle && this.view.warmStart) this.#needsSettle = true;
+        // (pinned labels have not moved: there is nothing to settle)
+        const pinned = (built.problem.warm_start as { pin?: boolean } | null | undefined)?.pin === true;
+        if (kind === "warm" && this.view.settle && this.view.warmStart && !pinned) this.#needsSettle = true;
         this.#redraw = true;
         this.#renderStats();
         this.#panel.update();

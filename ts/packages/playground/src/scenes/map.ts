@@ -49,6 +49,12 @@ interface ViewT {
   y: number;
 }
 
+/** A view and the size of the drawing it was taken for. */
+interface Snapshot extends ViewT {
+  w: number;
+  h: number;
+}
+
 /**
  * How far beyond the view the map is labeled as well, in px: about the width of a label
  * (`canvas.overscan`, 8 times the font size).
@@ -373,11 +379,14 @@ export class MapScene implements Scene {
     const flightsFirst = this.params.flightsFirst === true;
     const fonts = this.#fonts();
     const win = this.#window;
-    // a window: what lies a little beyond the view is part of the problem
+    // a window: what lies a little beyond the view is part of the problem, and points
+    // farther out are passed as well: the engine takes them as marks only, so that the
+    // labels in the overscan keep off them before they come in
     const margin = win ? OVERSCAN : 0;
+    const marks = 3 * margin;
     const out: Item[] = [];
     for (const c of this.#countries) {
-      if (!this.#visible(c, margin) || !c.main.length) continue;
+      if (!this.#visible(c, marks) || !c.main.length) continue;
       const [outer, ...inner] = this.#simplified(c);
       // a window gets the whole outline: the label has its place in the country, wherever
       // the view is. Otherwise only the part in view counts, and the label goes there
@@ -389,13 +398,14 @@ export class MapScene implements Scene {
       const ring = part(outer!);
       let anchor: Record<string, unknown>;
       if (ring.length >= 3 && Math.abs(ringArea(ring)) >= 12) {
+        if (!this.#visible(c, margin)) continue;
         anchor = { type: "area", polygon: ring };
         const holes = inner.map(part).filter((h) => h.length >= 3);
         if (holes.length) anchor.holes = holes;
       } else {
         // a country of a few pixels: a point at its label point
         const s = this.#toScreen(c.labelXY);
-        if (!this.#inView(s, margin)) continue;
+        if (!this.#inView(s, marks)) continue;
         anchor = { type: "point", x: round2(s[0]), y: round2(s[1]), mark: { shape: "circle", r: 2 } };
       }
       const label: Record<string, unknown> = { type: "text", text: c.name };
@@ -406,7 +416,7 @@ export class MapScene implements Scene {
     }
     for (const f of this.#flights) {
       const s = this.#flightXY(f);
-      if (!s || !this.#inView(s, margin)) continue;
+      if (!s || !this.#inView(s, marks)) continue;
       out.push({
         id: f.id,
         anchor: { type: "point", x: round2(s[0]), y: round2(s[1]), mark: { shape: "circle", r: 3.5 } },
@@ -440,8 +450,14 @@ export class MapScene implements Scene {
     return undefined;
   }
 
-  snapshot(): ViewT {
-    return { ...this.#v };
+  snapshot(): Snapshot {
+    return { ...this.#v, w: this.#w, h: this.#h };
+  }
+
+  /** Panned, not zoomed or resized: the map is where it was, only moved. */
+  pannedSince(at: unknown): boolean {
+    const s = at as Snapshot;
+    return this.#window && s.k === this.#v.k && s.w === this.#w && s.h === this.#h;
   }
 
   /** Remember where the engine put each area label's anchor (its pole), so labels follow it while panning. */

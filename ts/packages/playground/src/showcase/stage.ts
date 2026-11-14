@@ -24,6 +24,11 @@ export interface Solve {
   problem: LabelProblem;
   anchors: Map<string, Pt>;
   raster?: RgbaPixels;
+  /**
+   * The view only moved since the labels shown were placed, as a map that was panned:
+   * they are pinned (`warm_start.pin`), none moves, and the solve only adds labels.
+   */
+  pin?: boolean;
 }
 
 export interface Example {
@@ -248,7 +253,7 @@ export class Stage {
       const solve = this.#ex.solve(rest);
       // from the labels shown; an item left out before is free to get a label now
       const shown = this.#memory.warmStart(solve.anchors)?.placements.filter((p) => p.placed);
-      const warm = shown?.length ? { placements: shown } : undefined;
+      const warm = shown?.length ? { ...(solve.pin ? { pin: true } : {}), placements: shown } : undefined;
       const solver = { ...solve.problem.solver, ...(rest ? {} : { time_budget_ms: BUDGET_MOVING }) };
       const problem = { ...solve.problem, solver, ...(warm ? { warm_start: warm } : {}) } as LabelProblem;
       try {

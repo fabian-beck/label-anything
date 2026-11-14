@@ -81,6 +81,12 @@ export interface Scene {
   readonly anchorsFromResults?: boolean;
   /** State taken when a problem is built, handed back with its result (e.g. the map's view). */
   snapshot?(): unknown;
+  /**
+   * Whether the view only moved since `snapshot`, as a map that was panned. The app then
+   * pins the labels (`warm_start.pin`): none moves, the solve only adds labels where the
+   * view moves on, and no settle solve follows.
+   */
+  pannedSince?(snapshot: unknown): boolean;
   /** A result arrived for the problem built at `snapshot`. */
   onResult?(result: LabelResult, snapshot: unknown): void;
 

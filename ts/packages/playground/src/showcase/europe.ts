@@ -9,7 +9,9 @@
  * and more seas come. The seas' names are an SVG the engine reads: no label covers them.
  * At the first view the labels are those of the static figure. A zoomed view is a window
  * on the map (`canvas.overscan`): what lies a little beyond it is labeled as well, and a
- * name at its border keeps its place on the map and is cut there.
+ * name at its border keeps its place on the map and is cut there. While the map is only
+ * panned, the names are pinned (`warm_start.pin`): none moves, names come where the map
+ * moves on, and a zoom places them anew.
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
 import type { MotionFrame } from "@label-anything/extras";
@@ -244,6 +246,8 @@ export class Europe implements Example {
   #noteTimer = 0;
   /** Where each item's anchor is on the map at zoom 1 (from the latest result). */
   #base = new Map<string, Pt>();
+  /** The view the labels shown were placed for. */
+  #solved: View | null = null;
   #glide: { from: View; to: View; t0: number } | null = null;
   #pointers = new Map<number, Pt>();
   #moved = false;
@@ -337,13 +341,15 @@ export class Europe implements Example {
         placement: { models: ["internal"] },
       };
     });
-    const m = this.#overscan(v);
+    // in a window, the engine labels the places up to the overscan beyond the view; those
+    // farther out are passed as marks only, so that no name has to make way when they come in
+    const m = 3 * this.#overscan(v);
     const [mx0, my0] = this.#to(v, [0, 0]);
     const [mx1, my1] = this.#to(v, [W, H]);
     for (const p of this.#places.values()) {
       if (!p.capital && v.k < ZOOM_CITIES) continue;
       const [x, y] = this.#to(v, p.at);
-      // on the map, and in the view or a little beyond it
+      // on the map, and in the view or near it
       if (!(x > mx0 + 4 && x < mx1 - 4 && y > my0 + 4 && y < my1 - 4)) continue;
       if (!(x > 4 - m && x < W - 4 + m && y > 4 - m && y < H - 4 + m)) continue;
       items.push({
@@ -593,11 +599,14 @@ export class Europe implements Example {
       const id = it.id as string;
       anchors.set(id, this.#to(view, this.#base.get(id) ?? this.#home(id)));
     }
-    return { problem, anchors, view };
+    // a zoomed map that was only panned since its names were placed: they stay
+    const pin = view.k > 1 && this.#solved !== null && this.#solved.k === view.k;
+    return { problem, anchors, view, pin };
   }
 
   solved(result: LabelResult, solve: Solve): void {
     const v = (solve as EuropeSolve).view;
+    this.#solved = v;
     for (const p of result.placements) {
       if (p.anchor) this.#base.set(p.id, [(p.anchor[0]! - v.x) / v.k, (p.anchor[1]! - v.y) / v.k]);
     }

@@ -92,7 +92,9 @@ at the edges. Then:
   hold (§4.3) and the grids are empty: no coverage costs, no free-space seeds.
 * An item with a point anchor whose mark lies entirely beyond the working extent (its
   bounding box does not touch it) is a **mark only**: it gets no candidates and no label
-  (reason `outside`, §9.3), and its mark counts like every item's. A host passes the
+  (reason `outside`, §9.3), and its mark counts like every item's. Not so while its
+  warm-start box (§6.7) touches the canvas: a label that still shows is not taken away
+  because its point has gone far. A host passes the
   points about a label's reach beyond the overscan: the labels placed in the overscan
   then keep off marks that are yet to come in, and need not make way for them later. The
   `auto` preset's crowding rule (§6.6) counts the other items only.
