@@ -74,6 +74,12 @@ export class Solve {
    * mark (reported as `items` among the blocking classes).
    */
   staticDropped: number[];
+  /**
+   * Whether the pruning of §6.7 dropped a level-0 candidate of each item other than a
+   * distant one: only then can the item's regenerated level-0 candidates hold one of its
+   * models at level 0 that it does not have.
+   */
+  prunedLevel0: boolean[];
   /** The warm-start candidate of each item (see `generateWarm`). */
   warmCand: (number | null)[];
   /**
@@ -153,6 +159,7 @@ export class Solve {
     this.warmBox = new Array<[number, Rect] | null>(n).fill(null);
     this.warmNudge = new Array<[number, number][] | null>(n).fill(null);
     this.staticDropped = new Array<number>(n).fill(0);
+    this.prunedLevel0 = new Array<boolean>(n).fill(false);
     this.distantDirs = distantDirs(model);
     this.stubs = Stubs.of(model, obs);
     this.blockedFeasible = [];
@@ -250,6 +257,14 @@ export class Solve {
    * none equal to one the item has. They are not added to the candidates.
    */
   unprunedLevel0(i: number, softOk: boolean): Cand[] {
+    return this.usableUnpruned(i, this.regeneratedLevel0(i), softOk);
+  }
+
+  /**
+   * The level-0 candidates of item `i` generated again (without distant ones), none equal
+   * to one the item has, not evaluated yet: those the pruning of §6.7 dropped.
+   */
+  regeneratedLevel0(i: number): Cand[] {
     const model = this.model;
     const obs = this.obs;
     const item = model.items[i]!;
@@ -298,7 +313,19 @@ export class Solve {
           break;
         }
       }
-      if (known) continue;
+      if (!known) out.push(c);
+    }
+    return out;
+  }
+
+  /**
+   * The candidates of `fresh` (regenerated candidates of item `i`) that are statically
+   * usable once evaluated: feasible, or relaxed with `softOk`.
+   */
+  usableUnpruned(i: number, fresh: readonly Cand[], softOk: boolean): Cand[] {
+    const variants = this.variants[i]!;
+    const out: Cand[] = [];
+    for (const c of fresh) {
       this.evaluator.eval(c, variants[c.variant]!, null);
       if (c.feasible || (softOk && c.relaxed)) out.push(c);
     }
@@ -420,7 +447,10 @@ export class Solve {
       lim = model.placement.pruneFactor * Math.abs(best) + 1 + minf(best, 0);
       for (let k = 0; k < kept.length; k++) {
         const c = kept[k]!;
-        if (c.feasible && c.cost > lim) keepFlags[k] = 0;
+        if (c.feasible && c.cost > lim) {
+          if (keepFlags[k] && c.kind !== Kind.Distant && level === 0) this.prunedLevel0[i] = true;
+          keepFlags[k] = 0;
+        }
       }
     }
     const ids: number[] = [];

@@ -11,7 +11,7 @@
  */
 import type { LabelProblem, LabelResult, RgbaPixels } from "@label-anything/core";
 import { LabelMotion } from "@label-anything/extras";
-import { DEFAULTS, PRESETS } from "../../core/src/generated/spec-data.js";
+import { AGGRESSIVENESS, DEFAULTS, PRESETS } from "../../core/src/generated/spec-data.js";
 import { SECTIONS, type Control, type Section } from "./controls.js";
 import { ENGINE_NAMES, Engines, type EngineId } from "./engines.js";
 import { drawBoxes, drawCandidates, drawHighlight, drawLabels, drawNaive, drawObstacles, drawOmitted, labelAt, type Candidate, type LabelStyle, type Placement } from "./render.js";
@@ -84,6 +84,17 @@ export interface Solve {
 
 /** The engine defaults as a tree (DEFAULTS is a flat map of dotted keys). */
 const DEFAULT_TREE: Obj = Object.entries(DEFAULTS).reduce<Obj>((acc, [k, v]) => setPath(acc, k, v), {});
+
+/**
+ * The defaults in effect under the options `top` (scene, user, JSON) and the preset's: those
+ * of the table with the column of the aggressiveness level in force (spec §2.4).
+ */
+function defaultsFor(top: Obj, presetOpts: Obj): Obj {
+  const level = [lookup(top, "placement.aggressiveness"), lookup(presetOpts, "placement.aggressiveness"),
+    DEFAULTS["placement.aggressiveness"]].find((v) => typeof v === "string") as string;
+  const column = AGGRESSIVENESS[level] ?? {};
+  return Object.entries(column).reduce<Obj>((acc, [k, v]) => setPath(acc, k, v), DEFAULT_TREE);
+}
 
 /** Settings that change only the drawing (no solve). */
 const DRAW_ONLY = new Set(["labelStyle", "showBoxes", "showOmitted", "showObstacles", "compare", "speed"]);
@@ -249,7 +260,7 @@ export class App {
     const top = mergeAll<Obj>(sceneOpts, this.overrides, this.#jsonObj ?? {});
     const preset = typeof top.preset === "string" ? top.preset : "auto";
     const presetOpts = (PRESETS[preset]?.options ?? {}) as Obj;
-    return mergeAll<Obj>(DEFAULT_TREE, presetOpts, top);
+    return mergeAll<Obj>(defaultsFor(top, presetOpts), presetOpts, top);
   }
 
   /** The value in effect without the user's override of `key`. */
@@ -258,7 +269,8 @@ export class App {
     const user = setPath(this.overrides, key, undefined);
     const top = mergeAll<Obj>(sceneOpts, user);
     const preset = typeof top.preset === "string" ? top.preset : "auto";
-    return lookup(mergeAll<Obj>(DEFAULT_TREE, (PRESETS[preset]?.options ?? {}) as Obj, top), key);
+    const presetOpts = (PRESETS[preset]?.options ?? {}) as Obj;
+    return lookup(mergeAll<Obj>(defaultsFor(top, presetOpts), presetOpts, top), key);
   }
 
   #panelModel(): PanelModel {

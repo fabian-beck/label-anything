@@ -21,6 +21,7 @@ from ..common.model import (DIRECTIONS, PERCEPTUAL, Item, Problem, adjacent_box,
                             position_order)
 from . import association as assoc
 from . import classes as clsmod
+from . import clutter as cluttermod
 from . import priority as pr
 from . import visual as vis
 
@@ -652,6 +653,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
         "visual": vis.evaluate_visual(prob, placed, classes, a_label, a_leader, max_list),
         "association": assoc.evaluate_association(prob, placed, classes, a_label, box_index, tol, max_list,
                                                   collect=found),
+        "clutter": cluttermod.evaluate_clutter(prob, placed),
     }
     out["summary"] = summary(out)
     if found is not None:
@@ -731,6 +733,7 @@ def summary(m: dict) -> dict:
         "schema_errors": len(m["result_check"]["schema_errors"]),
         **(vis.summary_fields(m["visual"]) if "visual" in m else {}),
         **(assoc.summary_fields(m["association"]) if "association" in m else {}),
+        **(cluttermod.summary_fields(m["clutter"]) if "clutter" in m else {}),
     }
 
 

@@ -323,7 +323,11 @@ class BuilderJsonTest {
         {1, 0}, {1, 1}}).mark(Mark.circle(1)));
     assertThrows(IllegalArgumentException.class, () -> Mark.polygon(new double[][] {{0, 0}}));
     assertEquals("shrink:0.85", Degrade.shrink(0.85).jsonName());
-    assertEquals(8, Degrade.defaults().size());
+    assertEquals(5, Degrade.defaults().size());
+    assertEquals(4, Degrade.defaults(Placement.Aggressiveness.LOW).size());
+    assertEquals("shrink:0.85", Degrade.defaults(Placement.Aggressiveness.HIGH).get(4).jsonName());
+    assertEquals("{\"aggressiveness\":\"low\"}",
+        Placement.defaults().aggressiveness(Placement.Aggressiveness.LOW).toJson());
 
     // warm start from a parsed result
     LabelResult prev = LabelResult.parse("""

@@ -1,0 +1,362 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 400,
+      "height": 200
+    },
+    "placement": {
+      "models": [
+        "adjacent",
+        "slider"
+      ]
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "class": "walls",
+          "rects": [
+            [
+              60,
+              60,
+              34,
+              80
+            ],
+            [
+              94,
+              60,
+              24,
+              28
+            ],
+            [
+              94,
+              112,
+              60,
+              28
+            ],
+            [
+              138,
+              88,
+              16,
+              24
+            ],
+            [
+              220,
+              60,
+              34,
+              80
+            ],
+            [
+              254,
+              60,
+              24,
+              28
+            ],
+            [
+              254,
+              112,
+              60,
+              28
+            ],
+            [
+              298,
+              88,
+              16,
+              24
+            ],
+            [
+              278,
+              60,
+              36,
+              28
+            ]
+          ]
+        }
+      ]
+    },
+    "avoid": {
+      "label": {
+        "walls": "hard"
+      },
+      "leader": {
+        "walls": "hard"
+      }
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 260,
+          "y": 100
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      },
+      {
+        "id": "c",
+        "anchor": {
+          "type": "point",
+          "x": 330,
+          "y": 30
+        },
+        "label": {
+          "type": "text",
+          "text": "Ham"
+        },
+        "priority": 2,
+        "placement": {
+          "position_order": [
+            "right"
+          ]
+        }
+      },
+      {
+        "id": "d",
+        "anchor": {
+          "type": "point",
+          "x": 330,
+          "y": 48
+        },
+        "label": {
+          "type": "text",
+          "text": "Ham"
+        },
+        "priority": 1,
+        "placement": {
+          "position_order": [
+            "right"
+          ]
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "a",
+        "placed": true,
+        "box": {
+          "x": 129.10220527410556,
+          "y": 72.3454718804997,
+          "w": 35.891999999999996,
+          "h": 15.599999999999994
+        },
+        "anchor": [
+          100.0,
+          100.0
+        ],
+        "anchor_side": "distant",
+        "model": "distant",
+        "text": {
+          "lines": [
+            "Alpha"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            32.292
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              103.2335783637895,
+              98.66060798672218
+            ],
+            [
+              129.10220527410556,
+              87.9454718804997
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            129.10220527410556,
+            87.9454718804997
+          ]
+        },
+        "cost": 2.220833333333333,
+        "degrade_steps": [
+          "distant"
+        ],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 2
+        }
+      },
+      {
+        "id": "b",
+        "placed": false,
+        "reason": "no_feasible_candidate",
+        "blocking": [
+          "walls",
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 3
+        },
+        "degrade_steps": [
+          "alternatives",
+          "wrap",
+          "distant",
+          "evict_lower",
+          "omit"
+        ]
+      },
+      {
+        "id": "c",
+        "placed": true,
+        "box": {
+          "x": 333.0,
+          "y": 23.856,
+          "w": 30.44399999999996,
+          "h": 12.287999999999997
+        },
+        "anchor": [
+          330.0,
+          30.0
+        ],
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Ham"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.367999999999999
+          ],
+          "line_widths": [
+            26.844
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.024999999999999998,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 2.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "d",
+        "placed": true,
+        "box": {
+          "x": 333.0,
+          "y": 41.856,
+          "w": 30.44399999999996,
+          "h": 12.287999999999997
+        },
+        "anchor": [
+          330.0,
+          48.0
+        ],
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Ham"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.367999999999999
+          ],
+          "line_widths": [
+            26.844
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.024999999999999998,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 1
+        }
+      }
+    ],
+    "stats": {
+      "placed": 3,
+      "total": 4,
+      "placed_weighted": 0.8318724637288825,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 1600,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 210,
+      "omission_order": [
+        "b"
+      ],
+      "priority_inversions": 0,
+      "total_cost": 2.270833333333333,
+      "degraded": {
+        "distant": 1
+      },
+      "grid": {
+        "cell": 3.0,
+        "cols": 134,
+        "rows": 67,
+        "classes": [
+          "walls"
+        ]
+      }
+    },
+    "debug_svg": null
+  }
+}

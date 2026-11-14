@@ -1,5 +1,6 @@
 /**
- * Effective options: `spec/defaults.md` ← preset ← problem (spec §2.4).
+ * Effective options: `spec/defaults.md` ← aggressiveness level ← preset ← problem
+ * (spec §2.4).
  *
  * Port of `rust/crates/la-core/src/options.rs`. JSON values are plain JavaScript values
  * (`null`, booleans, numbers, strings, arrays, plain objects). An object property whose
@@ -7,7 +8,7 @@
  * returns `Option<&Value>`, these functions return `undefined` for "absent", because JSON
  * `null` is a value of its own (`user_sets` tells an explicit `null` from a missing key).
  */
-import { DEFAULTS, PRESETS, type PresetData } from "./generated/spec-data.js";
+import { AGGRESSIVENESS, DEFAULTS, PRESETS, type PresetData } from "./generated/spec-data.js";
 import { Length } from "./units.js";
 
 type JsonObject = Record<string, unknown>;
@@ -53,6 +54,14 @@ function cloneJson(v: unknown): unknown {
 /** The defaults table as a flat map from dotted key to JSON value. */
 export function defaults(): Readonly<Record<string, unknown>> {
   return DEFAULTS;
+}
+
+/**
+ * The defaults of a `placement.aggressiveness` level (spec/defaults.md) as a flat map from
+ * dotted key to JSON (`null` if unknown).
+ */
+export function aggressiveness(level: string): Readonly<Record<string, unknown>> | null {
+  return hasOwnProperty.call(AGGRESSIVENESS, level) ? (AGGRESSIVENESS[level] ?? null) : null;
 }
 
 /** A preset by name (`null` if unknown). */
@@ -103,6 +112,11 @@ export class Opts {
   preset: PresetData | null;
   /** Which implementation's per-implementation defaults apply ("rust" or "ts"). */
   implementation: "rust" | "ts";
+  /**
+   * The defaults of the `placement.aggressiveness` level in effect: they take the place of
+   * the defaults table's for the keys they list (spec §2.4).
+   */
+  level: Readonly<Record<string, unknown>> | null;
 
   constructor(problem: unknown) {
     const requested = isObject(problem) ? own(problem, "preset") : undefined;
@@ -130,6 +144,9 @@ export class Opts {
     this.presetName = name;
     this.preset = p;
     this.implementation = "ts";
+    let level = lookup(this.merged, "placement.aggressiveness");
+    if (typeof level !== "string") level = own(DEFAULTS as JsonObject, "placement.aggressiveness");
+    this.level = typeof level === "string" ? aggressiveness(level) : null;
   }
 
   /** The explicitly given value (problem or preset) at `key` (`undefined` if absent or `null`). */
@@ -144,14 +161,20 @@ export class Opts {
   }
 
   /**
-   * Effective value: given value, else the default (resolving per-implementation
-   * defaults), else `null`. A given value is returned as stored in {@link merged} (not
-   * copied); defaults are fresh copies.
+   * Effective value: given value, else the default of the aggressiveness level, else the
+   * default (resolving per-implementation defaults), else `null`. A given value is returned
+   * as stored in {@link merged} (not copied); defaults are fresh copies.
    */
   get(key: string): unknown {
     const v = this.given(key);
     if (v !== undefined) return v;
-    return defaultOf(key, this.implementation);
+    return this.default(key);
+  }
+
+  /** The default of `key` (a fresh copy): the aggressiveness level's, else the defaults table's. */
+  default(key: string): unknown {
+    const v = this.level !== null ? own(this.level as JsonObject, key) : undefined;
+    return v !== undefined ? cloneJson(v) : defaultOf(key, this.implementation);
   }
 
   f64(key: string): number {
@@ -180,7 +203,7 @@ export class Opts {
 
   /** A class-keyed map: the default map overlaid with the given map, per key. */
   map(key: string): Record<string, unknown> {
-    const d = defaultOf(key, this.implementation);
+    const d = this.default(key);
     const out: JsonObject = isObject(d) ? d : {};
     const m = this.given(key);
     if (isObject(m)) {

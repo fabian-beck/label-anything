@@ -202,8 +202,9 @@ All six build the same problem and get the same boxes.
 The [real-world benchmark](project/benchmark.md) compares Label Anything with nine other
 labelers, among them adjustText, ggrepel, vega-label and textalloc, on 62 problems from
 open data. [The results](project/benchmark.md#what-the-results-show): no overlaps and no
-crossing leaders anywhere, and the most usable labels on 60 of the 62, often by only a few
-percent. It falls short on dense data, moving labels and the speed of the largest
+crossing leaders anywhere, and with every means the most usable labels on 60 of the 62,
+often by only a few percent; the default gives up a few percent of them for a calmer
+picture. It falls short on dense data, moving labels and the speed of the largest
 problems.
 
 ## Good to know

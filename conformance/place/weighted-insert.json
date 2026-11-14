@@ -1429,7 +1429,8 @@
         "slider",
         "boundary"
       ],
-      "stubs": "off"
+      "stubs": "off",
+      "aggressiveness": "high"
     },
     "leaders": {
       "style": "curved"

@@ -67,7 +67,7 @@ object. Lengths are a number (px) or a string with a unit (`"0.5em"`, `"3px"`, `
 | `backgroundRaster(Path or byte[], RasterMode)`, `backgroundPixels(w, h, ByteBuffer or byte[], mode)`, `backgroundSvg(String or Path)`, `background(Raster... or Svg...)`, `vector(VectorLayer)` | `obstacles` |
 | `avoid(Avoid.label().hard(..).weight(..), Avoid.leader()..., Avoid.buffer()..., Avoid.relaxable(..))` | `avoid` (merged key by key) |
 | `leaders(Leaders.straight()/angles(..)/orthogonal()/elbow(..)/curved().port(..).clearance(..))` | `leaders` |
-| `placement(Placement.models(Model...).maxDistance("10em").boundarySides(..))` | `placement` |
+| `placement(Placement.models(Model...).maxDistance("10em").boundarySides(..))`, `Placement.defaults().aggressiveness(Placement.Aggressiveness.LOW)` | `placement` |
 | `priority(Priority)`, `tier(where, tier)`, `omission(Omission)`, `coverage(by, n)`, `ties`, `tiesRandom(seed)`, `band`, `maxLabels`, `maxInkFraction`, `focus`, `fontClasses(FontClass...)` | `priority` |
 | `timeBudgetMs`, `seed`, `strategy(Strategy)`, `maxIterations`, `gridCell` | `solver` |
 | `degrade(Degrade.ALTERNATIVES, Degrade.shrink(0.85), ...)`, `minScale`, `wrapMaxLines`, `softOverlapWeight` | `degrade`, `degrade_options` |

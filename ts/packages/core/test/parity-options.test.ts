@@ -1,7 +1,7 @@
 // Parity with the Rust core beyond the fixtures: every sample problem of
 // conformance/problems/ with option changes that steer the solver into paths the fixtures
 // do not reach (soft item costs, item buffers, a partial own-mark policy, hard point and
-// line classes), solved by the Rust CLI without a clock and by the TypeScript core with
+// line classes, the other aggressiveness levels), solved by the Rust CLI without a clock and by the TypeScript core with
 // the Rust budget profile. Runs when the Rust CLI has been built
 // (`cargo build --release -p label-anything-cli`).
 import { execFileSync } from "node:child_process";
@@ -36,11 +36,18 @@ function withAvoid(p: Obj, section: string, add: Obj): Obj {
   return { ...p, avoid: { ...avoid, [section]: { ...obj(avoid[section]), ...add } } };
 }
 
+/** `p` with `placement` extended by `add`. */
+function withPlacement(p: Obj, add: Obj): Obj {
+  return { ...p, placement: { ...obj(p.placement), ...add } };
+}
+
 const VARIANTS: [string, (p: Obj) => Obj][] = [
   ["soft items", (p) => withAvoid(p, "label", { items: 0.7 })],
   ["item buffer", (p) => withAvoid(p, "buffer", { items: 0.5 })],
   ["partial own mark", (p) => withAvoid(p, "label", { own_mark: "partial:0.3" })],
   ["hard points and lines", (p) => withAvoid(withAvoid(p, "label", { points: "hard", lines: "hard" }), "leader", { points: "hard", lines: "hard" })],
+  ["aggressiveness low", (p) => withPlacement(p, { aggressiveness: "low" })],
+  ["aggressiveness high", (p) => withPlacement(p, { aggressiveness: "high" })],
 ];
 
 /** The Rust CLI's result without a clock (null if this build lacks `--no-clock`). */
