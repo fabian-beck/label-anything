@@ -1,0 +1,63 @@
+{
+  "kind": "place",
+  "name": "a mark beside a side of the label, where its own label would go, keeps the side margin",
+  "$comment": "Below left of its mark Beta's label is 1 px from its own mark and 5 px from Alpha's, which faces the middle of its left side: more than the margin (2.4 px) farther, but not the side margin (0.5 em = 6 px; spec §4.4). It stands right of its mark.",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 160
+    },
+    "weights": {
+      "ambiguity": 0
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 115.2,
+          "y": 80
+        },
+        "label": {
+          "type": "text",
+          "text": "A"
+        },
+        "placement": {
+          "position_order": [
+            "left"
+          ]
+        }
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 200,
+          "y": 70
+        },
+        "label": {
+          "type": "text",
+          "text": "Luxembourg"
+        },
+        "placement": {
+          "position_order": [
+            "bottom-left",
+            "right"
+          ]
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 2,
+    "anchor_side": {
+      "a": "left",
+      "b": "right"
+    },
+    "own_nearest": true
+  }
+}

@@ -1,0 +1,310 @@
+{
+  "kind": "parity",
+  "problem_file": "../problems/regions-map.json",
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "A",
+        "placed": true,
+        "box": {
+          "x": 69.742,
+          "y": 102.2,
+          "w": 60.516000000000005,
+          "h": 15.599999999999994
+        },
+        "anchor": [
+          100.0,
+          110.0
+        ],
+        "anchor_side": "internal",
+        "model": "internal",
+        "text": {
+          "lines": [
+            "Alphaland"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            56.916
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 2.459233345705562,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 1,
+          "score": 0.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "B",
+        "placed": true,
+        "box": {
+          "x": 213.27,
+          "y": 63.856,
+          "w": 53.46000000000001,
+          "h": 12.288000000000004
+        },
+        "anchor": [
+          240.0,
+          70.0
+        ],
+        "anchor_side": "internal",
+        "model": "internal",
+        "text": {
+          "lines": [
+            "Betastan"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.367999999999999
+          ],
+          "line_widths": [
+            49.86
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": -0.075,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 1,
+          "score": 0.0,
+          "rank": 1
+        }
+      },
+      {
+        "id": "C",
+        "placed": true,
+        "box": {
+          "x": 187.26600000000002,
+          "y": 153.58,
+          "w": 105.46799999999996,
+          "h": 12.839999999999975
+        },
+        "anchor": [
+          240.0,
+          160.0
+        ],
+        "anchor_side": "internal",
+        "model": "internal",
+        "text": {
+          "lines": [
+            "Gammaria del Sur"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            101.868
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.043349999999999514,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 1,
+          "score": 0.0,
+          "rank": 2
+        }
+      },
+      {
+        "id": "capital-A",
+        "placed": true,
+        "box": {
+          "x": 113.73467965644033,
+          "y": 42.27867965644037,
+          "w": 60.144000000000005,
+          "h": 15.599999999999994
+        },
+        "anchor": [
+          176.0,
+          60.0
+        ],
+        "anchor_side": "top-left",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Alpha City"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            56.544
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.10000000000000023,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 3
+        }
+      },
+      {
+        "id": "capital-B",
+        "placed": true,
+        "box": {
+          "x": 185.82667965644032,
+          "y": 101.59067965644034,
+          "w": 62.05200000000002,
+          "h": 12.288000000000011
+        },
+        "anchor": [
+          250.0,
+          116.0
+        ],
+        "anchor_side": "top-left",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Beta Town"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.367999999999999
+          ],
+          "line_widths": [
+            58.452
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.10000000000000035,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 4
+        }
+      },
+      {
+        "id": "port",
+        "placed": true,
+        "box": {
+          "x": 266.09172769028777,
+          "y": 232.56435014921567,
+          "w": 64.96799999999996,
+          "h": 12.839999999999975
+        },
+        "anchor": [
+          334.0,
+          246.0
+        ],
+        "anchor_side": "top-left",
+        "model": "slider",
+        "text": {
+          "lines": [
+            "Port Island"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            61.368
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.3646521400571716,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 5
+        }
+      }
+    ],
+    "stats": {
+      "placed": 6,
+      "total": 6,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 2400,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 87,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 2.9922354857627336,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 134,
+        "rows": 100,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

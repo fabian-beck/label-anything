@@ -224,6 +224,34 @@ export type InternalPolicy = "auto" | "prefer" | "allow" | "never";
 export type PositionOrder = ("perceptual" | "cartographic") | [PositionName, ...PositionName[]];
 export type PositionName =
   "top" | "right" | "bottom" | "left" | "top-right" | "bottom-right" | "top-left" | "bottom-left";
+export type VectorLayer = VectorLayer1 & {
+  class?: ClassName;
+  /**
+   * The layer's polygons, rects, circles and shapes on the region map (spec §4.8); a layer with a region and no class adds no obstacles.
+   */
+  region?: string;
+  points?: Point[];
+  /**
+   * Radius for points (px).
+   */
+  r?: number;
+  /**
+   * [x, y, r] triples.
+   */
+  circles?: [number, number, number][];
+  polylines?: Polyline[];
+  /**
+   * Stroke width for polylines (px).
+   */
+  width?: number;
+  polygons?: Ring[];
+  fill_rule?: "nonzero" | "evenodd";
+  rects?: Rect4[];
+  shapes?: PositionedShape[];
+};
+export type VectorLayer1 = {
+  [k: string]: unknown | undefined;
+};
 /**
  * Obstacle class name. Reserved: items, labels, leaders, canvas_edge, ink, text.
  */
@@ -314,6 +342,10 @@ export type SvgSource = {
    */
   classes?: SvgClassRule[];
   default_class?: ClassName | "ignore";
+  /**
+   * Regions of the picture (spec §4.8): a selector (every matching element is a region of its own), or region rules, first match wins. Labels keep inside one region; only fills count.
+   */
+  regions?: string | SvgRegionRule[];
   auto_mark_items?: boolean;
   /**
    * Curve flattening tolerance in px.
@@ -555,6 +587,10 @@ export interface ItemDefaults {
    */
   spacing?: NonNegLength | null;
   /**
+   * A non-negative length: number of pixels, or a string with unit px | pt | em.
+   */
+  side_margin?: number | string;
+  /**
    * Mark used for point anchors without an explicit mark.
    */
   mark?:
@@ -691,6 +727,10 @@ export interface Item {
    * Element id in the background SVG that draws this item (used by svg.auto_mark_items).
    */
   svg_id?: string;
+  /**
+   * The name of the item's home region (spec §4.8). Default: the region at its anchor.
+   */
+  region?: string;
   placement?: ItemPlacement;
 }
 export interface SizedLabel {
@@ -748,33 +788,22 @@ export interface Obstacles {
   svg?: SvgSource | SvgSource[];
   raster?: RasterSource | RasterSource[];
 }
-export interface VectorLayer {
-  class: ClassName;
-  points?: Point[];
-  /**
-   * Radius for points (px).
-   */
-  r?: number;
-  /**
-   * [x, y, r] triples.
-   */
-  circles?: [number, number, number][];
-  polylines?: Polyline[];
-  /**
-   * Stroke width for polylines (px).
-   */
-  width?: number;
-  polygons?: Ring[];
-  fill_rule?: "nonzero" | "evenodd";
-  rects?: Rect4[];
-  shapes?: PositionedShape[];
-}
 export interface SvgClassRule {
   /**
    * CSS subset: type, .class, #id, [attr], [attr=value], descendant combinator, *, comma lists.
    */
   selector: string;
   class: ClassName | "ignore";
+}
+export interface SvgRegionRule {
+  /**
+   * CSS subset, as in class rules. A drawn fill belongs to the nearest element (itself or an ancestor) that a rule matches; the first rule matching that element decides.
+   */
+  selector: string;
+  /**
+   * Default "each".
+   */
+  region?: string;
 }
 export interface Avoid {
   /**
@@ -872,6 +901,10 @@ export interface Placement {
    * A non-negative length: number of pixels, or a string with unit px | pt | em.
    */
   stub_reach?: number | string;
+  /**
+   * On a region map (spec §4.8): the largest share of the box of an area item's label (internal ones aside) or of a label on a leader that may lie in other items' regions; 1: no limit, the foreign weight decides.
+   */
+  max_foreign?: number;
 }
 export interface Leaders {
   style?: "straight" | "angles" | "orthogonal" | "elbow" | "curved";
@@ -963,6 +996,9 @@ export interface Weights {
   lookahead?: number;
   starve?: number;
   contrast?: number;
+  straddle?: number;
+  foreign?: number;
+  leader_borders?: number;
   stability?: number;
 }
 export interface Output {

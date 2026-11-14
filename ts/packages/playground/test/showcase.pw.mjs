@@ -68,7 +68,9 @@ const state = (page, name) =>
     const s = globalThis.labelAnythingShowcase.stages[n];
     return {
       total: s.result.stats.total,
-      placed: s.result.placements.filter((p) => p.placed).map((p) => ({ id: p.id, box: p.box, rotation: p.rotation ?? 0, leader: p.leader?.points ?? null, lines: p.text?.lines ?? [] })),
+      placed: s.result.placements
+        .filter((p) => p.placed)
+        .map((p) => ({ id: p.id, box: p.box, rotation: p.rotation ?? 0, leader: p.leader?.points ?? null, lines: p.text?.lines ?? [] })),
       drawn: [...s.labels.querySelectorAll(".la-item")].map((e) => e.getAttribute("data-id")),
       solves: s.solves,
     };
@@ -83,27 +85,27 @@ const client = (page, name, x, y) =>
 
 const anchor = (page, name, id) => page.evaluate(([n, id]) => [...globalThis.labelAnythingShowcase.examples[n].anchors().get(id)], [name, id]);
 
-/** The corners of a label: its box, turned by its rotation about its center (a country's name along it). */
-function corners(p) {
-  const { x, y, w, h } = p.box;
-  const [cx, cy] = [x + w / 2, y + h / 2];
-  const a = ((p.rotation ?? 0) * Math.PI) / 180;
-  const [s, c] = [Math.sin(a), Math.cos(a)];
-  return [[x, y], [x + w, y], [x + w, y + h], [x, y + h]].map(([px, py]) => [cx + (px - cx) * c - (py - cy) * s, cy + (px - cx) * s + (py - cy) * c]);
+/** The corners of a placed label: its box turned by its rotation (degrees, clockwise on screen) about the box's center. */
+function corners({ box: b, rotation }) {
+  const [cx, cy] = [b.x + b.w / 2, b.y + b.h / 2];
+  const t = (rotation * Math.PI) / 180;
+  const [c, s] = [Math.cos(t), Math.sin(t)];
+  return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => {
+    const [x, y] = [(u * b.w) / 2, (v * b.h) / 2];
+    return [cx + x * c - y * s, cy + x * s + y * c];
+  });
 }
 
-/** Whether two labels are apart: a side of one of them separates them (within 0.01 px). */
+/** Whether two convex quadrilaterals are apart, up to 0.01 px: one of their edges' normals separates them. */
 function apart(p, q) {
-  const [a, b] = [corners(p), corners(q)];
-  for (const quad of [a, b]) {
-    for (let i = 0; i < 4; i++) {
-      const [p0, p1] = [quad[i], quad[(i + 1) % 4]];
-      const [nx, ny] = [p1[1] - p0[1], p0[0] - p1[0]];
+  for (const poly of [p, q]) {
+    for (let k = 0; k < 4; k++) {
+      const [[x0, y0], [x1, y1]] = [poly[k], poly[(k + 1) % 4]];
+      const [nx, ny] = [y1 - y0, x0 - x1];
       const len = Math.hypot(nx, ny);
-      if (len === 0) continue;
-      const span = (r) => r.map((v) => (v[0] * nx + v[1] * ny) / len);
-      const [da, db] = [span(a), span(b)];
-      if (Math.max(...da) <= Math.min(...db) + 0.01 || Math.max(...db) <= Math.min(...da) + 0.01) return true;
+      const a = p.map(([x, y]) => (x * nx + y * ny) / len);
+      const b = q.map(([x, y]) => (x * nx + y * ny) / len);
+      if (Math.max(...a) <= Math.min(...b) + 0.01 || Math.max(...b) <= Math.min(...a) + 0.01) return true;
     }
   }
   return false;
@@ -112,7 +114,7 @@ function apart(p, q) {
 function expectDisjoint(placed) {
   for (let i = 0; i < placed.length; i++) {
     for (let j = i + 1; j < placed.length; j++) {
-      expect(apart(placed[i], placed[j]), `${placed[i].id} and ${placed[j].id} overlap`).toBe(true);
+      expect(apart(corners(placed[i]), corners(placed[j])), `${placed[i].id} and ${placed[j].id} overlap`).toBe(true);
     }
   }
 }

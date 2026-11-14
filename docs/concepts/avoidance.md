@@ -72,9 +72,13 @@ marks overlap or touch. Without a stub it must be *clearly* nearer: by its margi
 (0.2 em), or, for marks closer together than that, by the distance between them. A label
 below two touching points thus stands on the side away from the other point, takes a stub
 or a leader, or is left out — it is never as near to a neighbour's point as to its own.
+A mark that a label may not cover, beside the middle of a side of the label, stands where
+that mark's own label would go: where it lies more squarely beside the label than the
+label's own mark — a label hanging below and left of its mark's corner, starting right
+beside another point — it must be farther by up to `defaults.side_margin` (0.5 em).
 The rule protects the marks a label may not cover (hard `items`, or hard `lower_items`)
-and the marks of less important items it may cover but does not hide (below); internal
-labels and labels on leaders are exempt
+and the marks of less important items it may cover but does not hide (below, by the
+margin alone); internal labels and labels on leaders are exempt
 ([ADR placement/margin](../adr/placement/margin.md)).
 
 The unlabeled points of a chart count too: the discs of vector layers and the shapes an SVG

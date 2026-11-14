@@ -443,6 +443,9 @@ function narrateMove(ex: Explained, e: Move): Narration {
     case "no_room":
       html = `<p><i>Swap</i>: ${nm} would take ${esc(where(ex, e.to))}, but ${name(ex, e.other)}, whose label is in the way, has no other free candidate: no move.</p>`;
       break;
+    case "uncovers":
+      html = `<p>${e.kind === "swap" ? `<i>Swap</i>: ${nm} would take ${esc(where(ex, e.to))} and ${name(ex, e.other)} ${esc(where(ex, e.otherTo))}` : `<i>Relocate</i> ${nm} to ${esc(where(ex, e.to))}`}? That would uncover the mark of a less important item that has no label because a label covers it. With <i>prefix</i> omission it would then end the prefix, and the labels after it would have to go: no move.</p>`;
+      break;
     case "inserted": {
       const moved = e.changes.filter(([i, c]) => i !== e.item && c >= 0).map(([i]) => i);
       const removed = e.changes.filter(([i, c]) => i !== e.item && c < 0).map(([i]) => i);

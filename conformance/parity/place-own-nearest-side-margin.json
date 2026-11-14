@@ -1,0 +1,174 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 160
+    },
+    "weights": {
+      "ambiguity": 0
+    },
+    "defaults": {
+      "side_margin": "0.2em"
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 115.2,
+          "y": 80
+        },
+        "label": {
+          "type": "text",
+          "text": "A"
+        },
+        "placement": {
+          "position_order": [
+            "left"
+          ]
+        }
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 200,
+          "y": 70
+        },
+        "label": {
+          "type": "text",
+          "text": "Luxembourg"
+        },
+        "placement": {
+          "position_order": [
+            "bottom-left",
+            "right"
+          ]
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "a",
+        "placed": true,
+        "box": {
+          "x": 100.932,
+          "y": 73.898,
+          "w": 11.268,
+          "h": 12.204000000000008
+        },
+        "anchor": [
+          115.2,
+          80.0
+        ],
+        "anchor_side": "left",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "A"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.404
+          ],
+          "line_widths": [
+            7.668
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.024999999999999998,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "b",
+        "placed": true,
+        "box": {
+          "x": 122.20667965644033,
+          "y": 72.12132034355965,
+          "w": 75.67200000000001,
+          "h": 15.599999999999994
+        },
+        "anchor": [
+          200.0,
+          70.0
+        ],
+        "anchor_side": "bottom-left",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Luxembourg"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            72.072
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.025000000000000355,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 1
+        }
+      }
+    ],
+    "stats": {
+      "placed": 2,
+      "total": 2,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 800,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 3,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.05000000000000035,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 100,
+        "rows": 54,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

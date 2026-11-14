@@ -80,6 +80,65 @@ pub fn classify<'a>(
     Ok(out)
 }
 
+/// A fill of a region (spec §4.8): a polygon primitive and the rule that made it part of
+/// a region.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct RegionFill<'a> {
+    /// Index of the first selector that matches `element`.
+    pub rule: usize,
+    /// The element that selector matches: the primitive's element (the outermost `<use>`
+    /// for instance geometry) or its nearest ancestor that a selector matches.
+    pub element: usize,
+    /// Index into [`Scene::primitives`].
+    pub index: usize,
+    /// The primitive (always a [`Geometry::Polygon`]: fills only).
+    pub primitive: &'a Primitive,
+}
+
+/// The fills of regions, in paint order: every fill polygon whose element, or else the
+/// nearest of its ancestors, matches one of `selectors`, with the first selector matching
+/// that element. Strokes and text boxes are never part of a region. Errors: selector
+/// syntax (`pattern`, naming the rule).
+pub fn regions<'a>(
+    scene: &'a Scene,
+    selectors: &[String],
+) -> Result<Vec<RegionFill<'a>>, SvgError> {
+    let mut parsed = Vec::with_capacity(selectors.len());
+    for (k, s) in selectors.iter().enumerate() {
+        parsed.push(Selector::parse(s).map_err(|e| SvgError {
+            code: e.code,
+            message: format!("region rule {k}: {}", e.message),
+        })?);
+    }
+    let ctx = scene.match_context();
+    // the nearest element (itself or an ancestor) a selector matches, with that selector:
+    // parents precede their children in document order
+    let mut nearest: Vec<Option<(usize, usize)>> = Vec::with_capacity(scene.elements.len());
+    for i in 0..scene.elements.len() {
+        let own = parsed
+            .iter()
+            .position(|s| s.matches_in(&scene.elements, i, &ctx))
+            .map(|k| (i, k));
+        let inherited = scene.elements[i].parent.and_then(|p| nearest[p]);
+        nearest.push(own.or(inherited));
+    }
+    let mut out = Vec::new();
+    for (index, p) in scene.primitives.iter().enumerate() {
+        if !matches!(p.geometry, Geometry::Polygon { .. }) {
+            continue;
+        }
+        if let Some((element, rule)) = nearest[p.element] {
+            out.push(RegionFill {
+                rule,
+                element,
+                index,
+                primitive: p,
+            });
+        }
+    }
+    Ok(out)
+}
+
 /// The primitives of the element with this `id` and its descendants (`None` if there is
 /// no such element).
 pub fn element_geometry<'a>(scene: &'a Scene, id: &str) -> Option<&'a [Primitive]> {

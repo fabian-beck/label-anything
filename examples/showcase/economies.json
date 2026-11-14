@@ -2144,23 +2144,6 @@
    "priority": 18173
   },
   {
-   "id": "SOL",
-   "anchor": {
-    "type": "point",
-    "x": 448.8,
-    "y": 338.16,
-    "mark": {
-     "shape": "circle",
-     "r": 2.0
-    }
-   },
-   "label": {
-    "type": "text",
-    "text": "Somaliland"
-   },
-   "priority": 17836
-  },
-  {
    "id": "GEO",
    "anchor": {
     "type": "point",
@@ -2949,23 +2932,6 @@
     "text": "Suriname"
    },
    "priority": 3697
-  },
-  {
-   "id": "CYN",
-   "anchor": {
-    "type": "point",
-    "x": 597.66,
-    "y": 477.04,
-    "mark": {
-     "shape": "circle",
-     "r": 2.0
-    }
-   },
-   "label": {
-    "type": "text",
-    "text": "Northern Cyprus"
-   },
-   "priority": 3600
   },
   {
    "id": "DJI",

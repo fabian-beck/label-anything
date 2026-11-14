@@ -38,6 +38,7 @@ are stale.
 | `defaults.buffer` | `"0.3em"` | length ≥ 0 | Soft ambiguity buffer ring around each label (Mumtaz et al. 2019). |
 | `defaults.margin` | `"0.2em"` | length ≥ 0 | Space a label keeps from other items' marks while `avoid.label.items` is hard (spec §4.4): not from its own mark (`placement.offset`), never more than another mark keeps from the own mark's box, half for warm-start candidates; also the least space from other labels. 0.3 em with `placement.aggressiveness` `low`. |
 | `defaults.spacing` | `null` | length ≥ 0 or null | Space a label keeps from other labels and their stubs while `avoid.label.labels` is hard (the larger of the two labels' spacings, each at least its margin; spec §4.4); `null`: twice the margin (0.4 em), so that with the padding their letters stand farther apart than the lines of one label. Half for warm-start candidates. |
+| `defaults.side_margin` | `"0.5em"` | length ≥ 0 | With `placement.own_nearest`: how much nearer its own mark a label without a stub is than another point's mark that lies more squarely beside one of its sides than its own, where that point's own label would go (spec §4.4): the full side margin for a mark straight across a side when the own mark is on a corner's diagonal, the margin when the own mark is as squarely beside the label, and never less than the margin. Half for warm-start candidates. |
 | `defaults.mark` | `{"shape":"circle","r":2}` | mark | Mark of point anchors without `anchor.mark`. |
 | `defaults.wrap` | `null` | wrap or null | No wrap settings: single line; the `wrap` ladder step may still try 2–3 lines. |
 | `defaults.truncate` | `"none"` | none \| end \| middle | Truncation when wrapped text exceeds `max_lines`. |
@@ -68,6 +69,7 @@ are stale.
 | `placement.stubs` | `"off"` | off \| auto | Stubs (spec §6.9): with `auto`, a label next to its mark that another item's mark comes within `stub_reach` of stands `stub_length` farther out, joined to its mark by a short leader at a right angle to its side (`leader.stub`; in the middle of a left or right side), where that is feasible; such a crowded label without a stub costs as much as a leader (`w_leader`). |
 | `placement.stub_length` | `"0.5em"` | length ≥ 0 | How much farther out a label with a stub stands than an adjacent one. |
 | `placement.stub_reach` | `"0.75em"` | length ≥ 0 | A label is ambiguous where another item's mark comes closer than this to its adjacent box. |
+| `placement.max_foreign` | `0.25` | 0–1 | On a region map (spec §4.8), the largest share of a label that names a region by where it lies — an area item's (internal ones aside), or one on a leader — that may lie in other items' regions: a name stays mostly in its own country or in open space, smaller, on a leader into the sea, or left out rather than misplaced. 1: no limit (`weights.foreign` decides). |
 | `leaders.style` | `"straight"` | enum | straight \| angles \| orthogonal \| elbow \| curved. |
 | `leaders.angles` | `[0,45,90,135,180,225,270,315]` | list of degrees | 0 = right, 90 = up. Used by `angles` and the first segment of `elbow`. |
 | `leaders.port` | `"nearest"` | nearest \| side-center \| baseline | Where the leader meets the label. |
@@ -117,12 +119,17 @@ are stale.
 | `weights.lookahead` | `0.3` | ≥ 0 | × Σ fraction of other unplaced items' candidates invalidated. |
 | `weights.starve` | `2.0` | ≥ 0 | × number of unplaced items whose last candidates would be invalidated. |
 | `weights.contrast` | `0.5` | ≥ 0 | × 4 · lightness variance of the raster backdrop under the label box, per em² (spec §8): a label half on black, half on white costs the weight per em² of its box. |
+| `weights.straddle` | `0.5` | ≥ 0 | × 4 · Σ a_r · a_s / A over the pairs of regions under the label box, per em² (spec §4.8, §8): a label half in one region, half in another (or in open space) costs the weight per em² of its box, as one half on black and half on white does (`contrast`). |
+| `weights.foreign` | `0.5` | ≥ 0 | × the area of the label box in regions other than its item's home, per em² (open space is free): a label in a neighbouring country costs the weight per em² of its box. |
+| `weights.leader_borders` | `1.0` | ≥ 0 | × the region borders a leader crosses (spec §7): each costs as much as having a leader. |
 | `weights.stability` | `1.0` | ≥ 0 | × displacement from `warm_start`: 1 per em up to 1 em, then 1/4 per em up to 5 em (at most 2 per label). |
 | `obstacles.vector.r` | `2` | ≥ 0 | Radius of vector points. |
 | `obstacles.vector.width` | `1` | ≥ 0 | Stroke width of vector polylines. |
+| `obstacles.vector.region` | `null` | region or null | The layer's polygons, rects, circles and shapes on the region map (spec §4.8): `each`, `open`, `none` or a region name. |
 | `obstacles.vector.fill_rule` | `"nonzero"` | nonzero \| evenodd | Fill rule of vector polygons. |
 | `obstacles.svg.default_class` | `"ink"` | class or ignore | Class of drawn SVG elements no rule matches. |
 | `obstacles.svg.auto_mark_items` | `false` | bool | Take item marks from SVG elements with the item's `svg_id`. |
+| `obstacles.svg.regions` | `null` | selector, rules or null | Regions of the picture (spec §4.8): every element a selector matches is a region; labels keep inside one region, leaders cross few borders. |
 | `obstacles.svg.tolerance` | `0.25` | > 0 | Curve flattening tolerance (px). |
 | `obstacles.raster.mode` | `"ink"` | enum | ink \| alpha \| cost \| classmap \| saliency. |
 | `obstacles.raster.class` | `"ink"` | class | Class produced by ink, alpha, cost and saliency modes. |

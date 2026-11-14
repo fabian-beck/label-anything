@@ -1,0 +1,195 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 120
+    },
+    "priority": {
+      "omission": "prefix"
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 80,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Pair"
+        },
+        "group": "g",
+        "priority": 1.0
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 84,
+          "y": 62
+        },
+        "label": {
+          "type": "text",
+          "text": "Pair"
+        },
+        "group": "g",
+        "priority": 3.0
+      },
+      {
+        "id": "c",
+        "anchor": {
+          "type": "point",
+          "x": 220,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Gamma"
+        },
+        "priority": 2.0
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "a",
+        "placed": true,
+        "box": {
+          "x": 67.178,
+          "y": 44.43358800705922,
+          "w": 25.644000000000005,
+          "h": 12.563999999999993
+        },
+        "anchor": [
+          82.0,
+          61.0
+        ],
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Pair"
+          ],
+          "used": "group",
+          "truncated": false,
+          "baseline_offsets": [
+            10.643999999999998
+          ],
+          "line_widths": [
+            22.044
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.3581323339216012,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 2
+        },
+        "members": [
+          "a",
+          "b"
+        ]
+      },
+      {
+        "id": "b",
+        "placed": false,
+        "reason": "grouped",
+        "blocking": [],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 3.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "c",
+        "placed": true,
+        "box": {
+          "x": 195.88,
+          "y": 44.592,
+          "w": 48.24000000000001,
+          "h": 12.408000000000001
+        },
+        "anchor": [
+          220.0,
+          60.0
+        ],
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Gamma"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.488
+          ],
+          "line_widths": [
+            44.64
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.024999999999999998,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 2.0,
+          "rank": 1
+        }
+      }
+    ],
+    "stats": {
+      "placed": 2,
+      "total": 3,
+      "placed_weighted": 0.5307212739772434,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 1200,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 80,
+      "omission_order": [
+        "b"
+      ],
+      "priority_inversions": 0,
+      "total_cost": 0.38313233392160123,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 100,
+        "rows": 40,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}
