@@ -3,7 +3,7 @@
 // in its way can move to another of its positions.
 import { describe, expect, it } from "vitest";
 import type { Env } from "../src/env.js";
-import { placeWith } from "../src/place.js";
+import { solveWith } from "../src/place.js";
 
 /** No clock: the solve is deterministic. */
 const NO_CLOCK: Env = {};
@@ -51,7 +51,7 @@ function sides(r: Res): [string, string | null][] {
 
 describe("moving one label aside", () => {
   it("a more important label moves aside", () => {
-    const r = placeWith(problem(), NO_CLOCK) as Res;
+    const r = solveWith(problem(), NO_CLOCK) as Res;
     expect(sides(r)).toEqual([
       ["B", "left"],
       ["H", "top"],
@@ -60,7 +60,7 @@ describe("moving one label aside", () => {
   });
 
   it("one less important label gives way", () => {
-    const r = placeWith(problem([lower("L1", 30, 0, "bottom")]), NO_CLOCK) as Res;
+    const r = solveWith(problem([lower("L1", 30, 0, "bottom")]), NO_CLOCK) as Res;
     expect(sides(r)).toEqual([
       ["B", "left"],
       ["H", "top"],
@@ -71,7 +71,7 @@ describe("moving one label aside", () => {
 
   it("two less important labels do not", () => {
     const p = problem([lower("L1", 30, 0, "bottom"), lower("L2", 70, -1, "top")]);
-    const r = placeWith(p, NO_CLOCK) as Res;
+    const r = solveWith(p, NO_CLOCK) as Res;
     expect(sides(r)).toEqual([
       ["B", "right"],
       ["H", null],
@@ -86,7 +86,7 @@ describe("moving one label aside", () => {
     p.obstacles = { vector: [{ class: "shade", rects: [[7, 45, 40, 10]] }] };
     p.avoid = { label: { shade: 5 } };
     p.placement = { models: ["adjacent"], prune_factor: 1 };
-    const r = placeWith(p, NO_CLOCK) as Res;
+    const r = solveWith(p, NO_CLOCK) as Res;
     expect(sides(r)).toEqual([
       ["B", "left"],
       ["H", "top"],
@@ -106,7 +106,7 @@ describe("moving one label aside", () => {
     p.obstacles = { vector: [{ class: "shade", rects: [[60, 57, 30, 10]] }] };
     p.avoid = { label: { shade: 5 } };
     p.placement = { models: ["adjacent"], prune_factor: 1 };
-    const r = placeWith(p, NO_CLOCK) as Res;
+    const r = solveWith(p, NO_CLOCK) as Res;
     expect(sides(r)).toEqual([
       ["B", "left"],
       ["F", "top"],

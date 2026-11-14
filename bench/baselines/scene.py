@@ -33,7 +33,6 @@ from ..common.model import Item, Problem, load_problem, position_order
 from ..eval import classes as clsmod
 from ..eval import priority as pr
 
-RESERVED = ("items", "labels", "leaders", "canvas_edge")
 PLACEHOLDER = "■"  # text handed to text-only tools for icon / box labels
 
 
@@ -45,9 +44,6 @@ class Note:
     feature: str       # short key, e.g. "raster:ink", "svg", "area-anchors"
     message: str
     pointer: str = ""
-
-    def as_dict(self) -> dict:
-        return {"kind": self.kind, "feature": self.feature, "message": self.message}
 
 
 @dataclass
@@ -140,10 +136,6 @@ class Obstacles:
         cs |= {p[-1] for p in self.polygons} | {m.cls for m in self.masks}
         return sorted(cs)
 
-    def counts(self) -> dict[str, int]:
-        return {"circles": len(self.circles), "polylines": len(self.polylines), "rects": len(self.rects),
-                "polygons": len(self.polygons), "raster_px": sum(m.count for m in self.masks)}
-
 
 @dataclass
 class Scene:
@@ -158,10 +150,6 @@ class Scene:
     positions: list[str]               # problem-level adjacent position order
     infos: dict                        # reference priority (bench.eval.priority.PriorityInfo per id)
     notes: list[Note] = field(default_factory=list)
-
-    def note(self, kind: str, feature: str, message: str, pointer: str = "") -> None:
-        if not any(n.feature == feature and n.kind == kind for n in self.notes):
-            self.notes.append(Note(kind, feature, message, pointer))
 
 
 def default_truth_path(problem_path: str | Path | None) -> Path | None:
@@ -295,7 +283,7 @@ def build_scene(problem: dict, problem_path: str | Path | None = None, truth: di
 
     def wanted(cls: str) -> bool:
         v = spec.avoid_value(a_label, cls)
-        if cls in RESERVED or v == "ignore":
+        if cls in spec.NON_OBSTACLE_CLASSES or v == "ignore":
             return False
         if soft == "ignore" and v != "hard":
             left_out.add(cls)
@@ -346,11 +334,12 @@ def build_scene(problem: dict, problem_path: str | Path | None = None, truth: di
                           | left_out)
     if soft_classes and soft == "hard":
         notes.append(Note("emulation", "soft-classes", "soft obstacle classes (" + ", ".join(soft_classes) + ") "
-                                                       "are avoided like hard ones: the tools have no soft costs"))
+                                                       "are treated as hard obstacles (no soft costs in these "
+                                                       "methods)"))
     elif soft_classes:
         notes.append(Note("emulation", "soft-classes", "soft obstacle classes (" + ", ".join(soft_classes) + ") "
-                                                       "are left out: labels may cover them (the tools have no "
-                                                       "soft costs)"))
+                                                       "are ignored: labels may cover them (no soft costs in "
+                                                       "these methods)"))
 
     positions = [p for p in position_order(opts.get("placement", {}).get("position_order", "perceptual"))]
     if any(it.raw.get("placement", {}).get("position_order") for it in prob.items):

@@ -31,7 +31,6 @@ from bench.scenarios import load_module  # noqa: E402
 
 SCENARIO = "09-line-end-labels"
 SOURCES = ["vega-datasets-3.2.1"]
-TGZ = None
 COLORS = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f", "#edc948", "#b07aa1", "#ff9da7", "#9c755f",
           "#bab0ac", "#86bcb6", "#d37295", "#8cd17d", "#a0cbe8"]
 
@@ -95,7 +94,8 @@ def main() -> None:
     p["priority"] = {"terms": [{"attr": "last"}]}
     merge_avoid(p, {"lines": 2.0, "grid": 0.2}, {"lines": 0.5, "grid": 0.1})
     wr.config("unemployment-14-vector", p, quick=True, svg=sc.svg(), png=png_bytes(sc.png()),
-              description="14 industries, labels at the series ends (right-side positions only, distant allowed).")
+              description="14 industries; labels at the series ends (positions to the right only; distant labels "
+                          "allowed).")
     # 2. stocks on an SVG chart
     rows = list(csv.DictReader(io.StringIO(member("stocks.csv").decode("utf-8"))))
     series = {}

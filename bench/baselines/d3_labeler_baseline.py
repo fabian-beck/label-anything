@@ -12,19 +12,15 @@ Translation (see bench/baselines/README.md and d3_labeler.mjs):
   the box. A label away from its mark gets a straight leader (as the tool's demo draws one), from the mark
   to the box edge facing it.
 
-    python -m bench.baselines.d3_labeler_baseline problem.json -o result.json
+    python -m bench.baselines d3-labeler problem.json -o result.json
 """
 from __future__ import annotations
 
-import argparse
-
 from ..common.geom import Box
-from ..common.jsonio import read_json, write_json
 from . import node
 from .results import build_result
 from .scene import Note, Scene, build_scene, ray_exit, without_obstacles
 
-TOOL = "d3-labeler"
 OBSTACLES = False  # the tool is told no obstacle classes: soft emulations do not differ
 COMMIT = "6de86705a8bbdebb00282aaa61755686f7309b31"  # tinker10/D3-Labeler master, vendor/d3-labeler
 SWEEPS = 1000
@@ -87,16 +83,3 @@ def solve(problem: dict, problem_path=None, options: dict | None = None) -> dict
         if not box.contains_point((lab.x, lab.y)):
             ports[lab.id] = ray_exit(box, (box.cx, box.cy), (lab.x, lab.y))
     return build_result(scene, boxes, ports, float(out.get("runtime_ms", 0.0)), f"d3-labeler/{COMMIT[:7]}", notes)
-
-
-def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("problem")
-    ap.add_argument("-o", "--out", required=True)
-    a = ap.parse_args(argv)
-    write_json(a.out, solve(read_json(a.problem), a.problem), nd=3)
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

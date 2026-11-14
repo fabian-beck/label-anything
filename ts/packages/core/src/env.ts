@@ -1,5 +1,5 @@
 /**
- * The environment of a solve: pluggable backends and host callbacks (spec §6.4); port of
+ * The environment of a solve: pluggable backends and host callbacks; port of
  * `rust/crates/la-core/src/env.rs`.
  *
  * The core has no I/O. File access, the clock and host callbacks are injected through

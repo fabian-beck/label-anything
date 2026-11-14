@@ -40,7 +40,7 @@ function spanMask(w: number, w0: number, w1: number, c0: number, c1: number): nu
  * Fine grid counting, per cell, the placed rectangular labels whose interior contains the
  * cell center, mirrored in a per-row bitset of non-zero cells. A candidate box whose
  * interior contains an occupied cell center (with margin) overlaps a placed label: an
- * exact rejection test (placed labels in `State.quickBlocked`, item marks in
+ * exact rejection test (placed labels in `State.occupancy`, item marks in
  * `Obstacles.itemOcc`) that misses only overlaps thinner than a cell.
  */
 export class Occupancy {

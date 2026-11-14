@@ -214,9 +214,11 @@ def random_problem(seed):
 # random problem 537 of the property test, weighted omission: an insertion of the local search
 # moved a more important label aside and freed the room of an omitted item but for the label
 # it inserted; no priority repair follows weighted omission, so the insertion is undone (spec
-# §10.2). With a budget that the iterations use up before the clock.
+# §10.2). With a budget that the iterations use up before the clock, and at aggressiveness high,
+# the defaults under which the property test found it.
 WEIGHTED_INSERT = random_problem(537)
 WEIGHTED_INSERT["solver"]["time_budget_ms"] = 5000
+WEIGHTED_INSERT["placement"]["aggressiveness"] = "high"
 CASES["weighted-insert"] = case(
     "weighted omission: an insertion leaves no more important item blocked only by less important labels",
     WEIGHTED_INSERT, {"placed_min": 20})
@@ -486,7 +488,7 @@ CASES["distant-keeps-sides"] = case(
      "items": [pt("a", 100, 40, "Alpha"), pt("b", 100, 120, "Beta")]},
     {"placed": 1, "unplaced_ids": ["a"], "reasons": {"a": "no_feasible_candidate"},
      "model": {"b": "distant"}, "has_leader": {"b": True},
-     "box": {"b": {"x": 143.884, "y": 89.535, "w": 29.232, "h": 12.288, "tol": 0.01}}},
+     "box": {"b": {"x": 138.341, "y": 91.831, "w": 29.232, "h": 12.288, "tol": 0.01}}},
     "Both items allow only `right`. Left of them everything is free, but distant labels keep to "
     "directions within 22.5° of the listed positions: a, walled in on the right for labels and "
     "leaders, is omitted; b goes up-right, its leader over the soft-for-leaders box.")
@@ -791,7 +793,7 @@ CASES["warm-start-follows-anchor"] = case(
 CASES["warm-start-degraded"] = case(
     "a label shrunk in the previous solve keeps its box instead of running the ladder again",
     {"canvas": {"width": 240, "height": 180},
-     "placement": {"models": ["adjacent", "slider"]},
+     "placement": {"models": ["adjacent", "slider"], "aggressiveness": "high"},
      "obstacles": {"vector": [{"class": "walls", "rects": [
          [60, 60, 34, 80], [94, 60, 24, 28], [94, 112, 60, 28], [138, 88, 16, 24]]}]},
      "avoid": {"label": {"walls": "hard"}, "leader": {"walls": "hard"}},
@@ -806,7 +808,7 @@ CASES["warm-start-degraded"] = case(
     "label fits nowhere next to it, the label shrunk to 0.85 (the box in warm_start) fits "
     "on its right. An opening in the top wall lets the ladder's distant step place the "
     "full-size label with a leader, but the previous, shrunk box is still free and is "
-    "kept (ADR motion/warm-starts).")
+    "kept (ADR motion/warm-starts). Aggressiveness high: only its ladder shrinks labels.")
 
 CASES["warm-start-nudge"] = case(
     "a previous box that an obstacle now clips slides along the mark instead of jumping",
@@ -907,23 +909,24 @@ CASES["regions-unknown-home"] = case(
     "The result warns (unknown_region at /items/0/region); the label stays in the west, as in "
     "regions-stay-home.")
 
-# a strip too narrow for its name between two regions, open space below (or none)
-STRIP = {"vector": [{"region": "west", "rects": [[0, 0, 140, 120]]},
-                    {"region": "east", "rects": [[160, 0, 140, 120]]},
-                    {"region": "each", "rects": [[140, 0, 20, 120]]}]}
-STRIP_ITEM = {"id": "s", "anchor": {"type": "area", "polygon": [[140, 0], [160, 0], [160, 120], [140, 120]]},
+# a strip too narrow for its name between two regions, open space below (or none); the open
+# space is within the default leader reach (4 em) of the strip's dot
+STRIP = {"vector": [{"region": "west", "rects": [[0, 0, 140, 80]]},
+                    {"region": "east", "rects": [[160, 0, 140, 80]]},
+                    {"region": "each", "rects": [[140, 0, 20, 80]]}]}
+STRIP_ITEM = {"id": "s", "anchor": {"type": "area", "polygon": [[140, 0], [160, 0], [160, 80], [140, 80]]},
               "label": {"type": "text", "text": "Stripland"}}
 
 CASES["regions-area-to-open"] = case(
     "an area's name that fits only in other regions goes out on a leader into open space",
-    {"canvas": {"width": 300, "height": 200}, "obstacles": STRIP, "items": [STRIP_ITEM]},
+    {"canvas": {"width": 300, "height": 160}, "obstacles": STRIP, "items": [STRIP_ITEM]},
     {"placed": 1, "model": {"s": "distant"}, "has_leader": {"s": True}},
     "Beside its dot the name would lie mostly in the west or the east (more than max_foreign); "
     "the ladder's distant step finds open space below the regions.")
 
 CASES["regions-area-omitted"] = case(
     "an area's name that fits only in other regions is left out rather than misplaced",
-    {"canvas": {"width": 300, "height": 120}, "obstacles": STRIP, "items": [STRIP_ITEM]},
+    {"canvas": {"width": 300, "height": 80}, "obstacles": STRIP, "items": [STRIP_ITEM]},
     {"placed": 0, "reasons": {"s": "no_feasible_candidate"}})
 
 CASES["regions-max-foreign-1"] = case(
@@ -985,6 +988,71 @@ CASES["search-restore-true-total"] = case(
                pt("p12", 160, 156.3, "Alder"), pt("p13", 250.4, 155.3, "Aspen"),
                pt("p14", 163.3, 137.6, "Beech"), pt("p15", 164.9, 166.8, "Holly")]},
     {"placed": 16})
+
+
+CASES["repair-pruned-candidate"] = case(
+    "the priority repair tries the positions the pruning dropped",
+    {"canvas": {"width": 200, "height": 160}, "degrade": ["omit"],
+     "placement": {"models": ["adjacent", "slider"]},
+     "obstacles": {"vector": [{"class": "walls", "rects": [[58, 95, 22, 15], [120, 95, 22, 15]]},
+                              {"class": "shade", "rects": [[40, 103, 120, 50]]}]},
+     "avoid": {"label": {"walls": "hard", "shade": 3}},
+     "items": [pt("a", 100, 60, "Alpha", priority=2, placement={"position_order": ["bottom"]}),
+               pt("h", 100, 100, "Alpha", priority=1)]},
+    {"placed": 2, "anchor_side": {"a": "bottom", "h": "bottom"}, "model": {"h": "adjacent"},
+     "box": {"h": {"x": 82.054, "y": 103, "w": 35.892, "h": 15.6, "tol": 0.01}}},
+    "a's label stands below a, too close to h's places above h; walls (hard) take h's places "
+    "left and right of it. Below h, over the soft class shade (3 per em²), its label costs "
+    "about 12, so the pruning of spec §6.7 drops those places before the search. The priority "
+    "repair tries them (spec §10.3): h is labeled below, where nothing more important is.")
+
+
+# --- aggressiveness ----------------------------------------------------------------------
+def pocket(dx, closed):
+    """Hard walls around the point (100 + dx, 100): a full-size "Alpha" fits nowhere next to
+    it, the label shrunk to 0.85 fits on its right; an opening in the top wall unless closed."""
+    walls = [[60 + dx, 60, 34, 80], [94 + dx, 60, 24, 28], [94 + dx, 112, 60, 28], [138 + dx, 88, 16, 24]]
+    return walls + ([[118 + dx, 60, 36, 28]] if closed else [])
+
+
+LEVELS = {"canvas": {"width": 400, "height": 200},
+          "placement": {"models": ["adjacent", "slider"]},
+          "obstacles": {"vector": [{"class": "walls", "rects": pocket(0, False) + pocket(160, True)}]},
+          "avoid": {"label": {"walls": "hard"}, "leader": {"walls": "hard"}},
+          "items": [pt("a", 100, 100, "Alpha"), pt("b", 260, 100, "Alpha"),
+                    pt("c", 330, 30, "Ham", priority=2, placement={"position_order": ["right"]}),
+                    pt("d", 330, 48, "Ham", priority=1, placement={"position_order": ["right"]})]}
+LEVELS_ABOUT = ("a's pocket opens upwards, where a distant label fits; b's is closed, and only b's "
+                "label shrunk to 0.85 fits, right of b. c's and d's labels, right of points 18 px "
+                "apart, are 5.712 px apart: more than the label spacing of medium (0.4 em = 4.8 px), "
+                "less than that of low (0.6 em = 7.2 px).")
+
+
+def with_level(problem, level):
+    return {**problem, "placement": {**problem["placement"], "aggressiveness": level}}
+
+
+CASES["aggressiveness-low"] = case(
+    "aggressiveness low: no distant labels from the ladder, no smaller type, more room",
+    with_level(LEVELS, "low"),
+    {"placed_ids": ["c"], "unplaced_ids": ["a", "b", "d"],
+     "reasons": {"a": "no_feasible_candidate", "b": "no_feasible_candidate", "d": "omitted_by_priority"}},
+    LEVELS_ABOUT + " Low: the ladder has no distant step and keeps the type size, and labels keep "
+    "0.6 em from each other (spec §2.4): only c is labeled.")
+CASES["aggressiveness-medium"] = case(
+    "aggressiveness medium (the default): distant labels from the ladder, no smaller type",
+    LEVELS,
+    {"placed_ids": ["a", "c", "d"], "unplaced_ids": ["b"], "reasons": {"b": "no_feasible_candidate"},
+     "model": {"a": "distant", "c": "adjacent", "d": "adjacent"}, "has_leader": {"a": True},
+     "font": {"c": {"size": 12}, "d": {"size": 12}}},
+    LEVELS_ABOUT + " Medium: the ladder's distant step gives a a leader; b keeps no label.")
+CASES["aggressiveness-high"] = case(
+    "aggressiveness high: smaller type where nothing else fits",
+    with_level(LEVELS, "high"),
+    {"placed": 4, "model": {"a": "distant", "b": "adjacent"}, "anchor_side": {"b": "right"},
+     "font": {"b": {"size": 10.2}},
+     "box": {"b": {"x": 263, "y": 93.37, "w": 30.508, "h": 13.26, "tol": 0.01}}},
+    LEVELS_ABOUT + " High: the ladder shrinks b's label to fit beside it.")
 
 
 def main():

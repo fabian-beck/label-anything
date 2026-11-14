@@ -8,6 +8,12 @@ with the labels and leaders of the result, the text set in an embedded subset of
 (``docs/assets/figures/<name>.svg``). It needs the benchmark's Python environment for the
 fonts (fontTools). Solves are deterministic, so unchanged inputs give unchanged figures.
 
+On the home page the examples are live (``ts/packages/playground/src/showcase``): the
+chart and the map are built there again from the same data (ports of ``economies.py`` and
+``europe.py``; a browser test compares their problems with the ones written here), the
+graph and the photograph start from ``modules.json`` and ``retina.json``. Change a script
+and its port together.
+
 * ``economies.py``: a chart, the world's economies as a bubble chart;
 * ``europe.py``: a map, the countries and capitals of Europe;
 * ``retina.py``: a photograph, the parts of the eye's fundus, labeled in the margins;

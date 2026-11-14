@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest";
 import { PlaceError } from "../src/api.js";
 import { BasicEnv } from "../src/env.js";
-import { placeWith } from "../src/place.js";
+import { solveWith } from "../src/place.js";
 
 const point = (id: string, x: number, y: number): unknown => ({
   id,
@@ -15,7 +15,7 @@ const point = (id: string, x: number, y: number): unknown => ({
 /** The result, or the codes of the errors. */
 function solve(problem: unknown): Record<string, any> | string[] {
   try {
-    return placeWith(problem, new BasicEnv()) as Record<string, any>;
+    return solveWith(problem, new BasicEnv()) as Record<string, any>;
   } catch (e) {
     if (e instanceof PlaceError) return e.errors.map((i) => i.code);
     throw e;

@@ -4,15 +4,14 @@
 // two paths must give bit-identical label variants and identical results.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { BasicEnv, type Env, envHasMeasureCallback } from "../src/env.js";
 import { Measurer, baseVariants, bundledFonts, ladderVariants, userFonts } from "../src/labels.js";
 import { build } from "../src/model/index.js";
-import { placeWith } from "../src/place.js";
+import { solveWith } from "../src/place.js";
 import { jsonDiff } from "./parity-util.js";
+import { CONF } from "./util.js";
 
-const conformanceDir = fileURLToPath(new URL("../../../../conformance/", import.meta.url));
 
 /** Declares a measurement callback that never measures, so every line takes the closure
  * path and falls back to the same fonts. */
@@ -21,8 +20,8 @@ const closurePath: Env = {};
 function assertSameResults(name: string, problem: unknown): void {
   expect(envHasMeasureCallback(new BasicEnv())).toBe(false);
   expect(envHasMeasureCallback(closurePath)).toBe(true);
-  const fast = placeWith(problem, new BasicEnv());
-  const closure = placeWith(problem, closurePath);
+  const fast = solveWith(problem, new BasicEnv());
+  const closure = solveWith(problem, closurePath);
   expect(jsonDiff(fast, closure), name).toEqual([]);
 }
 
@@ -52,16 +51,16 @@ function assertSameVariants(name: string, problem: unknown): number {
 }
 
 function conformance(dir: string): [string, Record<string, unknown>][] {
-  return readdirSync(join(conformanceDir, dir))
+  return readdirSync(join(CONF, dir))
     .filter((f) => f.endsWith(".json"))
     .sort()
-    .map((f) => [f, JSON.parse(readFileSync(join(conformanceDir, dir, f), "utf8"))]);
+    .map((f) => [f, JSON.parse(readFileSync(join(CONF, dir, f), "utf8"))]);
 }
 
 /** A data URL (percent-encoded) of a synthetic font whose kern pair `T o` skips its second
  * glyph (ValueFormat2 ≠ 0) and whose acute accent is a GDEF mark. */
 function syntheticGposFont(): string {
-  const bytes = readFileSync(join(conformanceDir, "text/fonts/synthetic-gpos.ttf"));
+  const bytes = readFileSync(join(CONF, "text/fonts/synthetic-gpos.ttf"));
   let encoded = "";
   for (const b of bytes) encoded += `%${b.toString(16).toUpperCase().padStart(2, "0")}`;
   return `data:font/ttf,${encoded}`;

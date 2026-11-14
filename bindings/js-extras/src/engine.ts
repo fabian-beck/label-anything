@@ -27,14 +27,12 @@ export function setDefaultEngine(engine: AnyEngine | undefined): void {
 
 /** The engine to use: the given one, else the default, else `@label-anything/core`. */
 export function resolveEngine(engine?: AnyEngine): AnyEngine {
-  const builtin = core as unknown as Partial<Engine>;
-  const e = engine ?? defaultEngine ?? (typeof builtin.place === "function" ? (builtin as Engine) : undefined);
-  if (!e) {
-    throw new Error(
-      "@label-anything/extras: no engine available. Pass { engine } (e.g. the @label-anything/wasm module) or call setDefaultEngine().",
-    );
-  }
-  return e;
+  return engine ?? defaultEngine ?? core;
+}
+
+/** What a helper does with a failed solve: the caller's `onError`, else `console.error`. */
+export function errorHandler(onError: ((error: unknown) => void) | undefined): (error: unknown) => void {
+  return (error) => (onError ? onError(error) : console.error(error));
 }
 
 export function isPromiseLike<T>(value: T | PromiseLike<T>): value is PromiseLike<T> {

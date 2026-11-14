@@ -492,14 +492,18 @@ read, open questions). "–" = no DOI found.
 |---|---|---|---|
 | Bobák, Čmolík, Čadík. From top-right to user-right: perceptual prioritization of point-feature label positions. arXiv:2407.11996 (cited by the project as CVM 2026) | arXiv:2407.11996 | PARTIAL (no CVM record found) | d |
 | Chazelle, Drysdale, Lee (1986). Computing the largest empty rectangle. *SIAM J. Comput.* 15(1):300–315 | DOI not confirmed | VERIFIED-SEARCH (volume, pages) | d |
+| Chu et al. (2025). What makes a visualization image complex? IEEE VIS 2025; arXiv:2510.08332 | arXiv:2510.08332 | PARTIAL (search summaries only; edge density is the dominant predictor in v3, the best for node-link diagrams in v1) | ADR project/benchmark-measures |
 | Fan, Zhang, Du (2005). Quality evaluation model for map labeling. *Geo-spatial Inf. Sci.* 8(1):72–78 | 10.1007/BF02826996 | VERIFIED-SEARCH | d |
+| Henderson, Chanceaux, Smith (2009). The influence of clutter on real-world scene search: evidence from search efficiency and eye movements. *J. Vis.* 9(1):32, 1–8 | 10.1167/9.1.32 | VERIFIED-SEARCH | ADR project/benchmark-measures |
 | Imhof (1975). Positioning names on maps. *Am. Cartogr.* 2(2):128–144 | 10.1559/152304075784313304 (memory) | PARTIAL (secondary sources) | d, e |
 | Kittivorawong, Moritz, Wongsuphasawat, Heer (2020). Fast and flexible overlap detection for chart labeling with occupancy bitmap. IEEE VIS 2020 Short Papers (cited) | 10.1109/VIS47514.2020.00027 | PARTIAL | d |
 | Luboschik, Schumann, Cords (2008). Particle-based labeling: fast point-feature labeling without obscuring other visual features. *IEEE TVCG* 14(6):1237–1244 | 10.1109/TVCG.2008.152 | VERIFIED-SEARCH | d |
+| Mack, Oliva (2004). Computational estimation of visual complexity (conference presentation, as cited by Rosenholtz et al. 2007) | – | PARTIAL (not seen; cited as the origin of edge density as a complexity measure) | ADR project/benchmark-measures |
 | Naamad, Lee, Hsu (1984). On the maximum empty rectangle problem. *Discrete Appl. Math.* 8(3):267–277 | DOI not confirmed | PARTIAL | d |
 | Ooms, Kellens, Fack (2009). Dynamic map labeling for users. ICC 2009, Santiago | – | PARTIAL | d |
 | Pavlovec, Čmolík (2022). Rapid labels: point-feature labeling on GPU. *IEEE TVCG* 28(1):604–613 (cited) | 10.1109/TVCG.2021.3114854 | VERIFIED-SEARCH | d |
 | Petzold, Gröger, Plümer (2003). Fast screen map labeling — data structures and algorithms. ICC 2003, Durban, 288–298 | – | PARTIAL | d |
+| Rosenholtz, Li, Nakano (2007). Measuring visual clutter. *J. Vis.* 7(2):17, 1–22 | 10.1167/7.2.17 | VERIFIED-SEARCH | ADR project/benchmark-measures |
 | Rylov, Reimer (2015). Improving label placement quality by considering basemap detail with a raster-based approach. *GeoInformatica* 19(3):463–486 | 10.1007/s10707-014-0214-6 | VERIFIED-SEARCH | d |
 | Scheuerman, Harman, Goldstein, Acklin, Michael (2023). Visual preferences in map label placement. *Discov. Psychol.* 3(1) | 10.1007/s44202-023-00088-0 | VERIFIED-SEARCH | d |
 | Theophil, Schödl (2006). An efficient algorithm for scatter chart labeling. AAAI 2006, 1064–1069 | – | VERIFIED-SEARCH | d |

@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import csv
+import functools
 import math
 import sys
 from dataclasses import dataclass
@@ -91,7 +92,10 @@ def load_airports(min_routes: int = 1) -> list[Airport]:
     return out
 
 
+@functools.lru_cache(maxsize=None)
 def load_countries() -> list[tuple[str, str, list]]:
+    """(name, continent, polygons) of every country with the internationally recognized
+    borders, by name; built once per build (read-only)."""
     out = []
     for feat in borders.countries():
         p = feat["properties"]

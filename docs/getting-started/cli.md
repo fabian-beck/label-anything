@@ -35,6 +35,9 @@ Options, for a JSON problem as for one built [from a CSV file](#anchors-from-a-c
   `solver.strategy` (`greedy` skips the local search);
 * `--degrade` sets the degradation ladder as comma-separated steps (`wrap,distant,omit`;
   `omit` alone turns it off);
+* `--aggressiveness low|medium|high` sets how hard the engine tries to place every label
+  (`placement.aggressiveness`, default `medium`;
+  [aggressiveness](../concepts/candidates.md#aggressiveness));
 * `--preset`, `--canvas WxH`, `--font-size`, `--omission` and `--max-labels` set those
   options; `--canvas` keeps the other canvas options;
 * `--pretty` indents the JSON.

@@ -1,6 +1,7 @@
 """Benchmark scenarios. Each ``NN-name/`` directory has ``fetch.py`` (download and
-verify the data), ``build.py`` (write problems, truths and backgrounds to
-``bench/out/problems/NN-name/``), ``LICENSE.md`` and ``README.md``.
+verify the data; none where the data is committed, scenario 13), ``build.py`` (write
+problems, truths and backgrounds to ``bench/out/problems/NN-name/``), ``LICENSE.md`` and
+``README.md``.
 
     python -m bench.scenarios list
     python -m bench.scenarios fetch [NN ...]     # all when no ids are given

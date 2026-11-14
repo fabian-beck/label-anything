@@ -85,7 +85,7 @@ export function crowded(model: Model, obs: Obstacles, item: Item, r: Rect, buf: 
   obs.itemIndex.query(r.inflate(reach), buf);
   for (let q = 0; q < buf.len; q++) {
     const j = buf.get(q);
-    if (j !== i && (model.groupOf[j] ?? null) !== i && model.items[j]!.shape.distRect(r) < reach) return true;
+    if (j !== i && model.groupRep(j) !== i && model.items[j]!.shape.distRect(r) < reach) return true;
   }
   return false;
 }
@@ -245,7 +245,7 @@ export class Evaluator {
             : clear;
         sep = minf(need, sj.reference().dist(item.shape.reference()));
       }
-      if (nearRule && d < dOwn + sep - EPS && (model.groupOf[j] ?? null) !== i) {
+      if (nearRule && d < dOwn + sep - EPS && model.groupRep(j) !== i) {
         acc.violate(BLOCK_ITEMS, false, 0);
         if (acc.unusable(quick)) return finish(c, acc);
       }
@@ -409,14 +409,8 @@ export class Evaluator {
 
   private ambiguityRect(i: number, r: Rect, dOwn: number, em: number): number {
     const reach = dOwn + 0.5 * em;
-    const buf = this.buf;
-    this.obs.itemIndex.query(r.inflate(reach), buf);
-    let dOther = Infinity;
-    for (let q = 0; q < buf.len; q++) {
-      const j = buf.get(q);
-      if (j !== i) dOther = minf(dOther, this.model.items[j]!.shape.distRect(r));
-    }
-    return dOther < reach ? clampf((dOwn - dOther) / em + 0.5, 0, 1) : 0;
+    this.obs.itemIndex.query(r.inflate(reach), this.buf);
+    return this.ambiguityRectCached(i, r, dOwn, em);
   }
 
   private ambiguityPoint(i: number, p: P, em: number): number {
@@ -485,7 +479,7 @@ export class Evaluator {
     const start = l.pts[0]!;
     for (let q = 0; q < buf.len; q++) {
       const j = buf.get(q);
-      if (j === i || (model.groupOf[j] ?? null) === i) continue;
+      if (j === i || model.groupRep(j) === i) continue;
       const li = lowerRule && model.isLower(i, j) ? dy.leaderLower : dy.leaderItems;
       if (li.kind === AvoidKind.Ignore) continue;
       const sj = model.items[j]!.shape;

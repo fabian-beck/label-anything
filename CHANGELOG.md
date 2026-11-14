@@ -36,7 +36,11 @@ The first release, 0.1.0. Nothing is published to a package registry yet.
   for every omitted label. Font classes set important labels larger or bold.
 - A degradation ladder for labels that do not fit: alternative texts, wrapping, distant
   placement, eviction of lower priorities, shrinking, soft overlap, omission.
-- Presets `scatter`, `map`, `graph`, `illustration` and `auto`.
+- How hard the engine tries to place every label is one option, `placement.aggressiveness`:
+  `medium` (the default) keeps type at its size and leaders within 4 em, `high` also
+  shrinks type, relaxes overlaps and draws leaders up to 8 em, `low` keeps labels next to
+  their marks with more room around them.
+- Presets `auto`, `scatter`, `map`, `graph`, `illustration` and `none`.
 - Warm starts and stability costs for interactive and animated views.
 - A deterministic solver (greedy pass, local search, exact search for small problems)
   with a time budget that does not depend on the machine's speed.

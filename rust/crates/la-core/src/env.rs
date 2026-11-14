@@ -1,4 +1,4 @@
-//! The environment of a solve: pluggable backends and host callbacks (spec §6.4).
+//! The environment of a solve: pluggable backends and host callbacks.
 //!
 //! The core has no I/O. File access, the clock and host callbacks are injected through
 //! [`Env`]. SVG backgrounds use `label-anything-svg` by default ([`BuiltinSvg`]; a host

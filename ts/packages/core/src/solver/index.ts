@@ -25,7 +25,7 @@ import { type P, Rect } from "../geom/index.js";
 import { type Measurer, type Variant, fullSize, ladderVariants } from "../labels.js";
 import { Stubs, distant, distantDirs } from "../leaders.js";
 import { cosDeg } from "../detmath.js";
-import { cmpF64, minf } from "../math.js";
+import { cmpF64, maxf, minf } from "../math.js";
 import { type Model, Models, Omission, labelGap } from "../model/index.js";
 import type { Obstacles } from "../obstacles.js";
 import type { Priorities } from "../priority.js";
@@ -43,6 +43,9 @@ export const Reason = {
   Grouped: 4,
 } as const;
 export type Reason = (typeof Reason)[keyof typeof Reason];
+
+/** No removed items (`Solve.budgetAllows`). */
+const NO_ITEMS: readonly number[] = [];
 
 const REASON_NAMES = ["omitted_by_priority", "no_feasible_candidate", "budget_exhausted", "keep_with", "grouped"] as const;
 
@@ -74,6 +77,12 @@ export class Solve {
    * mark (reported as `items` among the blocking classes).
    */
   staticDropped: number[];
+  /**
+   * Whether the pruning of §6.7 dropped a level-0 candidate of each item other than a
+   * distant one: only then can the item's regenerated level-0 candidates hold one of its
+   * models at level 0 that it does not have.
+   */
+  prunedLevel0: boolean[];
   /** The warm-start candidate of each item (see `generateWarm`). */
   warmCand: (number | null)[];
   /**
@@ -118,7 +127,6 @@ export class Solve {
     readonly pri: Priorities,
     readonly measurer: Measurer,
     public variants: Variant[][],
-    readonly startMs: number,
   ) {
     const n = model.items.length;
     this.byItem = [];
@@ -137,7 +145,7 @@ export class Solve {
       obs.dynamic.lowerCover
         ? new LowerMarks(
             model.items.map((it) => it.shape),
-            model.items.map((_, k) => model.groupOf[k] ?? null),
+            model.items.map((_, k) => model.groupRep(k)),
             model.extent,
             obs.indexCell,
           )
@@ -153,6 +161,7 @@ export class Solve {
     this.warmBox = new Array<[number, Rect] | null>(n).fill(null);
     this.warmNudge = new Array<[number, number][] | null>(n).fill(null);
     this.staticDropped = new Array<number>(n).fill(0);
+    this.prunedLevel0 = new Array<boolean>(n).fill(false);
     this.distantDirs = distantDirs(model);
     this.stubs = Stubs.of(model, obs);
     this.blockedFeasible = [];
@@ -182,8 +191,7 @@ export class Solve {
 
   /** Generate and evaluate candidates for `variants[vis]` of item `i` with `models`. */
   generate(i: number, vis: readonly number[], models: Models, level: number): number[] {
-    const g = this.model.groupOf[i];
-    if (g !== undefined && g !== null && g !== i) return [];
+    if (this.model.isGroupMember(i)) return [];
     return this.generateMode(i, vis, models, level, false);
   }
 
@@ -250,6 +258,14 @@ export class Solve {
    * none equal to one the item has. They are not added to the candidates.
    */
   unprunedLevel0(i: number, softOk: boolean): Cand[] {
+    return this.usableUnpruned(i, this.regeneratedLevel0(i), softOk);
+  }
+
+  /**
+   * The level-0 candidates of item `i` generated again (without distant ones), none equal
+   * to one the item has, not evaluated yet: those the pruning of §6.7 dropped.
+   */
+  regeneratedLevel0(i: number): Cand[] {
     const model = this.model;
     const obs = this.obs;
     const item = model.items[i]!;
@@ -298,7 +314,19 @@ export class Solve {
           break;
         }
       }
-      if (known) continue;
+      if (!known) out.push(c);
+    }
+    return out;
+  }
+
+  /**
+   * The candidates of `fresh` (regenerated candidates of item `i`) that are statically
+   * usable once evaluated: feasible, or relaxed with `softOk`.
+   */
+  usableUnpruned(i: number, fresh: readonly Cand[], softOk: boolean): Cand[] {
+    const variants = this.variants[i]!;
+    const out: Cand[] = [];
+    for (const c of fresh) {
       this.evaluator.evalUsable(c, variants[c.variant]!, softOk);
       if (c.feasible || (softOk && c.relaxed)) out.push(c);
     }
@@ -420,7 +448,10 @@ export class Solve {
       lim = model.placement.pruneFactor * Math.abs(best) + 1 + minf(best, 0);
       for (let k = 0; k < kept.length; k++) {
         const c = kept[k]!;
-        if (c.feasible && c.cost > lim) keepFlags[k] = 0;
+        if (c.feasible && c.cost > lim) {
+          if (keepFlags[k] && c.kind !== Kind.Distant && level === 0) this.prunedLevel0[i] = true;
+          keepFlags[k] = 0;
+        }
       }
     }
     const ids: number[] = [];
@@ -494,8 +525,7 @@ export class Solve {
     const item = this.model.items[i]!;
     const b = this.model.warm.get(item.id);
     if (b === undefined || b === null) return;
-    const g = this.model.groupOf[i];
-    if (g !== undefined && g !== null && g !== i) return;
+    if (this.model.isGroupMember(i)) return;
     const vs = this.variants[i]!;
     const v0 = vs.findIndex((v) => v.level === 0 && Math.abs(v.w - b.w()) <= 0.5 && Math.abs(v.h - b.h()) <= 0.5);
     if (v0 >= 0) this.warmBox[i] = [v0, b];
@@ -524,6 +554,39 @@ export class Solve {
       if (v.level === 0) vis.push(k);
     });
     return this.generate(i, vis, Models.DISTANT, 0);
+  }
+
+  /**
+   * Soft costs of candidate `c` of item `i` against the placed labels and leaders
+   * (`State.dynamicCost` with the item's buffer and clearance).
+   */
+  dynamicCost(i: number, c: number): number {
+    const item = this.model.items[i]!;
+    return this.state.dynamicCost(this.cands[c]!, this.cands, this.obs, item.len.buffer, item.len.clearance, this.model.leaders.width, i);
+  }
+
+  /** Whether `priority.budget.max_labels` labels are placed. */
+  labelCapReached(): boolean {
+    const m = this.model.maxLabels;
+    return m !== null && this.state.nPlaced >= m;
+  }
+
+  /**
+   * Whether the budget (`priority.budget`: `max_labels` and `max_ink_fraction`) allows one
+   * more label with the box of `c`, once the labels of the placed items `removed` are
+   * removed.
+   */
+  budgetAllows(c: Cand, removed: readonly number[] = NO_ITEMS): boolean {
+    const m = this.model.maxLabels;
+    if (m !== null && this.state.nPlaced + 1 > m + removed.length) return false;
+    const f = this.model.maxInkFraction;
+    const canvas = this.model.canvas;
+    if (f !== null && canvas !== null) {
+      let area = this.state.labelAreaSum;
+      for (const j of removed) area -= this.cands[this.state.placed[j]!]!.rect.area();
+      if ((area + c.rect.area()) / maxf(canvas.area(), 1e-9) > f) return false;
+    }
+    return true;
   }
 
   /** Lower bound of the static cost of any leadered candidate of item `i`. */

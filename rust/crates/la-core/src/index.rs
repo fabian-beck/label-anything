@@ -128,9 +128,6 @@ impl StaticIndex {
     pub fn is_empty(&self) -> bool {
         self.boxes.is_empty()
     }
-    pub fn bbox(&self, id: u32) -> &Rect {
-        &self.boxes[id as usize]
-    }
 
     /// Ids whose boxes touch `r` (closed), deduplicated, in bucket scan order
     /// (row-major, first occurrence) — deterministic for a given index.

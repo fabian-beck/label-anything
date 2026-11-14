@@ -4,11 +4,10 @@
 // reports`; `cargo test -p label-anything-core --test validate_reports` keeps it current).
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { validate, validateStr, type Report } from "../src/validate.js";
+import { CONF } from "./util.js";
 
-const CONF = fileURLToPath(new URL("../../../../conformance/", import.meta.url));
 
 interface ExpectedIssue {
   pointer: string;

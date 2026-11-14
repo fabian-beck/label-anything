@@ -96,9 +96,7 @@ pub fn crowded(model: &Model, obs: &Obstacles, item: &Item, r: &Rect, buf: &mut 
     obs.item_index.query(&r.inflate(reach), buf);
     buf.iter().any(|&j| {
         let j = j as usize;
-        j != i
-            && model.group_of.get(j).copied().flatten() != Some(i)
-            && model.items[j].shape.dist_rect(r) < reach
+        j != i && model.group_rep(j) != Some(i) && model.items[j].shape.dist_rect(r) < reach
     })
 }
 
@@ -160,7 +158,7 @@ impl<'a> Evaluator<'a> {
         self.quick = None;
     }
 
-    /// Fill `c.cost`, `c.feasible`, `c.relaxed`, `c.relax_cost`, `c.blocked_*`.
+    /// Fill `c.cost`, `c.feasible`, `c.relaxed`, `c.relax_cost`, `c.blocked`.
     pub fn eval(&mut self, c: &mut Cand, v: &Variant, breakdown: Option<&mut Breakdown>) {
         let model = self.model;
         let obs = self.obs;
@@ -335,10 +333,7 @@ impl<'a> Evaluator<'a> {
             } else {
                 0.0
             };
-            if near_rule
-                && d < d_own + sep - crate::geom::EPS
-                && model.group_of.get(j).copied().flatten() != Some(i)
-            {
+            if near_rule && d < d_own + sep - crate::geom::EPS && model.group_rep(j) != Some(i) {
                 acc.violate(Block::Items, false, 0.0);
                 if acc.unusable(quick) {
                     return finish(c, acc);
@@ -564,17 +559,7 @@ impl<'a> Evaluator<'a> {
         let reach = d_own + 0.5 * em;
         self.buf.clear();
         self.obs.item_index.query(&r.inflate(reach), &mut self.buf);
-        let mut d_other = f64::INFINITY;
-        for &j in &self.buf {
-            if j as usize != i {
-                d_other = minf(d_other, self.model.items[j as usize].shape.dist_rect(r));
-            }
-        }
-        if d_other < reach {
-            clampf((d_own - d_other) / em + 0.5, 0.0, 1.0)
-        } else {
-            0.0
-        }
+        self.ambiguity_rect_cached(i, r, d_own, em)
     }
 
     fn ambiguity_point(&mut self, i: usize, p: P, em: f64) -> f64 {
@@ -673,7 +658,7 @@ impl<'a> Evaluator<'a> {
         let start = l.pts[0];
         for &j in &self.buf {
             let j = j as usize;
-            if j == i || model.group_of.get(j).copied().flatten() == Some(i) {
+            if j == i || model.group_rep(j) == Some(i) {
                 continue;
             }
             let sj = &model.items[j].shape;

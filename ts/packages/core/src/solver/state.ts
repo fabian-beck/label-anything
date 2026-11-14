@@ -8,7 +8,7 @@
  */
 
 import type { Cand } from "../candidates.js";
-import { EPS, P, Rect, segLenInRect, segOverlapsRectXY, segSegDistXY } from "../geom/index.js";
+import { EPS, P, Rect, segLenInRect, segSegDistXY } from "../geom/index.js";
 import { Occupancy } from "../grid/occupancy.js";
 import { type Spacing, candLeadersConflict, leaderHitsLabel } from "../leaders.js";
 import { maxf, minf } from "../math.js";
@@ -283,14 +283,6 @@ export class State {
   /** The largest key level among placed labels (null when nothing is placed). */
   maxPlacedKey(): number | null {
     return this.maxKey < 0 ? null : this.maxKey;
-  }
-
-  /**
-   * Quick, exact rejection: the box `r` of a rectangular label overlaps a placed
-   * rectangular label (`false` means "unknown", not "free").
-   */
-  quickBlocked(r: Rect): boolean {
-    return this.nPlaced > 0 && this.occupancy().blocked(r);
   }
 
   /** The placed-label occupancy grid (its windows serve grids with the same cells). */
@@ -605,11 +597,6 @@ export class State {
       }
     }
     return cost;
-  }
-
-  /** Ids of placed items whose labels overlap `r` (no conflict semantics). */
-  labelsNear(r: Rect, out: IdList): void {
-    this.labelIx.query(r, out);
   }
 }
 

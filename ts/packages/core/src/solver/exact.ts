@@ -1,5 +1,5 @@
 /**
- * Exact search (spec §5.6 "exact"): branch and bound over items in priority order on the
+ * Exact search (ADR solver/search): branch and bound over items in priority order on the
  * candidate conflict graph (a maximum-weight independent set); port of
  * `rust/crates/la-core/src/solver/exact.rs`.
  *

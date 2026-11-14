@@ -11,7 +11,7 @@ pub const OCC_MARGIN: f64 = 2.0 * EPS;
 /// Fine grid counting, per cell, the placed rectangular labels whose interior contains
 /// the cell center, mirrored in a per-row bitset of non-zero cells. A candidate box whose
 /// interior contains an occupied cell center (with margin) overlaps a placed label: an
-/// exact rejection test (placed labels in `State::quick_blocked`, item marks in
+/// exact rejection test (placed labels in `State::occupancy`, item marks in
 /// `Obstacles::item_occ`) that misses only overlaps thinner than a cell.
 pub struct Occupancy {
     ox: f64,

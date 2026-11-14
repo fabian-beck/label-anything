@@ -18,6 +18,6 @@
   "publishConfig": { "access": "public" },
   "keywords": ["label placement", "labeling", "visualization", "leader lines", "cli"],
   "engines": { "node": ">=18" },
-  "scripts": { "build": "tsc -b", "test": "vitest run", "prepack": "tsc -b" },
+  "scripts": { "build": "tsc -b", "test": "vitest run --root ../../.. ts/packages/cli", "prepack": "tsc -b" },
   "dependencies": { "@label-anything/core": "0.1.0" }
 }

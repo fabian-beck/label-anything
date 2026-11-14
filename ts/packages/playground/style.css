@@ -142,7 +142,7 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 12px; }
   .hud-legend { display: none; }
   .chip { gap: 6px; padding: 4px 8px; font-size: 11.5px; }
   .chip .engine-name { display: none; }
-  .hud button, .tool { padding: 5px 8px; font-size: 12px; }
+  .hud button { padding: 5px 8px; font-size: 12px; }
   .hud .speed input { width: 64px; }
   .hud-tr { right: 8px; top: 8px; }
   .hud-bl { left: 8px; bottom: 8px; }
@@ -187,7 +187,7 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 12px; }
 .hud-legend .legend-box span { display: inline-flex; align-items: center; gap: 5px; }
 .hud-legend .legend-box i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 .hud-br { right: 12px; bottom: 12px; display: flex; gap: 6px; }
-.hud button, .tool {
+.hud button {
   display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--hud-rule); background: var(--hud); color: var(--hud-fg);
   border-radius: 7px; padding: 6px 10px; cursor: pointer; box-shadow: var(--shadow); font-weight: 600; font-size: 13px;
 }

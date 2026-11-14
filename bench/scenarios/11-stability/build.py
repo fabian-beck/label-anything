@@ -65,6 +65,14 @@ def projection(lon: float, lat: float, zoom: float) -> Equirect:
     return Equirect(lon - hw, lon + hw, lat + hh, lat - hh, W, H)
 
 
+def write_manifest(wr: Writer, name: str, frames: list[dict]) -> None:
+    """``<name>/sequence.json``: the frames of a sequence in order."""
+    man = {"name": name, "frames": frames, "warm_start": True,
+           "warm_start_mapping": "previous result, each box shifted by its anchor's displacement",
+           "metrics": "python -m bench.eval sequence <sequence.json> --results <dir>"}
+    write_json(wr.dir / name / "sequence.json", man, indent=1)
+
+
 GW, GH, GSCALE = 1000.0, 760.0, 1.35  # graph canvas; simulation units -> px
 
 
@@ -98,10 +106,7 @@ def graph_sequences(wr: Writer) -> list[dict]:
     out = []
 
     def write(name: str, frames: list[dict], what: str) -> None:
-        man = {"name": name, "frames": frames, "warm_start": True,
-               "warm_start_mapping": "previous result, each box shifted by its anchor's displacement",
-               "metrics": "python -m bench.eval sequence <sequence.json> --results <dir>"}
-        write_json(wr.dir / name / "sequence.json", man, indent=1)
+        write_manifest(wr, name, frames)
         out.append({"name": name, "manifest": f"{name}/sequence.json", "quick": True, "frames": len(frames),
                     "what": what})
 
@@ -138,7 +143,7 @@ def graph_sequences(wr: Writer) -> list[dict]:
 def main() -> None:
     aps = [a for a in A.load_airports() if A.WORLD.lat1 <= a.lat <= A.WORLD.lat0]
     ids = B.unique_ids(aps)
-    wr = Writer(SCENARIO, "Interactive stability (pan/zoom, force layout)", A.SOURCES + G07.SOURCES[:1],
+    wr = Writer(SCENARIO, "Temporal stability (zoom and pan, force layout)", A.SOURCES + G07.SOURCES[:1],
                 notes="Frame sequences; consecutive frames are solved with warm_start by the runner.")
     seqs = []
     for n, quick in ((1000, True), (3000, False)):
@@ -156,10 +161,7 @@ def main() -> None:
             frames.append({"file": f"{fname}.json", "step": step,
                            "view": {"lon": round(lon, 4), "lat": round(lat, 4), "zoom": round(z, 5)},
                            "n_items": len(vis)})
-        man = {"name": name, "frames": frames, "warm_start": True,
-               "warm_start_mapping": "previous result, each box shifted by its anchor's displacement",
-               "metrics": "python -m bench.eval sequence <sequence.json> --results <dir>"}
-        write_json(wr.dir / name / "sequence.json", man, indent=1)
+        write_manifest(wr, name, frames)
         seqs.append({"name": name, "manifest": f"{name}/sequence.json", "quick": quick, "frames": len(frames),
                      "airports": n})
     seqs += graph_sequences(wr)

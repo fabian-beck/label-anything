@@ -73,11 +73,9 @@ pub fn run(s: &mut Solve) {
     }
     // non-representative group members are labeled by their representative
     for i in 0..n {
-        if let Some(r) = s.model.group_of.get(i).copied().flatten() {
-            if r != i {
-                g.done[i] = true;
-                s.reasons[i] = Some(Reason::Grouped);
-            }
+        if s.model.is_group_member(i) {
+            g.done[i] = true;
+            s.reasons[i] = Some(Reason::Grouped);
         }
     }
     for (si, set) in crate::priority::keep_with_sets(s.model)
@@ -175,7 +173,7 @@ pub fn run(s: &mut Solve) {
                     s.time_guard_hit = true;
                     break;
                 }
-                if label_cap_reached(s) {
+                if s.label_cap_reached() {
                     // nothing later in the total order can be placed: evict_lower only
                     // evicts lower keys, and none is placed yet
                     g.done[i] = true;
@@ -195,7 +193,7 @@ pub fn run(s: &mut Solve) {
                     continue;
                 }
                 let Some(c) = s.warm_cand[i] else { continue };
-                if g.alive[c as usize] && cap_allows(s, &s.cands[c as usize]) {
+                if g.alive[c as usize] && s.budget_allows(&s.cands[c as usize], &[]) {
                     commit(s, &mut g, i, c, false);
                     g.done[i] = true;
                 }
@@ -207,7 +205,7 @@ pub fn run(s: &mut Solve) {
                     continue;
                 }
                 if let Some(c) = best_nudge(s, i) {
-                    if cap_allows(s, &s.cands[c as usize]) {
+                    if s.budget_allows(&s.cands[c as usize], &[]) {
                         commit(s, &mut g, i, c, false);
                         g.done[i] = true;
                     }
@@ -297,7 +295,7 @@ fn place_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> bool {
         return false;
     };
     g.done[i] = true;
-    if !cap_allows(s, &s.cands[c as usize]) {
+    if !s.budget_allows(&s.cands[c as usize], &[]) {
         g.cap_reached = true;
         s.reasons[i] = Some(Reason::OmittedByPriority);
         return false;
@@ -310,11 +308,6 @@ fn place_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> bool {
 /// without a clock).
 fn guard_passed(s: &Solve, started: f64, guard: f64) -> bool {
     s.now() > 0.0 && s.now() - started > guard
-}
-
-/// Whether `priority.budget.max_labels` labels are placed.
-fn label_cap_reached(s: &Solve) -> bool {
-    s.model.max_labels.is_some_and(|m| s.state.n_placed >= m)
 }
 
 /// After a cancellation, or at the end of the pass after the time guard (`last`: its
@@ -335,22 +328,16 @@ fn exhaust(s: &mut Solve, g: &mut Greedy, band: &[usize], last: bool) {
 /// the two directions on a tie (see [`Solve::warm_nudges`]).
 fn best_nudge(s: &mut Solve, i: usize) -> Option<u32> {
     let ids = s.warm_nudges(i);
-    let item = &s.model.items[i];
-    let (buffer, clearance) = (item.len.buffer, item.len.clearance);
-    let lw = s.model.leaders.width;
-    let mut scratch = Vec::new();
     let mut best: Option<(usize, f64, u32)> = None;
     for (si, c) in ids {
         if best.is_some_and(|b| si > b.0) {
             break;
         }
         let cand = &s.cands[c as usize];
-        if !s.state.is_free(cand, &s.cands, s.obs, i, &mut scratch) {
+        if !s.state.is_free(cand, &s.cands, s.obs, i) {
             continue;
         }
-        let t = cand.cost
-            + s.state
-                .dynamic_cost(cand, &s.cands, s.obs, buffer, clearance, lw, i);
+        let t = cand.cost + s.dynamic_cost(i, c);
         if best.map(|b| t < b.1).unwrap_or(true) {
             best = Some((si, t, c));
         }
@@ -367,20 +354,6 @@ fn cap_may_hit(s: &Solve, band: &[usize]) -> bool {
     s.model.max_ink_fraction.is_some()
 }
 
-fn cap_allows(s: &Solve, c: &Cand) -> bool {
-    if let Some(m) = s.model.max_labels {
-        if s.state.n_placed >= m {
-            return false;
-        }
-    }
-    if let (Some(f), Some(canvas)) = (s.model.max_ink_fraction, s.model.canvas) {
-        if (s.state.label_area_sum + c.rect.area()) / canvas.area().max(1e-9) > f {
-            return false;
-        }
-    }
-    true
-}
-
 /// Process an item (or its whole keep_with set). Returns whether it was placed.
 /// With `ladder = false` only level-0 candidates are tried and a failing item stays
 /// undecided (deferred); with `ladder = true` the full ladder runs and failures are final.
@@ -395,7 +368,7 @@ fn process_unit(s: &mut Solve, g: &mut Greedy, i: usize, ladder: bool) -> bool {
             if s.state.placed[m].is_some() {
                 continue;
             }
-            if place_item(s, g, m, true) {
+            if place_item(s, g, m) {
                 placed_now.push(m);
             } else {
                 failed = Some(m);
@@ -425,7 +398,7 @@ fn process_unit(s: &mut Solve, g: &mut Greedy, i: usize, ladder: bool) -> bool {
     if !ladder {
         // level 0 only
         if let Some(c) = best_level0(s, g, i) {
-            if cap_allows(s, &s.cands[c as usize]) {
+            if s.budget_allows(&s.cands[c as usize], &[]) {
                 commit(s, g, i, c, false);
                 g.done[i] = true;
                 return true;
@@ -437,14 +410,14 @@ fn process_unit(s: &mut Solve, g: &mut Greedy, i: usize, ladder: bool) -> bool {
         }
         return false;
     }
-    place_item(s, g, i, true)
+    place_item(s, g, i)
 }
 
 /// Try level 0 and then the ladder. Marks the item done; sets the reason on failure.
-fn place_item(s: &mut Solve, g: &mut Greedy, i: usize, ladder: bool) -> bool {
+fn place_item(s: &mut Solve, g: &mut Greedy, i: usize) -> bool {
     g.done[i] = true;
     if let Some(c) = best_level0(s, g, i) {
-        if !cap_allows(s, &s.cands[c as usize]) {
+        if !s.budget_allows(&s.cands[c as usize], &[]) {
             g.cap_reached = true;
             s.reasons[i] = Some(Reason::OmittedByPriority);
             return false;
@@ -452,18 +425,11 @@ fn place_item(s: &mut Solve, g: &mut Greedy, i: usize, ladder: bool) -> bool {
         commit(s, g, i, c, false);
         return true;
     }
-    if !ladder {
-        s.reasons[i] = Some(explain(s, i));
-        return false;
-    }
     // a label the previous solve degraded keeps its box while that is free (ADR motion/warm-starts)
     if s.model.weights.stability > 0.0 {
         if let Some(c) = s.warm_ladder_candidate(i) {
-            let mut scratch = Vec::new();
-            if s.state
-                .is_free(&s.cands[c as usize], &s.cands, s.obs, i, &mut scratch)
-            {
-                if !cap_allows(s, &s.cands[c as usize]) {
+            if s.state.is_free(&s.cands[c as usize], &s.cands, s.obs, i) {
+                if !s.budget_allows(&s.cands[c as usize], &[]) {
                     g.cap_reached = true;
                     s.reasons[i] = Some(Reason::OmittedByPriority);
                     return false;
@@ -499,7 +465,7 @@ fn place_item(s: &mut Solve, g: &mut Greedy, i: usize, ladder: bool) -> bool {
             }
         };
         if let Some((c, relaxed)) = choice {
-            if !cap_allows(s, &s.cands[c as usize]) {
+            if !s.budget_allows(&s.cands[c as usize], &[]) {
                 g.cap_reached = true;
                 s.reasons[i] = Some(Reason::OmittedByPriority);
                 return false;
@@ -577,16 +543,13 @@ fn unplace_item(s: &mut Solve, g: &mut Greedy, i: usize) {
     s.state.unplace(i, &s.cands);
     // The item's own level-0 candidates were not updated while it was placed (commits
     // only kill candidates of unplaced items): recompute them against the current state.
-    let mut own_scratch = Vec::new();
     let mut live = 0;
     for k in s.by_item[i].clone() {
         let ku = k as usize;
         if ku >= s.n_level0 {
             continue;
         }
-        let ok = s.cands[ku].feasible
-            && s.state
-                .is_free(&s.cands[ku], &s.cands, s.obs, i, &mut own_scratch);
+        let ok = s.cands[ku].feasible && s.state.is_free(&s.cands[ku], &s.cands, s.obs, i);
         g.alive[ku] = ok;
         live += ok as u32;
     }
@@ -599,7 +562,6 @@ fn unplace_item(s: &mut Solve, g: &mut Greedy, i: usize) {
         &mut ids,
     );
     lower_affected(s, i, c, &mut ids);
-    let mut scratch = Vec::new();
     for k in ids {
         let k = k as usize;
         if g.alive[k] || !s.cands[k].feasible {
@@ -610,7 +572,7 @@ fn unplace_item(s: &mut Solve, g: &mut Greedy, i: usize) {
             continue;
         }
         let cand = &s.cands[k];
-        if s.state.is_free(cand, &s.cands, s.obs, j, &mut scratch) {
+        if s.state.is_free(cand, &s.cands, s.obs, j) {
             g.alive[k] = true;
             g.live[j] += 1;
         }
@@ -619,9 +581,6 @@ fn unplace_item(s: &mut Solve, g: &mut Greedy, i: usize) {
 
 /// Best live level-0 candidate with lookahead.
 fn best_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<u32> {
-    let item = &s.model.items[i];
-    let (buffer, clearance) = (item.len.buffer, item.len.clearance);
-    let lw = s.model.leaders.width;
     let mut scored: Vec<(f64, u32)> = Vec::new();
     let ids: Vec<u32> = s.by_item[i]
         .iter()
@@ -629,18 +588,14 @@ fn best_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<u32> {
         .filter(|&c| (c as usize) < s.n_level0 && g.alive[c as usize])
         .collect();
     for c in ids {
-        let cand = &s.cands[c as usize];
-        let d = s
-            .state
-            .dynamic_cost(cand, &s.cands, s.obs, buffer, clearance, lw, i);
-        scored.push((cand.cost + d, c));
+        let d = s.dynamic_cost(i, c);
+        scored.push((s.cands[c as usize].cost + d, c));
     }
     // on-demand distant candidates: only when they could beat the best adjacent one
     let best_adj = scored.iter().map(|x| x.0).fold(f64::INFINITY, f64::min);
     if s.distant_pending[i] && best_adj > s.leader_cost_bound(i) {
         s.ensure_distant(i);
     }
-    let mut scratch = Vec::new();
     let late: Vec<u32> = s.by_item[i]
         .iter()
         .copied()
@@ -652,13 +607,11 @@ fn best_level0(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<u32> {
         .collect();
     for c in late {
         let cand = &s.cands[c as usize];
-        if !s.state.is_free(cand, &s.cands, s.obs, i, &mut scratch) {
+        if !s.state.is_free(cand, &s.cands, s.obs, i) {
             continue;
         }
-        let d = s
-            .state
-            .dynamic_cost(cand, &s.cands, s.obs, buffer, clearance, lw, i);
-        scored.push((cand.cost + d, c));
+        let d = s.dynamic_cost(i, c);
+        scored.push((s.cands[c as usize].cost + d, c));
     }
     if scored.is_empty() {
         return None;
@@ -734,17 +687,13 @@ fn lookahead(s: &Solve, g: &mut Greedy, i: usize, c: u32) -> f64 {
 /// Lazily generated candidates are evaluated only when they are free.
 fn best_free(s: &mut Solve, ids: &[u32], relaxed: bool) -> Option<(u32, bool)> {
     let mut best: Option<(f64, u32)> = None;
-    let mut scratch = Vec::new();
     for &c in ids {
         let cu = c as usize;
         let i = s.cands[cu].item as usize;
         // lazily generated candidates are evaluated once they are free
         let fresh = !s.cands[cu].evaluated;
         if fresh {
-            if !s
-                .state
-                .is_free(&s.cands[cu], &s.cands, s.obs, i, &mut scratch)
-            {
+            if !s.state.is_free(&s.cands[cu], &s.cands, s.obs, i) {
                 continue;
             }
             s.ensure_eval(c);
@@ -758,19 +707,11 @@ fn best_free(s: &mut Solve, ids: &[u32], relaxed: bool) -> Option<(u32, bool)> {
         if !usable {
             continue;
         }
-        let item = &s.model.items[i];
-        if !fresh && !s.state.is_free(cand, &s.cands, s.obs, i, &mut scratch) {
+        if !fresh && !s.state.is_free(cand, &s.cands, s.obs, i) {
             continue;
         }
-        let d = s.state.dynamic_cost(
-            cand,
-            &s.cands,
-            s.obs,
-            item.len.buffer,
-            item.len.clearance,
-            s.model.leaders.width,
-            i,
-        );
+        let d = s.dynamic_cost(i, c);
+        let cand = &s.cands[cu];
         let total = cand.cost + d + if relaxed { cand.relax_cost } else { 0.0 };
         if best
             .map(|b| total < b.0 || (total == b.0 && c < b.1))

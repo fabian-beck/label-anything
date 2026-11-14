@@ -107,6 +107,15 @@ def test_marker_sizes_per_point() -> None:
         label_points(go.Figure(), x, y, list("abcde"), marker_size=[6, 8])
 
 
+def test_ids_one_per_point() -> None:
+    x, y = data(5)
+    x[2] = np.nan  # skipped: the other points keep their ids
+    out = label_points(go.Figure(), x, y, list("abcde"), ids=["p0", "p1", "p2", "p3", "p4"])
+    assert [it["id"] for it in out.result.problem["items"]] == ["p0", "p1", "p3", "p4"]
+    with pytest.raises(ValueError, match="ids must have one entry per point"):
+        label_points(go.Figure(), x, y, list("abcde"), ids=["p0", "p1"])
+
+
 def test_a_priority_lets_important_labels_cover_minor_dots() -> None:
     x, y = data(5)
     fig = go.Figure(go.Scatter(x=x, y=y, mode="markers"))

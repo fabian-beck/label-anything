@@ -26,7 +26,8 @@ would go. A mark beside the middle of a side is where that mark's own label woul
 one at a corner is not.
 
 ## Decision
-- `defaults.margin` = 0.2 em is a hard distance from other items' marks
+- `defaults.margin` = 0.2 em (0.3 em with `placement.aggressiveness` `low`, ADR
+  placement/aggressiveness) is a hard distance from other items' marks
   (`avoid.label.items` hard). From another mark a label keeps at most what that mark keeps
   from the bounding box of its own mark, so that items on top of or next to each other
   can still be labeled.

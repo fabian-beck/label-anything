@@ -4,7 +4,7 @@
  * between; drag an agent to steer it.
  */
 import { FONT_CLASSES, type Control } from "../controls.js";
-import { nameGen, rng, type Obj } from "../util.js";
+import { nameGen, rng, round2, type Obj } from "../util.js";
 import type { Anchors, DrawState, Item, PointerInfo, Scene, SceneHost } from "./scene.js";
 
 interface Agent {
@@ -123,7 +123,7 @@ export class SwarmScene implements Scene {
   items(): Item[] {
     return this.#agents.map((a) => ({
       id: a.id,
-      anchor: { type: "point", x: round(a.x), y: round(a.y), mark: { shape: "circle", r: a.r } },
+      anchor: { type: "point", x: round2(a.x), y: round2(a.y), mark: { shape: "circle", r: a.r } },
       label: { type: "text", text: a.name },
       priority: Math.round(a.r * 100) / 100,
     }));
@@ -134,7 +134,7 @@ export class SwarmScene implements Scene {
   }
 
   anchors(): Anchors {
-    return new Map(this.#agents.map((a) => [a.id, [round(a.x), round(a.y)]]));
+    return new Map(this.#agents.map((a) => [a.id, [round2(a.x), round2(a.y)]]));
   }
 
   step(dt: number): boolean {
@@ -317,5 +317,3 @@ export class SwarmScene implements Scene {
     this.#drag = null;
   }
 }
-
-const round = (v: number) => Math.round(v * 100) / 100;

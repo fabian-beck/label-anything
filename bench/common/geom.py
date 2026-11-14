@@ -29,6 +29,9 @@ import numpy as np
 Point = tuple[float, float]
 EPS = 1e-9
 FLATTEN_TOL = 0.02
+TOL = 0.5
+"""Tolerance of the evaluator's hard tests, px: a box violates something only if the box shrunk by it still
+intersects it (bench/README.md, *Evaluator metrics*)."""
 
 
 # ---------------------------------------------------------------------------
@@ -103,9 +106,6 @@ class Box:
     def corners(self) -> list[Point]:
         return [(self.x0, self.y0), (self.x1, self.y0), (self.x1, self.y1), (self.x0, self.y1)]
 
-    def union(self, o: "Box") -> "Box":
-        return Box(min(self.x0, o.x0), min(self.y0, o.y0), max(self.x1, o.x1), max(self.y1, o.y1))
-
     def as_dict(self) -> dict:
         return {"x": self.x0, "y": self.y0, "w": self.w, "h": self.h}
 
@@ -117,9 +117,13 @@ def point_box_dist(p: Point, b: Box) -> float:
 
 
 def box_box_dist(a: Box, b: Box) -> float:
-    dx = max(a.x0 - b.x1, 0.0, b.x0 - a.x1)
-    dy = max(a.y0 - b.y1, 0.0, b.y0 - a.y1)
-    return math.sqrt(dx * dx + dy * dy)
+    """Distance between two boxes (0 when they touch or overlap)."""
+    return math.hypot(max(0.0, a.x0 - b.x1, b.x0 - a.x1), max(0.0, a.y0 - b.y1, b.y0 - a.y1))
+
+
+def segment_bbox(a: Point, b: Point, grow: float = 0.0) -> Box:
+    """Bounding box of the segment ``a b``, grown by ``grow`` on every side."""
+    return Box(min(a[0], b[0]) - grow, min(a[1], b[1]) - grow, max(a[0], b[0]) + grow, max(a[1], b[1]) + grow)
 
 
 # ---------------------------------------------------------------------------
@@ -238,35 +242,6 @@ def ring_area(r: Sequence[Point]) -> float:
         x1, y1 = r[(i + 1) % n]
         s += x0 * y1 - x1 * y0
     return 0.5 * s
-
-
-def winding_number(p: Point, ring: Sequence[Point]) -> int:
-    wn = 0
-    n = len(ring)
-    px, py = p
-    for i in range(n):
-        x0, y0 = ring[i]
-        x1, y1 = ring[(i + 1) % n]
-        if y0 <= py:
-            if y1 > py and (x1 - x0) * (py - y0) - (px - x0) * (y1 - y0) > 0:
-                wn += 1
-        elif y1 <= py and (x1 - x0) * (py - y0) - (px - x0) * (y1 - y0) < 0:
-            wn -= 1
-    return wn
-
-
-def crossings(p: Point, ring: Sequence[Point]) -> int:
-    c = 0
-    n = len(ring)
-    px, py = p
-    for i in range(n):
-        x0, y0 = ring[i]
-        x1, y1 = ring[(i + 1) % n]
-        if (y0 > py) != (y1 > py):
-            xi = x0 + (py - y0) * (x1 - x0) / (y1 - y0)
-            if px < xi:
-                c += 1
-    return c
 
 
 def convex_hull(points: Iterable[Point]) -> list[Point]:
@@ -573,12 +548,6 @@ class Polygon(Shape):
         up = np.count_nonzero((ay <= py) & (by > py) & (cr > 0))
         dn = np.count_nonzero((ay > py) & (by <= py) & (cr < 0))
         return (up - dn) != 0
-
-    def edges(self) -> Iterable[tuple[Point, Point]]:
-        for r in self._rings:
-            n = len(r)
-            for i in range(n):
-                yield r[i], r[(i + 1) % n]
 
     def boundary_dist(self, p: Point) -> float:
         E = self._E()

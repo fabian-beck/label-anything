@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
-"""Writes conformance/problems/*.json and conformance/validate/*.json.
+"""Writes the sample problems (conformance/problems/*.json) and the `validate` cases made
+from the table below (conformance/validate/<name>.json and samples-valid.json).
+
+    python3 tools/conformance/make_samples.py           write the files
+    python3 tools/conformance/make_samples.py --check   exit 1 if a file would change
 
 The JSON files are the canonical test inputs; this script documents how they were made
-(and builds the tiny PNG used by raster-ink.json). Run: python3 tools/conformance/make_samples.py
+(and builds the tiny PNG used by raster-ink.json). Other `validate` cases are written by
+hand (count-limits, expr-*, stub-options) and conformance/validate/reports/ by
+tools/validate/parity.mjs: the script leaves them alone.
 """
 import base64
 import json
 import math
 import random
 import struct
+import sys
 import zlib
 from pathlib import Path
 
@@ -383,23 +390,40 @@ invalid = {
 
 
 def main():
-    PROB.mkdir(parents=True, exist_ok=True)
-    VAL.mkdir(parents=True, exist_ok=True)
+    check = "--check" in sys.argv[1:]
+    files = {}
     for name, p in problems.items():
-        (PROB / f"{name}.json").write_text(json.dumps(p, indent=2, ensure_ascii=False) + "\n")
+        files[PROB / f"{name}.json"] = json.dumps(p, indent=2, ensure_ascii=False) + "\n"
     for name, (p, errs, warns, *exact) in invalid.items():
         case = {"kind": "validate", "name": name, "problem": p,
                 "expect": {"valid": not errs, "errors": [{"pointer": a, "code": b} for a, b in errs],
                            "warnings": [{"pointer": a, "code": b} for a, b in warns]}}
         if exact:
             case["expect"]["exact"] = exact[0]
-        (VAL / f"{name}.json").write_text(json.dumps(case, indent=2, ensure_ascii=False) + "\n")
+        files[VAL / f"{name}.json"] = json.dumps(case, indent=2, ensure_ascii=False) + "\n"
     # every sample problem must be valid
     case = {"kind": "validate", "name": "all sample problems are valid", "problem_files": sorted(f"../problems/{n}.json" for n in problems),
             "expect": {"valid": True, "errors": []}}
-    (VAL / "samples-valid.json").write_text(json.dumps(case, indent=2) + "\n")
-    print(len(problems), "problems,", len(invalid), "invalid cases")
+    files[VAL / "samples-valid.json"] = json.dumps(case, indent=2) + "\n"
+    # a sample problem that is not made here is not in samples-valid.json either
+    stale = [p for p in sorted(PROB.glob("*.json")) if p not in files]
+    for path, text in files.items():
+        if path.exists() and path.read_text(encoding="utf-8") == text:
+            continue
+        stale.append(path)
+        if not check:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8", newline="\n")
+    for path in stale:
+        known = path in files
+        print(f"{'stale' if check or not known else 'wrote'}: {path.relative_to(ROOT)}" + ("" if known else " (not made by this script)"),
+              file=sys.stderr if check or not known else sys.stdout)
+    if check and stale:
+        print("Run: python3 tools/conformance/make_samples.py", file=sys.stderr)
+        return 1
+    print(len(problems), "problems,", len(invalid), "invalid cases" + ("" if stale else ": up to date"))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

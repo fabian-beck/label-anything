@@ -23,24 +23,13 @@ const CHAIN_TRIES: usize = 16;
 pub struct LocalStats {
     pub iterations: u64,
     pub accepted: u64,
-    pub inserted: u64,
 }
 
 /// Total cost of item `i` at candidate `c` given the other placed labels.
 fn item_cost(s: &mut Solve, i: usize, c: u32) -> f64 {
-    let item = &s.model.items[i];
+    let d = s.dynamic_cost(i, c);
     let cand = &s.cands[c as usize];
-    let relax = if !cand.feasible { cand.relax_cost } else { 0.0 };
-    let d = s.state.dynamic_cost(
-        cand,
-        &s.cands,
-        s.obs,
-        item.len.buffer,
-        item.len.clearance,
-        s.model.leaders.width,
-        i,
-    );
-    cand.cost + relax + d
+    cand.relaxed_cost() + d
 }
 
 /// Whether item `i` may use candidate `c` statically.
@@ -66,8 +55,7 @@ fn insert_tries(s: &mut Solve, u: usize, soft_ok: bool) -> u32 {
 
 fn is_free(s: &mut Solve, i: usize, c: u32) -> bool {
     let cand = &s.cands[c as usize];
-    let mut scratch = Vec::new();
-    s.state.is_free(cand, &s.cands, s.obs, i, &mut scratch)
+    s.state.is_free(cand, &s.cands, s.obs, i)
 }
 
 fn place(s: &mut Solve, i: usize, c: u32) {
@@ -81,7 +69,6 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
     let mut st = LocalStats {
         iterations: 0,
         accepted: 0,
-        inserted: 0,
     };
     if n == 0 || iterations == 0 {
         return st;
@@ -196,10 +183,8 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
             {
                 continue;
             }
-            if let Some(m) = s.model.max_labels {
-                if s.state.n_placed >= m && mode != Omission::Strict {
-                    continue;
-                }
+            if s.label_cap_reached() && mode != Omission::Strict {
+                continue;
             }
             if failed_at[u] == Some(st.accepted) {
                 let tries = insert_tries(s, u, soft_ok);
@@ -217,14 +202,13 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
                 &mut scratch,
                 guard.then_some(end),
             ) {
-                st.inserted += 1;
                 st.accepted += 1;
                 // the priority objective improved: this state becomes the new reference
                 cur = total(s);
                 best = cur;
                 snapshot.clone_from(&s.state.placed);
                 snap_reasons.clone_from(&s.reasons);
-            } else if !cap_full(s) {
+            } else if !s.label_cap_reached() {
                 failed_at[u] = Some(st.accepted);
             }
             continue;
@@ -414,10 +398,7 @@ fn try_insert(
             continue;
         }
         let cand = &s.cands[c as usize];
-        scored.push((
-            cand.cost + if cand.feasible { 0.0 } else { cand.relax_cost },
-            c,
-        ));
+        scored.push((cand.relaxed_cost(), c));
     }
     crate::sort::sort_by(&mut scored, |a, b| {
         crate::math::cmp_f64(a.0, b.0).then(a.1.cmp(&b.1))
@@ -437,7 +418,7 @@ fn try_insert(
         let blockers: Vec<usize> = scratch.iter().map(|&j| j as usize).collect();
         if blockers.is_empty() {
             let mut tx = Tx::default();
-            if cap_full(s) && !evict_one_lower(s, u, sets, &mut tx) {
+            if s.label_cap_reached() && !evict_one_lower(s, u, sets, &mut tx) {
                 return false;
             }
             tx.place(s, u, c);
@@ -574,13 +555,6 @@ fn set_items(s: &mut Solve, states: &[(usize, Option<u32>, Option<Reason>)]) {
         }
         s.reasons[i] = reason;
     }
-}
-
-fn cap_full(s: &Solve) -> bool {
-    s.model
-        .max_labels
-        .map(|m| s.state.n_placed >= m)
-        .unwrap_or(false)
 }
 
 fn cap_full_after_insert(s: &Solve) -> bool {

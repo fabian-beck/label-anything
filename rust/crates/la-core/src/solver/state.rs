@@ -302,12 +302,6 @@ impl State {
         self.max_key
     }
 
-    /// Quick, exact rejection: the box `r` of a rectangular label overlaps a placed
-    /// rectangular label (`false` means "unknown", not "free").
-    pub fn quick_blocked(&mut self, r: &Rect) -> bool {
-        self.n_placed > 0 && self.occupancy().blocked(r)
-    }
-
     /// The placed-label occupancy grid (its windows serve grids with the same cells).
     pub fn occupancy(&mut self) -> &Occupancy {
         for (e, &item) in self.pend.iter().zip(&self.pend_item) {
@@ -485,14 +479,7 @@ impl State {
 
     /// Whether candidate `c` conflicts with nothing placed (except `skip`); stops at the
     /// first conflict.
-    pub fn is_free(
-        &mut self,
-        c: &Cand,
-        cands: &[Cand],
-        obs: &Obstacles,
-        skip: usize,
-        _scratch: &mut Vec<u32>,
-    ) -> bool {
+    pub fn is_free(&mut self, c: &Cand, cands: &[Cand], obs: &Obstacles, skip: usize) -> bool {
         self.first_conflict(c, cands, obs, skip, |_| true).is_none()
     }
 
@@ -649,10 +636,5 @@ impl State {
             }
         }
         cost
-    }
-
-    /// Ids of placed items whose labels overlap `r` (no conflict semantics).
-    pub fn labels_near(&mut self, r: &Rect, out: &mut Vec<u32>) {
-        self.label_ix.query(r, out);
     }
 }

@@ -34,10 +34,11 @@ hide:
 
 </div>
 
-<figure markdown>
+<figure markdown data-la-example="economies">
 [![The world's economies as a bubble chart, 147 of its 193 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
 <figcaption>The world's economies: each country a bubble sized by its GDP (Natural Earth,
-2019). Label Anything labels 147 of 193 in a fraction of a second.</figcaption>
+2019). Label Anything labels 147 of 193 in a fraction of a second, here in your browser:
+choose other variables and it labels the chart again.</figcaption>
 </figure>
 
 In this chart:
@@ -127,34 +128,35 @@ labels stay put ([interactive maps](tutorials/interactive-maps.md)).
 
 ## Gallery
 
-Open data, labeled by the engine
-([scripts](gh:examples/showcase/make_showcase.py)); click a picture to enlarge it.
+Open data, labeled by the engine ([scripts](gh:examples/showcase/make_showcase.py)). The
+examples on this page are live: the engine runs in your browser, so hover a label or a
+mark, and change, zoom or drag what is shown.
 
-<figure markdown>
+<figure markdown data-la-example="europe">
 [![The countries and capitals of Europe, labeled](assets/figures/europe.svg)](assets/figures/europe.svg)
 <figcaption markdown>**A map.** The countries and capitals of Europe (Natural Earth,
 internationally recognized borders). The countries are the picture's
 [regions](concepts/regions.md): each name inside its country where it fits, else out on a
-leader into the sea (the United Kingdom, the Balkans), never in a neighbouring
-country, its type size growing with the country's area; the capitals beside their dots, in
-the cartographer's order of positions, all in one size; no label covers the name of a sea.
-88 of the 90 labels placed: the name LUXEMBOURG (its capital is labeled) and Podgorica find
-no room.</figcaption>
+leader into the sea, never in a neighbouring country, its type size growing with the
+country's area; the capitals beside their dots, all in one size; no label covers the name
+of a sea. 87 of the 90 labels placed: the name LUXEMBOURG (its capital is labeled),
+Ljubljana and Podgorica find no room. Pan and zoom: every view is labeled again, the labels
+stay where they can, and more cities come as there is room.</figcaption>
 </figure>
 
-<figure markdown>
+<figure markdown data-la-example="retina">
 [![A fundus photograph with its parts labeled in the margins](assets/figures/retina.svg)](assets/figures/retina.svg)
 <figcaption markdown>**A photograph.** The back of an eye (fundus photograph by
 M. Häggström, CC0), labeled like an anatomy atlas: names in the margins, each with a leader
-to its part.</figcaption>
+to its part. Choose the margins and how the leaders run.</figcaption>
 </figure>
 
-<figure markdown>
+<figure markdown data-la-example="modules">
 [![The module graph of the library's TypeScript packages, labeled](assets/figures/modules.svg)](assets/figures/modules.svg)
 <figcaption markdown>**A diagram.** This library's own TypeScript modules: 112 nodes, 416
 imports. The most imported are labeled first, in bold; labels may cross edges at a cost,
 never nodes, and a label that would stand as near another node as its own goes out on a
-leader. All 112 placed.</figcaption>
+leader. All 112 placed. Drag a node: its edges follow, and the labels make room.</figcaption>
 </figure>
 
 ## Five lines
@@ -206,8 +208,9 @@ All six build the same problem and get the same boxes.
 The [real-world benchmark](project/benchmark.md) compares Label Anything with nine other
 labelers, among them adjustText, ggrepel, vega-label and textalloc, on 62 problems from
 open data. [The results](project/benchmark.md#what-the-results-show): no overlaps and no
-crossing leaders anywhere, and the most usable labels on 60 of the 62, often by only a few
-percent. It falls short on dense data, moving labels and the speed of the largest
+crossing leaders anywhere, and with every means the most usable labels on 60 of the 62,
+often by only a few percent; the default gives up a few percent of them for a calmer
+picture. It falls short on dense data, moving labels and the speed of the largest
 problems.
 
 ## Good to know

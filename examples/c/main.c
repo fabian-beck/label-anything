@@ -19,9 +19,12 @@ int main(void) {
     int rc = la_place_json(problem, NULL, 0, 0, &result);
     printf("label-anything %s, rc=%d\n%s\n", la_version(), rc, result);
     la_free(result);
+    if (rc != LA_OK) {
+        return 1;
+    }
     char *report = NULL;
     rc = la_validate_json("{\"items\":[{\"anchor\":{\"type\":\"point\",\"x\":1}}]}", &report);
     printf("validate rc=%d %s\n", rc, report);
     la_free(report);
-    return 0;
+    return rc == LA_INVALID ? 0 : 1; /* the problem above lacks y and a label */
 }

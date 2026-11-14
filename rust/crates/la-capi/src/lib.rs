@@ -25,9 +25,6 @@ struct CEnv {
 }
 
 impl Env for CEnv {
-    fn svg(&self) -> Option<&dyn label_anything::SvgBackend> {
-        self.inner.svg()
-    }
     fn raster_override(&self) -> Option<RgbaImage> {
         self.rgba.clone()
     }
@@ -90,28 +87,9 @@ fn place_text_unguarded(text: &str, img: Option<RgbaImage>) -> (i32, String) {
         inner: NativeEnv::new(),
         rgba: img,
     };
-    let v: Value = match serde_json::from_str(text) {
-        Ok(v) => v,
-        Err(e) => {
-            return (
-                LA_INVALID,
-                error_json("parse", &format!("invalid JSON: {e}")),
-            )
-        }
-    };
-    let report = label_anything::validate(&v);
-    if !report.valid {
-        return (
-            LA_INVALID,
-            serde_json::to_string(&report.errors).unwrap_or_default(),
-        );
-    }
-    match label_anything::place_validated(&v, &env, report) {
-        Ok(r) => (LA_OK, serde_json::to_string(&r).unwrap_or_default()),
-        Err(e) => (
-            LA_INVALID,
-            serde_json::to_string(&e.errors).unwrap_or_default(),
-        ),
+    match label_anything::place_json_with(text, &env) {
+        Ok(result) => (LA_OK, result),
+        Err(errors) => (LA_INVALID, errors),
     }
 }
 
@@ -121,18 +99,7 @@ pub(crate) fn validate_text(text: &str) -> (i32, String) {
 }
 
 fn validate_text_unguarded(text: &str) -> (i32, String) {
-    let r = match serde_json::from_str::<Value>(text) {
-        Ok(v) => label_anything::validate(&v),
-        Err(e) => label_anything::Report {
-            valid: false,
-            errors: vec![label_anything::Issue::new(
-                "",
-                "parse",
-                format!("invalid JSON: {e}"),
-            )],
-            warnings: vec![],
-        },
-    };
+    let r = label_anything::validate_json(text);
     let code = if r.valid { LA_OK } else { LA_INVALID };
     (code, serde_json::to_string(&r).unwrap_or_default())
 }

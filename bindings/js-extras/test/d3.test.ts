@@ -48,7 +48,7 @@ describe("labelSelection", () => {
     ]);
     // the marks got ids in the snapshot (not in the page) for svg_id
     expect(problem.items.every((i) => typeof i.svg_id === "string" && i.svg_id.length > 0)).toBe(true);
-    expect(dots.nodes().every((n) => !n.hasAttribute("id"))).toBe(true);
+    expect(dots.nodes().every((n) => !(n as Element).hasAttribute("id"))).toBe(true);
     const source = (problem.obstacles!.svg as { source: string; auto_mark_items: boolean }).source;
     expect((problem.obstacles!.svg as { auto_mark_items: boolean }).auto_mark_items).toBe(true);
     expect(source).toContain("Franconia");
