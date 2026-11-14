@@ -71,6 +71,30 @@ export function crowded(model: Model, obs: Obstacles, item: Item, r: Rect, buf: 
   return false;
 }
 
+/**
+ * The area of the label of `c` that `f` reports as covered: `f` of its box, or for a
+ * turned label the sum over the boxes of its cover, scaled to the label's area.
+ */
+function covered(c: Cand, f: (b: Rect) => number): number {
+  const t = c.turn;
+  if (t === null) return f(c.rect);
+  let sum = 0.0;
+  let all = 0.0;
+  for (const b of t.cover) {
+    sum += f(b);
+    all += b.area();
+  }
+  return all > 0.0 ? (sum * t.upright.area()) / all : 0.0;
+}
+
+/** Whether `f` holds for one of the boxes of the label of `c`. */
+function anyBox(c: Cand, f: (b: Rect) => boolean): boolean {
+  const t = c.turn;
+  if (t === null) return f(c.rect);
+  for (const b of t.cover) if (f(b)) return true;
+  return false;
+}
+
 function finish(c: Cand, acc: Acc): void {
   c.evaluated = true;
   c.cost = acc.cost;
@@ -99,6 +123,8 @@ export class Evaluator {
     const item = model.items[i]!;
     const em = item.em();
     const r = c.rect;
+    // a turned label is tested as the boxes of its cover (spec §6.5)
+    const turned = c.turn !== null;
     const area = maxf(r.area(), 1e-9);
     // coverage costs count covered em², whatever the label's size (spec §8)
     const em2 = em * em;
@@ -160,7 +186,7 @@ export class Evaluator {
         acc.violate(BLOCK_ITEMS, false, 0);
         continue;
       }
-      const d = sj.distRect(r);
+      const d = c.distShape(sj);
       // the margin (up to rounding), but never more than the mark keeps from the own mark's
       // box
       if (margin > EPS && d < margin - EPS && d < sj.distRect(item.shape.bbox())) acc.violate(BLOCK_ITEMS, false, 0);
@@ -177,7 +203,7 @@ export class Evaluator {
       if (pc !== null) acc.violate(pc, false, 0);
     }
     if (dy.labelItems.kind === AvoidKind.Soft) {
-      const cov = obs.otherItemsCovered(i, r);
+      const cov = turned ? covered(c, (b) => obs.otherItemsCovered(i, b)) : obs.otherItemsCovered(i, r);
       acc.add("items", (dy.labelItems.w * (lowerRule ? maxf(cov - lowerCov, 0) : cov)) / em2);
     }
     if (lowerRule && dy.labelLower.kind === AvoidKind.Soft) acc.add("lower_items", (dy.labelLower.w * lowerCov) / em2);
@@ -201,7 +227,7 @@ export class Evaluator {
       const lk = cl.label.kind;
       if (lk === AvoidKind.Hard) {
         let hit = false;
-        if (cl.hasRaster) hit = sat.any(grid, r);
+        if (cl.hasRaster) hit = turned ? anyBox(c, (b) => sat.any(grid, b)) : sat.any(grid, r);
         else if (cl.hasPrims) {
           const buf2 = this.buf2;
           if (!hardPrimsChecked) {
@@ -211,18 +237,21 @@ export class Evaluator {
           const prims = obs.prims();
           for (let q = 0; q < buf2.len; q++) {
             const pr = prims[buf2.get(q)]!;
-            if (pr[0] === ci && primOverlapsRect(pr[1], r)) {
+            if (pr[0] === ci && (turned ? anyBox(c, (b) => primOverlapsRect(pr[1], b)) : primOverlapsRect(pr[1], r))) {
               hit = true;
               break;
             }
           }
         }
         if (hit) {
-          const extra = (softW * sat.coveredArea(grid, r)) / em2;
-          acc.violate(ci, cl.relaxable, extra);
+          const cov = turned ? covered(c, (b) => sat.coveredArea(grid, b)) : sat.coveredArea(grid, r);
+          acc.violate(ci, cl.relaxable, (softW * cov) / em2);
         }
       } else if (lk === AvoidKind.Soft) {
-        if (!onMark && sat.any(grid, r)) acc.add(cl.name, (cl.label.w * sat.coveredArea(grid, r)) / em2);
+        if (!onMark && (turned ? anyBox(c, (b) => sat.any(grid, b)) : sat.any(grid, r))) {
+          const cov = turned ? covered(c, (b) => sat.coveredArea(grid, b)) : sat.coveredArea(grid, r);
+          acc.add(cl.name, (cl.label.w * cov) / em2);
+        }
       }
       if (cl.buffer > 0 && sat.any(grid, ring)) {
         const ringArea = maxf(ring.area() - area, 1e-9);
@@ -247,9 +276,14 @@ export class Evaluator {
     const gap = c.kind === Kind.Internal ? 0 : nearRule ? dOwn : item.shape.distRect(r);
     // (a stub is part of the distance, not a leader to a distant label)
     const stub = c.hasStub();
-    if (c.leaders.length === 0 || stub) acc.add("distance", (w.distance * gap) / em);
+    if (c.leaders.length === 0 || stub) {
+      acc.add("distance", (w.distance * gap) / em);
+      // inside its area: the room the label lacks and its distance from the pole
+      acc.add("distance", w.distance * c.inside);
+    }
     // 7. shape penalty
     acc.add("shape", w.shape * v.penalty);
+    acc.add("shape", (w.shape * Math.abs(c.angle())) / 180.0);
     // 8. edge proximity
     if (la !== null) {
       const d = minf(minf(r.x0 - la.x0, la.x1 - r.x1), minf(r.y0 - la.y0, la.y1 - r.y1));

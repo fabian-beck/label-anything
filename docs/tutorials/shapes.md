@@ -57,10 +57,31 @@ Per item, `placement` overrides `models`, `offset`, `internal` and `position_ord
 ## Area anchors
 
 An item with an `area` anchor labels a region: its label goes inside the polygon if it
-fits, preferably at the pole of inaccessibility. If it does not fit ("Tiny region" in the
-example), the item becomes a point at the pole with a small dot mark
-(`anchor.dot`, by default a circle of radius 2) and gets an outside label, on a leader if
-needed. Areas are not obstacles for other labels.
+fits, where it has the most room around it, near the middle of the area (the pole of
+inaccessibility) when there is room everywhere. The engine offers places all over the part
+of the polygon the label fits in, so a label gives way to the marks and labels inside its
+area without leaving it. If it does not fit ("Tiny region" in the example), the item
+becomes a point at the pole with a small dot mark (`anchor.dot`, by default a circle of
+radius 2) and gets an outside label, on a leader if needed. Areas are not obstacles for
+other labels.
+
+A label may be **turned** along a slanted area, as the names of lakes and valleys are on
+a map: when the polygon is clearly longer one way (its main axis is at least 10° from the
+horizontal), the engine also tries the label along that axis, by at most
+`placement.area_rotation` (45° by default; `0` keeps every label upright). Turning costs
+a little (45° as much as one more line of text), so a label that has room upright stays
+upright. The placement of a turned label has a `rotation` in degrees, clockwise, and its
+`box` is the label before it is turned about the box's center:
+
+```js
+for (const p of result.placements) {
+  if (!p.placed) continue;
+  const turn = p.rotation ? `rotate(${p.rotation} ${p.box.x + p.box.w / 2} ${p.box.y + p.box.h / 2})` : "";
+  // draw the text in p.box as for any label, inside <g transform={turn}>
+}
+```
+
+The renderers of the packages (`renderSvg`, the debug overlay) do this already.
 
 ## Covering one's own mark
 

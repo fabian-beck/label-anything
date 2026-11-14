@@ -154,17 +154,20 @@ def evaluate_visual(prob, placed, classes: dict, a_label: dict, a_leader: dict, 
               "long": long_n, "far": len(far), "far_boundary": far_boundary, "far_examples": far[:max_list]}
 
     # ------------------------------------------------------------ leader vs leader
-    seg_index = GridIndex(32.0)
+    # one box per leader (all its segments), and one reach for every query: a pair is found
+    # from its earlier leader only, so the test must not depend on which of the two that is
+    leader_index = GridIndex(32.0)
+    lbox = []
     for li, (_k, L, _em, _m) in enumerate(leaders):
-        for a, b in leader_segments(L):
-            seg_index.insert(li, geom.segment_bbox(a, b))
+        pts = [q for seg in leader_segments(L) for q in seg]   # a leader has two points or more
+        lbox.append(geom.Box(min(q[0] for q in pts), min(q[1] for q in pts),
+                             max(q[0] for q in pts), max(q[1] for q in pts)))
+        leader_index.insert(li, lbox[li])
+    reach = max([NEAR_PX] + [em for _k, _L, em, _m in leaders])
     near_pairs: dict[tuple[int, int], float] = {}
     parallel = []
     for li, (k, L, em, model) in enumerate(leaders):
-        cand = set()
-        for a, b in leader_segments(L):
-            cand.update(seg_index.query(geom.segment_bbox(a, b, max(NEAR_PX, em))))
-        for lj in sorted(cand):
+        for lj in leader_index.query(lbox[li].grow(reach)):
             if lj <= li:
                 continue
             k2, L2, em2, model2 = leaders[lj]

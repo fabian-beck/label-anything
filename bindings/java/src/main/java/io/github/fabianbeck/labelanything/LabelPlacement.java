@@ -9,7 +9,8 @@ import java.util.Map;
  *
  * @param id item id
  * @param placed whether the label is placed
- * @param box the label box (null when not placed)
+ * @param box the label box (null when not placed); of a turned label ({@link #rotation()}) the
+ *     box before it is turned
  * @param anchor the item's anchor point (area items: the pole of the polygon; null when not
  *     placed); passed back as warm start, the box moves with it
  * @param anchorSide where the label sits relative to the anchor (null when not placed)
@@ -49,6 +50,15 @@ public record LabelPlacement(
     degradeSteps = List.copyOf(degradeSteps);
     blocking = List.copyOf(blocking);
     blockedBy = List.copyOf(blockedBy);
+  }
+
+  /**
+   * Degrees, clockwise on screen, by which the label is turned about the center of {@link
+   * #box()}: the label of an area anchor along the area ({@code placement.area_rotation}); 0
+   * for an upright label. The box is the label before it is turned.
+   */
+  public double rotation() {
+    return raw.get("rotation") instanceof Number n ? n.doubleValue() : 0.0;
   }
 
   /** Whether the label has a leader (or fan leaders). */

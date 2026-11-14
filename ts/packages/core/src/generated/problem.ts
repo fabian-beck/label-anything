@@ -434,6 +434,10 @@ export type WarmStart = {
       points?: Point[];
       style?: string;
     } | null;
+    /**
+     * The rotation the box was placed with, as in a result (a turned area label).
+     */
+    rotation?: number;
     box?: {
       x: number;
       y: number;
@@ -461,6 +465,10 @@ export type WarmStart1 = {
       points?: Point[];
       style?: string;
     } | null;
+    /**
+     * The rotation the box was placed with, as in a result (a turned area label).
+     */
+    rotation?: number;
     box?: {
       x: number;
       y: number;
@@ -824,6 +832,10 @@ export interface Placement {
    * Circles get internal candidates when r >= ratio * label height (internal=auto).
    */
   internal_circle_ratio?: number;
+  /**
+   * Degrees: the label of an area anchor may be turned along the polygon's main axis by this angle at most (0: always horizontal). A turned label is reported with its rotation.
+   */
+  area_rotation?: number;
   prune_factor?: number;
   boundary?: {
     /**

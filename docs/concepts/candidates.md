@@ -41,6 +41,13 @@ their own, and without a stub they are nearer to their own by the label margin
 point, if the label fits with `inner_padding` (0.2 em) to spare; `placement.internal`
 (`auto`, `prefer`, `allow`, `never`) decides when ([shapes](../tutorials/shapes.md#internal-labels)).
 
+The label of an **area** has its own candidates
+([area anchors](../tutorials/shapes.md#area-anchors), spec §6.5): places spread over the
+part of the polygon it fits in, the one with the most room around the label first, and, for
+a slanted polygon, the same turned along its main axis (`placement.area_rotation`, at most
+45° by default). It gets positions beside a point only when it fits nowhere inside
+(ADR placement/areas).
+
 **`distant`** — away from the mark, with a leader: `distant_rings` (4) rings between
 `min_distance` (1.5 em) and `max_distance` (4 em; per [aggressiveness](#aggressiveness)),
 in `distant_directions` (16) directions

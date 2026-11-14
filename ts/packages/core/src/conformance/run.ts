@@ -81,6 +81,62 @@ function boxOf(p: Json): BoxR | null {
 
 type Pt = [number, number];
 
+/** The rotation of a placed label (degrees; 0: not turned). */
+function rotationOf(p: Json): number {
+  return asF64(get(p, "rotation")) ?? 0;
+}
+
+/** The corners of a placed label: its box, turned by its rotation about its center. */
+function cornersOf(p: Json): Pt[] | null {
+  const b = boxOf(p);
+  if (b === null) return null;
+  const cx = (b.x0 + b.x1) / 2;
+  const cy = (b.y0 + b.y1) / 2;
+  const a = (rotationOf(p) * Math.PI) / 180;
+  const s = Math.sin(a);
+  const c = Math.cos(a);
+  const t = (x: number, y: number): Pt => [cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c];
+  return [t(b.x0, b.y0), t(b.x1, b.y0), t(b.x1, b.y1), t(b.x0, b.y1)];
+}
+
+/** The bounding box of a placed label (of its turned box). */
+function boundsOf(p: Json): BoxR | null {
+  if (rotationOf(p) === 0) return boxOf(p);
+  const q = cornersOf(p);
+  if (q === null) return null;
+  return {
+    x0: Math.min(...q.map((v) => v[0])),
+    y0: Math.min(...q.map((v) => v[1])),
+    x1: Math.max(...q.map((v) => v[0])),
+    y1: Math.max(...q.map((v) => v[1])),
+  };
+}
+
+/**
+ * Whether two convex quadrilaterals overlap by more than `e` along every separating axis
+ * of their sides.
+ */
+function quadsOverlap(a: Pt[], b: Pt[], e: number): boolean {
+  for (const q of [a, b]) {
+    for (let i = 0; i < 4; i++) {
+      const p0 = q[i]!;
+      const p1 = q[(i + 1) % 4]!;
+      const nx = p1[1] - p0[1];
+      const ny = p0[0] - p1[0];
+      const len = Math.sqrt(nx * nx + ny * ny);
+      if (len === 0) continue;
+      const span = (r: Pt[]): [number, number] => {
+        const d = r.map((v) => (v[0] * nx + v[1] * ny) / len);
+        return [Math.min(...d), Math.max(...d)];
+      };
+      const [a0, a1] = span(a);
+      const [b0, b1] = span(b);
+      if (a1 - b0 <= e || b1 - a0 <= e) return false;
+    }
+  }
+  return true;
+}
+
 function segCross(a: Pt, b: Pt, c: Pt, d: Pt): boolean {
   const o = (p: Pt, q: Pt, r: Pt): number => (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]);
   const d1 = o(c, d, a);
@@ -220,6 +276,15 @@ export function checkPlace(problem: unknown, exp: unknown): string[] {
       if (got !== hl[id]) f.push(`has_leader.${id}: expected ${show(hl[id])}, got ${got}`);
     }
   }
+  const rot = get(exp, "rotation");
+  if (isObject(rot)) {
+    for (const id of Object.keys(rot)) {
+      const p = placementOf(r, id);
+      const got = p !== undefined ? rotationOf(p) : null;
+      const want = asF64(rot[id]) ?? NaN;
+      if (got === null || !(Math.abs(got - want) <= 0.01)) f.push(`rotation.${id}: expected ${want}, got ${show(got)}`);
+    }
+  }
   const sb = get(exp, "stub");
   if (isObject(sb)) {
     for (const id of Object.keys(sb)) {
@@ -314,13 +379,27 @@ export function checkPlace(problem: unknown, exp: unknown): string[] {
       }
     }
   }
-  // independent re-check: no two placed rectangular labels overlap
+  // independent re-check: no two placed rectangular labels overlap (turned labels: as their
+  // turned boxes)
   const boxes: [string, BoxR][] = [];
+  const quads: (Pt[] | null)[] = [];
   for (const p of placed) {
     const id = p.id;
-    const b = boxOf(p);
-    if (typeof id === "string" && b !== null) boxes.push([id, b]);
+    const b = boundsOf(p);
+    if (typeof id === "string" && b !== null) {
+      boxes.push([id, b]);
+      quads.push(rotationOf(p) !== 0 ? cornersOf(p) : null);
+    }
   }
+  const quad = (k: number): Pt[] => {
+    const b = boxes[k]![1];
+    return quads[k] ?? [
+      [b.x0, b.y0],
+      [b.x1, b.y0],
+      [b.x1, b.y1],
+      [b.x0, b.y1],
+    ];
+  };
   const ll = pointer(problem, "/avoid/label/labels");
   const labelsHard = ll === undefined ? true : ll === "hard";
   if (labelsHard) {
@@ -329,7 +408,14 @@ export function checkPlace(problem: unknown, exp: unknown): string[] {
         const a = boxes[i]![1];
         const b = boxes[j]![1];
         const e = 1e-6;
-        if (a.x0 < b.x1 - e && b.x0 < a.x1 - e && a.y0 < b.y1 - e && b.y0 < a.y1 - e) {
+        const turned = quads[i] !== null || quads[j] !== null;
+        if (
+          a.x0 < b.x1 - e &&
+          b.x0 < a.x1 - e &&
+          a.y0 < b.y1 - e &&
+          b.y0 < a.y1 - e &&
+          (!turned || quadsOverlap(quad(i), quad(j), e))
+        ) {
           f.push(`labels ${boxes[i]![0]} and ${boxes[j]![0]} overlap`);
         }
       }

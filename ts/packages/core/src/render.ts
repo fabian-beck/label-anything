@@ -21,8 +21,10 @@ export interface DebugData {
   grid: GridSpec;
   /** (class name, coverage 0..255 per cell) */
   classes: [string, Uint8Array][];
-  /** (item id, label box, feasible) of all candidates */
+  /** (item id, label box, feasible) of all candidates (a turned label: its box before it is turned) */
   candidates: [string, Rect, boolean][];
+  /** The rotation of each candidate (degrees, clockwise on screen; 0: not turned). */
+  rotations: number[];
 }
 
 /** Escape text for XML. */
@@ -56,6 +58,16 @@ const I64_MAX = BigInt("9223372036854775807");
 const I64_MIN = BigInt("-9223372036854775808");
 
 /** A coordinate rounded to 2 decimals, as the Rust writer prints it. */
+/**
+ * The `transform` attribute of a label turned by `angle` degrees about the center of its
+ * box `r` (empty when it is not turned).
+ */
+function turnAttr(angle: number, r: Rect): string {
+  if (angle === 0) return "";
+  const c = r.center();
+  return ` transform="rotate(${f(angle)} ${f(c.x)} ${f(c.y)})"`;
+}
+
 function f(v: number): string {
   const r = roundHalfAway(v * 100) / 100;
   if (r === Math.trunc(r)) {
@@ -195,7 +207,9 @@ export function debugSvg(model: Model | null, result: unknown, debug: DebugData 
     const n = debug.candidates.length < 50000 ? debug.candidates.length : 50000;
     for (let k = 0; k < n; k++) {
       const [, r, ok] = debug.candidates[k]!;
-      parts.push(`<rect x="${f(r.x0)}" y="${f(r.y0)}" width="${f(r.w())}" height="${f(r.h())}" stroke="${ok ? "#2e7d32" : "#c62828"}"/>`);
+      parts.push(
+        `<rect x="${f(r.x0)}" y="${f(r.y0)}" width="${f(r.w())}" height="${f(r.h())}" stroke="${ok ? "#2e7d32" : "#c62828"}"${turnAttr(debug.rotations[k] ?? 0, r)}/>`,
+      );
     }
     parts.push("</g>");
     s += parts.join("");
@@ -255,7 +269,7 @@ export function debugSvg(model: Model | null, result: unknown, debug: DebugData 
       }
       const cost = num(get(p, "cost"), 0);
       const title = `${id} · ${str(get(p, "anchor_side"))} · cost ${fmtFixed(cost, 3)} · rank ${jsonDisplay(get(get(p, "priority"), "rank"))}`;
-      labels += `<g class="label" data-id="${esc(id)}"><title>${esc(title)}</title><rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" fill="#ffffff" fill-opacity="0.75"/>`;
+      labels += `<g class="label" data-id="${esc(id)}"${turnAttr(num(get(p, "rotation"), 0), Rect.xywh(x, y, w, h))}><title>${esc(title)}</title><rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" fill="#ffffff" fill-opacity="0.75"/>`;
       const t = get(p, "text");
       if (t !== undefined) labels += drawText(t, x, y);
       for (const part of itemsOf(get(p, "parts"))) {

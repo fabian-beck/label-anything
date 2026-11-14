@@ -68,11 +68,12 @@ of 500 points or more. Its share of unclear labels rises from 28 to 37 %: its la
 less clear, but the leadered labels, which the measure never counts as unclear, are gone
 (ADR project/benchmark-measures). The embeddings, the illustrations and Les Misérables keep
 every label at every level. On the 46 problems with `strict` omission, the removal test
-finds no omitted label with a free place at `medium` and `high`: the fewer candidates of a
-lower level brought out that the pruning could drop the only free places of an item, which
-the repair now tries (ADR priority/repair). At `low` it finds one, an airport on the
-100-hub map to which the engine applies the rule of the unlabeled points (ADR
-placement/unlabeled-points) and the benchmark's mirror of that rule does not.
+finds no omitted label with a free place at any level. The fewer candidates of a lower
+level brought out that the pruning could drop the only free places of an item, which the
+repair now tries (ADR priority/repair), and that the benchmark's mirror of the rule of the
+unlabeled points must grant the circles of an SVG background the engine's flattening
+tolerance (ADR placement/unlabeled-points): an airport's dot on the 100-hub map, 0.08 px out
+of a label box as a circle, lies under it as the engine's pentagon.
 
 Against the other labelers on the quick suite (2026-10-25), `medium` keeps the most usable
 labels on every problem but the chart of 1,206 classes, where the greedy baseline keeps 51

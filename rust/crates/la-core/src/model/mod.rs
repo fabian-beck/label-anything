@@ -191,6 +191,76 @@ pub struct Area {
     pub shape: Shape,
     pub pole: P,
     pub pole_dist: f64,
+    /// Half the diagonal of the polygon's bounding box: the scale of a label's distance
+    /// from the pole (spec §6.5).
+    pub radius: f64,
+    /// The frame of labels turned along the polygon's main axis (`None`: horizontal
+    /// labels only).
+    pub turn: Option<AreaTurn>,
+}
+
+/// The frame of an area's turned labels (spec §6.5): the polygon turned back about the
+/// pole by the labels' angle, in which such a label is an upright box.
+#[derive(Clone, Debug)]
+pub struct AreaTurn {
+    /// Degrees, clockwise on screen.
+    pub angle: f64,
+    pub cos: f64,
+    pub sin: f64,
+    pub shape: Shape,
+}
+
+/// A main axis less than this far from the horizontal turns no label (degrees).
+pub const AREA_TURN_MIN: f64 = 10.0;
+
+impl Area {
+    pub fn new(rings: Vec<Vec<P>>, max_rotation: f64) -> Area {
+        let (pole, pole_dist) = polygon::polylabel(&rings, false, 0.5);
+        let turn = area_angle(polygon::main_axis(&rings, pole), max_rotation).map(|angle| {
+            let (sin, cos) = crate::math::sin_cos_deg(angle);
+            let turned = rings
+                .iter()
+                .map(|r| {
+                    r.iter()
+                        .map(|&q| pole + (q - pole).unrotate(cos, sin))
+                        .collect()
+                })
+                .collect();
+            AreaTurn {
+                angle,
+                cos,
+                sin,
+                shape: Shape::polygon(turned, false, pole),
+            }
+        });
+        let shape = Shape::polygon(rings, false, pole);
+        let bb = shape.bbox();
+        Area {
+            radius: 0.5 * crate::math::len2d(bb.w(), bb.h()),
+            shape,
+            pole,
+            pole_dist,
+            turn,
+        }
+    }
+}
+
+/// The angle of an area's turned labels (spec §6.5): the main axis, read upwards when it
+/// is vertical, none when it is less than [`AREA_TURN_MIN`] from the horizontal, and at
+/// most `max` degrees.
+pub fn area_angle(axis: Option<f64>, max: f64) -> Option<f64> {
+    let a = axis?;
+    let a = if a >= 90.0 { -90.0 } else { a };
+    if max.is_nan() || max <= 0.0 || a.is_nan() || a.abs() < AREA_TURN_MIN {
+        return None;
+    }
+    Some(if a > max {
+        max
+    } else if a < -max {
+        -max
+    } else {
+        a
+    })
 }
 
 /// Per-item resolved lengths (px).
@@ -506,6 +576,8 @@ pub struct Model {
     /// The leader of each warm-start box, moved with it, for the `angles`, `elbow` and
     /// `orthogonal` leader styles (the entry's `leader` of the same style; spec §6.7).
     pub warm_leaders: BTreeMap<String, Vec<P>>,
+    /// The rotation of each turned warm-start box (degrees, not 0).
+    pub warm_rotation: BTreeMap<String, f64>,
     pub warnings: Vec<Issue>,
     /// Groups of items sharing one label: (representative, members incl. the representative).
     pub groups: Vec<(usize, Vec<usize>)>,
@@ -1232,6 +1304,7 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     .then(|| leaders.style.name());
     let mut warm = BTreeMap::new();
     let mut warm_leaders = BTreeMap::new();
+    let mut warm_rotation = BTreeMap::new();
     for p in lookup(problem, "warm_start.placements")
         .and_then(|v| v.as_array())
         .into_iter()
@@ -1275,6 +1348,13 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
                     }
                 }
                 warm_leaders.insert(id.to_string(), pts);
+            }
+            if let (true, Some(_), Some(r)) =
+                (placed, b, p.get("rotation").and_then(|v| v.as_f64()))
+            {
+                if r != 0.0 && r.abs() <= 90.0 {
+                    warm_rotation.insert(id.to_string(), r);
+                }
             }
             warm.insert(id.to_string(), if placed { b } else { None });
         }
@@ -1326,6 +1406,7 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         shaping: o.string("text.shaping"),
         warm,
         warm_leaders,
+        warm_rotation,
         warnings,
         groups: Vec::new(),
         group_of: Vec::new(),
@@ -1565,6 +1646,7 @@ struct ItemDefaults {
     align: String,
     internal: String,
     position_order: Value,
+    area_rotation: f64,
 }
 
 impl ItemDefaults {
@@ -1594,6 +1676,7 @@ impl ItemDefaults {
             align: o.string("defaults.align"),
             internal: o.string("placement.internal"),
             position_order: o.get("placement.position_order"),
+            area_rotation: o.f64("placement.area_rotation"),
         }
     }
 }
@@ -1651,24 +1734,15 @@ fn build_item(
                 rings.push(points_of(h).into_iter().map(|p| to_px.apply(p)).collect());
             }
             polygon::orient_holes(&mut rings);
-            let (pole, pole_dist) = polygon::polylabel(&rings, false, 0.5);
-            let area_shape = Shape::polygon(rings, false, pole);
+            let area = Area::new(rings, defs.area_rotation);
+            let pole = area.pole;
             let dot = match anchor_v.get("dot") {
                 Some(m) => {
                     mark_shape(m, pole, to_px, svgs, warnings, &format!("{ptr}/anchor/dot"))?.0
                 }
                 None => Shape::circle(pole, 2.0),
             };
-            (
-                pole,
-                dot,
-                Some(Area {
-                    shape: area_shape,
-                    pole,
-                    pole_dist,
-                }),
-                false,
-            )
+            (pole, dot, Some(area), false)
         }
         _ => {
             let at = to_px.apply(P::new(

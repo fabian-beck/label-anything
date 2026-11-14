@@ -1,6 +1,7 @@
 // Port of the unit tests of rust/crates/la-core/src/candidates.rs.
 import { describe, expect, it } from "vitest";
-import { cspacePath, dirOf, pushIn, samplePath, touchCenter } from "../src/candidates.js";
+import { cspacePath, dirOf, pushIn, samplePath, touchCenter, turnOf } from "../src/candidates.js";
+import { sinCosDeg } from "../src/math.js";
 import { P, Rect } from "../src/geom/index.js";
 import { Shape } from "../src/geom/shape.js";
 import { posAngle, posFromAngularIndex } from "../src/model/index.js";
@@ -10,6 +11,32 @@ function gapTo(shape: Shape, r: Rect, o: number): number {
 }
 
 describe("candidates", () => {
+  it("cover_of_a_turned_label", () => {
+    for (const [hw, hh, deg] of [
+      [40, 8, 30],
+      [40, 8, -90],
+      [5, 20, 45],
+      [500, 2, 10],
+    ] as [number, number, number][]) {
+      const c = new P(100, 50);
+      const [sin, cos] = sinCosDeg(deg);
+      const [bbox, turn, shape] = turnOf(c, hw, hh, deg, cos, sin);
+      expect(turn.upright.eq(Rect.fromCenter(c, hw, hh))).toBe(true);
+      expect(turn.cover.length).toBe(Math.min(32, Math.max(1, Math.ceil(hw / hh))));
+      // the label lies in its cover, and the cover in the label's bounding box
+      for (let k = 0; k <= 40; k++) {
+        for (let j = 0; j <= 4; j++) {
+          const q = new P(-hw + (2 * hw * k) / 40, -hh + (2 * hh * j) / 4);
+          const p = c.add(q.rotate(cos, sin));
+          expect(turn.cover.some((b) => b.inflate(1e-9).containsPoint(p)), `${deg}: ${p.x}, ${p.y}`).toBe(true);
+        }
+      }
+      for (const b of turn.cover) expect(bbox.inflate(1e-9).containsRect(b), String(deg)).toBe(true);
+      const sb = shape.bbox();
+      expect(Math.abs(sb.x0 - bbox.x0) < 1e-9 && Math.abs(sb.y1 - bbox.y1) < 1e-9).toBe(true);
+    }
+  });
+
   it("adjacent_touch_circle_tangent", () => {
     const s = Shape.circle(new P(100, 100), 10);
     const o = 2;

@@ -16,6 +16,16 @@ than the engine's at the median. Placing fewer labels to calm a picture (ADR
 placement/aggressiveness) needs a measure of what more labels cost: the number of labels
 and of leaders, and leader lengths, each tell one part.
 
+The near crossings and parallel leaders of a result (`bench/eval/visual.py`) depended on
+the order of its items, as an audit found in 2026-11. The index of the leaders kept one
+box per leader, that of the segment added last, so a leader with a bend or an underline
+was missed where it was the later leader of a pair and the other leader came close to
+another of its segments. Parallel leaders were looked for within 1 em of the earlier
+leader's font, although the measure takes the larger font of the two. Two items, one
+straight leader ending 3 px from the first segment of an elbow leader, had one near
+crossing in one order and none in the other; the hard rule `leader_near` counted the pair
+in both.
+
 ## Decision
 - **Data points** are the marks of point items, labeled or not, and the circles of every
   vector class labels do not ignore.
@@ -38,11 +48,16 @@ and of leaders, and leader lengths, each tell one part.
   Henderson, Chanceaux & Smith 2009). Reported with the share of leaders and the edge
   length per label in em; for information, not in the release gate, since more labels add
   clutter.
+- **Leader pairs**, the near crossings and the parallel leaders, are counted whatever the
+  order of the items: a leader is indexed once, by the box around all its segments and
+  its underline, and pairs are looked for within the largest font size of the result (at
+  least 4 px), as for the hard rules `leader_near` and `leader_angle`.
 - **Measured as the engine does**: text boxes fit the ink (from the outlines' `glyf`
   bounds) with the lines aligned per `align`, and the removal test keeps the engine's
-  label spacing and own-mark rule. Wrapped labels break where the specification says
-  (§5.3): the benchmark's own line breaking is tested against the conformance cases of
-  the engines (`conformance/text/wrap-*.json`), and so is its expression evaluator
+  label spacing and own-mark rule, granting the circles of an SVG background the engine's
+  flattening tolerance. Wrapped labels break where the specification says (§5.3): the
+  benchmark's own line breaking is tested against the conformance cases of the engines
+  (`conformance/text/wrap-*.json`), and so is its expression evaluator
   (`conformance/expr/`).
 - The report and the regression check of the release gate include the new measures, and
   the images of the report mark every instance where it happens, with the
@@ -69,6 +84,14 @@ a long name or a leader adds more than a short label beside its mark. The 90th p
 of the edge density in windows of 8 em agrees least (r = 0.840): taking leaders away
 raises it where labels then stay in the crowd. The measure counts what labels add, not
 what they hide, which `points` and `labels_over` count.
+
+Counting every leader pair (2026-11-14) can only raise the near crossings and the parallel
+leaders, and only for results with bent or underlined leaders or with labels of different
+font sizes; values measured before are lower bounds. For Label Anything's results on the
+66 static problems of the full suite nothing changes: 23 near crossings and no parallel
+leaders among 3,654 leaders, before and after, because only 11 of the leaders have a bend
+and none an underline. The baselines draw straight leaders of two points without
+underlines (`bench/baselines/results.py`), so their near crossings do not change either.
 
 The benchmark's line breaking had drifted from the specification (no acronym rule, among
 others: 21 of the 158 break, greedy and balanced cases of a font failed), which the

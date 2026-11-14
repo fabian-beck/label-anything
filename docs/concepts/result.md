@@ -76,6 +76,7 @@ The result (numbers rounded, `b` shortened):
 |---|---|
 | `id`, `placed` | the item and whether its label is placed |
 | `box` | the label box `{x, y, w, h}`: the collision box, including the label's padding; a text measured with the bundled fonts spans its lines' advance widths and, vertically, their ink, from the top of the first line's letters to the bottom of the last line's ([spec §5.2](../reference/spec.md#52-text-measurement)) |
+| `rotation` | only for a turned label (the label of an [area](../tutorials/shapes.md#area-anchors) along it): degrees, clockwise on screen, about the center of `box`, which is the label before it is turned; draw the label in `box` and rotate it |
 | `anchor` | `[x, y]`: the item's anchor in canvas px (area items: the pole of the polygon); a result passed back as `warm_start` moves each box with its anchor ([interactive maps](../tutorials/interactive-maps.md#warm-starts)) |
 | `anchor_side` | `top`, `right`, `bottom`, `left`, `top-right`, `bottom-right`, `top-left`, `bottom-left`; `internal`, `distant`, `boundary` or `fan` |
 | `model` | the candidate model: `adjacent`, `slider`, `internal`, `distant`, `boundary`, or `fan` for a label in a crowd's column ([fan labels](candidates.md#fan-labels)) |

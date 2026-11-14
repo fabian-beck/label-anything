@@ -39,6 +39,47 @@ def underline_at_port(p: Dict[str, Any]) -> bool:
             and y + h * 0.5 < ay < y + h and x - 1e-6 <= bx <= x + w + 1e-6)
 
 
+Quad = List[Tuple[float, float]]
+
+
+def corners(p: Dict[str, Any]) -> Quad:
+    """The corners of a placed label: its box, turned by its rotation about its center."""
+    b = p["box"]
+    cx, cy = b["x"] + b["w"] / 2, b["y"] + b["h"] / 2
+    a = math.radians(p.get("rotation") or 0.0)
+    s, c = math.sin(a), math.cos(a)
+    return [
+        (cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c)
+        for x, y in ((b["x"], b["y"]), (b["x"] + b["w"], b["y"]), (b["x"] + b["w"], b["y"] + b["h"]), (b["x"], b["y"] + b["h"]))
+    ]
+
+
+def bounds(p: Dict[str, Any]) -> la.BBox:
+    """The bounding box of a placed label (of its turned box)."""
+    if not p.get("rotation"):
+        return la.BBox(**p["box"])
+    q = corners(p)
+    x0, y0 = min(v[0] for v in q), min(v[1] for v in q)
+    return la.BBox(x0, y0, max(v[0] for v in q) - x0, max(v[1] for v in q) - y0)
+
+
+def quads_overlap(a: Quad, b: Quad, e: float) -> bool:
+    """Whether two convex quadrilaterals overlap by more than ``e`` along every separating
+    axis of their sides."""
+    for q in (a, b):
+        for i in range(4):
+            (x0, y0), (x1, y1) = q[i], q[(i + 1) % 4]
+            nx, ny = y1 - y0, x0 - x1
+            n = math.hypot(nx, ny)
+            if n == 0:
+                continue
+            da = [(x * nx + y * ny) / n for x, y in a]
+            db = [(x * nx + y * ny) / n for x, y in b]
+            if max(da) - min(db) <= e or max(db) - min(da) <= e:
+                return False
+    return True
+
+
 def px(v: Any, em: float) -> float:
     if isinstance(v, (int, float)):
         return float(v)
@@ -98,6 +139,10 @@ def check(problem: Dict[str, Any], exp: Dict[str, Any]) -> List[str]:
         got = bool(segments(by_id[i])) if i in by_id else False
         if got != want:
             f.append(f"has_leader.{i}: expected {want}, got {got}")
+    for i, want in exp.get("rotation", {}).items():
+        got = (by_id[i].get("rotation") or 0.0) if i in by_id else None
+        if got is None or not abs(got - want) <= 0.01:
+            f.append(f"rotation.{i}: expected {want}, got {got}")
     for i, want in exp.get("stub", {}).items():
         got = bool(((by_id.get(i) or {}).get("leader") or {}).get("stub"))
         if got != want:
@@ -134,11 +179,16 @@ def check(problem: Dict[str, Any], exp: Dict[str, Any]) -> List[str]:
             if not abs(got.get(k, math.nan) - want[k]) <= tol:
                 f.append(f"box.{i}.{k}: expected {want[k]} ± {tol}, got {got.get(k)}")
     # independent re-check: no two placed labels overlap (labels hard, the default)
-    boxes = [(p["id"], la.BBox(**p["box"])) for p in placed if p.get("box")]
+    # (turned labels: as their turned boxes)
+    boxes = [(p["id"], bounds(p)) for p in placed if p.get("box")]
+    turned = {p["id"]: corners(p) for p in placed if p.get("box") and p.get("rotation")}
+    quads = {p["id"]: corners(p) for p in placed if p.get("box")}
     if problem.get("avoid", {}).get("label", {}).get("labels", "hard") == "hard":
         for k, (ia, a) in enumerate(boxes):
             for ib, b in boxes[k + 1 :]:
-                if a.intersects(b, 1e-6):
+                if a.intersects(b, 1e-6) and (
+                    not (ia in turned or ib in turned) or quads_overlap(quads[ia], quads[ib], 1e-6)
+                ):
                     f.append(f"labels {ia} and {ib} overlap")
     # independent re-check: no two leaders cross (crossings hard, the default)
     if problem.get("avoid", {}).get("leader", {}).get("leaders", "hard") == "hard":
