@@ -614,6 +614,16 @@ public final class LabelProblem {
      * they were placed for (boxes move with their items) and their leaders.
      */
     public Builder warmStart(LabelResult previous) {
+      return warmStart(previous, false);
+    }
+
+    /**
+     * As {@link #warmStart(LabelResult)}; with {@code pin}, every label keeps its box exactly
+     * (moved with its item) where the hard rules still allow it, whatever its priority, and
+     * the solve only adds labels around them. For a view that only moved since {@code
+     * previous}, as a map that was panned: no label moves.
+     */
+    public Builder warmStart(LabelResult previous, boolean pin) {
       List<Object> placements = new ArrayList<>();
       for (LabelPlacement p : previous.placements()) {
         Map<String, Object> m = new LinkedHashMap<>();
@@ -632,7 +642,12 @@ public final class LabelProblem {
         }
         placements.add(m);
       }
-      return put("warm_start", Map.of("placements", placements));
+      Map<String, Object> warm = new LinkedHashMap<>();
+      if (pin) {
+        warm.put("pin", true);
+      }
+      warm.put("placements", placements);
+      return put("warm_start", warm);
     }
 
     /** Emit the debug SVG overlay in {@link LabelResult#debugSvg()}. */
