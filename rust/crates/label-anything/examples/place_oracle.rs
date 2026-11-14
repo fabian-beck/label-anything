@@ -15,28 +15,10 @@
 //! file's fixture). The stored result drops the fields that depend on the clock or name
 //! the implementation: `stats.runtime_ms`, `stats.phases_ms`, `stats.implementation`.
 
-use label_anything::{Env, NativeEnv, SvgBackend};
+use label_anything::NativeEnv;
 use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
-
-/// The native environment without its clock.
-struct Clockless(NativeEnv);
-
-impl Env for Clockless {
-    fn svg(&self) -> Option<&dyn SvgBackend> {
-        self.0.svg()
-    }
-    fn read_file(&self, path: &str) -> Result<Vec<u8>, String> {
-        self.0.read_file(path)
-    }
-    fn now_ms(&self) -> f64 {
-        0.0
-    }
-    fn has_measure_callback(&self) -> bool {
-        false
-    }
-}
 
 fn read_json(p: &Path) -> Result<Value, String> {
     let text = std::fs::read_to_string(p).map_err(|e| format!("{}: {e}", p.display()))?;
@@ -55,7 +37,8 @@ fn json_files(dir: &Path) -> Result<Vec<PathBuf>, String> {
 
 /// The result with the clock- and implementation-dependent fields removed.
 fn oracle_result(problem: &Value, base: &Path) -> Result<Value, String> {
-    let env = Clockless(NativeEnv::with_base_dir(base));
+    let mut env = NativeEnv::with_base_dir(base);
+    env.clock = false;
     let mut r = label_anything::place_with(problem, &env).map_err(|e| e.to_string())?;
     if let Some(st) = r.get_mut("stats").and_then(|s| s.as_object_mut()) {
         // shift_remove keeps the order of the other keys

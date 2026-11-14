@@ -951,7 +951,7 @@ fn shape_case(g: &mut Gen, desc: &Desc) -> Value {
     }
     rects.push(Rect::new(bb.x1, bb.y0, bb.x1 + 3.0, bb.y1)); // touching the bbox
     rects.push(Rect::from_center(s.reference(), 0.5, 0.5));
-    let segs: Vec<(P, P, f64)> = (0..4)
+    let segs: Vec<(P, P)> = (0..4)
         .map(|k| {
             let a = P::new(g.coord(cx - ext, cx + ext), g.coord(cy - ext, cy + ext));
             let b = if k == 0 {
@@ -959,8 +959,7 @@ fn shape_case(g: &mut Gen, desc: &Desc) -> Value {
             } else {
                 P::new(g.coord(cx - ext, cx + ext), g.coord(cy - ext, cy + ext))
             };
-            let clearance = [0.0, 1.0, -1.0, 3.0][k % 4];
-            (a, b, clearance)
+            (a, b)
         })
         .collect();
     let pad = g.coord(0.0, 1.5);
@@ -986,7 +985,7 @@ fn shape_case(g: &mut Gen, desc: &Desc) -> Value {
                 "segs",
                 Value::Array(
                     segs.iter()
-                        .map(|&(a, b, c)| Value::Array(vec![pt(a), pt(b), num(c)]))
+                        .map(|&(a, b)| Value::Array(vec![pt(a), pt(b)]))
                         .collect(),
                 ),
             ),
@@ -1043,16 +1042,8 @@ fn shape_case(g: &mut Gen, desc: &Desc) -> Value {
                 nums(
                     &segs
                         .iter()
-                        .map(|&(a, b, _)| s.dist_segment(a, b))
+                        .map(|&(a, b)| s.dist_segment(a, b))
                         .collect::<Vec<_>>(),
-                ),
-            ),
-            (
-                "near_segment",
-                Value::Array(
-                    segs.iter()
-                        .map(|&(a, b, c)| Value::from(s.near_segment(a, b, c)))
-                        .collect(),
                 ),
             ),
             (
@@ -1060,7 +1051,7 @@ fn shape_case(g: &mut Gen, desc: &Desc) -> Value {
                 nums(
                     &segs
                         .iter()
-                        .map(|&(a, b, _)| s.covered_len(a, b, step))
+                        .map(|&(a, b)| s.covered_len(a, b, step))
                         .collect::<Vec<_>>(),
                 ),
             ),

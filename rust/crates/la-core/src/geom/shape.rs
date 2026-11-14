@@ -384,12 +384,6 @@ impl Shape {
         }
     }
 
-    /// Segment `ab` passes within `clearance` of the shape (interior when 0).
-    pub fn near_segment(&self, a: P, b: P, clearance: f64) -> bool {
-        self.dist_segment(a, b) < clearance - EPS
-            || (clearance <= 0.0 && self.dist_segment(a, b) < -EPS)
-    }
-
     /// Signed-ish distance between segment `ab` and the shape: 0 if they intersect,
     /// otherwise the gap.
     pub fn dist_segment(&self, a: P, b: P) -> f64 {
@@ -662,7 +656,7 @@ fn min_dist_on_segment(s: &Shape, a: P, b: P) -> f64 {
     )
 }
 
-/// 1 / cos(π / n): factor for a circumscribed regular n-gon.
+/// cos(π / n): its reciprocal is the factor for a circumscribed regular n-gon.
 fn cos_half_step(n: usize) -> f64 {
     let (_, c) = sin_cos_deg(180.0 / n as f64);
     c

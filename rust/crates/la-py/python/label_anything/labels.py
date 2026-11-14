@@ -227,9 +227,6 @@ class Composite:
     __la_json__ = to_dict
 
 
-LabelLike = Union[str, Text, Icon, Box, Composite, Mapping[str, Any]]
-
-
 def label_dict(label: Any) -> JSONDict:
     """Normalize a label: a string, a helper object, or a label dict."""
     if isinstance(label, str):
@@ -329,9 +326,6 @@ class Area:
         )
 
     __la_json__ = to_dict
-
-
-AnchorLike = Union[Point, Sequence[float], Area, Mapping[str, Any]]
 
 
 def _finite(v: Any, pointer: str) -> float:

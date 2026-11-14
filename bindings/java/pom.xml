@@ -69,9 +69,6 @@
 
   <build>
     <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-      </resource>
       <!-- The license texts travel with the JAR: MIT, and the SIL OFL 1.1 of the font
            metrics embedded in the native library (copies written by tools/codegen.mjs). -->
       <resource>

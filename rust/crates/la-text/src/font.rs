@@ -127,7 +127,7 @@ impl Font {
     #[cfg(not(feature = "woff2"))]
     fn from_woff2(_: &[u8]) -> Result<Font, TextError> {
         Err(TextError::Unsupported(
-            "WOFF2 fonts need the `woff2` feature of label-anything-text; use TTF or OTF".into(),
+            "WOFF2 fonts need the `woff2` feature of label-anything; use TTF or OTF".into(),
         ))
     }
 

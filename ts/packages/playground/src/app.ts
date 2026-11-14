@@ -11,62 +11,17 @@
  */
 import type { LabelProblem, LabelResult, RgbaPixels } from "@label-anything/core";
 import { LabelMotion } from "@label-anything/extras";
-import { DEFAULTS, PRESETS } from "../../core/src/generated/spec-data.js";
+import { AGGRESSIVENESS, DEFAULTS, PRESETS } from "../../core/src/generated/spec-data.js";
 import { SECTIONS, type Control, type Section } from "./controls.js";
-import { ENGINE_NAMES, Engines, type EngineId } from "./engines.js";
-import { drawBoxes, drawCandidates, drawHighlight, drawLabels, drawNaive, drawObstacles, drawOmitted, labelAt, type Candidate, type LabelStyle, type Placement } from "./render.js";
-import type { Anchors, PointerInfo, Scene, SceneHost } from "./scenes/scene.js";
+import { ENGINE_NAMES, Engines, type EngineId, type Solved } from "./engines.js";
+import { drawBoxes, drawCandidates, drawHighlight, drawLabels, drawNaive, drawObstacles, drawOmitted, labelAt, type Candidate, type Placement } from "./render.js";
+import type { PointerInfo, Scene, SceneHost } from "./scenes/scene.js";
 import { CodeView } from "./ui/code.js";
 import { h, icon } from "./ui/dom.js";
 import { Inspector } from "./ui/inspector.js";
 import { Panel, type PanelModel } from "./ui/panel.js";
-import { deepEqual, fromBase64Url, getPath, isObject, merge, mergeAll, setPath, toBase64Url, type Obj } from "./util.js";
-
-export interface View {
-  warmStart: boolean;
-  settle: boolean;
-  transition: number;
-  moveDelay: number;
-  appearDelay: number;
-  holdTime: number;
-  collisions: boolean;
-  fadeJumps: boolean;
-  maxRate: number;
-  budgetRest: number;
-  budgetMoving: number;
-  labelStyle: LabelStyle;
-  showBoxes: boolean;
-  showOmitted: boolean;
-  showCandidates: boolean;
-  showObstacles: boolean;
-  compare: boolean;
-  avoidHud: boolean;
-  customJson: string;
-  speed: number;
-}
-
-export const VIEW_DEFAULTS: View = {
-  warmStart: true,
-  settle: true,
-  transition: 300,
-  moveDelay: 500,
-  appearDelay: 250,
-  holdTime: 500,
-  collisions: true,
-  fadeJumps: true,
-  maxRate: 30,
-  budgetRest: 100,
-  budgetMoving: 10,
-  labelStyle: "box",
-  showBoxes: false,
-  showOmitted: false,
-  showCandidates: false,
-  showObstacles: false,
-  compare: false,
-  avoidHud: true,
-  customJson: "",
-  speed: 1,
-};
+import { deepEqual, fromBase64Url, getPath, isObject, merge, mergeAll, round2, setPath, toBase64Url, warmPlacement, type Obj } from "./util.js";
+import { VIEW_DEFAULTS, type View } from "./view.js";
 
 type SolveKind = "cold" | "warm" | "settle";
 
@@ -84,6 +39,17 @@ export interface Solve {
 
 /** The engine defaults as a tree (DEFAULTS is a flat map of dotted keys). */
 const DEFAULT_TREE: Obj = Object.entries(DEFAULTS).reduce<Obj>((acc, [k, v]) => setPath(acc, k, v), {});
+
+/**
+ * The defaults in effect under the options `top` (scene, user, JSON) and the preset's: those
+ * of the table with the column of the aggressiveness level in force (spec §2.4).
+ */
+function defaultsFor(top: Obj, presetOpts: Obj): Obj {
+  const level = [lookup(top, "placement.aggressiveness"), lookup(presetOpts, "placement.aggressiveness"),
+    DEFAULTS["placement.aggressiveness"]].find((v) => typeof v === "string") as string;
+  const column = AGGRESSIVENESS[level] ?? {};
+  return Object.entries(column).reduce<Obj>((acc, [k, v]) => setPath(acc, k, v), DEFAULT_TREE);
+}
 
 /** Settings that change only the drawing (no solve). */
 const DRAW_ONLY = new Set(["labelStyle", "showBoxes", "showOmitted", "showObstacles", "compare", "speed"]);
@@ -115,8 +81,6 @@ export class App {
 
   result: LabelResult | undefined;
   problem: LabelProblem | undefined;
-  /** Anchors the latest result was solved for. */
-  resultAnchors: Anchors = new Map();
   history: Solve[] = [];
   hover: string | null = null;
   selected: string | null = null;
@@ -167,11 +131,6 @@ export class App {
     this.#code = new CodeView(document.getElementById("panel-code")!, this);
   }
 
-  /** The label transitions (for tests and measurements). */
-  get motion(): LabelMotion {
-    return this.#motion;
-  }
-
   // --- start ----------------------------------------------------------------------
 
   async start(): Promise<void> {
@@ -188,14 +147,7 @@ export class App {
   }
 
   get host(): SceneHost {
-    const app = this;
     return {
-      get width() {
-        return app.#size.w;
-      },
-      get height() {
-        return app.#size.h;
-      },
       asset: (path) => new URL(`data/${path}`, document.baseURI).href,
       invalidate: () => this.#invalidate(),
       moved: () => {
@@ -203,7 +155,6 @@ export class App {
         this.#lastMoveAt = performance.now();
         this.#redraw = true;
       },
-      redraw: () => (this.#redraw = true),
       toast: (text) => this.toast(text, "info"),
     };
   }
@@ -212,7 +163,7 @@ export class App {
     const scene = this.scenes.find((s) => s.id === id) ?? this.scenes[0]!;
     if (this.scene) this.scene.playing = false;
     this.scene = scene;
-    this.view = { ...VIEW_DEFAULTS, ...(scene.view as Partial<View>), ...(state?.view ?? {}) };
+    this.view = { ...this.#sceneView(), ...(state?.view ?? {}) };
     if (state?.overrides) this.#overrides.set(scene.id, state.overrides);
     if (state?.json !== undefined) this.view.customJson = state.json;
     else this.view.customJson = this.#json.get(scene.id) ?? "";
@@ -243,22 +194,26 @@ export class App {
     return this.#overrides.get(this.scene.id) ?? {};
   }
 
-  /** The problem options in effect, without items: defaults ← preset ← scene ← user ← JSON. */
-  effectiveOptions(): Obj {
-    const sceneOpts = this.scene.options() as Obj;
-    const top = mergeAll<Obj>(sceneOpts, this.overrides, this.#jsonObj ?? {});
+  /** The playground settings the scene starts with: the defaults, then the scene's own. */
+  #sceneView(): View {
+    return { ...VIEW_DEFAULTS, ...this.scene.view };
+  }
+
+  /** `top` (the options of scene, user and JSON) over its preset's over the engine defaults. */
+  #withDefaults(top: Obj): Obj {
     const preset = typeof top.preset === "string" ? top.preset : "auto";
     const presetOpts = (PRESETS[preset]?.options ?? {}) as Obj;
-    return mergeAll<Obj>(DEFAULT_TREE, presetOpts, top);
+    return mergeAll<Obj>(defaultsFor(top, presetOpts), presetOpts, top);
+  }
+
+  /** The problem options in effect, without items: defaults ← preset ← scene ← user ← JSON. */
+  effectiveOptions(): Obj {
+    return this.#withDefaults(mergeAll<Obj>(this.scene.options(), this.overrides, this.#jsonObj ?? {}));
   }
 
   /** The value in effect without the user's override of `key`. */
   #baseValue(key: string): unknown {
-    const sceneOpts = this.scene.options() as Obj;
-    const user = setPath(this.overrides, key, undefined);
-    const top = mergeAll<Obj>(sceneOpts, user);
-    const preset = typeof top.preset === "string" ? top.preset : "auto";
-    return lookup(mergeAll<Obj>(DEFAULT_TREE, (PRESETS[preset]?.options ?? {}) as Obj, top), key);
+    return lookup(this.#withDefaults(mergeAll<Obj>(this.scene.options(), setPath(this.overrides, key, undefined))), key);
   }
 
   #panelModel(): PanelModel {
@@ -267,7 +222,7 @@ export class App {
       changed: (key) => {
         if (key.startsWith("view.")) {
           const k = key.slice(5) as keyof View;
-          const base = { ...VIEW_DEFAULTS, ...(this.scene.view as Partial<View>) }[k];
+          const base = this.#sceneView()[k];
           return k === "customJson" ? this.view.customJson.trim() !== "" : !deepEqual(this.view[k], base);
         }
         if (key.startsWith("param.")) return false;
@@ -326,7 +281,7 @@ export class App {
   resetValue(key: string): void {
     if (key.startsWith("view.")) {
       const k = key.slice(5) as keyof View;
-      this.setValue(key, { ...VIEW_DEFAULTS, ...(this.scene.view as Partial<View>) }[k]);
+      this.setValue(key, this.#sceneView()[k]);
       return;
     }
     this.#overrides.set(this.scene.id, setPath(this.overrides, key, undefined));
@@ -338,7 +293,7 @@ export class App {
   resetAll(): void {
     this.#overrides.delete(this.scene.id);
     this.#json.delete(this.scene.id);
-    this.view = { ...VIEW_DEFAULTS, ...(this.scene.view as Partial<View>) };
+    this.view = this.#sceneView();
     this.#parseJson();
     this.#motion = motionOf(this.view);
     this.#invalidate();
@@ -452,14 +407,12 @@ export class App {
         this.#hideToast();
         this.result = result;
         this.problem = built.problem;
-        this.resultAnchors = anchors;
         this.scene.onResult?.(result, snapshot);
         this.#motion.target(result, anchors);
-        const st = result.stats as unknown as Obj;
-        const flicker = st.flicker as Obj | undefined;
+        const st = result.stats;
         this.history.push({
-          kind, engine, runtime: Number(st.runtime_ms ?? 0), roundTrip, placed: Number(st.placed ?? 0), total: Number(st.total ?? 0),
-          moved: typeof flicker?.mean_displacement === "number" ? (flicker.mean_displacement as number) : undefined, at: performance.now(),
+          kind, engine, runtime: st.runtime_ms, roundTrip, placed: st.placed, total: st.total,
+          moved: st.flicker?.mean_displacement, at: performance.now(),
         });
         if (this.history.length > 240) this.history.splice(0, this.history.length - 240);
         if (kind === "warm" && this.view.settle && this.view.warmStart) this.#needsSettle = true;
@@ -489,15 +442,11 @@ export class App {
   }
 
   /** Solve the current problem with both engines and compare the placements. */
-  async compareEngines(): Promise<{ wasm: Solved2; ts: Solved2 } | null> {
+  async compareEngines(): Promise<{ wasm: Solved; ts: Solved } | null> {
     if (!this.scene) return null;
     const built = this.buildProblem("cold", false);
-    const run = async (id: EngineId): Promise<Solved2> => {
-      const { result, roundTrip } = await this.#engines.place(id, built.problem, built.raster);
-      return { result, roundTrip };
-    };
-    const wasm = await run("wasm");
-    const ts = await run("ts");
+    const wasm = await this.#engines.place("wasm", built.problem, built.raster);
+    const ts = await this.#engines.place("ts", built.problem, built.raster);
     return { wasm, ts };
   }
 
@@ -591,7 +540,7 @@ export class App {
   #blockers(id: string | null): string[] {
     if (!id || !this.result) return [];
     const p = this.result.placements.find((q) => q.id === id);
-    return !p || p.placed ? [] : ((p as { blocked_by?: string[] }).blocked_by ?? []);
+    return !p || p.placed ? [] : (p.blocked_by ?? []);
   }
 
   #fontSize(): number {
@@ -874,8 +823,8 @@ export class App {
     const el = document.getElementById("hud-stats")!;
     const r = this.result;
     if (!r) return;
-    const st = r.stats as unknown as Obj;
-    const bad = Number(st.hard_violations ?? 0);
+    const st = r.stats;
+    const bad = st.hard_violations;
     const last = this.history[this.history.length - 1];
     el.replaceChildren(
       h(
@@ -887,7 +836,7 @@ export class App {
         h("span", { class: bad ? "bad" : "" }, bad ? `${bad} overlaps` : "no overlaps"),
         st.time_guard_hit ? h("span", { class: "bad", title: "The wall-clock guard stopped the search (see Inspect)" }, "guard") : null,
         h("span", { class: "sep" }),
-        h("span", {}, h("b", {}, `${fmtMs(Number(st.runtime_ms ?? 0))}`), last ? h("span", { class: "engine-name" }, ` · ${ENGINE_NAMES[last.engine]}`) : ""),
+        h("span", {}, h("b", {}, fmtMs(st.runtime_ms)), last ? h("span", { class: "engine-name" }, ` · ${ENGINE_NAMES[last.engine]}`) : ""),
       ),
     );
   }
@@ -912,8 +861,8 @@ export class App {
 
   #hideToast(): void {
     const el = document.getElementById("banner")!;
-    if (el.className.includes("info")) el.hidden = true;
-    if (!this.#engineError && !el.className.includes("info")) el.hidden = true;
+    // an error stays while the engine rejects the problem
+    if (el.className.includes("info") || !this.#engineError) el.hidden = true;
   }
 
   // --- size --------------------------------------------------------------------------------
@@ -936,14 +885,10 @@ export class App {
     this.#invalidate();
   }
 
-  get size(): { w: number; h: number } {
-    return { w: this.#size.w, h: this.#size.h };
-  }
-
   // --- share links -----------------------------------------------------------------------
 
   #state(): HashState {
-    const sceneView = { ...VIEW_DEFAULTS, ...(this.scene.view as Partial<View>) };
+    const sceneView = this.#sceneView();
     const view: Partial<View> = {};
     for (const k of Object.keys(this.view) as (keyof View)[]) {
       if (k !== "customJson" && !deepEqual(this.view[k], sceneView[k])) (view as Obj)[k] = this.view[k];
@@ -957,9 +902,8 @@ export class App {
     clearTimeout(this.#hashTimer);
     this.#hashTimer = window.setTimeout(() => {
       const st = this.#state();
-      const compact = { o: st.overrides, v: st.view, p: st.params, j: st.json };
       const empty = Object.keys(st.overrides ?? {}).length === 0 && Object.keys(st.view ?? {}).length === 0 && !st.json;
-      const hash = empty ? `#${st.scene}` : `#${st.scene}:${toBase64Url(JSON.stringify(compact))}`;
+      const hash = empty ? `#${st.scene}` : `#${st.scene}:${encodeState(st)}`;
       history.replaceState(null, "", hash);
     }, 300);
   }
@@ -985,8 +929,7 @@ export class App {
   async #share(): Promise<void> {
     clearTimeout(this.#hashTimer);
     const st = this.#state();
-    const compact = { o: st.overrides, v: st.view, p: st.params, j: st.json };
-    const url = `${location.origin}${location.pathname}#${st.scene}:${toBase64Url(JSON.stringify(compact))}`;
+    const url = `${location.origin}${location.pathname}#${st.scene}:${encodeState(st)}`;
     history.replaceState(null, "", url);
     try {
       await navigator.clipboard.writeText(url);
@@ -995,11 +938,6 @@ export class App {
       this.toast("The link is in the address bar.", "info", 3000);
     }
   }
-}
-
-export interface Solved2 {
-  result: LabelResult;
-  roundTrip: number;
 }
 
 export interface HashState {
@@ -1011,6 +949,11 @@ export interface HashState {
   playing?: boolean;
 }
 
+/** The part of a share link after the scene: options, view settings, scene parameters and extra JSON. */
+function encodeState(st: HashState): string {
+  return toBase64Url(JSON.stringify({ o: st.overrides, v: st.view, p: st.params, j: st.json }));
+}
+
 /** A dotted path in the effective options; map entries (`avoid.label.x`) fall back to `"*"`. */
 function lookup(options: Obj, key: string): unknown {
   const v = getPath(options, key);
@@ -1018,17 +961,6 @@ function lookup(options: Obj, key: string): unknown {
   const m = /^(avoid\.(?:label|leader))\.[^.]+$/.exec(key);
   if (m) return getPath(options, `${m[1]}.*`);
   return undefined;
-}
-
-/** What `warm_start` needs of a placement: the box, where it was placed for, its leader. */
-function warmPlacement(p: Placement): Obj {
-  const out: Obj = { id: p.id, placed: p.placed };
-  if (p.placed && p.box) {
-    out.box = p.box;
-    if (p.anchor) out.anchor = p.anchor;
-    if (p.leader) out.leader = { points: p.leader.points, style: p.leader.style };
-  }
-  return out;
 }
 
 function drawDivider(ctx: CanvasRenderingContext2D, x: number, h: number): void {
@@ -1064,8 +996,6 @@ function drawDivider(ctx: CanvasRenderingContext2D, x: number, h: number): void 
   tag("Label Anything", x + 14, "left");
   ctx.restore();
 }
-
-const round2 = (v: number) => Math.round(v * 100) / 100;
 
 function fmtMs(v: number): string {
   return v >= 100 ? `${Math.round(v)} ms` : `${v.toFixed(1)} ms`;

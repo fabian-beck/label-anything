@@ -32,6 +32,8 @@ import type { LabelProblem, LabelResult } from "@label-anything/core";
 import { LabelMotion } from "@label-anything/extras";
 import { createWorkerEngine, type WorkerEngine } from "@label-anything/extras/worker";
 import { labelPath } from "./logo.js";
+import { LABEL_FAMILY } from "./render.js";
+import { rng, warmPlacement } from "./util.js";
 
 type Placement = LabelResult["placements"][number];
 type TextInfo = NonNullable<Placement["text"]>;
@@ -40,8 +42,6 @@ type Rect = [number, number, number, number];
 type Pt = [number, number];
 
 const SVG_NS = "http://www.w3.org/2000/svg";
-/** The engine measures text with its bundled Noto Sans; the labels are drawn with it. */
-const LABEL_FONT = '"LA Noto Sans", "Noto Sans", sans-serif';
 /** Budgets (ms, of the Rust core; the TypeScript worker scales them) while dragging and at rest. */
 const BUDGET_MOVING = 4;
 const BUDGET_REST = 10;
@@ -268,24 +268,6 @@ const reach = (t: Pick<Thing, "art">) => {
   return a.r ?? Math.max(...a.outline.map((q) => Math.hypot(q[0], q[1])));
 };
 
-/** A small deterministic random generator (mulberry32), for shuffles. */
-function rng(seed: number): () => number {
-  let s = seed >>> 0;
-  return () => {
-    s = (s + 0x6d2b79f5) >>> 0;
-    let t = s;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/** What `warm_start` needs of a placement: the box, where it was placed for, its leader. */
-function warm(p: Placement): object {
-  if (!p.placed || !p.box) return { id: p.id, placed: false };
-  return { id: p.id, placed: true, box: p.box, anchor: p.anchor, ...(p.leader ? { leader: { points: p.leader.points, style: p.leader.style } } : {}) };
-}
-
 const SIDES: Record<string, string> = {
   top: "above", bottom: "below", left: "to the left of", right: "to the right of",
   "top-left": "above, left of", "top-right": "above, right of", "bottom-left": "below, left of", "bottom-right": "below, right of",
@@ -335,7 +317,7 @@ export class Hero {
   /** Where the name's dot was when the name last had a place, and the glide back there. */
   #nameOk: Pt | null = null;
   #glide: { from: Pt; to: Pt; t0: number } | null = null;
-  #nameWarm: object | null = null;
+  #nameWarm: Record<string, unknown> | null = null;
   /**
    * The name's dot radius, leader width, corner radius and the radius of the fillets where
    * its leader grows out of the label, as the static logo draws them; the offset of its
@@ -605,7 +587,7 @@ export class Hero {
     const nb = this.#nameLabel.getBoundingClientRect();
     const nameFont = parseFloat(getComputedStyle(this.#nameLabel).fontSize);
     const pad = Math.round(nb.height * 0.2);
-    const placements = this.result?.placements.filter((p) => p.id !== "name" || !this.#nameHome).map(warm) ?? [];
+    const placements = this.result?.placements.filter((p) => p.id !== "name" || !this.#nameHome).map(warmPlacement) ?? [];
     if (this.#nameHome && this.#nameWarm) placements.push(this.#nameWarm);
     const sides = ["top-left", "top-right", "bottom-left", "bottom-right", "left", "right", "top", "bottom"];
     return {
@@ -820,7 +802,7 @@ export class Hero {
       s.text.textContent = this.#nameLabel.textContent?.trim() ?? "";
       s.text.setAttribute("text-anchor", "middle");
       this.#styleName(s.text);
-    } else s.text.style.fontFamily = LABEL_FONT;
+    } else s.text.style.fontFamily = LABEL_FAMILY;
     g.appendChild(s.text);
     return s;
   }

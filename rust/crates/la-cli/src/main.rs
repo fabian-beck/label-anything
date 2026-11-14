@@ -36,7 +36,7 @@ fn keep_freed_memory() {
 }
 
 use clap::{Parser, Subcommand};
-use label_anything::{Env, Issue, NativeEnv, Report};
+use label_anything::{Issue, NativeEnv, Report};
 use serde_json::{json, Value};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -62,163 +62,187 @@ enum Cmd {
     ///
     /// Validation errors and warnings go to stderr. The problem options below set the
     /// field named in parentheses, in a JSON problem as well as in a CSV one.
-    Place {
-        /// Problem JSON file, or `-` for stdin. Omit when using --anchors.
-        problem: Option<String>,
-        /// Output result file (`-` = stdout, the default).
-        #[arg(short, long, default_value = "-")]
-        output: String,
-        /// Also write the debug SVG overlay (with heatmaps and candidates).
-        #[arg(long)]
-        debug_svg: Option<PathBuf>,
-        /// Pretty-print the result.
-        #[arg(long)]
-        pretty: bool,
-        /// Solve this many times before the reported solve (steady-state timing, as in a
-        /// host application that solves repeatedly).
-        #[arg(long, default_value_t = 0)]
-        warmup: u32,
-        /// Solve without a clock (no wall-clock guards; deterministic, for parity tests).
-        #[arg(long, hide = true)]
-        no_clock: bool,
-
-        /// Time budget in ms (solver.time_budget_ms).
-        #[arg(long, allow_negative_numbers = true, help_heading = "Problem options")]
-        time: Option<f64>,
-        /// Random seed (solver.seed).
-        #[arg(long, help_heading = "Problem options")]
-        seed: Option<u64>,
-        /// Solver strategy (solver.strategy); greedy skips the local search.
-        #[arg(long, value_parser = ["auto", "greedy", "local", "exact"], help_heading = "Problem options")]
-        strategy: Option<String>,
-        /// Degradation ladder, comma-separated steps (degrade), e.g. `wrap,distant,omit`;
-        /// `omit` alone turns the ladder off.
-        #[arg(long, value_delimiter = ',', help_heading = "Problem options")]
-        degrade: Option<Vec<String>>,
-        /// Preset (preset).
-        #[arg(long, value_parser = ["auto", "scatter", "map", "graph", "illustration", "none"], help_heading = "Problem options")]
-        preset: Option<String>,
-        /// Canvas size as WxH, e.g. 800x600 (canvas.width and canvas.height; the other canvas
-        /// options are kept). Without a canvas: the background's size, else unbounded.
-        #[arg(long, value_name = "WxH", value_parser = parse_canvas, help_heading = "Problem options")]
-        canvas: Option<(f64, f64)>,
-        /// Background file, relative to the current directory: .svg (obstacles.svg) or a
-        /// raster image .png/.jpg/.webp (obstacles.raster).
-        #[arg(long, help_heading = "Problem options")]
-        background: Option<PathBuf>,
-        /// Default font size in px (defaults.font.size).
-        #[arg(long, allow_negative_numbers = true, help_heading = "Problem options")]
-        font_size: Option<f64>,
-        /// Place at most this many labels, in priority order (priority.budget.max_labels).
-        #[arg(long, help_heading = "Problem options")]
-        max_labels: Option<u64>,
-        /// Omission mode (priority.omission).
-        #[arg(long, value_parser = ["strict", "prefix", "weighted"], help_heading = "Problem options")]
-        omission: Option<String>,
-
-        /// CSV file with anchors, or `-` for stdin: one item per row, with x, y and label
-        /// columns; the other columns become attrs (numbers where they parse as numbers).
-        #[arg(long, help_heading = "CSV input")]
-        anchors: Option<String>,
-        /// Column of the x coordinates.
-        #[arg(long, default_value = "x", help_heading = "CSV input")]
-        x_col: String,
-        /// Column of the y coordinates.
-        #[arg(long, default_value = "y", help_heading = "CSV input")]
-        y_col: String,
-        /// Column of the label texts; rows with an empty label get no label (their points
-        /// become obstacles of class `points`).
-        #[arg(long, default_value = "label", help_heading = "CSV input")]
-        labels_col: String,
-        /// Column of the item ids [default: the row index, from 0].
-        #[arg(long, help_heading = "CSV input")]
-        id_col: Option<String>,
-        /// Column of the item priorities (numbers; an empty cell leaves the item without one).
-        #[arg(long, help_heading = "CSV input")]
-        priority_col: Option<String>,
-    },
+    Place(PlaceArgs),
     /// Render the debug overlay of a problem and a result.
     ///
     /// The problem is validated, and the result must be one of this problem (one placement
     /// per item, in order). Without heatmaps and candidates (those exist only during the
     /// solve: `place --debug-svg`).
-    Render {
-        /// Problem JSON file, or `-` for stdin.
-        problem: String,
-        /// Result JSON file of this problem (from `place`), or `-` for stdin.
-        result: String,
-        /// Output file: SVG, or PNG when it ends in .png (rasterized with the bundled Noto
-        /// Sans); `-` writes the SVG to stdout.
-        #[arg(short, long, default_value = "-")]
-        output: String,
-    },
+    Render(RenderArgs),
     /// Validate a problem; exit code 1 when it is invalid.
     ///
     /// Errors and warnings go to stderr, the report with --json to stdout. Files referenced
     /// by the problem (backgrounds, fonts) are read only by `place`.
-    Validate {
-        /// Problem JSON file, or `-` for stdin.
-        problem: String,
-        /// Print the report as JSON.
-        #[arg(long)]
-        json: bool,
-    },
+    Validate(ValidateArgs),
     /// Run the real-world benchmark (delegates to bench/run.py with this binary as the `rust` solver).
     ///
     /// Python: $LA_BENCH_PYTHON, else bench/.venv's interpreter when present, else python3.
     /// Arguments after `--` are passed to bench/run.py unchanged.
-    Bench {
-        /// Problem suite: quick or full.
-        #[arg(long, default_value = "quick")]
-        suite: String,
-        /// Also run the baselines (naive, greedy, textalloc, adjustText, vega-label, ggrepel, d3fc,
-        /// ECharts, D3-Labeler).
-        #[arg(long)]
-        baselines: bool,
-        /// Measure the performance targets.
-        #[arg(long)]
-        perf: bool,
-        /// Evaluate the release gates (implies --perf); the exit code reflects them.
-        #[arg(long)]
-        gate: bool,
-        /// results.json of the previous release (changes and the regression gate).
-        #[arg(long)]
-        previous: Option<PathBuf>,
-        /// Runs per problem.
-        #[arg(long)]
-        runs: Option<u32>,
-        /// Report directory.
-        #[arg(short, long, default_value = "bench-report")]
-        output: PathBuf,
-        /// Repository root (defaults to the nearest ancestor containing bench/run.py).
-        #[arg(long)]
-        repo: Option<PathBuf>,
-        /// Further arguments for bench/run.py (after `--`).
-        #[arg(last = true)]
-        args: Vec<String>,
-    },
+    Bench(BenchArgs),
     /// HTTP server: POST /place and POST /validate with a JSON body, GET /health.
     ///
     /// Relative file paths in problems resolve against the working directory. Problems may
     /// read files only when the server listens on a loopback address, or with --allow-files,
     /// and never when the request comes from a web page (it has an Origin header).
-    Serve {
-        /// Port to listen on.
-        #[arg(long, default_value_t = 7077)]
-        port: u16,
-        /// Address to listen on (127.0.0.1: this machine only; 0.0.0.0: every interface).
-        #[arg(long, default_value = "127.0.0.1")]
-        host: String,
-        /// Let problems read files (backgrounds, fonts) also on a non-loopback --host.
-        #[arg(long)]
-        allow_files: bool,
-        /// Requests solved at the same time [default: the number of CPUs].
-        #[arg(long, value_parser = clap::value_parser!(u16).range(1..))]
-        workers: Option<u16>,
-        /// Largest request body in MiB; a larger one is answered with HTTP 413.
-        #[arg(long, default_value_t = 64, value_parser = clap::value_parser!(u32).range(1..=4095))]
-        max_body: u32,
-    },
+    Serve(ServeArgs),
+}
+
+/// The arguments of `place`.
+#[derive(clap::Args)]
+struct PlaceArgs {
+    /// Problem JSON file, or `-` for stdin. Omit when using --anchors.
+    problem: Option<String>,
+    /// Output result file (`-` = stdout, the default).
+    #[arg(short, long, default_value = "-")]
+    output: String,
+    /// Also write the debug SVG overlay (with heatmaps and candidates).
+    #[arg(long)]
+    debug_svg: Option<PathBuf>,
+    /// Pretty-print the result.
+    #[arg(long)]
+    pretty: bool,
+    /// Solve this many times before the reported solve (steady-state timing, as in a
+    /// host application that solves repeatedly).
+    #[arg(long, default_value_t = 0)]
+    warmup: u32,
+    /// Solve without a clock (no wall-clock guards; deterministic, for parity tests).
+    #[arg(long, hide = true)]
+    no_clock: bool,
+
+    /// Time budget in ms (solver.time_budget_ms).
+    #[arg(long, allow_negative_numbers = true, help_heading = "Problem options")]
+    time: Option<f64>,
+    /// Random seed (solver.seed).
+    #[arg(long, help_heading = "Problem options")]
+    seed: Option<u64>,
+    /// Solver strategy (solver.strategy); greedy skips the local search.
+    #[arg(long, value_parser = ["auto", "greedy", "local", "exact"], help_heading = "Problem options")]
+    strategy: Option<String>,
+    /// Degradation ladder, comma-separated steps (degrade), e.g. `wrap,distant,omit`;
+    /// `omit` alone turns the ladder off.
+    #[arg(long, value_delimiter = ',', help_heading = "Problem options")]
+    degrade: Option<Vec<String>>,
+    /// Preset (preset).
+    #[arg(long, value_parser = ["auto", "scatter", "map", "graph", "illustration", "none"], help_heading = "Problem options")]
+    preset: Option<String>,
+    /// How hard to try to place every label (placement.aggressiveness); high also uses
+    /// long leaders, smaller type and relaxed overlaps [default: medium].
+    #[arg(long, value_parser = ["low", "medium", "high"], help_heading = "Problem options")]
+    aggressiveness: Option<String>,
+    /// Canvas size as WxH, e.g. 800x600 (canvas.width and canvas.height; the other canvas
+    /// options are kept). Without a canvas: the background's size, else unbounded.
+    #[arg(long, value_name = "WxH", value_parser = parse_canvas, help_heading = "Problem options")]
+    canvas: Option<(f64, f64)>,
+    /// Background file, relative to the current directory: .svg (obstacles.svg) or a
+    /// raster image .png/.jpg/.webp (obstacles.raster).
+    #[arg(long, help_heading = "Problem options")]
+    background: Option<PathBuf>,
+    /// Default font size in px (defaults.font.size).
+    #[arg(long, allow_negative_numbers = true, help_heading = "Problem options")]
+    font_size: Option<f64>,
+    /// Place at most this many labels, in priority order (priority.budget.max_labels).
+    #[arg(long, help_heading = "Problem options")]
+    max_labels: Option<u64>,
+    /// Omission mode (priority.omission).
+    #[arg(long, value_parser = ["strict", "prefix", "weighted"], help_heading = "Problem options")]
+    omission: Option<String>,
+
+    /// CSV file with anchors, or `-` for stdin: one item per row, with x, y and label
+    /// columns; the other columns become attrs (numbers where they parse as numbers).
+    #[arg(long, help_heading = "CSV input")]
+    anchors: Option<String>,
+    /// Column of the x coordinates.
+    #[arg(long, default_value = "x", help_heading = "CSV input")]
+    x_col: String,
+    /// Column of the y coordinates.
+    #[arg(long, default_value = "y", help_heading = "CSV input")]
+    y_col: String,
+    /// Column of the label texts; rows with an empty label get no label (their points
+    /// become obstacles of class `points`).
+    #[arg(long, default_value = "label", help_heading = "CSV input")]
+    labels_col: String,
+    /// Column of the item ids [default: the row index, from 0].
+    #[arg(long, help_heading = "CSV input")]
+    id_col: Option<String>,
+    /// Column of the item priorities (numbers; an empty cell leaves the item without one).
+    #[arg(long, help_heading = "CSV input")]
+    priority_col: Option<String>,
+}
+
+/// The arguments of `render`.
+#[derive(clap::Args)]
+struct RenderArgs {
+    /// Problem JSON file, or `-` for stdin.
+    problem: String,
+    /// Result JSON file of this problem (from `place`), or `-` for stdin.
+    result: String,
+    /// Output file: SVG, or PNG when it ends in .png (rasterized with the bundled Noto
+    /// Sans); `-` writes the SVG to stdout.
+    #[arg(short, long, default_value = "-")]
+    output: String,
+}
+
+/// The arguments of `validate`.
+#[derive(clap::Args)]
+struct ValidateArgs {
+    /// Problem JSON file, or `-` for stdin.
+    problem: String,
+    /// Print the report as JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+/// The arguments of `bench`.
+#[derive(clap::Args)]
+struct BenchArgs {
+    /// Problem suite: quick or full.
+    #[arg(long, default_value = "quick", value_parser = ["quick", "full"])]
+    suite: String,
+    /// Also run the baselines (naive, greedy, textalloc, adjustText, vega-label, ggrepel, d3fc,
+    /// ECharts, D3-Labeler, Mumtaz et al. 2019).
+    #[arg(long)]
+    baselines: bool,
+    /// Measure the performance targets.
+    #[arg(long)]
+    perf: bool,
+    /// Evaluate the release gates (implies --perf); the exit code reflects them.
+    #[arg(long)]
+    gate: bool,
+    /// results.json of the previous release (changes and the regression gate).
+    #[arg(long)]
+    previous: Option<PathBuf>,
+    /// Runs per problem.
+    #[arg(long)]
+    runs: Option<u32>,
+    /// Report directory.
+    #[arg(short, long, default_value = "bench-report")]
+    output: PathBuf,
+    /// Repository root (defaults to the nearest ancestor containing bench/run.py).
+    #[arg(long)]
+    repo: Option<PathBuf>,
+    /// Further arguments for bench/run.py (after `--`).
+    #[arg(last = true)]
+    args: Vec<String>,
+}
+
+/// The arguments of `serve`.
+#[derive(clap::Args)]
+struct ServeArgs {
+    /// Port to listen on.
+    #[arg(long, default_value_t = 7077)]
+    port: u16,
+    /// Address to listen on (127.0.0.1: this machine only; 0.0.0.0: every interface).
+    #[arg(long, default_value = "127.0.0.1")]
+    host: String,
+    /// Let problems read files (backgrounds, fonts) also on a non-loopback --host.
+    #[arg(long)]
+    allow_files: bool,
+    /// Requests solved at the same time [default: the number of CPUs].
+    #[arg(long, value_parser = clap::value_parser!(u16).range(1..))]
+    workers: Option<u16>,
+    /// Largest request body in MiB; a larger one is answered with HTTP 413.
+    #[arg(long, default_value_t = 64, value_parser = clap::value_parser!(u32).range(1..=4095))]
+    max_body: u32,
 }
 
 /// Why a command failed.
@@ -244,25 +268,6 @@ fn parse_canvas(s: &str) -> Result<(f64, f64), String> {
         .ok_or_else(|| "expected WxH, e.g. 800x600".to_string())
 }
 
-/// An environment without a clock (`now_ms() = 0`): no wall-clock guards, so results
-/// depend only on the iteration budgets (`place --no-clock`, used by parity tests).
-struct Clockless<'a>(&'a NativeEnv);
-
-impl Env for Clockless<'_> {
-    fn svg(&self) -> Option<&dyn label_anything::SvgBackend> {
-        self.0.svg()
-    }
-    fn read_file(&self, path: &str) -> Result<Vec<u8>, String> {
-        self.0.read_file(path)
-    }
-    fn now_ms(&self) -> f64 {
-        0.0
-    }
-    fn has_measure_callback(&self) -> bool {
-        false
-    }
-}
-
 /// Read a text input (`-` = stdin), without a leading UTF-8 byte order mark.
 fn read_input(path: &str) -> Result<String, String> {
     let mut s = String::new();
@@ -277,11 +282,6 @@ fn read_input(path: &str) -> Result<String, String> {
         s.drain(..'\u{feff}'.len_utf8());
     }
     Ok(s)
-}
-
-/// Parse JSON text; a syntax error is reported like a validation error (code `parse`).
-fn parse_json(text: &str) -> Result<Value, Issue> {
-    serde_json::from_str(text).map_err(|e| Issue::new("", "parse", format!("invalid JSON: {e}")))
 }
 
 fn write_output(path: &str, data: &str) -> Result<(), String> {
@@ -383,295 +383,267 @@ fn main() -> ExitCode {
 
 fn run(cli: Cli) -> Result<ExitCode, Failure> {
     match cli.cmd {
-        Cmd::Place {
-            problem,
-            output,
-            debug_svg,
-            time,
-            seed,
-            strategy,
-            degrade,
-            pretty,
-            anchors,
-            x_col,
-            y_col,
-            labels_col,
-            id_col,
-            priority_col,
-            omission,
-            background,
-            preset,
-            canvas,
-            font_size,
-            max_labels,
-            no_clock,
-            warmup,
-        } => {
-            let (mut p, env) = match (&problem, &anchors) {
-                (Some(path), None) => {
-                    let text = read_input(path)?;
-                    let v = parse_json(&text).map_err(|e| Failure::Invalid(vec![e]))?;
-                    (v, env_for(Some(path)))
-                }
-                (None, Some(csv_path)) => {
-                    let opts = csv::CsvOpts {
-                        x_col,
-                        y_col,
-                        labels_col,
-                        id_col,
-                        priority_col,
-                    };
-                    let name = if csv_path == "-" { "stdin" } else { csv_path };
-                    let v = csv::problem_from_csv(&read_input(csv_path)?, name, &opts)
-                        .map_err(Failure::Input)?;
-                    (v, NativeEnv::new())
-                }
-                (Some(_), Some(_)) => {
-                    return Err(Failure::Other(
-                        "give either a problem file or --anchors, not both".into(),
-                    ))
-                }
-                (None, None) => {
-                    return Err(Failure::Other("missing problem file (or --anchors)".into()))
-                }
-            };
-            let mut options: Vec<(&[&str], Value)> = Vec::new();
-            if let Some(t) = time {
-                options.push((&["solver", "time_budget_ms"], json!(t)));
-            }
-            if let Some(s) = seed {
-                options.push((&["solver", "seed"], json!(s)));
-            }
-            if let Some(s) = strategy {
-                options.push((&["solver", "strategy"], json!(s)));
-            }
-            if let Some(d) = degrade {
-                options.push((&["degrade"], json!(d)));
-            }
-            if let Some(o) = omission {
-                options.push((&["priority", "omission"], json!(o)));
-            }
-            if let Some(m) = max_labels {
-                options.push((&["priority", "budget", "max_labels"], json!(m)));
-            }
-            if let Some(ps) = preset {
-                options.push((&["preset"], json!(ps)));
-            }
-            if let Some(fs) = font_size {
-                options.push((&["defaults", "font", "size"], json!(fs)));
-            }
-            if let Some((w, h)) = canvas {
-                options.push((&["canvas", "width"], json!(w)));
-                options.push((&["canvas", "height"], json!(h)));
-            }
-            if let Some(bg) = background {
-                let ext = bg
-                    .extension()
-                    .and_then(|e| e.to_str())
-                    .unwrap_or("")
-                    .to_ascii_lowercase();
-                // relative to the current directory, not to the problem file
-                let path = std::path::absolute(&bg)
-                    .map_err(|e| format!("{}: {e}", bg.display()))?
-                    .to_string_lossy()
-                    .into_owned();
-                if ext == "svg" {
-                    options.push((&["obstacles", "svg"], json!({"path": path})));
-                } else {
-                    options.push((&["obstacles", "raster"], json!({"source": path})));
-                }
-            }
-            if debug_svg.is_some() {
-                options.push((&["output", "debug_svg"], json!(true)));
-            }
-            let errors: Vec<Issue> = options
-                .into_iter()
-                .filter_map(|(path, value)| set_option(&mut p, path, value).err())
-                .collect();
-            if !errors.is_empty() {
-                return Err(Failure::Invalid(errors));
-            }
-            let report = label_anything::validate(&p);
-            print_report(&report);
-            if !report.valid {
-                return Ok(ExitCode::from(1));
-            }
-            let validation_warnings = report.warnings.clone();
-            let clockless = Clockless(&env);
-            let env: &dyn Env = if no_clock { &clockless } else { &env };
-            for _ in 0..warmup {
-                label_anything::place_validated(&p, env, label_anything::validate(&p))
-                    .map_err(|e| e.to_string())?;
-            }
-            let mut result =
-                label_anything::place_validated(&p, env, report).map_err(|e| e.to_string())?;
-            // warnings found while preparing (the validation warnings are printed already)
-            let more: Vec<Issue> = result["warnings"]
-                .as_array()
-                .into_iter()
-                .flatten()
-                .map(|w| {
-                    let s = |k: &str| w[k].as_str().unwrap_or("").to_string();
-                    Issue::new(s("pointer"), &s("code"), s("message"))
-                })
-                .filter(|w| {
-                    !validation_warnings.iter().any(|v| {
-                        (&v.pointer, &v.code, &v.message) == (&w.pointer, &w.code, &w.message)
-                    })
-                })
-                .collect();
-            print_issues("warning", &more);
-            if let Some(path) = debug_svg {
-                if let Some(svg) = result.get("debug_svg").and_then(|s| s.as_str()) {
-                    std::fs::write(&path, svg).map_err(|e| format!("{}: {e}", path.display()))?;
-                }
-                result["debug_svg"] = Value::Null;
-            }
-            let text = if pretty {
-                serde_json::to_string_pretty(&result)
-            } else {
-                serde_json::to_string(&result)
-            }
-            .map_err(|e| e.to_string())?;
-            write_output(&output, &text)?;
-            Ok(ExitCode::SUCCESS)
-        }
-        Cmd::Render {
-            problem,
-            result,
-            output,
-        } => {
-            let p = parse_json(&read_input(&problem)?).map_err(|e| Failure::Invalid(vec![e]))?;
-            let report = label_anything::validate(&p);
-            print_issues("warning", &report.warnings);
-            if !report.valid {
-                return Err(Failure::Invalid(report.errors));
-            }
-            let r: Value = serde_json::from_str(&read_input(&result)?)
-                .map_err(|e| Failure::Input(format!("{result}: invalid JSON: {e}")))?;
-            check_result(&p, &r).map_err(|e| {
-                Failure::Input(format!("{result} is not a result of {problem}: {e}"))
-            })?;
-            let env = env_for(Some(&problem));
-            let svg = label_anything::render_svg(&p, &r, &env);
-            let png = Path::new(&output)
-                .extension()
-                .is_some_and(|e| e.eq_ignore_ascii_case("png"));
-            if png {
-                let png = svg_to_png(&svg)?;
-                std::fs::write(&output, png).map_err(|e| format!("{output}: {e}"))?;
-                return Ok(ExitCode::SUCCESS);
-            }
-            write_output(&output, &svg)?;
-            Ok(ExitCode::SUCCESS)
-        }
-        Cmd::Validate { problem, json } => {
-            let text = read_input(&problem)?;
-            let report = match parse_json(&text) {
-                Ok(v) => label_anything::validate(&v),
-                Err(e) => Report {
-                    valid: false,
-                    errors: vec![e],
-                    warnings: vec![],
-                },
-            };
-            if json {
-                println!(
-                    "{}",
-                    serde_json::to_string_pretty(&report).unwrap_or_default()
-                );
-            } else {
-                print_report(&report);
-                if report.valid {
-                    eprintln!("valid");
-                }
-            }
-            Ok(if report.valid {
-                ExitCode::SUCCESS
-            } else {
-                ExitCode::from(1)
-            })
-        }
-        Cmd::Bench {
-            suite,
-            baselines,
-            perf,
-            gate,
-            previous,
-            runs,
-            output,
-            repo,
-            args,
-        } => {
-            let root = match repo {
-                Some(r) => r,
-                None => {
-                    let mut d = std::env::current_dir().map_err(|e| e.to_string())?;
-                    loop {
-                        if d.join("bench/run.py").exists() {
-                            break d;
-                        }
-                        if !d.pop() {
-                            return Err(Failure::Other(
-                                "bench/run.py not found; pass --repo".into(),
-                            ));
-                        }
-                    }
-                }
-            };
-            let exe = std::env::current_exe().map_err(|e| e.to_string())?;
-            let python = std::env::var_os("LA_BENCH_PYTHON")
-                .map(PathBuf::from)
-                .or_else(|| {
-                    [
-                        root.join("bench/.venv/bin/python"),
-                        root.join("bench/.venv/Scripts/python.exe"),
-                    ]
-                    .into_iter()
-                    .find(|p| p.exists())
-                })
-                .unwrap_or_else(|| PathBuf::from("python3"));
-            let mut cmd = std::process::Command::new(&python);
-            cmd.arg(root.join("bench/run.py"))
-                .arg("--suite")
-                .arg(&suite)
-                .arg("--out")
-                .arg(&output)
-                .arg("--engine")
-                .arg(exe);
-            if baselines {
-                cmd.arg("--baselines");
-            }
-            if perf {
-                cmd.arg("--perf");
-            }
-            if gate {
-                cmd.arg("--gate");
-            }
-            if let Some(p) = previous {
-                cmd.arg("--previous").arg(p);
-            }
-            if let Some(n) = runs {
-                cmd.arg("--runs").arg(n.to_string());
-            }
-            cmd.args(&args);
-            let status = cmd
-                .status()
-                .map_err(|e| format!("{}: {e}", python.display()))?;
-            Ok(if status.success() {
-                ExitCode::SUCCESS
-            } else {
-                ExitCode::from(1)
-            })
-        }
-        Cmd::Serve {
-            port,
-            host,
-            allow_files,
-            workers,
-            max_body,
-        } => serve(&host, port, allow_files, workers, max_body),
+        Cmd::Place(args) => place(args),
+        Cmd::Render(args) => render(args),
+        Cmd::Validate(args) => validate(args),
+        Cmd::Bench(args) => bench(args),
+        Cmd::Serve(args) => serve(args),
     }
+}
+
+/// The problem of `place` (a JSON file, or built from the CSV of `--anchors`) and the
+/// environment that resolves its relative file paths.
+fn load_problem(args: &PlaceArgs) -> Result<(Value, NativeEnv), Failure> {
+    match (&args.problem, &args.anchors) {
+        (Some(path), None) => {
+            let text = read_input(path)?;
+            let v = label_anything::parse_json(&text).map_err(|e| Failure::Invalid(vec![e]))?;
+            Ok((v, env_for(Some(path))))
+        }
+        (None, Some(csv_path)) => {
+            let opts = csv::CsvOpts {
+                x_col: args.x_col.clone(),
+                y_col: args.y_col.clone(),
+                labels_col: args.labels_col.clone(),
+                id_col: args.id_col.clone(),
+                priority_col: args.priority_col.clone(),
+            };
+            let name = if csv_path == "-" { "stdin" } else { csv_path };
+            let v = csv::problem_from_csv(&read_input(csv_path)?, name, &opts)
+                .map_err(Failure::Input)?;
+            Ok((v, NativeEnv::new()))
+        }
+        (Some(_), Some(_)) => Err(Failure::Other(
+            "give either a problem file or --anchors, not both".into(),
+        )),
+        (None, None) => Err(Failure::Other("missing problem file (or --anchors)".into())),
+    }
+}
+
+/// The fields of the problem that the options of `place` set: path and value.
+fn problem_options(args: &PlaceArgs) -> Result<Vec<(&'static [&'static str], Value)>, Failure> {
+    let mut options: Vec<(&[&str], Value)> = Vec::new();
+    if let Some(t) = args.time {
+        options.push((&["solver", "time_budget_ms"], json!(t)));
+    }
+    if let Some(s) = args.seed {
+        options.push((&["solver", "seed"], json!(s)));
+    }
+    if let Some(s) = &args.strategy {
+        options.push((&["solver", "strategy"], json!(s)));
+    }
+    if let Some(d) = &args.degrade {
+        options.push((&["degrade"], json!(d)));
+    }
+    if let Some(o) = &args.omission {
+        options.push((&["priority", "omission"], json!(o)));
+    }
+    if let Some(m) = args.max_labels {
+        options.push((&["priority", "budget", "max_labels"], json!(m)));
+    }
+    if let Some(ps) = &args.preset {
+        options.push((&["preset"], json!(ps)));
+    }
+    if let Some(a) = &args.aggressiveness {
+        options.push((&["placement", "aggressiveness"], json!(a)));
+    }
+    if let Some(fs) = args.font_size {
+        options.push((&["defaults", "font", "size"], json!(fs)));
+    }
+    if let Some((w, h)) = args.canvas {
+        options.push((&["canvas", "width"], json!(w)));
+        options.push((&["canvas", "height"], json!(h)));
+    }
+    if let Some(bg) = &args.background {
+        let ext = bg
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("")
+            .to_ascii_lowercase();
+        // relative to the current directory, not to the problem file
+        let path = std::path::absolute(bg)
+            .map_err(|e| format!("{}: {e}", bg.display()))?
+            .to_string_lossy()
+            .into_owned();
+        if ext == "svg" {
+            options.push((&["obstacles", "svg"], json!({"path": path})));
+        } else {
+            options.push((&["obstacles", "raster"], json!({"source": path})));
+        }
+    }
+    if args.debug_svg.is_some() {
+        options.push((&["output", "debug_svg"], json!(true)));
+    }
+    Ok(options)
+}
+
+fn place(args: PlaceArgs) -> Result<ExitCode, Failure> {
+    let (mut p, mut env) = load_problem(&args)?;
+    let errors: Vec<Issue> = problem_options(&args)?
+        .into_iter()
+        .filter_map(|(path, value)| set_option(&mut p, path, value).err())
+        .collect();
+    if !errors.is_empty() {
+        return Err(Failure::Invalid(errors));
+    }
+    let report = label_anything::validate(&p);
+    print_report(&report);
+    if !report.valid {
+        return Ok(ExitCode::from(1));
+    }
+    let validation_warnings = report.warnings.clone();
+    // without a clock there are no wall-clock guards: the result depends only on
+    // the iteration budgets (parity tests)
+    env.clock = !args.no_clock;
+    for _ in 0..args.warmup {
+        label_anything::place_validated(&p, &env, label_anything::validate(&p))
+            .map_err(|e| e.to_string())?;
+    }
+    let mut result =
+        label_anything::place_validated(&p, &env, report).map_err(|e| e.to_string())?;
+    // warnings found while preparing (the validation warnings are printed already)
+    let more: Vec<Issue> = result["warnings"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(|w| {
+            let s = |k: &str| w[k].as_str().unwrap_or("").to_string();
+            Issue::new(s("pointer"), &s("code"), s("message"))
+        })
+        .filter(|w| {
+            !validation_warnings
+                .iter()
+                .any(|v| (&v.pointer, &v.code, &v.message) == (&w.pointer, &w.code, &w.message))
+        })
+        .collect();
+    print_issues("warning", &more);
+    if let Some(path) = args.debug_svg {
+        if let Some(svg) = result.get("debug_svg").and_then(|s| s.as_str()) {
+            std::fs::write(&path, svg).map_err(|e| format!("{}: {e}", path.display()))?;
+        }
+        result["debug_svg"] = Value::Null;
+    }
+    let text = if args.pretty {
+        serde_json::to_string_pretty(&result)
+    } else {
+        serde_json::to_string(&result)
+    }
+    .map_err(|e| e.to_string())?;
+    write_output(&args.output, &text)?;
+    Ok(ExitCode::SUCCESS)
+}
+
+fn render(args: RenderArgs) -> Result<ExitCode, Failure> {
+    let RenderArgs {
+        problem,
+        result,
+        output,
+    } = args;
+    let p = label_anything::parse_json(&read_input(&problem)?)
+        .map_err(|e| Failure::Invalid(vec![e]))?;
+    let report = label_anything::validate(&p);
+    print_issues("warning", &report.warnings);
+    if !report.valid {
+        return Err(Failure::Invalid(report.errors));
+    }
+    let r: Value = serde_json::from_str(&read_input(&result)?)
+        .map_err(|e| Failure::Input(format!("{result}: invalid JSON: {e}")))?;
+    check_result(&p, &r)
+        .map_err(|e| Failure::Input(format!("{result} is not a result of {problem}: {e}")))?;
+    let env = env_for(Some(&problem));
+    let svg = label_anything::render_svg(&p, &r, &env);
+    let png = Path::new(&output)
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("png"));
+    if png {
+        let png = svg_to_png(&svg)?;
+        std::fs::write(&output, png).map_err(|e| format!("{output}: {e}"))?;
+        return Ok(ExitCode::SUCCESS);
+    }
+    write_output(&output, &svg)?;
+    Ok(ExitCode::SUCCESS)
+}
+
+fn validate(args: ValidateArgs) -> Result<ExitCode, Failure> {
+    let text = read_input(&args.problem)?;
+    let report = label_anything::validate_json(&text);
+    if args.json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&report).unwrap_or_default()
+        );
+    } else {
+        print_report(&report);
+        if report.valid {
+            eprintln!("valid");
+        }
+    }
+    Ok(if report.valid {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(1)
+    })
+}
+
+fn bench(args: BenchArgs) -> Result<ExitCode, Failure> {
+    let root = match args.repo {
+        Some(r) => r,
+        None => {
+            let mut d = std::env::current_dir().map_err(|e| e.to_string())?;
+            loop {
+                if d.join("bench/run.py").exists() {
+                    break d;
+                }
+                if !d.pop() {
+                    return Err(Failure::Other("bench/run.py not found; pass --repo".into()));
+                }
+            }
+        }
+    };
+    let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+    let python = std::env::var_os("LA_BENCH_PYTHON")
+        .map(PathBuf::from)
+        .or_else(|| {
+            [
+                root.join("bench/.venv/bin/python"),
+                root.join("bench/.venv/Scripts/python.exe"),
+            ]
+            .into_iter()
+            .find(|p| p.exists())
+        })
+        .unwrap_or_else(|| PathBuf::from("python3"));
+    let mut cmd = std::process::Command::new(&python);
+    cmd.arg(root.join("bench/run.py"))
+        .arg("--suite")
+        .arg(&args.suite)
+        .arg("--out")
+        .arg(&args.output)
+        .arg("--engine")
+        .arg(exe);
+    if args.baselines {
+        cmd.arg("--baselines");
+    }
+    if args.perf {
+        cmd.arg("--perf");
+    }
+    if args.gate {
+        cmd.arg("--gate");
+    }
+    if let Some(p) = args.previous {
+        cmd.arg("--previous").arg(p);
+    }
+    if let Some(n) = args.runs {
+        cmd.arg("--runs").arg(n.to_string());
+    }
+    cmd.args(&args.args);
+    let status = cmd
+        .status()
+        .map_err(|e| format!("{}: {e}", python.display()))?;
+    Ok(if status.success() {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(1)
+    })
 }
 
 /// Check that a result belongs to a problem: one placement per item, with the item's id,
@@ -704,13 +676,15 @@ fn check_result(problem: &Value, result: &Value) -> Result<(), String> {
     Ok(())
 }
 
-fn serve(
-    host: &str,
-    port: u16,
-    allow_files: bool,
-    workers: Option<u16>,
-    max_body_mib: u32,
-) -> Result<ExitCode, Failure> {
+fn serve(args: ServeArgs) -> Result<ExitCode, Failure> {
+    let ServeArgs {
+        host,
+        port,
+        allow_files,
+        workers,
+        max_body: max_body_mib,
+    } = args;
+    let host = host.as_str();
     let server =
         tiny_http::Server::http((host, port)).map_err(|e| format!("{host}:{port}: {e}"))?;
     let loopback = host == "localhost"
@@ -817,9 +791,8 @@ fn respond(mut req: tiny_http::Request, files: bool, max_body: u64) {
             }
         }
         (tiny_http::Method::Post, "/validate") => {
-            match std::panic::catch_unwind(|| match parse_json(body) {
-                Ok(v) => serde_json::to_string(&label_anything::validate(&v)).unwrap_or_default(),
-                Err(e) => json!({"valid": false, "errors": [e], "warnings": []}).to_string(),
+            match std::panic::catch_unwind(|| {
+                serde_json::to_string(&label_anything::validate_json(body)).unwrap_or_default()
             }) {
                 Ok(report) => (200, report),
                 Err(_) => (500, internal_error()),

@@ -5,22 +5,18 @@
  */
 import type { LabelProblem, LabelResult, RgbaPixels } from "@label-anything/core";
 import type { Control } from "../controls.js";
+import type { View } from "../view.js";
 
 export type Item = LabelProblem["items"][number];
 export type Anchors = Map<string, [number, number]>;
 
 export interface SceneHost {
-  /** Size of the drawing in CSS px. */
-  readonly width: number;
-  readonly height: number;
   /** URL of a file published with the playground (`data/...`). */
   asset(path: string): string;
   /** The scene's data or settings changed: solve again from scratch. */
   invalidate(): void;
   /** Items moved (by the scene itself, outside of `step`): solve again, warm-started. */
   moved(): void;
-  /** Redraw without solving. */
-  redraw(): void;
   /** Show a short message over the drawing. */
   toast(text: string): void;
 }
@@ -55,7 +51,7 @@ export interface Scene {
   /** Obstacle classes the scene sends besides the items (`points`, `lines`, `ink`): their avoidance controls show. */
   readonly classes: readonly string[];
   /** Playground settings this scene starts with (budgets, transitions, display). */
-  readonly view?: Partial<Record<string, unknown>>;
+  readonly view?: Partial<View>;
   readonly params: Record<string, unknown>;
   /** A scene control changed. */
   setParam(key: string, value: unknown): void;

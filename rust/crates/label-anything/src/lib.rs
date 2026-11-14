@@ -42,6 +42,9 @@ pub struct NativeEnv {
     pub base_dir: Option<PathBuf>,
     /// Allow reading files at all.
     pub allow_files: bool,
+    /// Read the clock. Without it `now_ms()` is 0: no wall-clock guards, so a result
+    /// depends only on the iteration budgets (parity tests, `place --no-clock`).
+    pub clock: bool,
 }
 
 impl Default for NativeEnv {
@@ -51,6 +54,7 @@ impl Default for NativeEnv {
             start: std::time::Instant::now(),
             base_dir: None,
             allow_files: true,
+            clock: true,
         }
     }
 }
@@ -69,16 +73,7 @@ impl NativeEnv {
     }
 }
 
-/// The SVG backend compiled into this build (`label-anything-svg`). Bindings with their
-/// own [`Env`] (WASM, Python) delegate `Env::svg` to it.
-pub fn svg_backend() -> Option<&'static dyn SvgBackend> {
-    Some(&la_core::env::BUILTIN_SVG)
-}
-
 impl Env for NativeEnv {
-    fn svg(&self) -> Option<&dyn SvgBackend> {
-        svg_backend()
-    }
     fn read_file(&self, path: &str) -> Result<Vec<u8>, String> {
         if !self.allow_files {
             return Err(format!("file access disabled ({path})"));
@@ -91,13 +86,10 @@ impl Env for NativeEnv {
     }
     fn now_ms(&self) -> f64 {
         #[cfg(feature = "std-clock")]
-        {
-            self.start.elapsed().as_secs_f64() * 1000.0
+        if self.clock {
+            return self.start.elapsed().as_secs_f64() * 1000.0;
         }
-        #[cfg(not(feature = "std-clock"))]
-        {
-            0.0
-        }
+        0.0
     }
     fn has_measure_callback(&self) -> bool {
         false
@@ -107,6 +99,23 @@ impl Env for NativeEnv {
 /// Validate a problem.
 pub fn validate(problem: &Value) -> Report {
     la_core::validate::validate(problem)
+}
+
+/// Parse JSON text. A syntax error is reported like a validation error (code `parse`).
+pub fn parse_json(text: &str) -> Result<Value, Issue> {
+    serde_json::from_str(text).map_err(|e| Issue::new("", "parse", format!("invalid JSON: {e}")))
+}
+
+/// Validate a problem given as JSON text; text that is not JSON gives a `parse` error.
+pub fn validate_json(problem: &str) -> Report {
+    match parse_json(problem) {
+        Ok(v) => validate(&v),
+        Err(e) => Report {
+            valid: false,
+            errors: vec![e],
+            warnings: vec![],
+        },
+    }
 }
 
 /// Solve with the native environment.
@@ -154,10 +163,7 @@ pub fn place_json(problem: &str) -> Result<String, String> {
 
 /// [`place_json`] with a custom environment.
 pub fn place_json_with(problem: &str, env: &dyn Env) -> Result<String, String> {
-    let v: Value = serde_json::from_str(problem).map_err(|e| {
-        serde_json::to_string(&vec![Issue::new("", "parse", format!("invalid JSON: {e}"))])
-            .unwrap_or_default()
-    })?;
+    let v = parse_json(problem).map_err(|e| serde_json::to_string(&[e]).unwrap_or_default())?;
     match place_with(&v, env) {
         Ok(r) => Ok(serde_json::to_string(&r).unwrap_or_default()),
         Err(e) => Err(serde_json::to_string(&e.errors).unwrap_or_default()),

@@ -357,7 +357,6 @@ pub struct Item {
     pub required: bool,
     pub group: Option<String>,
     pub keep_with: Option<KeepWith>,
-    pub svg_id: Option<String>,
     /// The original item JSON (for callbacks).
     pub raw: Value,
     /// Pole of inaccessibility of a polygon mark (computed on first use).
@@ -466,10 +465,9 @@ pub struct Model {
     pub leader_area: Option<Rect>,
     /// Extent of the grid.
     pub extent: Rect,
-    pub to_px: Affine,
     pub items: Vec<Item>,
-    /// Vector obstacles by class (problem vector layers and SVG geometry).
-    /// Vector obstacle primitives with their class (names shared between primitives).
+    /// Vector obstacle primitives (problem vector layers and SVG geometry) with their
+    /// class (names shared between primitives).
     pub vector: Vec<(Arc<str>, Prim)>,
     pub rasters: Vec<RasterSrc>,
     /// `canvas.background`: the backdrop where no raster lies.
@@ -509,7 +507,6 @@ pub struct Model {
     /// `orthogonal` leader styles (the entry's `leader` of the same style; spec §6.7).
     pub warm_leaders: BTreeMap<String, Vec<P>>,
     pub warnings: Vec<Issue>,
-    pub preset_name: String,
     /// Groups of items sharing one label: (representative, members incl. the representative).
     pub groups: Vec<(usize, Vec<usize>)>,
     /// For each item: the representative of its group (itself for representatives).
@@ -517,13 +514,27 @@ pub struct Model {
 }
 
 impl Model {
-    /// Members of the group represented by `rep` (empty if `rep` is not a representative).
     /// Whether item `j` has a lower priority key than item `i` (spec §9.1): the
     /// `lower_items` policy applies to its mark for the labels and leaders of `i`.
     pub fn is_lower(&self, i: usize, j: usize) -> bool {
         !self.key_level.is_empty() && self.key_level[j] > self.key_level[i]
     }
 
+    /// The representative of the group of item `j` (itself for a representative); `None`
+    /// for an item without a group.
+    #[inline]
+    pub fn group_rep(&self, j: usize) -> Option<usize> {
+        self.group_of.get(j).copied().flatten()
+    }
+
+    /// Whether another item represents the group of item `i`: its representative's label
+    /// is its label.
+    #[inline]
+    pub fn is_group_member(&self, i: usize) -> bool {
+        matches!(self.group_of.get(i), Some(Some(r)) if *r != i)
+    }
+
+    /// Members of the group represented by `rep` (empty if `rep` is not a representative).
     pub fn group_members(&self, rep: usize) -> &[usize] {
         self.groups
             .iter()
@@ -667,7 +678,7 @@ pub fn build(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     Ok(m)
 }
 
-/// Merge items sharing a `group` id into one label (spec §5.7 "groups"): the first member
+/// Merge items sharing a `group` id into one label (docs/concepts/problem.md): the first member
 /// (input order) represents the group; its mark becomes the convex hull of all member
 /// marks, its anchor their centroid, and its text lists the distinct member texts.
 fn resolve_groups(m: &mut Model) {
@@ -1276,11 +1287,11 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         label_area,
         leader_area,
         extent,
-        to_px,
         items,
         vector,
         rasters,
-        background: parse_color(&o.string("canvas.background")).unwrap_or([255, 255, 255]),
+        background: la_raster::parse_hex_color(&o.string("canvas.background"))
+            .unwrap_or([255, 255, 255]),
         avoid_label: o.map("avoid.label"),
         avoid_leader: o.map("avoid.leader"),
         avoid_buffer: o.map("avoid.buffer"),
@@ -1316,7 +1327,6 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         warm,
         warm_leaders,
         warnings,
-        preset_name: o.preset_name.clone(),
         groups: Vec::new(),
         group_of: Vec::new(),
     })
@@ -1335,25 +1345,12 @@ fn looks_base64(s: &str) -> bool {
         })
 }
 
-fn parse_color(s: &str) -> Option<[u8; 3]> {
-    let h = s.strip_prefix('#')?;
-    let v = |a: &str| u8::from_str_radix(a, 16).ok();
-    match h.len() {
-        3 => {
-            let r = v(&h[0..1])?;
-            let g = v(&h[1..2])?;
-            let b = v(&h[2..3])?;
-            Some([r * 17, g * 17, b * 17])
-        }
-        6 => Some([v(&h[0..2])?, v(&h[2..4])?, v(&h[4..6])?]),
-        _ => None,
-    }
-}
-
 fn raster_opts(src: &Value, ptr: &str) -> Result<RasterOpts, BuildError> {
     let get = |k: &str| source_opt(src, "obstacles.raster", k);
     let mode = get("mode").as_str().unwrap_or("ink").to_string();
-    let background = get("ink.background").as_str().and_then(parse_color);
+    let background = get("ink.background")
+        .as_str()
+        .and_then(la_raster::parse_hex_color);
     let ink_threshold = get("ink.threshold").as_f64().unwrap_or(0.12);
     let mode = match mode.as_str() {
         "alpha" => RasterMode::Alpha {
@@ -1367,7 +1364,7 @@ fn raster_opts(src: &Value, ptr: &str) -> Result<RasterOpts, BuildError> {
             let mut palette = Vec::new();
             if let Some(Value::Object(m)) = src.get("classmap") {
                 for (k, v) in m {
-                    let c = parse_color(k).ok_or_else(|| {
+                    let c = la_raster::parse_hex_color(k).ok_or_else(|| {
                         err(
                             format!("{ptr}/classmap"),
                             "pattern",
@@ -1894,7 +1891,6 @@ fn build_item(
             .unwrap_or(false),
         group: it.get("group").and_then(|v| v.as_str()).map(str::to_string),
         keep_with,
-        svg_id,
         raw: it.clone(),
         pole: std::sync::OnceLock::new(),
         supports: std::sync::OnceLock::new(),

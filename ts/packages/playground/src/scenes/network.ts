@@ -6,7 +6,7 @@
  */
 import { forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, type Simulation, type SimulationLinkDatum, type SimulationNodeDatum } from "d3-force";
 import { FONT_CLASSES, type Control } from "../controls.js";
-import { rng, type Obj } from "../util.js";
+import { rng, round2, type Obj } from "../util.js";
 import type { Anchors, DrawState, Item, PointerInfo, Scene, SceneHost } from "./scene.js";
 
 interface Mod {
@@ -162,7 +162,7 @@ export class NetworkScene implements Scene {
     return this.#nodes.map((n) => {
       const item: Item = {
         id: n.id,
-        anchor: { type: "point", x: round(n.x!), y: round(n.y!), mark: { shape: "circle", r: round(n.r) } },
+        anchor: { type: "point", x: round2(n.x!), y: round2(n.y!), mark: { shape: "circle", r: round2(n.r) } },
         label: { type: "text", text: n.name },
       };
       if (imp === "importers") item.priority = n.importers + n.lines / 10000;
@@ -178,8 +178,8 @@ export class NetworkScene implements Scene {
           class: "lines",
           width: 1,
           polylines: this.#edges.map((e): [[number, number], [number, number]] => [
-            [round(e.source.x!), round(e.source.y!)],
-            [round(e.target.x!), round(e.target.y!)],
+            [round2(e.source.x!), round2(e.source.y!)],
+            [round2(e.target.x!), round2(e.target.y!)],
           ]),
         },
       ],
@@ -187,7 +187,7 @@ export class NetworkScene implements Scene {
   }
 
   anchors(): Anchors {
-    return new Map(this.#nodes.map((n) => [n.id, [round(n.x!), round(n.y!)]]));
+    return new Map(this.#nodes.map((n) => [n.id, [round2(n.x!), round2(n.y!)]]));
   }
 
   step(dt: number): boolean {
@@ -279,5 +279,3 @@ export class NetworkScene implements Scene {
     this.#sim?.alphaTarget(0);
   }
 }
-
-const round = (v: number) => Math.round(v * 100) / 100;

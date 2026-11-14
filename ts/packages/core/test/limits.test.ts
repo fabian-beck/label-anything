@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { PlaceError } from "../src/api.js";
 import { BasicEnv } from "../src/env.js";
 import { MAX_GRID_CELLS } from "../src/obstacles.js";
-import { placeWith } from "../src/place.js";
+import { solveWith } from "../src/place.js";
 
 const item = (id: string, x: number, y: number): unknown => ({
   id,
@@ -15,7 +15,7 @@ const item = (id: string, x: number, y: number): unknown => ({
 
 function placeError(problem: unknown): PlaceError {
   try {
-    placeWith(problem, new BasicEnv());
+    solveWith(problem, new BasicEnv());
   } catch (e) {
     if (e instanceof PlaceError) return e;
     throw e;
@@ -25,7 +25,7 @@ function placeError(problem: unknown): PlaceError {
 
 describe("grid limits", () => {
   it("auto_cell_grows_for_huge_canvases", () => {
-    const r = placeWith(
+    const r = solveWith(
       { canvas: { width: 50000, height: 40000 }, items: [item("a", 100, 100), item("b", 49900, 39900)] },
       new BasicEnv(),
     );

@@ -12,11 +12,13 @@ on an engine implementation.
 bench/
   common/          shared library: sources + fetch, spec options, text measurement, geometry,
                    problem model, raster modes, scene/SVG builder, deterministic JSON
-  scenarios/NN-*/  fetch.py, build.py, README.md, LICENSE.md (+ data helpers, polygons.json)
+  scenarios/NN-*/  fetch.py (not 13: its data is committed), build.py, README.md, LICENSE.md
+                   (+ data helpers, polygons.json, figures.json)
   eval/            evaluator package + CLI (python -m bench.eval) + tests/
   solvers/         built-in baselines: naive, greedy
-  baselines/       third-party baselines: textalloc, adjustText, vega-label, ggrepel (adapters,
-                   pinned toolchains, README.md with methods and emulations, tests/)
+  baselines/       third-party baselines: textalloc, adjustText, vega-label, ggrepel, d3fc, ECharts,
+                   D3-Labeler, mumtaz2019 (adapters, pinned toolchains, README.md with methods and
+                   emulations, tests/)
   perf/            performance targets: problem generator + timing (python -m bench.perf)
   render.py        problem + result (+ background) -> SVG / PNG
   run.py           runner -> bench-report/results.json + index.html
@@ -187,7 +189,8 @@ digest).
 | `cora-cites`, `cora-content` | `tkipf/pygcn@1600b5b7` `data/cora/` | `ec1a3723…42d5945e`, `b8ebed0f…46e9c8ee` | repository MIT; data: research use, no explicit license (not redistributed) | McCallum et al. 2000; Sen et al. 2008 |
 | `scikit-image-0.26.0-sdist` | PyPI `scikit_image-0.26.0.tar.gz` | `f5f970ab…e59199fa` | BSD-3-Clause; images: NASA/SpaceX public domain, retina CC0 | NASA; SpaceX; M. Häggström |
 
-Benchmark tooling dependencies (`requirements.txt`) are BSD-3-Clause, MIT or MIT-CMU.
+Benchmark tooling dependencies (`requirements.txt`, transitive ones included) are BSD-3-Clause,
+BSD-2-Clause, MIT, MIT-CMU or Apache-2.0 OR BSD-2-Clause.
 
 ## Evaluator metrics
 
@@ -217,6 +220,7 @@ Hard/soft/ignore come from the effective options (defaults.md ← preset ← pro
 | | `clarity.leadered_unclear` (and `_rate`) | labels with a leader whose box another data point comes nearer than 0.2 em: the leader says whose it is, its position says another point's |
 | | `points.{total,covered,rate,hidden,items_covered,background_covered,labels_covering,labels_covering_rate}` | data points (as above) that a label other than their own overlaps (box shrunk by t), whatever the avoidance settings: a covered point is hidden from the reader; `hidden`: those entirely inside a label box; `labels_covering` = labels covering any |
 | | `spacing.{pairs_tight,pairs_close,labels_close,labels_close_rate,nearest_p10_em,nearest_p50_em}` | the gap between label boxes in em of the larger font: pairs closer than 0.2 em (the label margin) and 0.4 em (the engine's default spacing, ADR placement/margin), labels whose nearest other label is closer than 0.4 em, quantiles of the nearest gap (capped at 2 em): labels too close to each other read as one |
+| clutter (`bench/eval/clutter.py`) | `clutter.{edge_density,text,leaders,leader_share,per_label_em,edges_px,box_area}` | the edge density the labels add (ADR project/benchmark-measures): the outline length of the glyphs of every placed text at its font size (bundled Noto Sans, `.notdef` for missing glyphs), plus twice the length of every leader and underline (the two edges of a stroke), plus the box perimeter of icon and box labels, per canvas px (unbounded problems: the extent of marks and labels); `text`/`leaders` the two parts, `leader_share` the leaders' share, `per_label_em` the edge length per placed label in em of its font, `box_area` the label boxes' share of the canvas. Agrees with the Canny edge density of the rendered labels (r = 0.991); informational in the report (more labels add clutter), not gated |
 | shape fidelity | `adjacent_gap_mean`, `_abs_mean`, `_max_abs`, `adjacent_touch_rate` | gap = signed distance(box, own shape) − `placement.offset` for adjacent/slider labels without leader (target 0; touch = \|gap\| ≤ t) |
 | | `own_mark_violations`, `internal_outside` | as above |
 | | `internal_eligible`, `internal_rate` | placed items whose shape can contain the placed box grown by `placement.inner_padding` (circles exactly, rects/ellipses at the center, polygons at the pole of inaccessibility); rate = fraction of them placed internally |
@@ -285,7 +289,8 @@ p95 by nearest rank, wall time and `stats.runtime_ms`), checks determinism (iden
 placements across runs), evaluates the last result (with the truth), renders PNGs (`--svg`:
 also SVGs; `--no-render`: none) and writes `bench-report/results.json` and the static report
 `bench-report/index.html` (see *Report*). Solvers: the built-in baselines `naive`, `greedy`,
-`textalloc`, `adjusttext`, `vega-label`, `ggrepel` (`--baselines` = all of them), or
+`textalloc`, `adjusttext`, `vega-label`, `ggrepel`, `d3fc`, `echarts`, `d3-labeler`, `mumtaz2019`
+(`--baselines` = all of them), or
 `NAME=COMMAND` with `{problem}` and `{result}` placeholders (`--timeout` seconds per run,
 default 600); `--engine PATH` adds `rust=PATH place {problem} -o {result}`. Solvers named
 `rust`, `wasm` or `ts` (optionally `-suffix`) are the Label Anything implementations: they
@@ -294,6 +299,11 @@ NAME=COMMAND` (`{problem}`, `{result}`, `{svg}`) renders the engine's debug over
 grids, candidates) from one extra untimed run; `--engine` sets it up for `rust` with `place
 --debug-svg`. Sequences are solved frame by frame; frame t+1 gets `warm_start.placements` =
 frame t's placements with each box (and leader) shifted by its anchor's movement.
+`--levels` (with `--engine`) adds `rust-low` and `rust-high`, the engine at the other two
+`placement.aggressiveness` levels (`rust` runs the default, `medium`; ADR
+placement/aggressiveness), for comparing labels against clutter. The result of a command
+with `--aggressiveness` is evaluated and drawn against the problem with that level set,
+whose options (such as the margin of `low`) it solved.
 Third-party baselines solve a problem with soft classes twice — avoided like hard ones and
 left out — and keep the better result by their own usable labels (`--baseline-soft best`, the
 default; see `bench/baselines/README.md`). The peak resident memory of every external solver
@@ -431,14 +441,14 @@ computed from the run, with the rule the tables use for the best value.
   method ran; time per problem: the median) with every method as a dot, further right
   always better; folded, the table of all aggregated values (problems run / n/a / failed,
   mean placed and usable rate, hard violations and conflicts, ambiguity, unclear labels,
-  covered points, close labels, inversions, summed runtimes, peak memory, and the empirical
-  scaling exponent k of runtime ∝ nᵏ over the stress scenario's sizes) — then one section
-  per question with its finding and a table of the measure per problem and method (several
-  measures as tabs; the last row counts the problems on which a method has the best value):
-  validity and completeness, clarity, priority (with the gallery's figures of the omission
-  modes), efficiency (with the runtime against the number of items, one panel per method on
-  shared log–log axes) and stability (the sequences' table, the gallery's frames and,
-  folded, the first, middle and last frame of every method);
+  covered points, close labels, clutter, inversions, summed runtimes, peak memory, and the
+  empirical scaling exponent k of runtime ∝ nᵏ over the stress scenario's sizes) — then one
+  section per question with its finding and a table of the measure per problem and method
+  (several measures as tabs; the last row counts the problems on which a method has the
+  best value): validity and completeness, clarity, priority (with the gallery's figures of
+  the omission modes), efficiency (with the runtime against the number of items, one panel
+  per method on shared log–log axes) and stability (the sequences' table, the gallery's
+  frames and, folded, the first, middle and last frame of every method);
 * **4 Results by problem**: per data type — maps, charts, photographs and illustrations,
   embeddings and networks, priority, scale; a scenario that no data type names comes under
   *Other problems* — every scenario of the run with its problems (one config at a time) and
@@ -593,8 +603,9 @@ docker run --rm -v la-bench-data:/la/bench/data -v la-bench-out:/la/bench/out \
     -v "$PWD/bench-report:/la/bench-report" label-anything-bench --suite full --runs 7 --gate
 ```
 
-The entrypoint (`bench/docker-run.sh`) fetches the data, builds the scenarios once per volume and
-runs `bench/run.py --suite quick --engine … --baselines --require-baselines --perf` plus the
+The entrypoint (`bench/docker-run.sh`) fetches the data, builds the scenarios (the slow derived
+data stays cached in the data volume) and runs
+`bench/run.py --suite quick --engine … --baselines --require-baselines --perf` plus the
 given arguments. In CI, the `bench` job runs the quick suite with the engine on pull requests
 and pushes to main (full suite on tags); the `baselines` job (tags, manual dispatch, weekly) runs the quick suite
 with the engine and every baseline plus the performance targets, builds the gallery into the

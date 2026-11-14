@@ -12,19 +12,15 @@ Translation (see bench/baselines/README.md and echarts_layout.mjs):
   priority), ties in data order; it compares labels only: marks and obstacle classes are not avoided
   (unsupported), labels may leave the label area. No leader lines.
 
-    python -m bench.baselines.echarts_baseline problem.json -o result.json
+    python -m bench.baselines echarts problem.json -o result.json
 """
 from __future__ import annotations
 
-import argparse
-
 from ..common.geom import Box, Circle
-from ..common.jsonio import read_json, write_json
 from . import node
 from .results import build_result
 from .scene import Note, Scene, build_scene, without_obstacles
 
-TOOL = "echarts"
 OBSTACLES = False  # the tool is told no obstacle classes: soft emulations do not differ
 SIDES = ("top", "right", "bottom", "left")
 
@@ -91,16 +87,3 @@ def solve(problem: dict, problem_path=None, options: dict | None = None) -> dict
         boxes[lab.id] = Box(float(e["x"]), float(e["y"]), float(e["x"]) + lab.w, float(e["y"]) + lab.h)
     v = out.get("versions", {})
     return build_result(scene, boxes, {}, float(out.get("runtime_ms", 0.0)), f"echarts/{v.get('echarts')}", notes)
-
-
-def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("problem")
-    ap.add_argument("-o", "--out", required=True)
-    a = ap.parse_args(argv)
-    write_json(a.out, solve(read_json(a.problem), a.problem), nd=3)
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

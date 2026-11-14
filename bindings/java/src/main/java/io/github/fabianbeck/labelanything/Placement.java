@@ -89,6 +89,31 @@ public final class Placement extends Spec {
     }
   }
 
+  /**
+   * How hard the engine tries to place every label (spec §2.4): each level sets the defaults
+   * of the degradation ladder ({@link Degrade#defaults(Aggressiveness)}), the reach of distant
+   * labels, fan labels and the label margin.
+   */
+  public enum Aggressiveness implements JsonName {
+    /**
+     * A label next to its mark, or on a short leader where the models ask for distant labels
+     * (within 2.5 em), with more room around it (margin 0.3 em); no fans.
+     */
+    LOW,
+    /** Labels keep their type size and the hard classes; distant labels within 4 em (default). */
+    MEDIUM,
+    /**
+     * Every means that keeps a label clear: distant labels up to 8 em away, leaders from the
+     * ladder, fans, smaller type, relaxed overlaps.
+     */
+    HIGH;
+
+    @Override
+    public String jsonName() {
+      return JsonName.lower(this);
+    }
+  }
+
   /** When crowds of items get fan labels (spec §6.8). */
   public enum Fan implements JsonName {
     /** Crowds with items left without a label, when the column places more labels (default). */
@@ -140,6 +165,11 @@ public final class Placement extends Spec {
     return with("boundary", Spec.with(b, key, value));
   }
 
+  /** How hard to try to place every label (default {@link Aggressiveness#MEDIUM}). */
+  public Placement aggressiveness(Aggressiveness level) {
+    return with("aggressiveness", level);
+  }
+
   /** A named position order. */
   public Placement positionOrder(PositionOrder order) {
     return with("position_order", order);
@@ -160,7 +190,10 @@ public final class Placement extends Spec {
     return with("offset", len(length));
   }
 
-  /** Largest anchor–label distance of distant labels in px (default 8 em). */
+  /**
+   * Largest anchor–label distance of distant labels in px (default 4 em; 2.5 em with {@link
+   * Aggressiveness#LOW}, 8 em with {@link Aggressiveness#HIGH}).
+   */
   public Placement maxDistance(double px) {
     return with("max_distance", len(px));
   }
@@ -252,7 +285,7 @@ public final class Placement extends Spec {
 
   /**
    * Fan labels: a crowd's labels stacked in a column beside it with fanning leaders
-   * (default {@link Fan#AUTO}).
+   * (default {@link Fan#AUTO}; {@link Fan#OFF} with {@link Aggressiveness#LOW}).
    */
   public Placement fan(Fan mode) {
     return with("fan", mode);

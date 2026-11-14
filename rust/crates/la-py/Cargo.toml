@@ -32,6 +32,4 @@ decode = ["label-anything/decode"]
 # sets PYO3_BUILD_EXTENSION_MODULE itself); abi3-py39: one wheel for CPython >= 3.9.
 pyo3 = { workspace = true, features = ["abi3-py39", "extension-module"] }
 label-anything = { workspace = true }
-# only for `geom::Rect` in `Env::extra_cost` (not re-exported by the facade)
-la-core = { workspace = true }
 serde_json = { workspace = true }

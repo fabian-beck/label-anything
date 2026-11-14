@@ -47,12 +47,12 @@ describe.skipIf(!built)("callbacks", () => {
       const problem = scatter(6, { priority: { terms: [{ builtin: "outlierness" }] } });
       problem.items[0] = { ...problem.items[0], priority: 100, tier: 2 } as AnyProblem["items"][number];
       const r = la.place(problem, { priority: (_it, i) => [i % 2, -i] });
-      const pri = (id: string) => r.placements.find((p) => p.id === id)?.priority as Record<string, unknown>;
+      const pri = (id: string) => r.placements.find((p) => p.id === id)!.priority!;
       expect(pri("p0")).toMatchObject({ tier: 2, score: 100, rank: 0 });
       expect(pri("p1")).toMatchObject({ tier: 1, score: -1 });
       expect(pri("p2")).toMatchObject({ tier: 0, score: -2 });
       expect(pri("p3").terms).toBeUndefined(); // the callback replaces priority.terms
-      expect((la.place(problem).placements[3].priority as Record<string, unknown>).terms).toBeDefined();
+      expect(la.place(problem).placements[3]!.priority!.terms).toBeDefined();
     });
 
     it("rethrows exceptions and rejects invalid values", () => {
@@ -154,8 +154,10 @@ describe.skipIf(!built)("callbacks", () => {
 
   describe("readFile", () => {
     const svg = readProblem("svg-background.json");
-    const markup: string = svg.obstacles.svg.source;
-    const byPath = (): AnyProblem => ({ ...svg, obstacles: { svg: { ...svg.obstacles.svg, source: undefined, path: "bg.svg" } } });
+    // the fixture has one SVG background (an object, not a list)
+    const background = [svg.obstacles!.svg!].flat()[0]!;
+    const markup: string = background.source!;
+    const byPath = (): AnyProblem => ({ ...svg, obstacles: { svg: { ...background, source: undefined, path: "bg.svg" } } });
 
     it("reads files referenced by path", () => {
       const paths: string[] = [];
@@ -213,7 +215,7 @@ describe.skipIf(!built)("callbacks", () => {
       expect(m.stats.cancelled).toBe(true);
       expect(m.stats.placed).toBe(normal.stats.placed);
       expect(m.stats.hard_violations).toBe(0);
-      expect(m.stats.iterations).toBeLessThan(normal.stats.iterations);
+      expect(m.stats.iterations).toBeLessThan(normal.stats.iterations!);
 
       // any object with `aborted` works
       expect(la.place(problem, { signal: { aborted: true } as AbortSignal }).stats.cancelled).toBe(true);

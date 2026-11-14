@@ -328,7 +328,7 @@ fn mutated_problems_never_panic() {
                 counts.set((j + 1, s + usize::from(solved)));
             }
             Err(_) => {
-                let _ = la_core::place_str(text, &env);
+                let _ = label_anything::place_json_with(text, &env);
             }
         }
     });

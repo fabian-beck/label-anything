@@ -155,7 +155,6 @@ def reference(prob: Problem) -> dict[str, PriorityInfo]:
     n = len(items)
     terms = opts.get("terms", []) or []
     scores = [0.0] * n
-    term_vals = []
     for t in terms:
         if "attr" in t:
             raw = []
@@ -179,7 +178,6 @@ def reference(prob: Problem) -> dict[str, PriorityInfo]:
         vals = [_transform(v, tr) for v in raw]
         norm = _normalize(vals, t.get("normalize", "rank"))
         w = float(t.get("weight", 1.0))
-        term_vals.append(norm)
         for i in range(n):
             scores[i] += w * norm[i]
     for i, it in enumerate(items):

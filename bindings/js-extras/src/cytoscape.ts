@@ -16,9 +16,9 @@
  * and `shrink`).
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
-import { LatestRunner, resolveEngine } from "./engine.js";
+import { errorHandler, LatestRunner, resolveEngine } from "./engine.js";
 import { numericWeight } from "./measure.js";
-import { buildProblem, itemExtras, keepHostText, labelOf, placeOptionsOf, resolveFont, type LabelOptions, type Mark } from "./options.js";
+import { buildProblem, itemExtras, keepHostText, labelOf, placeOptionsOf, resolveFont, type LabelOptions, type Mark, type VectorLayer } from "./options.js";
 import { renderLabels, type RenderOptions } from "./render.js";
 import { SVG_NS } from "./svg.js";
 
@@ -143,7 +143,7 @@ export function labelCytoscape(cy: CytoscapeLike, options: CytoscapeLabelOptions
   const solve = () => {
     nodes = new Map();
     const items: LabelProblem["items"] = [];
-    const unlabeled: NonNullable<NonNullable<LabelProblem["obstacles"]>["vector"]>[number]["shapes"] = [];
+    const unlabeled: NonNullable<VectorLayer["shapes"]> = [];
     let first: CyNode | undefined;
     cy.nodes().forEach((n, i) => {
       if (!n.visible()) return;
@@ -155,7 +155,7 @@ export function labelCytoscape(cy: CytoscapeLike, options: CytoscapeLabelOptions
         shape === "ellipse" ? (Math.abs(w - h) < 1e-9 ? { shape: "circle", r: w / 2 } : { shape: "ellipse", rx: w / 2, ry: h / 2 }) : { shape: "rect", w, h };
       const label = labelOf(options, n, i, (node) => node.style("label"));
       if (!label) {
-        unlabeled!.push({ ...mark, x: pos.x, y: pos.y });
+        unlabeled.push({ ...mark, x: pos.x, y: pos.y });
         return;
       }
       first ??= n;
@@ -190,12 +190,12 @@ export function labelCytoscape(cy: CytoscapeLike, options: CytoscapeLabelOptions
         edgeWidth = Math.max(edgeWidth, px(e.style("width"), 1));
       });
     }
-    const vector: NonNullable<NonNullable<LabelProblem["obstacles"]>["vector"]> = [];
-    if (unlabeled!.length) vector.push({ class: "nodes", shapes: unlabeled });
-    if (polylines.length) vector.push({ class: "edges", polylines: polylines as never, width: edgeWidth });
+    const vector: VectorLayer[] = [];
+    if (unlabeled.length) vector.push({ class: "nodes", shapes: unlabeled });
+    if (polylines.length) vector.push({ class: "edges", polylines: polylines as VectorLayer["polylines"], width: edgeWidth });
     const avoid = { ...options.avoid, label: { nodes: "hard" as const, ...options.avoid?.label } };
     const problem = keepHostText(buildProblem({ items, ...(vector.length ? { obstacles: { vector } } : {}) }, { ...options, avoid }, font));
-    runner.run(problem, placeOptionsOf(options), apply, (e) => (options.onError ? options.onError(e) : console.error(e)));
+    runner.run(problem, placeOptionsOf(options), apply, errorHandler(options.onError));
   };
 
   let timer: ReturnType<typeof setTimeout> | undefined;

@@ -17,7 +17,6 @@ FUNCS = {  # name: (min_args, max_args or None)
     "ceil": (1, 1), "round": (1, 1), "log1p": (1, 1), "len": (1, 1), "lower": (1, 1), "upper": (1, 1),
     "number": (1, 1), "startsWith": (2, 2), "endsWith": (2, 2), "contains": (2, 2), "coalesce": (1, None),
 }
-KEYWORDS = ("true", "false", "null", "in", "not")
 
 
 class ExprError(Exception):
@@ -65,7 +64,7 @@ def _unescape(s: str) -> str:
             elif n == "t":
                 out.append("\t")
                 i += 2
-            elif n == "u" and i + 5 < len(body) + 0 and re.match(r"[0-9a-fA-F]{4}", body[i + 2:i + 6]):
+            elif n == "u" and i + 5 < len(body) and re.match(r"[0-9a-fA-F]{4}", body[i + 2:i + 6]):
                 out.append(chr(int(body[i + 2:i + 6], 16)))
                 i += 6
             else:
