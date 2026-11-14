@@ -292,7 +292,8 @@ export class Europe implements Example {
       if (land.pop < 100_000 && !SMALL.has(land.id)) continue;
       const [x0, y0] = this.#to(v, [land.bounds[0], land.bounds[1]]);
       const [x1, y1] = this.#to(v, [land.bounds[2], land.bounds[3]]);
-      if (x1 < 3 - m || y1 < 3 - m || x0 > W - 3 + m || y0 > H - 3 + m) continue;
+      // (a name on a leader can show while its country is out of reach)
+      if ((x1 < 3 - m || y1 < 3 - m || x0 > W - 3 + m || y0 > H - 3 + m) && !this.#labelShows(land.id, v)) continue;
       let main: Ring[] | undefined;
       let best = 0;
       for (const part of land.parts) {
@@ -326,8 +327,11 @@ export class Europe implements Example {
   problem(v: View = this.view): LabelProblem {
     const countries = this.#countries(v).sort((a, b) => b.land.pop - a.land.pop);
     const size = (rank: number) => 9.5 * (rank < 9 ? 1.3 : rank < 24 ? 1.12 : 1);
+    // (a window has its coordinates unrounded: the same outlines in every view, so that
+    // their poles stay put and the labels move with the map exactly)
+    const at = (c: number): number => (v.k > 1 ? c : round(c, 1));
     const items: unknown[] = countries.map(({ land, main }) => {
-      const rings = main.map((r) => r.map(([x, y]) => [round(x, 1), round(y, 1)]));
+      const rings = main.map((r) => r.map(([x, y]) => [at(x), at(y)]));
       const name = land.name.toUpperCase();
       const alts = land.abbrev && land.abbrev.toUpperCase() !== name ? [land.abbrev.toUpperCase()] : [];
       return {
@@ -354,7 +358,7 @@ export class Europe implements Example {
       if (!(x > 4 - m && x < W - 4 + m && y > 4 - m && y < H - 4 + m)) continue;
       items.push({
         id: p.id,
-        anchor: { type: "point", x: round(x, 1), y: round(y, 1), mark: { shape: "circle", r: p.capital ? 2.6 : 2 } },
+        anchor: { type: "point", x: at(x), y: at(y), mark: { shape: "circle", r: p.capital ? 2.6 : 2 } },
         label: { type: "text", text: p.name, font: { size: p.capital ? 10.5 : 9.5 } },
         priority: p.priority,
         placement: { position_order: "cartographic" },
@@ -609,7 +613,21 @@ export class Europe implements Example {
     this.#solved = v;
     for (const p of result.placements) {
       if (p.anchor) this.#base.set(p.id, [(p.anchor[0]! - v.x) / v.k, (p.anchor[1]! - v.y) / v.k]);
+      if (p.placed && p.box && p.anchor) this.#labels.set(p.id, [p.box.x - p.anchor[0]!, p.box.y - p.anchor[1]!, p.box.w, p.box.h]);
+      else this.#labels.delete(p.id);
     }
+  }
+
+  /** Where each item's label is from its anchor, as of the latest result: x, y, width, height in px. */
+  #labels = new Map<string, [number, number, number, number]>();
+
+  /** Whether the label an item has shows in a view (some of it). */
+  #labelShows(id: string, v: View): boolean {
+    const l = this.#labels.get(id);
+    const base = this.#base.get(id);
+    if (!l || !base) return false;
+    const [x, y] = this.#to(v, base);
+    return x + l[0] < W && y + l[1] < H && x + l[0] + l[2] > 0 && y + l[1] + l[3] > 0;
   }
 
   anchors(): Map<string, Pt> {

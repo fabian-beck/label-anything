@@ -90,34 +90,44 @@ test("moving objects are solved warm-started, then settle", async ({ page }) => 
   await page.waitForFunction(() => globalThis.playground.history.at(-1)?.kind === "settle", null, { timeout: 20_000 });
 });
 
-test("the world map is a window on the map: labels are cut at its border and keep their place while it is panned", async ({ page }) => {
+test("the world map is a window on the map: labels are cut at its border, and none moves while it is panned", async ({ page }) => {
   const errors = await open(page, "map");
-  const settled = async () => {
-    await page.waitForTimeout(200);
-    await page.waitForFunction(() => globalThis.playground.history.at(-1)?.kind !== "warm", null, { timeout: 20_000 });
-    await page.waitForTimeout(300);
+  // no solve is under way or about to start, and the labels have come to rest
+  const quiet = async () => {
+    let n = -1;
+    for (let i = 0; i < 60; i++) {
+      await page.waitForTimeout(350);
+      const m = await page.evaluate(() => globalThis.playground.history.length);
+      if (m === n) return;
+      n = m;
+    }
   };
-  // the placed labels: where they are on the map (px of the map at zoom 1), and in the view
+  // the placed labels: where they are on the map (px of the map at zoom 1), and the view
   const labels = () =>
     page.evaluate(() => {
       const app = globalThis.playground;
       const v = app.scene.snapshot();
       const { width, height } = app.problem.canvas;
-      return app.result.placements
+      const list = app.result.placements
         .filter((p) => p.placed)
         .map((p) => {
           const b = p.box;
           const shown = b.x < width && b.y < height && b.x + b.w > 0 && b.y + b.h > 0;
           return {
-            id: p.id, k: v.k, x: (b.x + b.w / 2 - v.x) / v.k, y: (b.y + b.h / 2 - v.y) / v.k, shown,
+            id: p.id, x: (b.x - v.x) / v.k, y: (b.y - v.y) / v.k, w: b.w, h: b.h, shown,
             cut: shown && (b.x < 0 || b.y < 0 || b.x + b.w > width || b.y + b.h > height),
           };
         });
+      return { v, width, height, list, pinned: app.result.stats.pinned, pin: app.problem.warm_start?.pin === true, kind: app.history.at(-1).kind };
     });
   const canvas = () => page.evaluate(() => globalThis.playground.problem.canvas);
   const box = await page.locator("#stage").boundingBox();
   const [cx, cy] = [box.x + box.width * 0.55, box.y + box.height * 0.4];
-  /** Pans by 120 px to the left and 40 px up, in steps; the share of the labels in view that stay where they are on the map. */
+  /**
+   * Pans by 120 px to the left and 40 px up, in steps. Of the labels in view before or
+   * after: how many stay exactly where they are on the map, move, or are lost while the
+   * place they had is still in view.
+   */
   const pan = async () => {
     const before = await labels();
     for (let s = 0; s < 4; s++) {
@@ -126,13 +136,21 @@ test("the world map is a window on the map: labels are cut at its border and kee
       await page.mouse.move(cx - 15, cy - 5, { steps: 2 });
       await page.mouse.move(cx - 30, cy - 10, { steps: 2 });
       await page.mouse.up();
-      await settled();
+      await quiet();
     }
-    const after = new Map((await labels()).map((l) => [l.id, l]));
-    const both = before.filter((a) => after.has(a.id) && (a.shown || after.get(a.id).shown));
-    expect(both.length).toBeGreaterThan(8);
-    // (a label that is nudged by a few px has stayed)
-    return both.filter((a) => Math.hypot(after.get(a.id).x - a.x, after.get(a.id).y - a.y) * a.k < 6).length / both.length;
+    const after = await labels();
+    const now = new Map(after.list.map((l) => [l.id, l]));
+    const { v, width, height } = after;
+    const t = { stayed: 0, moved: 0, lost: 0, after };
+    for (const a of before.list) {
+      // where the label is in the view now, if it kept its place on the map
+      const [x, y] = [a.x * v.k + v.x, a.y * v.k + v.y];
+      const stillShown = x < width && y < height && x + a.w > 0 && y + a.h > 0;
+      const b = now.get(a.id);
+      if (!b) t.lost += stillShown ? 1 : 0;
+      else if (a.shown || b.shown) t[Math.hypot(b.x - a.x, b.y - a.y) * v.k < 0.01 ? "stayed" : "moved"]++;
+    }
+    return t;
   };
 
   expect((await canvas()).overscan).toBeGreaterThan(0);
@@ -143,22 +161,36 @@ test("the world map is a window on the map: labels are cut at its border and kee
     await page.mouse.wheel(0, -240);
     await page.waitForTimeout(100);
   }
-  await settled();
+  await page.waitForFunction(() => globalThis.playground.history.at(-1)?.kind === "settle", null, { timeout: 20_000 });
+  await quiet();
   const zoomed = await labels();
-  expect(zoomed[0].k).toBeGreaterThan(4);
+  expect(zoomed.v.k).toBeGreaterThan(4);
   // the region is the whole map, far larger than the view; labels cross the edges of the view
   const c = await canvas();
   expect(c.region[2]).toBeGreaterThan(4 * c.width);
-  expect(zoomed.filter((l) => l.cut).length).toBeGreaterThan(0);
-  const stayed = await pan();
-  expect(stayed).toBeGreaterThan(0.75);
+  expect(zoomed.list.filter((l) => l.cut).length).toBeGreaterThan(0);
+
+  // panned, the labels are pinned: none moves, none is lost, and no settle solve follows
+  const pinned = await pan();
+  expect(pinned.after.pin).toBe(true);
+  expect(pinned.after.pinned).toBeGreaterThan(10);
+  expect(pinned.after.kind).toBe("warm");
+  expect(pinned.stayed).toBeGreaterThan(8);
+  expect([pinned.moved, pinned.lost]).toEqual([0, 0]);
+
+  // with the warm starts alone, some labels move as the map is panned
+  await page.evaluate(() => globalThis.playground.setValue("view.pin", false));
+  const warm = await pan();
+  expect(warm.after.pin).toBe(false);
+  expect(warm.moved + warm.lost).toBeGreaterThan(0);
 
   // without the window, every label is moved inside the view, and those at the border move with it
   await page.evaluate(() => globalThis.playground.setValue("param.window", false));
   await page.waitForFunction(() => globalThis.playground.problem.canvas.overscan === undefined, null, { timeout: 20_000 });
-  await settled();
-  expect((await labels()).filter((l) => l.cut)).toEqual([]);
-  expect(await pan()).toBeLessThan(stayed - 0.15);
+  await quiet();
+  expect((await labels()).list.filter((l) => l.cut)).toEqual([]);
+  const contained = await pan();
+  expect(contained.moved + contained.lost).toBeGreaterThan(warm.moved + warm.lost);
   expect(errors).toEqual([]);
 });
 

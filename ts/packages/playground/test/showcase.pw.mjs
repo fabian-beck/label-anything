@@ -202,7 +202,7 @@ test("the map zooms and pans: more cities come, and the whole map has its first 
   const onMap = async () => {
     const v = await view();
     const placed = (await state(page, "europe")).placed;
-    return new Map(placed.map((p) => [p.id, { x: (p.box.x - v.x) / v.k, y: (p.box.y - v.y) / v.k, shown: inView(p.box) }]));
+    return new Map(placed.map((p) => [p.id, { x: (p.box.x - v.x) / v.k, y: (p.box.y - v.y) / v.k, w: p.box.w, h: p.box.h, shown: inView(p.box) }]));
   };
   const before = await onMap();
   // a drag pans the zoomed map
@@ -217,12 +217,21 @@ test("the map zooms and pans: more cities come, and the whole map has its first 
   expect(panned.x).toBeLessThan(zoomed.x - 50);
   expect(panned.y).toBeLessThan(zoomed.y - 20);
   expectDisjoint((await state(page, "europe")).placed);
-  // the labels stayed where they were on the map, those at the border too
+  // panned, the labels are pinned: every one that shows is exactly where it was on the map,
+  // those at the border too, and none is lost while its place is in view
   const after = await onMap();
-  const both = [...before].filter(([id, a]) => after.has(id) && (a.shown || after.get(id).shown));
-  expect(both.length).toBeGreaterThan(15);
-  const stayed = both.filter(([id, a]) => Math.hypot(after.get(id).x - a.x, after.get(id).y - a.y) * panned.k < 1);
-  expect(stayed.length / both.length).toBeGreaterThan(0.85);
+  expect(await page.evaluate(() => globalThis.labelAnythingShowcase.stages.europe.result.stats.pinned)).toBeGreaterThan(15);
+  let stayed = 0;
+  for (const [id, a] of before) {
+    const b = after.get(id);
+    const stillShown = inView({ x: a.x * panned.k + panned.x, y: a.y * panned.k + panned.y, w: a.w, h: a.h });
+    if (!b) expect(stillShown, `${id} lost its label`).toBe(false);
+    else if (a.shown || b.shown) {
+      expect(Math.hypot(b.x - a.x, b.y - a.y) * panned.k, `${id} moved`).toBeLessThan(0.01);
+      stayed++;
+    }
+  }
+  expect(stayed).toBeGreaterThan(15);
   // Ctrl + wheel zooms about the pointer; the wheel alone scrolls the page
   await page.keyboard.down("Control");
   await page.mouse.wheel(0, -100);

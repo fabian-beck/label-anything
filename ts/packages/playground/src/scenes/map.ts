@@ -192,6 +192,7 @@ export class MapScene implements Scene {
       } as Country;
     });
     this.#poles.clear();
+    this.#labels.clear();
     this.#simple.clear();
   }
 
@@ -384,21 +385,24 @@ export class MapScene implements Scene {
     // labels in the overscan keep off them before they come in
     const margin = win ? OVERSCAN : 0;
     const marks = 3 * margin;
+    const at = (v: number): number => (win ? v : round2(v));
     const out: Item[] = [];
     for (const c of this.#countries) {
       if (!this.#visible(c, marks) || !c.main.length) continue;
       const [outer, ...inner] = this.#simplified(c);
       // a window gets the whole outline: the label has its place in the country, wherever
       // the view is. Otherwise only the part in view counts, and the label goes there
+      // (and unrounded: the same outline in every view, so that its pole stays put)
       const view: [number, number, number, number] = [-2, -2, this.#w + 2, this.#h + 2];
       const part = (r: P[]): P[] => {
         const screen = r.map((p) => this.#toScreen(p));
-        return (win ? screen : clipRing(screen, view)).map(roundP);
+        return win ? screen : clipRing(screen, view).map(roundP);
       };
       const ring = part(outer!);
       let anchor: Record<string, unknown>;
       if (ring.length >= 3 && Math.abs(ringArea(ring)) >= 12) {
-        if (!this.#visible(c, margin)) continue;
+        // (a name beside a small country can show while the country is out of reach)
+        if (!this.#visible(c, margin) && !this.#labelShows(c.id)) continue;
         anchor = { type: "area", polygon: ring };
         const holes = inner.map(part).filter((h) => h.length >= 3);
         if (holes.length) anchor.holes = holes;
@@ -406,7 +410,7 @@ export class MapScene implements Scene {
         // a country of a few pixels: a point at its label point
         const s = this.#toScreen(c.labelXY);
         if (!this.#inView(s, marks)) continue;
-        anchor = { type: "point", x: round2(s[0]), y: round2(s[1]), mark: { shape: "circle", r: 2 } };
+        anchor = { type: "point", x: at(s[0]), y: at(s[1]), mark: { shape: "circle", r: 2 } };
       }
       const label: Record<string, unknown> = { type: "text", text: c.name };
       if (this.params.abbrev && c.abbrev) label.alternatives = [c.abbrev];
@@ -419,7 +423,7 @@ export class MapScene implements Scene {
       if (!s || !this.#inView(s, marks)) continue;
       out.push({
         id: f.id,
-        anchor: { type: "point", x: round2(s[0]), y: round2(s[1]), mark: { shape: "circle", r: 3.5 } },
+        anchor: { type: "point", x: at(s[0]), y: at(s[1]), mark: { shape: "circle", r: 3.5 } },
         label: { type: "text", text: f.code, font: { size: 10 } },
         tier: flightsFirst ? 1 : 0,
         priority: 0,
@@ -468,19 +472,35 @@ export class MapScene implements Scene {
       if (p.id.startsWith("f")) continue;
       if (p.anchor) this.#poles.set(p.id, [(p.anchor[0] - v.x) / v.k, (p.anchor[1] - v.y) / v.k]);
       if (p.placed && p.model !== "internal") this.#external.add(p.id);
+      if (p.placed && p.box && p.anchor) this.#labels.set(p.id, [p.box.x - p.anchor[0], p.box.y - p.anchor[1], p.box.w, p.box.h]);
+      else this.#labels.delete(p.id);
     }
+  }
+
+  /** Where each country's label is from its anchor, as of the latest result: x, y, width, height in px. */
+  #labels = new Map<string, [number, number, number, number]>();
+
+  /** Whether the label a country has shows in the view (some of it). */
+  #labelShows(id: string): boolean {
+    const l = this.#labels.get(id);
+    const pole = this.#poles.get(id);
+    if (!l || !pole) return false;
+    const s = this.#toScreen(pole);
+    return s[0] + l[0] < this.#w && s[1] + l[1] < this.#h && s[0] + l[0] + l[2] > 0 && s[1] + l[1] + l[3] > 0;
   }
 
   anchors(): Anchors {
     const m: Anchors = new Map();
+    // (a window's anchors are not rounded: the labels move with the map exactly)
+    const at = (v: number): number => (this.#window ? v : round2(v));
     for (const c of this.#countries) {
       const base = this.#poles.get(c.id) ?? c.labelXY;
       const s = this.#toScreen(base);
-      m.set(c.id, [round2(s[0]), round2(s[1])]);
+      m.set(c.id, [at(s[0]), at(s[1])]);
     }
     for (const f of this.#flights) {
       const s = this.#flightXY(f);
-      if (s) m.set(f.id, [round2(s[0]), round2(s[1])]);
+      if (s) m.set(f.id, [at(s[0]), at(s[1])]);
     }
     return m;
   }
