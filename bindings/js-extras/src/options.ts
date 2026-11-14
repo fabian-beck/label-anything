@@ -76,6 +76,29 @@ export function resolveFont(font: FontOptions | undefined, fallback: Partial<Css
   };
 }
 
+/**
+ * The `overscan` option of the helpers for views that pan and zoom (maps, large graphs): how
+ * far beyond the view, in px, items are labeled as well. The view is then a window on a
+ * larger drawing (`canvas.overscan`, spec §2.3): labels near its edge keep their places
+ * while it moves and are cut at the edge instead of being pushed inside. Default: 8 times
+ * the font size, about the width of a label. `false`: only what is in view is labeled, and
+ * every label stays inside the view.
+ */
+export type Overscan = number | false;
+
+/** The overscan in px, `null` for a view that keeps its labels inside. */
+export function resolveOverscan(overscan: Overscan | undefined, font: CssFont): number | null {
+  if (overscan === false) return null;
+  if (overscan === undefined) return 8 * font.size;
+  return Number.isFinite(overscan) && overscan > 0 ? overscan : 0;
+}
+
+/** Whether (x, y) lies in a view of w × h px or at most `overscan` px beyond it. */
+export function inView(x: number, y: number, w: number, h: number, overscan: number | null): boolean {
+  const m = overscan ?? 0;
+  return x >= -m && y >= -m && x <= w + m && y <= h + m;
+}
+
 /** The label of a datum (`null` when it has no text). */
 export function labelOf<D>(options: LabelOptions<D>, d: D, i: number, fallback?: (d: D) => unknown): Label | null {
   let t: unknown;

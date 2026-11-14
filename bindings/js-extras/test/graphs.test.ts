@@ -106,7 +106,8 @@ describe("sigma labels", () => {
     const engine = fakeEngine();
     const labels = labelSigma(r, { engine, debounce: 1, measure: false });
     const { problem } = engine.last;
-    expect(problem.canvas).toEqual({ width: 300, height: 200 });
+    // the viewport is a window on the graph: 8 times the font size (14 px) beyond its edges
+    expect(problem.canvas).toEqual({ width: 300, height: 200, overscan: 112 });
     expect(problem.items.map((i) => i.id)).toEqual(["a", "b", "c"]);
     expect(problem.obstacles!.vector![0]).toMatchObject({ class: "edges", polylines: [[[10, 10], [100, 10]]] });
     expect(r.refreshes()).toBe(1);

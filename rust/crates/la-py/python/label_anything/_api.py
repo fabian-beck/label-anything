@@ -213,6 +213,7 @@ def place(
     canvas: Any = None,
     canvas_padding: Optional[Length] = None,
     allow_outside: Optional[bool] = None,
+    overscan: Optional[Length] = None,
     device_pixel_ratio: Optional[float] = None,
     region: Optional[Sequence[float]] = None,
     canvas_background: Optional[str] = None,

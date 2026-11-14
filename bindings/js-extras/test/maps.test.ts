@@ -35,7 +35,8 @@ describe("Leaflet labelLayer", () => {
       measure: false,
     }).addTo(map);
     const first = engine.last.problem;
-    expect(first.canvas).toEqual({ width: 400, height: 300 });
+    // the map is a window on a larger drawing: 8 times the font size (12 px) beyond its edges
+    expect(first.canvas).toEqual({ width: 400, height: 300, overscan: 96 });
     expect(first.items.map((i) => i.id)).toEqual(["ba", "n", "er"]); // "far" is off-screen
     const n = map.latLngToContainerPoint([49.45, 11.08]);
     expect(first.items[1]!.anchor).toMatchObject({ x: n.x, y: n.y, mark: { shape: "circle", r: 4 } });
@@ -60,6 +61,46 @@ describe("Leaflet labelLayer", () => {
     expect(engine.last.problem.items.length).toBe(2);
     layer.remove();
     expect(pane.querySelector("svg")).toBeNull();
+  });
+
+  it("labels points a little beyond the map's edge, unless the labels are to stay inside", () => {
+    const map = leafletMap();
+    const at = (x: number, y: number) => map.containerPointToLatLng([x, y]);
+    const [near, beyond] = [at(460, 150), at(520, 150)];
+    const data = [
+      ...towns,
+      { id: "near", name: "Near", lat: near.lat, lng: near.lng, pop: 5 },
+      { id: "beyond", name: "Beyond", lat: beyond.lat, lng: beyond.lng, pop: 5 },
+    ];
+    const common = { latLng: (d: (typeof data)[number]) => [d.lat, d.lng] as [number, number], text: (d: (typeof data)[number]) => d.name, id: (d: (typeof data)[number]) => d.id, measure: false as const };
+    const engine = fakeEngine();
+    const layer = labelLayer(L, data, { engine, ...common }).addTo(map);
+    // 60 px beyond the right edge: within the overscan of 96 px; 120 px beyond: not
+    expect(engine.last.problem.items.map((i) => i.id)).toEqual(["ba", "n", "er", "near"]);
+    layer.remove();
+    const wide = labelLayer(L, data, { engine, ...common, overscan: 150 }).addTo(map);
+    expect(engine.last.problem.canvas).toEqual({ width: 400, height: 300, overscan: 150 });
+    expect(engine.last.problem.items.map((i) => i.id)).toEqual(["ba", "n", "er", "near", "beyond"]);
+    wide.remove();
+    labelLayer(L, data, { engine, ...common, overscan: false }).addTo(map);
+    expect(engine.last.problem.canvas).toEqual({ width: 400, height: 300 });
+    expect(engine.last.problem.items.map((i) => i.id)).toEqual(["ba", "n", "er"]);
+  });
+
+  it.skipIf(!cliEngine)("lets a label at the map's edge cross it, where the map cuts it", () => {
+    const map = leafletMap();
+    const edge = map.containerPointToLatLng([392, 150]);
+    const data = [...towns, { id: "edge", name: "Edgewater", lat: edge.lat, lng: edge.lng, pop: 5 }];
+    const common = { engine: cliEngine!, latLng: (d: (typeof data)[number]) => [d.lat, d.lng] as [number, number], text: (d: (typeof data)[number]) => d.name, id: (d: (typeof data)[number]) => d.id, measure: false as const };
+    const box = (r: LabelResult | undefined) => r!.placements.find((p) => p.id === "edge")!.box!;
+    const cut = labelLayer(L, data, common).addTo(map);
+    const b = box(cut.result);
+    expect(b.x + b.w).toBeGreaterThan(400);
+    expect(overlaps(cut.result!)).toEqual([]);
+    cut.remove();
+    const inside = labelLayer(L, data, { ...common, overscan: false }).addTo(map);
+    const c = box(inside.result);
+    expect(c.x + c.w).toBeLessThanOrEqual(400);
   });
 
   it("keeps labels on their anchors when they are drawn while the map is dragged", async () => {
@@ -197,6 +238,7 @@ describe("MapLibre labels", () => {
       measure: false,
     });
     const p = engine.last.problem;
+    expect(p.canvas).toEqual({ width: 400, height: 300, overscan: 96 });
     expect(p.items.map((i) => i.id)).toEqual(["ba", "n", "er"]);
     const roads = p.obstacles!.vector!;
     expect(roads.map((v) => [v.class, v.width])).toEqual([["roads", 2]]);
@@ -219,5 +261,18 @@ describe("MapLibre labels", () => {
     expect(map.getCanvasContainer().querySelector("svg")).toBeNull();
     map.fire("moveend");
     expect(engine.calls.length).toBe(2);
+  });
+
+  it("labels points a little beyond the map's edge, unless the labels are to stay inside", () => {
+    const map = fakeMap();
+    const engine = fakeEngine();
+    // x = 450 and 520 px in a map of 400 px: 50 and 120 px beyond its right edge
+    const data = [...towns, { id: "near", name: "Near", lat: 49.5, lng: 13.0, pop: 5 }, { id: "beyond", name: "Beyond", lat: 49.5, lng: 13.7, pop: 5 }];
+    const common = { engine, lngLat: (d: (typeof data)[number]) => [d.lng, d.lat] as [number, number], text: "name", id: (d: (typeof data)[number]) => d.id, measure: false as const };
+    labelMapLibre(map, data, common).remove();
+    expect(engine.last.problem.items.map((i) => i.id)).toEqual(["ba", "n", "er", "near"]);
+    labelMapLibre(map, data, { ...common, overscan: false }).remove();
+    expect(engine.last.problem.canvas).toEqual({ width: 400, height: 300 });
+    expect(engine.last.problem.items.map((i) => i.id)).toEqual(["ba", "n", "er"]);
   });
 });

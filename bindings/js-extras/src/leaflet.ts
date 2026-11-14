@@ -1,6 +1,8 @@
 /**
  * Leaflet: a layer of labels for point data, re-solved after every move and warm-started
- * from the previous result, so labels keep their places while you pan and zoom.
+ * from the previous result, so labels keep their places while you pan and zoom. The map is
+ * a window on a larger drawing: points a little beyond its edge are labeled too
+ * (`overscan`), and a label at the edge is cut there instead of being pushed inside.
  *
  * ```js
  * import L from "leaflet";
@@ -14,8 +16,8 @@
  * ```
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
-import type { LabelOptions, Mark } from "./options.js";
-import { idOf, itemExtras, labelOf, resolveFont } from "./options.js";
+import type { LabelOptions, Mark, Overscan } from "./options.js";
+import { idOf, inView, itemExtras, labelOf, resolveFont, resolveOverscan } from "./options.js";
 import { Overlay, type OverlayItem } from "./overlay.js";
 import type { RenderOptions } from "./render.js";
 
@@ -43,6 +45,12 @@ export interface LeafletLabelOptions<D> extends LabelOptions<D>, Omit<RenderOpti
   latLng: (d: D, i: number) => LatLngLike | null | undefined;
   /** Mark at the anchor that labels must not cover (default: circle r = 4). */
   mark?: Mark | ((d: D, i: number) => Mark | undefined);
+  /**
+   * How far beyond the map's edge, in px, points are labeled as well (default: 8 times the
+   * font size): labels near the edge keep their places while the map moves and are cut at
+   * the edge. `false`: only points in view are labeled, every label inside the map.
+   */
+  overscan?: Overscan;
   /** Map pane for the labels (created with z-index 640 if missing). */
   pane?: string;
   /** Obstacles in container px, e.g. from other layers. */
@@ -75,6 +83,7 @@ export function labelLayer<D>(L: LeafletLike, data: readonly D[], options: Leafl
   // result of a worker) stay on their anchors instead of being shifted a second time.
   let origin: PointLike = { x: 0, y: 0 };
   const font = resolveFont(options.font, { size: 12, family: "sans-serif" });
+  const overscan = resolveOverscan(options.overscan, font);
   const paneName = options.pane ?? "labelAnything";
 
   const collect = (): OverlayItem[] => {
@@ -87,7 +96,7 @@ export function labelLayer<D>(L: LeafletLike, data: readonly D[], options: Leafl
       if (!ll || !label) return;
       const layer = map!.latLngToLayerPoint(ll);
       const p = { x: layer.x - origin.x, y: layer.y - origin.y };
-      if (!(p.x >= 0 && p.y >= 0 && p.x <= size.x && p.y <= size.y)) return;
+      if (!inView(p.x, p.y, size.x, size.y, overscan)) return;
       const mark = typeof options.mark === "function" ? options.mark(d, i) : (options.mark ?? { shape: "circle", r: 4 });
       out.push({ id: idOf(options, d, i), x: p.x, y: p.y, label, mark, extras: itemExtras(options, d, i) });
     });
@@ -119,6 +128,7 @@ export function labelLayer<D>(L: LeafletLike, data: readonly D[], options: Leafl
           const s = m.getSize();
           return [s.x, s.y];
         },
+        overscan,
         collect,
         obstacles: options.obstacles ? () => options.obstacles!(m) : undefined,
         transition: options.transition,

@@ -34,9 +34,9 @@ def test_problem_places_without_violations(path: Path) -> None:
     from_file = la.place_problem(path)
     assert first.raw["placements"] == again.raw["placements"]
     assert first.raw["placements"] == from_file.raw["placements"]
-    # placed boxes lie inside the canvas
+    # placed boxes lie inside the canvas, unless it is a window on a larger drawing
     canvas = problem.get("canvas")
-    if canvas and not canvas.get("allow_outside"):
+    if canvas and not canvas.get("allow_outside") and canvas.get("overscan") is None:
         for p in first.placed:
             assert p.box is not None
             assert p.box.x >= -1e-6 and p.box.y >= -1e-6

@@ -191,6 +191,21 @@ def test_allow_outside_and_padding():
     assert evaluate(prob, res)["hard"]["canvas_edge"] == 0
 
 
+def test_a_window_bounds_labels_by_its_region_alone():
+    # canvas.overscan: the canvas is a window on a larger drawing (spec §2.3)
+    prob = problem([item("A", 190, 50)])
+    leader = {"points": [[192, 50], [205, 50]], "style": "straight", "port": [205, 50]}
+    res = result([placed("A", 205, 45, side="distant", model="distant", leader=leader)])
+    m = evaluate(prob, res)
+    assert m["hard"]["canvas_edge"] == 1 and m["hard"]["leader_canvas"] == 1
+    prob["canvas"]["overscan"] = 40
+    m = evaluate(prob, res)
+    assert m["hard"]["canvas_edge"] == 0 and m["hard"]["leader_canvas"] == 0
+    # the drawing ends 10 px beyond the canvas: the label must stay inside it
+    prob["canvas"]["region"] = [0, 0, prob["canvas"]["width"] + 10, prob["canvas"]["height"]]
+    assert evaluate(prob, res)["hard"]["canvas_edge"] == 1
+
+
 def test_generated_truth_is_equivalent_to_the_problem_layers():
     from bench.common.truth import complete_truth
 

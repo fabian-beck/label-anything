@@ -226,7 +226,24 @@ public final class LabelProblem {
       return put("canvas.allow_outside", allow);
     }
 
-    /** Sub-rectangle labels must stay inside (leaders may leave it). */
+    /**
+     * Makes the canvas a window on a larger drawing, for views that pan and zoom: labels
+     * are placed this far (px) beyond every edge as on the canvas and may cross the edges,
+     * where the host cuts them. Pass the items up to there.
+     */
+    public Builder overscan(double px) {
+      return put("canvas.overscan", px);
+    }
+
+    /** As {@link #overscan(double)}, with a unit ({@code "8em"}). */
+    public Builder overscan(String length) {
+      return put("canvas.overscan", length);
+    }
+
+    /**
+     * Rectangle labels must stay inside (leaders may leave it). In a window ({@link
+     * #overscan(double)}): the bounds of the whole drawing, which may reach beyond the canvas.
+     */
     public Builder region(double x, double y, double w, double h) {
       return put("canvas.region", new double[] {x, y, w, h});
     }

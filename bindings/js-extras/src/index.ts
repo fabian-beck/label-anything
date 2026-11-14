@@ -7,7 +7,7 @@
  */
 export { LatestRunner, resolveEngine, setDefaultEngine, type AnyEngine, type AsyncEngine, type Engine } from "./engine.js";
 export { canvasMeasure, cssFont, type CssFont, type MeasureFn } from "./measure.js";
-export { buildProblem, resolveFont, type FontOptions, type Item, type Label, type LabelOptions, type LeaderStyle, type Mark } from "./options.js";
+export { buildProblem, inView, resolveFont, resolveOverscan, type FontOptions, type Item, type Label, type LabelOptions, type LeaderStyle, type Mark, type Overscan } from "./options.js";
 export { followAnchors, leaderPath, renderLabels, type RenderOptions } from "./render.js";
 export { LabelMemory, type Anchors } from "./stable.js";
 export { LabelMotion, type MotionFrame, type MotionOptions } from "./motion.js";

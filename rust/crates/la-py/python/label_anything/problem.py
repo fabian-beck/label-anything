@@ -38,6 +38,7 @@ OPTION_PATHS: Dict[str, str] = {
     # canvas
     "canvas_padding": "canvas.padding",
     "allow_outside": "canvas.allow_outside",
+    "overscan": "canvas.overscan",
     "device_pixel_ratio": "canvas.device_pixel_ratio",
     "region": "canvas.region",
     "canvas_background": "canvas.background",

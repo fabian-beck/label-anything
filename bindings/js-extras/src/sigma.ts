@@ -8,7 +8,9 @@
  *
  * Sigma draws labels at a fixed pixel size while nodes move under the camera, so the solve
  * runs in viewport pixels: after camera moves and graph changes (debounced), warm-started
- * from the previous result. In between, labels follow their nodes; after a solve they glide
+ * from the previous result. The viewport is a window on the graph: nodes a little beyond
+ * its edge are labeled too (`overscan`), and a label at the edge is cut there instead of
+ * being pushed inside. In between, labels follow their nodes; after a solve they glide
  * into their new places and fade in and out (`transition`). Labels are drawn by a
  * replacement of sigma's label renderer; omitted labels are hidden via `nodeReducer`.
  */
@@ -16,7 +18,7 @@ import type { LabelProblem, LabelResult } from "@label-anything/core";
 import { errorHandler, LatestRunner, resolveEngine } from "./engine.js";
 import { cssFont, numericWeight } from "./measure.js";
 import { LabelMotion } from "./motion.js";
-import { buildProblem, itemExtras, labelOf, placeOptionsOf, resolveFont, type LabelOptions, type VectorLayer } from "./options.js";
+import { buildProblem, inView, itemExtras, labelOf, placeOptionsOf, resolveFont, resolveOverscan, type LabelOptions, type Overscan, type VectorLayer } from "./options.js";
 import { leadersOf, lineStart } from "./render.js";
 import { LabelMemory } from "./stable.js";
 
@@ -62,6 +64,12 @@ export interface SigmaLabelOptions extends Omit<LabelOptions<SigmaNode>, "id" | 
   priority?: ((key: string, attrs: Attrs) => number | null | undefined) | LabelProblem["priority"];
   /** Text colour (default: sigma's `labelColor`). */
   fill?: string;
+  /**
+   * How far beyond the viewport's edge, in px, nodes are labeled as well (default: 8 times
+   * the font size): labels near the edge keep their places while the camera moves and are
+   * cut at the edge. `false`: only nodes in view are labeled, every label inside the viewport.
+   */
+  overscan?: Overscan;
   /** Edges as obstacles (default `true`). */
   avoidEdges?: boolean;
   /** Re-solve delay after camera moves and graph changes in ms (default 120). */
@@ -91,6 +99,7 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
     weight: numericWeight(renderer.getSetting("labelWeight") as string | undefined),
   });
   const fill = options.fill ?? color ?? "#000";
+  const overscan = resolveOverscan(options.overscan, font);
   const helper: LabelOptions<SigmaNode> = {
     ...options,
     text: undefined,
@@ -182,7 +191,7 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
       const d = viewport(key);
       if (!d) return;
       pos.set(key, d);
-      if (!(d.x >= 0 && d.y >= 0 && d.x <= width && d.y <= height)) return;
+      if (!inView(d.x, d.y, width, height, overscan)) return;
       // the label sigma would show (our reducer hides omitted ones in the display data)
       const shown = previousReducer ? previousReducer(key, attrs) : attrs;
       const text = options.text ? options.text(key, attrs) : (shown.label as string | null | undefined);
@@ -203,7 +212,7 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
     const warm = memory.warmStart(anchors);
     const problem = buildProblem(
       {
-        canvas: { width, height },
+        canvas: overscan === null ? { width, height } : { width, height, overscan },
         items,
         ...(polylines.length ? { obstacles: { vector: [{ class: "edges", polylines: polylines as VectorLayer["polylines"], width: 1 }] } } : {}),
         ...(warm ? { warm_start: warm } : {}),

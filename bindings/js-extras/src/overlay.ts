@@ -31,6 +31,12 @@ export interface OverlayConfig<D> {
   render?: Omit<RenderOptions, "font">;
   /** View size in px. */
   size(): readonly [number, number];
+  /**
+   * The view is a window on a larger drawing (`canvas.overscan`, in px): `collect()` gives
+   * the items up to there, and labels may cross the edges of the view. `null`: labels stay
+   * inside the view.
+   */
+  overscan?: number | null;
   /** The items to label, at their current positions (overlay px). */
   collect(): OverlayItem[];
   /**
@@ -95,7 +101,7 @@ export class Overlay<D> {
     const obstacles = c.obstacles?.();
     const problem = buildProblem(
       {
-        canvas: { width: w, height: h },
+        canvas: typeof c.overscan === "number" ? { width: w, height: h, overscan: c.overscan } : { width: w, height: h },
         items: items.map((it) => ({
           id: it.id,
           anchor: it.mark ? { type: "point", x: it.x, y: it.y, mark: it.mark } : { type: "point", x: it.x, y: it.y },

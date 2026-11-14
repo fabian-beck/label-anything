@@ -1,6 +1,8 @@
 /**
  * MapLibre GL (and Mapbox GL): labels for point data in an SVG overlay. Labels follow
- * their anchors while the map moves and are re-solved (warm-started) on `moveend`.
+ * their anchors while the map moves and are re-solved (warm-started) on `moveend`. The map
+ * is a window on a larger drawing: points a little beyond its edge are labeled too
+ * (`overscan`), and a label at the edge is cut there instead of being pushed inside.
  * Rendered features of other layers can be obstacles (`avoidLayers`).
  *
  * ```js
@@ -15,8 +17,8 @@
  * ```
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
-import type { LabelOptions, Mark, VectorLayer } from "./options.js";
-import { idOf, itemExtras, labelOf, obstacleClass, resolveFont } from "./options.js";
+import type { LabelOptions, Mark, Overscan, VectorLayer } from "./options.js";
+import { idOf, inView, itemExtras, labelOf, obstacleClass, resolveFont, resolveOverscan } from "./options.js";
 import { Overlay, type OverlayItem } from "./overlay.js";
 import type { RenderOptions } from "./render.js";
 
@@ -44,6 +46,12 @@ export interface MapLibreLabelOptions<D> extends LabelOptions<D>, Omit<RenderOpt
   lngLat: (d: D, i: number) => LngLatLike | null | undefined;
   /** Mark at the anchor that labels must not cover (default: circle r = 4). */
   mark?: Mark | ((d: D, i: number) => Mark | undefined);
+  /**
+   * How far beyond the map's edge, in px, points are labeled as well (default: 8 times the
+   * font size): labels near the edge keep their places while the map moves and are cut at
+   * the edge. `false`: only points in view are labeled, every label inside the map.
+   */
+  overscan?: Overscan;
   /** Style layers whose rendered features are obstacles (class = layer id). */
   avoidLayers?: string[];
   /** Stroke width of line features (px, default 2) and radius of point features (default 3). */
@@ -67,11 +75,12 @@ export interface MapLabels<D> {
 export function labelMapLibre<D>(map: MapLibreLike, data: readonly D[], options: MapLibreLabelOptions<D>): MapLabels<D> {
   let rows = data;
   const font = resolveFont(options.font, { size: 12, family: "sans-serif" });
+  const overscan = resolveOverscan(options.overscan, font);
   const size = () => {
     const c = map.getCanvas();
     return [c.clientWidth, c.clientHeight] as const;
   };
-  /** The labeled rows at their projected positions: those in the view, or all of them. */
+  /** The labeled rows at their projected positions: those in the view and its overscan, or all of them. */
   const collect = (all = false): OverlayItem[] => {
     const [w, h] = size();
     const out: OverlayItem[] = [];
@@ -80,7 +89,7 @@ export function labelMapLibre<D>(map: MapLibreLike, data: readonly D[], options:
       const label = ll ? labelOf(options, d, i) : null;
       if (!ll || !label) return;
       const p = map.project(ll);
-      if (!all && !(p.x >= 0 && p.y >= 0 && p.x <= w && p.y <= h)) return;
+      if (!all && !inView(p.x, p.y, w, h, overscan)) return;
       const mark = typeof options.mark === "function" ? options.mark(d, i) : (options.mark ?? { shape: "circle", r: 4 });
       out.push({ id: idOf(options, d, i), x: p.x, y: p.y, label, mark, extras: itemExtras(options, d, i) });
     });
@@ -98,6 +107,7 @@ export function labelMapLibre<D>(map: MapLibreLike, data: readonly D[], options:
     font,
     render: { halo: "white", ...options },
     size,
+    overscan,
     collect: () => collect(),
     // while the map moves, a label follows its anchor out of the view
     positions: () => new Map(collect(true).map((it) => [it.id, [it.x, it.y] as const])),
