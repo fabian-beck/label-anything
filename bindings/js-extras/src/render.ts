@@ -130,6 +130,11 @@ export function renderLabels(group: SVGGElement | Element, result: LabelResult, 
     }
     const g = el(doc, "g", { class: `${cls}-item`, "data-id": p.id });
     if (op !== undefined && op < 1) g.setAttribute("opacity", String(r3(op)));
+    // a turned label (the label of an area along it): drawn upright in its box, then turned
+    // about the box's center
+    if (p.rotation) {
+      g.setAttribute("transform", `rotate(${r3(p.rotation)} ${r2(p.box.x + p.box.w / 2)} ${r2(p.box.y + p.box.h / 2)})`);
+    }
     if (p.parts && p.parts.length) {
       for (const part of p.parts) {
         if (part.type === "text" && part.text) g.appendChild(textElement(doc, part.box, part.text, options, cls));

@@ -54,7 +54,8 @@ in both.
   least 4 px), as for the hard rules `leader_near` and `leader_angle`.
 - **Measured as the engine does**: text boxes fit the ink (from the outlines' `glyf`
   bounds) with the lines aligned per `align`, and the removal test keeps the engine's
-  label spacing and own-mark rule.
+  label spacing and own-mark rule, granting the circles of an SVG background the engine's
+  flattening tolerance.
 - The report and the regression check of the release gate include the new measures, and
   the images of the report mark every instance where it happens, with the
   conflicts: a reader sees what a number counts.

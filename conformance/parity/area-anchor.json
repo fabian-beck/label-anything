@@ -8,9 +8,9 @@
         "id": "lake",
         "placed": true,
         "box": {
-          "x": 189.88000000000005,
-          "y": 169.88000000000002,
-          "w": 91.93199999999996,
+          "x": 190.45978125,
+          "y": 181.64640625,
+          "w": 91.93200000000002,
           "h": 12.839999999999975
         },
         "anchor": [
@@ -109,7 +109,7 @@
       "iterations": 800,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 88,
+      "candidates": 49,
       "omission_order": [],
       "priority_inversions": 0,
       "total_cost": 0.025000000000000605,

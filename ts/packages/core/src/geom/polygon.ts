@@ -9,6 +9,7 @@
  * @module
  */
 
+import { atan2Deg } from "../detmath.js";
 import { cmpF64, maxf, minf } from "../math.js";
 import {
   EPS,
@@ -18,6 +19,7 @@ import {
   cornerX,
   cornerY,
   distPointSegXY,
+  distSegRectXY,
   orientXY,
   segCrossProperXY,
   segOverlapsRectXY,
@@ -425,6 +427,82 @@ export function ringCentroid(ring: Ring): P {
     return new P(sx * k, sy * k);
   }
   return new P(cx / (3 * a), cy / (3 * a));
+}
+
+/**
+ * A polygon has a main axis when its larger principal moment is at least this many times
+ * the smaller (an axis ratio of about 1.41).
+ */
+export const MAIN_AXIS_RATIO = 2.0;
+
+/**
+ * The main axis of a polygon with oppositely wound holes (spec §6.5): the direction of
+ * its largest second moment of area about its centroid, as an angle in degrees in
+ * (−90, 90], clockwise on screen from the x axis. Null for a polygon without one: a
+ * degenerate polygon, or one whose larger principal moment is less than
+ * {@link MAIN_AXIS_RATIO} times the smaller. The moments are taken about `origin` (a point
+ * near the polygon, which keeps the sums small) and moved to the centroid.
+ */
+export function mainAxis(rings: readonly Ring[], origin: P): number | null {
+  let a = 0;
+  let cx = 0;
+  let cy = 0;
+  let ixx = 0;
+  let iyy = 0;
+  let ixy = 0;
+  for (const ring of rings) {
+    const n = ring.length;
+    for (let i = 0; i < n; i++) {
+      const p0 = ring[i]!;
+      const q0 = ring[(i + 1) % n]!;
+      const px = p0.x - origin.x;
+      const py = p0.y - origin.y;
+      const qx = q0.x - origin.x;
+      const qy = q0.y - origin.y;
+      const f = px * qy - qx * py;
+      a += f;
+      cx += (px + qx) * f;
+      cy += (py + qy) * f;
+      ixx += (px * px + px * qx + qx * qx) * f;
+      iyy += (py * py + py * qy + qy * qy) * f;
+      ixy += (px * qy + 2.0 * px * py + 2.0 * qx * qy + qx * py) * f;
+    }
+  }
+  if (!(Math.abs(a) > 1e-12)) return null;
+  // area = a / 2; first moments / 6, second moments / 12 (the mixed one / 24)
+  cx = cx / (3.0 * a);
+  cy = cy / (3.0 * a);
+  const mxx = ixx / (6.0 * a) - cx * cx;
+  const myy = iyy / (6.0 * a) - cy * cy;
+  const mxy = ixy / (12.0 * a) - cx * cy;
+  const d = mxx - myy;
+  const t = Math.sqrt(d * d + 4.0 * mxy * mxy);
+  const hi = (mxx + myy + t) * 0.5;
+  const lo = (mxx + myy - t) * 0.5;
+  if (!(Number.isFinite(hi) && lo > 0 && hi >= MAIN_AXIS_RATIO * lo)) return null;
+  return 0.5 * atan2Deg(2.0 * mxy, d);
+}
+
+/**
+ * The room of rectangle `r` inside the polygon: its distance from the polygon's boundary
+ * (0 when an edge touches or crosses it). For a rectangle inside the polygon.
+ */
+export function roomRect(rings: readonly Ring[], r: Rect): number {
+  let m = Infinity;
+  for (let k = 0; k < rings.length; k++) {
+    const ring = rings[k]!;
+    const n = ring.length;
+    for (let i = 0; i < n; i++) {
+      const a = ring[i]!;
+      const b = ring[(i + 1) % n]!;
+      // an edge whose bounding box is no nearer than the nearest edge so far is skipped
+      const dx = maxf(maxf(r.x0 - maxf(a.x, b.x), minf(a.x, b.x) - r.x1), 0.0);
+      const dy = maxf(maxf(r.y0 - maxf(a.y, b.y), minf(a.y, b.y) - r.y1), 0.0);
+      if (dx * dx + dy * dy >= m * m) continue;
+      m = minf(m, distSegRectXY(a.x, a.y, b.x, b.y, r.x0, r.y0, r.x1, r.y1));
+    }
+  }
+  return m;
 }
 
 /**

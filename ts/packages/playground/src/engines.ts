@@ -62,6 +62,7 @@ export function samePlacements(a: LabelResult, b: LabelResult): { same: number; 
       p.id === q.id &&
       p.placed === q.placed &&
       JSON.stringify(p.box ?? null) === JSON.stringify(q.box ?? null) &&
+      (p.rotation ?? 0) === (q.rotation ?? 0) &&
       JSON.stringify(p.leader?.points ?? null) === JSON.stringify(q.leader?.points ?? null) &&
       JSON.stringify(p.text?.lines ?? null) === JSON.stringify(q.text?.lines ?? null);
     if (eq) same++;

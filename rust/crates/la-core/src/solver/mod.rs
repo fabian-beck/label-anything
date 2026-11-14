@@ -644,7 +644,7 @@ impl<'a> Solve<'a> {
             let mut c = candidates::warm(self.model, item, vi, v, b)?;
             c.warm = true;
             c.level = level;
-            c.lshape = candidates::label_shape(&c.rect, &v.shape);
+            c.set_lshape(&v.shape);
             Evaluator::new(self.model, self.obs, self.env).eval(&mut c, v, None);
             if !c.feasible {
                 return None;
@@ -674,7 +674,7 @@ impl<'a> Solve<'a> {
             for (si, mut c) in candidates::warm_nudges(item, vi, v, rect, &steps, self.models[i]) {
                 c.level = 0;
                 c.warm = true;
-                c.lshape = candidates::label_shape(&c.rect, &v.shape);
+                c.set_lshape(&v.shape);
                 Evaluator::new(self.model, self.obs, self.env).eval(&mut c, v, None);
                 if c.feasible {
                     let id = self.cands.len() as u32;
@@ -756,19 +756,29 @@ fn raw_candidates(
         let internal_rank =
             candidates::internal_rank(item, v, models, model.placement.internal_circle_ratio);
         if item.area.is_some() {
-            // area anchors: internal candidates first; external ones around the dot
-            if let Some(rank) = internal_rank {
-                candidates::internal(item, vi, v, rank, &mut fresh);
+            // area anchors: places inside the polygon; beside the dot at the pole only
+            // when the label fits nowhere inside (spec §6.5). A pass for leaders alone
+            // (the ladder's `distant` and `boundary` steps) makes none of them again.
+            let mut inside: Vec<Cand> = Vec::new();
+            if let Some(rank) = candidates::area_rank(item) {
+                candidates::area(item, vi, v, rank, &mut inside);
             }
-            candidates::adjacent(
-                item,
-                vi,
-                v,
-                model.placement.slider_per_gap,
-                models,
-                stubs.as_ref(),
-                &mut fresh,
-            );
+            if inside.is_empty() {
+                candidates::adjacent(
+                    item,
+                    vi,
+                    v,
+                    model.placement.slider_per_gap,
+                    models,
+                    stubs.as_ref(),
+                    &mut fresh,
+                );
+            } else if models.has(Models::ADJACENT)
+                || models.has(Models::SLIDER)
+                || models.has(Models::INTERNAL)
+            {
+                fresh.append(&mut inside);
+            }
         } else {
             candidates::adjacent(
                 item,
@@ -802,7 +812,7 @@ fn raw_candidates(
     }
     for c in &mut fresh {
         c.level = level;
-        c.lshape = candidates::label_shape(&c.rect, &variants[c.variant as usize].shape);
+        c.set_lshape(&variants[c.variant as usize].shape);
     }
     (fresh, dropped.get())
 }
@@ -904,7 +914,7 @@ fn warm_candidate(
     let mut c = candidates::warm(model, item, vi, v, *b)?;
     c.warm = true;
     c.level = 0;
-    c.lshape = candidates::label_shape(&c.rect, &v.shape);
+    c.set_lshape(&v.shape);
     Evaluator::new(model, obs, env).eval(&mut c, v, None);
     c.feasible.then_some(c)
 }

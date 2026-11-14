@@ -399,6 +399,57 @@ CASES["area-internal"] = case(
                 "label": {"type": "text", "text": "Lake"}}]},
     {"placed": 1, "model": {"lake": "internal"}})
 
+# --- area labels (spec §6.5) --------------------------------------------------------------
+def _slab(cx, cy, w, h, deg):
+    """A w × h rectangle around (cx, cy), turned by deg (clockwise on screen)."""
+    a = math.radians(deg)
+    c, s = math.cos(a), math.sin(a)
+    return [[round(cx + x * c - y * s, 3), round(cy + x * s + y * c, 3)]
+            for x, y in ((-w / 2, -h / 2), (w / 2, -h / 2), (w / 2, h / 2), (-w / 2, h / 2))]
+
+
+def _area(id_, polygon, text):
+    return {"id": id_, "anchor": {"type": "area", "polygon": polygon}, "label": {"type": "text", "text": text}}
+
+
+CASES["area-turned"] = case(
+    "a label that fits its slanted area only along the area's main axis is turned along it",
+    {"canvas": {"width": 300, "height": 200},
+     "items": [_area("fjord", _slab(150, 100, 220, 26, 30), "Long Fjord")]},
+    {"placed": 1, "model": {"fjord": "internal"}, "rotation": {"fjord": 30}, "inside_canvas": True},
+    "A 220 × 26 px strip at 30°: an upright label of 15.6 px height with its inner padding "
+    "fits nowhere, a label along the strip does (spec §6.5). The reported box is the label "
+    "before it is turned about its center.")
+
+CASES["area-rotation-off"] = case(
+    "without rotation, the label of an area it does not fit in stands beside the pole",
+    {"canvas": {"width": 300, "height": 200}, "placement": {"area_rotation": 0},
+     "items": [_area("fjord", _slab(150, 100, 220, 26, 30), "Long Fjord")]},
+    {"placed": 1, "model": {"fjord": "adjacent"}, "rotation": {"fjord": 0}})
+
+CASES["area-rotation-limit"] = case(
+    "a label is turned by placement.area_rotation at most",
+    {"canvas": {"width": 300, "height": 300},
+     "items": [_area("sound", _slab(150, 150, 240, 44, 65), "Sound")]},
+    {"placed": 1, "model": {"sound": "internal"}, "rotation": {"sound": 45}},
+    "The strip's main axis is at 65°, more than the 45° a label may be turned by default: "
+    "the label takes 45°, where it still fits the 44 px wide strip.")
+
+CASES["area-upright-preferred"] = case(
+    "a label with room inside its slanted area stays upright",
+    {"canvas": {"width": 400, "height": 300},
+     "items": [_area("bay", _slab(200, 150, 260, 120, 30), "Bay")]},
+    {"placed": 1, "model": {"bay": "internal"}, "rotation": {"bay": 0}},
+    "Turning costs a quarter of weights.shape per 45°: a label that has 1 em of room around "
+    "it upright gains nothing from it.")
+
+CASES["area-avoids-marks"] = case(
+    "the label of an area moves inside it, away from the marks in its middle",
+    {"canvas": {"width": 400, "height": 300},
+     "items": [_area("land", [[40, 40], [360, 30], [370, 260], [30, 270]], "Hinterland"),
+               pt("a", 200, 150, "Alpha"), pt("b", 214, 156, "Beta")]},
+    {"placed": 3, "model": {"land": "internal"}, "rotation": {"land": 0}})
+
 # leaders keep their clearance from the other marks of the cluster (spec §7)
 CASES["leader-angles"] = case(
     "angle-restricted leaders on a crowded sample",
