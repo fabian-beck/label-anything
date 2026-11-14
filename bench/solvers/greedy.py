@@ -17,7 +17,7 @@ import argparse
 import time
 
 from ..common import spec
-from ..common.geom import Box, GridIndex
+from ..common.geom import TOL, Box, GridIndex
 from ..common.jsonio import read_json, write_json
 from ..common.model import adjacent_box, load_problem, position_order
 from ..eval import classes as clsmod
@@ -25,7 +25,6 @@ from ..eval import priority as pr
 from .common import placement, result
 
 IMPLEMENTATION = "bench-greedy/0.1"
-TOL = 0.5
 
 
 def solve(problem: dict) -> dict:
@@ -34,7 +33,7 @@ def solve(problem: dict) -> dict:
     opts = prob.opts
     a_label = opts.get("avoid", {}).get("label", {})
     classes = clsmod.build_classes(prob, None)
-    hard = [c for c in sorted(classes) if c not in ("items", "labels", "leaders", "canvas_edge")
+    hard = [c for c in sorted(classes) if c not in spec.NON_OBSTACLE_CLASSES
             and spec.is_hard(a_label, c)]
     items_hard = spec.is_hard(a_label, "items")
     area = prob.label_area()

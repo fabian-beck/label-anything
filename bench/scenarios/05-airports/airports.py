@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import csv
+import functools
 import json
 import math
 import sys
@@ -91,7 +92,9 @@ def load_airports(min_routes: int = 1) -> list[Airport]:
     return out
 
 
+@functools.lru_cache(maxsize=None)
 def load_countries() -> list[tuple[str, str, list]]:
+    """(name, continent, polygons) of every country, by name; parsed once per build (read-only)."""
     path = fetch.ensure("ne-50m-countries", verbose=False)
     with open(path, encoding="utf-8") as f:
         gj = json.load(f)

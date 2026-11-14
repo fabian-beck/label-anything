@@ -507,7 +507,6 @@ name = "label-anything-py"
 version = "0.1.0"
 dependencies = [
  "label-anything",
- "label-anything-core",
  "pyo3",
  "serde_json",
 ]

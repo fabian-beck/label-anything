@@ -65,7 +65,7 @@ def compute(n: int = N_POINTS) -> dict:
     if cache.exists():
         z = np.load(cache, allow_pickle=False)
         if z["offsets"].tolist() == [s["offset"] for s in sel]:
-            return {"synsets": sel, "xy": z["xy"], "svd": z["svd"]}
+            return {"synsets": sel, "xy": z["xy"]}
     from sklearn.decomposition import TruncatedSVD
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.manifold import TSNE
@@ -82,9 +82,8 @@ def compute(n: int = N_POINTS) -> dict:
         ts = TSNE(n_components=2, perplexity=40.0, init="pca", random_state=SEED, n_jobs=1, learning_rate="auto",
                   method="barnes_hut", angle=0.5)
         xy = ts.fit_transform(Y)
-    np.savez_compressed(cache, xy=xy, svd=Y.astype(np.float32),
-                        offsets=np.array([s["offset"] for s in sel]))
-    return {"synsets": sel, "xy": xy, "svd": Y.astype(np.float32)}
+    np.savez_compressed(cache, xy=xy, offsets=np.array([s["offset"] for s in sel]))
+    return {"synsets": sel, "xy": xy}
 
 
 STOP = set("""a an the of or and to in on for with by from as at that which who is are be used

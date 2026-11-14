@@ -1,4 +1,5 @@
-"""Running the Node baselines (d3fc, ECharts, D3-Labeler): toolchain checks and one script call per solve."""
+"""Running the Node baselines (vega-label, d3fc, ECharts, D3-Labeler): toolchain checks and one script call per
+solve."""
 from __future__ import annotations
 
 import json

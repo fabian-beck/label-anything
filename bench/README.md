@@ -12,11 +12,13 @@ on an engine implementation.
 bench/
   common/          shared library: sources + fetch, spec options, text measurement, geometry,
                    problem model, raster modes, scene/SVG builder, deterministic JSON
-  scenarios/NN-*/  fetch.py, build.py, README.md, LICENSE.md (+ data helpers, polygons.json)
+  scenarios/NN-*/  fetch.py (not 13: its data is committed), build.py, README.md, LICENSE.md
+                   (+ data helpers, polygons.json, figures.json)
   eval/            evaluator package + CLI (python -m bench.eval) + tests/
   solvers/         built-in baselines: naive, greedy
-  baselines/       third-party baselines: textalloc, adjustText, vega-label, ggrepel (adapters,
-                   pinned toolchains, README.md with methods and emulations, tests/)
+  baselines/       third-party baselines: textalloc, adjustText, vega-label, ggrepel, d3fc, ECharts,
+                   D3-Labeler, mumtaz2019 (adapters, pinned toolchains, README.md with methods and
+                   emulations, tests/)
   perf/            performance targets: problem generator + timing (python -m bench.perf)
   render.py        problem + result (+ background) -> SVG / PNG
   run.py           runner -> bench-report/results.json + index.html
@@ -187,7 +189,8 @@ digest).
 | `cora-cites`, `cora-content` | `tkipf/pygcn@1600b5b7` `data/cora/` | `ec1a3723…42d5945e`, `b8ebed0f…46e9c8ee` | repository MIT; data: research use, no explicit license (not redistributed) | McCallum et al. 2000; Sen et al. 2008 |
 | `scikit-image-0.26.0-sdist` | PyPI `scikit_image-0.26.0.tar.gz` | `f5f970ab…e59199fa` | BSD-3-Clause; images: NASA/SpaceX public domain, retina CC0 | NASA; SpaceX; M. Häggström |
 
-Benchmark tooling dependencies (`requirements.txt`) are BSD-3-Clause, MIT or MIT-CMU.
+Benchmark tooling dependencies (`requirements.txt`, transitive ones included) are BSD-3-Clause,
+BSD-2-Clause, MIT, MIT-CMU or Apache-2.0 OR BSD-2-Clause.
 
 ## Evaluator metrics
 
@@ -286,7 +289,8 @@ p95 by nearest rank, wall time and `stats.runtime_ms`), checks determinism (iden
 placements across runs), evaluates the last result (with the truth), renders PNGs (`--svg`:
 also SVGs; `--no-render`: none) and writes `bench-report/results.json` and the static report
 `bench-report/index.html` (see *Report*). Solvers: the built-in baselines `naive`, `greedy`,
-`textalloc`, `adjusttext`, `vega-label`, `ggrepel` (`--baselines` = all of them), or
+`textalloc`, `adjusttext`, `vega-label`, `ggrepel`, `d3fc`, `echarts`, `d3-labeler`, `mumtaz2019`
+(`--baselines` = all of them), or
 `NAME=COMMAND` with `{problem}` and `{result}` placeholders (`--timeout` seconds per run,
 default 600); `--engine PATH` adds `rust=PATH place {problem} -o {result}`. Solvers named
 `rust`, `wasm` or `ts` (optionally `-suffix`) are the Label Anything implementations: they
@@ -599,8 +603,9 @@ docker run --rm -v la-bench-data:/la/bench/data -v la-bench-out:/la/bench/out \
     -v "$PWD/bench-report:/la/bench-report" label-anything-bench --suite full --runs 7 --gate
 ```
 
-The entrypoint (`bench/docker-run.sh`) fetches the data, builds the scenarios once per volume and
-runs `bench/run.py --suite quick --engine … --baselines --require-baselines --perf` plus the
+The entrypoint (`bench/docker-run.sh`) fetches the data, builds the scenarios (the slow derived
+data stays cached in the data volume) and runs
+`bench/run.py --suite quick --engine … --baselines --require-baselines --perf` plus the
 given arguments. In CI, the `bench` job runs the quick suite with the engine on pull requests
 and pushes to main (full suite on tags); the `baselines` job (tags, manual dispatch, weekly) runs the quick suite
 with the engine and every baseline plus the performance targets, builds the gallery into the

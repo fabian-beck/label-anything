@@ -124,9 +124,8 @@ function totalCost(s: Solve, items: readonly number[]): number {
   for (const i of items) {
     const c = s.state.placed[i]!;
     if (c >= 0) {
-      const it = s.model.items[i]!;
-      const cand = s.cands[c]!;
-      t += cand.cost + s.state.dynamicCost(cand, s.cands, s.obs, it.len.buffer, it.len.clearance, s.model.leaders.width, i);
+      const d = s.dynamicCost(i, c);
+      t += s.cands[c]!.cost + d;
     }
   }
   return t;
@@ -273,9 +272,12 @@ function restack(s: Solve, area: Rect, side: number, members: readonly number[],
   return false;
 }
 
-/** Label evaluations of the boundary fill: at least this many, or this many per item. */
-const FILL_WORK_MIN = 20000;
-const FILL_WORK_PER_ITEM = 20;
+/**
+ * Label evaluations of a column pass (the boundary fill, the fan pass): at least this many,
+ * or this many per item.
+ */
+export const WORK_MIN = 20000;
+export const WORK_PER_ITEM = 20;
 
 /** A failing member and the placed item in its way (-1: a reason of its own). */
 type Fail = [number, number];
@@ -298,15 +300,14 @@ export function boundaryFill(s: Solve): void {
   const capable: boolean[] = [];
   for (let i = 0; i < n; i++) {
     const it = model.items[i]!;
-    const g = model.groupOf[i];
     capable.push(
       (s.models[i]! & Models.BOUNDARY) !== 0 &&
         s.variants[i]!.length > 0 &&
         it.keepWith === null &&
-        !(g !== undefined && g !== null),
+        model.groupRep(i) === null,
     );
   }
-  let work = Math.max(FILL_WORK_MIN, FILL_WORK_PER_ITEM * n);
+  let work = Math.max(WORK_MIN, WORK_PER_ITEM * n);
   for (const sideName of model.placement.boundary.sides) {
     const side = sideCode(sideName);
     // a placed label that may move into the column: not internal, on the column's side
@@ -343,8 +344,7 @@ export function boundaryFill(s: Solve): void {
       ) {
         continue;
       }
-      const maxLabels = model.maxLabels;
-      if (maxLabels !== null && s.state.nPlaced >= maxLabels) return;
+      if (s.labelCapReached()) return;
       const trial = members.slice();
       trial.push(u);
       for (;;) {
@@ -591,17 +591,9 @@ function priorityPass(s: Solve, relocate: boolean, freed: Rect[]): void {
       if (!(cand.feasible || (softOk && cand.relaxed))) continue;
       s.state.conflicts(cand, s.cands, s.obs, h, confl);
       if (!confl.every((j) => prio[j]!.key > keyH && !items[j]!.required)) continue;
-      const maxLabels = s.model.maxLabels;
-      if (maxLabels !== null && s.state.nPlaced + 1 > maxLabels + confl.length) continue;
-      const f = s.model.maxInkFraction;
-      const canvas = s.model.canvas;
-      if (f !== null && canvas !== null) {
-        let area = s.state.labelAreaSum;
-        for (const j of confl) area -= s.cands[s.state.placed[j]!]!.rect.area();
-        if ((area + cand.rect.area()) / maxf(canvas.area(), 1e-9) > f) continue;
-      }
+      if (!s.budgetAllows(cand, confl)) continue;
       const relaxed = !cand.feasible;
-      const cost = cand.cost + (relaxed ? cand.relaxCost : 0);
+      const cost = cand.relaxedCost();
       let gain = -0;
       for (const j of confl) gain += prio[j]!.gain;
       const n = confl.length;
@@ -725,19 +717,11 @@ function prunedChoice(s: Solve, h: number, softOk: boolean): { cand: Cand; remov
     const cand = fresh[k]!;
     s.state.conflicts(cand, s.cands, s.obs, h, confl);
     if (!confl.every((j) => prio[j]!.key > keyH && !items[j]!.required)) continue;
-    const maxLabels = s.model.maxLabels;
-    if (maxLabels !== null && s.state.nPlaced + 1 > maxLabels + confl.length) continue;
-    const f = s.model.maxInkFraction;
-    const canvas = s.model.canvas;
-    if (f !== null && canvas !== null) {
-      let area = s.state.labelAreaSum;
-      for (const j of confl) area -= s.cands[s.state.placed[j]!]!.rect.area();
-      if ((area + cand.rect.area()) / maxf(canvas.area(), 1e-9) > f) continue;
-    }
+    if (!s.budgetAllows(cand, confl)) continue;
     let gain = -0;
     for (const j of confl) gain += prio[j]!.gain;
     const n = confl.length;
-    const cost = relaxedCost(cand);
+    const cost = cand.relaxedCost();
     const better =
       best < 0 || n < bestN || (n === bestN && (gain < bestGain || (gain === bestGain && cost < bestCost)));
     if (better) {
@@ -793,14 +777,10 @@ function usableByCost(s: Solve, i: number, softOk: boolean, except: number): [nu
     }
     s.ensureEval(c);
     cand = s.cands[c]!;
-    if (cand.feasible || (softOk && cand.relaxed)) out.push([relaxedCost(cand), c]);
+    if (cand.feasible || (softOk && cand.relaxed)) out.push([cand.relaxedCost(), c]);
   }
   out.sort((a, b) => cmpF64(a[0], b[0]) || a[1] - b[1]);
   return out;
-}
-
-function relaxedCost(c: Cand): number {
-  return c.cost + (c.feasible ? 0 : c.relaxCost);
 }
 
 /**
@@ -845,7 +825,7 @@ function relocation(s: Solve, h: number, softOk: boolean): Relocation | null {
     const oldKind = s.cands[old]!.kind;
     if (lower.length > 1 || oldKind === Kind.Fan || oldKind === Kind.Boundary) continue;
     tried += 1;
-    const costOld = relaxedCost(s.cands[old]!);
+    const costOld = s.cands[old]!.relaxedCost();
     // its usable candidates, then the pruned level-0 ones (generated once per item)
     const places = usableByCost(s, b, softOk, old);
     let f = fresh.findIndex((e) => e[0] === b);
@@ -854,7 +834,7 @@ function relocation(s: Solve, h: number, softOk: boolean): Relocation | null {
       f = fresh.length - 1;
     }
     const regenerated = fresh[f]![1];
-    for (let k = 0; k < regenerated.length; k++) places.push([relaxedCost(regenerated[k]!), FRESH + k]);
+    for (let k = 0; k < regenerated.length; k++) places.push([regenerated[k]!.relaxedCost(), FRESH + k]);
     places.sort((x, y) => cmpF64(x[0], y[0]) || x[1] - y[1]);
     const sp = s.state.spacing(b, h);
     const ch = s.cands[c]!;

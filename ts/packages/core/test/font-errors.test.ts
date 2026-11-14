@@ -3,14 +3,14 @@
 import { describe, expect, it } from "vitest";
 import type { Env } from "../src/env.js";
 import { PlaceError } from "../src/api.js";
-import { placeWith } from "../src/place.js";
+import { solveWith } from "../src/place.js";
 
 /** Every file reads as bytes that are no font. */
 const garbage: Env = { readFile: () => new Uint8Array([1, 2, 3, 4]) };
 
-function errorOf(problem: unknown): [string, string, string] {
+function errorOf(problem: unknown): [string | undefined, string, string] {
   try {
-    placeWith(problem, garbage);
+    solveWith(problem, garbage);
   } catch (e) {
     expect(e).toBeInstanceOf(PlaceError);
     const err = (e as PlaceError).errors[0]!;

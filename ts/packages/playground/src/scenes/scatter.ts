@@ -5,7 +5,7 @@
  * some points may be labeled: the others become unlabeled `points` the labels avoid softly.
  */
 import { FONT_CLASSES, type Control } from "../controls.js";
-import { easeInOut, gauss, nameGen, rng, type Obj } from "../util.js";
+import { easeInOut, gauss, nameGen, rng, round2, type Obj } from "../util.js";
 import type { Anchors, DrawState, Item, PointerInfo, Scene, SceneHost } from "./scene.js";
 
 type P = [number, number];
@@ -26,18 +26,17 @@ interface Pt {
   labeled: boolean;
 }
 
+/** An axis: a value of the countries on a log scale. */
 interface Axis {
-  key: string;
   title: string;
-  log: boolean;
 }
 
 const AXES: Record<string, Axis> = {
-  gdppc: { key: "gdppc", title: "GDP per person (US$)", log: true },
-  pop: { key: "pop", title: "Population", log: true },
-  area: { key: "area", title: "Land area (km²)", log: true },
-  density: { key: "density", title: "People per km²", log: true },
-  gdp: { key: "gdp", title: "GDP (million US$)", log: true },
+  gdppc: { title: "GDP per person (US$)" },
+  pop: { title: "Population" },
+  area: { title: "Land area (km²)" },
+  density: { title: "People per km²" },
+  gdp: { title: "GDP (million US$)" },
 };
 
 /** The axis pairs Play cycles through. */
@@ -90,10 +89,7 @@ export class ScatterScene implements Scene {
   readonly params: Obj = { data: "countries", count: 600, labeled: 1, axes: "gdppc,pop" };
   playing = false;
 
-  #all: Pt[] = [];
   #pts: Pt[] = [];
-  #w = 800;
-  #h = 600;
   #plot = { x0: 70, y0: 30, x1: 760, y1: 540 };
   #t = 1;
   #hold = 0;
@@ -122,8 +118,6 @@ export class ScatterScene implements Scene {
   }
 
   resize(w: number, h: number): void {
-    this.#w = w;
-    this.#h = h;
     this.#plot = { x0: 74, y0: 26, x1: w - 24, y1: h - 64 };
     if (!this.#pts.length) this.#rebuild();
     else this.#layout(false);
@@ -219,7 +213,7 @@ export class ScatterScene implements Scene {
       if (!p.labeled) continue;
       const label: Record<string, unknown> = { type: "text", text: p.name };
       if (p.abbrev) label.alternatives = [p.abbrev];
-      out.push({ id: p.id, anchor: { type: "point", x: round(p.x), y: round(p.y), mark: { shape: "circle", r: round(p.r) } }, label, priority: p.weight } as unknown as Item);
+      out.push({ id: p.id, anchor: { type: "point", x: round2(p.x), y: round2(p.y), mark: { shape: "circle", r: round2(p.r) } }, label, priority: p.weight } as unknown as Item);
     }
     return out;
   }
@@ -227,11 +221,11 @@ export class ScatterScene implements Scene {
   obstacles() {
     const rest = this.#pts.filter((p) => !p.labeled);
     if (!rest.length) return undefined;
-    return { vector: [{ class: "points", circles: rest.map((p): [number, number, number] => [round(p.x), round(p.y), round(p.r)]) }] };
+    return { vector: [{ class: "points", circles: rest.map((p): [number, number, number] => [round2(p.x), round2(p.y), round2(p.r)]) }] };
   }
 
   anchors(): Anchors {
-    return new Map(this.#pts.filter((p) => p.labeled).map((p) => [p.id, [round(p.x), round(p.y)]]));
+    return new Map(this.#pts.filter((p) => p.labeled).map((p) => [p.id, [round2(p.x), round2(p.y)]]));
   }
 
   step(dt: number): boolean {
@@ -405,5 +399,3 @@ function tick(v: number): string {
   if (v >= 1e3) return `${v / 1e3} k`;
   return String(v);
 }
-
-const round = (v: number) => Math.round(v * 100) / 100;

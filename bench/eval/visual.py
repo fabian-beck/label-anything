@@ -33,7 +33,8 @@ import math
 import numpy as np
 
 from ..common import geom, spec
-from ..common.geom import Box, GridIndex, Point
+from ..common.geom import TOL, GridIndex, Point
+from .classes import clip_len
 
 NEAR_PX = 4.0         # leaders closer than this look like they cross
 TOUCH_PX = 1.0        # a leader passing this close to a mark (beyond half its stroke) touches it
@@ -41,13 +42,8 @@ LONG_EM = 10.0        # the default leaders.max_length
 FAR = 0.25            # fraction of the canvas diagonal
 PARALLEL_DEG = 10.0   # the default leaders.min_angle_between
 START_SKIP_PX = 3.0   # the start of a leader may touch lines that end at its own mark
-RESERVED = ("items", "labels", "leaders", "canvas_edge")
-TOL = 0.5             # contacts within the evaluator's tolerance do not count
+RESERVED = spec.NON_OBSTACLE_CLASSES
 CONTRAST_SPREAD = 0.5  # luma spread (10th to 90th percentile) under a label that reads as a border
-
-
-def _bbox(a: Point, b: Point, grow: float = 0.0) -> Box:
-    return Box(min(a[0], b[0]) - grow, min(a[1], b[1]) - grow, max(a[0], b[0]) + grow, max(a[1], b[1]) + grow)
 
 
 def _quantile(vals: list[float], q: float) -> float | None:
@@ -161,13 +157,13 @@ def evaluate_visual(prob, placed, classes: dict, a_label: dict, a_leader: dict, 
     seg_index = GridIndex(32.0)
     for li, (_k, L, _em, _m) in enumerate(leaders):
         for a, b in leader_segments(L):
-            seg_index.insert(li, _bbox(a, b))
+            seg_index.insert(li, geom.segment_bbox(a, b))
     near_pairs: dict[tuple[int, int], float] = {}
     parallel = []
     for li, (k, L, em, model) in enumerate(leaders):
         cand = set()
         for a, b in leader_segments(L):
-            cand.update(seg_index.query(_bbox(a, b, max(NEAR_PX, em))))
+            cand.update(seg_index.query(geom.segment_bbox(a, b, max(NEAR_PX, em))))
         for lj in sorted(cand):
             if lj <= li:
                 continue
@@ -200,7 +196,7 @@ def evaluate_visual(prob, placed, classes: dict, a_label: dict, a_leader: dict, 
         own = placed[k].item
         hit_prims: dict[str, set[int]] = {}
         for si, (a, b) in enumerate(zip(pl, pl[1:])):
-            for j in item_index.query(_bbox(a, b, touch)):
+            for j in item_index.query(geom.segment_bbox(a, b, touch)):
                 other = prob.items[j]
                 if not exempt_mark(own, other) and other.shape.intersects_segment(a, b, touch):
                     mark_pairs.add((k, j))
@@ -212,7 +208,7 @@ def evaluate_visual(prob, placed, classes: dict, a_label: dict, a_leader: dict, 
                 t = START_SKIP_PX / L
                 a = (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
             for c, oc in vec_classes.items():
-                for pi in oc.index().query(_bbox(a, b, touch)):
+                for pi in oc.index().query(geom.segment_bbox(a, b, touch)):
                     if oc.prims[pi].intersects_segment(a, b, touch):
                         hit_prims.setdefault(c, set()).add(pi)
         for c, s in hit_prims.items():
@@ -245,7 +241,7 @@ def evaluate_visual(prob, placed, classes: dict, a_label: dict, a_leader: dict, 
                     if prim.intersects_box(b):
                         hit.add(pi)
                         em = p.item.label.em
-                        lines_len += sum(_clip_len(q, r, b) for q, r in zip(prim.points, prim.points[1:])) / em
+                        lines_len += sum(clip_len(q, r, b) for q, r in zip(prim.points, prim.points[1:])) / em
                 elif prim.intersects_box(b):
                     hit.add(pi)
         n_by_kind = {"points": 0, "lines": 0, "areas": 0}
@@ -324,11 +320,6 @@ def _kind(prim) -> str:
     if prim.kind == "circle":
         return "points"
     return "areas"
-
-
-def _clip_len(a: Point, c: Point, b: Box) -> float:
-    from .classes import clip_len
-    return clip_len(a, c, b)
 
 
 def summary_fields(v: dict) -> dict:

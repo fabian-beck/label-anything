@@ -5,14 +5,15 @@
 //   node tools/codegen.mjs --check  fail (exit 1) if any output is stale
 //
 // Inputs:  spec/defaults.md (tables between defaults:begin/end and aggressiveness:begin/end),
-//          spec/presets/*.json,
-//          spec/schema/*.json, fonts/*.metrics.ttf
+//          spec/presets/*.json, spec/schema/*.json, fonts/, LICENSE, NOTICE
 // Outputs: rust/crates/la-core/src/generated/spec_data.rs
 //          ts/packages/core/src/generated/spec-data.ts
 //          ts/packages/core/src/generated/problem.ts, result.ts   (types from the schemas)
 //          ts/packages/text/src/generated/fonts.ts                 (base64 metrics fonts)
 //          rust/crates/la-text/assets/                             (copies of the metrics fonts + OFL.txt)
-//          LICENSE (and OFL.txt where the font is embedded) in every published package
+//          rust/crates/la-cli/assets/                              (copies of the fonts with outlines + OFL.txt)
+//          LICENSE in every published package, and OFL.txt and NOTICE where the font is embedded
+//          (the list: copyPackageFiles)
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -101,6 +102,9 @@ function readSchema(file) {
   return JSON.parse(readFileSync(join(root, "spec/schema", file), "utf8"));
 }
 
+/** The schema version the implementations support: the `version` constant of the problem schema. */
+const schemaVersion = readSchema("problem.v1.json").properties.version.const;
+
 function rustSpecData(defaults, levels, presets) {
   const presetNames = Object.keys(presets);
   const lines = [];
@@ -108,7 +112,7 @@ function rustSpecData(defaults, levels, presets) {
   lines.push("//! Spec data (defaults table and presets) as embedded JSON.");
   lines.push("");
   lines.push(`/// Schema version implemented.`);
-  lines.push(`pub const SCHEMA_VERSION: &str = "1";`);
+  lines.push(`pub const SCHEMA_VERSION: &str = "${schemaVersion}";`);
   lines.push("");
   lines.push("/// Flat map from dotted key to JSON default (spec/defaults.md).");
   lines.push(`pub const DEFAULTS_JSON: &str = r##"${json(defaults)}"##;`);
@@ -134,7 +138,7 @@ function tsSpecData(defaults, levels, presets) {
   const lines = [];
   lines.push(`// ${banner}`);
   lines.push("/** Schema version implemented. */");
-  lines.push(`export const SCHEMA_VERSION = "1";`);
+  lines.push(`export const SCHEMA_VERSION = "${schemaVersion}";`);
   lines.push("");
   lines.push("/** Flat map from dotted key to JSON default (spec/defaults.md). */");
   lines.push(`export const DEFAULTS: Readonly<Record<string, unknown>> = ${JSON.stringify(defaults, null, 2)};`);
@@ -245,7 +249,7 @@ async function tsTypes() {
   const { compile } = require("json-schema-to-typescript");
   const out = {};
   for (const [name, file] of [["problem", "problem.v1.json"], ["result", "result.v1.json"]]) {
-    const schema = taggedUnions(draft07Tuples(JSON.parse(readFileSync(join(root, "spec/schema", file), "utf8"))));
+    const schema = taggedUnions(draft07Tuples(readSchema(file)));
     if (name === "problem") {
       // TypeScript requires named properties to match the index signature; widen the
       // index type of avoid.label so `own_mark` (partial:f) type-checks. Validation is

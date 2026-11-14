@@ -9,34 +9,11 @@
 // offsets the generator seeds to explore other mutations.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { PlaceError } from "../src/api.js";
 import { BasicEnv } from "../src/env.js";
-import { placeWith, validate } from "../src/place.js";
-
-const MASK = (BigInt(1) << BigInt(64)) - BigInt(1);
-
-/** SplitMix64, as in the Rust test. */
-class Rng {
-  private s: bigint;
-  constructor(seed: number) {
-    this.s = BigInt(seed);
-  }
-  next(): bigint {
-    this.s = (this.s + BigInt("0x9E3779B97F4A7C15")) & MASK;
-    let z = this.s;
-    z = ((z ^ (z >> BigInt(30))) * BigInt("0xBF58476D1CE4E5B9")) & MASK;
-    z = ((z ^ (z >> BigInt(27))) * BigInt("0x94D049BB133111EB")) & MASK;
-    return z ^ (z >> BigInt(31));
-  }
-  below(n: number): number {
-    return n === 0 ? 0 : Number(this.next() % BigInt(n));
-  }
-  byte(): number {
-    return Number(this.next() & BigInt(0xff));
-  }
-}
+import { solveWith, validate } from "../src/place.js";
+import { PROBLEMS, Rng, envInt } from "./util.js";
 
 const enc = new TextEncoder();
 const INTERESTING = [
@@ -199,13 +176,8 @@ function bound(v: Json): void {
   }
 }
 
-const envInt = (name: string, d: number): number => {
-  const n = Number(process.env[name]);
-  return Number.isInteger(n) && n >= 0 ? n : d;
-};
 const CASES = envInt("LA_FUZZ_CASES", 300);
 const SEED = envInt("LA_FUZZ_SEED", 0);
-const PROBLEMS = fileURLToPath(new URL("../../../../conformance/problems/", import.meta.url));
 
 /** The seeds and mutated inputs (deterministic). */
 function inputs(): Uint8Array[] {
@@ -245,7 +217,7 @@ function runOne(bytes: Uint8Array, counts: { json: number; solved: number }): st
     v = JSON.parse(text);
   } catch {
     try {
-      placeWith(text, new BasicEnv());
+      solveWith(text, new BasicEnv());
       return "unparsable JSON was solved";
     } catch (e) {
       return e instanceof PlaceError ? null : `place(text): ${String(e)}`;
@@ -259,7 +231,7 @@ function runOne(bytes: Uint8Array, counts: { json: number; solved: number }): st
     return `validate: ${String(e)}`;
   }
   try {
-    placeWith(v, new BasicEnv());
+    solveWith(v, new BasicEnv());
     counts.solved++;
   } catch (e) {
     if (!(e instanceof PlaceError)) return `place: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`;

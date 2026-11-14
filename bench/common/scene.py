@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from xml.sax.saxutils import escape, quoteattr
+from xml.sax.saxutils import escape
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -309,7 +309,3 @@ def _dashed(dr, pts, color, width, pattern):
                 on = not on
                 k = (k + 1) % len(pattern)
                 rem = pattern[k]
-
-
-def quote(s: str) -> str:
-    return quoteattr(s)

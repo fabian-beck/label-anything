@@ -6,7 +6,7 @@
  */
 import type { RgbaPixels } from "@label-anything/core";
 import type { Control } from "../controls.js";
-import type { Obj } from "../util.js";
+import { inRing, ringArea, type Obj } from "../util.js";
 import type { Anchors, DrawState, Item, PointerInfo, Scene, SceneHost } from "./scene.js";
 
 type P = [number, number];
@@ -374,22 +374,6 @@ function pixelsOf(img: HTMLImageElement, scale = 1): RgbaPixels {
   ctx.drawImage(img, 0, 0, w, h);
   const d = ctx.getImageData(0, 0, w, h);
   return { width: w, height: h, data: d.data };
-}
-
-function inRing(p: P, ring: P[]): boolean {
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i]!;
-    const [xj, yj] = ring[j]!;
-    if (yi > p[1] !== yj > p[1] && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
-}
-
-function ringArea(r: P[]): number {
-  let s = 0;
-  for (let i = 0, j = r.length - 1; i < r.length; j = i++) s += r[j]![0] * r[i]![1] - r[i]![0] * r[j]![1];
-  return s / 2;
 }
 
 const round = (v: number) => Math.round(v * 1000) / 1000;

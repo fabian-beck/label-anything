@@ -16,6 +16,8 @@ default = []
 parallel = ["dep:rayon", "la-raster/parallel"]
 # PNG/JPEG/WebP decoding of raster backgrounds (raw RGBA always works).
 decode = ["la-raster/decode"]
+# WOFF2 fonts in `font.file` (TrueType and OpenType always work).
+woff2 = ["la-text/woff2"]
 
 [dependencies]
 serde = { workspace = true }

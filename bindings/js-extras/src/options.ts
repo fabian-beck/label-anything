@@ -8,6 +8,8 @@ export type Label = Item["label"];
 export type LeaderStyle = NonNullable<NonNullable<LabelProblem["leaders"]>["style"]>;
 /** Geometry of a labeled feature (spec §3.2). */
 export type Mark = NonNullable<NonNullable<LabelProblem["defaults"]>["mark"]>;
+/** One layer of `obstacles.vector`: geometry of one class. */
+export type VectorLayer = NonNullable<NonNullable<LabelProblem["obstacles"]>["vector"]>[number];
 /** A point anchor: the `type: "point"` variant of the problem's `Anchor`. */
 export interface PointAnchor {
   type: "point";
@@ -150,6 +152,11 @@ const DEFAULT_DEGRADE = ["alternatives", "wrap", "distant", "evict_lower", "shri
 export function keepHostText(problem: LabelProblem): LabelProblem {
   const ladder = (problem.degrade ?? DEFAULT_DEGRADE).filter((s) => s !== "wrap" && s !== "truncate" && !s.startsWith("shrink"));
   return { ...problem, degrade: ladder };
+}
+
+/** `name` as an obstacle class if it is a valid class name, else `fallback`. */
+export function obstacleClass(name: string | undefined, fallback: string): string {
+  return name && /^[A-Za-z_][A-Za-z0-9_.:-]*$/.test(name) ? name : fallback;
 }
 
 /** Solve options: the measurement (canvas by default) plus `placeOptions`. */

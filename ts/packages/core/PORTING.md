@@ -16,17 +16,21 @@ hard-constraint guarantees never do.
 | `x.rs` | `x.ts` |
 | `dir/mod.rs` | `dir/index.ts` |
 | `index.rs` (spatial index) | `spatial.ts` |
-| `lib.rs` (pipeline) | `place.ts` (`placeValidated`, `place`, `validate`, `renderDebugSvg`); public exports in `index.ts` |
+| `lib.rs` (pipeline) | `place.ts` (`solveValidated`, `place`, `validate`, `renderDebugSvg`); public exports in `index.ts` |
 | `env.rs` (`Env`, `NativeEnv` without files) | `env.ts` (`Env` with optional members, `BasicEnv`, `BUILTIN_SVG`); `place.ts` maps `PlaceOptions` to an `Env` |
 | `model/mod.rs`, `model/opts.rs` | `model/index.ts`, `model/opts.ts` |
 | `labels.rs`, `priority.rs`, `obstacles.rs`, `candidates.rs`, `leaders.rs`, `boundary.rs`, `cost.rs`, `result.rs` | same names `.ts` |
 | `grid/occupancy.rs` | `grid/occupancy.ts` (32-bit row words instead of 64-bit; same cells and answers) |
-| `solver/{mod,state,greedy,local,exact,repair,verify}.rs` | `solver/{index,state,greedy,local,exact,repair,verify}.ts` |
+| `solver/{mod,state,greedy,local,exact,fan,repair,verify}.rs` | `solver/{index,state,greedy,local,exact,fan,repair,verify}.ts` |
 | `la-render/src/lib.rs` (debug SVG) | `render.ts` |
 | `la-cli` (`place`, `validate`, `render`) | `ts/packages/cli` (`label-anything-ts`) |
 | `generated/spec_data.rs` | `generated/spec-data.ts` (by `tools/codegen.mjs`) |
-| `#[cfg(test)] mod tests` in `x.rs` | `test/x.test.ts` (same test names) |
+| `#[cfg(test)] mod tests` in `x.rs` | `test/x.test.ts` (same test names; `geom/` and `grid/` keep their directory, the tests of `solver/repair.rs` are in `test/repair.test.ts`) |
 | `tests/random_problems.rs` | `test/random-problems.test.ts` (same generator and seeds) |
+
+`par.rs` (order-preserving parallel maps, feature `parallel`) and `sort.rs` (one shared copy
+of the stable sort, for small WebAssembly builds) have no counterpart: the port does the
+same work sequentially in the same order and sorts with `Array.prototype.sort` (stable).
 
 `detmath.ts`, `pcg.ts` and `expr/` mirror `la-expr` (`det_math`, `Pcg32`, the expression
 language). Text measurement comes from `@label-anything/text`, raster modes from
@@ -100,7 +104,7 @@ random problems (`LA_RANDOM_PARITY`) with the Rust CLI (`label-anything place -
 | `u64` | only inside `Pcg32` (see `pcg.ts`) |
 | `Vec<f64>` / `Vec<u8>` / `Vec<u32>` in hot paths (grids, SAT, distance transform, per-candidate arrays) | `Float64Array` / `Uint8Array` / `Uint32Array` |
 | other `Vec<T>` | `T[]` |
-| `Option<T>` | `T \| null` (never `undefined`) |
+| `Option<T>` | `T \| null`. `undefined` occurs only where JavaScript produces it (an absent JSON property, an index out of range, an optional member of `Env` or of the options); such a value is tested against both |
 | `Result<T, E>` | return `T`, throw a typed error class (`BuildError`, `PlaceError`) |
 | struct | `class` (with methods) or `interface` (plain data) |
 | unit-only enum | `const X = { A: 0, B: 1 } as const` + `type X = (typeof X)[keyof typeof X]` in hot code; string literal unions where the Rust enum maps to a schema string |

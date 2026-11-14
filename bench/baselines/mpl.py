@@ -107,4 +107,3 @@ def fix_extent(text, w: float, h: float) -> None:
 
     text.get_window_extent = extent
     text.get_tightbbox = lambda renderer=None: extent()
-    text._la_size = (w, h)
