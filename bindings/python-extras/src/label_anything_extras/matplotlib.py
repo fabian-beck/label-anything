@@ -29,7 +29,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import numpy as np
-from matplotlib import cbook
+from matplotlib import cbook, rcParams
 from matplotlib.artist import Artist
 from matplotlib.axes import Axes
 from matplotlib.backends.backend_agg import FigureCanvasAgg, RendererAgg
@@ -42,7 +42,7 @@ from matplotlib.text import Text
 import label_anything as la
 from label_anything.problem import avoid_dict, merge
 
-from ._defaults import default_avoid
+from ._defaults import default_avoid, item_ids, take, take_per_item
 
 __all__ = [
     "FigureBackground",
@@ -508,37 +508,15 @@ def label_points(
             stacklevel=2,
         )
 
-    ids_opt = opts.pop("ids", None)
-    ids = [str(i) for i in (ids_opt if ids_opt is not None else range(n))]
-    if len(ids) != n:
-        raise ValueError("ids must have one entry per point")
-
-    def pick(v: Any) -> Any:
-        if v is None:
-            return None
-        if isinstance(v, Mapping):  # dict of columns
-            return {k: [list(col)[i] for i in idx] for k, col in v.items()}
-        if hasattr(v, "iloc"):  # pandas
-            return v.iloc[idx]
-        vals = list(v)
-        return [vals[i] for i in idx]
-
-    per_item = {k: pick(opts.pop(k)) for k in ("attrs", "required", "groups", "keep_with", "svg_ids", "item_placement") if k in opts}
-    for k in ("priority", "tiers"):
-        v = opts.get(k)
-        if v is not None and not isinstance(v, (str, Mapping, la.Priority)) and not callable(v):
-            vals = list(v)
-            if len(vals) == n and all(t is None or isinstance(t, (int, float)) or hasattr(t, "item") for t in vals):
-                opts[k] = [vals[i] for i in idx]
+    ids = item_ids(opts, n)
+    per_item = take_per_item(opts, idx, n, ("attrs", "required", "groups", "keep_with", "svg_ids", "item_placement"))
 
     user_marks = opts.pop("marks", None)
     if user_marks is not None:
-        marks = pick([user_marks] * n if isinstance(user_marks, Mapping) else user_marks)
+        marks = take([user_marks] * n if isinstance(user_marks, Mapping) else user_marks, idx)
     else:
         if marker_size is None:
-            import matplotlib as mpl
-
-            marker_size = float(mpl.rcParams["lines.markersize"]) ** 2
+            marker_size = float(rcParams["lines.markersize"]) ** 2
         sizes = np.broadcast_to(np.asarray(marker_size, dtype=float), (n,))
         marks = [la.Mark.circle(math.sqrt(max(float(sizes[i]), 0.0)) / 2.0 * dpi / 72.0) for i in idx]
 
