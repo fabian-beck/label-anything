@@ -60,6 +60,7 @@ Warnings never stop a solve; the result repeats them in `result.warnings`.
 |---|---|
 | `unknown_class` | an `avoid` key that is neither produced by an obstacle source nor a reserved class |
 | `unknown_attr` | a priority term on an attribute that no item has: the term is 0 for every item, so it ranks nothing |
+| `unknown_region` | an item's `region` that no [region](regions.md) has: its home is the region under its anchor |
 | `ignored` | an option without effect in its context |
 | `limit` | SVG content too deep to render, skipped |
 

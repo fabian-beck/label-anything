@@ -909,6 +909,7 @@ export class ExplainApp {
       ["rejected", "worse, rejected"],
       ["blocked", "blocked"],
       ["no_room", "swap, no room"],
+      ["uncovers", "would uncover a mark"],
       ["inserted", "inserted"],
       ["not_inserted", "not inserted"],
       ["idle", "no move"],

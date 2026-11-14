@@ -1,0 +1,137 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 400,
+      "height": 120
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "class": "wall",
+          "rects": [
+            [
+              20,
+              51.5,
+              360,
+              2
+            ]
+          ]
+        }
+      ]
+    },
+    "avoid": {
+      "label": {
+        "wall": "hard"
+      }
+    },
+    "items": [
+      {
+        "id": "strip",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              20,
+              30
+            ],
+            [
+              380,
+              30
+            ],
+            [
+              380,
+              66
+            ],
+            [
+              20,
+              66
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Narrows"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "strip",
+        "placed": true,
+        "box": {
+          "x": 179.74400000000006,
+          "y": 36.144,
+          "w": 51.32400000000001,
+          "h": 12.287999999999997
+        },
+        "anchor": [
+          200.0,
+          48.0
+        ],
+        "anchor_side": "internal",
+        "model": "internal",
+        "text": {
+          "lines": [
+            "Narrows"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.367999999999999
+          ],
+          "line_widths": [
+            47.724
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.08444259966190011,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 1,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 9,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.08444259966190011,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 134,
+        "rows": 40,
+        "classes": [
+          "wall"
+        ]
+      }
+    },
+    "debug_svg": null
+  }
+}

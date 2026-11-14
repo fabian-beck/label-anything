@@ -1233,7 +1233,8 @@
         "reason": "omitted_by_priority",
         "blocking": [
           "items",
-          "labels"
+          "labels",
+          "leaders"
         ],
         "blocked_by": [
           "m9",
@@ -1521,8 +1522,8 @@
         "id": "m25",
         "placed": true,
         "box": {
-          "x": 138.0195091551904,
-          "y": 59.196000000002144,
+          "x": 131.45000000000002,
+          "y": 40.69600000000001,
           "w": 28.139999999999986,
           "h": 12.563999999999993
         },
@@ -1530,8 +1531,8 @@
           145.52,
           74.76
         ],
-        "anchor_side": "top",
-        "model": "slider",
+        "anchor_side": "distant",
+        "model": "distant",
         "text": {
           "lines": [
             "Pine"
@@ -1554,9 +1555,27 @@
           "font_weight": 400,
           "scale": 1.0
         },
-        "leader": null,
-        "cost": 0.3351970561892885,
-        "degrade_steps": [],
+        "leader": {
+          "points": [
+            [
+              145.52,
+              71.26
+            ],
+            [
+              145.52,
+              53.260000000000005
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            145.52,
+            53.260000000000005
+          ]
+        },
+        "cost": 1.979845849043567,
+        "degrade_steps": [
+          "distant"
+        ],
         "priority": {
           "tier": 0,
           "score": 11.0,
@@ -1728,8 +1747,8 @@
         "id": "m30",
         "placed": true,
         "box": {
-          "x": 172.6342183103808,
-          "y": 53.95000000000435,
+          "x": 166.7751091551904,
+          "y": 53.95000000000218,
           "w": 24.588000000000022,
           "h": 12.719999999999999
         },
@@ -1737,7 +1756,7 @@
           173.21,
           69.67
         ],
-        "anchor_side": "top-right",
+        "anchor_side": "top",
         "model": "slider",
         "text": {
           "lines": [
@@ -1762,7 +1781,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.28374999999989126,
+        "cost": 0.16374999999994566,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1972,7 +1991,7 @@
       "iterations": 10000,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 1614,
+      "candidates": 1615,
       "omission_order": [
         "m35",
         "m31",
@@ -1990,9 +2009,9 @@
         "m3"
       ],
       "priority_inversions": 0,
-      "total_cost": 33.03199868127559,
+      "total_cost": 34.556647474129925,
       "degraded": {
-        "distant": 5
+        "distant": 6
       },
       "grid": {
         "cell": 3.0,

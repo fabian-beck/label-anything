@@ -137,6 +137,7 @@ nav:
       - The problem format: concepts/problem.md
       - The result format: concepts/result.md
       - Avoidance classes and policy: concepts/avoidance.md
+      - Regions: concepts/regions.md
       - Candidates and the degradation ladder: concepts/candidates.md
       - The solver: concepts/solver.md
       - The debug overlay: concepts/debug-overlay.md

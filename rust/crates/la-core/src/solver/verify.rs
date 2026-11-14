@@ -106,18 +106,12 @@ pub fn verify(s: &mut Solve) -> Verification {
 pub fn inversions(s: &mut Solve) -> usize {
     let n = s.model.items.len();
     if s.model.omission == Omission::Prefix {
-        let first_omitted = s
-            .pri
-            .order
+        // the labels after the first omitted item that ends the prefix (spec §9.2)
+        let end = s.prefix_end(0);
+        return s.pri.order[end..]
             .iter()
-            .position(|&i| s.state.placed[i].is_none());
-        return match first_omitted {
-            Some(r) => s.pri.order[r..]
-                .iter()
-                .filter(|&&i| s.state.placed[i].is_some())
-                .count(),
-            None => 0,
-        };
+            .filter(|&&i| s.state.placed[i].is_some())
+            .count();
     }
     let keys: Vec<usize> = s.pri.prio.iter().map(|p| p.key).collect();
     let mut count = 0;

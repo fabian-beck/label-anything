@@ -4,11 +4,20 @@
 // no DOMParser). Line-by-line mirror of the Rust crate `label-anything-svg`; both are tested
 // against conformance/svg/. All functions return `Result` values and never throw.
 
-import { classifyImpl, compileSelector, elementByIdImpl, matchContext, outlineImpl, selectImpl, subtreePrimitivesImpl } from "./classify.js";
+import {
+  classifyImpl,
+  compileSelector,
+  elementByIdImpl,
+  matchContext,
+  outlineImpl,
+  regionsImpl,
+  selectImpl,
+  subtreePrimitivesImpl,
+} from "./classify.js";
 import { guard } from "./error.js";
 import { parseScene } from "./render.js";
 import { Selector, selectorMatches } from "./selector.js";
-import type { ClassRule, Classified, Geometry, ParseOptions, Primitive, Result, Scene } from "./types.js";
+import type { ClassRule, Classified, Geometry, ParseOptions, Primitive, RegionFill, Result, Scene } from "./types.js";
 
 export type {
   ClassRule,
@@ -20,6 +29,7 @@ export type {
   Point,
   Primitive,
   Rect,
+  RegionFill,
   Result,
   Scene,
   SvgError,
@@ -50,6 +60,15 @@ export function parseSelector(selector: string): Result<Selector> {
  */
 export function classify(scene: Scene, rules: readonly ClassRule[], defaultClass: string): Result<Classified[]> {
   return guard(() => classifyImpl(scene, rules, defaultClass));
+}
+
+/**
+ * The fills of regions, in paint order (spec §4.8): every fill polygon whose element, or else
+ * the nearest of its ancestors, matches one of `selectors`, with the first selector matching
+ * that element. Strokes and text boxes are never part of a region. Errors: `pattern`.
+ */
+export function regions(scene: Scene, selectors: readonly string[]): Result<RegionFill[]> {
+  return guard(() => regionsImpl(scene, selectors));
 }
 
 /** The primitives of the element with this id and its descendants (undefined if no such element). */

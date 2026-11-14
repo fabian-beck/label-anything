@@ -35,9 +35,9 @@ hide:
 </div>
 
 <figure markdown data-la-example="economies">
-[![The world's economies as a bubble chart, 147 of its 195 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
+[![The world's economies as a bubble chart, 147 of its 193 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
 <figcaption>The world's economies: each country a bubble sized by its GDP (Natural Earth,
-2019). Label Anything labels 147 of 195 in a fraction of a second, here in your browser:
+2019). Label Anything labels 147 of 193 in a fraction of a second, here in your browser:
 choose other variables and it labels the chart again.</figcaption>
 </figure>
 
@@ -54,7 +54,7 @@ In this chart:
 * **Leaders where it is crowded.** France and the United Kingdom overlap Germany's bubble,
   so their labels sit on leaders that do not cross.
 * **Importance decides.** Larger economies are labeled first, the eight largest in larger
-  bold type. Of the 48 countries left out, 46 have no room beside the larger economies'
+  bold type. Of the 46 countries left out, 44 have no room beside the larger economies'
   labels, and the result names the labels in the way; Austria and Hong Kong lie so close
   among others that no place beside them would be clearly theirs.
 * **Full names.** Every label is the country's full name, a long one on two centered lines
@@ -134,11 +134,14 @@ mark, and change, zoom or drag what is shown.
 
 <figure markdown data-la-example="europe">
 [![The countries and capitals of Europe, labeled](assets/figures/europe.svg)](assets/figures/europe.svg)
-<figcaption markdown>**A map.** Europe's countries and capitals (Natural Earth). Country
-names sit inside the country, abbreviated where it is narrow (U.K., AUST.) and on a leader
-where it is too small (Luxembourg, Malta); no label covers a sea's name. All 91 labels
-placed. Pan and zoom: every view is labeled again, the labels stay where they can, and
-more cities come as there is room.</figcaption>
+<figcaption markdown>**A map.** The countries and capitals of Europe (Natural Earth,
+internationally recognized borders). The countries are the picture's
+[regions](concepts/regions.md): each name inside its country where it fits, else out on a
+leader into the sea, never in a neighbouring country, its type size growing with the
+country's area; the capitals beside their dots, all in one size; no label covers the name
+of a sea. 86 of the 90 labels placed: the names LUXEMBOURG and SLOVENIA (their capitals
+are labeled), Brussels and Podgorica find no room. Pan and zoom: every view is labeled
+again, the labels stay where they can, and more cities come as there is room.</figcaption>
 </figure>
 
 <figure markdown data-la-example="retina">

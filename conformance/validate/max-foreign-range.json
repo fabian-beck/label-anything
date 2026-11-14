@@ -1,0 +1,20 @@
+{
+  "kind": "validate",
+  "name": "max-foreign-range",
+  "problem": {
+    "items": [],
+    "placement": {
+      "max_foreign": 1.5
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/placement/max_foreign",
+        "code": "range"
+      }
+    ],
+    "warnings": []
+  }
+}

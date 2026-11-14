@@ -259,6 +259,14 @@ public final class Placement extends Spec {
   }
 
   /**
+   * On a region map (spec §4.8), the largest share of an area's label (internal ones aside)
+   * or a leader's label that may lie in other items' regions (default 0.25; 1: no limit).
+   */
+  public Placement maxForeign(double share) {
+    return with("max_foreign", share);
+  }
+
+  /**
    * The label of an area anchor may be turned along the area's main axis by this many degrees at
    * most (0–90, default 45; 0: always upright). See {@link LabelPlacement#rotation()}.
    */

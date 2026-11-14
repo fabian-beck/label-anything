@@ -248,10 +248,19 @@ comes no closer to the mark of another item than to its own, and without a stub 
 nearer to its own by its margin: it is infeasible when
 `dist(mark_j, box) < dist(mark_i, box) + s − EPS` for an item `j` (not a member of `i`'s
 group) whose mark the label may not cover (`items`, or `lower_items` for a less important
-`j`, hard), where `s = min(m, |p_j − p_i|)` for a label without a stub (`m` its margin, at
-half for warm-start candidates; `p` the marks' reference points) and `s = 0` for one with a
-stub. A reader takes a label for the label of the mark nearest to it; one about as near to
-another mark could be that one's, unless a stub says whose it is. Marks closer together
+`j`, hard), where `s = min(m + (k − m) · max(0, f_j − f_i), |p_j − p_i|)` for a label
+without a stub (`m` its margin and `k` its side margin `defaults.side_margin`, 0.5 em, at
+least `m`, both at half for warm-start candidates; `k = m` for an area item's mark, its dot;
+`p` the marks' reference points) and `s = 0` for one with a stub. `f` says how squarely a
+mark lies beside a side of the box: for the offset `(dx, dy)` of its reference point from
+the box (0 along an axis where the point lies within the box's extent),
+`f = |dx² − dy²| / (dx² + dy²)`, and 1 for an offset of 0: 1 straight across a side, 0 on the
+diagonal of a corner. A reader takes a label for the label of the mark nearest to it; one
+about as near to another mark could be that one's, unless a stub says whose it is. A mark
+beside the middle of a side stands where its own label would go, one at a corner does not:
+a mark more squarely beside the label than the label's own mark must be farther by up to
+the side margin — a label hanging below and left of its mark's corner does not start right
+beside another point. Marks closer together
 than the margin need only the distance between them: a label of one of two coincident
 marks may stand anywhere, one of two marks 1 px apart on the side away from the other.
 Internal labels lie on their own mark, and the leader of a distant label says whose it is:
@@ -260,17 +269,17 @@ closer than the margin; this rule still keeps it farther than the own mark.
 
 The rule holds against the **marks of less important items that the label may cover** as
 well (`avoid.label.lower_items` given and not hard; ADR priority/lower-items), by the same
-test, unless the label hides the mark: a mark is hidden when its bounding box lies inside
-the label box and the label overlaps it, which excludes every label of its item (above).
-Such a label hides a less important mark entirely or is clearly nearer to its own: beside
-the mark it could be that mark's label, whether the mark's item is labeled elsewhere or
-not, and a mark that shows from under the label's edge is as good as beside it. The rule
-holds against these marks only for an item of which one of the 8 fixed positions (§6.1) of
-its first variant hides or keeps clear of each of them by this test with its margin: among
-minor marks so dense that no place beside the mark could, the item's labels follow the rule
-for the marks they may not cover only, and it keeps the place its priority gives it. Marks
-that are soft or ignored through `items` alone stay outside the rule: hiding one does not
-stop its item from being labeled.
+test without the side margin (`k = m`), unless the label hides the mark: a mark is hidden
+when its bounding box lies inside the label box and the label overlaps it, which excludes
+every label of its item (above). Such a label hides a less important mark entirely or is
+clearly nearer to its own: beside the mark it could be that mark's label, whether the
+mark's item is labeled elsewhere or not, and a mark that shows from under the label's edge
+is as good as beside it. The rule holds against these marks only for an item of which one
+of the 8 fixed positions (§6.1) of its first variant hides or keeps clear of each of them
+by this test with its margin: among minor marks so dense that no place beside the mark
+could, the item's labels follow the rule for the marks they may not cover only, and it
+keeps the place its priority gives it. Marks that are soft or ignored through `items` alone
+stay outside the rule: hiding one does not stop its item from being labeled.
 
 The rule holds against the **unlabeled points** as well (ADR placement/unlabeled-points),
 unless `placement.own_nearest` is `"items"`: the discs of vector layers (`points`,
@@ -279,7 +288,7 @@ background puts there under the presets' rules), of classes labels do not `ignor
 centre (of the bounding box) lies at least 0.5 px from every item's reference point — a
 point drawn under an item's mark is that mark. The label is infeasible when
 `dist(point, box) < dist(mark_i, box) + s − EPS`, `s` as above with the point's centre for
-`p_j`. A point entirely inside the label box is hidden, not a competitor: what hiding it
+`p_j` but without the side margin (`k = m`). A point entirely inside the label box is hidden, not a competitor: what hiding it
 costs is its class's cost (§8). The rule holds against the unlabeled points only for an item
 of which one of the 8 fixed positions (§6.1) of its first variant keeps clear of them by
 this test with its margin: in a field of points so dense that no place beside the mark
@@ -382,6 +391,11 @@ lists, CSS escapes, and the pseudo-classes
 canvas in both dimensions), `:filled` and `:unfilled`. Anything else (sibling
 combinators, the `~=` and `|=` operators, attribute flags, other pseudo-classes and
 pseudo-elements) is a `pattern` error.
+
+**Regions.** `regions` (a selector, or rules `{selector, region}`) puts the fills of the
+matching elements on the region map (§4.8), whatever their class: `{"selector":
+".land path", "class": "ignore"}` with `"regions": ".land path"` makes every country of a
+map a region without making it an obstacle.
 
 `auto_mark_items: true`: items with `svg_id` take their mark geometry from that SVG
 element (as `from_svg`), and that element is removed from its class. A `from_svg` mark is
@@ -545,8 +559,88 @@ colours here: they do not change the backdrop.
 
 The exact Euclidean distance transform (Felzenszwalb–Huttenlocher) of the union of all
 **static hard** classes for labels (cells with coverage > 0, plus `canvas_edge` outside
-the label area) is computed on the grid in cell units and stored in px. It drives
+the label area) is computed on the grid in cell units and stored in px. With a region
+map (§4.8), every cell of a region (not open) belongs to the union too: free space is
+open space, and the seeds of distant labels lie in the sea, not on the land. It drives
 free-space seeds for distant candidates and early rejection.
+
+### 4.8 Regions
+
+Regions (ADR obstacles/regions) are the parts of a picture a label belongs to: the countries of a
+map, the bars of a chart, the compartments of a diagram. The rest of the canvas is
+**open** space — the sea, the plot's background — where any label may lie. A label
+reads as naming the region it lies in, so a label should lie inside one region, its
+item's own or open space, and a leader should cross few borders; three cost terms say
+how much that matters (§7, §8). Regions are not obstacles; their one hard rule keeps the
+labels that name a region by where they lie out of other regions (below).
+
+**Sources**, painted in this order (later ones on top):
+
+* SVG sources with `regions` (§4.5): a selector, or a list of rules
+  `{selector, region}`. A drawn fill polygon (never a stroke or a text box) belongs to the
+  nearest element, itself or an ancestor, that a rule's selector matches; the first rule
+  that matches that element decides. Fills whose element and ancestors match no rule are
+  not on the region map. The selectors are those of class rules; a syntax error is an
+  error (`pattern`, at the selector).
+* Vector layers with `region` (§4): their polygons (with the layer's fill rule), rects,
+  circles (their outline, §3.3) and shapes (their outline rings; polygons with their fill
+  rule), in that order; points and polylines never. A layer with a `region` and without
+  a `class` adds no obstacles.
+
+`region` (default `"each"` in SVG rules): `"each"` — every matched element (vector: every
+primitive) is a region of its own; an SVG element with an `id` is the region of that
+name. `"open"` — open space: it clears the regions below. `"none"` — not on the region
+map (a rule that keeps a later rule from matching). Any other string — the region of
+that name: all geometry with the same name, in every source, is one region. Regions are
+numbered `1, 2, …` in the order of their first fill; 0 is open space.
+
+**The region map.** One region number per grid cell (§4.1): every fill is painted in
+order onto the cells whose centre `(x0 + (col + ½)·c, y0 + (row + ½)·c)` it covers under
+its fill rule, as the rasterizer of §4.2 fills polygons at its sample rows (here one
+sample per cell: an active edge list per cell row; edges with `y0 ≤ y < y1`, crossings
+`x = x_top + (y − y_top) · slope` sorted by x then direction; a span `[xa, xb)` sets the
+cells whose centre x lies in it, `ceil((xa − x0)/c − ½) ≤ col < ceil((xb − x0)/c − ½)`).
+A cell takes the number of the last fill covering its centre; cells no fill covers are
+open. A cell is on a **border** when one of its 4 neighbours has another number.
+
+**Home.** The home of an item is the region named by `item.region` (a name no region has
+is a warning `unknown_region`, and the rule below applies); else the region of the cell
+containing its reference point (§11: point items' anchors, area items' poles); when that
+cell is open, the region with the most cells among those touched by the bounding box of
+the item's mark grown by one cell (ties: the lower number) — the dot of a coastal city may
+lie in the sea; else open space.
+
+**A label box on the map.** For a box `B`, its overlap with each cell (the cell-unit
+interval lengths `wx`, `wy` of the box clamped to the grid, `w = wx · wy`) is summed by
+the cell's region: rows in ascending order, columns in ascending order, `A = Σ w` and per
+region `a_r` (in the order the regions first occur). When no cell the box touches is on a
+border, the box lies in one region: `A = (u1 − u0) · (v1 − v0)` (the box in cell units,
+clamped), `a_r = A` for the region of its first cell. Then `Σ a_r²` is summed in the same
+order. The **straddle** of the box is `2 · (A² − Σ a_r²) / A` (0 when `A ≤ 0`, and never
+negative): `4 · Σ_{r<s} a_r · a_s / A`, the box's area for a box half in one region and
+half in another, `4 · p · (1 − p)` of it for a share `p` across a border, nothing in one
+region. Its **foreign** area is `Σ a_r` over the regions other than open space and the
+item's home. Both are in cells²; times `c²` they are px².
+
+**Foreign labels.** A label that names its item's region by where it lies — the label of
+an area item, internal ones aside, and any label with a leader — is infeasible when its
+foreign area exceeds `placement.max_foreign · A` (default 0.25): a country's name lies at
+home or in open space, at most a quarter of it in other countries, and a name with no such
+place is smaller, on a leader into open space, or omitted rather than misplaced. The hard
+class that rejects it is `regions` (`blocking`, §9.3); the ladder does not relax it. The
+internal labels of area items and the labels of point items without a leader may lie in
+other regions at the cost `w_foreign`: a capital near a border has its name next to its
+dot, wherever that is.
+
+**A leader on the map.** The polyline from the leader's start to its port (not an
+underline) is sampled at its first point and, along each segment `a → b`, at
+`a + (b − a) · k / n`, `k = 1 … n`, `n = max(1, ceil(|b − a| / c))`; the leader crosses
+as many **borders** as consecutive samples lie in different regions (a sample's region
+is that of its cell; outside the grid, open).
+
+The map is built only when one of `weights.straddle`, `weights.foreign` and
+`weights.leader_borders` is positive and a source has fills on it; without a map every
+home is open space and the terms are 0.
 
 ---
 
@@ -791,13 +885,14 @@ Positions on `distant_rings` rings with radii evenly spaced in
 the leader style (`straight`: `distant_directions` evenly spaced; `angles`/`elbow`: the
 listed angles; `orthogonal`: 8 octilinear directions), plus free-space seeds (local
 maxima of the distance transform within `max_distance` whose clearance ≥ label
-half-height). For each target the label is attached by its port side facing the anchor
-and the leader is built per style (§7). The `k_distant` cheapest (static cost) are kept.
-An item whose `position_order` lists fewer than the 8 fixed positions keeps its distant
-labels on those sides: only directions (and seeds, seen from the reference point) within
-22.5° of a listed position's direction are used (`u·v ≥ cos 22.5° · |u|·|v|` less 10⁻⁹,
-so that a direction between two octants belongs to both), e.g. `["right"]` keeps end
-labels of a line chart off the lines to the left.
+half-height; on a region map they lie in open space, §4.7). For each target the label is
+attached by its port side facing the anchor and the leader is built per style (§7). The
+`k_distant` cheapest (static cost) are kept. An item whose `position_order` lists fewer
+than the 8 fixed positions keeps its distant labels on those sides: only directions (and
+seeds, seen from the reference point) within 22.5° of a listed position's direction are
+used (`u·v ≥ cos 22.5° · |u|·|v|` less 10⁻⁹, so that a direction between two octants
+belongs to both), e.g. `["right"]` keeps end labels of a line chart off the lines to the
+left.
 
 ### 6.5 Area anchors
 
@@ -820,7 +915,13 @@ it in that frame.
 a grid (spacing = label height, at least 4 px, and at least √(w · h / 65536) for a polygon
 whose bounding box is w × h, which bounds the work for a polygon far larger than the
 picture; from the bounding box's top-left corner plus half the label size) where the
-label box grown by `inner_padding` lies inside the polygon. Each has a **lack**:
+label box grown by `inner_padding` lies inside the polygon. When some sample fits but the
+grid's samples lie in fewer than three rows (their centers less than 1.5 spacings apart
+vertically) or columns (horizontally), the grid is refined: after the grid, for each of its
+points in order, the points half a spacing below it (fewer than three rows), to its right
+(fewer than three columns) and below to its right (both) are sampled, in this order, within
+the grid's bounds. So a part the label fits in only narrowly still has places on either
+side of a mark or label in its way. Each has a **lack**:
 
 ```
 lack = max(0, 1 − room / em) + |center − pole| / R
@@ -843,7 +944,8 @@ lack`. A turned label adds `|α| / 180` to the shape penalty of its variant (§5
 turned label takes the place of an upright one only where it has clearly more room.
 
 **Tests of a turned label.** Its bounding box stands for it in the canvas and edge
-terms, the buffer rings, the contrast term, the spatial queries and the label budget.
+terms, the buffer rings, the contrast term, the region terms (§4.8), the spatial queries
+and the label budget.
 Against item marks and other labels it is tested exactly (its interior, §4.4). Where a
 distance or a coverage is needed — the margin from other marks, the gap to other labels,
 leaders through it, hard and soft classes — its **cover** stands for it: the label is cut
@@ -1116,6 +1218,9 @@ label's side.
   weight `w`, every mark closer than `clearance` costs `w · (1 − d / clearance)`. The
   marks of less important items follow `avoid.leader.lower_items` where it is given
   (§4.4).
+* **Region borders** (§4.8): on a region map, every border a leader crosses costs
+  `weights.leader_borders` — a leader from a country to its name in the sea crosses one
+  (the coast), one that runs across a neighbouring country three.
 * **Spacing between leaders** (with `avoid.leader.leaders` hard): two leaders of
   different labels conflict when a segment of one intersects a segment of the other, or
   when a vertex of one (start, bends, port, underline ends) is closer than `clr` to a
@@ -1141,7 +1246,9 @@ For candidate `k` of item `i` (all terms ≥ 0, summed in this order):
 cost = Σ_class w_label[class] · covered(label_k, class) / em²
      + Σ_class w_buffer[class] · covered(ring_k, class) / area(ring_k)
      + w_contrast · (4 · D(label_k) · C² / 65025) / em²
-     + [leader] (w_leader + w_leader_length · len/em + Σ_class w_leader[class] · covered_len/em + w_bends · bends)
+     + w_straddle · straddle(label_k) · c² / em² + w_foreign · foreign(label_k) · c² / em²
+     + [leader] (w_leader + w_leader_length · len/em + w_bends · bends
+                 + w_leader_borders · borders + Σ_class w_leader[class] · covered_len/em)
      + w_position · rank / n_positions
      + w_distance · gap(label_k, S_i) / em   (inside an area: w_distance · lack, §6.5)
      + w_shape · shape_penalty(variant)       (+ |rotation| / 180 for a turned label)
@@ -1171,6 +1278,13 @@ cost = Σ_class w_label[class] · covered(label_k, class) / em²
   integral of `(Y − Ȳ)²` over the box in px², `Y` the luma in `[0, 1]`: a label half on
   black and half on white costs `w_contrast` per em² of its box, a label on any uniform
   backdrop nothing. Internal labels of point items, which lie on their mark, have none.
+* `straddle(label_k)` and `foreign(label_k)` (§4.8, ADR obstacles/regions): how much of the box lies
+  across region borders, and in regions other than the item's home (open space is never
+  foreign), in cells² of the region map; `borders` is the number of region borders the
+  leader crosses (§4.8).
+  A label half in one region and half in another costs `w_straddle` per em² of its box,
+  one in a neighbouring country `w_foreign` per em² of its box. Internal labels of point
+  items, which lie on their mark, have neither; without a region map all three are 0.
 * `d` = the distance between the centers of the label box and the item's warm-start box
   (§6.7): 1 per em up to 1 em, then 1/4 per em up to 5 em, so that a label that has to
   move prefers a near place (ADR motion/warm-starts); 0 without a warm-start box.
@@ -1243,8 +1357,12 @@ then index; `random`/`random(n)`: a PCG32 permutation with seed `n` or `solver.s
   leaves `h` no candidate, §4.4). `stats.priority_inversions`
   counts violations of this (verified after solving by the same removal test) and MUST
   be 0.
-* `prefix`: the placed set is a prefix of the total order. Items after the first omitted
-  item are omitted with reason `omitted_by_priority`.
+* `prefix`: the placed set is a prefix of the total order, apart from items unlabeled
+  for a reason of their own, which do not end it: members of a group label (§5.7, reason
+  `grouped`) and, with a soft or ignored `avoid.label.lower_items`, items whose mark a
+  placed label of higher key covers (§4.4: no candidate is left them). Items after the
+  first other omitted item are omitted with reason `omitted_by_priority`.
+  `stats.priority_inversions` counts the placed items after it.
 * `weighted`: maximize Σ max(score, 0) + ε per tier, tiers strict. Inversions are
   reported, not forbidden.
 
@@ -1323,7 +1441,8 @@ The items still undecided then — except `keep_with` members and items whose le
 attempt already failed — are visited once more in total order and take their best free
 level-0 candidate as in a band's level-0 pass, without the ladder, until another
 10 × `time_budget_ms` have passed (checked every 64 items); with `prefix` omission the
-first of them without a free level-0 candidate ends the prefix. Every item left
+first of them without a free level-0 candidate ends the prefix (unless it does not end it
+by §9.2). Every item left
 undecided is `budget_exhausted`. Without a clock the guard never passes.
 
 Warm starts (`warm_start`, with `weights.stability` > 0; ADR motion/warm-starts):
@@ -1346,7 +1465,9 @@ Moves: relocate one item; swap (relocate an item into a position that conflicts 
 other item which is relocated in turn); insert an unplaced item by an ejection chain of
 depth ≤ 3; switch a label variant. Acceptance: hard feasibility is invariant; the
 priority objective (strict: placed key multiset, lexicographic; prefix: prefix length;
-weighted: tier-wise weight sums) must not get worse; cost changes are accepted by the
+weighted: tier-wise weight sums) must not get worse — with `prefix` omission no move
+leaves the mark of an item before the end of the prefix uncovered that a moved label
+covered (§9.2), and an insertion tries the item at the end; cost changes are accepted by the
 Metropolis rule `u < exp(−Δ/T)` with a geometric schedule from `T₀` to `T₀/1000` over the
 iteration budget. With `weighted` omission, which no priority repair follows (§10.3), an
 insertion is undone when it makes an omitted item placeable once labels of strictly lower
@@ -1367,7 +1488,8 @@ After search: fan labels (§6.8); the boundary labels of each side are re-stacke
 (§6.6) when that keeps them feasible and lowers their cost, and the sides' columns take in
 items without a label (§6.6, filling); any two crossing leaders (only
 possible when `avoid.leader.leaders` is soft) are uncrossed by exchanging label positions when that shortens the total leader
-length. With `strict` omission, the **priority repair** then visits the omitted items in
+length. With `prefix` omission, a re-stacking or exchange that would leave a mark before the
+end of the prefix uncovered (as in §10.2) is not made. With `strict` omission, the **priority repair** then visits the omitted items in
 total order (except `keep_with` members and items cut by the time guard): an item with a
 usable candidate (statically feasible, or relaxed with `soft_overlap` in the ladder) that
 conflicts with no placed label, or only with labels of strictly lower key (not required),
