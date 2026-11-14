@@ -29,7 +29,10 @@ than the engine's at the median.
 - **Stubs** are counted.
 - **Measured as the engine does**: text boxes fit the ink (from the outlines' `glyf`
   bounds) with the lines aligned per `align`, and the removal test keeps the engine's
-  label spacing and own-mark rule.
+  label spacing and own-mark rule. Wrapped labels break where the specification says
+  (§5.3): the benchmark's own line breaking is tested against the conformance cases of
+  the engines (`conformance/text/wrap-*.json`), and so is its expression evaluator
+  (`conformance/expr/`).
 - The report and the regression check of the release gate include the new measures, and
   the images of the report mark every instance where it happens, with the
   conflicts: a reader sees what a number counts.
@@ -45,3 +48,14 @@ The 300-airport map holds 142 of the engine's 148 unclear labels, among 2,917 un
 airports that its own-mark rule does not see; on the other 8 problems it has 1.5 %. The
 measures add at most 0.1 s to the evaluation of a problem. Earlier results have no values
 for them, so the release gate compares them from the next release on.
+
+The benchmark's line breaking had drifted from the specification (no acronym rule, among
+others: 21 of the 158 break, greedy and balanced cases of a font failed), which the
+conformance cases now prevent. Of the 228 problems of the full suite four have wrapped
+labels, and one had other boxes than the engine's: on `cbo-rfc-100-svg` two of the 100
+class names broke one segment early (`uimanager.` · `UIImplementationProvider` for
+`uimanager.UI` · `ImplementationProvider`), 9 and 10 px too wide. With the engine's boxes
+(2026-11-14) the other tools place and count differently there (usable labels: textalloc
+66 instead of 68, adjustText 55 instead of 59, the others as before; ggrepel not measured),
+still behind the engine's 79, whose own numbers do not change. No problem of the quick
+suite is affected.

@@ -412,6 +412,9 @@ jobs:
         with:
           path: bench/data
           key: ${{ steps.bench-data.outputs.cache-primary-key }}
+      - name: The benchmark's own line breaking and expressions against the conformance cases
+        # the rest of the benchmark's tests run in the job baselines
+        run: bench/.venv/bin/python -m pytest -q bench/tests/test_conformance.py
       - name: Run
         run: >
           bench/.venv/bin/python bench/run.py
