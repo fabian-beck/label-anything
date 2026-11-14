@@ -337,7 +337,8 @@ export class App {
       p.solver = { ...(p.solver as Obj | undefined), time_budget_ms: moving ? this.view.budgetMoving : this.view.budgetRest };
     }
     if (kind !== "cold" && this.view.warmStart && this.result) {
-      p.warm_start = { placements: this.result.placements.map(warmPlacement) };
+      const now = s.anchorsFromResults ? s.anchors() : undefined;
+      p.warm_start = { placements: this.result.placements.map((q) => warmPlacement(q, now?.get(q.id))) };
     }
     if (kind === "settle") {
       const stability = lookup(this.effectiveOptions(), "weights.stability");

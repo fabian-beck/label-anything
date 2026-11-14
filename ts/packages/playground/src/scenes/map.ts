@@ -2,12 +2,14 @@
  * A world map (Natural Earth countries, Equal Earth projection) with a label per country:
  * inside its area where it fits, else next to it or with a leader, abbreviated when space
  * is short, larger for the more important ones. Pan and zoom: every move is solved again,
- * warm-started, so labels stay put and the label set nests as space opens. Optional
- * flights cross the map as moving labeled points.
+ * warm-started, so labels stay put and the label set nests as space opens. The view is a
+ * window on the map (`canvas.overscan`): a country is passed whole, with what lies a
+ * little beyond the view, so a label at the border keeps its place on the map and is cut
+ * there. Optional flights cross the map as moving labeled points.
  */
 import { geoEqualEarth, geoGraticule10, geoInterpolate, geoPath, type GeoProjection } from "d3-geo";
 import type { LabelResult } from "@label-anything/core";
-import { FONT_CLASSES, type Control } from "../controls.js";
+import type { Control } from "../controls.js";
 import { clamp, inRing, ringArea, rng, round2, type Obj } from "../util.js";
 import type { Anchors, DrawState, Item, PointerInfo, Scene, SceneHost } from "./scene.js";
 
@@ -47,18 +49,35 @@ interface ViewT {
   y: number;
 }
 
+/**
+ * How far beyond the view the map is labeled as well, in px: about the width of a label
+ * (`canvas.overscan`, 8 times the font size).
+ */
+const OVERSCAN = 92;
+
+/** The type size of the countries' names (px), and the classes of the most important ones. */
+const FONT_SIZE = 11.5;
+const SIZES = [
+  { share: 0.04, scale: 1.6, weight: 700 },
+  { share: 0.2, scale: 1.25, weight: 400 },
+];
+
 const AIRLINES = ["LH", "AF", "BA", "KL", "UA", "DL", "AA", "QF", "SQ", "EK", "NH", "TK", "QR", "LX", "IB", "AZ", "CX", "AC", "ET", "LA"];
 
 export class MapScene implements Scene {
   readonly id = "map";
   readonly title = "World map";
-  readonly hint = "Drag to pan, scroll or pinch to zoom: labels stay put and fill in as space opens.";
+  readonly hint = "Drag to pan, scroll or pinch to zoom: labels stay put, also at the border, and fill in as space opens.";
   readonly about =
-    "Each country is an area item: its label goes inside where it fits, else beside it or on a leader. Abbreviations are shorter alternatives the engine falls back to, and type size follows importance. Every pan and zoom is solved again from the previous labels (warm start): labels stay put, and zooming in only adds labels.";
+    "Each country is an area item: its label goes inside where it fits, else beside it or on a leader. Abbreviations are shorter alternatives the engine falls back to, and type size follows importance. Every pan and zoom is solved again from the previous labels (warm start): labels stay put, and zooming in only adds labels. The view is a window on the map (canvas.overscan): a label at its border keeps its place and is cut there.";
   readonly credits = 'Map data: <a href="https://www.naturalearthdata.com/">Made with Natural Earth</a> (public domain).';
   readonly classes: readonly string[] = [];
   readonly cursor = "grab" as const;
-  readonly view = { budgetMoving: 20, maxRate: 20 };
+  // the labels of the last result move with the map, not with each country's pole of the moment
+  readonly anchorsFromResults = true;
+  // the controls drawn over the map are no obstacles: like the border of the view, they
+  // would push the labels around as the map moves under them
+  readonly view = { budgetMoving: 20, maxRate: 20, avoidHud: false };
   readonly controls: Control[] = [
     {
       key: "importance", label: "Importance", kind: "segmented",
@@ -71,13 +90,17 @@ export class MapScene implements Scene {
     },
     { key: "abbrev", label: "Abbreviations", kind: "toggle", hint: "Offer Natural Earth's abbreviations (Ger., Zimb.) as shorter alternatives" },
     {
+      key: "window", label: "Labels cut at the border", kind: "toggle",
+      hint: "The view is a window on the map (canvas.overscan): a label at its border keeps its place and is cut there. Off: only the part in view is labeled, every label inside the view, so labels at the border move with it",
+    },
+    {
       key: "flights", label: "Flights", kind: "segmented",
       options: [{ value: 0, label: "none" }, { value: 25, label: "25" }, { value: 60, label: "60" }, { value: 120, label: "120" }],
       hint: "Moving labeled points over the map",
     },
     { key: "flightsFirst", label: "Flights before countries", kind: "toggle", hint: "Flight labels outrank country labels", when: (g) => Number(g("param.flights")) > 0 },
   ];
-  readonly params: Obj = { importance: "pop", abbrev: true, flights: 0, flightsFirst: false };
+  readonly params: Obj = { importance: "pop", abbrev: true, window: true, flights: 0, flightsFirst: false };
   playing = false;
 
   #countries: Country[] = [];
@@ -290,51 +313,100 @@ export class MapScene implements Scene {
 
   // --- problem ---------------------------------------------------------------------------
 
+  /** The view is a window on the map: what lies up to `OVERSCAN` px beyond it is labeled as well. */
+  get #window(): boolean {
+    return this.params.window !== false;
+  }
+
   options() {
+    const { k, x, y } = this.#v;
     return {
       preset: "map" as const,
+      // labels may cross the edges of the view, not those of the map: the drawing at zoom 1
+      ...(this.#window
+        ? { canvas: { overscan: OVERSCAN, region: [round2(x), round2(y), round2(k * this.#w), round2(k * this.#h)] as [number, number, number, number] } }
+        : {}),
       placement: { models: ["internal", "adjacent", "slider", "distant"] as ("internal" | "adjacent" | "slider" | "distant")[], position_order: "cartographic" as const, max_distance: "5em" },
       leaders: { style: "straight" as const, max_length: "6em" },
-      priority: { font_classes: FONT_CLASSES[2]!.value as never },
-      defaults: { font: { size: 11.5 } },
+      defaults: { font: { size: FONT_SIZE } },
     };
   }
 
-  #visible(c: Country): boolean {
+  /** In the view, or at most `margin` px beyond it. */
+  #score(c: Country): number {
+    const imp = this.params.importance as string;
+    return imp === "gdp" ? c.gdp : imp === "area" ? c.area : imp === "rank" ? 20 - c.rank + Math.log10(c.pop + 1) / 20 : c.pop;
+  }
+
+  /**
+   * The type size of each country's name: larger for the most important ones of the whole
+   * map, not of the view (`priority.font_classes` would rank the items of each problem, and
+   * the names would change their size as countries come into view).
+   */
+  #fonts(): Map<string, { size: number; weight: number }> {
+    const key = String(this.params.importance);
+    if (this.#fontsOf !== key) {
+      this.#fontsOf = key;
+      this.#fontMap.clear();
+      const ranked = [...this.#countries].sort((a, b) => this.#score(b) - this.#score(a));
+      ranked.forEach((c, i) => {
+        const cls = SIZES.find((k) => i < Math.ceil(k.share * ranked.length));
+        if (cls) this.#fontMap.set(c.id, { size: round2(FONT_SIZE * cls.scale), weight: cls.weight });
+      });
+    }
+    return this.#fontMap;
+  }
+  #fontMap = new Map<string, { size: number; weight: number }>();
+  #fontsOf = "";
+
+  #visible(c: Country, margin = 0): boolean {
     const [x0, y0] = this.#toScreen([c.bounds[0], c.bounds[1]]);
     const [x1, y1] = this.#toScreen([c.bounds[2], c.bounds[3]]);
-    return x1 >= 0 && y1 >= 0 && x0 <= this.#w && y0 <= this.#h;
+    return x1 >= -margin && y1 >= -margin && x0 <= this.#w + margin && y0 <= this.#h + margin;
+  }
+
+  #inView(s: P, margin: number): boolean {
+    return s[0] >= -margin && s[1] >= -margin && s[0] <= this.#w + margin && s[1] <= this.#h + margin;
   }
 
   items(): Item[] {
-    const imp = this.params.importance as string;
     const flightsFirst = this.params.flightsFirst === true;
+    const fonts = this.#fonts();
+    const win = this.#window;
+    // a window: what lies a little beyond the view is part of the problem
+    const margin = win ? OVERSCAN : 0;
     const out: Item[] = [];
     for (const c of this.#countries) {
-      if (!this.#visible(c) || !c.main.length) continue;
-      // only the visible part counts: the label goes there, and the engine samples less
-      const view: [number, number, number, number] = [-2, -2, this.#w + 2, this.#h + 2];
+      if (!this.#visible(c, margin) || !c.main.length) continue;
       const [outer, ...inner] = this.#simplified(c);
-      const ring = clipRing(outer!.map((p) => this.#toScreen(p)), view).map(roundP);
+      // a window gets the whole outline: the label has its place in the country, wherever
+      // the view is. Otherwise only the part in view counts, and the label goes there
+      const view: [number, number, number, number] = [-2, -2, this.#w + 2, this.#h + 2];
+      const part = (r: P[]): P[] => {
+        const screen = r.map((p) => this.#toScreen(p));
+        return (win ? screen : clipRing(screen, view)).map(roundP);
+      };
+      const ring = part(outer!);
       let anchor: Record<string, unknown>;
       if (ring.length >= 3 && Math.abs(ringArea(ring)) >= 12) {
         anchor = { type: "area", polygon: ring };
-        const holes = inner.map((h) => clipRing(h.map((p) => this.#toScreen(p)), view).map(roundP)).filter((h) => h.length >= 3);
+        const holes = inner.map(part).filter((h) => h.length >= 3);
         if (holes.length) anchor.holes = holes;
       } else {
         // a country of a few pixels: a point at its label point
         const s = this.#toScreen(c.labelXY);
-        if (s[0] < 0 || s[1] < 0 || s[0] > this.#w || s[1] > this.#h) continue;
+        if (!this.#inView(s, margin)) continue;
         anchor = { type: "point", x: round2(s[0]), y: round2(s[1]), mark: { shape: "circle", r: 2 } };
       }
       const label: Record<string, unknown> = { type: "text", text: c.name };
       if (this.params.abbrev && c.abbrev) label.alternatives = [c.abbrev];
-      const score = imp === "gdp" ? c.gdp : imp === "area" ? c.area : imp === "rank" ? 20 - c.rank + Math.log10(c.pop + 1) / 20 : c.pop;
-      out.push({ id: c.id, anchor, label, priority: score, tier: flightsFirst ? 0 : 1 } as unknown as Item);
+      const font = fonts.get(c.id);
+      if (font) label.font = font;
+      out.push({ id: c.id, anchor, label, priority: this.#score(c), tier: flightsFirst ? 0 : 1 } as unknown as Item);
     }
     for (const f of this.#flights) {
       const s = this.#flightXY(f);
-      if (!s || s[0] < 0 || s[1] < 0 || s[0] > this.#w || s[1] > this.#h) continue;
+      if (!s || !this.#inView(s, margin)) continue;
       out.push({
         id: f.id,
         anchor: { type: "point", x: round2(s[0]), y: round2(s[1]), mark: { shape: "circle", r: 3.5 } },

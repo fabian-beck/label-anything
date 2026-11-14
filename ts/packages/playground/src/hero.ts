@@ -587,7 +587,7 @@ export class Hero {
     const nb = this.#nameLabel.getBoundingClientRect();
     const nameFont = parseFloat(getComputedStyle(this.#nameLabel).fontSize);
     const pad = Math.round(nb.height * 0.2);
-    const placements = this.result?.placements.filter((p) => p.id !== "name" || !this.#nameHome).map(warmPlacement) ?? [];
+    const placements = this.result?.placements.filter((p) => p.id !== "name" || !this.#nameHome).map((p) => warmPlacement(p)) ?? [];
     if (this.#nameHome && this.#nameWarm) placements.push(this.#nameWarm);
     const sides = ["top-left", "top-right", "bottom-left", "bottom-right", "left", "right", "top", "bottom"];
     return {

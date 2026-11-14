@@ -4,10 +4,12 @@
  * The countries of Natural Earth in a Lambert azimuthal equal-area projection centred on
  * Europe. The map can be panned and zoomed; every view is labeled again, from the labels
  * shown, so they stay where they can. A country is an area: its name goes inside the part
- * of it that is in view, wrapped or abbreviated where that is narrow, out on a leader
+ * of it that is on the map, wrapped or abbreviated where that is narrow, out on a leader
  * where it is too small. Capitals are points; zoomed in, more cities, the smallest states
  * and more seas come. The seas' names are an SVG the engine reads: no label covers them.
- * At the first view the labels are those of the static figure.
+ * At the first view the labels are those of the static figure. A zoomed view is a window
+ * on the map (`canvas.overscan`): what lies a little beyond it is labeled as well, and a
+ * name at its border keeps its place on the map and is cut there.
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
 import type { MotionFrame } from "@label-anything/extras";
@@ -23,6 +25,8 @@ const SCALE = W / (FRAME[2] - FRAME[0]); // px per km
 const H = Math.round((FRAME[3] - FRAME[1]) * SCALE);
 const R_EARTH = 6371.0;
 const PAD = 40; // the land is drawn this far beyond the map's edges
+/** How far beyond a zoomed view the map is labeled as well, in px (`canvas.overscan`): about a label's width. */
+const OVERSCAN = 80;
 
 const SEA = "#d3e3f1";
 const LAND_OTHER = "#ebe7df";
@@ -209,7 +213,7 @@ export class Europe implements Example {
   readonly width = W;
   readonly height = H;
   readonly title = "The countries and capitals of Europe, labeled live by Label Anything";
-  readonly hint = "Drag to pan; zoom with the buttons, a double click, a pinch or Ctrl + scroll: more cities come as there is room. Hover or tap a country or a city.";
+  readonly hint = "Drag to pan; zoom with the buttons, a double click, a pinch or Ctrl + scroll: more cities come as there is room, and names at the border stay where they are. Hover or tap a country or a city.";
   readonly render = {
     font: { family: LABEL_FAMILY, size: 9.5, weight: 400, italic: false },
     fill: CITY_TEXT,
@@ -263,19 +267,32 @@ export class Europe implements Example {
     return [x * v.k + v.x, y * v.k + v.y];
   }
 
-  /** The countries to label in a view, each with the part that carries the name: the largest in view. */
+  /** A zoomed view is a window on the map: what lies up to this far beyond it is labeled as well. */
+  #overscan(v: View): number {
+    return v.k > 1 ? OVERSCAN : 0;
+  }
+
+  /**
+   * The countries to label in a view, each with the part that carries the name: the
+   * largest on the map, whole. The view does not cut it, so that the name has its place
+   * in the country wherever the view is.
+   */
   #countries(v: View): { land: Land; main: Ring[] }[] {
     const out: { land: Land; main: Ring[] }[] = [];
+    const m = this.#overscan(v);
+    // the map's edges in the view (the whole map: the view's own)
+    const [mx0, my0] = this.#to(v, [0, 0]);
+    const [mx1, my1] = this.#to(v, [W, H]);
     for (const land of this.#lands) {
       if (SKIP.has(land.id) && !(SMALL.has(land.id) && v.k >= ZOOM_SMALL)) continue;
       if (land.pop < 100_000 && !SMALL.has(land.id)) continue;
       const [x0, y0] = this.#to(v, [land.bounds[0], land.bounds[1]]);
       const [x1, y1] = this.#to(v, [land.bounds[2], land.bounds[3]]);
-      if (x1 < 3 || y1 < 3 || x0 > W - 3 || y0 > H - 3) continue;
+      if (x1 < 3 - m || y1 < 3 - m || x0 > W - 3 + m || y0 > H - 3 + m) continue;
       let main: Ring[] | undefined;
       let best = 0;
       for (const part of land.parts) {
-        const rings = part.map((ring) => clipRing(ring.map((p) => this.#to(v, p)), 3, 3, W - 3, H - 3));
+        const rings = part.map((ring) => clipRing(ring.map((p) => this.#to(v, p)), mx0 + 3, my0 + 3, mx1 - 3, my1 - 3));
         if (rings[0]!.length < 3) continue;
         const a = ringArea(rings[0]!);
         if (a > best) {
@@ -291,10 +308,11 @@ export class Europe implements Example {
   /** The seas' names in a view, as SVG markup: drawn, and read by the engine. */
   #seaMarkup(v: View): string {
     const o = [`<g class="seas" fill="${SEA_TEXT}" font-size="12.5" font-style="italic" text-anchor="middle">`];
+    const m = this.#overscan(v);
     for (const [lines, lon, lat, zoom] of SEAS) {
       if (v.k < zoom) continue;
       const [x, y] = this.#to(v, project(lon, lat));
-      if (x < -80 || x > W + 80 || y < -40 || y > H + 40) continue;
+      if (x < -80 - m || x > W + 80 + m || y < -40 - m || y > H + 40 + m) continue;
       lines.forEach((line, i) => o.push(`<text x="${f2(x)}" y="${f2(y + (i - (lines.length - 1) / 2) * 15 + 4)}">${esc(line)}</text>`));
     }
     o.push("</g>");
@@ -319,10 +337,15 @@ export class Europe implements Example {
         placement: { models: ["internal"] },
       };
     });
+    const m = this.#overscan(v);
+    const [mx0, my0] = this.#to(v, [0, 0]);
+    const [mx1, my1] = this.#to(v, [W, H]);
     for (const p of this.#places.values()) {
       if (!p.capital && v.k < ZOOM_CITIES) continue;
       const [x, y] = this.#to(v, p.at);
-      if (!(x > 4 && x < W - 4 && y > 4 && y < H - 4)) continue;
+      // on the map, and in the view or a little beyond it
+      if (!(x > mx0 + 4 && x < mx1 - 4 && y > my0 + 4 && y < my1 - 4)) continue;
+      if (!(x > 4 - m && x < W - 4 + m && y > 4 - m && y < H - 4 + m)) continue;
       items.push({
         id: p.id,
         anchor: { type: "point", x: round(x, 1), y: round(y, 1), mark: { shape: "circle", r: p.capital ? 2.6 : 2 } },
@@ -333,7 +356,12 @@ export class Europe implements Example {
     }
     return {
       version: "1",
-      canvas: { width: W, height: H, padding: 4 },
+      // a zoomed view is a window on the map: labels may cross its edges, where they are
+      // cut, and stay inside the map (the region)
+      canvas:
+        v.k > 1
+          ? { width: W, height: H, padding: 4, overscan: OVERSCAN, region: [round(mx0, 2), round(my0, 2), round(mx1 - mx0, 2), round(my1 - my0, 2)] }
+          : { width: W, height: H, padding: 4 },
       defaults: { font: { size: 9.5 } },
       obstacles: {
         svg: {

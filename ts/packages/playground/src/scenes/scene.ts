@@ -71,6 +71,14 @@ export interface Scene {
   raster?(): RgbaPixels | undefined;
   /** Current anchor positions by item id (labels follow them between solves). */
   anchors(): Anchors;
+  /**
+   * `anchors()` gives the anchors the engine reported (`onResult`), at their places of
+   * now: the app moves the previous labels with them for the warm start. Otherwise the
+   * engine moves them, by each item's reference point of the moment, which for an area
+   * is its pole: a point that a small change of the outline can move far, and the label
+   * with it.
+   */
+  readonly anchorsFromResults?: boolean;
   /** State taken when a problem is built, handed back with its result (e.g. the map's view). */
   snapshot?(): unknown;
   /** A result arrived for the problem built at `snapshot`. */

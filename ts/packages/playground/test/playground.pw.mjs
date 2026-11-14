@@ -90,6 +90,78 @@ test("moving objects are solved warm-started, then settle", async ({ page }) => 
   await page.waitForFunction(() => globalThis.playground.history.at(-1)?.kind === "settle", null, { timeout: 20_000 });
 });
 
+test("the world map is a window on the map: labels are cut at its border and keep their place while it is panned", async ({ page }) => {
+  const errors = await open(page, "map");
+  const settled = async () => {
+    await page.waitForTimeout(200);
+    await page.waitForFunction(() => globalThis.playground.history.at(-1)?.kind !== "warm", null, { timeout: 20_000 });
+    await page.waitForTimeout(300);
+  };
+  // the placed labels: where they are on the map (px of the map at zoom 1), and in the view
+  const labels = () =>
+    page.evaluate(() => {
+      const app = globalThis.playground;
+      const v = app.scene.snapshot();
+      const { width, height } = app.problem.canvas;
+      return app.result.placements
+        .filter((p) => p.placed)
+        .map((p) => {
+          const b = p.box;
+          const shown = b.x < width && b.y < height && b.x + b.w > 0 && b.y + b.h > 0;
+          return {
+            id: p.id, k: v.k, x: (b.x + b.w / 2 - v.x) / v.k, y: (b.y + b.h / 2 - v.y) / v.k, shown,
+            cut: shown && (b.x < 0 || b.y < 0 || b.x + b.w > width || b.y + b.h > height),
+          };
+        });
+    });
+  const canvas = () => page.evaluate(() => globalThis.playground.problem.canvas);
+  const box = await page.locator("#stage").boundingBox();
+  const [cx, cy] = [box.x + box.width * 0.55, box.y + box.height * 0.4];
+  /** Pans by 120 px to the left and 40 px up, in steps; the share of the labels in view that stay where they are on the map. */
+  const pan = async () => {
+    const before = await labels();
+    for (let s = 0; s < 4; s++) {
+      await page.mouse.move(cx, cy);
+      await page.mouse.down();
+      await page.mouse.move(cx - 15, cy - 5, { steps: 2 });
+      await page.mouse.move(cx - 30, cy - 10, { steps: 2 });
+      await page.mouse.up();
+      await settled();
+    }
+    const after = new Map((await labels()).map((l) => [l.id, l]));
+    const both = before.filter((a) => after.has(a.id) && (a.shown || after.get(a.id).shown));
+    expect(both.length).toBeGreaterThan(8);
+    // (a label that is nudged by a few px has stayed)
+    return both.filter((a) => Math.hypot(after.get(a.id).x - a.x, after.get(a.id).y - a.y) * a.k < 6).length / both.length;
+  };
+
+  expect((await canvas()).overscan).toBeGreaterThan(0);
+  // the controls on the map are no obstacles: labels would dodge them as the map moves
+  expect(await page.evaluate(() => globalThis.playground.problem.obstacles)).toBeUndefined();
+  await page.mouse.move(cx, cy);
+  for (let i = 0; i < 5; i++) {
+    await page.mouse.wheel(0, -240);
+    await page.waitForTimeout(100);
+  }
+  await settled();
+  const zoomed = await labels();
+  expect(zoomed[0].k).toBeGreaterThan(4);
+  // the region is the whole map, far larger than the view; labels cross the edges of the view
+  const c = await canvas();
+  expect(c.region[2]).toBeGreaterThan(4 * c.width);
+  expect(zoomed.filter((l) => l.cut).length).toBeGreaterThan(0);
+  const stayed = await pan();
+  expect(stayed).toBeGreaterThan(0.75);
+
+  // without the window, every label is moved inside the view, and those at the border move with it
+  await page.evaluate(() => globalThis.playground.setValue("param.window", false));
+  await page.waitForFunction(() => globalThis.playground.problem.canvas.overscan === undefined, null, { timeout: 20_000 });
+  await settled();
+  expect((await labels()).filter((l) => l.cut)).toEqual([]);
+  expect(await pan()).toBeLessThan(stayed - 0.15);
+  expect(errors).toEqual([]);
+});
+
 test("labels keep off the controls drawn on the canvas, and stay in place while one changes a little", async ({ page }) => {
   await open(page, "network", 3); // the statistics show from the first result on
   const overlay = () =>

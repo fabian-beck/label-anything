@@ -190,6 +190,21 @@ test("the map zooms and pans: more cities come, and the whole map has its first 
   const s = await state(page, "europe");
   expect(s.placed.some((p) => p.id.startsWith("city-"))).toBe(true);
   expectDisjoint(s.placed);
+  // a zoomed view is a window on the map: what lies a little beyond it is labeled as well,
+  // and a label at its border is cut there, not moved inside
+  const canvas = await page.evaluate(() => globalThis.labelAnythingShowcase.examples.europe.problem().canvas);
+  expect(canvas.overscan).toBeGreaterThan(0);
+  expect(canvas.region[2]).toBeCloseTo(canvas.width * zoomed.k, 1);
+  const inView = (b) => b.x < canvas.width && b.y < canvas.height && b.x + b.w > 0 && b.y + b.h > 0;
+  const cut = (b) => inView(b) && (b.x < 0 || b.y < 0 || b.x + b.w > canvas.width || b.y + b.h > canvas.height);
+  expect(s.placed.filter((p) => cut(p.box)).length).toBeGreaterThan(0);
+  // where the labels are on the map (px of the map at zoom 1)
+  const onMap = async () => {
+    const v = await view();
+    const placed = (await state(page, "europe")).placed;
+    return new Map(placed.map((p) => [p.id, { x: (p.box.x - v.x) / v.k, y: (p.box.y - v.y) / v.k, shown: inView(p.box) }]));
+  };
+  const before = await onMap();
   // a drag pans the zoomed map
   const [x, y] = await client(page, "europe", 440, 440);
   await page.mouse.move(x, y);
@@ -202,6 +217,12 @@ test("the map zooms and pans: more cities come, and the whole map has its first 
   expect(panned.x).toBeLessThan(zoomed.x - 50);
   expect(panned.y).toBeLessThan(zoomed.y - 20);
   expectDisjoint((await state(page, "europe")).placed);
+  // the labels stayed where they were on the map, those at the border too
+  const after = await onMap();
+  const both = [...before].filter(([id, a]) => after.has(id) && (a.shown || after.get(id).shown));
+  expect(both.length).toBeGreaterThan(15);
+  const stayed = both.filter(([id, a]) => Math.hypot(after.get(id).x - a.x, after.get(id).y - a.y) * panned.k < 1);
+  expect(stayed.length / both.length).toBeGreaterThan(0.85);
   // Ctrl + wheel zooms about the pointer; the wheel alone scrolls the page
   await page.keyboard.down("Control");
   await page.mouse.wheel(0, -100);

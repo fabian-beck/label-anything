@@ -261,7 +261,7 @@ export class Stage {
         this.#memory.remember(result, at);
         this.#ex.solved?.(result, solve);
         this.#motion.target(result, solve.anchors);
-        this.#showStatus(result);
+        this.#showStatus(result, problem, solve.anchors);
         this.kick();
       } catch (e) {
         console.warn(`label-anything example ${this.#ex.name}:`, e);
@@ -271,11 +271,27 @@ export class Stage {
     this.#busy = false;
   }
 
-  #showStatus(r: LabelResult): void {
+  #showStatus(r: LabelResult, problem: LabelProblem, anchors: ReadonlyMap<string, Pt>): void {
     const grouped = r.placements.filter((p) => p.reason === "grouped").length;
-    const total = r.stats.total - grouped;
+    let placed = r.stats.placed;
+    let total = r.stats.total - grouped;
+    const canvas = problem.canvas;
+    if (canvas && canvas.overscan !== undefined && canvas.overscan !== null) {
+      // a window on a larger drawing: the labels in view, of the items in view
+      const { width: w, height: h } = canvas;
+      placed = 0;
+      total = 0;
+      for (const p of r.placements) {
+        if (p.reason === "grouped") continue;
+        const b = p.placed ? p.box : undefined;
+        const shown = b !== undefined && b.x < w && b.y < h && b.x + b.w > 0 && b.y + b.h > 0;
+        const a = anchors.get(p.id);
+        if (shown) placed++;
+        if (shown || (a !== undefined && a[0] >= 0 && a[1] >= 0 && a[0] <= w && a[1] <= h)) total++;
+      }
+    }
     const ms = r.stats.runtime_ms;
-    this.#status.textContent = `${r.stats.placed} of ${total} labels · ${ms < 10 ? ms.toFixed(1) : Math.round(ms)} ms`;
+    this.#status.textContent = `${placed} of ${total} labels · ${ms < 10 ? ms.toFixed(1) : Math.round(ms)} ms`;
   }
 
   #frame(now: number): void {
