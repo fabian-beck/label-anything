@@ -283,7 +283,7 @@ function rng(seed: number): () => number {
 /** What `warm_start` needs of a placement: the box, where it was placed for, its leader. */
 function warm(p: Placement): object {
   if (!p.placed || !p.box) return { id: p.id, placed: false };
-  return { id: p.id, placed: true, box: p.box, anchor: p.anchor, ...(p.leader ? { leader: { points: p.leader.points, style: p.leader.style } } : {}) };
+  return { id: p.id, placed: true, box: p.box, ...(p.rotation ? { rotation: p.rotation } : {}), anchor: p.anchor, ...(p.leader ? { leader: { points: p.leader.points, style: p.leader.style } } : {}) };
 }
 
 const SIDES: Record<string, string> = {

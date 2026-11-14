@@ -1025,6 +1025,7 @@ function warmPlacement(p: Placement): Obj {
   const out: Obj = { id: p.id, placed: p.placed };
   if (p.placed && p.box) {
     out.box = p.box;
+    if (p.rotation) out.rotation = p.rotation;
     if (p.anchor) out.anchor = p.anchor;
     if (p.leader) out.leader = { points: p.leader.points, style: p.leader.style };
   }

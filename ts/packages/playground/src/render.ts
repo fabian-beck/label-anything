@@ -42,6 +42,27 @@ function texts(p: Placement): { box: NonNullable<Placement["box"]>; text: TextIn
   return p.text && p.box ? [{ box: p.box, text: p.text }] : [];
 }
 
+type Box = NonNullable<Placement["box"]>;
+
+/**
+ * Runs `draw` with the canvas turned as a label with this box and rotation is (degrees,
+ * clockwise, about the center of the box): a turned area label is drawn as an upright one.
+ */
+export function turned(ctx: CanvasRenderingContext2D, box: Box, rotation: number | undefined, draw: () => void): void {
+  if (!rotation) {
+    draw();
+    return;
+  }
+  const cx = box.x + box.w / 2;
+  const cy = box.y + box.h / 2;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate((rotation * Math.PI) / 180);
+  ctx.translate(-cx, -cy);
+  draw();
+  ctx.restore();
+}
+
 /** Draws placed labels with their leaders; `opacity` per id for labels fading in or out. */
 export function drawLabels(
   ctx: CanvasRenderingContext2D,
@@ -87,26 +108,29 @@ export function drawLabels(
     const a = (opacity?.get(p.id) ?? 1) * (dim?.(p.id) ?? 1);
     if (a <= 0) continue;
     ctx.globalAlpha = a;
-    if (style === "box") {
-      ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
-      roundRect(ctx, p.box.x, p.box.y, p.box.w, p.box.h, 2);
-      ctx.fill();
-    }
-    for (const { box, text } of texts(p)) {
-      ctx.font = cssFont(text);
-      text.lines.forEach((line, i) => {
-        // each line where the engine aligned it (centered by default)
-        const x = box.x + (text.x_offsets?.[i] ?? text.x_offset ?? 0);
-        const y = box.y + (text.baseline_offsets[i] ?? 0);
-        if (style === "halo") {
-          ctx.lineWidth = 3;
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
-          ctx.strokeText(line, x, y);
-        }
-        ctx.fillStyle = "#000000";
-        ctx.fillText(line, x, y);
-      });
-    }
+    const pbox = p.box;
+    turned(ctx, pbox, p.rotation, () => {
+      if (style === "box") {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+        roundRect(ctx, pbox.x, pbox.y, pbox.w, pbox.h, 2);
+        ctx.fill();
+      }
+      for (const { box, text } of texts(p)) {
+        ctx.font = cssFont(text);
+        text.lines.forEach((line, i) => {
+          // each line where the engine aligned it (centered by default)
+          const x = box.x + (text.x_offsets?.[i] ?? text.x_offset ?? 0);
+          const y = box.y + (text.baseline_offsets[i] ?? 0);
+          if (style === "halo") {
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
+            ctx.strokeText(line, x, y);
+          }
+          ctx.fillStyle = "#000000";
+          ctx.fillText(line, x, y);
+        });
+      }
+    });
   }
   ctx.restore();
 }
@@ -132,7 +156,8 @@ export function drawBoxes(ctx: CanvasRenderingContext2D, result: LabelResult): v
     if (!p.placed || !p.box) continue;
     ctx.strokeStyle = MODEL_COLORS[p.model ?? "adjacent"] ?? ACCENT;
     ctx.setLineDash(p.model === "adjacent" ? [] : [3, 2]);
-    ctx.strokeRect(p.box.x + 0.5, p.box.y + 0.5, p.box.w - 1, p.box.h - 1);
+    const b = p.box;
+    turned(ctx, b, p.rotation, () => ctx.strokeRect(b.x + 0.5, b.y + 0.5, b.w - 1, b.h - 1));
   }
   ctx.restore();
 }
@@ -170,14 +195,15 @@ export function drawCandidates(ctx: CanvasRenderingContext2D, candidates: readon
     ctx.strokeStyle = c.feasible ? MODEL_COLORS[c.model] ?? ACCENT : "rgba(120, 120, 120, 0.55)";
     ctx.setLineDash(c.feasible ? [] : [2, 3]);
     ctx.globalAlpha = c.feasible ? 0.75 : 0.5;
-    ctx.strokeRect(c.box.x + 0.5, c.box.y + 0.5, c.box.w - 1, c.box.h - 1);
+    turned(ctx, c.box, c.rotation, () => ctx.strokeRect(c.box.x + 0.5, c.box.y + 0.5, c.box.w - 1, c.box.h - 1));
   }
-  if (chosen?.box) {
+  const cb = chosen?.box;
+  if (cb) {
     ctx.globalAlpha = 1;
     ctx.setLineDash([]);
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = ACCENT;
-    ctx.strokeRect(chosen.box.x, chosen.box.y, chosen.box.w, chosen.box.h);
+    turned(ctx, cb, chosen.rotation, () => ctx.strokeRect(cb.x, cb.y, cb.w, cb.h));
   }
   ctx.restore();
 }
@@ -188,8 +214,11 @@ export function drawHighlight(ctx: CanvasRenderingContext2D, p: Placement | unde
   ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth = width;
-  roundRect(ctx, p.box.x - 1, p.box.y - 1, p.box.w + 2, p.box.h + 2, 3);
-  ctx.stroke();
+  const b = p.box;
+  turned(ctx, b, p.rotation, () => {
+    roundRect(ctx, b.x - 1, b.y - 1, b.w + 2, b.h + 2, 3);
+    ctx.stroke();
+  });
   ctx.restore();
 }
 
@@ -268,7 +297,16 @@ export function labelAt(result: LabelResult | undefined, x: number, y: number): 
   for (let i = result.placements.length - 1; i >= 0; i--) {
     const p = result.placements[i]!;
     const b = p.box;
-    if (p.placed && b && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return p;
+    if (!p.placed || !b) continue;
+    // a turned label: the point turned back about the center of its box
+    let [qx, qy] = [x, y];
+    if (p.rotation) {
+      const a = (-p.rotation * Math.PI) / 180;
+      const [cx, cy] = [b.x + b.w / 2, b.y + b.h / 2];
+      qx = cx + (x - cx) * Math.cos(a) - (y - cy) * Math.sin(a);
+      qy = cy + (x - cx) * Math.sin(a) + (y - cy) * Math.cos(a);
+    }
+    if (qx >= b.x && qx <= b.x + b.w && qy >= b.y && qy <= b.y + b.h) return p;
   }
   return undefined;
 }

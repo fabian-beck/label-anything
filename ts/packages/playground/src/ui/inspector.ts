@@ -79,6 +79,7 @@ export class Inspector {
         rows.push(["Font", `${fmt(t.font_size)} px${t.font_weight && t.font_weight !== 400 ? `, weight ${t.font_weight}` : ""}${t.scale && t.scale < 1 ? `, shrunk to ${Math.round(t.scale * 100)} %` : ""}`]);
       }
       rows.push(["Box", `${fmt(p.box!.x)}, ${fmt(p.box!.y)}  ·  ${fmt(p.box!.w)} × ${fmt(p.box!.h)} px`]);
+      if (p.rotation) rows.push(["Rotation", `${fmt(p.rotation)}° (along the area)`]);
       if (p.leader) rows.push(["Leader", `${p.leader.style}, ${fmt(leaderLength(p.leader.points as number[][]))} px`]);
       if (typeof p.cost === "number") rows.push(["Cost", fmt(p.cost, 3)]);
       if (p.degrade_steps?.length) rows.push(["Ladder", p.degrade_steps.join(" → ")]);
