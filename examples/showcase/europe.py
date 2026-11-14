@@ -237,7 +237,7 @@ def problem(cs: list[dict]) -> dict:
         "priority": {"font_classes": [{"first": 9, "scale": 1.3}, {"first": 24, "scale": 1.12},
                                       {"first": n, "scale": 1.0}, {"scale": 1.0}]},
         "degrade": ["wrap", "alternatives", "distant", "omit"],
-        "solver": {"seed": 1},
+        "solver": {"seed": 4},
     }
 
 

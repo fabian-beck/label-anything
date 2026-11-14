@@ -223,7 +223,7 @@ PROBLEM_CHECKS: dict[str, tuple[int, Callable[[dict[str, Any]], str | None] | No
     "leaders-curved.json": (10, leader_styles("curved")),
     "leaders-boundary.json": (10, models("boundary")),
     "priority-cities.json": (29, all_checks(omitted_with("omitted_by_priority"), priority_cities)),
-    "shapes.json": (10, model_of(big="internal", ellipse="internal", card="internal", region="internal", islet="adjacent", medium="adjacent")),
+    "shapes.json": (11, model_of(big="internal", ellipse="internal", card="internal", region="internal", lake="internal", islet="adjacent", medium="adjacent")),
     "graph.json": (14, model_of(core="internal", api="internal", db="internal", cache="internal", web="adjacent")),
 }
 

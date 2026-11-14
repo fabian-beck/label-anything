@@ -20,14 +20,16 @@ p = la.Problem(canvas=(640, 380))
 for key, (anchor, mark, text) in marks.items():
     p.item(anchor, text, id=key, mark=mark, placement={"internal": "prefer"} if key == "big" else None)
 p.item(la.Area([(440, 280), (560, 262), (620, 320), (580, 368), (450, 360)]), "Region", id="region")
+p.item(la.Area([(501, 126), (616, 45), (631, 66), (516, 147)]), "Slanted lake", id="lake")
 p.item(la.Area([(352, 330), (372, 322), (376, 342), (356, 348)]), "Tiny region", id="islet")
 res = p.solve()
 for pl in res.placements:
-    print(f"{pl.id:9} {pl.model:9} {pl.anchor_side}")
+    print(f"{pl.id:9} {pl.model:9} {pl.anchor_side:9} {pl.rotation:6.1f}°")   # the lake's label is turned
 # --8<-- [end:shapes]
 same = la.place_problem(Path("../problems/shapes.json"))
 assert [(q.id, q.box) for q in same.placements] == [(q.id, q.box) for q in res.placements]
 assert res["big"].model == "internal" and res["region"].model == "internal" and res["islet"].model != "internal"
+assert res["lake"].model == "internal" and -36 < res["lake"].rotation < -34 and res["region"].rotation == 0
 
 # --8<-- [start:item-shape]
 res = la.place([(120, 80)], ["Ellipse"], canvas=(300, 200), marks=[la.Mark.ellipse(40, 16, rotation=30)],

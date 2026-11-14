@@ -91,7 +91,12 @@ def compose(width: float, height: float, title: str, picture: str, result: dict,
     o.append('<g class="labels">')
     for p in placed:
         cls = label_class(p)
-        o.append(f'<g class="{cls}">' if cls else "<g>")
+        # a turned label (the name of an area along it): drawn in its box, then turned about
+        # the box's center
+        b = p["box"]
+        turn = (f' transform="rotate({f(p["rotation"])} {f(b["x"] + b["w"] / 2)} {f(b["y"] + b["h"] / 2)})"'
+                if p.get("rotation") else "")
+        o.append(f'<g class="{cls}"{turn}>' if cls else f"<g{turn}>")
         if p.get("text"):
             o += _glyph_text(p["box"]["x"], p["box"]["y"], p["text"], color=label_color(p))
         o.append("</g>")

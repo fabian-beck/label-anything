@@ -368,6 +368,8 @@ const AREAS: { id: string; name: string; poly: [number, number][] }[] = [
   { id: "wood", name: "Fenwood", poly: [[300, 44], [420, 38], [446, 90], [430, 150], [356, 168], [296, 128]] },
   { id: "copse", name: "Ashcopse", poly: [[548, 222], [566, 218], [574, 234], [560, 244], [546, 238]] },
   { id: "moor", name: "Grey Moor", poly: [[332, 312], [440, 352], [500, 404], [380, 420], [300, 392]] },
+  // slanted and too narrow for an upright name: its label is turned along it
+  { id: "heath", name: "Long Heath", poly: [[147, 91], [184, 65], [257, 26], [271, 34], [270, 52], [220, 83], [165, 111]] },
 ];
 
 const PLACES: Place[] = [
@@ -386,7 +388,7 @@ export class AreasScene implements ExplainScene {
   readonly id = "areas";
   readonly title = "Areas & obstacles";
   readonly about =
-    "Areas get candidates inside them where the label fits; villages get theirs around the point. The river is a soft obstacle (covering it costs), the legend box a hard one (no label may cover it): hover a candidate to see what each term of its cost adds.";
+    "Areas get candidates inside them where the label fits, turned along a slanted area (Long Heath); villages get theirs around the point. The river is a soft obstacle (covering it costs), the legend box a hard one (no label may cover it): hover a candidate to see what each term of its cost adds.";
   readonly credits = "Invented geography.";
   readonly controls: SceneControl[] = [
     { key: "riverCost", label: "Cost of covering the river", kind: "range", min: 0, max: 8, step: 0.5, hint: "avoid.label.river (per em² covered)" },

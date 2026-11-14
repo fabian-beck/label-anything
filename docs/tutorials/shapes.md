@@ -66,7 +66,7 @@ radius 2) and gets an outside label, on a leader if needed. Areas are not obstac
 other labels.
 
 A label may be **turned** along a slanted area, as the names of lakes and valleys are on
-a map: when the polygon is clearly longer one way (its main axis is at least 10° from the
+a map ("Slanted lake" in the example): when the polygon is clearly longer one way (its main axis is at least 10° from the
 horizontal), the engine also tries the label along that axis, by at most
 `placement.area_rotation` (45° by default; `0` keeps every label upright). Turning costs
 a little (45° as much as one more line of text), so a label that has room upright stays

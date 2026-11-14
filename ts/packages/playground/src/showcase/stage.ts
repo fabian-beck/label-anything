@@ -147,8 +147,18 @@ export class Stage {
   /** The item at a point: the one whose label is there, else the one whose mark is. */
   pick(x: number, y: number): string | null {
     for (let i = this.#shown.length - 1; i >= 0; i--) {
-      const b = this.#shown[i]!.box;
-      if (b && x >= b.x - 2 && x <= b.x + b.w + 2 && y >= b.y - 2 && y <= b.y + b.h + 2) return this.#shown[i]!.id;
+      const p = this.#shown[i]!;
+      const b = p.box;
+      if (!b) continue;
+      // a turned label: the point turned back about the center of its box
+      let [qx, qy] = [x, y];
+      if (p.rotation) {
+        const a = (-p.rotation * Math.PI) / 180;
+        const [cx, cy] = [b.x + b.w / 2, b.y + b.h / 2];
+        qx = cx + (x - cx) * Math.cos(a) - (y - cy) * Math.sin(a);
+        qy = cy + (x - cx) * Math.sin(a) + (y - cy) * Math.cos(a);
+      }
+      if (qx >= b.x - 2 && qx <= b.x + b.w + 2 && qy >= b.y - 2 && qy <= b.y + b.h + 2) return p.id;
     }
     return this.#ex.hit(x, y);
   }

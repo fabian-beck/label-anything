@@ -348,7 +348,7 @@ export class Europe implements Example {
       placement: { models: ["adjacent", "slider", "internal", "distant"], max_distance: "5em", inner_padding: 2 },
       leaders: { style: "straight", max_length: "7em" },
       degrade: ["wrap", "alternatives", "distant", "omit"],
-      solver: { seed: 1 },
+      solver: { seed: 4 },
     } as unknown as LabelProblem;
   }
 
