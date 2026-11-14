@@ -27,7 +27,9 @@ border moved on the map at each pan step of 30 px.
 - **`canvas.overscan`** (a length; `null`, the default: labels stay inside the canvas).
   The working extent is the canvas grown by the overscan: the grids cover it, and what
   lies there is solved like what is in view. The canvas bounds neither labels nor leaders.
-  The host passes the items up to there and cuts what it draws at the edge.
+  The host passes the items up to there and cuts what it draws at the edge. A point beyond
+  the working extent is a mark only, unless its label still shows
+  (ADR motion/pinned-labels).
 - **`canvas.region` bounds the labels of a window**: the bounds of the whole drawing in
   canvas coordinates, larger than the canvas as a rule. A map that ends somewhere keeps
   its names inside, and at the view of the whole map the labels are those of a canvas.
@@ -39,9 +41,9 @@ border moved on the map at each pan step of 30 px.
   the extent: the same containment, and the same room up to the 1 em that counts
   (spec §6.5).
 - **The map helpers are windows.** Leaflet, MapLibre and sigma label the points up to
-  `overscan` px beyond the view, 8 times the font size unless set, and pass it on;
-  `overscan: false` gives the labels of a canvas. Their overlays are cut by the map's
-  own element.
+  `overscan` px beyond the view, 8 times the font size unless set, and pass it on, with
+  the points up to three times as far as marks; `overscan: false` gives the labels of a
+  canvas. Their overlays are cut by the map's own element.
 - **The examples**: the playground's world map and the home page's map of Europe pass
   whole countries and the region of the map; Europe at the whole map is the problem of
   the static figure, a canvas. The world map no longer takes the controls drawn over it
@@ -57,7 +59,8 @@ against 11.2 % elsewhere (contained: 21.3 % against 8.0 %), 15 jumps instead of 
 the world map at zoom 9, 4.6 % of the names at the border move on the map per step instead
 of 82 %, with 2 jumps of more than 12 px over 24 steps instead of 156; in the map of
 Europe at zoom 3, about 1 % instead of 33 %. What still moves does so as labels in the
-middle of the view do.
+middle of the view do; while the view is only panned, pinned labels end that too
+(ADR motion/pinned-labels).
 
 It costs the labels of the overscan: 96 px around 800 × 600 px are three quarters more
 items, and a solve of the world map takes 45 ms instead of 25 ms in TypeScript. The

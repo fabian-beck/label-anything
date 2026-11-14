@@ -103,9 +103,22 @@ changing sides to stay inside
 | Option | Default | |
 |---|---|---|
 | `overscan` | 8 × the font size (96 px at 12 px) | px beyond the view that are labeled as well, about a label's width; `false`: only what is in view is labeled, every label inside the view |
+| `pin` | `true` | while the view is only panned, every label keeps its place on the map exactly, and labels are only added where the view has moved on (`warm_start.pin`); `false`: warm starts alone, which keep most labels |
 
-For an overlay of your own, `resolveOverscan` and `inView` give the same margin, and
-`Overlay` takes it as `overscan`.
+**No label moves while the view is panned.** The helpers compare the view with that of
+the labels shown: the zoom for Leaflet, also bearing and pitch for MapLibre, the camera's
+ratio and angle and the graph for sigma. When only the position changed, the solve is
+pinned; after a zoom the labels are placed anew, warm-started. For labels in the overscan
+to keep off the marks that come in next, the helpers also pass the points up to three
+times the overscan beyond the view, which get no label there (reason `outside`). A pin
+gives way to nothing: a more important point that comes in next to a pinned label waits
+for its label until the next zoom
+([ADR motion/pinned-labels](https://github.com/fabian-beck/label-anything/blob/main/docs/adr/motion/pinned-labels.md)).
+
+For an overlay of your own, `resolveOverscan`, `marksMargin` and `inView` give the same
+margins. `Overlay` takes `overscan`, and pins when `viewKey()` returns what it returned
+for the labels shown: a number or string for everything but the position (the zoom, a
+rotation), compared with `===`.
 
 ## Smooth transitions
 

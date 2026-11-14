@@ -51,7 +51,8 @@ while nodes move under the camera, so the helper solves in viewport pixels after
 camera move (debounced), starting from the previous result. The viewport is a
 [window](interactive-maps.md#the-view-is-a-window) on the graph: nodes up to `overscan`
 px beyond it are labeled as well (default: 8 times the font size; `false`: every label
-inside the viewport), and a label at its edge is cut there. Between solves, labels follow
+inside the viewport), and a label at its edge is cut there. While the camera only pans
+over the same graph, the labels are pinned: none moves (`pin: false`: warm starts alone). Between solves, labels follow
 their nodes; after one, they move and fade calmly
 ([smooth transitions](interactive-maps.md#smooth-transitions)).
 

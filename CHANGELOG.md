@@ -43,7 +43,12 @@ The first release, 0.1.0. Nothing is published to a package registry yet.
   larger drawing. What lies up to that far beyond the canvas is labeled as well, labels
   cross its edges and are cut there by the host, and `canvas.region` gives the bounds of
   the whole drawing. A label at the border keeps its place while the view moves; areas are
-  passed whole and keep their names where they are.
+  passed whole and keep their names where they are. A point beyond the overscan is a mark
+  only (reason `outside`): labels keep off it before it comes in.
+- Pinned labels for a view that is only panned: with `warm_start.pin` every label keeps
+  its box exactly where the hard rules still allow it, whatever its priority, and the
+  solve only adds labels around them (`stats.pinned`). No label moves while a map is
+  panned; after a zoom, solve without the pin.
 - A deterministic solver (greedy pass, local search, exact search for small problems)
   with a time budget that does not depend on the machine's speed.
 - Text measurement with a bundled Noto Sans subset, with the host's fonts, or through a
@@ -62,7 +67,8 @@ The first release, 0.1.0. Nothing is published to a package registry yet.
   `@label-anything/cli`, and `@label-anything/extras` for d3, Observable Plot, Vega,
   Leaflet, MapLibre, Cytoscape, sigma and Web Workers. The Leaflet, MapLibre and sigma
   helpers treat the view as a window (option `overscan`, 8 times the font size by
-  default; `false` keeps every label inside the view).
+  default; `false` keeps every label inside the view) and pin the labels while it is
+  only panned (option `pin`).
 - Java ≥ 17: `io.github.fabian-beck:label-anything`, through FFM on Java 22+ and JNI
   before.
 - C ABI: `liblabelanything` with `label_anything.h`, with examples in C and Go.
