@@ -45,7 +45,8 @@ function spec(transform: Record<string, unknown>) {
 async function run(transform: Record<string, unknown>) {
   const view = new vega.View(vega.parse(spec(transform) as vega.Spec), { renderer: "none" });
   await view.runAsync();
-  const scene = view.scenegraph().root as unknown as { items: { items: { name?: string; items: Record<string, unknown>[] }[] }[] };
+  // `root` is not in vega's type declarations
+  const { root: scene } = view.scenegraph() as unknown as { root: { items: { items: { name?: string; items: Record<string, unknown>[] }[] }[] } };
   const mark = scene.items[0]!.items.find((m) => m.name === "labels")!;
   return mark.items;
 }

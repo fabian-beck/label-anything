@@ -173,11 +173,6 @@ export class StaticIndex {
     return this.boxes.length === 0;
   }
 
-  /** Box of `id`. */
-  bbox(id: number): Rect {
-    return this.boxes[id]!;
-  }
-
   /**
    * Ids whose boxes touch `r` (closed), deduplicated, in bucket scan order (row-major,
    * first occurrence) — deterministic for a given index.

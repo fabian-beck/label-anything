@@ -79,7 +79,7 @@ def chart(rows, year, labeled: set[str], watermark: bool) -> tuple[Axes, Scene]:
     return ax, sc
 
 
-def items_for(rows, ax, labeled: set[str], big_prefer: bool = False) -> list[dict]:
+def items_for(rows, ax, labeled: set[str]) -> list[dict]:
     pmax = rows[0]["pop"]
     out = []
     for r in rows:

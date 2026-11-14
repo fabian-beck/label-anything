@@ -230,7 +230,7 @@ describe("LabelMotion", () => {
   it("attaches leaders to the gliding box and fades out a leader that is no longer needed", () => {
     const m = new LabelMotion({ duration: 300, jump: Infinity, moveDelay: 0 });
     const near = lab("a", [104, 95, 30, 10], [100, 100]);
-    const leader = { points: [[104, 98], [140, 80]] as [number, number][], style: "straight" as const, port: [140, 80] as [number, number] };
+    const leader = { points: [[104, 98], [140, 80]] as [[number, number], [number, number]], style: "straight" as const, port: [140, 80] as [number, number] };
     const far = lab("a", [140, 75, 30, 10], [100, 100], { leader, model: "distant", anchor_side: "distant" });
     m.target(result(near), undefined, 0);
     m.target(result(far), undefined, 1000);
@@ -256,7 +256,7 @@ describe("LabelMotion", () => {
 
   it("keeps a label in a column where the column is while its point moves", () => {
     const m = new LabelMotion();
-    const leader = { points: [[10, 10], [80, 10]] as [number, number][], style: "straight" as const, port: [80, 10] as [number, number] };
+    const leader = { points: [[10, 10], [80, 10]] as [[number, number], [number, number]], style: "straight" as const, port: [80, 10] as [number, number] };
     m.target(result(lab("a", [80, 5, 30, 10], [10, 10], { model: "fan", anchor_side: "distant", leader })), undefined, 0);
     const p = m.frame(at(["a", 10, 30]), 10).result.placements[0]!;
     expect(p.box).toEqual({ x: 80, y: 5, w: 30, h: 10 });

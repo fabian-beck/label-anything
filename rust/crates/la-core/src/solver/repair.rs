@@ -130,18 +130,8 @@ fn total_cost(s: &mut Solve, items: &[usize]) -> f64 {
     let mut t = 0.0;
     for &i in items {
         if let Some(c) = s.state.placed[i] {
-            let it = &s.model.items[i];
-            let cand = &s.cands[c as usize];
-            t += cand.cost
-                + s.state.dynamic_cost(
-                    cand,
-                    &s.cands,
-                    s.obs,
-                    it.len.buffer,
-                    it.len.clearance,
-                    s.model.leaders.width,
-                    i,
-                );
+            let d = s.dynamic_cost(i, c);
+            t += s.cands[c as usize].cost + d;
         }
     }
     t
@@ -332,8 +322,7 @@ fn restack(s: &mut Solve, area: &Rect, side: u8, members: &[usize], full: bool) 
         s.cands.push(c);
         s.by_item[i].push(id);
         let cand = &s.cands[id as usize];
-        let mut scratch = Vec::new();
-        if !s.state.is_free(cand, &s.cands, s.obs, i, &mut scratch) {
+        if !s.state.is_free(cand, &s.cands, s.obs, i) {
             ok = false;
             break;
         }
@@ -356,9 +345,10 @@ fn restack(s: &mut Solve, area: &Rect, side: u8, members: &[usize], full: bool) 
     false
 }
 
-/// Label evaluations of the boundary fill: at least this many, or this many per item.
-const FILL_WORK_MIN: usize = 20_000;
-const FILL_WORK_PER_ITEM: usize = 20;
+/// Label evaluations of a column pass (the boundary fill, the fan pass): at least this
+/// many, or this many per item.
+pub(super) const WORK_MIN: usize = 20_000;
+pub(super) const WORK_PER_ITEM: usize = 20;
 
 /// Boundary columns (spec §6.6): on each side in `placement.boundary.sides`, items without a
 /// label that may take a boundary label join the side's column one after the other, in
@@ -382,10 +372,10 @@ pub fn boundary_fill(s: &mut Solve) {
             s.models[i].has(Models::BOUNDARY)
                 && !s.variants[i].is_empty()
                 && it.keep_with.is_none()
-                && !model.group_of.get(i).is_some_and(|g| g.is_some())
+                && model.group_rep(i).is_none()
         })
         .collect();
-    let mut work = FILL_WORK_MIN.max(FILL_WORK_PER_ITEM * n);
+    let mut work = WORK_MIN.max(WORK_PER_ITEM * n);
     for side_name in &model.placement.boundary.sides {
         let side = crate::boundary::side_code(side_name);
         // a placed label that may move into the column: not internal, on the column's
@@ -421,7 +411,7 @@ pub fn boundary_fill(s: &mut Solve) {
             {
                 continue;
             }
-            if model.max_labels.is_some_and(|m| s.state.n_placed >= m) {
+            if s.label_cap_reached() {
                 return;
             }
             let mut trial = members.clone();
@@ -594,13 +584,12 @@ pub fn uncross(s: &mut Solve) {
                 let id_j = s.cands.len() as u32;
                 s.cands.push(nj);
                 s.by_item[j].push(id_j);
-                let mut scratch = Vec::new();
                 let ci2 = &s.cands[id_i as usize];
-                let ok_i = s.state.is_free(ci2, &s.cands, s.obs, i, &mut scratch);
+                let ok_i = s.state.is_free(ci2, &s.cands, s.obs, i);
                 if ok_i {
                     s.state.place(i, id_i, &s.cands, false);
                     let cj2 = &s.cands[id_j as usize];
-                    if s.state.is_free(cj2, &s.cands, s.obs, j, &mut scratch) {
+                    if s.state.is_free(cj2, &s.cands, s.obs, j) {
                         s.state.place(j, id_j, &s.cands, false);
                         improved = true;
                         break 'pairs;
@@ -709,24 +698,11 @@ fn priority_pass(s: &mut Solve, relocate: bool, freed: &mut Vec<crate::geom::Rec
             {
                 continue;
             }
-            if let Some(m) = s.model.max_labels {
-                if s.state.n_placed + 1 > m + confl.len() {
-                    continue;
-                }
-            }
-            if let (Some(f), Some(canvas)) = (s.model.max_ink_fraction, s.model.canvas) {
-                let mut area = s.state.label_area_sum;
-                for &j in &confl {
-                    area -= s.cands[s.state.placed[j as usize].unwrap() as usize]
-                        .rect
-                        .area();
-                }
-                if (area + cand.rect.area()) / canvas.area().max(1e-9) > f {
-                    continue;
-                }
+            if !s.budget_allows(cand, &confl) {
+                continue;
             }
             let relaxed = !cand.feasible;
-            let cost = cand.cost + if relaxed { cand.relax_cost } else { 0.0 };
+            let cost = cand.relaxed_cost();
             let gain: f64 = confl.iter().map(|&j| s.pri.prio[j as usize].gain).sum();
             let score = (confl.len(), gain, cost);
             let better = match &best {
@@ -869,24 +845,11 @@ fn pruned_choice(
         {
             continue;
         }
-        if let Some(m) = s.model.max_labels {
-            if s.state.n_placed + 1 > m + confl.len() {
-                continue;
-            }
-        }
-        if let (Some(f), Some(canvas)) = (s.model.max_ink_fraction, s.model.canvas) {
-            let mut area = s.state.label_area_sum;
-            for &j in &confl {
-                area -= s.cands[s.state.placed[j as usize].unwrap() as usize]
-                    .rect
-                    .area();
-            }
-            if (area + cand.rect.area()) / canvas.area().max(1e-9) > f {
-                continue;
-            }
+        if !s.budget_allows(cand, &confl) {
+            continue;
         }
         let gain: f64 = confl.iter().map(|&j| s.pri.prio[j as usize].gain).sum();
-        let score = (confl.len(), gain, relaxed_cost(cand));
+        let score = (confl.len(), gain, cand.relaxed_cost());
         let better = match &best {
             None => true,
             Some((b, _, _)) => {
@@ -942,17 +905,13 @@ fn usable_by_cost(s: &mut Solve, i: usize, soft_ok: bool, except: Option<u32>) -
         s.ensure_eval(c);
         let cand = &s.cands[c as usize];
         if cand.feasible || soft_ok && cand.relaxed {
-            out.push((relaxed_cost(cand), c));
+            out.push((cand.relaxed_cost(), c));
         }
     }
     crate::sort::sort_by(&mut out, |a, b| {
         crate::math::cmp_f64(a.0, b.0).then(a.1.cmp(&b.1))
     });
     out
-}
-
-fn relaxed_cost(c: &Cand) -> f64 {
-    c.cost + if c.feasible { 0.0 } else { c.relax_cost }
 }
 
 /// Move one label aside (spec §10.3, ADR priority/repair): omitted item `h` takes one of its usable
@@ -996,7 +955,7 @@ fn relocation(s: &mut Solve, h: usize, keys: &[usize], soft_ok: bool) -> Option<
             continue;
         }
         tried += 1;
-        let cost_old = relaxed_cost(&s.cands[old as usize]);
+        let cost_old = s.cands[old as usize].relaxed_cost();
         // its usable candidates, then the pruned level-0 ones (generated once per item)
         let mut places = usable_by_cost(s, b, soft_ok, Some(old));
         let f = match fresh.iter().position(|e| e.0 == b) {
@@ -1008,7 +967,7 @@ fn relocation(s: &mut Solve, h: usize, keys: &[usize], soft_ok: bool) -> Option<
             }
         };
         for (k, fc) in fresh[f].1.iter().enumerate() {
-            places.push((relaxed_cost(fc), FRESH + k as u32));
+            places.push((fc.relaxed_cost(), FRESH + k as u32));
         }
         crate::sort::sort_by(&mut places, |a, b| {
             crate::math::cmp_f64(a.0, b.0).then(a.1.cmp(&b.1))

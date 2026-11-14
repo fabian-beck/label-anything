@@ -346,7 +346,7 @@ describe("geometry oracle (bit parity with rust/crates/la-core)", () => {
     const offset = f(i.offset);
     const points = pts(i.points);
     const rects = (i.rects as Json[]).map(rect);
-    const segs = (i.segs as Json[]).map((v) => [pt(v[0]), pt(v[1]), f(v[2])] as const);
+    const segs = (i.segs as Json[]).map((v) => [pt(v[0]), pt(v[1])] as const);
     const step = f(i.step);
     const pad = f(i.pad);
     const inner = (i.inner as Json[]).map(rect);
@@ -364,7 +364,6 @@ describe("geometry oracle (bit parity with rust/crates/la-core)", () => {
       overlaps_rect: rects.map((r) => s.overlapsRect(r)),
       dist_rect: numsJ(rects.map((r) => s.distRect(r))),
       dist_segment: numsJ(segs.map(([a, b]) => s.distSegment(a, b))),
-      near_segment: segs.map(([a, b, c]) => s.nearSegment(a, b, c)),
       covered_len: numsJ(segs.map(([a, b]) => s.coveredLen(a, b, step))),
       boundary_point: ptsJ(dirs.map((d) => s.boundaryPoint(d))),
       contains_rect: inner.map((r) => s.containsRect(r, pad)),

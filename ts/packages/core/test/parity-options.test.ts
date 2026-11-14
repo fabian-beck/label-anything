@@ -4,18 +4,13 @@
 // line classes, the other aggressiveness levels), solved by the Rust CLI without a clock and by the TypeScript core with
 // the Rust budget profile. Runs when the Rust CLI has been built
 // (`cargo build --release -p label-anything-cli`).
-import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { BasicEnv } from "../src/env.js";
-import { placeWith, validate } from "../src/place.js";
-import { jsonDiff, withoutTiming } from "./parity-util.js";
-
-const PROBLEMS = fileURLToPath(new URL("../../../../conformance/problems/", import.meta.url));
-const BIN = fileURLToPath(new URL("../../../../rust/target/release/label-anything", import.meta.url));
-const HAS_CLI = existsSync(BIN);
+import { solveWith, validate } from "../src/place.js";
+import { HAS_RUST_CLI, jsonDiff, rustResult, withoutTiming } from "./parity-util.js";
+import { PROBLEMS } from "./util.js";
 
 type Obj = Record<string, unknown>;
 const obj = (v: unknown): Obj => (v !== null && typeof v === "object" && !Array.isArray(v) ? (v as Obj) : {});
@@ -50,32 +45,15 @@ const VARIANTS: [string, (p: Obj) => Obj][] = [
   ["aggressiveness high", (p) => withPlacement(p, { aggressiveness: "high" })],
 ];
 
-/** The Rust CLI's result without a clock (null if this build lacks `--no-clock`). */
-function rustResult(p: unknown): unknown {
-  try {
-    const out = execFileSync(BIN, ["place", "-", "--no-clock"], {
-      input: JSON.stringify(p),
-      cwd: PROBLEMS,
-      maxBuffer: 1 << 28,
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    return JSON.parse(out.toString());
-  } catch (e) {
-    const msg = String((e as { stderr?: unknown }).stderr ?? e);
-    if (msg.includes("--no-clock")) return null;
-    throw e;
-  }
-}
-
 describe("parity with the Rust core under option changes", () => {
   for (const f of readdirSync(PROBLEMS).filter((f) => f.endsWith(".json")).sort()) {
     for (const [name, change] of VARIANTS) {
-      it.skipIf(!HAS_CLI)(`${f}: ${name}`, () => {
+      it.skipIf(!HAS_RUST_CLI)(`${f}: ${name}`, () => {
         const p = bounded(change(JSON.parse(readFileSync(join(PROBLEMS, f), "utf8")) as Obj));
         expect(validate(p).valid).toBe(true);
-        const rust = rustResult(p);
+        const rust = rustResult(p, PROBLEMS);
         if (rust === null) return; // an older CLI build without --no-clock
-        const ts = withoutTiming(placeWith(p, new BasicEnv(), "rust"));
+        const ts = withoutTiming(solveWith(p, new BasicEnv(), "rust"));
         expect(jsonDiff(ts, withoutTiming(rust))).toEqual([]);
       });
     }

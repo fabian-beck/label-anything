@@ -142,10 +142,6 @@ def effective_options(problem: dict) -> dict:
     return opts
 
 
-def preset_svg_classes(preset: str) -> list[dict]:
-    return presets().get(preset, {}).get("svg_classes", [])
-
-
 # ---------------------------------------------------------------------------
 # Lengths (spec §2.1)
 # ---------------------------------------------------------------------------
@@ -183,4 +179,7 @@ def is_hard(amap: dict, cls: str) -> bool:
     return avoid_value(amap, cls) == "hard"
 
 
-RESERVED_CLASSES = ("items", "labels", "leaders", "canvas_edge", "ink", "text")
+NON_OBSTACLE_CLASSES = ("items", "labels", "leaders", "canvas_edge")
+"""The keys of ``avoid`` maps that name no obstacle class of the problem (spec §4.4): the other items' marks,
+the labels, the leaders and the canvas edge, which the evaluator tests by themselves. (Not the engine's reserved
+class names, which also hold ``ink`` and ``text``: those are obstacle classes.)"""

@@ -107,14 +107,14 @@ export const Shape = {
 /** Methods shared by all {@link Shape} variants (Rust `impl Shape`). */
 export abstract class ShapeBase {
   /** The reference point (anchor). */
-  reference(): P {
-    const s = this as unknown as Shape;
+  reference(this: Shape): P {
+    const s = this;
     return s.kind === "polygon" ? s.poly.reference : s.c;
   }
 
   /** Axis-aligned bounding box. */
-  bbox(): Rect {
-    const s = this as unknown as Shape;
+  bbox(this: Shape): Rect {
+    const s = this;
     return s.kind === "polygon" ? s.poly.bbox : s.bb;
   }
 
@@ -122,8 +122,8 @@ export abstract class ShapeBase {
    * A rectangle containing every point that `contains` accepts: the bounding box, except
    * for degenerate ellipses, which `signedDistance` treats as discs.
    */
-  containsBound(): Rect {
-    const s = this as unknown as Shape;
+  containsBound(this: Shape): Rect {
+    const s = this;
     if (s.kind === "ellipse" && (s.rx <= 0 || s.ry <= 0)) {
       const m = maxf(s.rx, s.ry);
       return Rect.fromCenter(s.c, m, m);
@@ -132,8 +132,8 @@ export abstract class ShapeBase {
   }
 
   /** Area of the shape. */
-  area(): number {
-    const s = this as unknown as Shape;
+  area(this: Shape): number {
+    const s = this;
     switch (s.kind) {
       case "circle":
         return Math.PI * s.r * s.r;
@@ -147,8 +147,8 @@ export abstract class ShapeBase {
   }
 
   /** Whether the shape is a (possibly degenerate) disc. */
-  isCircle(): boolean {
-    return (this as unknown as Shape).kind === "circle";
+  isCircle(this: Shape): boolean {
+    return this.kind === "circle";
   }
 
   /**
@@ -156,8 +156,8 @@ export abstract class ShapeBase {
    * sides perpendicular to `d` the point closest to the projection of the reference point
    * is returned (so labels center on flat sides).
    */
-  support(d: P): P {
-    const s = this as unknown as Shape;
+  support(this: Shape, d: P): P {
+    const s = this;
     // dn = d.norm()
     const l = len2d(d.x, d.y);
     const dnx = l > 0 ? d.x / l : 0;
@@ -195,30 +195,30 @@ export abstract class ShapeBase {
   }
 
   /** Support point of the shape inflated by `o` (Minkowski sum with a disc). */
-  supportInflated(d: P, o: number): P {
+  supportInflated(this: Shape, d: P, o: number): P {
     const p = this.support(d);
     const n = d.norm();
     return new P(p.x + n.x * o, p.y + n.y * o);
   }
 
   /** Point containment (closed shape). */
-  contains(p: P): boolean {
+  contains(this: Shape, p: P): boolean {
     return this.signedDistanceXY(p.x, p.y) <= 0;
   }
 
   /** {@link contains} on scalars. */
-  containsXY(px: number, py: number): boolean {
+  containsXY(this: Shape, px: number, py: number): boolean {
     return this.signedDistanceXY(px, py) <= 0;
   }
 
   /** Signed distance from `p` to the boundary (negative inside). */
-  signedDistance(p: P): number {
+  signedDistance(this: Shape, p: P): number {
     return this.signedDistanceXY(p.x, p.y);
   }
 
   /** {@link signedDistance} on scalars. */
-  signedDistanceXY(px: number, py: number): number {
-    const s = this as unknown as Shape;
+  signedDistanceXY(this: Shape, px: number, py: number): number {
+    const s = this;
     // (the arms are small functions so that this dispatcher stays inlinable)
     switch (s.kind) {
       case "circle":
@@ -233,8 +233,8 @@ export abstract class ShapeBase {
   }
 
   /** The open rectangle `r` overlaps the shape's interior by more than `EPS`. */
-  overlapsRect(r: Rect): boolean {
-    const s = this as unknown as Shape;
+  overlapsRect(this: Shape, r: Rect): boolean {
+    const s = this;
     switch (s.kind) {
       case "circle":
         return circleOverlapsRect(s, r);
@@ -248,8 +248,8 @@ export abstract class ShapeBase {
   }
 
   /** Distance between the shape and rectangle `r` (0 when they touch or overlap). */
-  distRect(r: Rect): number {
-    const s = this as unknown as Shape;
+  distRect(this: Shape, r: Rect): number {
+    const s = this;
     switch (s.kind) {
       case "circle":
         return maxf(rectDistPointXY(r.x0, r.y0, r.x1, r.y1, s.c.x, s.c.y) - s.r, 0);
@@ -290,23 +290,17 @@ export abstract class ShapeBase {
     }
   }
 
-  /** Segment `ab` passes within `clearance` of the shape (interior when 0). */
-  nearSegment(a: P, b: P, clearance: number): boolean {
-    const d = this.distSegmentXY(a.x, a.y, b.x, b.y);
-    return d < clearance - EPS || (clearance <= 0 && d < -EPS);
-  }
-
   /**
    * Signed-ish distance between segment `ab` and the shape: 0 if they intersect,
    * otherwise the gap.
    */
-  distSegment(a: P, b: P): number {
+  distSegment(this: Shape, a: P, b: P): number {
     return this.distSegmentXY(a.x, a.y, b.x, b.y);
   }
 
   /** {@link distSegment} on scalars. */
-  distSegmentXY(ax: number, ay: number, bx: number, by: number): number {
-    const s = this as unknown as Shape;
+  distSegmentXY(this: Shape, ax: number, ay: number, bx: number, by: number): number {
+    const s = this;
     if (s.kind === "circle") return maxf(distPointSegXY(s.c.x, s.c.y, ax, ay, bx, by) - s.r, 0);
     if (this.containsXY(ax, ay) || this.containsXY(bx, by)) return 0;
     const outline = outlineRingsOf(s);
@@ -327,7 +321,7 @@ export abstract class ShapeBase {
    * Length of the part of segment `ab` inside the shape (approximate for curved shapes:
    * sampled at `step` px).
    */
-  coveredLen(a: P, b: P, step: number): number {
+  coveredLen(this: Shape, a: P, b: P, step: number): number {
     const len = a.dist(b);
     if (len <= 0) return 0;
     const n = toIndex(maxf(Math.ceil(len / maxf(step, 0.25)), 1));
@@ -342,7 +336,7 @@ export abstract class ShapeBase {
   }
 
   /** First boundary point along the ray from the reference point in direction `dir`. */
-  boundaryPoint(dir: P): P {
+  boundaryPoint(this: Shape, dir: P): P {
     BP[0] = dir.x;
     BP[1] = dir.y;
     this.boundaryPointIn(BP);
@@ -353,8 +347,8 @@ export abstract class ShapeBase {
    * {@link boundaryPoint} in place: the direction in `io[0..2]` is replaced by the point
    * (the same operations, without allocating or passing coordinates as arguments).
    */
-  boundaryPointIn(io: Float64Array): void {
-    const s = this as unknown as Shape;
+  boundaryPointIn(this: Shape, io: Float64Array): void {
+    const s = this;
     const out = io;
     const dirX = io[0]!;
     const dirY = io[1]!;
@@ -414,28 +408,28 @@ export abstract class ShapeBase {
    * approximated by a circumscribed polygon (so the outline contains the shape).
    * Returns fresh arrays.
    */
-  outlineRings(): P[][] {
-    const s = this as unknown as Shape;
+  outlineRings(this: Shape): P[][] {
+    const s = this;
     if (s.kind === "polygon") return s.poly.rings.map((r) => r.slice());
     return [this.outline()];
   }
 
   /** Outline of convex shapes (for polygons: the convex hull). Returns a fresh array. */
-  outline(): P[] {
-    return outlineOf(this as unknown as Shape).slice();
+  outline(this: Shape): P[] {
+    return outlineOf(this).slice();
   }
 
   /**
    * The outline rings without copying (the polygon's rings, or the cached outline of a
    * curved shape): for hot paths such as rasterization; never mutate the result.
    */
-  outlineRingsView(): readonly Ring[] {
-    return outlineRingsOf(this as unknown as Shape);
+  outlineRingsView(this: Shape): readonly Ring[] {
+    return outlineRingsOf(this);
   }
 
   /** Translate the shape. */
-  translated(d: P): Shape {
-    const s = this as unknown as Shape;
+  translated(this: Shape, d: P): Shape {
+    const s = this;
     switch (s.kind) {
       case "circle":
         return new CircleShape(s.c.add(d), s.r);
@@ -453,8 +447,8 @@ export abstract class ShapeBase {
   }
 
   /** The rectangle (with padding `pad`) fits inside the shape. */
-  containsRect(r: Rect, pad: number): boolean {
-    const s = this as unknown as Shape;
+  containsRect(this: Shape, r: Rect, pad: number): boolean {
+    const s = this;
     if (s.kind === "polygon") return polygon.containsRect(s.poly.rings, s.poly.evenOdd, r, pad);
     // convex shapes: all corners inside suffices (rr = r.inflate(pad))
     const x0 = r.x0 - pad;
@@ -743,7 +737,7 @@ function computeOutline(s: CircleShape | EllipseShape | RoundRectShape): P[] {
 }
 
 /** Minimum signed distance from the points of segment `ab` to a convex shape. */
-function minDistOnSegment(s: ShapeBase, ax: number, ay: number, bx: number, by: number): number {
+function minDistOnSegment(s: Shape, ax: number, ay: number, bx: number, by: number): number {
   let lo = 0;
   let hi = 1;
   const dx = bx - ax;

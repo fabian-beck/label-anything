@@ -1,4 +1,4 @@
-//! Exact search (spec §5.6 "exact"): branch and bound over items in priority order on the
+//! Exact search (ADR solver/search): branch and bound over items in priority order on the
 //! candidate conflict graph (a maximum-weight independent set). The objective is the
 //! omission mode's priority objective, then the total static cost. The search is limited
 //! by a node budget (deterministic) and never returns worse than the incumbent.
@@ -259,7 +259,6 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
         nodes: 0,
         max_nodes,
     };
-    let _ = search.n_slots;
     let mut prio = vec![0.0; search.n_slots];
     search.dfs(0, &mut prio, 0.0, true);
     if s.model.max_labels.is_some() || search.best_choice == chosen {
@@ -270,11 +269,10 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
     for &i in &order {
         s.state.unplace(i, &s.cands);
     }
-    let mut scratch = Vec::new();
     for &i in &order {
         if let Some(c) = best[i] {
             let cand = &s.cands[c as usize];
-            if s.state.is_free(cand, &s.cands, s.obs, i, &mut scratch) {
+            if s.state.is_free(cand, &s.cands, s.obs, i) {
                 s.state.place(i, c, &s.cands, false);
                 s.reasons[i] = None;
                 continue;

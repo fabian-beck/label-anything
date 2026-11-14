@@ -22,8 +22,8 @@
  */
 import type { FontSpec, LabelProblem, LabelResult } from "@label-anything/core";
 import { isPromiseLike, resolveEngine, type AnyEngine, type Engine } from "./engine.js";
-import { buildProblem, keepHostText, placeOptionsOf, resolveFont, type LabelOptions, type PointAnchor } from "./options.js";
-import { leaderPath, lineStart } from "./render.js";
+import { buildProblem, keepHostText, obstacleClass, placeOptionsOf, resolveFont, type LabelOptions, type PointAnchor, type VectorLayer } from "./options.js";
+import { leaderPath, leadersOf, lineStart } from "./render.js";
 
 /** The parts of the `vega` module used here. */
 export interface VegaLike {
@@ -185,7 +185,7 @@ function layout(
     items.push(item);
   });
 
-  const vectors: NonNullable<NonNullable<LabelProblem["obstacles"]>["vector"]> = [];
+  const vectors: VectorLayer[] = [];
   const avoid = (params.avoidMarks as SceneItem[][] | undefined) ?? [];
   avoid.forEach((markItems, k) => {
     const layer = obstacleLayer(markItems, k);
@@ -209,9 +209,9 @@ function layout(
       })
     : undefined;
   const engine: AnyEngine = defaults.engine ?? resolveEngine(opts.engine);
-  const out = engine.place(problem, placeOptionsOf(opts, measure ?? undefined));
+  const out = engine.place(problem, placeOptionsOf(opts, measure));
   if (isPromiseLike(out)) throw new Error("labelAnything: the Vega transform needs a synchronous engine (@label-anything/core or /wasm)");
-  return apply(texts, out as LabelResult);
+  return apply(texts, out);
 }
 
 function apply(texts: SceneItem[], result: LabelResult): Laid[] {
@@ -221,7 +221,7 @@ function apply(texts: SceneItem[], result: LabelResult): Laid[] {
     if (!p || !p.placed || !p.box) return { item, x: item.x, y: item.y, placed: false, leader: null, align: "left" };
     const t = p.text ?? p.parts?.find((q) => q.text)?.text;
     const y = p.box.y + (t?.baseline_offsets[0] ?? p.box.h * 0.8);
-    const leaders = p.leaders ?? (p.leader ? [p.leader] : []);
+    const leaders = leadersOf(p);
     const leader = leaders.length ? leaders.map(leaderPath).join("") : null;
     // Vega draws the lines of a text item itself: several lines take the engine's alignment
     if (t && t.lines.length > 1 && t.align === "center") return { item, x: p.box.x + p.box.w / 2, y, placed: true, leader, align: "center" };
@@ -251,8 +251,6 @@ function baseGeometry(
   if (type === "symbol") return { anchor, mark: { shape: "circle", r: radius ?? Math.max(w, h) / 2 } };
   return { anchor, mark: { shape: "rect", w, h } };
 }
-
-type VectorLayer = NonNullable<NonNullable<LabelProblem["obstacles"]>["vector"]>[number];
 
 /** Vector obstacles of the items of an avoided mark (class: the mark name). */
 function obstacleLayer(markItems: SceneItem[], k: number): VectorLayer | null {
@@ -285,9 +283,7 @@ function obstacleLayer(markItems: SceneItem[], k: number): VectorLayer | null {
   };
   visit(markItems ?? []);
   if (!rects.length && !polylines.length) return null;
-  const name = markItems[0]?.mark?.name;
-  const cls = name && /^[A-Za-z_][A-Za-z0-9_.:-]*$/.test(name) ? name : `avoid${k}`;
-  const layer: VectorLayer = { class: cls };
+  const layer: VectorLayer = { class: obstacleClass(markItems[0]?.mark?.name, `avoid${k}`) };
   if (rects.length) layer.rects = rects;
   if (polylines.length) {
     layer.polylines = polylines as VectorLayer["polylines"];

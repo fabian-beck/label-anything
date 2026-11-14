@@ -14,6 +14,11 @@ export type JsonObject = Record<string, unknown>;
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
+/** The message of a caught value (Rust `e.to_string()`). */
+export function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
 /** `v.is_object()`. */
 export function isObject(v: unknown): v is JsonObject {
   return typeof v === "object" && v !== null && !Array.isArray(v);

@@ -9,15 +9,10 @@
  * `null` is a value of its own (`user_sets` tells an explicit `null` from a missing key).
  */
 import { AGGRESSIVENESS, DEFAULTS, PRESETS, type PresetData } from "./generated/spec-data.js";
+import { type JsonObject, isObject } from "./json.js";
 import { Length } from "./units.js";
 
-type JsonObject = Record<string, unknown>;
-
 const hasOwnProperty = Object.prototype.hasOwnProperty;
-
-function isObject(v: unknown): v is JsonObject {
-  return typeof v === "object" && v !== null && !Array.isArray(v);
-}
 
 /** Own property `k` of `o` (`undefined` if absent; never reads the prototype chain). */
 function own(o: JsonObject, k: string): unknown {

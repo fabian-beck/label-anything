@@ -77,9 +77,6 @@ def label_points(
             opts["attrs"] = {prio: _column(data, prio, "priority")}
         elif isinstance(attrs, Mapping) and prio not in attrs:
             opts["attrs"] = {**attrs, prio: _column(data, prio, "priority")}
-    if marker_size is None:
-        import matplotlib as mpl
-
-        # seaborn.scatterplot draws markers of rcParams lines.markersize² (36 pt²)
-        marker_size = float(mpl.rcParams["lines.markersize"]) ** 2
+    # marker_size None: rcParams lines.markersize² (36 pt²), the markers seaborn.scatterplot
+    # draws, which is also the default of the matplotlib helper
     return _mpl_label_points(ax, xs, ys, labels, marker_size=marker_size, **opts)

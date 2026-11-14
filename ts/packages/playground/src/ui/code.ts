@@ -35,7 +35,6 @@ export class CodeView {
     const full = cleanProblem(problem);
     const options = { ...full };
     delete options.items;
-    delete options.warm_start;
     delete options.obstacles;
     const items = (full.items as unknown[]).length;
     const text = this.#text(full, options);
@@ -57,7 +56,7 @@ export class CodeView {
     const note =
       this.#lang === "options"
         ? "The options of this solve, without items, obstacles and warm start: what to pass besides your own data."
-        : `The problem of the latest solve: ${items} items${full.obstacles ? ", obstacles" : ""}${full.warm_start ? ", without its warm start" : ""}. Solved anywhere, it gives this layout.`;
+        : `The problem of the latest solve: ${items} items${full.obstacles ? ", obstacles" : ""}${problem.warm_start ? ", without its warm start" : ""}. Solved anywhere, it gives this layout.`;
     this.#root.replaceChildren(h("div", { class: "code" }, tabs, h("p", { class: "empty", style: { margin: 0 } }, note), h("div", { class: "row" }, copy, save, copied), pre));
   }
 
@@ -74,7 +73,7 @@ export class CodeView {
           `import { init, place } from "@label-anything/wasm";`,
           ``,
           `await init();`,
-          `const problem = ${JSON.stringify(options, null, 2).replace(/\n/g, "\n")};`,
+          `const problem = ${JSON.stringify(options, null, 2)};`,
           `problem.items = myItems; // [{ id, anchor: { type: "point", x, y, mark }, label: { type: "text", text } }, ...]`,
           `const result = place(problem);`,
           `for (const p of result.placements) if (p.placed) draw(p.box, p.text, p.leader);`,

@@ -178,6 +178,14 @@ export class Cand {
   /** Cache of {@link bbox} (computed on first use, once the leaders are complete). */
   private bb: Rect | null = null;
 
+  /**
+   * The static cost, with the extra cost of the relaxed classes when the candidate is only
+   * feasible with them relaxed.
+   */
+  relaxedCost(): number {
+    return this.cost + (this.feasible ? 0 : this.relaxCost);
+  }
+
   /** The label has a stub (spec §6.9). */
   hasStub(): boolean {
     return this.leaders.length > 0 && this.leaders[0]!.stub;

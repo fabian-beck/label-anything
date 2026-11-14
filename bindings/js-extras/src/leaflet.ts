@@ -13,7 +13,7 @@
  * }).addTo(map);
  * ```
  */
-import type { LabelResult } from "@label-anything/core";
+import type { LabelProblem, LabelResult } from "@label-anything/core";
 import type { LabelOptions, Mark } from "./options.js";
 import { idOf, itemExtras, labelOf, resolveFont } from "./options.js";
 import { Overlay, type OverlayItem } from "./overlay.js";
@@ -46,7 +46,7 @@ export interface LeafletLabelOptions<D> extends LabelOptions<D>, Omit<RenderOpti
   /** Map pane for the labels (created with z-index 640 if missing). */
   pane?: string;
   /** Obstacles in container px, e.g. from other layers. */
-  obstacles?: (map: LeafletMapLike) => NonNullable<import("@label-anything/core").LabelProblem["obstacles"]> | undefined;
+  obstacles?: (map: LeafletMapLike) => NonNullable<LabelProblem["obstacles"]> | undefined;
   /** Transition time in ms (default 300): labels glide into new places and fade in and out; 0: none. */
   transition?: number;
   onResult?: (result: LabelResult) => void;

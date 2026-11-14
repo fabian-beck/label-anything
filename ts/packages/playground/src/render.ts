@@ -13,6 +13,11 @@ export type Candidate = NonNullable<LabelResult["candidates"]>[number];
 /** The family the engine measures with by default (its bundled Noto Sans), as loaded by style.css. */
 export const LABEL_FAMILY = '"LA Noto Sans", "Noto Sans", sans-serif';
 
+/** Loads the label font (regular and bold): the engine measures with it, so it must be ready before the first drawing. */
+export function loadLabelFont(): Promise<unknown> {
+  return Promise.all([document.fonts.load('400 12px "LA Noto Sans"'), document.fonts.load('700 12px "LA Noto Sans"')]).catch(() => undefined);
+}
+
 export type LabelStyle = "box" | "halo" | "plain";
 
 export function cssFont(t: TextInfo): string {

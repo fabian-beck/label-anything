@@ -64,10 +64,11 @@ from pathlib import Path
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from bench import render  # noqa: E402
+from bench import gates, render  # noqa: E402
 from bench import report as rep  # noqa: E402
 from bench.baselines import BASELINES, Unsupported  # noqa: E402
 from bench.baselines.results import baseline_info  # noqa: E402
+from bench.baselines.scene import SOFT_MODES, build_scene  # noqa: E402
 from bench.common import paths  # noqa: E402
 from bench.common.jsonio import read_json, write_json  # noqa: E402
 from bench.common.model import load_problem  # noqa: E402
@@ -246,14 +247,9 @@ class Solver:
             raise RuntimeError(f"overlay failed ({r.returncode}): {r.stderr.strip()[:300]}")
 
 
-SOFT_MODES = ("hard", "ignore")
-
-
 def has_soft_classes(problem: dict, problem_path: Path) -> bool:
     """Whether the problem has obstacle classes with a cost (neither hard nor ignored) for labels: only then do
     the two soft emulations of the baselines differ."""
-    from bench.baselines.scene import build_scene
-
     return any(n.feature == "soft-classes" for n in build_scene(problem, problem_path, soft="ignore").notes)
 
 
@@ -487,13 +483,6 @@ def run_sequence(solver: Solver, seq: dict, out: Path, timeout: float, do_render
     return entry
 
 
-# ---------------------------------------------------------------------------
-# report (kept for callers of the old API)
-# ---------------------------------------------------------------------------
-def write_html(out: Path, report: dict) -> Path:
-    return rep.write_html(out, report)
-
-
 def build_solvers(a, log=print) -> tuple[list[Solver], dict[str, str]]:
     """Solvers from --solver / --engine / --baselines; baselines whose toolchain is missing are skipped."""
     specs: list[str] = list(a.solver or [])
@@ -558,7 +547,7 @@ def main(argv=None) -> int:
                     help="add wasm= the WebAssembly engine through the TypeScript CLI (npm run build:wasm)")
     ap.add_argument("--warmup", type=int, default=3,
                     help="warm-up solves before each timed rust/ts/wasm solve (steady state; default 3)")
-    ap.add_argument("--baselines", action="store_true", help="add all baselines (naive, greedy and the seven tools)")
+    ap.add_argument("--baselines", action="store_true", help="add all baselines (naive, greedy and the eight others)")
     ap.add_argument("--require-baselines", action="store_true",
                     help="fail instead of skipping a requested baseline whose toolchain is missing")
     ap.add_argument("--overlay", action="append",
@@ -639,8 +628,6 @@ def main(argv=None) -> int:
     report["parity"] = rep.parity(report)
     gate = None
     if a.gate:
-        from bench import gates
-
         allow, problems_allow = gates.load_allow(a.gates_allow)
         gate = gates.check(report, previous, allow, problems_allow, a.threshold)
         report["gate"] = gate
@@ -654,8 +641,6 @@ def main(argv=None) -> int:
     shutil.rmtree(out / "tmp", ignore_errors=True)
     print(f"wrote {out / 'results.json'} and {page}")
     if gate is not None:
-        from bench import gates
-
         print("\n".join(gates.summary_lines(gate)))
         return 0 if gate["passed"] else 1
     return 0 if not any("error" in r for r in report["results"] + report["sequences"]) else 1

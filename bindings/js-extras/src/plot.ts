@@ -14,10 +14,10 @@
  * helper options. Marks drawn before it (dots, lines, axes, grids) are obstacles; put it
  * last. Labels with an asynchronous engine are filled in when the result arrives.
  */
-import { text as plotText, type Mark, type TextOptions } from "@observablehq/plot";
+import { text as plotText, type RenderableMark, type TextOptions } from "@observablehq/plot";
 import type { LabelProblem, LabelResult } from "@label-anything/core";
 import { andThen, resolveEngine } from "./engine.js";
-import { buildProblem, placeOptionsOf, resolveFont, type LabelOptions } from "./options.js";
+import { buildProblem, itemExtras, placeOptionsOf, resolveFont, type LabelOptions } from "./options.js";
 import { renderLabels, type RenderOptions } from "./render.js";
 import { snapshotSvg, SVG_NS } from "./svg.js";
 
@@ -43,7 +43,7 @@ type Scales = { x?: { bandwidth?(): number }; y?: { bandwidth?(): number } };
 type Context = { document?: Document; ownerSVGElement?: SVGSVGElement };
 
 /** A `Plot.text` mark whose labels avoid each other and the rest of the plot. */
-export function labelAnything<D>(data: Iterable<D> | ArrayLike<D>, options: LabelMarkOptions<D> = {}): Mark {
+export function labelAnything<D>(data: Iterable<D> | ArrayLike<D>, options: LabelMarkOptions<D> = {}): RenderableMark {
   const {
     engine,
     priority,
@@ -94,15 +94,8 @@ export function labelAnything<D>(data: Iterable<D> | ArrayLike<D>, options: Labe
         id: String(i),
         anchor: { type: "point", x, y, mark: { shape: "circle", r } },
         label,
+        ...itemExtras(helper, rows[i] as D, i),
       };
-      if (typeof priority === "function") {
-        const p = priority(rows[i] as D, i);
-        if (typeof p === "number" && Number.isFinite(p)) item.priority = p;
-      }
-      if (attrs) {
-        const a = attrs(rows[i] as D, i);
-        if (a) item.attrs = a;
-      }
       items.push(item);
     }
     // Faceted marks render in facet coordinates; the plot's SVG would not line up.

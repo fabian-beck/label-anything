@@ -15,7 +15,7 @@ import { Attach, type Item, LeaderStyle, type Model, Port, posDir } from "./mode
 import type { Obstacles } from "./obstacles.js";
 import { IdList } from "./spatial.js";
 
-/** Leader start on the item for direction `d` (boundary + gap, center or tip). */
+/** Leader start on the item for a leader toward `toward` (boundary + gap, center or tip). */
 export function leaderStart(model: Model, item: Item, toward: P): P {
   LS[0] = toward.x;
   LS[1] = toward.y;
@@ -583,13 +583,6 @@ export function curvePoints(a: P, b: P, bow: number): P[] {
     out.push(new P(u * u * a.x + 2 * u * t * c.x + t * t * b.x, u * u * a.y + 2 * u * t * c.y + t * t * b.y));
   }
   return out;
-}
-
-/** Leader length helper for tests. */
-export function polylineLen(pts: readonly P[]): number {
-  let l = 0;
-  for (let i = 0; i + 1 < pts.length; i++) l += pts[i]!.dist(pts[i + 1]!);
-  return maxf(minf(l, Number.MAX_VALUE), 0);
 }
 
 /** Spacing rules between the leaders of two items (spec §7). */

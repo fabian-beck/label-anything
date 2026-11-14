@@ -131,7 +131,7 @@ export class Axis {
 }
 
 /** `floor(cov·255 + 1/2)` clamped to 255; a positive coverage never quantizes to 0. */
-export function quantize(cov: number): number {
+function quantize(cov: number): number {
   const t = cov * 255 + 0.5;
   return t >= 255 ? 255 : t >= 1 ? t | 0 : cov > 0 ? 1 : 0;
 }
@@ -267,11 +267,7 @@ export class Resampler {
       const base = (slot * k + cls) * gcols;
       const out = this.out[cls]!;
       const o = gy * gcols;
-      for (let gx = 0; gx < gcols; gx++) {
-        const cov = acc[base + gx]!;
-        const t = cov * 255 + 0.5;
-        out[o + gx] = t >= 255 ? 255 : t >= 1 ? t | 0 : cov > 0 ? 1 : 0;
-      }
+      for (let gx = 0; gx < gcols; gx++) out[o + gx] = quantize(acc[base + gx]!);
       acc.fill(0, base, base + gcols);
     }
     this.slotRow[slot] = -1;

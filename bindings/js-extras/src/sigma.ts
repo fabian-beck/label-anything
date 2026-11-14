@@ -13,11 +13,11 @@
  * replacement of sigma's label renderer; omitted labels are hidden via `nodeReducer`.
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
-import { LatestRunner, resolveEngine } from "./engine.js";
+import { errorHandler, LatestRunner, resolveEngine } from "./engine.js";
 import { cssFont, numericWeight } from "./measure.js";
 import { LabelMotion } from "./motion.js";
-import { buildProblem, labelOf, placeOptionsOf, resolveFont, type LabelOptions } from "./options.js";
-import { lineStart } from "./render.js";
+import { buildProblem, itemExtras, labelOf, placeOptionsOf, resolveFont, type LabelOptions, type VectorLayer } from "./options.js";
+import { leadersOf, lineStart } from "./render.js";
 import { LabelMemory } from "./stable.js";
 
 type P = { x: number; y: number };
@@ -142,7 +142,7 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
     const dx = data.x - p.anchor[0];
     const dy = data.y - p.anchor[1];
     ctx.save();
-    const leaders = p.leaders ?? (p.leader ? [p.leader] : []);
+    const leaders = leadersOf(p);
     if (leaders.length) {
       ctx.globalAlpha = s.leaderOpacity;
       ctx.strokeStyle = fill;
@@ -190,12 +190,7 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
       if (!label) return;
       const r = renderer.scaleSize ? renderer.scaleSize(d.size) : d.size;
       anchors.set(key, [d.x, d.y]);
-      const item: LabelProblem["items"][number] = { id: key, anchor: { type: "point", x: d.x, y: d.y, mark: { shape: "circle", r } }, label };
-      if (typeof helper.priority === "function") {
-        const p = helper.priority({ key, attributes: attrs }, 0);
-        if (typeof p === "number" && Number.isFinite(p)) item.priority = p;
-      }
-      items.push(item);
+      items.push({ id: key, anchor: { type: "point", x: d.x, y: d.y, mark: { shape: "circle", r } }, label, ...itemExtras(helper, { key, attributes: attrs }, 0) });
     });
     const polylines: [number, number][][] = [];
     if (options.avoidEdges !== false) {
@@ -210,7 +205,7 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
       {
         canvas: { width, height },
         items,
-        ...(polylines.length ? { obstacles: { vector: [{ class: "edges", polylines: polylines as never, width: 1 }] } } : {}),
+        ...(polylines.length ? { obstacles: { vector: [{ class: "edges", polylines: polylines as VectorLayer["polylines"], width: 1 }] } } : {}),
         ...(warm ? { warm_start: warm } : {}),
       },
       helper,
@@ -227,7 +222,7 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
         animate();
         options.onResult?.(r);
       },
-      (e) => (options.onError ? options.onError(e) : console.error(e)),
+      errorHandler(options.onError),
     );
   };
 
