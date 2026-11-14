@@ -127,3 +127,10 @@ def test_split_word_follows_the_break_rules():
     assert not gallery.split_word({"lines": ["uimanager.UIView", "OperationQueue"]}, "uimanager.UIViewOperationQueue")
     assert not gallery.split_word({"lines": ["Hong Kong,", "China"]}, "Hong Kong, China")
     assert gallery.split_word({"lines": ["Mytili", "ni"]}, "Mytilini")
+    # the rules are those of the text measurement (bench/common/text.py): numbers and "::" keep together
+    assert gallery.split_word({"lines": ["pi is 3.", "14"]}, "pi is 3.14")
+    assert not gallery.split_word({"lines": ["pi is", "3.14"]}, "pi is 3.14")
+    assert gallery.split_word({"lines": ["std:", ":vec"]}, "std::vec")
+    assert not gallery.split_word({"lines": ["std::", "vec"]}, "std::vec")
+    assert not gallery.split_word({"lines": ["a b", "a b"]}, "a b a b")
+    assert not gallery.split_word({"lines": ["org.exa…", "Foo"]}, "org.example.Foo")  # truncated
