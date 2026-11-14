@@ -144,8 +144,9 @@ baselines — naive, greedy, textalloc, adjustText, vega-label, ggrepel, the lab
 ECharts and d3fc, D3-Labeler, and the outlier labeling of Mumtaz et al. (2019) — scored the
 same way.
 `label-anything bench --baselines --perf` writes `bench-report/index.html`, an interactive
-report: where each labeler stands, every problem with the labelers side by side and their
-numbers, runtime-vs-size plots, Rust/TypeScript parity and the performance targets; `--gate`
+report: the questions and the benchmark design, the results per question and per problem
+with the labelers side by side, case studies, the limitations, runtime-vs-size plots,
+Rust/TypeScript parity and the performance targets; `--gate`
 enforces the release gates (`bench/README.md`, which also has the release procedure and where
 the performance targets stand). `python -m bench.gallery` adds its figures; the
 [latest report](https://fabian-beck.github.io/label-anything/benchmark-report/) is published

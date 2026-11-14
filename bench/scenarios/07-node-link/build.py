@@ -237,7 +237,7 @@ def main() -> None:
     p["obstacles"] = {"vector": [edge_layer(G, pos)]}
     p["priority"] = {"terms": [{"attr": "degree"}]}
     wr.config("lesmis-shapes", p,
-              description="Same layout with UML-like rounded rects (internal labels) and ER-like ellipses.")
+              description="Same layout with UML-style rounded rectangles (internal labels) and ER-style ellipses.")
     # the force layout at rest: circles by degree, colored by community, edges by co-occurrence
     fpos = lesmis_force(G)
     sc = Scene(1000.0, 760.0, background="#ffffff")
@@ -320,7 +320,8 @@ def main() -> None:
     p["priority"] = {"terms": [{"attr": "citations", "transform": "log1p"}], "font_classes": FONT_CLASSES_SPARSE}
     merge_avoid(p, {"nodes": "hard"}, {"nodes": 1.0})
     wr.config("cora-circles", p,
-              description="Cora citation network (2,485 papers): 150 most cited labeled; other nodes are hard.")
+              description="Cora citation network (2,485 papers): the 150 most cited labeled; other nodes as hard "
+                          "obstacles.")
     wr.finish()
 
 
