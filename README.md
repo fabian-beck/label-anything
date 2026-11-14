@@ -131,8 +131,8 @@ CI runs):
 | Solver | time budget 100 ms (Rust) / 250 ms (TS) · seed 0 · deterministic |
 | Degradation | alternatives → wrap → distant → evict_lower → shrink 0.85 → soft_overlap → omit |
 
-The complete table is `spec/defaults.md`; presets (`scatter`, `map`, `graph`,
-`illustration`, `auto`) are in `spec/presets/`.
+The complete table is `spec/defaults.md`; presets (`auto`, `scatter`, `map`, `graph`,
+`illustration`, `none`) are in `spec/presets/`.
 
 ## Benchmark
 

@@ -13,6 +13,8 @@
 //                                                      with a pattern (regex_lite vs RegExp "u"), TS vs Rust
 //   node tools/validate/parity.mjs bench [--runs N]    time both validators on a generated problem with
 //                                                      2,000 items and 100k obstacle points (Rust: release)
+//   node tools/validate/parity.mjs bases               the problems the mutations start from, with their
+//                                                      Rust reports (exit 1 if a sample problem is invalid)
 //
 // --check compares instead of writing (exit 1 if stale). `cargo test -p label-anything-core
 // --test validate_reports` also checks that both fixtures match the Rust validator.
@@ -1159,7 +1161,7 @@ switch (args[0]) {
     ok = await cmdFuzz(Number(flag("--count", 5000)), Number(flag("--text-count", 2000)), Number(flag("--seed", 1)), flag("--keep", null));
     break;
   default:
-    console.error("usage: node tools/validate/parity.mjs reports|mutants [--check] | fuzz [--count N] [--text-count M] [--seed S] [--keep DIR] | patterns [--count N] | bench [--runs N]");
+    console.error("usage: node tools/validate/parity.mjs reports|mutants [--check] | fuzz [--count N] [--text-count M] [--seed S] [--keep DIR] | patterns [--count N] | bench [--runs N] | bases");
     ok = false;
 }
 process.exit(ok ? 0 : 1);

@@ -4,7 +4,6 @@
 # Node
 node_modules/
 /ts/packages/*/dist/
-/ts/packages/*/tsconfig.tsbuildinfo
 /ts/packages/*/test-results/
 /bindings/js-extras/dist/
 *.tsbuildinfo
@@ -14,7 +13,10 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
+.pytest_cache/
 /bindings/python-extras/build/
+# wheels and source distributions (maturin, python -m build: RELEASING.md)
+/dist/
 /rust/crates/la-py/python/label_anything/*.so
 /rust/crates/la-py/python/label_anything/*.pyd
 # Java

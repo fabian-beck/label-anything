@@ -29,15 +29,17 @@ implementations (Rust and TypeScript) that follow one language-neutral spec.
 ## Development
 
 ```sh
-# Rust
-cd rust && cargo test --workspace && cargo clippy --workspace -- -D warnings
+# Rust (the Python extension, label-anything-py, is built and tested with maturin)
+(cd rust && cargo test --workspace --exclude label-anything-py && cargo clippy --workspace --all-targets -- -D warnings)
 # TypeScript and the JavaScript helpers (npm workspace at the repository root)
 npm ci && npm run build && npm test
 # Conformance (both)
-cd rust && cargo test -p label-anything --test conformance
+(cd rust && cargo test -p label-anything --test conformance)
 npm run conformance
 # Schema cross-check
 python3 conformance/check_schema.py
+# Python: unused imports and names, syntax errors (pip install ruff)
+ruff check --select F,E9 bench bindings/python-extras rust/crates/la-py tools examples docs conformance
 ```
 
 ## Changelog and releases
