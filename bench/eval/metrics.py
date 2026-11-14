@@ -818,12 +818,21 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
     for k, shape in enumerate(unlabeled):
         point_index.insert(k, shape.bbox())
 
+    # the engine flattens the curves of an SVG background (spec §4.5): a circle drawn there is a
+    # polygon within the flattening tolerance inside it. Whether a fixed position keeps clear of
+    # the points grants the engine that leeway, so that the rule never applies to fewer items here
+    # than in the engine.
+    svgs = (prob.raw.get("obstacles") or {}).get("svg") or []
+    leeway = max((float(s.get("tolerance", spec.element_default("obstacles.svg.tolerance")))
+                  for s in (svgs if isinstance(svgs, list) else [svgs])), default=0.0)
+
     def point_nearer(it: Item, b: Box, d_own: float, m: float, t: float) -> bool:
         """An unlabeled point the box does not hide entirely comes nearer to it than the own mark
-        plus the margin (at most the distance to the own mark's point), by ``t`` more."""
-        for k in point_index.query(b.grow(max(d_own, 0.0) + m + t)):
+        plus the margin (at most the distance to the own mark's point), by ``t`` more; with ``t``
+        below 0, a point within the box grown by −t counts as hidden too."""
+        for k in point_index.query(b.grow(max(d_own, 0.0) + m + max(t, 0.0))):
             shape = unlabeled[k]
-            if b.contains_box(shape.bbox()):
+            if b.grow(max(-t, 0.0)).contains_box(shape.bbox()):
                 continue  # hidden entirely, not a competitor
             if shape.sdist_box(b) < d_own + min(m, math.dist(shape.ref, it.ref)) + t:
                 return True
@@ -836,7 +845,7 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
         shape = it.dot if it.anchor_type == "area" else it.shape
         for pos in PERCEPTUAL:
             b = adjacent_box(shape, it.offset, it.label.w, it.label.h, pos)
-            if not point_nearer(it, b, shape.sdist_box(b), margin(it), 0.0):
+            if not point_nearer(it, b, shape.sdist_box(b), margin(it), -leeway):
                 return True
         return False
 
