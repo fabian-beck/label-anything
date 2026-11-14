@@ -61,7 +61,7 @@ object. Lengths are a number (px) or a string with a unit (`"0.5em"`, `"3px"`, `
 
 | Builder | Problem field |
 |---|---|
-| `canvas(w, h)`, `canvasPadding`, `allowOutside`, `region`, `canvasBackground`, `devicePixelRatio`, `yAxisUp()`, `transform(a..f)`, `preset(Preset)` | `canvas`, `y_axis`, `transform`, `preset` |
+| `canvas(w, h)`, `canvasPadding`, `allowOutside`, `overscan`, `region`, `canvasBackground`, `devicePixelRatio`, `yAxisUp()`, `transform(a..f)`, `preset(Preset)` | `canvas`, `y_axis`, `transform`, `preset` |
 | `fontSize`, `font(Font.of("default").size(14).bold().lineHeight(1.3))`, `labelPadding`, `buffer`, `margin`, `spacing`, `defaultMark(Mark)`, `wrap(Wrap)`, `truncate(Truncate)`, `align(Label.Align)`, `textShaping` | `defaults`, `text.shaping` |
 | `item(id, x, y, label)`, `item(id, x, y, label, it -> it.mark(..).attr(..))`, `item(Item.point(..)...)`, `area(id, polygon, label)`, `items(...)` | `items` |
 | `backgroundRaster(Path or byte[], RasterMode)`, `backgroundPixels(w, h, ByteBuffer or byte[], mode)`, `backgroundSvg(String or Path)`, `background(Raster... or Svg...)`, `vector(VectorLayer)` | `obstacles` |

@@ -75,6 +75,13 @@ Mark rotations are degrees **clockwise** on screen (as in SVG); leader angles ar
 * `region` `[x, y, w, h]`: labels must stay inside this sub-rectangle, e.g. a chart's plot
   area.
 * `allow_outside: true` drops the `canvas_edge` class.
+* `overscan` (a length) makes the canvas a **window** on a larger drawing, for a view
+  that pans and zooms: pass what lies up to that far beyond the canvas as well (areas
+  and lines whole), and cut what you draw at its edge. Labels are placed there as on the
+  canvas and cross its edges, so a label at the border keeps its place while the view
+  moves. `region` then gives the bounds of the whole drawing, which may reach beyond the
+  canvas: labels stay inside them
+  ([interactive maps](../tutorials/interactive-maps.md#the-view-is-a-window)).
 * `background` (`"#rrggbb"`, default white): the colour of the canvas where no raster
   lies. Labels avoid straddling the edge between it and a raster of another lightness
   ([the contrast cost](../tutorials/raster-backgrounds.md#contrast-borders)).

@@ -48,7 +48,10 @@ if enabled, go into an SVG overlay.
 
 `labelSigma` replaces sigma's label renderer. Sigma draws labels at a fixed pixel size
 while nodes move under the camera, so the helper solves in viewport pixels after each
-camera move (debounced), starting from the previous result. Between solves, labels follow
+camera move (debounced), starting from the previous result. The viewport is a
+[window](interactive-maps.md#the-view-is-a-window) on the graph: nodes up to `overscan`
+px beyond it are labeled as well (default: 8 times the font size; `false`: every label
+inside the viewport), and a label at its edge is cut there. Between solves, labels follow
 their nodes; after one, they move and fade calmly
 ([smooth transitions](interactive-maps.md#smooth-transitions)).
 

@@ -43,7 +43,7 @@ Every other keyword sets a field of the [problem](../concepts/problem.md). `None
 
 | Keywords | Problem field |
 |---|---|
-| `canvas=(w, h)` or a dict; `canvas_padding`, `allow_outside`, `region`, `device_pixel_ratio`, `canvas_background` | `canvas` |
+| `canvas=(w, h)` or a dict; `canvas_padding`, `allow_outside`, `overscan`, `region`, `device_pixel_ratio`, `canvas_background` | `canvas` |
 | `y_axis`, `transform`, `preset`, `weights`, `degrade`, `warm_start` (a `Result` works) | the field of that name |
 | `font` (`la.Font`), `font_family`, `font_size`, `font_weight`, `font_style`, `line_height`, `font_file` | `defaults.font` |
 | `padding`, `buffer`, `margin`, `spacing`, `mark`, `wrap`, `truncate`, `align`; `shaping` | `defaults`; `text.shaping` |
