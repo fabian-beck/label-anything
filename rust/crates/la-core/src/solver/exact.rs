@@ -127,7 +127,12 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
         .order
         .iter()
         .copied()
-        .filter(|&i| !matches!(s.reasons[i], Some(Reason::Grouped) | Some(Reason::KeepWith)))
+        .filter(|&i| {
+            !matches!(
+                s.reasons[i],
+                Some(Reason::Grouped) | Some(Reason::KeepWith) | Some(Reason::Outside)
+            )
+        })
         .collect();
     // candidates: evaluated feasible ones (evaluate lazily generated ones)
     let all: Vec<u32> = (0..s.cands.len() as u32).collect();

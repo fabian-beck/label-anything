@@ -537,6 +537,9 @@ pub struct Model {
     pub extent: Rect,
     /// The canvas is a window on a larger drawing (`canvas.overscan`, spec §2.3).
     pub window: bool,
+    /// In a window, the point items whose mark lies entirely beyond the working extent:
+    /// they are not labeled, their marks count (spec §2.3).
+    pub beyond: Vec<bool>,
     pub items: Vec<Item>,
     /// Vector obstacle primitives (problem vector layers and SVG geometry) with their
     /// class (names shared between primitives).
@@ -575,6 +578,9 @@ pub struct Model {
     pub default_em: f64,
     pub shaping: String,
     pub warm: BTreeMap<String, Option<Rect>>,
+    /// `warm_start.pin`: labels keep their warm-start boxes exactly where they still can
+    /// (spec §10.1).
+    pub warm_pin: bool,
     /// The leader of each warm-start box, moved with it, for the `angles`, `elbow` and
     /// `orthogonal` leader styles (the entry's `leader` of the same style; spec §6.7).
     pub warm_leaders: BTreeMap<String, Vec<P>>,
@@ -592,6 +598,13 @@ impl Model {
     /// window the working extent (spec §2.3); `None` without a canvas.
     pub fn ink_area(&self) -> Option<f64> {
         self.canvas.map(|_| self.extent.area())
+    }
+
+    /// Whether item `i` lies beyond the working extent of a window: it gets no label
+    /// (reason `outside`), its mark counts (spec §2.3).
+    #[inline]
+    pub fn is_beyond(&self, i: usize) -> bool {
+        self.beyond.get(i).copied().unwrap_or(false)
     }
 
     /// In a window, the working extent: where the labels of areas are looked for (spec
@@ -1243,6 +1256,12 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         }
     };
 
+    // in a window, a point beyond the working extent is a mark only (spec §2.3)
+    let beyond: Vec<bool> = items
+        .iter()
+        .map(|it| overscan.is_some() && it.area.is_none() && !extent.touches(&it.shape.bbox()))
+        .collect();
+
     // --- label area ---
     let allow_outside = o.bool("canvas.allow_outside");
     let pad = o.length("canvas.padding").px(default_em);
@@ -1396,6 +1415,7 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         label_area,
         leader_area,
         window,
+        beyond,
         extent,
         items,
         vector,
@@ -1435,6 +1455,9 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         default_em,
         shaping: o.string("text.shaping"),
         warm,
+        warm_pin: lookup(problem, "warm_start.pin")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false),
         warm_leaders,
         warm_rotation,
         warnings,

@@ -970,6 +970,65 @@ CASES["window-area-turned"] = case(
      "box": {"fjord": {"x": 388.128, "y": 212.2, "w": 63.744, "h": 15.6, "tol": 0.01}}},
     WINDOW_ABOUT + " A 1400 × 26 px strip at 30° through the view; its pole lies beyond the view.")
 
+CASES["window-marks-only"] = case(
+    "window: a point beyond the working extent is a mark only, and labels keep off it",
+    {"canvas": WINDOW, "items": [pt("near", 185, 50, "NearEdge"), pt("far", 205, 40, "Far")]},
+    {"placed_ids": ["near"], "unplaced_ids": ["far"], "reasons": {"far": "outside"},
+     "anchor_side": {"near": "bottom"}},
+    WINDOW_ABOUT + " The working extent ends at x = 200. far lies beyond it: it gets no label, and its mark "
+    "is where near's first position (top) would be. When the view moves on and far comes in, near's "
+    "label is not in its way.")
+
+# --- pinned labels (warm_start.pin, spec §10.1) ---------------------------------------------
+PIN_ABOUT = ("With warm_start.pin every label keeps its warm-start box, moved with its anchor, where the hard "
+             "rules still allow it, whatever its priority; the solve only adds labels around the pinned ones.")
+ALPHA_BOX = {"x": 82.054, "y": 41.4, "w": 35.892, "h": 15.6}  # "Alpha" above (100, 60)
+
+
+def pinned(*entries):
+    return {"pin": True, "placements": [{"id": i, "placed": True, "box": box, "anchor": anchor}
+                                         for i, box, anchor in entries]}
+
+
+CASES["pin-keeps-box"] = case(
+    "pin: a label keeps its box, moved with its anchor, and a newcomer takes a place beside it",
+    {"canvas": {"width": 300, "height": 120},
+     "items": [pt("a", 140, 70, "Alpha", priority=1), pt("b", 164, 54, "Beta", priority=2)],
+     "warm_start": pinned(("a", ALPHA_BOX, [100, 60]))},
+    {"placed": 2, "anchor_side": {"a": "top", "b": "right"},
+     "box": {"a": {"x": 122.054, "y": 51.4, "w": 35.892, "h": 15.6, "tol": 0.001}}},
+    PIN_ABOUT + " The view moved by (40, 10) since a was labeled above its point; b is new.")
+
+CASES["pin-outranks-priority"] = case(
+    "pin: a more important newcomer waits for a pinned label in its way",
+    {"canvas": {"width": 300, "height": 120}, "degrade": ["evict_lower", "omit"],
+     "items": [pt("a", 100, 60, "Alpha", priority=1),
+               pt("b", 100, 30, "Beta", priority=2, placement={"position_order": ["bottom"]})],
+     "warm_start": pinned(("a", ALPHA_BOX, [100, 60]))},
+    {"placed_ids": ["a"], "unplaced_ids": ["b"], "reasons": {"b": "omitted_by_priority"},
+     "priority_inversions": 1, "box": {"a": {**ALPHA_BOX, "tol": 0.001}}},
+    PIN_ABOUT + " b may only stand below its point, where a's label is. Without the pin, b takes that "
+    "place first and a moves to the right; evict_lower would remove a for b, but not a pinned label.")
+
+CASES["pin-blocked-box"] = case(
+    "pin: a label whose box a hard obstacle covers now is placed like any other",
+    {"canvas": {"width": 300, "height": 120}, "items": [pt("a", 100, 60, "Alpha")],
+     "obstacles": {"vector": [{"class": "wall", "rects": [[80, 40, 40, 10]]}]},
+     "avoid": {"label": {"wall": "hard"}}, "warm_start": pinned(("a", ALPHA_BOX, [100, 60]))},
+    {"placed": 1, "anchor_side": {"a": "right"}},
+    PIN_ABOUT)
+
+CASES["pin-degraded-label"] = case(
+    "pin: an abbreviated label keeps its text and its box, although the full text fits now",
+    {"canvas": {"width": 300, "height": 120},
+     "items": [pt("a", 150, 60, "Alphabetical",
+                  label={"type": "text", "text": "Alphabetical", "alternatives": ["Alph."]})],
+     "warm_start": pinned(("a", {"x": 13.812, "y": 41.4, "w": 32.376, "h": 15.6}, [30, 60]))},
+    {"placed": 1, "text_lines": {"a": ["Alph."]},
+     "box": {"a": {"x": 133.812, "y": 41.4, "w": 32.376, "h": 15.6, "tol": 0.001}}},
+    PIN_ABOUT + " The warm-start box has the size of the alternative text, which a canvas of 60 px had "
+    "forced; without the pin the label grows back to its full text.")
+
 CASES["window-raster"] = case(
     "window: a raster background keeps its place on the canvas, and its borders count as without overscan",
     {"canvas": {"width": 300, "height": 120, "overscan": 30}, "obstacles": {"raster": BLACK_STRIP},

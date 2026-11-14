@@ -61,6 +61,7 @@ Each omitted item reports:
     | `budget_exhausted` | the solve was cancelled before the item was reached, or hit its time guard and the item had no free normal position (its degraded variants were not tried) |
     | `keep_with` | another member of its all-or-none set could not be placed |
     | `grouped` | it shares a group label with other items (`item.group`) |
+    | `outside` | in a window (`canvas.overscan`), the point lies beyond the overscan: its mark counts, so that labels keep off it before it comes in, and it gets no label ([interactive maps](interactive-maps.md#the-view-is-a-window)) |
 
 * `blocking` — the hard classes that rejected its candidates, most frequent first
   (`labels`, `items`, `leaders`, `canvas_edge`, or obstacle classes).

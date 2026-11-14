@@ -143,7 +143,7 @@ class Search {
 /** Run the exact search with a node budget. Returns whether the solution changed. */
 export function run(s: Solve, maxNodes: number): boolean {
   const n = s.model.items.length;
-  const order = s.pri.order.filter((i) => s.reasons[i] !== Reason.Grouped && s.reasons[i] !== Reason.KeepWith);
+  const order = s.pri.order.filter((i) => s.reasons[i] !== Reason.Grouped && s.reasons[i] !== Reason.KeepWith && s.reasons[i] !== Reason.Outside);
   // candidates: evaluated feasible ones (evaluate lazily generated ones)
   const total = s.cands.length;
   for (let c = 0; c < total; c++) if (!s.cands[c]!.evaluated) s.ensureEval(c);

@@ -1,0 +1,126 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 160,
+      "height": 100,
+      "overscan": 40
+    },
+    "items": [
+      {
+        "id": "near",
+        "anchor": {
+          "type": "point",
+          "x": 185,
+          "y": 50
+        },
+        "label": {
+          "type": "text",
+          "text": "NearEdge"
+        }
+      },
+      {
+        "id": "far",
+        "anchor": {
+          "type": "point",
+          "x": 205,
+          "y": 40
+        },
+        "label": {
+          "type": "text",
+          "text": "Far"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "near",
+        "placed": true,
+        "box": {
+          "x": 155.312,
+          "y": 53.0,
+          "w": 59.375999999999976,
+          "h": 15.599999999999994
+        },
+        "anchor": [
+          185.0,
+          50.0
+        ],
+        "anchor_side": "bottom",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "NearEdge"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            55.776
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.175,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "far",
+        "placed": false,
+        "reason": "outside",
+        "blocking": [],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 1
+        }
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 2,
+      "placed_weighted": 0.6131471927654585,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 800,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 40,
+      "omission_order": [
+        "far"
+      ],
+      "priority_inversions": 0,
+      "total_cost": 0.175,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 80,
+        "rows": 60,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

@@ -169,7 +169,10 @@ pub fn run(s: &mut Solve, iterations: u64, deadline_ms: f64) -> LocalStats {
             if sets[u]
                 || matches!(
                     s.reasons[u],
-                    Some(Reason::KeepWith) | Some(Reason::Grouped) | Some(Reason::BudgetExhausted)
+                    Some(Reason::KeepWith)
+                        | Some(Reason::Grouped)
+                        | Some(Reason::BudgetExhausted)
+                        | Some(Reason::Outside)
                 )
             {
                 continue;

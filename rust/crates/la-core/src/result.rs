@@ -396,6 +396,9 @@ pub fn build(
         },
         "implementation": format!("rust/{}", env!("CARGO_PKG_VERSION")),
     });
+    if model.warm_pin {
+        stats["pinned"] = json!(s.pinned.iter().filter(|&&p| p).count());
+    }
     if !model.warm.is_empty() {
         stats["flicker"] = json!({
             "moved": flicker.0,

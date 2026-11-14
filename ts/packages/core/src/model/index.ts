@@ -461,6 +461,11 @@ export class Model {
   extent: Rect = new Rect(0, 0, 1, 1);
   /** The canvas is a window on a larger drawing (`canvas.overscan`, spec §2.3). */
   window = false;
+  /**
+   * In a window, the point items whose mark lies entirely beyond the working extent: they
+   * are not labeled, their marks count (spec §2.3).
+   */
+  beyond: boolean[] = [];
   items: Item[] = [];
   /** Vector obstacles by class (problem vector layers and SVG geometry). */
   vector: [string, Prim][] = [];
@@ -497,6 +502,8 @@ export class Model {
   defaultEm = 12;
   shaping = "auto";
   warm: Map<string, Rect | null> = new Map();
+  /** `warm_start.pin`: labels keep their warm-start boxes exactly where they still can (spec §10.1). */
+  warmPin = false;
   /**
    * The leader of each warm-start box, moved with it, for the `angles`, `elbow` and
    * `orthogonal` leader styles (the entry's `leader` of the same style; spec §6.7).
@@ -516,6 +523,14 @@ export class Model {
    */
   inkArea(): number | null {
     return this.canvas !== null ? this.extent.area() : null;
+  }
+
+  /**
+   * Whether item `i` lies beyond the working extent of a window: it gets no label (reason
+   * `outside`), its mark counts (spec §2.3).
+   */
+  isBeyond(i: number): boolean {
+    return this.beyond[i] === true;
   }
 
   /**
@@ -1148,6 +1163,8 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.leaderArea = leaderArea;
   m.extent = extent;
   m.window = window;
+  // in a window, a point beyond the working extent is a mark only (spec §2.3)
+  m.beyond = items.map((it) => overscan !== null && it.area === null && !extent.touches(it.shape.bbox()));
   m.items = items;
   m.vector = vector;
   m.rasters = rasters;
@@ -1180,6 +1197,7 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.defaultEm = defaultEm;
   m.shaping = o.string("text.shaping");
   m.warm = warm;
+  m.warmPin = lookup(problem, "warm_start.pin") === true;
   m.warmLeaders = warmLeaders;
   m.warmRotation = warmRotation;
   m.warnings = warnings;

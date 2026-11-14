@@ -151,7 +151,7 @@
         "cost_breakdown": { "type": "object", "additionalProperties": { "type": "number" } },
         "degrade_steps": { "type": "array", "items": { "type": "string" } },
         "priority": { "$ref": "#/$defs/priorityInfo" },
-        "reason": { "enum": ["omitted_by_priority", "no_feasible_candidate", "budget_exhausted", "keep_with", "grouped"] },
+        "reason": { "enum": ["omitted_by_priority", "no_feasible_candidate", "budget_exhausted", "keep_with", "grouped", "outside"] },
         "blocking": { "type": "array", "items": { "type": "string" }, "description": "Hard classes that rejected candidates, most frequent first." },
         "blocked_by": { "type": "array", "items": { "type": "string" }, "description": "Placed items whose label or leader conflicts with this item's best feasible candidates (spec §9)." },
         "item_shape": { "type": "object", "description": "Resolved item geometry in canvas px (only with output.item_shape)." },
@@ -202,6 +202,7 @@
           "additionalProperties": { "type": "integer" },
           "description": "Placed labels per degradation kind: wrapped, alternative, truncated, shrunk, soft_overlap, distant, boundary."
         },
+        "pinned": { "type": "integer", "minimum": 0, "description": "Labels that kept their warm-start box as pinned labels (only with warm_start.pin)." },
         "flicker": {
           "type": "object",
           "additionalProperties": false,

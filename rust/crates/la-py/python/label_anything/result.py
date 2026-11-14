@@ -88,7 +88,7 @@ class Placement:
     #: Text lines as placed (wrapped, truncated or an alternative); empty for icons/boxes.
     lines: Tuple[str, ...] = ()
     #: Why an unplaced item was omitted: ``omitted_by_priority``,
-    #: ``no_feasible_candidate``, ``budget_exhausted``, ``keep_with`` or ``grouped``.
+    #: ``no_feasible_candidate``, ``budget_exhausted``, ``keep_with``, ``grouped`` or ``outside``.
     reason: Optional[str] = None
     cost: Optional[float] = None
     #: ``{tier, score, rank, ...}`` of the item.

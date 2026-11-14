@@ -1799,6 +1799,10 @@
         "null"
       ],
       "properties": {
+        "pin": {
+          "type": "boolean",
+          "description": "Labels keep their boxes exactly, moved with their anchors, where the hard rules still allow it, whatever their priority; the solve only adds labels around them (spec §10.1). For a view that only moved, as a map that was panned. Default false."
+        },
         "placements": {
           "type": "array",
           "items": {

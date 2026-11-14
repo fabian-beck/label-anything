@@ -11,7 +11,9 @@ public enum Reason implements JsonName {
   /** A member of its keep-with set failed. */
   KEEP_WITH,
   /** Merged into a group label. */
-  GROUPED;
+  GROUPED,
+  /** Beyond the working extent of a window ({@code canvas.overscan}): a mark only. */
+  OUTSIDE;
 
   @Override
   public String jsonName() {

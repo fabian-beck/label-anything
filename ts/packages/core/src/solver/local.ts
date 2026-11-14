@@ -161,7 +161,7 @@ export function run(s: Solve, iterations: number, deadlineMs: number): LocalStat
         continue;
       }
       const ru = s.reasons[u];
-      if (sets[u] || ru === Reason.KeepWith || ru === Reason.Grouped || ru === Reason.BudgetExhausted) {
+      if (sets[u] || ru === Reason.KeepWith || ru === Reason.Grouped || ru === Reason.BudgetExhausted || ru === Reason.Outside) {
         if (tr !== null) tr.move(it, "insert", u, -1, -1, -1, -1, 0, null, temp, "idle", "excluded", cur, best);
         continue;
       }

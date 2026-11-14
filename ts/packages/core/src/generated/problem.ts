@@ -423,6 +423,10 @@ export type DegradeStep = string;
  * A previous result (or its placements) to stay close to.
  */
 export type WarmStart = {
+  /**
+   * Labels keep their boxes exactly, moved with their anchors, where the hard rules still allow it, whatever their priority; the solve only adds labels around them (spec §10.1). For a view that only moved, as a map that was panned. Default false.
+   */
+  pin?: boolean;
   placements: {
     id: string;
     placed?: boolean;
@@ -454,6 +458,10 @@ export type WarmStart = {
  */
 export type Point3 = [number, number];
 export type WarmStart1 = {
+  /**
+   * Labels keep their boxes exactly, moved with their anchors, where the hard rules still allow it, whatever their priority; the solve only adds labels around them (spec §10.1). For a view that only moved, as a map that was panned. Default false.
+   */
+  pin?: boolean;
   placements: {
     id: string;
     placed?: boolean;

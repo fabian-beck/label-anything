@@ -90,6 +90,12 @@ at the edges. Then:
   its place when the view moves it across an edge.
 * Beyond the working extent, as beyond the canvas with `allow_outside`, the exact tests
   hold (§4.3) and the grids are empty: no coverage costs, no free-space seeds.
+* An item with a point anchor whose mark lies entirely beyond the working extent (its
+  bounding box does not touch it) is a **mark only**: it gets no candidates and no label
+  (reason `outside`, §9.3), and its mark counts like every item's. A host passes the
+  points about a label's reach beyond the overscan: the labels placed in the overscan
+  then keep off marks that are yet to come in, and need not make way for them later. The
+  `auto` preset's crowding rule (§6.6) counts the other items only.
 
 Everything else that refers to the canvas keeps to it: the default `priority.focus`, the
 sides of the boundary model (§6.6), the position of raster backgrounds. Only
@@ -1289,7 +1295,7 @@ static hard constraint), `omitted_by_priority` (blocked only by placed labels/le
 higher or equal key, or cut by `prefix`/`max_labels`), `budget_exhausted` (not reached
 before a cancellation, or past the time guard without a free level-0 candidate: its ladder
 did not run, §10.1), `keep_with` (a member of its set failed), `grouped` (merged into a
-group label). `blocking` lists the hard classes that rejected candidates (most frequent
+group label), `outside` (a point beyond the working extent of a window, §2.3). `blocking` lists the hard classes that rejected candidates (most frequent
 first); `blocked_by` lists the placed items whose label or leader conflicts with the
 item's best feasible candidates (the 5 cheapest statically feasible ones). Candidates
 dropped while they were generated because placed labels blocked them (§6.7) count: when
@@ -1371,6 +1377,26 @@ Warm starts (`warm_start`, with `weights.stability` > 0; ADR motion/warm-starts)
   candidate of that variant and level as for level 0 (§6.7). When it is statically
   feasible and free, the item takes it; otherwise the ladder runs as usual. The steps
   run only once per item (the ladder reuses their candidates).
+
+Pinned labels (`warm_start.pin`, whatever `weights.stability`; ADR motion/pinned-labels):
+for a view that only moved, as a map that was panned, where every label can stay.
+
+* Before the first band, the items (except `keep_with` members) take their warm-start
+  candidate in total order, whatever their keys: the level-0 one (§6.7), else the one of
+  a ladder variant (above). An item takes it when it is statically feasible, free of the
+  labels pinned before it and within the label budgets; its label is then **pinned**.
+  With `prefix` omission the pinned labels are no part of the prefix.
+* The bands then run for the other items as always. No ladder step removes a pinned
+  label: `evict_lower` takes no candidate that conflicts with one.
+* When a label is pinned, the solve ends with the greedy pass: no local search, no exact
+  search, no fans, no boundary columns, no repairs (§10.2, §10.3). It only adds labels
+  around the pinned ones; the verification still runs. `stats.strategy_used` is
+  `greedy`, `stats.pinned` the number of pinned labels.
+
+So a label keeps its box exactly, where the hard rules still allow it, and an item that
+is more important than a pinned label in its way waits: `stats.priority_inversions`
+counts such items, and their reason is `omitted_by_priority`. Nothing is pinned without
+a warm-start box of the size of a variant.
 
 ### 10.2 Local search
 
