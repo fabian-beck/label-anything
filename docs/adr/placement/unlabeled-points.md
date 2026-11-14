@@ -65,6 +65,13 @@ leaders (the 150-node Cora graph: +5 ms). The labels the rule moves exposed an i
 the local search that could invert priorities with weighted omission, now undone (ADR
 solver/search).
 
+The benchmark's removal test mirrors the rule, the probe of the fixed positions included. It
+grants the circles of an SVG background the engine's flattening tolerance (spec §4.5): the
+engine probes them as polygons up to that much inside the circle. On the 100-hub map, an
+airport's dot 0.08 px out of a label box as a circle lies under it as the engine's pentagon,
+so the rule holds for the hub beside it, and the test no longer counts that hub as an
+inversion (with `placement.aggressiveness` `low`, ADR placement/aggressiveness).
+
 ## Alternatives
 - **The rule for every item** (no probe): unclear labels caused by unlabeled points fell from
   795 to 5, but in dense fields every label moved onto a leader (200 among 10,000 points: 164
