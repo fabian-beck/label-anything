@@ -62,11 +62,14 @@ METRICS = [
     ("label_points_hidden", "points hidden", "{:d}", -1),
     ("label_lines_em", "lines hidden em", "{:.1f}", -1),
     ("labels_on_contrast_border", "contrast border", "{:d}", -1),
+    ("clutter", "clutter", "{:.2%}", 0),
+    ("clutter_leader_share", "clutter by leaders", "{:.1%}", 0),
+    ("clutter_per_label_em", "edges per label em", "{:.1f}", 0),
     ("schema_errors", "schema err.", "{:d}", -1),
 ]
 TABLE_COLS = ["placed_rate", "usable_rate", "hard_violations", "hard_conflicts", "leader_crossings",
               "leader_near_crossings", "leader_mark_touches", "ambiguity_rate", "clarity_unclear_rate",
-              "points_covered_rate", "labels_close_rate", "priority_inversions", "ndcg_at_k",
+              "points_covered_rate", "labels_close_rate", "clutter", "priority_inversions", "ndcg_at_k",
               "adjacent_gap_abs_mean", "position_rank_mean", "region_coverage", "soft_coverage_mean"]
 SEQ_METRICS = [
     ("displacement_mean_px", "displacement px", "{:.2f}", -1),
@@ -173,7 +176,8 @@ def compare(previous: dict, current: dict, threshold: float = 0.02) -> dict:
 def parity(report: dict) -> dict:
     """Deltas of every metric between the Rust implementation and each other implementation (TS, WASM)."""
     sol = report["solvers"]
-    ref = next((s for s in sol if implementation(s) == "rust"), None)
+    # the engine at its defaults; rust-low, rust-high (--levels) are other settings, not implementations
+    ref = "rust" if "rust" in sol else next((s for s in sol if implementation(s) == "rust"), None)
     others = [s for s in sol if implementation(s) in ("ts", "wasm") and s != ref]
     out = {"reference": ref, "pairs": []}
     if ref is None or not others:

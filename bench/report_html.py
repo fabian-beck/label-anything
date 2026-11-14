@@ -53,7 +53,8 @@ REPO_URL = "https://github.com/fabian-beck/label-anything"
 NAMES = {"rust": "Label Anything", "ts": "Label Anything (TypeScript)", "wasm": "Label Anything (WebAssembly)",
          "ggrepel": "ggrepel", "adjusttext": "adjustText", "textalloc": "textalloc", "vega-label": "vega-label",
          "echarts": "ECharts", "d3fc": "d3fc", "d3-labeler": "D3-Labeler", "mumtaz2019": "Mumtaz et al.",
-         "greedy": "greedy", "naive": "naive"}
+         "greedy": "greedy", "naive": "naive", "rust-low": "Label Anything (low)",
+         "rust-high": "Label Anything (high)"}
 APPROACH = {  # solver: (platform, approach) for the table of methods and the tooltips
     "ggrepel": ("R, ggplot2", "force-based repulsion"),
     "adjusttext": ("Python, matplotlib", "iterative repulsion; never omits labels"),
@@ -95,6 +96,9 @@ def reference(solvers: list[str]) -> str | None:
     """The Label Anything solver every comparison shows: the Rust engine where it ran, else the first
     implementation."""
     la = [s for s in solvers if implementation(s)]
+    # the engine at its defaults; rust-low, rust-high (--levels) are other settings, not implementations
+    if "rust" in la:
+        return "rust"
     return next((s for s in la if implementation(s) == "rust"), la[0] if la else None)
 
 
@@ -239,6 +243,9 @@ GLOSSARY = {
                                               "label of another item."),
     "labels_close_rate": ("labels too close", "Share of placed labels less than 0.4 em from the nearest other "
                                               "label; such labels are read as one."),
+    "clutter": ("clutter", "Edge density added by labels and leaders: outline length of the glyphs, twice the "
+                           "length of each leader and the perimeter of icon and box labels, per canvas pixel; "
+                           "informational, since more labels add clutter."),
     "priority_inversions": ("inversions", "Omitted items for which a position free of all more important labels "
                                           "existed; a less important label occupies it."),
     "ndcg_at_k": ("NDCG@k", "Normalized discounted cumulative gain of the placed labels with respect to priority; "
@@ -332,7 +339,7 @@ def aggregates(report: dict, solver: str) -> dict:
            "peak_mb": max(mem) if mem else None, "scaling": scaling_exponent(report["results"], solver),
            "time_ms": statistics.median(times) if times else None}
     for k in ("placed_rate", "usable_rate", "ambiguity_rate", "clarity_unclear_rate", "points_covered_rate",
-              "labels_close_rate"):
+              "labels_close_rate", "clutter"):
         row[k] = _mean(_numbers(ok, k))
     for k in ("hard_violations", "hard_conflicts", "priority_inversions"):
         v = _numbers(ok, k)
@@ -499,6 +506,7 @@ SUMMARY_COLS = [  # (key, heading, format, direction, log scale)
     ("clarity_unclear_rate", "unclear (mean)", "{:.1%}", -1, False),
     ("points_covered_rate", "points covered (mean)", "{:.1%}", -1, False),
     ("labels_close_rate", "labels close (mean)", "{:.1%}", -1, False),
+    ("clutter", "clutter (mean)", "{:.2%}", 0, False),
     ("priority_inversions", "inversions (sum)", "{:d}", -1, True),
     ("engine_ms", "engine ms (sum of medians)", "{:,.1f}", -1, True),
     ("wall_ms", "wall ms (sum of medians)", "{:,.1f}", -1, True),
