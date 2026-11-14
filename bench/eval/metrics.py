@@ -766,10 +766,12 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
     the label gap (the spacing, at least the margin) and hard marks the label margin
     (spec §4.4) from it, by ``tol`` more; with ``placement.own_nearest`` the position must
     be nearer to the item's own mark than to any other mark it may not cover by the margin
-    (or the distance between the marks), by ``tol`` more, and likewise than to any unlabeled
-    point it does not hide entirely where one of the item's 8 fixed positions keeps clear of
-    them: the engine leaves such an item out rather than place a label that could be another's
-    (ADR placement/margin, placement/unlabeled-points).
+    (or the distance between the marks), by ``tol`` more, likewise than to the mark of any
+    less important item it may cover (``lower_items`` given and not hard) but does not hide
+    entirely, and than to any unlabeled point it does not hide entirely — each where one of
+    the item's 8 fixed positions keeps clear of them (or hides the marks): the engine leaves
+    such an item out rather than place a label that could be another's (ADR placement/margin,
+    priority/lower-items, placement/unlabeled-points).
     """
     opts = prob.opts
     margin_opt = (opts.get("defaults") or {}).get("margin", "0.2em")
@@ -851,6 +853,30 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
 
     def points_rule(it: Item) -> bool:
         return bool(unlabeled) and points_rule_of(it.index)
+
+    @functools.lru_cache(maxsize=None)
+    def lower_rule_of(index: int) -> bool:
+        # the rule holds against the less important marks the item may cover when one of its 8
+        # fixed positions hides or keeps clear of them
+        it = prob.items[index]
+        shape = it.dot if it.anchor_type == "area" else it.shape
+        m = margin(it)
+        for pos in PERCEPTUAL:
+            b = adjacent_box(shape, it.offset, it.label.w, it.label.h, pos)
+            d_own = shape.sdist_box(b)
+            for j in item_index.query(b.grow(max(d_own, 0.0) + m)):
+                other = prob.items[j]
+                if (other.id == it.id or keys[other.id] >= keys[it.id] or same_group(it, other)
+                        or b.contains_box(other.shape.bbox())):
+                    continue
+                if other.shape.sdist_box(b) < d_own + min(m, math.dist(other.ref, it.ref)):
+                    break
+            else:
+                return True
+        return False
+
+    def lower_rule(it: Item) -> bool:
+        return covers_lower and own_nearest and lower_rule_of(it.index)
     out = []
     untestable = []
     for it in prob.items:
@@ -900,14 +926,19 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
                         ok = False
                         break
             if ok and own_nearest and own is not None:
-                # clearly nearer to its own mark than to any mark it may not cover (spec §4.4)
+                # clearly nearer to its own mark than to any mark it may not cover, or may cover
+                # but does not hide (spec §4.4)
                 d_own = own.sdist_box(b)
                 for j in item_index.query(b.grow(max(d_own, 0.0) + m_h + tol)):
                     other = prob.items[j]
                     if other.id == it.id or same_group(it, other):
                         continue
-                    if not (lower_hard if keys[other.id] < kh else items_hard):
-                        continue
+                    lower = keys[other.id] < kh
+                    if not (lower_hard if lower else items_hard):
+                        # a less important mark it may cover competes unless it hides it entirely,
+                        # where one of the item's 8 fixed positions hides or keeps clear of them
+                        if not (lower and lower_rule(it)) or b.shrink(tol).contains_box(other.shape.bbox()):
+                            continue
                     s = min(m_h, math.dist(other.ref, it.ref))
                     if other.shape.sdist_box(b) < d_own + s + tol:
                         ok = False

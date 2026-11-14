@@ -778,7 +778,7 @@ export interface SvgClassRule {
 }
 export interface Avoid {
   /**
-   * Label box vs. classes. Key "*" sets the weight of classes not listed. Key own_mark sets the own-mark policy. Key lower_items sets the policy for the marks of items of lower priority key (default: that of items); when given and not hard, a label covering such a mark excludes that item's label.
+   * Label box vs. classes. Key "*" sets the weight of classes not listed. Key own_mark sets the own-mark policy. Key lower_items sets the policy for the marks of items of lower priority key (default: that of items); when given and not hard, a label covering such a mark excludes that item's label, and with placement.own_nearest a label beside its mark hides such a mark entirely or keeps clear of it, where some fixed position beside the mark can.
    */
   label?: {
     own_mark?: OwnMarkValue;
@@ -857,7 +857,7 @@ export interface Placement {
    */
   fan?: "auto" | "always" | "off";
   /**
-   * A label without a distant leader comes no closer to another item's mark, or to an unlabeled point (a disc of a vector layer, a shape of class points) it does not hide, than to its own, and without a stub it is nearer to its own by its margin (at most by the distance between the two marks; marks it may not cover; unlabeled points only where some fixed position beside the mark keeps clear of them). items: other items' marks only; false: no such rule.
+   * A label without a distant leader comes no closer to another item's mark, or to an unlabeled point (a disc of a vector layer, a shape of class points) it does not hide, than to its own, and without a stub it is nearer to its own by its margin (at most by the distance between the two marks; marks it may not cover; marks of less important items it may cover (lower_items) but does not hide, and unlabeled points, each only where some fixed position beside the mark keeps clear of them). items: other items' marks only; false: no such rule.
    */
   own_nearest?: true | false | "items";
   /**

@@ -553,7 +553,8 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
     }
     if exp.get("own_nearest") == Some(&Value::Bool(true)) {
         // circle marks: no other item's mark is nearer to a label without a distant leader
-        // (adjacent or slider, with or without a stub) than its own mark
+        // (adjacent or slider, with or without a stub) than its own mark, unless the label
+        // hides it entirely (the mark of a less important item under the label)
         let default_mark = problem
             .pointer("/defaults/mark")
             .cloned()
@@ -589,8 +590,9 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
             };
             let own = dist(*ax, *ay, *ar);
             for (jd, x, y, rr) in &circles {
+                let hidden = x - rr >= b.x0 && x + rr <= b.x1 && y - rr >= b.y0 && y + rr <= b.y1;
                 let d = dist(*x, *y, *rr);
-                if jd != id && d < own - 1e-6 {
+                if jd != id && !hidden && d < own - 1e-6 {
                     f.push(format!(
                         "own_nearest: {id} is {d} from {jd}, {own} from its mark"
                     ));
