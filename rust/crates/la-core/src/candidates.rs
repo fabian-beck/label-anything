@@ -1173,6 +1173,28 @@ impl AreaFrame<'_> {
         }
     }
 
+    /// The points of the sampling grid with spacing `step`, row by row from the top
+    /// (spec §6.5): from the bounding box's top-left corner plus half the label size.
+    fn grid(&self, step: f64, mut f: impl FnMut(P)) {
+        let bb = self.shape.bbox();
+        let mut y = bb.y0 + self.hh;
+        while y <= bb.y1 - self.hh + 1e-9 {
+            let mut x = bb.x0 + self.hw;
+            while x <= bb.x1 - self.hw + 1e-9 {
+                f(P::new(x, y));
+                // coordinates so large that a step no longer changes them
+                if x + step <= x {
+                    break;
+                }
+                x += step;
+            }
+            if y + step <= y {
+                break;
+            }
+            y += step;
+        }
+    }
+
     /// The places of the area's labels in this frame with what they lack (spec §6.5):
     /// the best sample, improved, then one sample of each of the 3 × 3 cells of the
     /// samples' bounding box (the one that lacks least as seen from the cell's middle),
@@ -1193,27 +1215,41 @@ impl AreaFrame<'_> {
         // `AREA_SAMPLES` places
         let bb = self.shape.bbox();
         let step = maxf(maxf(2.0 * hh, 4.0), (bb.w() * bb.h() / AREA_SAMPLES).sqrt());
-        let mut y = bb.y0 + hh;
-        while y <= bb.y1 - hh + 1e-9 {
-            let mut x = bb.x0 + hw;
-            while x <= bb.x1 - hw + 1e-9 {
-                let c = P::new(x, y);
-                if self.fits(c) {
-                    pts.push(sample(c));
-                }
-                // coordinates so large that a step no longer changes them
-                if x + step <= x {
-                    break;
-                }
-                x += step;
+        let first = pts.len();
+        self.grid(step, |c| {
+            if self.fits(c) {
+                pts.push(sample(c));
             }
-            if y + step <= y {
-                break;
-            }
-            y += step;
-        }
+        });
         if pts.is_empty() {
             return Vec::new();
+        }
+        // where the label fits only narrowly, the grid's samples lie in fewer than three
+        // rows (columns), and the cells below would have no places above and below
+        // (beside) each other: the points half a spacing below (right of, and with both
+        // below and right of) the grid's points are sampled too
+        let mut gb = Rect::EMPTY;
+        for &(c, _, _) in &pts[first..] {
+            gb = gb.add_point(c);
+        }
+        let rows = gb.h() < 1.5 * step;
+        let cols = gb.w() < 1.5 * step;
+        if rows || cols {
+            let s = step * 0.5;
+            let (x1, y1) = (bb.x1 - hw + 1e-9, bb.y1 - hh + 1e-9);
+            let shifts = [
+                (rows, P::new(0.0, s)),
+                (cols, P::new(s, 0.0)),
+                (rows && cols, P::new(s, s)),
+            ];
+            self.grid(step, |c| {
+                for &(on, d) in &shifts {
+                    let q = c + d;
+                    if on && q.x <= x1 && q.y <= y1 && self.fits(q) {
+                        pts.push(sample(q));
+                    }
+                }
+            });
         }
         let mut best = 0;
         let mut sb = Rect::EMPTY;

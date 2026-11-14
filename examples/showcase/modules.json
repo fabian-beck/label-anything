@@ -16735,14 +16735,14 @@
     "y": 429.3,
     "mark": {
      "shape": "circle",
-     "r": 6.45
+     "r": 6.51
     }
    },
    "label": {
     "type": "text",
     "text": "candidates"
    },
-   "priority": 12.01292
+   "priority": 12.01327
   },
   {
    "id": "core/cost",

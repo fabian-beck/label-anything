@@ -1111,6 +1111,26 @@ class AreaFrame {
   }
 
   /**
+   * The points of the sampling grid with spacing `step`, row by row from the top (spec
+   * §6.5): from the bounding box's top-left corner plus half the label size.
+   */
+  grid(step: number, f: (c: P) => void): void {
+    const bb = this.shape.bbox();
+    let y = bb.y0 + this.hh;
+    while (y <= bb.y1 - this.hh + 1e-9) {
+      let x = bb.x0 + this.hw;
+      while (x <= bb.x1 - this.hw + 1e-9) {
+        f(new P(x, y));
+        // coordinates so large that a step no longer changes them
+        if (x + step <= x) break;
+        x += step;
+      }
+      if (y + step <= y) break;
+      y += step;
+    }
+  }
+
+  /**
    * The places of the area's labels in this frame with what they lack (spec §6.5): the
    * best sample, improved, then one sample of each of the 3 × 3 cells of the samples'
    * bounding box (the one that lacks least as seen from the cell's middle), in ascending
@@ -1130,20 +1150,35 @@ class AreaFrame {
     // beyond the view of a map) is sampled more coarsely, at about `AREA_SAMPLES` places
     const bb = this.shape.bbox();
     const step = maxf(maxf(2.0 * hh, 4.0), Math.sqrt((bb.w() * bb.h()) / AREA_SAMPLES));
-    let y = bb.y0 + hh;
-    while (y <= bb.y1 - hh + 1e-9) {
-      let x = bb.x0 + hw;
-      while (x <= bb.x1 - hw + 1e-9) {
-        const c = new P(x, y);
-        if (this.fits(c)) pts.push(sample(c));
-        // coordinates so large that a step no longer changes them
-        if (x + step <= x) break;
-        x += step;
-      }
-      if (y + step <= y) break;
-      y += step;
-    }
+    const first = pts.length;
+    this.grid(step, (c) => {
+      if (this.fits(c)) pts.push(sample(c));
+    });
     if (pts.length === 0) return [];
+    // where the label fits only narrowly, the grid's samples lie in fewer than three rows
+    // (columns), and the cells below would have no places above and below (beside) each
+    // other: the points half a spacing below (right of, and with both below and right of)
+    // the grid's points are sampled too
+    let gb = Rect.EMPTY;
+    for (let k = first; k < pts.length; k++) gb = gb.addPoint(pts[k]![0]);
+    const rows = gb.h() < 1.5 * step;
+    const cols = gb.w() < 1.5 * step;
+    if (rows || cols) {
+      const s = step * 0.5;
+      const x1 = bb.x1 - hw + 1e-9;
+      const y1 = bb.y1 - hh + 1e-9;
+      const shifts: [boolean, P][] = [
+        [rows, new P(0.0, s)],
+        [cols, new P(s, 0.0)],
+        [rows && cols, new P(s, s)],
+      ];
+      this.grid(step, (c) => {
+        for (const [on, d] of shifts) {
+          const q = c.add(d);
+          if (on && q.x <= x1 && q.y <= y1 && this.fits(q)) pts.push(sample(q));
+        }
+      });
+    }
     let best = 0;
     let sb = Rect.EMPTY;
     for (let k = 0; k < pts.length; k++) {

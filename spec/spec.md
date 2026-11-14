@@ -899,7 +899,13 @@ it in that frame.
 a grid (spacing = label height, at least 4 px, and at least √(w · h / 65536) for a polygon
 whose bounding box is w × h, which bounds the work for a polygon far larger than the
 picture; from the bounding box's top-left corner plus half the label size) where the
-label box grown by `inner_padding` lies inside the polygon. Each has a **lack**:
+label box grown by `inner_padding` lies inside the polygon. When some sample fits but the
+grid's samples lie in fewer than three rows (their centers less than 1.5 spacings apart
+vertically) or columns (horizontally), the grid is refined: after the grid, for each of its
+points in order, the points half a spacing below it (fewer than three rows), to its right
+(fewer than three columns) and below to its right (both) are sampled, in this order, within
+the grid's bounds. So a part the label fits in only narrowly still has places on either
+side of a mark or label in its way. Each has a **lack**:
 
 ```
 lack = max(0, 1 − room / em) + |center − pole| / R

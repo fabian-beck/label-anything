@@ -470,6 +470,19 @@ CASES["area-avoids-marks"] = case(
                pt("a", 200, 150, "Alpha"), pt("b", 214, 156, "Beta")]},
     {"placed": 3, "model": {"land": "internal"}, "rotation": {"land": 0}})
 
+CASES["area-narrow-rows"] = case(
+    "a label that fits its area in a single row of the grid has places half a row above and below",
+    {"canvas": {"width": 400, "height": 120},
+     "obstacles": {"vector": [{"class": "wall", "rects": [[20, 51.5, 360, 2]]}]},
+     "avoid": {"label": {"wall": "hard"}},
+     "items": [_area("strip", [[20, 30], [380, 30], [380, 66], [20, 66]], "Narrows")]},
+    {"placed": 1, "model": {"strip": "internal"}, "rotation": {"strip": 0}},
+    "A 360 × 36 px strip and a label 12.288 px tall with 2.4 px of inner padding: its center "
+    "fits between y = 38.544 and 57.456, where the grid (spacing 12.288 from y = 36.144) has a "
+    "single row, y = 48.432, which a hard wall from y = 51.5 to 53.5 blocks, as it blocks the "
+    "pole. The points half a spacing below the grid's are sampled as well (spec §6.5): the row "
+    "y = 42.288 above the wall takes the label, which otherwise leaves the strip on a leader.")
+
 # leaders keep their clearance from the other marks of the cluster (spec §7)
 CASES["leader-angles"] = case(
     "angle-restricted leaders on a crowded sample",
