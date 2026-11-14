@@ -40,6 +40,9 @@ struct Search<'a> {
     cost: &'a dyn Fn(u32) -> f64,
     cancel: &'a dyn Fn() -> bool,
     mode: Omission,
+    /// With `prefix` omission, the pool candidates (with their items) whose labels cover
+    /// each item's mark (`lower_items`, spec §4.4).
+    covered_by: Vec<Vec<(usize, u32)>>,
     chosen: Vec<Option<u32>>,
     best: Obj,
     best_choice: Vec<Option<u32>>,
@@ -53,6 +56,14 @@ impl Search<'_> {
             prio: prio.to_vec(),
             cost,
         }
+    }
+
+    /// Whether a chosen label covers the mark of item `i`: unlabeled, `i` does not end the
+    /// prefix (spec §9.2).
+    fn covered(&self, i: usize) -> bool {
+        self.covered_by[i]
+            .iter()
+            .any(|&(j, c)| self.chosen[j] == Some(c))
     }
 
     fn dfs(&mut self, k: usize, prio: &mut Vec<f64>, cost: f64, prefix_alive: bool) {
@@ -110,12 +121,8 @@ impl Search<'_> {
             }
         }
         // leave item i unplaced
-        self.dfs(
-            k + 1,
-            prio,
-            cost,
-            prefix_alive && self.mode != Omission::Prefix,
-        );
+        let alive = prefix_alive && (self.mode != Omission::Prefix || self.covered(i));
+        self.dfs(k + 1, prio, cost, alive);
     }
 }
 
@@ -178,6 +185,16 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
     for v in conflicts.values_mut() {
         v.sort_unstable();
     }
+    let mut covered_by: Vec<Vec<(usize, u32)>> = vec![Vec::new(); n];
+    if s.model.omission == Omission::Prefix && s.state.has_lower() {
+        let mut buf = Vec::new();
+        for &c in &pool {
+            s.state.lower_covered(&s.cands[c as usize], &mut buf);
+            for &j in &buf {
+                covered_by[j as usize].push((s.cands[c as usize].item as usize, c));
+            }
+        }
+    }
     // priority slots per omission mode
     let (slot, n_slots, weight): (Vec<usize>, usize, Vec<f64>) = match s.model.omission {
         Omission::Strict => (
@@ -234,9 +251,11 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
         }
     }
     if s.model.omission == Omission::Prefix {
+        // the labels of the prefix (spec §9.2)
+        let end = s.prefix_end(0);
         inc_prio[0] = order
             .iter()
-            .take_while(|&&i| s.state.placed[i].is_some())
+            .filter(|&&i| s.pri.prio[i].rank < end && s.state.placed[i].is_some())
             .count() as f64;
     }
     let mut search = Search {
@@ -250,6 +269,7 @@ pub fn run(s: &mut Solve, max_nodes: u64) -> bool {
         cost: &cost_fn,
         cancel: &cancel_fn,
         mode: s.model.omission,
+        covered_by,
         chosen: vec![None; n],
         best: Obj {
             prio: inc_prio,

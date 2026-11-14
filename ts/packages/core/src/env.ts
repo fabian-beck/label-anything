@@ -41,6 +41,18 @@ export class SvgRuleError extends Error {
   }
 }
 
+/** A fill of a region of an SVG background (spec §4.8), in canvas pixels (Rust `env::RegionGeom`). */
+export interface RegionGeom {
+  /** Index of the region rule that applies. */
+  rule: number;
+  /** The element that rule matched (an index in document order). */
+  element: number;
+  /** That element's `id`. */
+  id: string | null;
+  rings: P[][];
+  evenOdd: boolean;
+}
+
 /** A parsed SVG document. */
 export interface SvgDoc {
   /** Viewport size in px (before mapping to the canvas). */
@@ -55,6 +67,12 @@ export interface SvgDoc {
   geometryById(id: string): Geom[] | null;
   /** Geometry of all elements matching `selector` (throws an `Error` with a message). */
   geometryBySelector(selector: string): Geom[];
+  /**
+   * The fills of regions in paint order (spec §4.8): every fill polygon whose element or
+   * nearest ancestor matches one of `selectors`, with the first selector matching that
+   * element. Selector errors throw {@link SvgRuleError}. A backend without it has no regions.
+   */
+  regions?(selectors: readonly string[]): RegionGeom[];
 }
 
 /** Parses SVG markup into an {@link SvgDoc} mapped onto the canvas. */
@@ -142,6 +160,29 @@ class BuiltinDoc implements SvgDoc {
     if (!r.ok) throw new Error(r.error.message);
     return r.value.map(geomOf);
   }
+
+  regions(selectors: readonly string[]): RegionGeom[] {
+    // report the first rule whose selector does not parse
+    for (let i = 0; i < selectors.length; i++) {
+      const r = svg.parseSelector(selectors[i]!);
+      if (!r.ok) throw new SvgRuleError(i, r.error.message);
+    }
+    const fills = svg.regions(this.scene, selectors);
+    if (!fills.ok) throw new SvgRuleError(0, fills.error.message);
+    const out: RegionGeom[] = [];
+    for (const f of fills.value) {
+      const g = geomOf(f.primitive);
+      if (g.kind === "polygon") {
+        out.push({ rule: f.rule, element: f.element, id: this.scene.elements[f.element]!.id, rings: g.rings, evenOdd: g.evenOdd });
+      }
+    }
+    return out;
+  }
+}
+
+/** `doc.regions(selectors)` (a backend without it has none). */
+export function docRegions(doc: SvgDoc, selectors: readonly string[]): RegionGeom[] {
+  return doc.regions ? doc.regions(selectors) : [];
 }
 
 /** The built-in SVG backend (`@label-anything/svg`, identical to `label-anything-svg`). */

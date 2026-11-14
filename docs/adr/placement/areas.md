@@ -24,7 +24,10 @@ all, where a map would write the name along it.
 - **Places all over the area**: the best sample of a grid, improved by a short pattern
   search (the grid alone is half a line off, which shows in a symmetric shape), and the
   best sample of each of the 3 × 3 cells of the region the label fits in. A label in the
-  way of the best place leaves eight others, each the best of its part.
+  way of the best place leaves eight others, each the best of its part. Where the label
+  fits only narrowly, the grid's samples lie in fewer than three rows (columns), and the
+  cells have no places above and below (beside) each other: then the points half a
+  spacing below (beside) the grid's points are sampled too.
 - **No point-like candidates** while the label fits inside: only a variant that fits
   nowhere falls back to the dot at the pole. Leaders still lead to the pole.
 - **Turned labels**: one more direction, along the main axis (principal axis of the
@@ -54,11 +57,23 @@ vertices with 300 points, 95 instead of 73 areas have their label inside (21 of 
 turned), and a solve takes 28 ms instead of 25 (Rust) and 120 ms instead of 87
 (TypeScript). Results of problems
 with area anchors change. Soft costs of turned labels are approximate (the cover is wider
-than the label; rings, contrast and the label budget use the bounding box), always on the
-safe side for hard rules. Turned labels are text in a rectangular box; icons, composite
-labels and labels of other shapes stay upright.
+than the label; rings, contrast, the region terms and the label budget use the bounding
+box), always on the safe side for hard rules. Turned labels are text in a rectangular box;
+icons, composite labels and labels of other shapes stay upright.
+
+A part the label fits in within less than two grid spacings gets the rows (columns)
+between the grid's: on the home page's map of Europe, Czechia's name fitted in a single
+row, the one through Prague's dot, which it covered (the `map` preset lets important
+labels cover lesser marks), so that Prague lost its label; with the rows between, the name
+sits below the dot and Prague keeps its label (87 instead of 86 of 90 labels when this
+was decided, and 6 % fewer instructions for the solve). No problem of the benchmark
+changes (their areas fit the label in three rows or more, or nowhere), and the extra
+samples add no measurable work there.
 
 ## Alternatives
+- **A finer grid everywhere** (spacing half the label height): four times the samples
+  in every area for places the cells mostly do not keep, and on the map of Europe it
+  moved other names, Slovakia's onto the place of Bratislava's label.
 - **Several fixed angles** (0°, ±15°, ±30°, …): more candidates, and a label a few degrees
   off the area's direction looks wrong; the main axis is the one direction that follows
   the shape.

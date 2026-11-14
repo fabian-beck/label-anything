@@ -14,6 +14,7 @@ import {
   elementGeometry,
   outline,
   parseSvg,
+  regions,
   select,
 } from "../src/index.js";
 import { fillArea, type Summary, summarize } from "./summary.js";
@@ -164,6 +165,35 @@ function runCase(c: J): string[] {
     }
     checkSummary(`geometry #${e.id}`, summarize(geoms(prims)), e, tol, errs);
     if (e.outline !== undefined) checkSummary(`outline #${e.id}`, summarize(outline(prims)), e.outline, tol, errs);
+  }
+
+  for (const e of ex.regions ?? []) {
+    const sel = JSON.stringify(e.selectors);
+    const r = regions(scene, e.selectors);
+    if (!r.ok) {
+      if (e.error !== r.error.code) errs.push(`regions ${sel}: ${r.error.code}: ${r.error.message}`);
+      continue;
+    }
+    if (e.error !== undefined) {
+      errs.push(`regions ${sel}: expected an error`);
+      continue;
+    }
+    const fills = r.value;
+    if (e.count !== undefined && fills.length !== e.count) errs.push(`regions: ${fills.length} fills, expected ${e.count}`);
+    const idOf = (el: number): string => scene.elements[el]!.id ?? "";
+    if (e.order !== undefined) {
+      const seen: string[] = [];
+      for (const f of fills) {
+        const id = idOf(f.element);
+        if (!seen.includes(id)) seen.push(id);
+      }
+      if (JSON.stringify(seen) !== JSON.stringify(e.order)) errs.push(`regions: order ${JSON.stringify(seen)}, expected ${JSON.stringify(e.order)}`);
+    }
+    for (const [id, x] of Object.entries((e.elements ?? {}) as Record<string, J>)) {
+      const mine = fills.filter((f) => idOf(f.element) === id);
+      if (x.rule !== undefined && mine.some((f) => f.rule !== x.rule)) errs.push(`regions #${id}: rule, expected ${x.rule}`);
+      checkSummary(`regions #${id}`, summarize(geoms(mine.map((f) => f.primitive))), x, tol, errs);
+    }
   }
   return errs;
 }

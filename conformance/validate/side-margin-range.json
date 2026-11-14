@@ -1,0 +1,20 @@
+{
+  "kind": "validate",
+  "name": "side-margin-range",
+  "problem": {
+    "items": [],
+    "defaults": {
+      "side_margin": -1
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/defaults/side_margin",
+        "code": "range"
+      }
+    ],
+    "warnings": []
+  }
+}

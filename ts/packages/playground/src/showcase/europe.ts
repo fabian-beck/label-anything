@@ -1,13 +1,14 @@
 /**
  * A map: the countries and capitals of Europe (examples/showcase/europe.py, live).
  *
- * The countries of Natural Earth in a Lambert azimuthal equal-area projection centred on
- * Europe. The map can be panned and zoomed; every view is labeled again, from the labels
- * shown, so they stay where they can. A country is an area: its name goes inside the part
- * of it that is in view, wrapped or abbreviated where that is narrow, out on a leader
- * where it is too small. Capitals are points; zoomed in, more cities, the smallest states
- * and more seas come. The seas' names are an SVG the engine reads: no label covers them.
- * At the first view the labels are those of the static figure.
+ * The countries of Natural Earth (internationally recognized borders) in a Lambert azimuthal
+ * equal-area projection centred on Europe. The map can be panned and zoomed; every view is
+ * labeled again, from the labels shown, so they stay where they can. The countries are the
+ * map's regions (spec §4.8): a country's name stays inside its country or goes out on a
+ * leader into the sea, its type size growing with the country's area. Capitals are points,
+ * every one with its dot; zoomed in, more cities, the smallest states and more seas come.
+ * The countries and the seas' names are an SVG the engine reads: no label covers a sea's
+ * name. At the first view the problem is that of the static figure.
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
 import type { MotionFrame } from "@label-anything/extras";
@@ -93,9 +94,12 @@ const CITIES: [string, number, number, string, number][] = [
   ["İzmir", 27.14, 38.42, "TUR", 2950], ["Casablanca", -7.59, 33.57, "MAR", 3360], ["Oran", -0.63, 35.70, "DZA", 800],
   ["Rostov-on-Don", 39.72, 47.24, "RUS", 1140],
 ];
-// not labeled: part of another's, or (unless zoomed in: SMALL) too small for a name
-const SKIP = new Set(["AND", "MCO", "SMR", "LIE", "VAT", "ALD", "FRO", "GGY", "JEY", "IMN", "CYN", "-99"]);
+// labeled: the countries of the capitals; zoomed in, the smallest states too
+const STATES = new Set(CAPITALS.map(([, , , iso]) => iso));
 const SMALL = new Set(["AND", "MCO", "SMR", "LIE"]);
+
+/** A country name's type size in px: 6 up to 10,000 km², 18 from 1,000,000 km², the logarithm of the area in between (europe.py). */
+const typeSize = (km2: number): number => round(Math.min(18, Math.max(6, 6 + 6 * Math.log10(km2 / 10_000))), 2);
 
 interface Land {
   id: string;
@@ -103,14 +107,14 @@ interface Land {
   abbrev: string | null;
   pop: number;
   gdp: number;
+  /** km² */
+  area: number;
   /** Per part, its rings (outer first) in the map's px at zoom 1, uncut. */
   parts: Ring[][];
   /** The same, cut to the map (and a little beyond): what is drawn. */
   shapes: Ring[][];
   bounds: [number, number, number, number];
   colour: string;
-  /** The rank among the countries labeled at zoom 1, by population (the type size follows it). */
-  rank: number;
 }
 
 interface Place {
@@ -175,7 +179,7 @@ function lands(world: WorldCountry[]): Land[] {
       }
     }
     points.set(c.id, pts);
-    out.push({ id: c.id, name: c.name, abbrev: c.abbrev, pop: c.pop ?? 0, gdp: c.gdp ?? 0, parts, shapes, bounds: b, colour: LAND_OTHER, rank: Infinity });
+    out.push({ id: c.id, name: c.name, abbrev: c.abbrev, pop: c.pop ?? 0, gdp: c.gdp ?? 0, area: c.area ?? 0, parts, shapes, bounds: b, colour: LAND_OTHER });
     (out.at(-1) as Land & { continent?: string }).continent = c.continent;
   }
   // neighbours in different colours (greedy, those with the longest outlines first)
@@ -247,10 +251,6 @@ export class Europe implements Example {
   constructor(world: WorldCountry[]) {
     this.#lands = lands(world);
     this.#byId = new Map(this.#lands.map((c) => [c.id, c]));
-    // the type size follows the rank among the countries labeled at zoom 1
-    this.#countries(this.view)
-      .sort((a, b) => b.land.pop - a.land.pop)
-      .forEach((c, i) => (c.land.rank = i));
     for (const [name, lon, lat, iso] of CAPITALS) {
       this.#places.set(`capital-${iso}`, { id: `capital-${iso}`, name, at: project(lon, lat), land: iso, capital: true, priority: this.#byId.get(iso)?.pop ?? 0 });
     }
@@ -267,8 +267,7 @@ export class Europe implements Example {
   #countries(v: View): { land: Land; main: Ring[] }[] {
     const out: { land: Land; main: Ring[] }[] = [];
     for (const land of this.#lands) {
-      if (SKIP.has(land.id) && !(SMALL.has(land.id) && v.k >= ZOOM_SMALL)) continue;
-      if (land.pop < 100_000 && !SMALL.has(land.id)) continue;
+      if (!STATES.has(land.id) && !(SMALL.has(land.id) && v.k >= ZOOM_SMALL)) continue;
       const [x0, y0] = this.#to(v, [land.bounds[0], land.bounds[1]]);
       const [x1, y1] = this.#to(v, [land.bounds[2], land.bounds[3]]);
       if (x1 < 3 || y1 < 3 || x0 > W - 3 || y0 > H - 3) continue;
@@ -301,22 +300,34 @@ export class Europe implements Example {
     return o.join("\n");
   }
 
+  /** The countries in a view, as SVG markup for the engine: each path a region (europe-map.svg's at zoom 1). */
+  #landMarkup(v: View): string {
+    const o = ['<g class="land">'];
+    for (const c of this.#lands) {
+      const shapes =
+        v.k === 1 && v.x === 0 && v.y === 0
+          ? c.shapes
+          : c.parts.map((rings) => rings.map((r) => clipRing(r.map((p) => this.#to(v, p)), -PAD, -PAD, W + PAD, H + PAD))).filter((rings) => rings[0]!.length >= 3);
+      const d = shapes.map(ringsPath).join("");
+      if (d) o.push(`<path id="${c.id}" fill-rule="evenodd" d="${d}"/>`);
+    }
+    o.push("</g>");
+    return o.join("\n");
+  }
+
   problem(v: View = this.view): LabelProblem {
     const countries = this.#countries(v).sort((a, b) => b.land.pop - a.land.pop);
-    const size = (rank: number) => 9.5 * (rank < 9 ? 1.3 : rank < 24 ? 1.12 : 1);
     const items: unknown[] = countries.map(({ land, main }) => {
       const rings = main.map((r) => r.map(([x, y]) => [round(x, 1), round(y, 1)]));
-      const name = land.name.toUpperCase();
-      const alts = land.abbrev && land.abbrev.toUpperCase() !== name ? [land.abbrev.toUpperCase()] : [];
       return {
         id: land.id,
-        anchor: { type: "area", polygon: rings[0], ...(rings.length > 1 ? { holes: rings.slice(1) } : {}), dot: { shape: "circle", r: 1 } },
-        label: { type: "text", text: name, alternatives: alts, font: { size: round(size(land.rank), 3) }, ...(name.includes(" ") ? { wrap: { max_lines: 2 } } : {}) },
-        // countries before cities
-        priority: 1e9 + land.pop,
-        // inside (wrapped or abbreviated if need be), else out on a leader (the ladder's
-        // `distant` step): a name beside a small country would read as its neighbour's
-        placement: { models: ["internal"] },
+        anchor: { type: "area", polygon: rings[0], ...(rings.length > 1 ? { holes: rings.slice(1) } : {}) },
+        label: { type: "text", text: land.name.toUpperCase(), font: { size: typeSize(land.area) } },
+        // countries before cities, by population
+        tier: 1,
+        priority: land.pop,
+        // a country's name may go out on a leader (into the sea, where the regions want it)
+        placement: { models: ["adjacent", "slider", "distant"] },
       };
     });
     for (const p of this.#places.values()) {
@@ -326,29 +337,27 @@ export class Europe implements Example {
       items.push({
         id: p.id,
         anchor: { type: "point", x: round(x, 1), y: round(y, 1), mark: { shape: "circle", r: p.capital ? 2.6 : 2 } },
-        label: { type: "text", text: p.name, font: { size: p.capital ? 10.5 : 9.5 } },
+        label: { type: "text", text: p.name, font: { size: p.capital ? 8 : 7.5 } },
         priority: p.priority,
-        placement: { position_order: "cartographic" },
       });
     }
     return {
       version: "1",
-      canvas: { width: W, height: H, padding: 4 },
-      defaults: { font: { size: 9.5 } },
+      preset: "map",
+      canvas: { width: W, height: H },
+      defaults: { wrap: { max_lines: 2 } },
+      // every label keeps its size: the ladder's shrink step stops at the full size
+      degrade_options: { min_scale: 1 },
       obstacles: {
         svg: {
-          source: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">\n${this.#seaMarkup(v)}\n</svg>\n`,
-          classes: [{ selector: ".seas text", class: "seas" }],
+          source: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">\n${this.#landMarkup(v)}\n${this.#seaMarkup(v)}\n</svg>\n`,
+          // nothing in the picture is an obstacle but the seas' names; the countries are the regions
+          classes: [{ selector: ".seas text", class: "seas" }, { selector: "*", class: "ignore" }],
+          regions: ".land path",
         },
       },
       items,
-      // a country's leader may pass a city's dot (it starts at the country's centre, where
-      // the capital often is); labels keep off the dots
-      avoid: { label: { seas: "hard" }, leader: { seas: "hard", lower_items: 0.5 } },
-      placement: { models: ["adjacent", "slider", "internal", "distant"], max_distance: "5em", inner_padding: 2 },
-      leaders: { style: "straight", max_length: "7em" },
-      degrade: ["wrap", "alternatives", "distant", "omit"],
-      solver: { seed: 1 },
+      avoid: { label: { seas: "hard" }, leader: { seas: "hard" } },
     } as unknown as LabelProblem;
   }
 
@@ -581,12 +590,12 @@ export class Europe implements Example {
     return out;
   }
 
-  /** A city's dot shows while its name does. */
+  /** Every capital's dot shows; a city's while its name does. */
   drawn(frame: MotionFrame): void {
     const seen = new Set<string>();
     for (const p of frame.result.placements) {
       const place = this.#places.get(p.id);
-      if (!place || !p.placed) continue;
+      if (!place || (!p.placed && !place.capital)) continue;
       seen.add(p.id);
       let dot = this.#dot.get(p.id);
       if (!dot) {

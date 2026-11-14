@@ -46,6 +46,13 @@ that two labels competed for one dot.
   before.
 - Marks that are soft through `items` alone stay outside the rule: hiding one does not
   stop its item from being labeled.
+- With `prefix` omission a covered item does not end the prefix, as the removal test of
+  strict omission does not count it: it has no candidate, whatever its place in the
+  order. A member of a group label does not end it either. The greedy pass goes on past
+  such an item; the local search inserts the item that ends the prefix; no move of the
+  local search, the exact search or the passes after it leaves a mark before the end of
+  the prefix uncovered that a moved label covered — that item would end the prefix, and
+  the labels after it would be inversions.
 - The `map` preset and the Python and JavaScript plotting helpers, whenever a priority is
   given, set 10 for labels and 2.5 for leaders; the caller's own `avoid` wins key by key.
   The engine's default stays as before.
@@ -68,14 +75,24 @@ most important items of each of these problems, 272 are labeled (273 before), 23
 on leaders (22). With `high` 4.1 % fewer labels are placed, with `low`, which has no
 leaders to fall back on, 6.8 % fewer.
 
-With `prefix` omission the first label without a clear place, or whose mark a more
-important label now hides, ends the prefix: 89 instead of 136 of 250 European cities,
-where Manchester's label, 0.3 px beside Liverpool's dot before, now hides it; 70 instead
-of 167 of the airports ordered by outlierness. Between the frames of a zoom, marks move
-in and out from under labels: over 1,000 airports labels move 3.3 px per frame instead of
-2.8, and 235 disappear over 30 frames instead of 191. Solve times stay as they were
-(117 ms for the 1,000 airports). The release gate's allow-list names the configurations
-whose measures this moves by more than 2 %.
+Before covered items stopped ending the prefix, one covered mark cut it: on the world's
+airports ordered by outlierness, Rota's label covered Guam's mark and the prefix ended
+after 24 of 3,221 airports. When they stopped (2026-10-25), the four benchmark problems
+with `prefix` omission on the `map` preset kept 193 instead of 24, 47 instead of 20 and 67
+instead of 16 of 3,221 airports, and 247 instead of 193 of Europe's 250; problems with
+other omission modes, and without covering labels, kept their results. Group members
+ended the prefix as well, which the verification counted as inversions.
+
+With `prefix` omission the first label without a clear place ends the prefix, one whose
+mark a more important label hides does not (above): 192 instead of 135 of 250 European
+cities, where Manchester's label, 0.3 px beside Liverpool's dot before, now hides it and
+the prefix goes on past Liverpool; 126 instead of 168 of the airports ordered by
+outlierness (31 and 67 of the airports ordered otherwise, as before).
+
+Between the frames of a zoom, marks move in and out from under labels: over 1,000
+airports labels move 3.3 px per frame instead of 2.8, and 235 disappear over 30 frames
+instead of 191. Solve times stay as they were (117 ms for the 1,000 airports). The release
+gate's allow-list names the configurations whose measures this moves by more than 2 %.
 
 ## Alternatives
 - **The rule for every item**: no label is unclear because of an item's mark, but the

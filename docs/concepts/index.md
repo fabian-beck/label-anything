@@ -14,7 +14,8 @@ Every implementation runs the same steps:
 1. **Validate** the problem completely ([errors](errors.md)).
 2. **Merge options**: defaults ← preset ← problem ([presets](../reference/presets.md)).
 3. **Prepare obstacles**: vector layers, SVG and raster backgrounds become classed geometry
-   and coverage grids ([avoidance](avoidance.md)).
+   and coverage grids ([avoidance](avoidance.md)), and the picture's regions a region map
+   ([regions](regions.md)).
 4. **Measure labels** and build their variants (wrapped, alternative, truncated, shrunk).
 5. **Generate candidates** per item: adjacent, slider, internal, distant, boundary
    ([candidates](candidates.md)).

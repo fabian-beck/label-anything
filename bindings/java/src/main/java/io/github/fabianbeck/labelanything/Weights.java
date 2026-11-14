@@ -75,6 +75,24 @@ public final class Weights extends Spec {
     return with("contrast", w);
   }
 
+  /**
+   * × the area of the label across region borders, per em² (default 0.5): on a region map
+   * (spec §4.8), labels stay inside one region.
+   */
+  public Weights straddle(double w) {
+    return with("straddle", w);
+  }
+
+  /** × the label's area in regions other than its item's and open space, per em² (default 0.5). */
+  public Weights foreign(double w) {
+    return with("foreign", w);
+  }
+
+  /** × number of region borders a leader crosses (default 1.0). */
+  public Weights leaderBorders(double w) {
+    return with("leader_borders", w);
+  }
+
   /** Displacement from the warm start in em (default 1.0). */
   public Weights stability(double w) {
     return with("stability", w);

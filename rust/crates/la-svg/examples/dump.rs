@@ -12,16 +12,18 @@
 //! ```text
 //! {"svg": "...", "canvas": [w, h] | null, "tolerance": t | null,
 //!  "rules": [{"selector": "...", "class": "..."}] | null, "default_class": "ink",
-//!  "select": ["selector", ...] | null}
+//!  "select": ["selector", ...] | null, "regions": ["selector", ...] | null}
 //! ```
 //!
 //! and the corresponding output line is `{"error": e}` if parsing fails, else
 //! `{"scene": scene, "classified": [{"class", "index"}] | {"error": e},
-//! "selected": [[primitive, ...] | {"error": e}, ...]}` (the last two only when requested).
+//! "selected": [[primitive, ...] | {"error": e}, ...],
+//! "regions": [{"rule", "element", "index"}] | {"error": e}}` (the last three only when
+//! requested).
 
 use std::io::{BufWriter, Read, Write};
 
-use label_anything_svg::{classify, parse, select, ClassRule, ParseOptions};
+use label_anything_svg::{classify, parse, regions, select, ClassRule, ParseOptions};
 use serde_json::{json, Value};
 
 fn options(case: &Value) -> ParseOptions<'static> {
@@ -69,6 +71,19 @@ fn run_case(case: &Value) -> Value {
                 Err(e) => json!({ "error": e }),
             })
             .collect();
+    }
+    if let Some(selectors) = case["regions"].as_array() {
+        let selectors: Vec<String> = selectors
+            .iter()
+            .map(|s| s.as_str().unwrap_or_default().to_string())
+            .collect();
+        out["regions"] = match regions(&scene, &selectors) {
+            Ok(fills) => fills
+                .iter()
+                .map(|f| json!({ "rule": f.rule, "element": f.element, "index": f.index }))
+                .collect(),
+            Err(e) => json!({ "error": e }),
+        };
     }
     out["scene"] = json!(scene);
     out

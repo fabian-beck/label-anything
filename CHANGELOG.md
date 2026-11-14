@@ -24,6 +24,13 @@ The first release, 0.1.0. Nothing is published to a package registry yet.
 - Avoidance by class: other labels, items, text, the canvas edge, vector obstacles, SVG
   backgrounds and raster backgrounds (ink, alpha, cost, class map, saliency), each either
   forbidden or at a cost.
+- Regions: the countries of a map, the bars of a chart (`obstacles.svg.regions`, a vector
+  layer's `region`). A label stays in its own region or in open space, and its leader
+  crosses few borders (`weights.straddle`, `weights.foreign`, `weights.leader_borders`,
+  `placement.max_foreign`).
+- A label beside its mark stands clearly nearer to it than to any other mark or unlabeled
+  point, and farther still from one beside its side (`placement.own_nearest`,
+  `defaults.side_margin`).
 - Priority and omission: explicit priorities, attribute expressions, outlierness, tiers
   and per-category coverage decide which labels are left out; the result gives the reason
   for every omitted label. Font classes set important labels larger or bold.

@@ -5,8 +5,19 @@
  * @module
  */
 
-import { BLOCK_EDGE, BLOCK_ITEMS, BLOCK_LABELS, type Block, type Cand, Kind, type Leader, WARM_MARGIN } from "./candidates.js";
+import {
+  BLOCK_EDGE,
+  BLOCK_ITEMS,
+  BLOCK_LABELS,
+  BLOCK_REGIONS,
+  type Block,
+  type Cand,
+  Kind,
+  type Leader,
+  WARM_MARGIN,
+} from "./candidates.js";
 import type { Env } from "./env.js";
+import type { SplitScratch } from "./grid/regions.js";
 import { EPS, P, Rect, segOverlapsRectXY } from "./geom/index.js";
 import type { Variant } from "./labels.js";
 import { clampf, maxf, minf } from "./math.js";
@@ -50,6 +61,14 @@ class Acc {
     if (relaxable) this.relaxCost += extra;
     else this.relaxed = false;
   }
+
+  /**
+   * With `quick = softOk` (not null): whether the candidate can no longer be used — not even
+   * relaxed, or infeasible where relaxed candidates do not count.
+   */
+  unusable(quick: boolean | null): boolean {
+    return quick !== null && (!this.relaxed || (!quick && !this.feasible));
+  }
 }
 
 /**
@@ -69,6 +88,18 @@ export function crowded(model: Model, obs: Obstacles, item: Item, r: Rect, buf: 
     if (j !== i && model.groupRep(j) !== i && model.items[j]!.shape.distRect(r) < reach) return true;
   }
   return false;
+}
+
+/**
+ * How squarely the point `p` lies beside a side of `r`, where a label of a mark at `p` would
+ * go: 1 straight across a side (or inside `r`), 0 on the diagonal of a corner, and
+ * `|dx² − dy²| / (dx² + dy²)` for the offset `(dx, dy)` of `p` from `r` (spec §4.4).
+ */
+export function facing(r: Rect, p: P): number {
+  const dx = p.x < r.x0 ? r.x0 - p.x : p.x > r.x1 ? p.x - r.x1 : 0;
+  const dy = p.y < r.y0 ? r.y0 - p.y : p.y > r.y1 ? p.y - r.y1 : 0;
+  const s = dx * dx + dy * dy;
+  return s > 0 ? Math.abs(dx * dx - dy * dy) / s : 1;
 }
 
 /**
@@ -108,12 +139,32 @@ function finish(c: Cand, acc: Acc): void {
 export class Evaluator {
   private readonly buf = new IdList();
   private readonly buf2 = new IdList();
+  /** Per-region areas of a label box. */
+  private readonly split: SplitScratch = { ids: [], areas: [] };
+  /** `softOk` while {@link evalUsable} runs, else null. */
+  private quick: boolean | null = null;
+  /**
+   * Less important items whose marks a label covers, while {@link evalUsable} runs: their
+   * coverage is summed once the hard rules let the label be used.
+   */
+  private readonly lower: number[] = [];
 
   constructor(
     readonly model: Model,
     readonly obs: Obstacles,
     readonly env: Env,
   ) {}
+
+  /**
+   * {@link eval} for a caller that keeps a candidate only when it is usable (feasible, or
+   * relaxed with `softOk`): the evaluation stops at the first violation that leaves it
+   * unusable, so the cost of a candidate it returns unusable is partial.
+   */
+  evalUsable(c: Cand, v: Variant, softOk: boolean): void {
+    this.quick = softOk;
+    this.eval(c, v, null);
+    this.quick = null;
+  }
 
   /** Fill `c.cost`, `c.feasible`, `c.relaxed`, `c.relaxCost`, `c.blocked`. */
   eval(c: Cand, v: Variant, breakdown: Breakdown | null = null): void {
@@ -131,6 +182,7 @@ export class Evaluator {
     const w = model.weights;
     const dy = obs.dynamic;
     const softW = model.degrade.softOverlapWeight;
+    const quick = this.quick;
     const acc = new Acc();
     acc.breakdown = breakdown;
 
@@ -152,7 +204,15 @@ export class Evaluator {
       model.placement.ownNearest && c.kind !== Kind.Internal && (c.leaders.length === 0 || c.hasStub());
     const dOwn = nearRule ? item.shape.distRect(r) : 0;
     const clear = nearRule && !c.hasStub() ? margin : 0;
-    const reach = maxf(maxf(item.len.buffer > gapGuess ? item.len.buffer : gapGuess, margin), dOwn + clear);
+    // a mark that lies more squarely beside a side of the label than its own, where its own
+    // label would go, must be farther still: up to the side margin
+    const side = clear > 0 ? maxf(c.warm ? WARM_MARGIN * item.len.sideMargin : item.len.sideMargin, clear) : 0;
+    const ownFacing = side > clear ? facing(r, item.shape.reference()) : 1;
+    // no other mark needs more than the side margin's share the own mark leaves
+    const reach = maxf(
+      maxf(item.len.buffer > gapGuess ? item.len.buffer : gapGuess, margin),
+      dOwn + clear + (side - clear) * (1 - ownFacing),
+    );
     const buf = this.buf;
     obs.itemIndex.query(r.inflate(reach), buf);
     const labelItemsHard = dy.labelItems.kind === AvoidKind.Hard;
@@ -160,12 +220,17 @@ export class Evaluator {
     const lowerRule = !dy.labelLower.equals(dy.labelItems);
     const labelLowerHard = dy.labelLower.isHard();
     let lowerCov = 0;
+    const lowerJs = this.lower;
+    lowerJs.length = 0;
     let otherFound = false;
     for (let q = 0; q < buf.len; q++) {
       const j = buf.get(q);
       const sj = model.items[j]!.shape;
       const lower = lowerRule && j !== i && model.isLower(i, j);
-      if (lower) lowerCov += obs.ownCovered(j, r);
+      if (lower) {
+        if (quick !== null) lowerJs.push(j);
+        else lowerCov += obs.ownCovered(j, r);
+      }
       if (j === i) {
         if (c.kind === Kind.Internal) continue;
         const om = dy.ownMark;
@@ -178,19 +243,25 @@ export class Evaluator {
             if (frac > om.f) acc.violate(BLOCK_ITEMS, false, 0);
           }
         }
+        if (acc.unusable(quick)) return finish(c, acc);
         continue;
       }
       otherFound = true;
+      const hard = lower ? labelLowerHard : labelItemsHard;
       let d: number;
-      if (lower ? labelLowerHard : labelItemsHard) {
+      if (hard) {
         if (c.labelOverlapsShape(sj)) {
           acc.violate(BLOCK_ITEMS, false, 0);
+          if (acc.unusable(quick)) return finish(c, acc);
           continue;
         }
         d = c.distShape(sj);
         // the margin (up to rounding), but never more than the mark keeps from the own
         // mark's box
-        if (margin > EPS && d < margin - EPS && d < sj.distRect(item.shape.bbox())) acc.violate(BLOCK_ITEMS, false, 0);
+        if (margin > EPS && d < margin - EPS && d < sj.distRect(item.shape.bbox())) {
+          acc.violate(BLOCK_ITEMS, false, 0);
+          if (acc.unusable(quick)) return finish(c, acc);
+        }
       } else {
         // of the marks the label may cover, that of a less important item (`lower_items`
         // given and not hard) competes with the own mark unless the label hides it entirely:
@@ -207,18 +278,34 @@ export class Evaluator {
         }
         d = c.distShape(sj);
       }
-      // nearer to the label than its own mark, or, without a stub, not a margin farther (at
-      // most as far as the two marks' reference points lie apart; the marks of the item's
-      // group aside)
-      const sep = clear > 0 ? minf(clear, sj.reference().dist(item.shape.reference())) : 0;
-      if (nearRule && d < dOwn + sep - EPS && model.groupRep(j) !== i) acc.violate(BLOCK_ITEMS, false, 0);
+      // nearer to the label than its own mark, or, without a stub, not a margin farther, up to
+      // the side margin for the point's mark of an item it may not cover that lies more
+      // squarely beside a side than the own (at most as far as the two marks' reference
+      // points lie apart; the marks of the item's group aside)
+      let sep = 0;
+      if (clear > 0) {
+        const need =
+          hard && side > clear && model.items[j]!.area === null
+            ? clear + (side - clear) * maxf(facing(r, sj.reference()) - ownFacing, 0)
+            : clear;
+        sep = minf(need, sj.reference().dist(item.shape.reference()));
+      }
+      if (nearRule && d < dOwn + sep - EPS && model.groupRep(j) !== i) {
+        acc.violate(BLOCK_ITEMS, false, 0);
+        if (acc.unusable(quick)) return finish(c, acc);
+      }
     }
     // nor to an unlabeled point, where some place beside the mark keeps clear of them (spec
     // §4.4)
     if (nearRule && acc.feasible && obs.pointsRule[i] === true) {
       const pc = obs.pointNearer(item, r, dOwn, clear);
-      if (pc !== null) acc.violate(pc, false, 0);
+      if (pc !== null) {
+        acc.violate(pc, false, 0);
+        if (acc.unusable(quick)) return finish(c, acc);
+      }
     }
+    // (in the order of the query, as above)
+    for (const j of lowerJs) lowerCov += obs.ownCovered(j, r);
     if (dy.labelItems.kind === AvoidKind.Soft) {
       const cov = turned ? covered(c, (b) => obs.otherItemsCovered(i, b)) : obs.otherItemsCovered(i, r);
       acc.add("items", (dy.labelItems.w * (lowerRule ? maxf(cov - lowerCov, 0) : cov)) / em2);
@@ -263,6 +350,7 @@ export class Evaluator {
         if (hit) {
           const cov = turned ? covered(c, (b) => sat.coveredArea(grid, b)) : sat.coveredArea(grid, r);
           acc.violate(ci, cl.relaxable, (softW * cov) / em2);
+          if (acc.unusable(quick)) return finish(c, acc);
         }
       } else if (lk === AvoidKind.Soft) {
         if (!onMark && (turned ? anyBox(c, (b) => sat.any(grid, b)) : sat.any(grid, r))) {
@@ -284,8 +372,25 @@ export class Evaluator {
       const d = bd.deviation(r);
       acc.add("contrast", (w.contrast * ((4 * d * (cell * cell)) / 65025)) / em2);
     }
+    // 3c. regions: a label across a border, in a region other than its item's (none on a mark)
+    const rm = obs.regions;
+    if (rm !== null && !onMark) {
+      const sp = rm.split(r, obs.home[i]!, this.split);
+      // a label that names a region by where it lies (an area's, not inside it, or one on a
+      // leader) lies mostly at home or in open space
+      if (sp.foreign > model.placement.maxForeign * sp.area && c.kind !== Kind.Internal && (item.area !== null || c.leaders.length > 0)) {
+        acc.violate(BLOCK_REGIONS, false, 0);
+        return finish(c, acc);
+      }
+      const c2 = rm.grid.cell * rm.grid.cell;
+      acc.add("straddle", (w.straddle * (sp.straddle() * c2)) / em2);
+      acc.add("foreign", (w.foreign * (sp.foreign * c2)) / em2);
+    }
     // 4. leaders
-    for (const l of c.leaders) this.leaderTerms(i, l, r, c.kind === Kind.Fan || c.kind === Kind.Boundary, acc);
+    for (const l of c.leaders) {
+      this.leaderTerms(i, l, r, c.kind === Kind.Fan || c.kind === Kind.Boundary, acc);
+      if (acc.unusable(quick)) return finish(c, acc);
+    }
     if (!acc.relaxed) return finish(c, acc);
     // 5. position
     acc.add("position", (w.position * c.rank) / 8);
@@ -385,9 +490,15 @@ export class Evaluator {
     // a stub (spec §6.9) costs its length, not a leader
     if (l.stub) acc.add("stub", (w.leaderLength * l.len) / em);
     else acc.add("leader", w.leader + (w.leaderLength * l.len) / em + w.bends * l.bends);
+    // region borders on the way
+    const rm = obs.regions;
+    if (rm !== null) acc.add("leader_borders", w.leaderBorders * rm.crossings(l.pts));
     // leaders stay on the canvas
     const ca = obs.leaderArea;
-    if (ca !== null && !l.pts.every((p) => ca.containsPoint(p))) acc.violate(BLOCK_EDGE, false, 0);
+    if (ca !== null && !l.pts.every((p) => ca.containsPoint(p))) {
+      acc.violate(BLOCK_EDGE, false, 0);
+      if (acc.unusable(this.quick)) return;
+    }
     const nseg = l.segCount();
     const nMain = l.pts.length > 0 ? l.pts.length - 1 : 0;
     // ownRect.inflate(-0.5)
@@ -403,6 +514,7 @@ export class Evaluator {
       if ((!item.tip || k > 0) && item.shape.distSegment(a2, b) <= EPS) acc.violate(BLOCK_ITEMS, false, 0);
       // not into the own label except at the port (underline is on the label edge)
       if (k < nMain && segOverlapsRectXY(a.x, a.y, b.x, b.y, ox0, oy0, ox1, oy1)) acc.violate(BLOCK_LABELS, false, 0);
+      if (acc.unusable(this.quick)) return;
     }
     // other items: clearance (not from the group's members, and not from a mark that
     // covers the leader's anchor, or a column leader's start: no leader avoids it). A
@@ -434,7 +546,10 @@ export class Evaluator {
       if (li.kind === AvoidKind.Hard) {
         const crossOnly = sj.signedDistance(start) < clearance && (column || sj.distRect(ownBox) <= EPS);
         const lim = crossOnly ? EPS : clearance - EPS;
-        if (dmin < lim) acc.violate(BLOCK_ITEMS, false, 0);
+        if (dmin < lim) {
+          acc.violate(BLOCK_ITEMS, false, 0);
+          if (acc.unusable(this.quick)) return;
+        }
       } else if (dmin < clearance) {
         const f = clearance > 0 ? 1 - dmin / clearance : 1;
         acc.add("leader:items", li.w * f);
@@ -477,6 +592,7 @@ export class Evaluator {
           for (let k = 0; k < nseg; k++) sum += obs.coveredLen(sat, l.segA(k), l.segB(k));
           const extra = sum / em;
           acc.violate(ci, cl.relaxable, model.degrade.softOverlapWeight * extra);
+          if (acc.unusable(this.quick)) return;
         }
       } else if (lk === AvoidKind.Soft) {
         let cov = -0;

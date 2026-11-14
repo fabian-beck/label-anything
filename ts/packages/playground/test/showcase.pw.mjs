@@ -68,7 +68,9 @@ const state = (page, name) =>
     const s = globalThis.labelAnythingShowcase.stages[n];
     return {
       total: s.result.stats.total,
-      placed: s.result.placements.filter((p) => p.placed).map((p) => ({ id: p.id, box: p.box, leader: p.leader?.points ?? null, lines: p.text?.lines ?? [] })),
+      placed: s.result.placements
+        .filter((p) => p.placed)
+        .map((p) => ({ id: p.id, box: p.box, rotation: p.rotation ?? 0, leader: p.leader?.points ?? null, lines: p.text?.lines ?? [] })),
       drawn: [...s.labels.querySelectorAll(".la-item")].map((e) => e.getAttribute("data-id")),
       solves: s.solves,
     };
@@ -83,13 +85,36 @@ const client = (page, name, x, y) =>
 
 const anchor = (page, name, id) => page.evaluate(([n, id]) => [...globalThis.labelAnythingShowcase.examples[n].anchors().get(id)], [name, id]);
 
+/** The corners of a placed label: its box turned by its rotation (degrees, clockwise on screen) about the box's center. */
+function corners({ box: b, rotation }) {
+  const [cx, cy] = [b.x + b.w / 2, b.y + b.h / 2];
+  const t = (rotation * Math.PI) / 180;
+  const [c, s] = [Math.cos(t), Math.sin(t)];
+  return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => {
+    const [x, y] = [(u * b.w) / 2, (v * b.h) / 2];
+    return [cx + x * c - y * s, cy + x * s + y * c];
+  });
+}
+
+/** Whether two convex quadrilaterals are apart, up to 0.01 px: one of their edges' normals separates them. */
+function apart(p, q) {
+  for (const poly of [p, q]) {
+    for (let k = 0; k < 4; k++) {
+      const [[x0, y0], [x1, y1]] = [poly[k], poly[(k + 1) % 4]];
+      const [nx, ny] = [y1 - y0, x0 - x1];
+      const len = Math.hypot(nx, ny);
+      const a = p.map(([x, y]) => (x * nx + y * ny) / len);
+      const b = q.map(([x, y]) => (x * nx + y * ny) / len);
+      if (Math.max(...a) <= Math.min(...b) + 0.01 || Math.max(...b) <= Math.min(...a) + 0.01) return true;
+    }
+  }
+  return false;
+}
+
 function expectDisjoint(placed) {
   for (let i = 0; i < placed.length; i++) {
     for (let j = i + 1; j < placed.length; j++) {
-      const a = placed[i].box;
-      const b = placed[j].box;
-      const apart = a.x + a.w <= b.x + 0.01 || b.x + b.w <= a.x + 0.01 || a.y + a.h <= b.y + 0.01 || b.y + b.h <= a.y + 0.01;
-      expect(apart, `${placed[i].id} and ${placed[j].id} overlap`).toBe(true);
+      expect(apart(corners(placed[i]), corners(placed[j])), `${placed[i].id} and ${placed[j].id} overlap`).toBe(true);
     }
   }
 }

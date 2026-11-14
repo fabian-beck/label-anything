@@ -158,7 +158,6 @@
 <circle class="bubble" id="AFG" cx="198.53" cy="236.62" r="2" fill="#e15759" fill-opacity="0.78"/>
 <circle class="bubble" id="BWA" cx="555.27" cy="378.27" r="2" fill="#59a14f" fill-opacity="0.78"/>
 <circle class="bubble" id="LAO" cx="407" cy="320.92" r="2" fill="#e15759" fill-opacity="0.78"/>
-<circle class="bubble" id="SOL" cx="448.8" cy="338.16" r="2" fill="#59a14f" fill-opacity="0.78"/>
 <circle class="bubble" id="GEO" cx="486.93" cy="354.06" r="2" fill="#e15759" fill-opacity="0.78"/>
 <circle class="bubble" id="MLI" cx="269.79" cy="269.97" r="2" fill="#59a14f" fill-opacity="0.78"/>
 <circle class="bubble" id="GAB" cx="552.07" cy="381.23" r="2" fill="#59a14f" fill-opacity="0.78"/>
@@ -205,7 +204,6 @@
 <circle class="bubble" id="SLE" cx="203.63" cy="316.58" r="2" fill="#59a14f" fill-opacity="0.78"/>
 <circle class="bubble" id="VIR" cx="751.3" cy="533.49" r="2" fill="#f28e2b" fill-opacity="0.78"/>
 <circle class="bubble" id="SUR" cx="526.16" cy="447.82" r="2" fill="#d4a72c" fill-opacity="0.78"/>
-<circle class="bubble" id="CYN" cx="597.66" cy="477.04" r="2" fill="#e15759" fill-opacity="0.78"/>
 <circle class="bubble" id="DJI" cx="445.59" cy="421.77" r="2" fill="#59a14f" fill-opacity="0.78"/>
 <circle class="bubble" id="CUW" cx="672.54" cy="513.77" r="2" fill="#f28e2b" fill-opacity="0.78"/>
 <circle class="bubble" id="LBR" cx="224.95" cy="339.76" r="2" fill="#59a14f" fill-opacity="0.78"/>

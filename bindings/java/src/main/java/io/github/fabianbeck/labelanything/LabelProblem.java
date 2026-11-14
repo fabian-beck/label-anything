@@ -313,6 +313,22 @@ public final class LabelProblem {
       return put("defaults.spacing", length);
     }
 
+    /**
+     * How much nearer its own mark a label is than another point's mark that lies more squarely
+     * beside one of its sides than its own, in px (default 0.5 em; spec §4.4).
+     */
+    public Builder sideMargin(double px) {
+      return put("defaults.side_margin", px);
+    }
+
+    /**
+     * How much nearer its own mark a label is than another point's mark that lies more squarely
+     * beside one of its sides than its own ({@code "0.5em"}; spec §4.4).
+     */
+    public Builder sideMargin(String length) {
+      return put("defaults.side_margin", length);
+    }
+
     /** Mark of point anchors without their own mark (default circle r = 2). */
     public Builder defaultMark(Mark mark) {
       return put("defaults.mark", mark);

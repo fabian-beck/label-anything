@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use label_anything_svg::{
-    classify, element_geometry, outline, parse, select, ClassRule, Geometry, ParseOptions,
+    classify, element_geometry, outline, parse, regions, select, ClassRule, Geometry, ParseOptions,
     Primitive,
 };
 use serde_json::Value;
@@ -457,6 +457,64 @@ fn run_case(case: &Value) -> Result<(), Vec<String>> {
                             &mut errs,
                         );
                     }
+                }
+            }
+        }
+    }
+
+    if let Some(list) = expect.get("regions").and_then(Value::as_array) {
+        for e in list {
+            let selectors: Vec<String> = e["selectors"]
+                .as_array()
+                .expect("selectors")
+                .iter()
+                .map(|s| s.as_str().expect("selector").to_string())
+                .collect();
+            let fills = match regions(&scene, &selectors) {
+                Err(err) => {
+                    if e.get("error").and_then(Value::as_str) != Some(err.code.as_str()) {
+                        errs.push(format!("regions {selectors:?}: {err}"));
+                    }
+                    continue;
+                }
+                Ok(f) => f,
+            };
+            if e.get("error").is_some() {
+                errs.push(format!("regions {selectors:?}: expected an error"));
+                continue;
+            }
+            if let Some(n) = e.get("count").and_then(Value::as_u64) {
+                if fills.len() as u64 != n {
+                    errs.push(format!("regions: {} fills, expected {n}", fills.len()));
+                }
+            }
+            let id_of = |el: usize| scene.elements[el].id.clone().unwrap_or_default();
+            if let Some(order) = e.get("order").and_then(Value::as_array) {
+                let mut seen: Vec<String> = Vec::new();
+                for f in &fills {
+                    let id = id_of(f.element);
+                    if !seen.contains(&id) {
+                        seen.push(id);
+                    }
+                }
+                let want: Vec<String> = order
+                    .iter()
+                    .map(|v| v.as_str().expect("id").to_string())
+                    .collect();
+                if seen != want {
+                    errs.push(format!("regions: order {seen:?}, expected {want:?}"));
+                }
+            }
+            if let Some(els) = e.get("elements").and_then(Value::as_object) {
+                for (id, x) in els {
+                    let mine: Vec<_> = fills.iter().filter(|f| id_of(f.element) == *id).collect();
+                    if let Some(k) = x.get("rule").and_then(Value::as_u64) {
+                        if mine.iter().any(|f| f.rule as u64 != k) {
+                            errs.push(format!("regions #{id}: rule, expected {k}"));
+                        }
+                    }
+                    let s = summarize(geometries(mine.iter().map(|f| f.primitive)));
+                    check_summary(&format!("regions #{id}"), &s, x, &tol, &mut errs);
                 }
             }
         }

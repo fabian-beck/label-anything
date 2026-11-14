@@ -239,7 +239,7 @@ impl<'a> Solve<'a> {
                 None,
             );
             for mut c in fresh {
-                ev.eval(&mut c, v, None);
+                ev.eval_usable(&mut c, v, soft_ok);
                 if c.feasible || (soft_ok && c.relaxed) {
                     out.push(c);
                     if out.len() == k {
@@ -297,7 +297,7 @@ impl<'a> Solve<'a> {
         let mut out = Vec::new();
         for mut c in fresh {
             let v = &self.variants[i][c.variant as usize];
-            ev.eval(&mut c, v, None);
+            ev.eval_usable(&mut c, v, soft_ok);
             if c.feasible || soft_ok && c.relaxed {
                 out.push(c);
             }
@@ -699,6 +699,52 @@ impl<'a> Solve<'a> {
             self.cancelled = true;
         }
         self.cancelled
+    }
+
+    /// With `prefix` omission (spec §9.2): whether item `i` keeps the prefix going — it is
+    /// placed, merged into a group label, or has no candidate because a placed label of a
+    /// more important item covers its mark (§4.4).
+    pub fn in_prefix(&mut self, i: usize) -> bool {
+        self.state.placed[i].is_some()
+            || self.reasons[i] == Some(Reason::Grouped)
+            || self.state.mark_covered(i, &self.cands)
+    }
+
+    /// With `prefix` omission: the total-order position of the first item from position
+    /// `from` on that ends the prefix (see [`Solve::in_prefix`]), the number of items when
+    /// none does.
+    pub fn prefix_end(&mut self, from: usize) -> usize {
+        let mut r = from;
+        while r < self.pri.order.len() && self.in_prefix(self.pri.order[r]) {
+            r += 1;
+        }
+        r
+    }
+
+    /// With `prefix` omission and labels that may cover the marks of less important items:
+    /// the end of the prefix, which moves of placed labels keep (see [`Solve::uncovers`]).
+    pub fn prefix_guard(&mut self) -> Option<usize> {
+        if self.model.omission == crate::model::opts::Omission::Prefix && self.state.has_lower() {
+            Some(self.prefix_end(0))
+        } else {
+            None
+        }
+    }
+
+    /// With `prefix` omission: whether the labels that left the candidates `old` covered
+    /// the mark of an item before position `end` of the total order that now ends the
+    /// prefix (`buf`: scratch). Moves of placed labels must not do that.
+    pub fn uncovers(&mut self, old: &[u32], end: usize, buf: &mut Vec<u32>) -> bool {
+        for &c in old {
+            self.state.lower_covered(&self.cands[c as usize], buf);
+            for &j in buf.iter() {
+                let j = j as usize;
+                if self.pri.prio[j].rank < end && !self.in_prefix(j) {
+                    return true;
+                }
+            }
+        }
+        false
     }
 }
 

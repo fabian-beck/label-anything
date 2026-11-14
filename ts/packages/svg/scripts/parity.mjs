@@ -361,6 +361,7 @@ for (const f of readdirSync(conformanceDir).filter((f) => f.endsWith(".json")).s
     rules: c.classes ?? presetRules.get(c.preset) ?? presetRules.get("auto") ?? [],
     default_class: c.default_class ?? "ink",
     select: (c.expect?.select ?? []).map((s) => s.selector),
+    regions: (c.expect?.regions ?? [])[0]?.selectors ?? null,
   });
 }
 const conformanceCount = cases.length;
@@ -368,7 +369,16 @@ const gen = generator(rng(seed));
 for (let i = 0; i < count; i++) {
   const svg = gen.document();
   const { canvas, tolerance } = gen.options();
-  cases.push({ label: `random ${seed}/${i}`, svg, canvas, tolerance, rules: gen.rules(presets), default_class: gen.defaultClass(), select: gen.selectors() });
+  cases.push({
+    label: `random ${seed}/${i}`,
+    svg,
+    canvas,
+    tolerance,
+    rules: gen.rules(presets),
+    default_class: gen.defaultClass(),
+    select: gen.selectors(),
+    regions: gen.selectors(),
+  });
 }
 
 // ---------------------------------------------------------------------------------------
@@ -415,6 +425,10 @@ function runTs(c) {
       return r.ok ? r.value : { error: r.error };
     });
   }
+  if (c.regions) {
+    const r = api.regions(scene, c.regions);
+    out.regions = r.ok ? r.value.map((f) => ({ rule: f.rule, element: f.element, index: f.index })) : { error: r.error };
+  }
   out.scene = scene;
   // Through JSON, like the Rust output.
   return JSON.parse(JSON.stringify(out));
@@ -455,7 +469,7 @@ function diff(a, b, path, out) {
   }
 }
 
-const stats = { errors: 0, primitives: 0, classified: 0, selected: 0 };
+const stats = { errors: 0, primitives: 0, classified: 0, selected: 0, regions: 0 };
 let failures = 0;
 let failDir;
 for (let i = 0; i < cases.length; i++) {
@@ -472,6 +486,7 @@ for (let i = 0; i < cases.length; i++) {
     stats.primitives += r.scene.primitives.length;
     if (Array.isArray(r.classified)) stats.classified += r.classified.length;
     for (const s of r.selected ?? []) if (Array.isArray(s)) stats.selected += s.length;
+    if (Array.isArray(r.regions)) stats.regions += r.regions.length;
   }
   const out = [];
   diff(r, t, "", out);
@@ -490,7 +505,7 @@ for (let i = 0; i < cases.length; i++) {
 
 console.log(
   `${cases.length - failures}/${cases.length} identical (${conformanceCount} conformance cases, ${count} random documents with seed ${seed}; ` +
-    `${stats.errors} parse errors, ${stats.primitives} primitives, ${stats.classified} classified, ${stats.selected} selected)`,
+    `${stats.errors} parse errors, ${stats.primitives} primitives, ${stats.classified} classified, ${stats.selected} selected, ${stats.regions} region fills)`,
 );
 if (failDir) console.log(`failing documents: ${failDir}`);
 process.exit(failures ? 1 : 0);

@@ -200,6 +200,27 @@ export class State {
     }
   }
 
+  /**
+   * Whether a placed label of a more important item covers the mark of item `i` (see
+   * {@link LowerMarks}): `i` then has no candidate.
+   */
+  markCovered(i: number, cands: readonly Cand[]): boolean {
+    const lw = this.lower;
+    if (lw === null) return false;
+    const keys = this.keys;
+    const mark = lw.marks[i]!;
+    const buf = this.lbuf;
+    this.labelIx.query(mark.bbox(), buf);
+    for (let q = 0; q < buf.len; q++) {
+      const j = buf.get(q);
+      if (j === i || keys[j]! >= keys[i]! || (lw.groupOf[i] ?? null) === j) continue;
+      const pid = this.placed[j]!;
+      if (pid < 0) continue;
+      if (cands[pid]!.labelOverlapsShape(mark)) return true;
+    }
+    return false;
+  }
+
   /** The bounding box of item `i`'s mark (when labels may cover less important marks), else null. */
   markBBox(i: number): Rect | null {
     return this.lower === null ? null : this.lower.marks[i]!.bbox();

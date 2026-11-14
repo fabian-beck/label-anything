@@ -46,6 +46,10 @@ steps through a real solve: candidates and their costs, the greedy pass, local s
   (`spec/schema/`), so it works from any language.
 * **Graded collision policy.** "Never cover outliers; covering other points costs a
   little; never cross a leader" is one line of configuration.
+* **Labels stay where they belong.** Say which parts of the picture are regions (the
+  countries of a map, the bars of a chart) and each label stays inside its own or in open
+  space: a country's name in that country or out on a leader into the sea, never in a
+  neighbouring country.
 * **You decide how hard it tries.** One option, `placement.aggressiveness`, trades labels
   for calm: `high` uses every means that keeps a label clear — long leaders, fan columns,
   smaller type — `medium` (the default) keeps the type size and short leaders, `low` keeps
@@ -128,10 +132,10 @@ CI runs):
 | Aggressiveness | `medium`: labels keep their type size and the hard classes, distant labels stay within 4 em · `low`: no leaders but short ones of the models, 0.6 em between labels · `high`: every means (long leaders, fans, smaller type, relaxed overlaps) |
 | Priority | explicit `item.priority`, else input order; omission `strict`; `evict_lower` on |
 | Text | 12 px bundled sans (Noto Sans) · padding 0.15 em · buffer 0.3 em |
-| Spacing | 1 px from the own mark · 0.2 em from other marks · 0.4 em from other labels · clearly nearer to the own mark than to any other |
+| Spacing | 1 px from the own mark · 0.2 em from other marks · 0.4 em from other labels · clearly nearer to the own mark than to any other, by 0.5 em where another point faces a side of the label more squarely |
 | Candidates | models adjacent + slider + distant up to 4 em (preset `auto`: distant only when crowded) · perceptual position order (top first) · fan labels for crowds left without labels |
 | Leaders | straight, crossings hard, 0.4 em clear of other marks and leaders |
-| Label vs. | labels, items, text, canvas edge: **hard** · ink 0.1 per em² · across a light–dark border of a raster background 0.5 per em² |
+| Label vs. | labels, items, text, canvas edge: **hard** · ink 0.1 per em² · across a light–dark border of a raster background 0.5 per em² · across a region border or in another region 0.5 per em², an area's or a leader's label at most ¼ in other regions |
 | Leader vs. | labels, items, leaders **hard** |
 | Solver | time budget 100 ms (Rust) / 250 ms (TS) · seed 0 · deterministic |
 | Degradation | alternatives → wrap → distant → evict_lower → omit (`high`: … → shrink 0.85 → soft_overlap → omit) |

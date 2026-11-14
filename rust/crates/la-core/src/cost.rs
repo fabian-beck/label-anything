@@ -18,6 +18,13 @@ pub struct Evaluator<'a> {
     pub env: &'a dyn Env,
     buf: Vec<u32>,
     buf2: Vec<u32>,
+    /// Per-region areas of a label box.
+    split: Vec<(u32, f64)>,
+    /// `Some(soft_ok)` while [`Evaluator::eval_usable`] runs.
+    quick: Option<bool>,
+    /// Less important items whose marks a label covers, while [`Evaluator::eval_usable`]
+    /// runs: their coverage is summed once the hard rules let the label be used.
+    lower: Vec<u32>,
 }
 
 struct Acc<'b> {
@@ -64,6 +71,15 @@ impl Acc<'_> {
             self.relaxed = false;
         }
     }
+    /// With `quick = Some(soft_ok)`: whether the candidate can no longer be used — not even
+    /// relaxed, or infeasible where relaxed candidates do not count.
+    #[inline]
+    fn unusable(&self, quick: Option<bool>) -> bool {
+        match quick {
+            Some(soft_ok) => !self.relaxed || (!soft_ok && !self.feasible),
+            None => false,
+        }
+    }
 }
 
 /// Whether the mark of another item (not of the item's group) comes closer than
@@ -82,6 +98,32 @@ pub fn crowded(model: &Model, obs: &Obstacles, item: &Item, r: &Rect, buf: &mut 
         let j = j as usize;
         j != i && model.group_rep(j) != Some(i) && model.items[j].shape.dist_rect(r) < reach
     })
+}
+
+/// How squarely the point `p` lies beside a side of `r`, where a label of a mark at `p`
+/// would go: 1 straight across a side (or inside `r`), 0 on the diagonal of a corner, and
+/// `|dx² − dy²| / (dx² + dy²)` for the offset `(dx, dy)` of `p` from `r` (spec §4.4).
+pub fn facing(r: &Rect, p: P) -> f64 {
+    let dx = if p.x < r.x0 {
+        r.x0 - p.x
+    } else if p.x > r.x1 {
+        p.x - r.x1
+    } else {
+        0.0
+    };
+    let dy = if p.y < r.y0 {
+        r.y0 - p.y
+    } else if p.y > r.y1 {
+        p.y - r.y1
+    } else {
+        0.0
+    };
+    let s = dx * dx + dy * dy;
+    if s > 0.0 {
+        (dx * dx - dy * dy).abs() / s
+    } else {
+        1.0
+    }
 }
 
 /// The area of the label of `c` that `f` reports as covered: `f` of its box, or for a
@@ -121,7 +163,19 @@ impl<'a> Evaluator<'a> {
             env,
             buf: Vec::new(),
             buf2: Vec::new(),
+            split: Vec::new(),
+            quick: None,
+            lower: Vec::new(),
         }
+    }
+
+    /// [`Evaluator::eval`] for a caller that keeps a candidate only when it is usable
+    /// (feasible, or relaxed with `soft_ok`): the evaluation stops at the first violation
+    /// that leaves it unusable, so the cost of a candidate it returns unusable is partial.
+    pub fn eval_usable(&mut self, c: &mut Cand, v: &Variant, soft_ok: bool) {
+        self.quick = Some(soft_ok);
+        self.eval(c, v, None);
+        self.quick = None;
     }
 
     /// Fill `c.cost`, `c.feasible`, `c.relaxed`, `c.relax_cost`, `c.blocked`.
@@ -138,6 +192,7 @@ impl<'a> Evaluator<'a> {
         let w = &model.weights;
         let dy = &obs.dynamic;
         let soft_w = model.degrade.soft_overlap_weight;
+        let quick = self.quick;
         let mut acc = Acc {
             cost: 0.0,
             feasible: true,
@@ -185,6 +240,23 @@ impl<'a> Evaluator<'a> {
         } else {
             0.0
         };
+        // a mark that lies more squarely beside a side of the label than its own, where its
+        // own label would go, must be farther still: up to the side margin
+        let side = if clear > 0.0 {
+            let s = if c.warm {
+                crate::candidates::WARM_MARGIN * item.len.side_margin
+            } else {
+                item.len.side_margin
+            };
+            maxf(s, clear)
+        } else {
+            0.0
+        };
+        let own_facing = if side > clear {
+            facing(&r, item.shape.reference())
+        } else {
+            1.0
+        };
         let reach = maxf(
             maxf(
                 if item.len.buffer > gap_guess {
@@ -194,19 +266,25 @@ impl<'a> Evaluator<'a> {
                 },
                 margin,
             ),
-            d_own + clear,
+            // no other mark needs more than the side margin's share the own mark leaves
+            d_own + clear + (side - clear) * (1.0 - own_facing),
         );
         self.buf.clear();
         obs.item_index.query(&r.inflate(reach), &mut self.buf);
         // the marks of less important items follow `lower_items` where it differs from `items`
         let lower_rule = dy.label_lower != dy.label_items;
         let mut lower_cov = 0.0;
+        self.lower.clear();
         for &j in &self.buf {
             let j = j as usize;
             let sj = &model.items[j].shape;
             let lower = lower_rule && j != i && model.is_lower(i, j);
             if lower {
-                lower_cov += obs.own_covered(j, &r);
+                if quick.is_some() {
+                    self.lower.push(j as u32);
+                } else {
+                    lower_cov += obs.own_covered(j, &r);
+                }
             }
             if j == i {
                 if c.kind == Kind::Internal {
@@ -229,6 +307,9 @@ impl<'a> Evaluator<'a> {
                     }
                     OwnMark::Ignore => {}
                 }
+                if acc.unusable(quick) {
+                    return finish(c, acc);
+                }
                 continue;
             }
             let hard = if lower {
@@ -239,6 +320,9 @@ impl<'a> Evaluator<'a> {
             let d = if hard {
                 if c.label_overlaps_shape(sj) {
                     acc.violate(Block::Items, false, 0.0);
+                    if acc.unusable(quick) {
+                        return finish(c, acc);
+                    }
                     continue;
                 }
                 let d = c.dist_shape(sj);
@@ -249,6 +333,9 @@ impl<'a> Evaluator<'a> {
                     && d < sj.dist_rect(&item.shape.bbox())
                 {
                     acc.violate(Block::Items, false, 0.0);
+                    if acc.unusable(quick) {
+                        return finish(c, acc);
+                    }
                 }
                 d
             } else {
@@ -266,16 +353,25 @@ impl<'a> Evaluator<'a> {
                 }
                 c.dist_shape(sj)
             };
-            // nearer to the label than its own mark, or, without a stub, not a margin farther
-            // (at most as far as the two marks' reference points lie apart; the marks of the
-            // item's group aside)
+            // nearer to the label than its own mark, or, without a stub, not a margin farther,
+            // up to the side margin for the point's mark of an item it may not cover that lies
+            // more squarely beside a side than the own (at most as far as the two marks'
+            // reference points lie apart; the marks of the item's group aside)
             let sep = if clear > 0.0 {
-                minf(clear, sj.reference().dist(item.shape.reference()))
+                let need = if hard && side > clear && model.items[j].area.is_none() {
+                    clear + (side - clear) * maxf(facing(&r, sj.reference()) - own_facing, 0.0)
+                } else {
+                    clear
+                };
+                minf(need, sj.reference().dist(item.shape.reference()))
             } else {
                 0.0
             };
             if near_rule && d < d_own + sep - crate::geom::EPS && model.group_rep(j) != Some(i) {
                 acc.violate(Block::Items, false, 0.0);
+                if acc.unusable(quick) {
+                    return finish(c, acc);
+                }
             }
         }
         // nor to an unlabeled point, where some place beside the mark keeps clear of them
@@ -283,7 +379,14 @@ impl<'a> Evaluator<'a> {
         if near_rule && acc.feasible && obs.points_rule.get(i).copied().unwrap_or(false) {
             if let Some(pc) = obs.point_nearer(item, &r, d_own, clear) {
                 acc.violate(Block::Class(pc as u16), false, 0.0);
+                if acc.unusable(quick) {
+                    return finish(c, acc);
+                }
             }
+        }
+        // (in the order of the query, as above)
+        for &j in &self.lower {
+            lower_cov += obs.own_covered(j as usize, &r);
         }
         if let AvoidW::Soft(wt) = dy.label_items {
             let cov = covered(c, |b| obs.other_items_covered(i, b));
@@ -334,6 +437,9 @@ impl<'a> Evaluator<'a> {
                     if hit {
                         let cov = covered(c, |b| sat.covered_area(&obs.grid, b));
                         acc.violate(Block::Class(ci as u16), cl.relaxable, soft_w * cov / em2);
+                        if acc.unusable(quick) {
+                            return finish(c, acc);
+                        }
                     }
                 }
                 AvoidW::Soft(wt) => {
@@ -367,6 +473,25 @@ impl<'a> Evaluator<'a> {
                 );
             }
         }
+        // 3c. regions: a label across a border, in a region other than its item's (none on
+        // a mark)
+        if let Some(rm) = &obs.regions {
+            if !on_mark {
+                let sp = rm.split(&r, obs.home[i], &mut self.split);
+                // a label that names a region by where it lies (an area's, not inside it, or
+                // one on a leader) lies mostly at home or in open space
+                if sp.foreign > model.placement.max_foreign * sp.area
+                    && c.kind != Kind::Internal
+                    && (item.area.is_some() || !c.leaders.is_empty())
+                {
+                    acc.violate(Block::Regions, false, 0.0);
+                    return finish(c, acc);
+                }
+                let c2 = rm.grid.cell * rm.grid.cell;
+                acc.add("straddle", w.straddle * (sp.straddle() * c2) / em2);
+                acc.add("foreign", w.foreign * (sp.foreign * c2) / em2);
+            }
+        }
         // 4. leaders
         for l in &c.leaders {
             self.leader_terms(
@@ -376,6 +501,9 @@ impl<'a> Evaluator<'a> {
                 matches!(c.kind, Kind::Fan | Kind::Boundary),
                 &mut acc,
             );
+            if acc.unusable(quick) {
+                return finish(c, acc);
+            }
         }
         if !acc.relaxed {
             return finish(c, acc);
@@ -512,10 +640,20 @@ impl<'a> Evaluator<'a> {
                 w.leader + w.leader_length * l.len / em + w.bends * l.bends as f64,
             );
         }
+        // region borders on the way
+        if let Some(rm) = &obs.regions {
+            acc.add(
+                "leader_borders",
+                w.leader_borders * f64::from(rm.crossings(&l.pts)),
+            );
+        }
         // leaders stay on the canvas
         if let Some(ca) = obs.leader_area {
             if !l.pts.iter().all(|p| ca.contains_point(*p)) {
                 acc.violate(Block::Edge, false, 0.0);
+                if acc.unusable(self.quick) {
+                    return;
+                }
             }
         }
         let segs: Vec<(P, P)> = l.segments().collect();
@@ -533,6 +671,9 @@ impl<'a> Evaluator<'a> {
             // not into the own label except at the port (underline is on the label edge)
             if k < n_main && crate::geom::seg_overlaps_rect(a, b, &own_rect.inflate(-0.5)) {
                 acc.violate(Block::Labels, false, 0.0);
+            }
+            if acc.unusable(self.quick) {
+                return;
             }
         }
         // other items: clearance (not from the group's members, and not from a mark that
@@ -582,6 +723,9 @@ impl<'a> Evaluator<'a> {
                     };
                     if dmin < lim {
                         acc.violate(Block::Items, false, 0.0);
+                        if acc.unusable(self.quick) {
+                            return;
+                        }
                     }
                 }
                 AvoidW::Soft(wt) => {
@@ -633,6 +777,9 @@ impl<'a> Evaluator<'a> {
                             cl.relaxable,
                             model.degrade.soft_overlap_weight * extra,
                         );
+                        if acc.unusable(self.quick) {
+                            return;
+                        }
                     }
                 }
                 AvoidW::Soft(wt) => {

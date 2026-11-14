@@ -35,15 +35,9 @@ CONTINENTS = {
     "South America": "#d4a72c",
     "Oceania": "#b07aa1",
 }
-# every label is the country's name in full: Natural Earth's abbreviations spelled out, and
-# the Republic of the Congo told apart from the Democratic Republic
-FULL = {
-    "BIH": "Bosnia and Herzegovina", "CAF": "Central African Republic",
-    "COD": "Democratic Republic of the Congo", "COG": "Republic of the Congo", "CYN": "Northern Cyprus",
-    "DOM": "Dominican Republic", "GNQ": "Equatorial Guinea", "PYF": "French Polynesia", "SAH": "Western Sahara",
-    "SDS": "South Sudan", "SLB": "Solomon Islands", "SWZ": "Eswatini", "VCT": "Saint Vincent and the Grenadines",
-    "VIR": "United States Virgin Islands",
-}
+# every label is the country's name in full (world.json writes Natural Earth's abbreviations
+# out): the Republic of the Congo told apart from the Democratic Republic, Eswatini as usual
+FULL = {"COG": "Republic of the Congo", "SWZ": "Eswatini"}
 # names wider than this (in em of their font) break into two balanced lines
 LONG_EM = 9.0
 FONT_SIZE = 11.5

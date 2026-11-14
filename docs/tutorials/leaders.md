@@ -125,7 +125,9 @@ Only labels that need one get it, and only where it is clear:
   stub keeps `leaders.clearance` from other points as every leader does, and other labels
   keep the label spacing from it. Otherwise the label keeps its place against its point.
 * Without a stub a label must be *clearly* nearer to its own point than to any other, by
-  the label margin; with one, as near is enough, since the stub says whose it is. Beside
+  the label margin, and by up to the side margin (0.5 em) from a point that faces one of
+  its sides more squarely than its own; with one, as near is enough, since the stub says
+  whose it is. Beside
   a neighbouring point a stub is often the only way to label a point at all.
 * An ambiguous label left without a stub costs as much as a leader, so that a stub, a clear
   position or a leader is taken where one is free.

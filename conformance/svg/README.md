@@ -43,6 +43,7 @@ Without `classes` and `preset` the rule list is empty (everything gets `default_
 | `elements` | by `id`: `tag`, `drawn`, `filled`, `stroked` (exact), `bbox` (`[x, y, w, h]` or `null`) |
 | `select` | list of `{ "selector", …summary, "outline": summary }` or `{ "selector", "error": code }` |
 | `geometry` | list of `{ "id", …summary, "outline": summary }` for `element_geometry`; `"missing": true` if the id must not exist |
+| `regions` | list of `{ "selectors", "count", "order", "elements" }` for `regions` (spec §4.8): `count` fills in all, `order` the ids of the region elements in order of their first fill, and per region element (by id) its `rule` and a summary of its fills; or `{ "selectors", "error": code }` |
 | `tol` | `{ "area", "length", "bbox" }` overrides of the tolerances below |
 
 A **summary** of a list of primitives may contain:

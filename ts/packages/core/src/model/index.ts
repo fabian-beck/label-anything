@@ -15,6 +15,7 @@ import {
   type RgbaImage,
   type SvgDoc,
   SvgRuleError,
+  docRegions,
   envRasterOverride,
   envReadFile,
   envSvg,
@@ -23,6 +24,7 @@ import { Affine, P, Rect, bboxOf } from "../geom/index.js";
 import { PathError, flatten } from "../geom/path.js";
 import { convexHull, mainAxis, orientHoles, polylabel } from "../geom/polygon.js";
 import { Shape } from "../geom/shape.js";
+import type { RegionFill } from "../grid/regions.js";
 import { asArray, asBool, asF64, asI64, asStr, asU64, at, errorMessage, get, isObject, items as itemsOf, parseRustF64 } from "../json.js";
 import { clampf, len2d, maxf, minf, sinCosDeg } from "../math.js";
 import { Opts, lookup, sourceOpt } from "../options.js";
@@ -219,6 +221,11 @@ export interface ItemLengths {
    * set (at least `margin`, see {@link labelGap}).
    */
   spacing: number;
+  /**
+   * `defaults.side_margin`: how much nearer its own mark the label is than another item's
+   * mark beside one of its sides (spec §4.4).
+   */
+  sideMargin: number;
   offset: number;
   innerPadding: number;
   maxDistance: number;
@@ -249,6 +256,7 @@ export interface ItemLengthSpec {
   margin: Length;
   /** `null`: twice the margin. */
   spacing: Length | null;
+  sideMargin: Length;
   offset: Length;
   innerPadding: Length;
   maxDistance: Length;
@@ -271,6 +279,7 @@ export function resolveLengths(l: ItemLengthSpec, em: number): ItemLengths {
     buffer: l.buffer.px(em),
     margin,
     spacing: l.spacing === null ? 2 * margin : l.spacing.px(em),
+    sideMargin: l.sideMargin.px(em),
     offset: l.offset.px(em),
     innerPadding: l.innerPadding.px(em),
     maxDistance: l.maxDistance.px(em),
@@ -362,6 +371,8 @@ export class Item {
     public required: boolean,
     public group: string | null,
     public keepWith: KeepWith | null,
+    /** `region`: the name of the item's home region (spec §4.8), else found on the map. */
+    public region: string | null,
     /** The original item JSON (for callbacks). */
     public raw: unknown,
   ) {}
@@ -463,6 +474,10 @@ export class Model {
   /** Vector obstacles by class (problem vector layers and SVG geometry). */
   vector: [string, Prim][] = [];
   rasters: RasterSrc[] = [];
+  /** The fills of the region map in paint order (spec §4.8). */
+  regionFills: RegionFill[] = [];
+  /** The named regions: name → region number. */
+  regionIds = new Map<string, number>();
   /** `canvas.background`: the backdrop where no raster lies. */
   background: [number, number, number] = [255, 255, 255];
   avoidLabel: Record<string, unknown> = {};
@@ -902,7 +917,9 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   // --- vector obstacles ---
   const vector: [string, Prim][] = [];
   for (const layer of itemsOf(lookup(problem, "obstacles.vector"))) {
-    const cls = asStr(get(layer, "class")) ?? "ink";
+    // a region layer without a class only paints the region map
+    const cls = asStr(get(layer, "class"));
+    if (cls === null) continue;
     const r = asF64(sourceOpt(layer, "obstacles.vector", "r")) ?? 2;
     const width = asF64(sourceOpt(layer, "obstacles.vector", "width")) ?? 1;
     const evenOdd = asStr(sourceOpt(layer, "obstacles.vector", "fill_rule")) === "evenodd";
@@ -982,6 +999,82 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
       throw e;
     }
     for (const [cls, g] of geoms) vector.push([cls, geomToPrim(g)]);
+  }
+
+  // --- regions (spec §4.8): the SVG sources, then the vector layers, in paint order ---
+  const regions = new Regions();
+  for (let si = 0; si < svgs.length; si++) {
+    const [doc, src, ptr] = svgs[si]!;
+    const [rules, rulePtr] = regionRules(get(src, "regions"), ptr);
+    if (rules.length === 0) continue;
+    const selectors = rules.map((r) => r[0]);
+    let fills;
+    try {
+      fills = docRegions(doc, selectors);
+    } catch (e) {
+      if (e instanceof SvgRuleError) throw err(rulePtr(e.rule), "pattern", e.message);
+      throw e;
+    }
+    for (const f of fills) {
+      const kind = rules[f.rule]![1];
+      let region: number;
+      if (kind.kind === "none") continue;
+      else if (kind.kind === "open") region = 0;
+      else if (kind.kind === "named") region = regions.named(kind.name);
+      else region = f.id !== null ? regions.named(f.id) : regions.element(si, f.element);
+      regions.fills.push({ region, rings: f.rings, evenOdd: f.evenOdd });
+    }
+  }
+  for (const layer of itemsOf(lookup(problem, "obstacles.vector"))) {
+    const r = asStr(get(layer, "region"));
+    if (r === null) continue;
+    const kind = regionKindParse(r);
+    const evenOdd = asStr(sourceOpt(layer, "obstacles.vector", "fill_rule")) === "evenodd";
+    const fills: [P[][], boolean][] = [];
+    for (const pg of itemsOf(get(layer, "polygons"))) {
+      const ring = pointsOf(pg).map((p) => toPx.apply(p));
+      fills.push([[ring], evenOdd]);
+    }
+    for (const rc of itemsOf(get(layer, "rects"))) {
+      const v = itemsOf(rc).map((x) => asF64(x) ?? 0);
+      if (v.length === 4) {
+        const ring = [
+          new P(v[0]!, v[1]!),
+          new P(v[0]! + v[2]!, v[1]!),
+          new P(v[0]! + v[2]!, v[1]! + v[3]!),
+          new P(v[0]!, v[1]! + v[3]!),
+        ].map((p) => toPx.apply(p));
+        fills.push([[ring], false]);
+      }
+    }
+    for (const c of itemsOf(get(layer, "circles"))) {
+      const atp = toPx.apply(new P(asF64(at(c, 0)) ?? 0, asF64(at(c, 1)) ?? 0));
+      fills.push([Shape.circle(atp, asF64(at(c, 2)) ?? 0).outlineRings(), false]);
+    }
+    for (const sh of itemsOf(get(layer, "shapes"))) {
+      const atp = toPx.apply(new P(asF64(get(sh, "x")) ?? 0, asF64(get(sh, "y")) ?? 0));
+      // (its warnings were reported with the layer's obstacles, if it has a class)
+      const [shape] = markShape(sh, atp, toPx, [], [], "/obstacles/vector");
+      fills.push([shape.outlineRings(), shape.kind === "polygon" && shape.poly.evenOdd]);
+    }
+    const named = kind.kind === "named" ? regions.named(kind.name) : 0;
+    for (const [rings, eo] of fills) {
+      let region: number;
+      if (kind.kind === "none") continue;
+      else if (kind.kind === "open") region = 0;
+      else if (kind.kind === "named") region = named;
+      else region = regions.anonymous();
+      regions.fills.push({ region, rings, evenOdd: eo });
+    }
+  }
+  // an item's home region by name must exist
+  for (let i = 0; i < items.length; i++) {
+    const name = items[i]!.region;
+    if (name !== null && !regions.ids.has(name)) {
+      warnings.push(
+        new Issue(`/items/${i}/region`, "unknown_region", `no region is named '${name}': the item's home is the region at its anchor`),
+      );
+    }
   }
 
   // --- extent ---
@@ -1121,6 +1214,8 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.items = items;
   m.vector = vector;
   m.rasters = rasters;
+  m.regionFills = regions.fills;
+  m.regionIds = regions.ids;
   m.background = parseHexColor(o.string("canvas.background")) ?? [255, 255, 255];
   m.avoidLabel = o.map("avoid.label");
   m.avoidLeader = o.map("avoid.leader");
@@ -1254,6 +1349,74 @@ function geomsToRings(geoms: readonly Geom[]): P[][] {
 }
 
 /** Build a mark shape from a mark JSON object placed at `at` (canvas px): `[shape, tip]`. */
+/** What a region rule or a region layer makes of its geometry (spec §4.8; Rust `RegionKind`). */
+type RegionKind = { kind: "each" } | { kind: "open" } | { kind: "none" } | { kind: "named"; name: string };
+
+function regionKindParse(s: string): RegionKind {
+  switch (s) {
+    case "each":
+      return { kind: "each" };
+    case "open":
+      return { kind: "open" };
+    case "none":
+      return { kind: "none" };
+    default:
+      return { kind: "named", name: s };
+  }
+}
+
+/**
+ * The region rules of an SVG source (`regions`: a selector, or a list of rules
+ * `{selector, region}`) and the pointer of rule `k`'s selector.
+ */
+function regionRules(v: unknown, ptr: string): [[string, RegionKind][], (k: number) => string] {
+  if (typeof v === "string") return [[[v, { kind: "each" }]], () => `${ptr}/regions`];
+  const rules = asArray(v);
+  if (rules !== null) {
+    return [
+      rules.map((r) => [asStr(get(r, "selector")) ?? "", regionKindParse(asStr(get(r, "region")) ?? "each")]),
+      (k) => `${ptr}/regions/${k}/selector`,
+    ];
+  }
+  return [[], () => `${ptr}/regions`];
+}
+
+/** The regions being built: their names and fills, in paint order (Rust `Regions`). */
+class Regions {
+  /** The number of regions so far (they are numbered 1, 2, …). */
+  private count = 0;
+  /** Named regions: name → region. */
+  ids = new Map<string, number>();
+  fills: RegionFill[] = [];
+  /** Unnamed regions of SVG elements: `source:element` → region. */
+  private elements = new Map<string, number>();
+
+  /** The region of this name (new at its first use). */
+  named(name: string): number {
+    const r = this.ids.get(name);
+    if (r !== undefined) return r;
+    const n = this.anonymous();
+    this.ids.set(name, n);
+    return n;
+  }
+
+  /** A new unnamed region. */
+  anonymous(): number {
+    this.count += 1;
+    return this.count;
+  }
+
+  /** The unnamed region of element `e` of SVG source `si`. */
+  element(si: number, e: number): number {
+    const key = `${si}:${e}`;
+    const r = this.elements.get(key);
+    if (r !== undefined) return r;
+    const n = this.anonymous();
+    this.elements.set(key, n);
+    return n;
+  }
+}
+
 export function markShape(
   m: unknown,
   atp: P,
@@ -1374,6 +1537,7 @@ function itemDefaults(o: Opts): ItemDefaults {
       buffer: o.length("defaults.buffer"),
       margin: o.length("defaults.margin"),
       spacing: Length.fromValue(o.get("defaults.spacing")),
+      sideMargin: o.length("defaults.side_margin"),
       offset: o.length("placement.offset"),
       innerPadding: o.length("placement.inner_padding"),
       maxDistance: o.length("placement.max_distance"),
@@ -1548,6 +1712,7 @@ function buildItem(
     asBool(get(it, "required")) ?? false,
     asStr(get(it, "group")),
     keepWith,
+    asStr(get(it, "region")),
     it,
   );
 }

@@ -3,6 +3,7 @@
 pub mod dt;
 pub mod occupancy;
 pub mod raster;
+pub mod regions;
 
 use crate::geom::{Rect, P};
 

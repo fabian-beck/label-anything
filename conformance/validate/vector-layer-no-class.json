@@ -1,0 +1,39 @@
+{
+  "kind": "validate",
+  "name": "vector-layer-no-class",
+  "problem": {
+    "items": [],
+    "obstacles": {
+      "vector": [
+        {
+          "polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                9,
+                0
+              ],
+              [
+                9,
+                9
+              ]
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/obstacles/vector/0/class",
+        "code": "required"
+      }
+    ],
+    "warnings": []
+  }
+}

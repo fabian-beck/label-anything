@@ -2,13 +2,13 @@
 
 * OpenFlights ``airports.dat`` + ``routes.dat``: traffic = number of route
   records that start or end at the airport (all airlines, both directions),
-* Natural Earth 1:50m admin-0 countries for the background map.
+* Natural Earth 1:50m admin-0 countries for the background map, with the internationally
+  recognized borders (bench/common/borders.py).
 """
 from __future__ import annotations
 
 import csv
 import functools
-import json
 import math
 import sys
 from dataclasses import dataclass
@@ -16,12 +16,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from bench.common import fetch  # noqa: E402
+from bench.common import borders, fetch  # noqa: E402
 from bench.common.geo import Equirect, geojson_polygons, project_rings  # noqa: E402
 from bench.common.geom import Box  # noqa: E402
 from bench.common.scene import Scene  # noqa: E402
 
-SOURCES = ["openflights-airports", "openflights-routes", "ne-50m-countries"]
+SOURCES = ["openflights-airports", "openflights-routes", "ne-50m-countries", "ne-50m-disputed"]
 
 CITY_NAMES = {
     "Algier": "Algiers", "Biarritz-bayonne": "Biarritz", "Cluj-napoca": "Cluj-Napoca", "Connaught": "Knock",
@@ -94,12 +94,10 @@ def load_airports(min_routes: int = 1) -> list[Airport]:
 
 @functools.lru_cache(maxsize=None)
 def load_countries() -> list[tuple[str, str, list]]:
-    """(name, continent, polygons) of every country, by name; parsed once per build (read-only)."""
-    path = fetch.ensure("ne-50m-countries", verbose=False)
-    with open(path, encoding="utf-8") as f:
-        gj = json.load(f)
+    """(name, continent, polygons) of every country with the internationally recognized
+    borders, by name; built once per build (read-only)."""
     out = []
-    for feat in gj["features"]:
+    for feat in borders.countries():
         p = feat["properties"]
         out.append((p["NAME"], p["CONTINENT"], geojson_polygons(feat["geometry"])))
     out.sort(key=lambda t: t[0])

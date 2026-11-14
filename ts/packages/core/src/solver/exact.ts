@@ -64,6 +64,11 @@ class Search {
     readonly cost: readonly number[],
     readonly cancel: () => boolean,
     readonly mode: Omission,
+    /**
+     * With `prefix` omission, the pool candidates (with their items, `[item, cand]`) whose
+     * labels cover each item's mark (`lower_items`, spec §4.4).
+     */
+    readonly coveredBy: [number, number][][],
     n: number,
     public best: Obj,
     bestChoice: (number | null)[],
@@ -71,6 +76,12 @@ class Search {
   ) {
     this.chosen = new Array<number | null>(n).fill(null);
     this.bestChoice = bestChoice;
+  }
+
+  /** Whether a chosen label covers the mark of item `i`: unlabeled, `i` does not end the prefix (spec §9.2). */
+  covered(i: number): boolean {
+    for (const [j, c] of this.coveredBy[i]!) if (this.chosen[j] === c) return true;
+    return false;
   }
 
   /**
@@ -135,7 +146,7 @@ class Search {
       }
       // leave item i unplaced (tail call)
       k += 1;
-      prefixAlive = prefixAlive && this.mode !== Omission.Prefix;
+      prefixAlive = prefixAlive && (this.mode !== Omission.Prefix || this.covered(i));
     }
   }
 }
@@ -188,6 +199,15 @@ export function run(s: Solve, maxNodes: number): boolean {
     }
   }
   for (const v of conflicts.values()) v.sort((a, b) => a - b);
+  const coveredBy: [number, number][][] = [];
+  for (let i = 0; i < n; i++) coveredBy.push([]);
+  if (s.model.omission === Omission.Prefix && s.state.hasLower()) {
+    const buf: number[] = [];
+    for (const c of pool) {
+      s.state.lowerCovered(s.cands[c]!, buf);
+      for (const j of buf) coveredBy[j]!.push([s.cands[c]!.item, c]);
+    }
+  }
   // priority slots per omission mode
   let slot: number[];
   let nSlots: number;
@@ -233,11 +253,10 @@ export function run(s: Solve, maxNodes: number): boolean {
     }
   }
   if (s.model.omission === Omission.Prefix) {
+    // the labels of the prefix (spec §9.2)
+    const end = s.prefixEnd(0);
     let count = 0;
-    for (const i of order) {
-      if (s.state.placed[i]! < 0) break;
-      count += 1;
-    }
+    for (const i of order) if (s.pri.prio[i]!.rank < end && s.state.placed[i]! >= 0) count += 1;
     incPrio[0] = count;
   }
   const search = new Search(
@@ -251,6 +270,7 @@ export function run(s: Solve, maxNodes: number): boolean {
     costs,
     cancelFn,
     s.model.omission,
+    coveredBy,
     n,
     { prio: incPrio, cost: incCost },
     chosen.slice(),

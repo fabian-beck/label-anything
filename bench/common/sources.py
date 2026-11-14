@@ -82,6 +82,11 @@ SOURCES: dict[str, Source] = {
         "natural-earth", "ne_50m_admin_0_countries.geojson",
         f"{GH}/nvkelso/natural-earth-vector/{NATURAL_EARTH_COMMIT}/geojson/ne_50m_admin_0_countries.geojson",
         "3e458fc036ad0a66411f2c1e6cac49c5d7bfb81cb1123bc513b22511a2b7fdeb", "public-domain", "Made with Natural Earth. Free vector and raster map data @ naturalearthdata.com."),
+    # breakaway and disputed areas: the outlines that bench/common/borders.py moves between countries
+    "ne-50m-disputed": Source(
+        "natural-earth", "ne_50m_admin_0_breakaway_disputed_areas.geojson",
+        f"{GH}/nvkelso/natural-earth-vector/{NATURAL_EARTH_COMMIT}/geojson/ne_50m_admin_0_breakaway_disputed_areas.geojson",
+        "e91f0f9518b24355ceec6668f4df874d6f39db7d0bc9ec22d9b14429bfb6be01", "public-domain", "Made with Natural Earth. Free vector and raster map data @ naturalearthdata.com."),
     # 06 city POIs: OpenStreetMap extract of Monaco (ODbL 1.0), test resource of planetiler.
     "osm-monaco": Source(
         "osm-monaco", "monaco-latest.osm.pbf",

@@ -232,6 +232,15 @@ public final class Item extends Spec {
       return this;
     }
 
+    /**
+     * The item's home region (spec §4.8), when it is not the region under its anchor: its
+     * label keeps to it.
+     */
+    public Builder region(String region) {
+      m.put("region", region);
+      return this;
+    }
+
     /** Id of the background SVG element that draws this item. */
     public Builder svgId(String svgId) {
       m.put("svg_id", svgId);

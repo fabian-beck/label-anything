@@ -241,6 +241,26 @@ CASES["lower-items-cover"] = case(
     "the hub's own mark (spec §4.4), and no label of the minor item may stand (its box would "
     "be 5.7 px from the hub's, clear of it).")
 
+# the same with prefix omission and a third, least important item in free space: the minor
+# item, whose mark the hub's label covers, has no candidate but does not end the prefix
+# (spec §9.2), so the third item is labeled
+CASES["prefix-covered-mark"] = case(
+    "prefix omission: an item whose mark a more important label covers does not end the prefix",
+    {**LOWER, "avoid": {"label": {"lower_items": 2.0}}, "priority": {"omission": "prefix"},
+     "items": LOWER["items"] + [pt("next", 150, 20, "Next", priority=0.5)]},
+    {"placed": 2, "placed_ids": ["hub", "next"], "unplaced_ids": ["minor"],
+     "reasons": {"minor": "omitted_by_priority"}})
+
+# the most important item is a group member that its group's label names (the first member
+# represents the group): it does not end the prefix either
+CASES["prefix-grouped"] = case(
+    "prefix omission: a member of a group label does not end the prefix",
+    {"canvas": {"width": 300, "height": 120}, "priority": {"omission": "prefix"},
+     "items": [pt("a", 80, 60, "Pair", group="g", priority=1.0),
+               pt("b", 84, 62, "Pair", group="g", priority=3.0),
+               pt("c", 220, 60, "Gamma", priority=2.0)]},
+    {"prefix": True, "placed": 2, "placed_ids": ["a", "c"], "reasons": {"b": "grouped"}})
+
 CASES["max-labels"] = case(
     "a label budget keeps the highest priorities",
     {"canvas": {"width": 600, "height": 200}, "priority": {"budget": {"max_labels": 2}},
@@ -454,6 +474,19 @@ CASES["area-avoids-marks"] = case(
                pt("a", 200, 150, "Alpha"), pt("b", 214, 156, "Beta")]},
     {"placed": 3, "model": {"land": "internal"}, "rotation": {"land": 0}})
 
+CASES["area-narrow-rows"] = case(
+    "a label that fits its area in a single row of the grid has places half a row above and below",
+    {"canvas": {"width": 400, "height": 120},
+     "obstacles": {"vector": [{"class": "wall", "rects": [[20, 51.5, 360, 2]]}]},
+     "avoid": {"label": {"wall": "hard"}},
+     "items": [_area("strip", [[20, 30], [380, 30], [380, 66], [20, 66]], "Narrows")]},
+    {"placed": 1, "model": {"strip": "internal"}, "rotation": {"strip": 0}},
+    "A 360 × 36 px strip and a label 12.288 px tall with 2.4 px of inner padding: its center "
+    "fits between y = 38.544 and 57.456, where the grid (spacing 12.288 from y = 36.144) has a "
+    "single row, y = 48.432, which a hard wall from y = 51.5 to 53.5 blocks, as it blocks the "
+    "pole. The points half a spacing below the grid's are sampled as well (spec §6.5): the row "
+    "y = 42.288 above the wall takes the label, which otherwise leaves the strip on a leader.")
+
 # leaders keep their clearance from the other marks of the cluster (spec §7)
 CASES["leader-angles"] = case(
     "angle-restricted leaders on a crowded sample",
@@ -657,6 +690,34 @@ CASES["own-nearest-clear-stub"] = case(
     "label would be 1 px from both marks. With a stub, 0.5 em farther out, each is 7 px from "
     "both marks, and its stub, which keeps the leader clearance (0.4 em) from the other mark, "
     "says whose it is.")
+
+# Beta's label prefers the place below and left of its mark, where its box ends at the mark's
+# corner (1 px away). Alpha's point lies 5 px from the left side of that box, at its middle:
+# where Alpha's own label would go. The ambiguity cost is off, so only the hard rule decides.
+def side_case(ax, ay, **extra):
+    return {"canvas": {"width": 300, "height": 160}, "weights": {"ambiguity": 0}, **extra,
+            "items": [pt("a", ax, ay, "A", placement={"position_order": ["left"]}),
+                      pt("b", 200, 70, "Luxembourg", placement={"position_order": ["bottom-left", "right"]})]}
+
+
+CASES["own-nearest-side"] = case(
+    "a mark beside a side of the label, where its own label would go, keeps the side margin",
+    side_case(115.2, 80),
+    {"placed": 2, "anchor_side": {"a": "left", "b": "right"}, "own_nearest": True},
+    "Below left of its mark Beta's label is 1 px from its own mark and 5 px from Alpha's, which "
+    "faces the middle of its left side: more than the margin (2.4 px) farther, but not the side "
+    "margin (0.5 em = 6 px; spec §4.4). It stands right of its mark.")
+CASES["own-nearest-side-margin"] = case(
+    "with the side margin at the margin, a mark beside a side needs only the margin",
+    side_case(115.2, 80, defaults={"side_margin": "0.2em"}),
+    {"placed": 2, "anchor_side": {"a": "left", "b": "bottom-left"}})
+CASES["own-nearest-side-diagonal"] = case(
+    "a mark on the diagonal of the label's corner needs only the margin",
+    side_case(117.26, 67.17),
+    {"placed": 2, "anchor_side": {"a": "left", "b": "bottom-left"}, "own_nearest": True},
+    "Alpha's point lies 5 px from the box's top left corner, on its diagonal, where no label of "
+    "Alpha's would go: the margin (2.4 px) suffices, as before the side margin.")
+
 
 # Alpha may only stand above its point: its label (35.892 × 15.6 px) spans x 82.054–117.946
 # and y 41.4–57, 1 px from its mark. An unlabeled point (r 0.5) at (119, 50) is 0.554 px from
@@ -960,6 +1021,76 @@ CASES["contrast-canvas-background"] = case(
     {"canvas": {"width": 300, "height": 120, "background": "#000000"}, "obstacles": {"raster": BLACK_STRIP},
      "items": [pt("a", 100, 60, "Border")]},
     {"placed": 1, "anchor_side": {"a": "top"}})
+
+# --- regions (spec §4.8) ------------------------------------------------------------------
+# two regions side by side, open space below them
+WEST_EAST = {"vector": [{"region": "west", "rects": [[0, 0, 150, 80]]},
+                        {"region": "east", "rects": [[150, 0, 150, 80]]}]}
+
+CASES["regions-stay-home"] = case(
+    "a label next to a border stays in its item's region",
+    {"canvas": {"width": 300, "height": 120}, "obstacles": WEST_EAST, "items": [pt("a", 146, 40, "Border")]},
+    {"placed": 1, "anchor_side": {"a": "left"}, "inside_canvas": True},
+    "The point lies in the west, 4 px from the border. Top and bottom would straddle the border "
+    "(straddle cost), right lies in the east (foreign cost); left lies in the west only.")
+
+CASES["regions-off"] = case(
+    "without the region weights the label takes the first position across the border",
+    {"canvas": {"width": 300, "height": 120}, "obstacles": WEST_EAST,
+     "weights": {"straddle": 0, "foreign": 0, "leader_borders": 0}, "items": [pt("a", 146, 40, "Border")]},
+    {"placed": 1, "anchor_side": {"a": "top"}})
+
+CASES["regions-item-home"] = case(
+    "an item's home region by name: the label goes into it",
+    {"canvas": {"width": 300, "height": 120}, "obstacles": WEST_EAST,
+     "items": [pt("a", 146, 40, "Border", region="east")]},
+    {"placed": 1, "anchor_side": {"a": "right"}})
+
+CASES["regions-unknown-home"] = case(
+    "an item's home region that no region has: a warning, and the home is the region at its anchor",
+    {"canvas": {"width": 300, "height": 120}, "obstacles": WEST_EAST,
+     "items": [pt("a", 146, 40, "Border", region="north")]},
+    {"placed": 1, "anchor_side": {"a": "left"}},
+    "The result warns (unknown_region at /items/0/region); the label stays in the west, as in "
+    "regions-stay-home.")
+
+# a strip too narrow for its name between two regions, open space below (or none); the open
+# space is within the default leader reach (4 em) of the strip's dot
+STRIP = {"vector": [{"region": "west", "rects": [[0, 0, 140, 80]]},
+                    {"region": "east", "rects": [[160, 0, 140, 80]]},
+                    {"region": "each", "rects": [[140, 0, 20, 80]]}]}
+STRIP_ITEM = {"id": "s", "anchor": {"type": "area", "polygon": [[140, 0], [160, 0], [160, 80], [140, 80]]},
+              "label": {"type": "text", "text": "Stripland"}}
+
+CASES["regions-area-to-open"] = case(
+    "an area's name that fits only in other regions goes out on a leader into open space",
+    {"canvas": {"width": 300, "height": 160}, "obstacles": STRIP, "items": [STRIP_ITEM]},
+    {"placed": 1, "model": {"s": "distant"}, "has_leader": {"s": True}},
+    "Beside its dot the name would lie mostly in the west or the east (more than max_foreign); "
+    "the ladder's distant step finds open space below the regions.")
+
+CASES["regions-area-omitted"] = case(
+    "an area's name that fits only in other regions is left out rather than misplaced",
+    {"canvas": {"width": 300, "height": 80}, "obstacles": STRIP, "items": [STRIP_ITEM]},
+    {"placed": 0, "reasons": {"s": "no_feasible_candidate"}})
+
+CASES["regions-max-foreign-1"] = case(
+    "with max_foreign 1 an area's name may lie in another region",
+    {"canvas": {"width": 300, "height": 120}, "obstacles": STRIP, "placement": {"max_foreign": 1},
+     "items": [STRIP_ITEM]},
+    {"placed": 1})
+
+CASES["regions-svg"] = case(
+    "the paths of an SVG background are regions, the rest open space",
+    {"canvas": {"width": 300, "height": 120},
+     "obstacles": {"svg": {"source": '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="120">'
+                                     '<rect width="300" height="120" fill="#cde"/>'
+                                     '<path d="M0 0 H150 V80 H0 Z" fill="#eda"/>'
+                                     '<path d="M150 0 H300 V80 H150 Z" fill="#ade"/></svg>',
+                           "classes": [{"selector": "*", "class": "ignore"}], "regions": "path"}},
+     "items": [pt("a", 154, 40, "Border")]},
+    {"placed": 1, "anchor_side": {"a": "right"}, "inside_canvas": True},
+    "The point lies in the eastern path, 4 px from the western one: the label goes right.")
 
 CASES["y-up-transform"] = case(
     "y-up input coordinates",

@@ -3,7 +3,7 @@
 import { SvgFailure } from "./error.js";
 import { SCENE_IDS } from "./render.js";
 import { type MatchContext, Selector, parseSelectorList, selectorMatches } from "./selector.js";
-import type { ClassRule, Classified, Geometry, Primitive, Scene } from "./types.js";
+import type { ClassRule, Classified, Geometry, Primitive, RegionFill, Scene } from "./types.js";
 
 /** The class name that drops matching primitives. */
 export const IGNORE = "ignore";
@@ -74,6 +74,40 @@ export function classifyImpl(scene: Scene, rules: readonly ClassRule[], defaultC
       }
     }
     if (memoClass !== IGNORE) out.push({ class: memoClass, index, primitive: p });
+  });
+  return out;
+}
+
+export function regionsImpl(scene: Scene, selectors: readonly string[]): RegionFill[] {
+  const parsed: Selector[] = [];
+  selectors.forEach((s, k) => {
+    try {
+      parsed.push(compileSelector(s));
+    } catch (e) {
+      if (e instanceof SvgFailure) throw new SvgFailure(e.error.code, `region rule ${k}: ${e.error.message}`);
+      throw e;
+    }
+  });
+  const ctx = matchContext(scene);
+  // the nearest element (itself or an ancestor) a selector matches, with that selector:
+  // parents precede their children in document order
+  const nearest: ([number, number] | null)[] = [];
+  for (let i = 0; i < scene.elements.length; i++) {
+    let own: [number, number] | null = null;
+    for (let k = 0; k < parsed.length; k++) {
+      if (selectorMatches(parsed[k]!, scene.elements, i, ctx)) {
+        own = [i, k];
+        break;
+      }
+    }
+    const parent = scene.elements[i]!.parent;
+    nearest.push(own ?? (parent === null ? null : nearest[parent]!));
+  }
+  const out: RegionFill[] = [];
+  scene.primitives.forEach((p, index) => {
+    if (p.type !== "polygon") return;
+    const m = nearest[p.element];
+    if (m) out.push({ rule: m[1], element: m[0], index, primitive: p });
   });
   return out;
 }
