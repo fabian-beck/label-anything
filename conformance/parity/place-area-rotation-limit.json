@@ -1,0 +1,116 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 300
+    },
+    "items": [
+      {
+        "id": "sound",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              119.225,
+              31.945
+            ],
+            [
+              220.653,
+              249.459
+            ],
+            [
+              180.775,
+              268.055
+            ],
+            [
+              79.347,
+              50.541
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Sound"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "sound",
+        "placed": true,
+        "box": {
+          "x": 130.17,
+          "y": 143.58,
+          "w": 39.660000000000025,
+          "h": 12.839999999999975
+        },
+        "rotation": 45.0,
+        "anchor": [
+          150.0,
+          150.0
+        ],
+        "anchor_side": "internal",
+        "model": "internal",
+        "text": {
+          "lines": [
+            "Sound"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            36.06
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.12036845158959292,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 1,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 4,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.12036845158959292,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 100,
+        "rows": 100,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

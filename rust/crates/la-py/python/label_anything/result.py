@@ -70,7 +70,11 @@ class Placement:
 
     id: str
     placed: bool
+    #: The label box; of a turned label (``rotation``) the box before it is turned.
     box: Optional[BBox] = None
+    #: Degrees, clockwise on screen, by which the label is turned about the center of
+    #: ``box`` (the label of an area anchor along the area, ``placement.area_rotation``).
+    rotation: float = 0.0
     #: The item's anchor point (area items: the pole of the polygon). Passed back as
     #: ``warm_start``, the label box moves with it.
     anchor: Optional[Point] = None
@@ -116,6 +120,7 @@ class Placement:
             id=str(d["id"]),
             placed=bool(d.get("placed", False)),
             box=BBox(float(b["x"]), float(b["y"]), float(b["w"]), float(b["h"])) if b else None,
+            rotation=float(d.get("rotation") or 0.0),
             anchor=_pt(d["anchor"]) if d.get("anchor") is not None else None,
             anchor_side=d.get("anchor_side"),
             model=d.get("model"),

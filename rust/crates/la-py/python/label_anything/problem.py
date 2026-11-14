@@ -71,6 +71,7 @@ OPTION_PATHS: Dict[str, str] = {
     "internal": "placement.internal",
     "inner_padding": "placement.inner_padding",
     "internal_circle_ratio": "placement.internal_circle_ratio",
+    "area_rotation": "placement.area_rotation",
     "prune_factor": "placement.prune_factor",
     "boundary": "placement.boundary",
     "fan": "placement.fan",

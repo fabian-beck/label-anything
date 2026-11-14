@@ -5,7 +5,7 @@ use crate::geom::shape::Shape;
 use crate::geom::{seg_len_in_rect, seg_seg_dist, Rect, EPS, P};
 use crate::grid::occupancy::Occupancy;
 use crate::index::{DynIndex, StaticIndex};
-use crate::leaders::{cand_leaders_conflict, leader_hits_label, Spacing};
+use crate::leaders::{cand_leaders_conflict, Spacing};
 use crate::math::{maxf, minf};
 use crate::obstacles::{AvoidW, Obstacles};
 
@@ -408,9 +408,7 @@ impl State {
                 out.push(j);
                 continue;
             }
-            if dy.leader_labels.is_hard()
-                && c.leaders.iter().any(|l| leader_hits_label(l, &p.rect, gap))
-            {
+            if dy.leader_labels.is_hard() && c.leaders.iter().any(|l| p.leader_hits(l, gap)) {
                 out.push(j);
             }
         }
@@ -444,9 +442,7 @@ impl State {
     /// (or a stub closer than the margin), or a leader that conflicts with a leader of `c`.
     fn leaders_hit(&self, c: &Cand, p: &Cand, dy: &crate::obstacles::Dynamic, j: usize) -> bool {
         let gap = maxf(self.margin[c.item as usize], self.margin[j]);
-        if dy.leader_labels.is_hard()
-            && p.leaders.iter().any(|l| leader_hits_label(l, &c.rect, gap))
-        {
+        if dy.leader_labels.is_hard() && p.leaders.iter().any(|l| c.leader_hits(l, gap)) {
             return true;
         }
         dy.leader_leaders.is_hard()
@@ -485,9 +481,7 @@ impl State {
             if dy.label_labels.is_hard() && c.label_overlaps_gap(p, gap) {
                 return Some(ju);
             }
-            if dy.leader_labels.is_hard()
-                && c.leaders.iter().any(|l| leader_hits_label(l, &p.rect, gap))
-            {
+            if dy.leader_labels.is_hard() && c.leaders.iter().any(|l| p.leader_hits(l, gap)) {
                 return Some(ju);
             }
         }

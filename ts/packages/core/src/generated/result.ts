@@ -31,6 +31,10 @@ export interface Placement {
   id: string;
   placed: boolean;
   box?: Box;
+  /**
+   * Degrees, clockwise on screen, by which the label is turned about the center of its box (only the label of an area anchor, placement.area_rotation; absent: 0). Hosts draw the label in box and rotate it.
+   */
+  rotation?: number;
   anchor?: Point;
   anchor_side?:
     | "top"
@@ -82,6 +86,9 @@ export interface Placement {
    */
   displacement?: number;
 }
+/**
+ * The label box. For a turned label (rotation): the box before it is turned about its center.
+ */
 export interface Box {
   x: number;
   y: number;
@@ -119,8 +126,14 @@ export interface TextInfo {
 }
 export interface Part {
   type: "text" | "icon" | "box";
-  box: Box;
+  box: Box1;
   text?: TextInfo;
+}
+export interface Box1 {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 export interface Leader {
   /**
@@ -227,7 +240,11 @@ export interface Issue {
 }
 export interface Candidate {
   id: string;
-  box: Box;
+  box: Box1;
+  /**
+   * As in a placement (absent: 0).
+   */
+  rotation?: number;
   model: "adjacent" | "slider" | "internal" | "distant" | "boundary" | "fan";
   anchor_side?: string;
   variant?: number;

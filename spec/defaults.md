@@ -57,6 +57,7 @@ are stale.
 | `placement.internal` | `"auto"` | auto \| prefer \| allow \| never | auto = prefer for rect/ellipse/polygon/path marks and areas, allow for circles. |
 | `placement.inner_padding` | `"0.2em"` | length ≥ 0 | Clearance of internal labels from the shape boundary. |
 | `placement.internal_circle_ratio` | `1.5` | ≥ 0 | Circles get internal candidates when r ≥ ratio × label height. |
+| `placement.area_rotation` | `45` | 0–90 degrees | The label of an area anchor may be turned along the polygon's main axis, by this angle at most (spec §6.5), where it has more room than a horizontal one; `0`: always horizontal. Hosts draw a turned label rotated by the placement's `rotation` about the center of its `box`. |
 | `placement.prune_factor` | `4` | ≥ 1 | Drop candidates whose static cost exceeds factor × the item's best (+ 1). |
 | `placement.boundary.sides` | `["right","left"]` | list | Canvas sides used by the boundary model. |
 | `placement.boundary.align` | `"stack"` | stack \| spread | stack: as close to the anchors as possible; spread: evenly distributed. |
@@ -106,11 +107,11 @@ are stale.
 | `degrade_options.wrap_max_lines` | `3` | int 1…1000 | Line limit of the `wrap` step for labels without wrap settings. |
 | `degrade_options.soft_overlap_weight` | `10` | ≥ 0 | Weight replacing `hard` for relaxed classes. |
 | `weights.position` | `0.6` | ≥ 0 | × position rank / number of positions. |
-| `weights.distance` | `0.3` | ≥ 0 | × gap between label and own shape, in em. |
+| `weights.distance` | `0.3` | ≥ 0 | × gap between label and own shape, in em; for a label inside its area (spec §6.5): × the room it lacks to 1 em from the polygon's boundary, in em, plus its distance from the pole relative to the polygon's size. |
 | `weights.leader` | `1.0` | ≥ 0 | Fixed cost of having a leader. |
 | `weights.leader_length` | `0.25` | ≥ 0 | × leader length in em. |
 | `weights.bends` | `0.3` | ≥ 0 | × number of leader bends. |
-| `weights.shape` | `0.5` | ≥ 0 | × shape penalty (wrap, alternative, truncate, shrink, relaxed overlap). |
+| `weights.shape` | `0.5` | ≥ 0 | × shape penalty (wrap, alternative, truncate, shrink, relaxed overlap, a turned area label). |
 | `weights.edge` | `0.2` | ≥ 0 | × proximity to the canvas edge (1 at the edge, 0 at ≥ 1 em). |
 | `weights.ambiguity` | `1.0` | ≥ 0 | Label closer to another item's shape than to its own. |
 | `weights.lookahead` | `0.3` | ≥ 0 | × Σ fraction of other unplaced items' candidates invalidated. |
