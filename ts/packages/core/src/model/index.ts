@@ -6,7 +6,7 @@
  * @module
  */
 
-import { RasterError, decode, decodeSource, rgbaFromBase64 } from "@label-anything/raster";
+import { RasterError, decode, decodeSource, parseHexColor, rgbaFromBase64 } from "@label-anything/raster";
 import type { FontSpec } from "../api.js";
 import {
   type Env,
@@ -21,10 +21,10 @@ import {
 } from "../env.js";
 import { Affine, P, Rect, bboxOf } from "../geom/index.js";
 import { PathError, flatten } from "../geom/path.js";
-import { convexHull, orientHoles, polylabel } from "../geom/polygon.js";
+import { convexHull, mainAxis, orientHoles, polylabel } from "../geom/polygon.js";
 import { Shape } from "../geom/shape.js";
-import { asArray, asBool, asF64, asI64, asStr, asU64, at, get, isObject, items as itemsOf, parseRustF64 } from "../json.js";
-import { clampf, maxf, minf } from "../math.js";
+import { asArray, asBool, asF64, asI64, asStr, asU64, at, errorMessage, get, isObject, items as itemsOf, parseRustF64 } from "../json.js";
+import { clampf, len2d, maxf, minf, sinCosDeg } from "../math.js";
 import { Opts, lookup, sourceOpt } from "../options.js";
 import { Length } from "../units.js";
 import { Issue } from "../validate.js";
@@ -66,21 +66,6 @@ export function labelShapeParse(s: string | null, polygon: unknown): LabelShape 
   if (s === "polygon") return { kind: "polygon", pts: pointsOf(polygon === undefined ? null : polygon) };
   if (s !== null && s.startsWith("rounded:")) return { kind: "rounded", r: parseRustF64(s.slice(8)) ?? 0 };
   return { kind: "rect" };
-}
-
-/** Rust's derived `PartialEq` of `LabelShape`. */
-export function labelShapeEq(a: LabelShape, b: LabelShape): boolean {
-  if (a.kind !== b.kind) return false;
-  switch (a.kind) {
-    case "rounded":
-      return a.r === (b as { r: number }).r;
-    case "polygon": {
-      const q = (b as { pts: P[] }).pts;
-      return a.pts.length === q.length && a.pts.every((p, i) => p.eq(q[i]!));
-    }
-    default:
-      return true;
-  }
 }
 
 export type Truncate = "none" | "end" | "middle";
@@ -172,6 +157,55 @@ export interface Area {
   shape: Shape;
   pole: P;
   poleDist: number;
+  /**
+   * Half the diagonal of the polygon's bounding box: the scale of a label's distance from
+   * the pole (spec §6.5).
+   */
+  radius: number;
+  /** The frame of labels turned along the polygon's main axis (null: horizontal labels only). */
+  turn: AreaTurn | null;
+}
+
+/**
+ * The frame of an area's turned labels (spec §6.5): the polygon turned back about the
+ * pole by the labels' angle, in which such a label is an upright box.
+ */
+export interface AreaTurn {
+  /** Degrees, clockwise on screen. */
+  angle: number;
+  cos: number;
+  sin: number;
+  shape: Shape;
+}
+
+/** A main axis less than this far from the horizontal turns no label (degrees). */
+export const AREA_TURN_MIN = 10.0;
+
+/** `Area::new`. */
+export function newArea(rings: P[][], maxRotation: number): Area {
+  const [pole, poleDist] = polylabel(rings, false, 0.5);
+  const angle = areaAngle(mainAxis(rings, pole), maxRotation);
+  let turn: AreaTurn | null = null;
+  if (angle !== null) {
+    const [sin, cos] = sinCosDeg(angle);
+    const turned = rings.map((r) => r.map((q) => pole.add(q.sub(pole).unrotate(cos, sin))));
+    turn = { angle, cos, sin, shape: Shape.polygon(turned, false, pole) };
+  }
+  const shape = Shape.polygon(rings, false, pole);
+  const bb = shape.bbox();
+  return { radius: 0.5 * len2d(bb.w(), bb.h()), shape, pole, poleDist, turn };
+}
+
+/**
+ * The angle of an area's turned labels (spec §6.5): the main axis, read upwards when it is
+ * vertical, none when it is less than {@link AREA_TURN_MIN} from the horizontal, and at
+ * most `max` degrees.
+ */
+export function areaAngle(axis: number | null, max: number): number | null {
+  if (axis === null) return null;
+  const a = axis >= 90.0 ? -90.0 : axis;
+  if (!(max > 0.0) || !(Math.abs(a) >= AREA_TURN_MIN)) return null;
+  return a > max ? max : a < -max ? -max : a;
 }
 
 /** Per-item resolved lengths (px). */
@@ -328,7 +362,6 @@ export class Item {
     public required: boolean,
     public group: string | null,
     public keepWith: KeepWith | null,
-    public svgId: string | null,
     /** The original item JSON (for callbacks). */
     public raw: unknown,
   ) {}
@@ -426,7 +459,6 @@ export class Model {
   leaderArea: Rect | null = null;
   /** Extent of the grid. */
   extent: Rect = new Rect(0, 0, 1, 1);
-  toPx: Affine = Affine.IDENTITY;
   items: Item[] = [];
   /** Vector obstacles by class (problem vector layers and SVG geometry). */
   vector: [string, Prim][] = [];
@@ -468,8 +500,9 @@ export class Model {
    * `orthogonal` leader styles (the entry's `leader` of the same style; spec §6.7).
    */
   warmLeaders: Map<string, P[]> = new Map();
+  /** The rotation of each turned warm-start box (degrees, not 0). */
+  warmRotation: Map<string, number> = new Map();
   warnings: Issue[] = [];
-  presetName = "auto";
   /** Groups of items sharing one label: (representative, members incl. the representative). */
   groups: [number, number[]][] = [];
   /** For each item: the representative of its group (itself for representatives). */
@@ -481,6 +514,23 @@ export class Model {
    */
   isLower(i: number, j: number): boolean {
     return this.keyLevel.length > 0 && this.keyLevel[j]! > this.keyLevel[i]!;
+  }
+
+  /**
+   * The representative of the group of item `j` (itself for a representative); `null` for
+   * an item without a group.
+   */
+  groupRep(j: number): number | null {
+    return this.groupOf[j] ?? null;
+  }
+
+  /**
+   * Whether another item represents the group of item `i`: its representative's label is
+   * its label.
+   */
+  isGroupMember(i: number): boolean {
+    const r = this.groupOf[i];
+    return r !== undefined && r !== null && r !== i;
   }
 
   /** Members of the group represented by `rep` (empty if `rep` is not a representative). */
@@ -639,7 +689,7 @@ export function build(problem: unknown, env: Env, implementation: "ts" | "rust" 
 }
 
 /**
- * Merge items sharing a `group` id into one label (spec §5.7 "groups"): the first member
+ * Merge items sharing a `group` id into one label (docs/concepts/problem.md): the first member
  * (input order) represents the group; its mark becomes the convex hull of all member
  * marks, its anchor their centroid, and its text lists the distinct member texts.
  */
@@ -696,10 +746,6 @@ function rasterErr(at: string, e: unknown): BuildError {
     return err(at, e.code === "unsupported" ? "unsupported" : "invalid_value", `${e.message} (${e.code})`);
   }
   throw e;
-}
-
-function errorMessage(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
 }
 
 const utf8Lossy = new TextDecoder("utf-8", { fatal: false, ignoreBOM: true });
@@ -1020,6 +1066,7 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
     ls === LeaderStyle.Angles || ls === LeaderStyle.Elbow || ls === LeaderStyle.Orthogonal ? leaderStyleName(ls) : null;
   const warm = new Map<string, Rect | null>();
   const warmLeaders = new Map<string, P[]>();
+  const warmRotation = new Map<string, number>();
   for (const p of itemsOf(lookup(problem, "warm_start.placements"))) {
     const id = asStr(get(p, "id"));
     if (id === null) continue;
@@ -1061,6 +1108,8 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
         warmLeaders.set(id, pts);
       }
     }
+    const rot = asF64(get(p, "rotation"));
+    if (placed && rect !== null && rot !== null && rot !== 0 && Math.abs(rot) <= 90.0) warmRotation.set(id, rot);
     warm.set(id, placed ? rect : null);
   }
 
@@ -1069,11 +1118,10 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.labelArea = labelArea;
   m.leaderArea = leaderArea;
   m.extent = extent;
-  m.toPx = toPx;
   m.items = items;
   m.vector = vector;
   m.rasters = rasters;
-  m.background = parseColor(o.string("canvas.background")) ?? [255, 255, 255];
+  m.background = parseHexColor(o.string("canvas.background")) ?? [255, 255, 255];
   m.avoidLabel = o.map("avoid.label");
   m.avoidLeader = o.map("avoid.leader");
   m.avoidBuffer = o.map("avoid.buffer");
@@ -1103,8 +1151,8 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.shaping = o.string("text.shaping");
   m.warm = warm;
   m.warmLeaders = warmLeaders;
+  m.warmRotation = warmRotation;
   m.warnings = warnings;
-  m.presetName = o.presetName;
   return m;
 }
 
@@ -1121,48 +1169,11 @@ function looksBase64(s: string): boolean {
   return true;
 }
 
-/** `parse_color`: `#rgb` or `#rrggbb`. */
-function parseColor(s: string): [number, number, number] | null {
-  if (!s.startsWith("#")) return null;
-  const h = utf8.encode(s.slice(1));
-  // u8::from_str_radix on a 1- or 2-byte slice
-  const hex = (i: number, n: number): number => {
-    const d = (c: number): number =>
-      c >= 0x30 && c <= 0x39 ? c - 0x30 : c >= 0x61 && c <= 0x66 ? c - 0x57 : c >= 0x41 && c <= 0x46 ? c - 0x37 : -1;
-    let k = i;
-    const end = i + n;
-    if (h[k] === 0x2b) k++;
-    if (k >= end) return -1;
-    let v = 0;
-    for (; k < end; k++) {
-      const x = d(h[k]!);
-      if (x < 0) return -1;
-      v = v * 16 + x;
-    }
-    return v;
-  };
-  if (h.length === 3) {
-    const r = hex(0, 1);
-    const g = hex(1, 1);
-    const b = hex(2, 1);
-    if (r < 0 || g < 0 || b < 0) return null;
-    return [r * 17, g * 17, b * 17];
-  }
-  if (h.length === 6) {
-    const r = hex(0, 2);
-    const g = hex(2, 2);
-    const b = hex(4, 2);
-    if (r < 0 || g < 0 || b < 0) return null;
-    return [r, g, b];
-  }
-  return null;
-}
-
 function rasterOpts(src: unknown, ptr: string): RasterOpts {
   const g = (k: string): unknown => sourceOpt(src, "obstacles.raster", k);
   const mode = asStr(g("mode")) ?? "ink";
   const bgs = asStr(g("ink.background"));
-  const background = bgs !== null ? parseColor(bgs) : null;
+  const background = bgs !== null ? parseHexColor(bgs) : null;
   const inkThreshold = asF64(g("ink.threshold")) ?? 0.12;
   let m: RasterOpts["mode"];
   switch (mode) {
@@ -1182,7 +1193,7 @@ function rasterOpts(src: unknown, ptr: string): RasterOpts {
         for (const k of Object.keys(cm)) {
           const v = cm[k];
           if (v === undefined) continue;
-          const c = parseColor(k);
+          const c = parseHexColor(k);
           if (c === null) throw err(`${ptr}/classmap`, "pattern", `invalid colour ${k}`);
           palette.push([c, asStr(v) ?? "ink"]);
         }
@@ -1353,6 +1364,7 @@ interface ItemDefaults {
   align: string;
   internal: string;
   positionOrder: unknown;
+  areaRotation: number;
 }
 
 function itemDefaults(o: Opts): ItemDefaults {
@@ -1381,6 +1393,7 @@ function itemDefaults(o: Opts): ItemDefaults {
     align: o.string("defaults.align"),
     internal: o.string("placement.internal"),
     positionOrder: o.get("placement.position_order"),
+    areaRotation: o.f64("placement.area_rotation"),
   };
 }
 
@@ -1422,13 +1435,12 @@ function buildItem(
     const rings: P[][] = [pointsOf(pv === undefined ? null : pv).map((p) => toPx.apply(p))];
     for (const h of itemsOf(get(anchorV, "holes"))) rings.push(pointsOf(h).map((p) => toPx.apply(p)));
     orientHoles(rings);
-    const [pole, poleDist] = polylabel(rings, false, 0.5);
-    const areaShape = Shape.polygon(rings, false, pole);
+    area = newArea(rings, defs.areaRotation);
+    const pole = area.pole;
     const dotV = get(anchorV, "dot");
     const dot = dotV !== undefined ? markShape(dotV, pole, toPx, svgs, warnings, `${ptr}/anchor/dot`)[0] : Shape.circle(pole, 2);
     anchor = pole;
     shape = dot;
-    area = { shape: areaShape, pole, poleDist };
   } else {
     const atp = toPx.apply(new P(asF64(get(anchorV, "x")) ?? 0, asF64(get(anchorV, "y")) ?? 0));
     const markV = get(anchorV, "mark");
@@ -1536,7 +1548,6 @@ function buildItem(
     asBool(get(it, "required")) ?? false,
     asStr(get(it, "group")),
     keepWith,
-    svgId,
     it,
   );
 }

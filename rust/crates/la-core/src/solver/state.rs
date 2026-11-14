@@ -5,7 +5,7 @@ use crate::geom::shape::Shape;
 use crate::geom::{seg_len_in_rect, seg_seg_dist, Rect, EPS, P};
 use crate::grid::occupancy::Occupancy;
 use crate::index::{DynIndex, StaticIndex};
-use crate::leaders::{cand_leaders_conflict, leader_hits_label, Spacing};
+use crate::leaders::{cand_leaders_conflict, Spacing};
 use crate::math::{maxf, minf};
 use crate::obstacles::{AvoidW, Obstacles};
 
@@ -279,12 +279,6 @@ impl State {
         self.max_key
     }
 
-    /// Quick, exact rejection: the box `r` of a rectangular label overlaps a placed
-    /// rectangular label (`false` means "unknown", not "free").
-    pub fn quick_blocked(&mut self, r: &Rect) -> bool {
-        self.n_placed > 0 && self.occupancy().blocked(r)
-    }
-
     /// The placed-label occupancy grid (its windows serve grids with the same cells).
     pub fn occupancy(&mut self) -> &Occupancy {
         for (e, &item) in self.pend.iter().zip(&self.pend_item) {
@@ -414,9 +408,7 @@ impl State {
                 out.push(j);
                 continue;
             }
-            if dy.leader_labels.is_hard()
-                && c.leaders.iter().any(|l| leader_hits_label(l, &p.rect, gap))
-            {
+            if dy.leader_labels.is_hard() && c.leaders.iter().any(|l| p.leader_hits(l, gap)) {
                 out.push(j);
             }
         }
@@ -450,9 +442,7 @@ impl State {
     /// (or a stub closer than the margin), or a leader that conflicts with a leader of `c`.
     fn leaders_hit(&self, c: &Cand, p: &Cand, dy: &crate::obstacles::Dynamic, j: usize) -> bool {
         let gap = maxf(self.margin[c.item as usize], self.margin[j]);
-        if dy.leader_labels.is_hard()
-            && p.leaders.iter().any(|l| leader_hits_label(l, &c.rect, gap))
-        {
+        if dy.leader_labels.is_hard() && p.leaders.iter().any(|l| c.leader_hits(l, gap)) {
             return true;
         }
         dy.leader_leaders.is_hard()
@@ -462,14 +452,7 @@ impl State {
 
     /// Whether candidate `c` conflicts with nothing placed (except `skip`); stops at the
     /// first conflict.
-    pub fn is_free(
-        &mut self,
-        c: &Cand,
-        cands: &[Cand],
-        obs: &Obstacles,
-        skip: usize,
-        _scratch: &mut Vec<u32>,
-    ) -> bool {
+    pub fn is_free(&mut self, c: &Cand, cands: &[Cand], obs: &Obstacles, skip: usize) -> bool {
         self.first_conflict(c, cands, obs, skip, |_| true).is_none()
     }
 
@@ -498,9 +481,7 @@ impl State {
             if dy.label_labels.is_hard() && c.label_overlaps_gap(p, gap) {
                 return Some(ju);
             }
-            if dy.leader_labels.is_hard()
-                && c.leaders.iter().any(|l| leader_hits_label(l, &p.rect, gap))
-            {
+            if dy.leader_labels.is_hard() && c.leaders.iter().any(|l| p.leader_hits(l, gap)) {
                 return Some(ju);
             }
         }
@@ -626,10 +607,5 @@ impl State {
             }
         }
         cost
-    }
-
-    /// Ids of placed items whose labels overlap `r` (no conflict semantics).
-    pub fn labels_near(&mut self, r: &Rect, out: &mut Vec<u32>) {
-        self.label_ix.query(r, out);
     }
 }

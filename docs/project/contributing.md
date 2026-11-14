@@ -62,6 +62,11 @@ python3 examples/showcase/make_showcase.py --cli rust/target/release/label-anyth
   section (`--8<-- [start:name]` … `[end:name]` comments in the file).
 * `examples/tutorials/data/make_data.py` writes the tutorial data; CI checks that the
   committed files are current (`--check`).
+* The home page's examples are live where the playground is published
+  (`ts/packages/playground/src/showcase`, started by `docs/index.md`'s
+  `data-la-example`): the chart and the map are ports of `examples/showcase/economies.py`
+  and `europe.py`, so change script and port together; the playground's browser test
+  compares them.
 * The specification, defaults, presets, expression grammar and API definitions are
   included from their source files: change them there.
 * Architecture decisions appear in the navigation and the [index](decisions/index.md) by area;

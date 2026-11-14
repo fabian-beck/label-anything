@@ -3,10 +3,11 @@
  * — model, side, cost, priority, why an item has no label and which labels are in its way —
  * and the statistics of the solves: counts, verification, phases, time and movement.
  */
+import type { LabelResult } from "@label-anything/core";
 import type { App } from "../app.js";
 import { ENGINE_NAMES, samePlacements } from "../engines.js";
 import { MODEL_COLORS } from "../render.js";
-import { fmt, type Obj } from "../util.js";
+import { fmt } from "../util.js";
 import { h, svgEl } from "./dom.js";
 
 const REASONS: Record<string, string> = {
@@ -44,7 +45,7 @@ export class Inspector {
     const parts: HTMLElement[] = [];
     parts.push(this.#selection());
     if (r) {
-      parts.push(this.#stats(r.stats as unknown as Obj));
+      parts.push(this.#stats(r.stats));
       parts.push(this.#history());
     }
     parts.push(this.#engines());
@@ -66,8 +67,7 @@ export class Inspector {
       box.appendChild(h("p", { class: "empty" }, `“${text}” is not in the latest result.`));
       return box;
     }
-    const q = p as unknown as Obj;
-    const pr = (p.priority ?? {}) as Obj;
+    const pr: Partial<NonNullable<typeof p.priority>> = p.priority ?? {};
     const rows: [string, Node | string][] = [["Item", h("span", {}, text, text === id ? null : h("span", { class: "mono", style: { color: "var(--faint)" } }, `  ${id}`))]];
     if (p.placed) {
       const model = p.model ?? "adjacent";
@@ -79,17 +79,18 @@ export class Inspector {
         rows.push(["Font", `${fmt(t.font_size)} px${t.font_weight && t.font_weight !== 400 ? `, weight ${t.font_weight}` : ""}${t.scale && t.scale < 1 ? `, shrunk to ${Math.round(t.scale * 100)} %` : ""}`]);
       }
       rows.push(["Box", `${fmt(p.box!.x)}, ${fmt(p.box!.y)}  ·  ${fmt(p.box!.w)} × ${fmt(p.box!.h)} px`]);
+      if (p.rotation) rows.push(["Rotation", `${fmt(p.rotation)}° (along the area)`]);
       if (p.leader) rows.push(["Leader", `${p.leader.style}, ${fmt(leaderLength(p.leader.points as number[][]))} px`]);
       if (typeof p.cost === "number") rows.push(["Cost", fmt(p.cost, 3)]);
       if (p.degrade_steps?.length) rows.push(["Ladder", p.degrade_steps.join(" → ")]);
-      if (typeof q.displacement === "number") rows.push(["Moved", `${fmt(q.displacement as number)} px since the last solve`]);
+      if (typeof p.displacement === "number") rows.push(["Moved", `${fmt(p.displacement)} px since the last solve`]);
     } else {
-      const reason = String(q.reason ?? "");
+      const reason = String(p.reason ?? "");
       rows.push(["Status", h("span", { class: "pill err" }, "no label")]);
       rows.push(["Why", REASONS[reason] ?? reason ?? "–"]);
-      const blocking = (q.blocking as string[] | undefined) ?? [];
+      const blocking = p.blocking ?? [];
       if (blocking.length) rows.push(["Hard classes", blocking.join(", ")]);
-      const by = (q.blocked_by as string[] | undefined) ?? [];
+      const by = p.blocked_by ?? [];
       if (by.length) {
         rows.push([
           "In its way",
@@ -98,7 +99,7 @@ export class Inspector {
       }
       if (p.degrade_steps?.length) rows.push(["Tried", p.degrade_steps.join(" → ")]);
     }
-    rows.push(["Priority", `rank ${pr.rank ?? "–"}${typeof pr.score === "number" ? `, score ${fmt(pr.score as number, 2)}` : ""}${pr.tier ? `, tier ${pr.tier}` : ""}${typeof pr.font_class === "number" ? `, font class ${pr.font_class}` : ""}`]);
+    rows.push(["Priority", `rank ${pr.rank ?? "–"}${typeof pr.score === "number" ? `, score ${fmt(pr.score, 2)}` : ""}${pr.tier ? `, tier ${pr.tier}` : ""}${typeof pr.font_class === "number" ? `, font class ${pr.font_class}` : ""}`]);
     box.appendChild(kv(rows));
     if (app.view.showCandidates) {
       const n = (app.result?.candidates ?? []).filter((c) => c.id === id).length;
@@ -107,24 +108,25 @@ export class Inspector {
     return box;
   }
 
-  #stats(st: Obj): HTMLElement {
+  #stats(st: LabelResult["stats"]): HTMLElement {
     const phases = (st.phases_ms ?? {}) as Record<string, number>;
     const total = Object.values(phases).reduce((a, b) => a + b, 0) || 1;
-    const flicker = st.flicker as Obj | undefined;
+    const flicker = st.flicker;
     const degraded = st.degraded as Record<string, number> | undefined;
     const rows: [string, Node | string][] = [
-      ["Labels", `${st.placed} of ${st.total} placed (weighted ${fmt(Number(st.placed_weighted ?? 0) * 100, 0)} %)`],
-      ["Verification", h("span", {}, pill(Number(st.hard_violations ?? 0) === 0, `${st.hard_violations ?? 0} overlaps`), " ", pill(Number(st.leader_crossings ?? 0) === 0, `${st.leader_crossings ?? 0} crossings`), " ", pill(Number(st.priority_inversions ?? 0) === 0, `${st.priority_inversions ?? 0} inversions`))],
-      ["Solver", `${st.strategy_used}, ${fmt(Number(st.iterations ?? 0))} moves, ${fmt(Number(st.candidates ?? 0))} candidates`],
-      ["Time", `${fmt(Number(st.runtime_ms ?? 0))} ms in the engine (${st.implementation})`],
+      ["Labels", `${st.placed} of ${st.total} placed (weighted ${fmt((st.placed_weighted ?? 0) * 100, 0)} %)`],
+      ["Verification", h("span", {}, pill(st.hard_violations === 0, `${st.hard_violations} overlaps`), " ", pill(st.leader_crossings === 0, `${st.leader_crossings} crossings`), " ", pill(st.priority_inversions === 0, `${st.priority_inversions} inversions`))],
+      ["Solver", `${st.strategy_used}, ${fmt(st.iterations ?? 0)} moves, ${fmt(st.candidates ?? 0)} candidates`],
+      ["Time", `${fmt(st.runtime_ms)} ms in the engine (${st.implementation})`],
     ];
     if (st.time_guard_hit) {
       rows.push(["Guard", h("span", { class: "pill err", title: "Raise the budget (Solver) for a complete search" }, "the wall-clock guard stopped the search: this result depends on the machine's speed")]);
     }
     if (degraded && Object.keys(degraded).length) rows.push(["Degraded", Object.entries(degraded).map(([k, v]) => `${v} ${k}`).join(", ")]);
-    if (flicker) rows.push(["Since last", `${flicker.moved ?? 0} moved, ${flicker.added ?? 0} added, ${flicker.removed ?? 0} removed; ${fmt(Number(flicker.mean_displacement ?? 0))} px on average`]);
+    if (flicker) rows.push(["Since last", `${flicker.moved ?? 0} moved, ${flicker.added ?? 0} added, ${flicker.removed ?? 0} removed; ${fmt(flicker.mean_displacement ?? 0)} px on average`]);
     const bar = h("div", { class: "phases" }, Object.entries(phases).map(([k, v]) => h("i", { title: `${k}: ${fmt(v)} ms`, style: { width: `${(100 * v) / total}%`, background: PHASE_COLORS[k] ?? "#999" } })));
-    const legend = h("div", { class: "legend" }, Object.entries(phases).map(([k, v]) => h("span", { style: { "--c": PHASE_COLORS[k] ?? "#999" } as unknown as Record<string, string> }, `${k} ${fmt(v)}`)));
+    const legend = h("div", { class: "legend" }, Object.entries(phases).map(([k, v]) => h("span", {}, `${k} ${fmt(v)}`)));
+    // a custom property cannot be set through the `style` attribute of h()
     legend.querySelectorAll("span").forEach((s, i) => s.style.setProperty("--c", PHASE_COLORS[Object.keys(phases)[i]!] ?? "#999"));
     return h("section", {}, h("h3", {}, "Last solve"), kv(rows), h("div", { style: { marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px" } }, bar, legend));
   }
@@ -160,8 +162,8 @@ export class Inspector {
           if (!res) return;
           const cmp = samePlacements(res.wasm.result, res.ts.result);
           const ok = cmp.same === cmp.total;
-          const tw = Number((res.wasm.result.stats as unknown as Obj).runtime_ms ?? 0);
-          const tt = Number((res.ts.result.stats as unknown as Obj).runtime_ms ?? 0);
+          const tw = res.wasm.result.stats.runtime_ms;
+          const tt = res.ts.result.stats.runtime_ms;
           this.#parity.replaceChildren(
             h("div", {}, h("span", { class: ok ? "ok" : "err" }, ok ? "Identical layouts" : `${cmp.total - cmp.same} placements differ`), ` — ${cmp.same} of ${cmp.total} placements equal`, ok ? "" : ` (first: ${cmp.firstDiff})`, "."),
             h("div", { class: "empty" }, `${ENGINE_NAMES.wasm}: ${fmt(tw)} ms · ${ENGINE_NAMES.ts}: ${fmt(tt)} ms (${fmt(tt / Math.max(tw, 0.01))}× the time).`),

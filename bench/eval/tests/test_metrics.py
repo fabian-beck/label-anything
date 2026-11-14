@@ -302,6 +302,31 @@ def test_removal_test_needs_the_own_mark_nearer_than_unlabeled_points():
     assert evaluate(p, result([omitted("lo")]))["priority"]["inversions"] == 1
 
 
+def test_removal_test_grants_svg_points_the_flattening_tolerance():
+    # a field of points blocks every fixed position of lo but the left one [67, 45, 97, 55], where
+    # a point pokes 0.1 px out of the box: an exact disc there competes, so no fixed position keeps
+    # clear and lo's only position (right) needs to keep clear of the marks only. The engine draws a
+    # circle of an SVG background as a polygon within the flattening tolerance inside it, which can
+    # lie entirely under the box: the rule may hold there, and right is then too near the points.
+    def near_left(x, y):
+        return 67 - 3.4 < x < 97 + 3.4 and 45 - 3.4 < y < 55 + 3.4
+
+    field = [[x, y] for x in range(55, 146, 5) for y in range(25, 76, 5)
+             if math.dist((x, y), (100, 50)) > 4 and (not near_left(x, y) or (y == 50 and 70 <= x <= 95))]
+    field.append([67.9, 50])                          # its disc reaches 0.1 px out of the left box
+    lo = [item("lo", 100, 50)]
+    vector = problem(lo, placement={"position_order": ["right"]},
+                     obstacles={"vector": [{"class": "points", "r": 1, "points": field}]})
+    assert evaluate(vector, result([omitted("lo")]))["priority"]["inversions"] == 1
+    svg = {"source": '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"/>',
+           "classes": [{"class": "points", "selector": "circle"}]}
+    truth = {"version": "1", "classes": {"points": {"circles": [[x, y, 1] for x, y in field]}}}
+    drawn = problem(lo, placement={"position_order": ["right"]}, obstacles={"svg": [svg]})
+    assert evaluate(drawn, result([omitted("lo")]), truth)["priority"]["inversions"] == 0
+    fine = problem(lo, placement={"position_order": ["right"]}, obstacles={"svg": [{**svg, "tolerance": 0.05}]})
+    assert evaluate(fine, result([omitted("lo")]), truth)["priority"]["inversions"] == 1
+
+
 def test_removal_test_uses_only_the_items_candidates():
     # "lo" sits right below a wall of hard 'block' rects on its right side; only 'left' is free.
     items = [item("lo", 100, 50)]

@@ -4,7 +4,7 @@
 //! module, so that the Rust and TypeScript implementations agree bit for bit
 //! (ADR solver/determinism). The transcendental functions are provided by `la_expr::det_math`.
 
-pub use la_expr::det_math::{cbrt, exp, ln, ln_1p, round_half_away, sin_cos_deg};
+pub use la_expr::det_math::{ln, ln_1p, sin_cos_deg};
 
 /// `x.floor()` without a libm call (`f64::floor` is a function call on baseline x86-64,
 /// which lacks SSE4.1). Exact for |x| < 2^63; NaN maps to 0.

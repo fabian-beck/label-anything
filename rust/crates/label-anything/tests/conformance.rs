@@ -48,6 +48,66 @@ struct BoxR {
     y1: f64,
 }
 
+/// The rotation of a placed label (degrees; 0: not turned).
+fn rotation_of(p: &Value) -> f64 {
+    p.get("rotation").and_then(|v| v.as_f64()).unwrap_or(0.0)
+}
+
+/// The corners of a placed label: its box, turned by its rotation about its center.
+fn corners_of(p: &Value) -> Option<[(f64, f64); 4]> {
+    let b = box_of(p)?;
+    let (cx, cy) = ((b.x0 + b.x1) / 2.0, (b.y0 + b.y1) / 2.0);
+    let (s, c) = rotation_of(p).to_radians().sin_cos();
+    let t = |x: f64, y: f64| {
+        (
+            cx + (x - cx) * c - (y - cy) * s,
+            cy + (x - cx) * s + (y - cy) * c,
+        )
+    };
+    Some([t(b.x0, b.y0), t(b.x1, b.y0), t(b.x1, b.y1), t(b.x0, b.y1)])
+}
+
+/// The bounding box of a placed label (of its turned box).
+fn bounds_of(p: &Value) -> Option<BoxR> {
+    if rotation_of(p) == 0.0 {
+        return box_of(p);
+    }
+    let q = corners_of(p)?;
+    Some(BoxR {
+        x0: q.iter().map(|v| v.0).fold(f64::INFINITY, f64::min),
+        y0: q.iter().map(|v| v.1).fold(f64::INFINITY, f64::min),
+        x1: q.iter().map(|v| v.0).fold(f64::NEG_INFINITY, f64::max),
+        y1: q.iter().map(|v| v.1).fold(f64::NEG_INFINITY, f64::max),
+    })
+}
+
+/// Whether two convex quadrilaterals overlap by more than `e` along every separating
+/// axis of their sides.
+fn quads_overlap(a: &[(f64, f64); 4], b: &[(f64, f64); 4], e: f64) -> bool {
+    for q in [a, b] {
+        for i in 0..4 {
+            let (p0, p1) = (q[i], q[(i + 1) % 4]);
+            let (nx, ny) = (p1.1 - p0.1, p0.0 - p1.0);
+            let len = (nx * nx + ny * ny).sqrt();
+            if len == 0.0 {
+                continue;
+            }
+            let span = |r: &[(f64, f64); 4]| {
+                r.iter()
+                    .map(|v| (v.0 * nx + v.1 * ny) / len)
+                    .fold((f64::INFINITY, f64::NEG_INFINITY), |m, d| {
+                        (m.0.min(d), m.1.max(d))
+                    })
+            };
+            let ((a0, a1), (b0, b1)) = (span(a), span(b));
+            if a1 - b0 <= e || b1 - a0 <= e {
+                return false;
+            }
+        }
+    }
+    true
+}
+
 fn box_of(p: &Value) -> Option<BoxR> {
     let b = p.get("box")?;
     let (x, y, w, h) = (
@@ -226,6 +286,15 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
             }
         }
     }
+    if let Some(Value::Object(m)) = exp.get("rotation") {
+        for (id, want) in m {
+            let got = placement(&r, id).map(rotation_of);
+            let want = want.as_f64().unwrap_or(f64::NAN);
+            if !got.is_some_and(|g| (g - want).abs() <= 0.01) {
+                f.push(format!("rotation.{id}: expected {want}, got {got:?}"));
+            }
+        }
+    }
     if let Some(Value::Object(m)) = exp.get("stub") {
         for (id, want) in m {
             let got = placement(&r, id).is_some_and(|p| p["leader"]["stub"] == true);
@@ -344,10 +413,16 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
             }
         }
     }
-    // independent re-check: no two placed rectangular labels overlap
+    // independent re-check: no two placed rectangular labels overlap (turned labels: as
+    // their turned boxes)
     let boxes: Vec<(String, BoxR)> = placed
         .iter()
-        .filter_map(|p| Some((p["id"].as_str()?.to_string(), box_of(p)?)))
+        .filter_map(|p| Some((p["id"].as_str()?.to_string(), bounds_of(p)?)))
+        .collect();
+    let quads: Vec<Option<[(f64, f64); 4]>> = placed
+        .iter()
+        .filter(|p| p["id"].is_string() && box_of(p).is_some())
+        .map(|p| (rotation_of(p) != 0.0).then(|| corners_of(p)).flatten())
         .collect();
     let labels_hard = problem
         .pointer("/avoid/label/labels")
@@ -358,7 +433,17 @@ fn check_place(name: &str, problem: &Value, exp: &Value) -> Vec<String> {
             for j in i + 1..boxes.len() {
                 let (a, b) = (&boxes[i].1, &boxes[j].1);
                 let e = 1e-6;
-                if a.x0 < b.x1 - e && b.x0 < a.x1 - e && a.y0 < b.y1 - e && b.y0 < a.y1 - e {
+                let quad = |k: usize| {
+                    let r = &boxes[k].1;
+                    quads[k].unwrap_or([(r.x0, r.y0), (r.x1, r.y0), (r.x1, r.y1), (r.x0, r.y1)])
+                };
+                let turned = quads[i].is_some() || quads[j].is_some();
+                if a.x0 < b.x1 - e
+                    && b.x0 < a.x1 - e
+                    && a.y0 < b.y1 - e
+                    && b.y0 < a.y1 - e
+                    && (!turned || quads_overlap(&quad(i), &quad(j), e))
+                {
                     f.push(format!("labels {} and {} overlap", boxes[i].0, boxes[j].0));
                 }
             }

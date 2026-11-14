@@ -5,14 +5,13 @@
  * when updates overlap.
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
-import { LatestRunner, resolveEngine } from "./engine.js";
+import { errorHandler, LatestRunner, resolveEngine } from "./engine.js";
 import type { CssFont } from "./measure.js";
 import { buildProblem, placeOptionsOf, type Item, type Label, type LabelOptions, type Mark } from "./options.js";
 import { LabelMotion } from "./motion.js";
 import { renderLabels, type RenderOptions } from "./render.js";
 import { LabelMemory, type Anchors } from "./stable.js";
 import { SVG_NS } from "./svg.js";
-
 
 /** One item of the current view, in overlay px. */
 export interface OverlayItem {
@@ -118,7 +117,7 @@ export class Overlay<D> {
         this.follow();
         c.onResult?.(result);
       },
-      (error) => (c.onError ? c.onError(error) : console.error(error)),
+      errorHandler(c.onError?.bind(c)),
     );
   }
 

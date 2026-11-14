@@ -46,7 +46,7 @@ if __package__ in (None, ""):
 from PIL import Image, ImageDraw, ImageFont  # noqa: E402
 
 from bench.common import text as textmod  # noqa: E402
-from bench.common.geom import Circle, Ellipse, Polygon, RoundedRect  # noqa: E402
+from bench.common.geom import Circle, Ellipse, RoundedRect  # noqa: E402
 from bench.common.jsonio import read_json  # noqa: E402
 from bench.common.model import load_problem, raster_bytes  # noqa: E402
 
@@ -160,7 +160,7 @@ def _text_svg(x0: float, y0: float, t: dict, color: str = LABEL_TEXT) -> list[st
     return out
 
 
-def _background_items(problem: dict, bg_svg_path: Path | None) -> list[str]:
+def _background_items(problem: dict) -> list[str]:
     out = []
     obs = problem.get("obstacles") or {}
     rasters = obs.get("raster")
@@ -245,8 +245,8 @@ def _marks_svg(marks: dict | None, by_id: dict) -> list[str]:
     return o
 
 
-def render_svg(problem: dict, result: dict, font_href: str | None = None, title: str | None = None,
-               show_obstacles: bool = True, marks: dict | None = None) -> str:
+def render_svg(problem: dict, result: dict, font_href: str | None = None, show_obstacles: bool = True,
+               marks: dict | None = None) -> str:
     prob = load_problem(problem)
     W = prob.width or 800
     H = prob.height or 600
@@ -259,10 +259,8 @@ def render_svg(problem: dict, result: dict, font_href: str | None = None, title:
         css = (f"@font-face{{font-family:'Noto Sans Bench';src:url('{font_href}')}}"
                f"text{{font-family:'Noto Sans Bench', sans-serif;white-space:pre}}")
     o.append(f"<style>{css}</style>")
-    if title:
-        o.append(f"<title>{escape(title)}</title>")
     o.append(f'<rect width="{_fmt(W)}" height="{_fmt(H)}" fill="#ffffff"/>')
-    o += _background_items(problem, None)
+    o += _background_items(problem)
     if show_obstacles:
         o.append(f'<g class="obstacles" fill="{OBST}" stroke="{OBST}" fill-opacity="0.6">')
         for cls, prims in sorted(prob.vectors.items()):

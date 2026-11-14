@@ -3,7 +3,7 @@
 // measurement) does not leave the labels unplaced.
 import { describe, expect, it } from "vitest";
 import type { Env } from "../src/env.js";
-import { placeWith } from "../src/place.js";
+import { solveWith } from "../src/place.js";
 
 /** A clock that advances 5 ms with every host measurement, and only then. */
 class SlowMeasure implements Env {
@@ -52,13 +52,13 @@ describe("time guard", () => {
     }));
     // guard 10 ms; measuring the ten labels alone takes 50 ms on this clock
     const p = { canvas: { width: 800, height: 200 }, items, solver: { strategy: "greedy", time_budget_ms: 1 } };
-    const r = placeWith(p, new SlowMeasure()) as { stats: Record<string, unknown> };
+    const r = solveWith(p, new SlowMeasure()) as { stats: Record<string, unknown> };
     expect(r.stats.placed).toBe(10);
     expect(r.stats.time_guard_hit).toBe(false);
   });
 
   it("after_the_guard_the_rest_get_level_0", () => {
-    const r = placeWith(rows("strict"), new Ticking(1)) as Res;
+    const r = solveWith(rows("strict"), new Ticking(1)) as Res;
     expect(r.stats.time_guard_hit).toBe(true);
     // every label has a free level-0 position: the level-0 pass after the guard places them
     // all instead of leaving them budget_exhausted (ADR solver/time-budget)
@@ -68,7 +68,7 @@ describe("time guard", () => {
   it("after_the_guard_a_prefix_continues_at_level_0", () => {
     // the prefix checks the guard every 64 items: it passes at the first check, and the
     // guard of the level-0 pass ends the prefix at a later one
-    const r = placeWith(rows("prefix"), new Ticking(6)) as Res;
+    const r = solveWith(rows("prefix"), new Ticking(6)) as Res;
     expect(r.stats.time_guard_hit).toBe(true);
     const placed = r.stats.placed as number;
     // more than the 63 items before the guard's first check: the level-0 pass places more
@@ -89,7 +89,7 @@ describe("time guard", () => {
       priority: 1000 - i,
     }));
     const p = { canvas: { width: 2020, height: 640 }, items, solver: { strategy: "greedy", time_budget_ms: 1 } };
-    const r = placeWith(p, new Ticking(1)) as Res;
+    const r = solveWith(p, new Ticking(1)) as Res;
     expect(r.stats.time_guard_hit).toBe(true);
     const placed = r.stats.placed as number;
     expect(placed).toBeGreaterThan(100);

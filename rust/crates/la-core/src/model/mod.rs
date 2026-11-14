@@ -191,6 +191,76 @@ pub struct Area {
     pub shape: Shape,
     pub pole: P,
     pub pole_dist: f64,
+    /// Half the diagonal of the polygon's bounding box: the scale of a label's distance
+    /// from the pole (spec §6.5).
+    pub radius: f64,
+    /// The frame of labels turned along the polygon's main axis (`None`: horizontal
+    /// labels only).
+    pub turn: Option<AreaTurn>,
+}
+
+/// The frame of an area's turned labels (spec §6.5): the polygon turned back about the
+/// pole by the labels' angle, in which such a label is an upright box.
+#[derive(Clone, Debug)]
+pub struct AreaTurn {
+    /// Degrees, clockwise on screen.
+    pub angle: f64,
+    pub cos: f64,
+    pub sin: f64,
+    pub shape: Shape,
+}
+
+/// A main axis less than this far from the horizontal turns no label (degrees).
+pub const AREA_TURN_MIN: f64 = 10.0;
+
+impl Area {
+    pub fn new(rings: Vec<Vec<P>>, max_rotation: f64) -> Area {
+        let (pole, pole_dist) = polygon::polylabel(&rings, false, 0.5);
+        let turn = area_angle(polygon::main_axis(&rings, pole), max_rotation).map(|angle| {
+            let (sin, cos) = crate::math::sin_cos_deg(angle);
+            let turned = rings
+                .iter()
+                .map(|r| {
+                    r.iter()
+                        .map(|&q| pole + (q - pole).unrotate(cos, sin))
+                        .collect()
+                })
+                .collect();
+            AreaTurn {
+                angle,
+                cos,
+                sin,
+                shape: Shape::polygon(turned, false, pole),
+            }
+        });
+        let shape = Shape::polygon(rings, false, pole);
+        let bb = shape.bbox();
+        Area {
+            radius: 0.5 * crate::math::len2d(bb.w(), bb.h()),
+            shape,
+            pole,
+            pole_dist,
+            turn,
+        }
+    }
+}
+
+/// The angle of an area's turned labels (spec §6.5): the main axis, read upwards when it
+/// is vertical, none when it is less than [`AREA_TURN_MIN`] from the horizontal, and at
+/// most `max` degrees.
+pub fn area_angle(axis: Option<f64>, max: f64) -> Option<f64> {
+    let a = axis?;
+    let a = if a >= 90.0 { -90.0 } else { a };
+    if max.is_nan() || max <= 0.0 || a.is_nan() || a.abs() < AREA_TURN_MIN {
+        return None;
+    }
+    Some(if a > max {
+        max
+    } else if a < -max {
+        -max
+    } else {
+        a
+    })
 }
 
 /// Per-item resolved lengths (px).
@@ -357,7 +427,6 @@ pub struct Item {
     pub required: bool,
     pub group: Option<String>,
     pub keep_with: Option<KeepWith>,
-    pub svg_id: Option<String>,
     /// The original item JSON (for callbacks).
     pub raw: Value,
     /// Pole of inaccessibility of a polygon mark (computed on first use).
@@ -466,10 +535,9 @@ pub struct Model {
     pub leader_area: Option<Rect>,
     /// Extent of the grid.
     pub extent: Rect,
-    pub to_px: Affine,
     pub items: Vec<Item>,
-    /// Vector obstacles by class (problem vector layers and SVG geometry).
-    /// Vector obstacle primitives with their class (names shared between primitives).
+    /// Vector obstacle primitives (problem vector layers and SVG geometry) with their
+    /// class (names shared between primitives).
     pub vector: Vec<(Arc<str>, Prim)>,
     pub rasters: Vec<RasterSrc>,
     /// `canvas.background`: the backdrop where no raster lies.
@@ -508,8 +576,9 @@ pub struct Model {
     /// The leader of each warm-start box, moved with it, for the `angles`, `elbow` and
     /// `orthogonal` leader styles (the entry's `leader` of the same style; spec §6.7).
     pub warm_leaders: BTreeMap<String, Vec<P>>,
+    /// The rotation of each turned warm-start box (degrees, not 0).
+    pub warm_rotation: BTreeMap<String, f64>,
     pub warnings: Vec<Issue>,
-    pub preset_name: String,
     /// Groups of items sharing one label: (representative, members incl. the representative).
     pub groups: Vec<(usize, Vec<usize>)>,
     /// For each item: the representative of its group (itself for representatives).
@@ -517,13 +586,27 @@ pub struct Model {
 }
 
 impl Model {
-    /// Members of the group represented by `rep` (empty if `rep` is not a representative).
     /// Whether item `j` has a lower priority key than item `i` (spec §9.1): the
     /// `lower_items` policy applies to its mark for the labels and leaders of `i`.
     pub fn is_lower(&self, i: usize, j: usize) -> bool {
         !self.key_level.is_empty() && self.key_level[j] > self.key_level[i]
     }
 
+    /// The representative of the group of item `j` (itself for a representative); `None`
+    /// for an item without a group.
+    #[inline]
+    pub fn group_rep(&self, j: usize) -> Option<usize> {
+        self.group_of.get(j).copied().flatten()
+    }
+
+    /// Whether another item represents the group of item `i`: its representative's label
+    /// is its label.
+    #[inline]
+    pub fn is_group_member(&self, i: usize) -> bool {
+        matches!(self.group_of.get(i), Some(Some(r)) if *r != i)
+    }
+
+    /// Members of the group represented by `rep` (empty if `rep` is not a representative).
     pub fn group_members(&self, rep: usize) -> &[usize] {
         self.groups
             .iter()
@@ -667,7 +750,7 @@ pub fn build(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     Ok(m)
 }
 
-/// Merge items sharing a `group` id into one label (spec §5.7 "groups"): the first member
+/// Merge items sharing a `group` id into one label (docs/concepts/problem.md): the first member
 /// (input order) represents the group; its mark becomes the convex hull of all member
 /// marks, its anchor their centroid, and its text lists the distinct member texts.
 fn resolve_groups(m: &mut Model) {
@@ -1221,6 +1304,7 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     .then(|| leaders.style.name());
     let mut warm = BTreeMap::new();
     let mut warm_leaders = BTreeMap::new();
+    let mut warm_rotation = BTreeMap::new();
     for p in lookup(problem, "warm_start.placements")
         .and_then(|v| v.as_array())
         .into_iter()
@@ -1265,6 +1349,13 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
                 }
                 warm_leaders.insert(id.to_string(), pts);
             }
+            if let (true, Some(_), Some(r)) =
+                (placed, b, p.get("rotation").and_then(|v| v.as_f64()))
+            {
+                if r != 0.0 && r.abs() <= 90.0 {
+                    warm_rotation.insert(id.to_string(), r);
+                }
+            }
             warm.insert(id.to_string(), if placed { b } else { None });
         }
     }
@@ -1276,11 +1367,11 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         label_area,
         leader_area,
         extent,
-        to_px,
         items,
         vector,
         rasters,
-        background: parse_color(&o.string("canvas.background")).unwrap_or([255, 255, 255]),
+        background: la_raster::parse_hex_color(&o.string("canvas.background"))
+            .unwrap_or([255, 255, 255]),
         avoid_label: o.map("avoid.label"),
         avoid_leader: o.map("avoid.leader"),
         avoid_buffer: o.map("avoid.buffer"),
@@ -1315,8 +1406,8 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         shaping: o.string("text.shaping"),
         warm,
         warm_leaders,
+        warm_rotation,
         warnings,
-        preset_name: o.preset_name.clone(),
         groups: Vec::new(),
         group_of: Vec::new(),
     })
@@ -1335,25 +1426,12 @@ fn looks_base64(s: &str) -> bool {
         })
 }
 
-fn parse_color(s: &str) -> Option<[u8; 3]> {
-    let h = s.strip_prefix('#')?;
-    let v = |a: &str| u8::from_str_radix(a, 16).ok();
-    match h.len() {
-        3 => {
-            let r = v(&h[0..1])?;
-            let g = v(&h[1..2])?;
-            let b = v(&h[2..3])?;
-            Some([r * 17, g * 17, b * 17])
-        }
-        6 => Some([v(&h[0..2])?, v(&h[2..4])?, v(&h[4..6])?]),
-        _ => None,
-    }
-}
-
 fn raster_opts(src: &Value, ptr: &str) -> Result<RasterOpts, BuildError> {
     let get = |k: &str| source_opt(src, "obstacles.raster", k);
     let mode = get("mode").as_str().unwrap_or("ink").to_string();
-    let background = get("ink.background").as_str().and_then(parse_color);
+    let background = get("ink.background")
+        .as_str()
+        .and_then(la_raster::parse_hex_color);
     let ink_threshold = get("ink.threshold").as_f64().unwrap_or(0.12);
     let mode = match mode.as_str() {
         "alpha" => RasterMode::Alpha {
@@ -1367,7 +1445,7 @@ fn raster_opts(src: &Value, ptr: &str) -> Result<RasterOpts, BuildError> {
             let mut palette = Vec::new();
             if let Some(Value::Object(m)) = src.get("classmap") {
                 for (k, v) in m {
-                    let c = parse_color(k).ok_or_else(|| {
+                    let c = la_raster::parse_hex_color(k).ok_or_else(|| {
                         err(
                             format!("{ptr}/classmap"),
                             "pattern",
@@ -1568,6 +1646,7 @@ struct ItemDefaults {
     align: String,
     internal: String,
     position_order: Value,
+    area_rotation: f64,
 }
 
 impl ItemDefaults {
@@ -1597,6 +1676,7 @@ impl ItemDefaults {
             align: o.string("defaults.align"),
             internal: o.string("placement.internal"),
             position_order: o.get("placement.position_order"),
+            area_rotation: o.f64("placement.area_rotation"),
         }
     }
 }
@@ -1654,24 +1734,15 @@ fn build_item(
                 rings.push(points_of(h).into_iter().map(|p| to_px.apply(p)).collect());
             }
             polygon::orient_holes(&mut rings);
-            let (pole, pole_dist) = polygon::polylabel(&rings, false, 0.5);
-            let area_shape = Shape::polygon(rings, false, pole);
+            let area = Area::new(rings, defs.area_rotation);
+            let pole = area.pole;
             let dot = match anchor_v.get("dot") {
                 Some(m) => {
                     mark_shape(m, pole, to_px, svgs, warnings, &format!("{ptr}/anchor/dot"))?.0
                 }
                 None => Shape::circle(pole, 2.0),
             };
-            (
-                pole,
-                dot,
-                Some(Area {
-                    shape: area_shape,
-                    pole,
-                    pole_dist,
-                }),
-                false,
-            )
+            (pole, dot, Some(area), false)
         }
         _ => {
             let at = to_px.apply(P::new(
@@ -1894,7 +1965,6 @@ fn build_item(
             .unwrap_or(false),
         group: it.get("group").and_then(|v| v.as_str()).map(str::to_string),
         keep_with,
-        svg_id,
         raw: it.clone(),
         pole: std::sync::OnceLock::new(),
         supports: std::sync::OnceLock::new(),

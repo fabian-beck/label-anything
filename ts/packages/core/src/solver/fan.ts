@@ -29,11 +29,11 @@
  */
 
 import { boundaryLeader, slotArea } from "../boundary.js";
-import { Cand, Kind, SIDE_FAN, labelShape } from "../candidates.js";
+import { Cand, Kind, SIDE_FAN } from "../candidates.js";
 import { EPS, P, Rect } from "../geom/index.js";
 import { cmpF64, maxf, minf } from "../math.js";
 import { FanMode, LeaderStyle, Models, Omission, Pos, labelGap } from "../model/index.js";
-import { hungarian, stack } from "./repair.js";
+import { WORK_MIN, WORK_PER_ITEM, hungarian, stack } from "./repair.js";
 import { Reason, type Solve } from "./index.js";
 import { inverted } from "./verify.js";
 
@@ -46,9 +46,6 @@ export const MAX_COLUMN = 40;
  */
 export const RUN_PER_RISE = 1.0;
 export const MIN_RUN_EM = 1.5;
-/** Label evaluations of the pass: at least this many, or this many per item. */
-const WORK_MIN = 20000;
-const WORK_PER_ITEM = 20;
 
 /** A column: its candidates and the members it gives a label. */
 export interface Plan {
@@ -89,13 +86,12 @@ export function fanPass(s: Solve): void {
     const it = model.items[i]!;
     const m = s.models[i]!;
     const leaders = ladderLeaders || (m & Models.DISTANT) !== 0 || (m & Models.BOUNDARY) !== 0;
-    const g = model.groupOf[i];
     excluded.push(
       !leaders ||
         s.variants[i]!.length === 0 ||
         it.keepWith !== null ||
         it.area !== null ||
-        (g !== undefined && g !== null),
+        model.groupRep(i) !== null,
     );
   }
   const pass: Pass = { always: mode === FanMode.Always, excluded, work: Math.max(WORK_MIN, WORK_PER_ITEM * n) };
@@ -411,7 +407,7 @@ function layout(
     const l = boundaryLeader(model, items[j]!, right ? 1 : 0, new P(x, y));
     const tooLong = l.len > items[j]!.len.leaderMax + 1e-9;
     if (l.len > 0) c.leaders.push(l);
-    c.lshape = labelShape(c.rect, v.shape);
+    c.setLshape(v.shape);
     s.evaluator.eval(c, v, null);
     // fan leaders keep to leaders.max_length like distant ones
     if (tooLong) c.feasible = false;

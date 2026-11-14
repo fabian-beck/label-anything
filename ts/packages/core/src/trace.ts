@@ -47,8 +47,10 @@ export interface TraceCandidate {
   level: number;
   model: string;
   side: string;
-  /** Label box `[x, y, w, h]`. */
+  /** Label box `[x, y, w, h]`; of a turned label the box before it is turned about its center. */
   box: [number, number, number, number];
+  /** Degrees, clockwise on screen, by which the label is turned (0: upright). */
+  rotation: number;
   /** Leaders, as in the result (`points`, `style`, `port`, …). */
   leaders: Record<string, unknown>[];
   /** Static cost, or null when the solver never needed it (ladder candidates are evaluated lazily). */
@@ -462,13 +464,15 @@ export class Tracer {
         s.evaluator.eval(c.clone(), s.variants[c.item]![c.variant]!, bd);
         breakdown = bd.map(([n, v]) => [n, v]);
       }
+      const ub = c.upright();
       return {
         item: c.item,
         variant: c.variant,
         level: c.level,
         model: kindName(c.kind),
         side: sideName(c.side),
-        box: [c.rect.x0, c.rect.y0, c.rect.w(), c.rect.h()],
+        box: [ub.x0, ub.y0, ub.w(), ub.h()],
+        rotation: c.angle(),
         leaders: c.leaders.map((l) => leaderJson(l, s) as Record<string, unknown>),
         cost: c.evaluated ? c.cost : null,
         feasible: c.evaluated ? c.feasible : null,

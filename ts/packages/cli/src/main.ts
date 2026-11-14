@@ -35,8 +35,9 @@ const USAGE = `label-anything-ts ${VERSION} — label placement (TypeScript engi
 Usage:
   label-anything-ts place <problem.json|-> [-o <result.json|->] [--debug-svg <file>]
         [--time <ms>] [--seed <n>] [--strategy <name>] [--degrade <step,...>] [--pretty]
-        [--preset <name>] [--omission <mode>] [--max-labels <n>] [--font-size <px>]
-        [--canvas <WxH>] [--background <file>] [--engine core|wasm] [--warmup <n>]
+        [--preset <name>] [--aggressiveness low|medium|high] [--omission <mode>]
+        [--max-labels <n>] [--font-size <px>] [--canvas <WxH>] [--background <file>]
+        [--engine core|wasm] [--warmup <n>]
   label-anything-ts validate <problem.json|-> [--json]
   label-anything-ts render <problem.json> <result.json> [-o <out.svg|->]
   label-anything-ts --help | --version
@@ -91,6 +92,7 @@ const VALUED = new Set([
   "--strategy",
   "--degrade",
   "--preset",
+  "--aggressiveness",
   "--omission",
   "--max-labels",
   "--font-size",
@@ -132,7 +134,7 @@ function readInput(path: string, io: Io): string {
     try {
       text = readFileSync(path, "utf8");
     } catch (e) {
-      throw new CliError(`${path}: ${e instanceof Error ? e.message : String(e)}`);
+      throw new CliError(`${path}: ${errMsg(e)}`);
     }
   }
   return text.startsWith("\uFEFF") ? text.slice(1) : text;
@@ -146,17 +148,33 @@ function writeOutput(path: string, data: string, io: Io): void {
   try {
     writeFileSync(path, data);
   } catch (e) {
-    throw new CliError(`${path}: ${e instanceof Error ? e.message : String(e)}`);
+    throw new CliError(`${path}: ${errMsg(e)}`);
   }
 }
 
-/** A problem's JSON text; malformed JSON is an invalid problem (a `parse` error). */
+/** The message of a caught value. */
+function errMsg(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
+/**
+ * A problem's JSON text; malformed JSON is an invalid problem: the `parse` error that
+ * `validate` reports for the text (with the message of the Rust CLI).
+ */
 function parseProblem(text: string): unknown {
   try {
     return JSON.parse(text);
-  } catch (e) {
-    throw new InvalidProblem([{ pointer: "", code: "parse", message: `invalid JSON: ${e instanceof Error ? e.message : String(e)}` }]);
+  } catch {
+    throw new InvalidProblem(validate(text).errors);
   }
+}
+
+/**
+ * Validates a parsed problem. `validate` reads a string as JSON text, so a document that
+ * is a JSON string is passed as its text: it is then a `type` error, as in the Rust CLI.
+ */
+function validateValue(problem: unknown): ValidationReport {
+  return validate(typeof problem === "string" ? JSON.stringify(problem) : problem);
 }
 
 /** File access relative to the problem file's directory (like the Rust CLI). */
@@ -168,7 +186,7 @@ function envFor(problemPath: string | null, clock: boolean): Env {
       try {
         return new Uint8Array(readFileSync(p));
       } catch (e) {
-        throw new Error(`cannot read ${p}: ${e instanceof Error ? e.message : String(e)}`);
+        throw new Error(`cannot read ${p}: ${errMsg(e)}`);
       }
     },
     hasMeasureCallback(): boolean {
@@ -253,7 +271,7 @@ export async function loadWasmEngine(): Promise<void> {
     const m = (await import(spec)) as { place: WasmPlace };
     wasmPlace = m.place;
   } catch (e) {
-    throw new CliError(`--engine wasm needs ${spec} (built): ${e instanceof Error ? e.message : String(e)}`);
+    throw new CliError(`--engine wasm needs ${spec} (built): ${errMsg(e)}`);
   }
 }
 
@@ -281,6 +299,8 @@ function cmdPlace(p: Parsed, io: Io): number {
   if (maxLabels !== undefined) setOption(problem, ["priority", "budget", "max_labels"], maxLabels);
   const preset = flags.get("--preset");
   if (typeof preset === "string") setOption(problem, ["preset"], preset);
+  const aggressiveness = flags.get("--aggressiveness");
+  if (typeof aggressiveness === "string") setOption(problem, ["placement", "aggressiveness"], aggressiveness);
   const fontSize = numberFlag(flags, "--font-size");
   if (fontSize !== undefined) setOption(problem, ["defaults", "font", "size"], fontSize);
   const canvas = flags.get("--canvas");
@@ -302,7 +322,7 @@ function cmdPlace(p: Parsed, io: Io): number {
   }
   const debugSvg = flags.get("--debug-svg");
   if (typeof debugSvg === "string") setOption(problem, ["output", "debug_svg"], true);
-  const report = validate(problem);
+  const report = validateValue(problem);
   if (!report.valid) throw new InvalidProblem(report.errors);
   printReport({ ...report, errors: [] }, io);
   const engine = flags.get("--engine") ?? "core";
@@ -331,7 +351,7 @@ function cmdPlace(p: Parsed, io: Io): number {
       try {
         writeFileSync(debugSvg, svg);
       } catch (e) {
-        throw new CliError(`${debugSvg}: ${e instanceof Error ? e.message : String(e)}`);
+        throw new CliError(`${debugSvg}: ${errMsg(e)}`);
       }
     }
     result.debug_svg = null;
@@ -344,14 +364,8 @@ function cmdPlace(p: Parsed, io: Io): number {
 function cmdValidate(p: Parsed, io: Io): number {
   const path = p.positional[0];
   if (path === undefined) throw new CliError("missing problem file");
-  const text = readInput(path, io);
-  let report: ValidationReport;
-  try {
-    report = validate(JSON.parse(text));
-  } catch (e) {
-    const issue: Issue = { pointer: "", code: "parse", message: `invalid JSON: ${e instanceof Error ? e.message : String(e)}` };
-    report = { valid: false, errors: [issue], warnings: [] };
-  }
+  // the text itself: malformed JSON is a `parse` error of the report
+  const report = validate(readInput(path, io));
   if (p.flags.get("--json") === true) io.stdout(JSON.stringify(report, null, 2) + "\n");
   else {
     printReport(report, io);
@@ -364,14 +378,14 @@ function cmdRender(p: Parsed, io: Io): number {
   const [problemPath, resultPath] = p.positional;
   if (problemPath === undefined || resultPath === undefined) throw new CliError("render needs a problem and a result file");
   const problem = parseProblem(readInput(problemPath, io));
-  const report = validate(problem);
+  const report = validateValue(problem);
   if (!report.valid) throw new InvalidProblem(report.errors);
   printReport({ ...report, errors: [] }, io);
   let result: unknown;
   try {
     result = JSON.parse(readInput(resultPath, io));
   } catch (e) {
-    throw new InvalidInput(`${resultPath}: invalid JSON: ${e instanceof Error ? e.message : String(e)}`);
+    throw new InvalidInput(`${resultPath}: invalid JSON: ${errMsg(e)}`);
   }
   const mismatch = checkResult(problem, result);
   if (mismatch !== null) throw new InvalidInput(`${resultPath} is not a result of ${problemPath}: ${mismatch}`);
@@ -443,7 +457,7 @@ if (isMain()) {
     try {
       await loadWasmEngine();
     } catch (e) {
-      process.stderr.write(`label-anything-ts: ${e instanceof Error ? e.message : String(e)}\n`);
+      process.stderr.write(`label-anything-ts: ${errMsg(e)}\n`);
       process.exit(2);
     }
   }

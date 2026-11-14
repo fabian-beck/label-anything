@@ -1,11 +1,11 @@
 /**
- * The public JavaScript/TypeScript API of Label Anything (spec §6.2, §6.4).
+ * The public JavaScript/TypeScript API of Label Anything (docs/getting-started/javascript.md).
  *
  * `@label-anything/core` (pure TypeScript) and `@label-anything/wasm` (the Rust core
  * compiled to WebAssembly) implement exactly these signatures, so callers can switch
  * between them by changing the import. Options that are not part of the JSON problem
  * (callbacks, pixels, cancellation) are passed in {@link PlaceOptions}; they are the
- * documented non-schema extensions of spec §6.4.
+ * non-schema options documented there.
  */
 import type { LabelProblem } from "./generated/problem.js";
 import type { Issue, LabelResult } from "./generated/result.js";

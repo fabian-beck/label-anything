@@ -8,7 +8,7 @@
 import type { Cand } from "../candidates.js";
 import { envProgress } from "../env.js";
 import { type Spacing, candLeadersConflict } from "../leaders.js";
-import { cmpF64, maxf, minf } from "../math.js";
+import { cmpF64, minf } from "../math.js";
 import { Omission, stepEq, stepName } from "../model/index.js";
 import { AvoidKind, type Dynamic } from "../obstacles.js";
 import { keepWithSets } from "../priority.js";
@@ -23,8 +23,8 @@ import { leadersHitLabel } from "./state.js";
 export function pairConflict(a: Cand, b: Cand, dy: Dynamic, sp: Spacing): boolean {
   if (dy.labelLabels.kind === AvoidKind.Hard && a.labelOverlapsGap(b, sp.gap)) return true;
   if (dy.leaderLabels.kind === AvoidKind.Hard) {
-    if (leadersHitLabel(a, b.rect, sp.gap)) return true;
-    if (leadersHitLabel(b, a.rect, sp.gap)) return true;
+    if (leadersHitLabel(a, b, sp.gap)) return true;
+    if (leadersHitLabel(b, a, sp.gap)) return true;
   }
   return dy.leaderLeaders.kind === AvoidKind.Hard && candLeadersConflict(a, b, sp);
 }
@@ -45,10 +45,6 @@ class ItemHeap {
     this.live.length = 0;
     this.rank.length = 0;
     this.item.length = 0;
-  }
-
-  get size(): number {
-    return this.item.length;
   }
 
   /** Entry `a` has priority over entry `b`. */
@@ -152,8 +148,7 @@ export function run(s: Solve): void {
   for (let k = 0; k < s.nLevel0; k++) if (g.alive[k]) g.live[s.cands[k]!.item] += 1;
   // non-representative group members are labeled by their representative
   for (let i = 0; i < n; i++) {
-    const r = s.model.groupOf[i];
-    if (r !== undefined && r !== null && r !== i) {
+    if (s.model.isGroupMember(i)) {
       g.done[i] = 1;
       s.reasons[i] = Reason.Grouped;
     }
@@ -235,7 +230,7 @@ export function run(s: Solve): void {
           s.timeGuardHit = true;
           break;
         }
-        if (labelCapReached(s)) {
+        if (s.labelCapReached()) {
           // nothing later in the total order can be placed: evictLower only evicts lower
           // keys, and none is placed yet
           g.done[i] = 1;
@@ -255,7 +250,7 @@ export function run(s: Solve): void {
         if (g.done[i] || g.sets[i]! >= 0) continue;
         const c = s.warmCand[i];
         if (c === null || c === undefined) continue;
-        if (g.alive[c] && capAllows(s, s.cands[c]!)) {
+        if (g.alive[c] && s.budgetAllows(s.cands[c]!)) {
           commit(s, g, i, c, false);
           g.done[i] = 1;
         }
@@ -265,7 +260,7 @@ export function run(s: Solve): void {
       for (const i of band) {
         if (g.done[i] || g.sets[i]! >= 0) continue;
         const c = bestNudge(s, i);
-        if (c !== null && capAllows(s, s.cands[c]!)) {
+        if (c !== null && s.budgetAllows(s.cands[c]!)) {
           commit(s, g, i, c, false);
           g.done[i] = 1;
         }
@@ -345,7 +340,7 @@ function placeLevel0(s: Solve, g: Greedy, i: number): boolean {
   const c = bestLevel0(s, g, i);
   if (c === null) return false;
   g.done[i] = 1;
-  if (!capAllows(s, s.cands[c]!)) {
+  if (!s.budgetAllows(s.cands[c]!)) {
     g.capReached = true;
     s.reasons[i] = Reason.OmittedByPriority;
     return false;
@@ -360,12 +355,6 @@ function placeLevel0(s: Solve, g: Greedy, i: number): boolean {
  */
 function guardPassed(s: Solve, started: number, guard: number): boolean {
   return s.now() > 0 && s.now() - started > guard;
-}
-
-/** Whether `priority.budget.max_labels` labels are placed. */
-function labelCapReached(s: Solve): boolean {
-  const m = s.model.maxLabels;
-  return m !== null && s.state.nPlaced >= m;
 }
 
 /**
@@ -388,10 +377,6 @@ function exhaust(s: Solve, g: Greedy, band: readonly number[], last: boolean): v
  */
 function bestNudge(s: Solve, i: number): number | null {
   const ids = s.warmNudges(i);
-  const item = s.model.items[i]!;
-  const buffer = item.len.buffer;
-  const clearance = item.len.clearance;
-  const lw = s.model.leaders.width;
   let bestStep = -1;
   let bestCost = 0;
   let best: number | null = null;
@@ -399,7 +384,7 @@ function bestNudge(s: Solve, i: number): number | null {
     if (best !== null && si > bestStep) break;
     const cand = s.cands[c]!;
     if (!s.state.isFree(cand, s.cands, s.obs, i)) continue;
-    const t = cand.cost + s.state.dynamicCost(cand, s.cands, s.obs, buffer, clearance, lw, i);
+    const t = cand.cost + s.dynamicCost(i, c);
     if (best === null || t < bestCost) {
       bestStep = si;
       bestCost = t;
@@ -413,17 +398,6 @@ function capMayHit(s: Solve, band: readonly number[]): boolean {
   const m = s.model.maxLabels;
   if (m !== null && s.state.nPlaced + band.length > m) return true;
   return s.model.maxInkFraction !== null;
-}
-
-function capAllows(s: Solve, c: Cand): boolean {
-  const m = s.model.maxLabels;
-  if (m !== null && s.state.nPlaced >= m) return false;
-  const f = s.model.maxInkFraction;
-  const canvas = s.model.canvas;
-  if (f !== null && canvas !== null) {
-    if ((s.state.labelAreaSum + c.rect.area()) / maxf(canvas.area(), 1e-9) > f) return false;
-  }
-  return true;
 }
 
 /**
@@ -440,7 +414,7 @@ function processUnit(s: Solve, g: Greedy, i: number, ladder: boolean): boolean {
     let failed = -1;
     for (const m of membersSorted) {
       if (s.state.placed[m]! >= 0) continue;
-      if (placeItem(s, g, m, true)) placedNow.push(m);
+      if (placeItem(s, g, m)) placedNow.push(m);
       else {
         failed = m;
         break;
@@ -462,7 +436,7 @@ function processUnit(s: Solve, g: Greedy, i: number, ladder: boolean): boolean {
     // level 0 only
     const c = bestLevel0(s, g, i);
     if (c !== null) {
-      if (capAllows(s, s.cands[c]!)) {
+      if (s.budgetAllows(s.cands[c]!)) {
         commit(s, g, i, c, false);
         g.done[i] = 1;
         return true;
@@ -475,15 +449,15 @@ function processUnit(s: Solve, g: Greedy, i: number, ladder: boolean): boolean {
     }
     return false;
   }
-  return placeItem(s, g, i, true);
+  return placeItem(s, g, i);
 }
 
 /** Try level 0 and then the ladder. Marks the item done; sets the reason on failure. */
-function placeItem(s: Solve, g: Greedy, i: number, ladder: boolean): boolean {
+function placeItem(s: Solve, g: Greedy, i: number): boolean {
   g.done[i] = 1;
   const c0 = bestLevel0(s, g, i);
   if (c0 !== null) {
-    if (!capAllows(s, s.cands[c0]!)) {
+    if (!s.budgetAllows(s.cands[c0]!)) {
       g.capReached = true;
       s.reasons[i] = Reason.OmittedByPriority;
       if (s.trace !== null) s.trace.omitted(i);
@@ -492,16 +466,11 @@ function placeItem(s: Solve, g: Greedy, i: number, ladder: boolean): boolean {
     commit(s, g, i, c0, false);
     return true;
   }
-  if (!ladder) {
-    s.reasons[i] = explain(s, i);
-    if (s.trace !== null) s.trace.omitted(i);
-    return false;
-  }
   // a label the previous solve degraded keeps its box while that is free (ADR motion/warm-starts)
   if (s.model.weights.stability > 0) {
     const c = s.warmLadderCandidate(i);
     if (c !== null && s.state.isFree(s.cands[c]!, s.cands, s.obs, i)) {
-      if (!capAllows(s, s.cands[c]!)) {
+      if (!s.budgetAllows(s.cands[c]!)) {
         g.capReached = true;
         s.reasons[i] = Reason.OmittedByPriority;
         if (s.trace !== null) s.trace.omitted(i);
@@ -529,7 +498,7 @@ function placeItem(s: Solve, g: Greedy, i: number, ladder: boolean): boolean {
     if (s.trace !== null) s.trace.ladder(i, stepName(step), ids, choice === null ? null : choice[0]);
     if (choice !== null) {
       const [c, relaxed] = choice;
-      if (!capAllows(s, s.cands[c]!)) {
+      if (!s.budgetAllows(s.cands[c]!)) {
         g.capReached = true;
         s.reasons[i] = Reason.OmittedByPriority;
         if (s.trace !== null) s.trace.omitted(i);
@@ -623,10 +592,6 @@ function unplaceItem(s: Solve, g: Greedy, i: number): void {
 
 /** Best live level-0 candidate with lookahead. */
 function bestLevel0(s: Solve, g: Greedy, i: number): number | null {
-  const item = s.model.items[i]!;
-  const buffer = item.len.buffer;
-  const clearance = item.len.clearance;
-  const lw = s.model.leaders.width;
   const scoredCost: number[] = [];
   const scoredId: number[] = [];
   const byItem = s.byItem[i]!;
@@ -635,7 +600,7 @@ function bestLevel0(s: Solve, g: Greedy, i: number): number | null {
     const c = byItem[q]!;
     if (c >= n0 || !g.alive[c]) continue;
     const cand = s.cands[c]!;
-    const d = s.state.dynamicCost(cand, s.cands, s.obs, buffer, clearance, lw, i);
+    const d = s.dynamicCost(i, c);
     scoredCost.push(cand.cost + d);
     scoredId.push(c);
   }
@@ -647,7 +612,7 @@ function bestLevel0(s: Solve, g: Greedy, i: number): number | null {
   for (const c of late) {
     const cand = s.cands[c]!;
     if (!s.state.isFree(cand, s.cands, s.obs, i)) continue;
-    const d = s.state.dynamicCost(cand, s.cands, s.obs, buffer, clearance, lw, i);
+    const d = s.dynamicCost(i, c);
     scoredCost.push(cand.cost + d);
     scoredId.push(c);
   }
@@ -738,9 +703,8 @@ function bestFree(s: Solve, ids: readonly number[], relaxed: boolean): [number, 
     const cand = s.cands[c]!;
     const usable = relaxed ? !cand.feasible && cand.relaxed : cand.feasible;
     if (!usable) continue;
-    const item = s.model.items[i]!;
     if (!fresh && !s.state.isFree(cand, s.cands, s.obs, i)) continue;
-    const d = s.state.dynamicCost(cand, s.cands, s.obs, item.len.buffer, item.len.clearance, s.model.leaders.width, i);
+    const d = s.dynamicCost(i, c);
     const total = cand.cost + d + (relaxed ? cand.relaxCost : 0);
     if (bestC < 0 || total < bestTotal || (total === bestTotal && c < bestC)) {
       bestTotal = total;

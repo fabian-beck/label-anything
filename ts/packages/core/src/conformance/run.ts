@@ -17,23 +17,19 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { LabelProblem, LabelResult } from "../api.js";
-import { jsonEq } from "../json.js";
+import { asF64, asU64, errorMessage, get, isObject, jsonEq } from "../json.js";
 import { defaultOf } from "../options.js";
 import { place } from "../place.js";
 
 type Json = Record<string, unknown>;
 
-const isObj = (v: unknown): v is Json => typeof v === "object" && v !== null && !Array.isArray(v);
-const get = (v: unknown, k: string): unknown => (isObj(v) ? v[k] : undefined);
-const f64 = (v: unknown): number | null => (typeof v === "number" ? v : null);
-const u64 = (v: unknown): number | null => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null);
 /** RFC 6901 pointer lookup. */
 function pointer(v: unknown, p: string): unknown {
   let cur = v;
   for (const part of p.split("/").slice(1)) {
     const k = part.replace(/~1/g, "/").replace(/~0/g, "~");
     if (Array.isArray(cur)) cur = cur[Number(k)];
-    else if (isObj(cur)) cur = cur[k];
+    else if (isObject(cur)) cur = cur[k];
     else return undefined;
     if (cur === undefined) return undefined;
   }
@@ -75,15 +71,71 @@ interface BoxR {
 
 function boxOf(p: Json): BoxR | null {
   const b = get(p, "box");
-  const x = f64(get(b, "x"));
-  const y = f64(get(b, "y"));
-  const w = f64(get(b, "w"));
-  const h = f64(get(b, "h"));
+  const x = asF64(get(b, "x"));
+  const y = asF64(get(b, "y"));
+  const w = asF64(get(b, "w"));
+  const h = asF64(get(b, "h"));
   if (x === null || y === null || w === null || h === null) return null;
   return { x0: x, y0: y, x1: x + w, y1: y + h };
 }
 
 type Pt = [number, number];
+
+/** The rotation of a placed label (degrees; 0: not turned). */
+function rotationOf(p: Json): number {
+  return asF64(get(p, "rotation")) ?? 0;
+}
+
+/** The corners of a placed label: its box, turned by its rotation about its center. */
+function cornersOf(p: Json): Pt[] | null {
+  const b = boxOf(p);
+  if (b === null) return null;
+  const cx = (b.x0 + b.x1) / 2;
+  const cy = (b.y0 + b.y1) / 2;
+  const a = (rotationOf(p) * Math.PI) / 180;
+  const s = Math.sin(a);
+  const c = Math.cos(a);
+  const t = (x: number, y: number): Pt => [cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c];
+  return [t(b.x0, b.y0), t(b.x1, b.y0), t(b.x1, b.y1), t(b.x0, b.y1)];
+}
+
+/** The bounding box of a placed label (of its turned box). */
+function boundsOf(p: Json): BoxR | null {
+  if (rotationOf(p) === 0) return boxOf(p);
+  const q = cornersOf(p);
+  if (q === null) return null;
+  return {
+    x0: Math.min(...q.map((v) => v[0])),
+    y0: Math.min(...q.map((v) => v[1])),
+    x1: Math.max(...q.map((v) => v[0])),
+    y1: Math.max(...q.map((v) => v[1])),
+  };
+}
+
+/**
+ * Whether two convex quadrilaterals overlap by more than `e` along every separating axis
+ * of their sides.
+ */
+function quadsOverlap(a: Pt[], b: Pt[], e: number): boolean {
+  for (const q of [a, b]) {
+    for (let i = 0; i < 4; i++) {
+      const p0 = q[i]!;
+      const p1 = q[(i + 1) % 4]!;
+      const nx = p1[1] - p0[1];
+      const ny = p0[0] - p1[0];
+      const len = Math.sqrt(nx * nx + ny * ny);
+      if (len === 0) continue;
+      const span = (r: Pt[]): [number, number] => {
+        const d = r.map((v) => (v[0] * nx + v[1] * ny) / len);
+        return [Math.min(...d), Math.max(...d)];
+      };
+      const [a0, a1] = span(a);
+      const [b0, b1] = span(b);
+      if (a1 - b0 <= e || b1 - a0 <= e) return false;
+    }
+  }
+  return true;
+}
 
 function segCross(a: Pt, b: Pt, c: Pt, d: Pt): boolean {
   const o = (p: Pt, q: Pt, r: Pt): number => (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]);
@@ -128,14 +180,19 @@ function underlineAtPort(p: Json): boolean {
   );
 }
 
-function leaderSegments(p: Json): [Pt, Pt][] {
-  const out: [Pt, Pt][] = [];
+/** The leaders of placement `p`: its `leader` and its `leaders`. */
+function leadersOf(p: Json): unknown[] {
   const ls: unknown[] = [];
   const l = get(p, "leader");
   if (l !== undefined && l !== null) ls.push(l);
   const many = get(p, "leaders");
   if (Array.isArray(many)) ls.push(...many);
-  for (const l of ls) {
+  return ls;
+}
+
+function leaderSegments(p: Json): [Pt, Pt][] {
+  const out: [Pt, Pt][] = [];
+  for (const l of leadersOf(p)) {
     const pts: Pt[] = [];
     const raw = get(l, "points");
     if (Array.isArray(raw)) {
@@ -150,33 +207,23 @@ function leaderSegments(p: Json): [Pt, Pt][] {
 
 /** The number of points of every leader of placement `p`. */
 function leaderPointCounts(p: Json): number[] {
-  const ls: unknown[] = [];
-  const l = get(p, "leader");
-  if (l !== undefined && l !== null) ls.push(l);
-  const many = get(p, "leaders");
-  if (Array.isArray(many)) ls.push(...many);
-  return ls.map((l) => {
+  return leadersOf(p).map((l) => {
     const raw = get(l, "points");
     return Array.isArray(raw) ? raw.length : 0;
   });
 }
 
-/** The solver under test: `place` of `@label-anything/core` by default. */
-export type PlaceFn = (problem: unknown) => LabelResult;
-
-const defaultPlace: PlaceFn = (p) => place(p as LabelProblem);
-
 /** Check one case; returns the list of failed expectations. */
-export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = defaultPlace): string[] {
+export function checkPlace(problem: unknown, exp: unknown): string[] {
   const f: string[] = [];
   let r: LabelResult;
   try {
-    r = placeFn(problem);
+    r = place(problem as LabelProblem);
   } catch (e) {
-    return [`place failed: ${e instanceof Error ? e.message : String(e)}`];
+    return [`place failed: ${errorMessage(e)}`];
   }
   const st = r.stats as unknown as Json;
-  const placements = (r.placements as unknown[]).filter(isObj);
+  const placements = (r.placements as unknown[]).filter(isObject);
   const placed = placements.filter((p) => p.placed === true);
   const num = (key: string, actual: unknown): void => {
     const e = get(exp, key);
@@ -187,9 +234,9 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
   num("priority_inversions", st.priority_inversions);
   num("placed", st.placed);
   const nPlaced = placed.length;
-  const pmin = u64(get(exp, "placed_min"));
+  const pmin = asU64(get(exp, "placed_min"));
   if (pmin !== null && nPlaced < pmin) f.push(`placed_min: ${nPlaced} < ${pmin}`);
-  const pmax = u64(get(exp, "placed_max"));
+  const pmax = asU64(get(exp, "placed_max"));
   if (pmax !== null && nPlaced > pmax) f.push(`placed_max: ${nPlaced} > ${pmax}`);
   for (const [key, want] of [
     ["placed_ids", true],
@@ -209,7 +256,7 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
     ["model", "model"],
   ] as const) {
     const m = get(exp, key);
-    if (!isObj(m)) continue;
+    if (!isObject(m)) continue;
     for (const id of Object.keys(m)) {
       const want = m[id];
       const p = placementOf(r, id);
@@ -222,18 +269,27 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
     f.push(`omission_order: expected ${show(oo)}, got ${show(st.omission_order)}`);
   }
   const hl = get(exp, "has_leader");
-  if (isObj(hl)) {
+  if (isObject(hl)) {
     for (const id of Object.keys(hl)) {
       const p = placementOf(r, id);
       const got = p !== undefined ? leaderSegments(p).length > 0 : false;
       if (got !== hl[id]) f.push(`has_leader.${id}: expected ${show(hl[id])}, got ${got}`);
     }
   }
+  const rot = get(exp, "rotation");
+  if (isObject(rot)) {
+    for (const id of Object.keys(rot)) {
+      const p = placementOf(r, id);
+      const got = p !== undefined ? rotationOf(p) : null;
+      const want = asF64(rot[id]) ?? NaN;
+      if (got === null || !(Math.abs(got - want) <= 0.01)) f.push(`rotation.${id}: expected ${want}, got ${show(got)}`);
+    }
+  }
   const sb = get(exp, "stub");
-  if (isObj(sb)) {
+  if (isObject(sb)) {
     for (const id of Object.keys(sb)) {
       const p = placementOf(r, id);
-      const got = p !== undefined && isObj(p.leader) && p.leader.stub === true;
+      const got = p !== undefined && isObject(p.leader) && p.leader.stub === true;
       if (got !== sb[id]) f.push(`stub.${id}: expected ${show(sb[id])}, got ${got}`);
     }
   }
@@ -246,7 +302,7 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
     }
   }
   const ul = get(exp, "underline");
-  if (isObj(ul)) {
+  if (isObject(ul)) {
     for (const id of Object.keys(ul)) {
       const p = placementOf(r, id);
       const got = p !== undefined && underlineAtPort(p);
@@ -254,7 +310,7 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
     }
   }
   const tl = get(exp, "text_lines");
-  if (isObj(tl)) {
+  if (isObject(tl)) {
     for (const id of Object.keys(tl)) {
       const p = placementOf(r, id);
       const lines = get(get(p, "text"), "lines");
@@ -263,7 +319,7 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
     }
   }
   const ta = get(exp, "text_align");
-  if (isObj(ta)) {
+  if (isObject(ta)) {
     // every line starts where the alignment puts it (spec §5.1): centered in the box, or
     // flush with the text block's left (`start`) or right (`end`) edge
     for (const id of Object.keys(ta)) {
@@ -274,9 +330,9 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
         f.push(`text_align.${id}: expected ${show(want)}, got ${show(get(t, "align") ?? null)}`);
         continue;
       }
-      const nums = (v: unknown): number[] => (Array.isArray(v) ? v.map((x) => f64(x) ?? NaN) : []);
-      const w = f64(get(get(p, "box"), "w")) ?? NaN;
-      const pad = f64(get(t, "x_offset")) ?? NaN;
+      const nums = (v: unknown): number[] => (Array.isArray(v) ? v.map((x) => asF64(x) ?? NaN) : []);
+      const w = asF64(get(get(p, "box"), "w")) ?? NaN;
+      const pad = asF64(get(t, "x_offset")) ?? NaN;
       const xs = nums(get(t, "x_offsets"));
       const ws = nums(get(t, "line_widths"));
       if (xs.length !== ws.length || xs.length === 0) f.push(`text_align.${id}: ${xs.length} x_offsets for ${ws.length} lines`);
@@ -289,13 +345,13 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
     }
   }
   const fo = get(exp, "font");
-  if (isObj(fo)) {
+  if (isObject(fo)) {
     for (const id of Object.keys(fo)) {
       const want = fo[id];
       const p = placementOf(r, id);
-      const size = f64(get(want, "size"));
+      const size = asF64(get(want, "size"));
       if (size !== null) {
-        const got = f64(get(get(p, "text"), "font_size")) ?? NaN;
+        const got = asF64(get(get(p, "text"), "font_size")) ?? NaN;
         if (Math.abs(got - size) > 1e-6 || got !== got) f.push(`font.${id}.size: expected ${size}, got ${got}`);
       }
       const w = get(want, "weight");
@@ -311,25 +367,39 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
     }
   }
   const bx = get(exp, "box");
-  if (isObj(bx)) {
+  if (isObject(bx)) {
     for (const id of Object.keys(bx)) {
       const want = bx[id];
-      const tol = f64(get(want, "tol")) ?? 0.01;
+      const tol = asF64(get(want, "tol")) ?? 0.01;
       const got = get(placementOf(r, id), "box");
       for (const k of ["x", "y", "w", "h"]) {
-        const a = f64(get(got, k)) ?? NaN;
-        const b = f64(get(want, k)) ?? NaN;
+        const a = asF64(get(got, k)) ?? NaN;
+        const b = asF64(get(want, k)) ?? NaN;
         if (Math.abs(a - b) > tol || a !== a || b !== b) f.push(`box.${id}.${k}: expected ${b} ± ${tol}, got ${a}`);
       }
     }
   }
-  // independent re-check: no two placed rectangular labels overlap
+  // independent re-check: no two placed rectangular labels overlap (turned labels: as their
+  // turned boxes)
   const boxes: [string, BoxR][] = [];
+  const quads: (Pt[] | null)[] = [];
   for (const p of placed) {
     const id = p.id;
-    const b = boxOf(p);
-    if (typeof id === "string" && b !== null) boxes.push([id, b]);
+    const b = boundsOf(p);
+    if (typeof id === "string" && b !== null) {
+      boxes.push([id, b]);
+      quads.push(rotationOf(p) !== 0 ? cornersOf(p) : null);
+    }
   }
+  const quad = (k: number): Pt[] => {
+    const b = boxes[k]![1];
+    return quads[k] ?? [
+      [b.x0, b.y0],
+      [b.x1, b.y0],
+      [b.x1, b.y1],
+      [b.x0, b.y1],
+    ];
+  };
   const ll = pointer(problem, "/avoid/label/labels");
   const labelsHard = ll === undefined ? true : ll === "hard";
   if (labelsHard) {
@@ -338,7 +408,14 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
         const a = boxes[i]![1];
         const b = boxes[j]![1];
         const e = 1e-6;
-        if (a.x0 < b.x1 - e && b.x0 < a.x1 - e && a.y0 < b.y1 - e && b.y0 < a.y1 - e) {
+        const turned = quads[i] !== null || quads[j] !== null;
+        if (
+          a.x0 < b.x1 - e &&
+          b.x0 < a.x1 - e &&
+          a.y0 < b.y1 - e &&
+          b.y0 < a.y1 - e &&
+          (!turned || quadsOverlap(quad(i), quad(j), e))
+        ) {
           f.push(`labels ${boxes[i]![0]} and ${boxes[j]![0]} overlap`);
         }
       }
@@ -356,14 +433,14 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
       }
     }
   }
-  const em = f64(pointer(problem, "/defaults/font/size")) ?? 12;
+  const em = asF64(pointer(problem, "/defaults/font/size")) ?? 12;
   if (get(exp, "inside_canvas") === true) {
     const c = get(problem, "canvas");
     if (c !== undefined) {
       const pv = get(c, "padding");
       const pad = pv !== undefined ? px(pv, em) : 0;
-      const w = f64(get(c, "width")) ?? 0;
-      const h = f64(get(c, "height")) ?? 0;
+      const w = asF64(get(c, "width")) ?? 0;
+      const h = asF64(get(c, "height")) ?? 0;
       for (const [id, b] of boxes) {
         const e = 1e-6;
         if (b.x0 < pad - e || b.y0 < pad - e || b.x1 > w - pad + e || b.y1 > h - pad + e) {
@@ -376,7 +453,7 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
     const ranked: [number, boolean][] = [];
     for (const p of placements) {
       if (p.reason === "grouped" || p.reason === "keep_with") continue;
-      const rank = u64(get(p.priority, "rank"));
+      const rank = asU64(get(p.priority, "rank"));
       if (rank !== null) ranked.push([rank, p.placed === true]);
     }
     ranked.sort((a, b) => a[0] - b[0] || Number(a[1]) - Number(b[1]));
@@ -385,7 +462,7 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
       f.push("prefix: a placed item follows an omitted one in priority order");
     }
   }
-  const gap = f64(get(exp, "touch_gap_max"));
+  const gap = asF64(get(exp, "touch_gap_max"));
   if (gap !== null) {
     // point anchors with circle marks: adjacent labels touch the mark inflated by offset
     const ov = pointer(problem, "/placement/offset");
@@ -395,19 +472,19 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
       const id = typeof get(it, "id") === "string" ? (get(it, "id") as string) : "";
       const p = placementOf(r, id);
       // (a label with a stub stands farther out)
-      if (p === undefined || p.model !== "adjacent" || (isObj(p.leader) && p.leader.stub === true)) continue;
+      if (p === undefined || p.model !== "adjacent" || (isObject(p.leader) && p.leader.stub === true)) continue;
       const b = boxOf(p);
       if (b === null) continue;
       const anchor = get(it, "anchor");
-      const ax = f64(get(anchor, "x")) ?? 0;
-      const ay = f64(get(anchor, "y")) ?? 0;
+      const ax = asF64(get(anchor, "x")) ?? 0;
+      const ay = asF64(get(anchor, "y")) ?? 0;
       let mark = get(anchor, "mark");
       if (mark === undefined) {
         const dm = pointer(problem, "/defaults/mark");
         mark = dm !== undefined ? dm : defaultOf("defaults.mark", "rust");
       }
       if (get(mark, "shape") !== "circle") continue;
-      const rr = f64(get(mark, "r")) ?? 0;
+      const rr = asF64(get(mark, "r")) ?? 0;
       const dx = Math.max(Math.max(b.x0 - ax, ax - b.x1), 0);
       const dy = Math.max(Math.max(b.y0 - ay, ay - b.y1), 0);
       const d = Math.sqrt(dx * dx + dy * dy) - rr - offset;
@@ -427,12 +504,12 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
       const mark = get(anchor, "mark") ?? defaultMark;
       if (get(mark, "shape") !== "circle") continue;
       const id = typeof get(it, "id") === "string" ? (get(it, "id") as string) : "";
-      circles.push([id, f64(get(anchor, "x")) ?? 0, f64(get(anchor, "y")) ?? 0, f64(get(mark, "r")) ?? 0]);
+      circles.push([id, asF64(get(anchor, "x")) ?? 0, asF64(get(anchor, "y")) ?? 0, asF64(get(mark, "r")) ?? 0]);
     }
     for (const [id, ax, ay, ar] of circles) {
       const p = placementOf(r, id);
       if (p === undefined || (p.model !== "adjacent" && p.model !== "slider")) continue;
-      if (p.leader !== null && p.leader !== undefined && !(isObj(p.leader) && p.leader.stub === true)) continue;
+      if (p.leader !== null && p.leader !== undefined && !(isObject(p.leader) && p.leader.stub === true)) continue;
       const b = boxOf(p);
       if (b === null) continue;
       const dist = (x: number, y: number, rr: number): number => {
@@ -451,7 +528,7 @@ export function checkPlace(problem: unknown, exp: unknown, placeFn: PlaceFn = de
     }
   }
   if (get(exp, "deterministic") === true) {
-    const r2 = placeFn(problem);
+    const r2 = place(problem as LabelProblem);
     if (!jsonEq(r.placements, r2.placements)) f.push("deterministic: two runs differ");
   }
   return f;
@@ -484,11 +561,11 @@ export function loadPlaceCases(conformanceDir: string): PlaceCase[] {
 }
 
 /** Run all `place` cases; returns the failures as `name: messages`. */
-export function runPlaceCases(conformanceDir: string, placeFn: PlaceFn = defaultPlace): { total: number; failures: string[] } {
+export function runPlaceCases(conformanceDir: string): { total: number; failures: string[] } {
   const cases = loadPlaceCases(conformanceDir);
   const failures: string[] = [];
   for (const c of cases) {
-    const fails = checkPlace(c.problem, c.expect, placeFn);
+    const fails = checkPlace(c.problem, c.expect);
     if (fails.length > 0) failures.push(`${c.name}: ${fails.join("; ")}`);
   }
   return { total: cases.length, failures };

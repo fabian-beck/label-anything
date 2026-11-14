@@ -1,11 +1,10 @@
 // Runs conformance/place/*.json (format: conformance/README.md, "place cases") through
 // the TypeScript runner (src/conformance/run.ts, also `npm run conformance`), with the
 // runner's independent re-checks of label overlaps, leader crossings and canvas bounds.
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { checkPlace, loadPlaceCases } from "../src/conformance/run.js";
+import { CONF } from "./util.js";
 
-const CONF = fileURLToPath(new URL("../../../../conformance/", import.meta.url));
 const cases = loadPlaceCases(CONF);
 
 describe("conformance/place", () => {

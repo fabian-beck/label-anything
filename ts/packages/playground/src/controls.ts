@@ -147,6 +147,15 @@ export const SECTIONS: Section[] = [
         key: "preset", label: "Preset", kind: "select",
         options: ["auto", "scatter", "map", "graph", "illustration", "none"].map((v) => ({ value: v, label: v })),
       },
+      {
+        key: "placement.aggressiveness", label: "Aggressiveness", kind: "segmented",
+        options: [
+          { value: "low", label: "low", title: "Labels next to their marks with room around them; short leaders only" },
+          { value: "medium", label: "medium", title: "Full-size labels; leaders up to 4 em" },
+          { value: "high", label: "high", title: "Every means: long leaders, fans, smaller type, relaxed overlaps" },
+        ],
+        hint: "How hard to try to place every label",
+      },
       { key: "placement.models", label: "Candidate models", kind: "checks", options: MODELS },
       { key: "placement.position_order", label: "Position order", kind: "select", options: POSITION_ORDERS },
       {

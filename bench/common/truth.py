@@ -19,6 +19,7 @@ the problem's anchors (spec §3.2) and are not repeated here.
 """
 from __future__ import annotations
 
+from . import spec
 from .geom import Circle, RoundedRect
 from .model import load_problem
 
@@ -55,7 +56,8 @@ def complete_truth(problem: dict, scene_truth: dict | None = None) -> dict:
     obs = problem.get("obstacles") or {}
     rasters = obs.get("raster")
     rlist = rasters if isinstance(rasters, list) else ([rasters] if rasters else [])
-    out["rasters"] = [{"index": i, "mode": r.get("mode", "ink"), "class": r.get("class", "ink"),
+    mode, cls = spec.element_default("obstacles.raster.mode"), spec.element_default("obstacles.raster.class")
+    out["rasters"] = [{"index": i, "mode": r.get("mode", mode), "class": r.get("class", cls),
                        "scale": r.get("scale", 1), "offset": r.get("offset", [0, 0]),
                        "derived_from": f"problem.obstacles.raster[{i}] (spec §4.6, per pixel)"}
                       for i, r in enumerate(rlist)]

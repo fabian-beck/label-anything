@@ -143,10 +143,14 @@ pub fn build(
                 let c = s.cands[cid as usize].clone();
                 let v = s.variants[i][c.variant as usize].clone();
                 m.insert("placed".into(), json!(true));
+                let b = c.upright();
                 m.insert(
                     "box".into(),
-                    json!({"x": c.rect.x0, "y": c.rect.y0, "w": c.rect.w(), "h": c.rect.h()}),
+                    json!({"x": b.x0, "y": b.y0, "w": b.w(), "h": b.h()}),
                 );
+                if let Some(t) = &c.turn {
+                    m.insert("rotation".into(), json!(t.angle));
+                }
                 let a = item.shape.reference();
                 m.insert("anchor".into(), json!([a.x, a.y]));
                 m.insert("anchor_side".into(), json!(c.side.name()));
@@ -173,15 +177,7 @@ pub fn build(
                         );
                     }
                 }
-                let dynamic = s.state.dynamic_cost(
-                    &c,
-                    &s.cands,
-                    s.obs,
-                    item.len.buffer,
-                    item.len.clearance,
-                    model.leaders.width,
-                    i,
-                );
+                let dynamic = s.dynamic_cost(i, cid);
                 let relax = if s.state.relaxed[i] {
                     c.relax_cost
                 } else {
@@ -425,9 +421,10 @@ pub fn build(
             s.cands
                 .iter()
                 .map(|c| {
-                    json!({
+                    let b = c.upright();
+                    let mut j = json!({
                         "id": model.items[c.item as usize].id,
-                        "box": {"x": c.rect.x0, "y": c.rect.y0, "w": c.rect.w(), "h": c.rect.h()},
+                        "box": {"x": b.x0, "y": b.y0, "w": b.w(), "h": b.h()},
                         "model": c.kind.name(),
                         "anchor_side": c.side.name(),
                         "variant": c.variant,
@@ -435,7 +432,11 @@ pub fn build(
                         "cost": c.cost,
                         "feasible": c.feasible,
                         "leader": c.leaders.first().map(|l| leader_json(l, s)).unwrap_or(Value::Null),
-                    })
+                    });
+                    if let Some(t) = &c.turn {
+                        j["rotation"] = json!(t.angle);
+                    }
+                    j
                 })
                 .collect(),
         );

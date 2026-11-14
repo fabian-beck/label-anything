@@ -11,7 +11,7 @@ type Box = NonNullable<Placement["box"]>;
 export interface RenderOptions {
   /** The font the labels were measured with. */
   font: CssFont;
-  /** CSS class prefix (default `la`): `la-labels`, `la-label`, `la-leader`, `la-stub`. */
+  /** CSS class prefix (default `la`): `la-leaders`, `la-leader`, `la-stub`, `la-texts`, `la-item`, `la-label`. */
   className?: string;
   /** Text colour (default `currentColor`). */
   fill?: string;
@@ -37,6 +37,9 @@ function el<K extends keyof SVGElementTagNameMap>(doc: Document, tag: K, attrs: 
   for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
   return e;
 }
+
+/** The leaders of a placement: `leaders` (a label with several), else its one `leader`, else none. */
+export const leadersOf = (p: Placement): Leader[] => p.leaders ?? (p.leader ? [p.leader] : []);
 
 const r2 = (v: number) => Math.round(v * 100) / 100;
 const r3 = (v: number) => Math.round(v * 1000) / 1000;
@@ -118,7 +121,7 @@ export function renderLabels(group: SVGGElement | Element, result: LabelResult, 
     if (!p.placed || !p.box) continue;
     const op = options.opacity?.get(p.id);
     const lop = options.leaderOpacity?.get(p.id) ?? op;
-    for (const leader of p.leaders ?? (p.leader ? [p.leader] : [])) {
+    for (const leader of leadersOf(p)) {
       // a stub (placement.stubs) also gets the class `la-stub`, to be drawn more lightly
       const kind = leader.stub ? `${cls}-leader ${cls}-stub` : `${cls}-leader`;
       const path = el(doc, "path", { class: kind, d: leaderPath(leader), "data-id": leader.member ?? p.id });
@@ -127,6 +130,11 @@ export function renderLabels(group: SVGGElement | Element, result: LabelResult, 
     }
     const g = el(doc, "g", { class: `${cls}-item`, "data-id": p.id });
     if (op !== undefined && op < 1) g.setAttribute("opacity", String(r3(op)));
+    // a turned label (the label of an area along it): drawn upright in its box, then turned
+    // about the box's center
+    if (p.rotation) {
+      g.setAttribute("transform", `rotate(${r3(p.rotation)} ${r2(p.box.x + p.box.w / 2)} ${r2(p.box.y + p.box.h / 2)})`);
+    }
     if (p.parts && p.parts.length) {
       for (const part of p.parts) {
         if (part.type === "text" && part.text) g.appendChild(textElement(doc, part.box, part.text, options, cls));

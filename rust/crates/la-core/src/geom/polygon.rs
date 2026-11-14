@@ -350,6 +350,66 @@ pub fn ring_centroid(ring: &[P]) -> P {
     P::new(cx / (3.0 * a), cy / (3.0 * a))
 }
 
+/// The main axis of a polygon with oppositely wound holes (spec §6.5): the direction of
+/// its largest second moment of area about its centroid, as an angle in degrees in
+/// (−90, 90], clockwise on screen from the x axis. `None` for a polygon without one: a
+/// degenerate polygon, or one whose larger principal moment is less than
+/// [`MAIN_AXIS_RATIO`] times the smaller. The moments are taken about `origin` (a point
+/// near the polygon, which keeps the sums small) and moved to the centroid.
+pub fn main_axis(rings: &[Vec<P>], origin: P) -> Option<f64> {
+    let (mut a, mut cx, mut cy) = (0.0, 0.0, 0.0);
+    let (mut ixx, mut iyy, mut ixy) = (0.0, 0.0, 0.0);
+    for ring in rings {
+        let n = ring.len();
+        for i in 0..n {
+            let p = ring[i] - origin;
+            let q = ring[(i + 1) % n] - origin;
+            let f = p.x * q.y - q.x * p.y;
+            a += f;
+            cx += (p.x + q.x) * f;
+            cy += (p.y + q.y) * f;
+            ixx += (p.x * p.x + p.x * q.x + q.x * q.x) * f;
+            iyy += (p.y * p.y + p.y * q.y + q.y * q.y) * f;
+            ixy += (p.x * q.y + 2.0 * p.x * p.y + 2.0 * q.x * q.y + q.x * p.y) * f;
+        }
+    }
+    if a.is_nan() || a.abs() <= 1e-12 {
+        return None;
+    }
+    // area = a / 2; first moments / 6, second moments / 12 (the mixed one / 24)
+    let (cx, cy) = (cx / (3.0 * a), cy / (3.0 * a));
+    let mxx = ixx / (6.0 * a) - cx * cx;
+    let myy = iyy / (6.0 * a) - cy * cy;
+    let mxy = ixy / (12.0 * a) - cx * cy;
+    let d = mxx - myy;
+    let t = (d * d + 4.0 * mxy * mxy).sqrt();
+    let (hi, lo) = ((mxx + myy + t) * 0.5, (mxx + myy - t) * 0.5);
+    if !(hi.is_finite() && lo > 0.0 && hi >= MAIN_AXIS_RATIO * lo) {
+        return None;
+    }
+    Some(0.5 * la_expr::det_math::atan2_deg(2.0 * mxy, d))
+}
+
+/// A polygon has a main axis when its larger principal moment is at least this many times
+/// the smaller (an axis ratio of about 1.41).
+pub const MAIN_AXIS_RATIO: f64 = 2.0;
+
+/// The room of rectangle `r` inside the polygon: its distance from the polygon's boundary
+/// (0 when an edge touches or crosses it). For a rectangle inside the polygon.
+pub fn room_rect(rings: &[Vec<P>], r: &Rect) -> f64 {
+    let mut m = f64::INFINITY;
+    for (a, b) in edges(rings) {
+        // an edge whose bounding box is no nearer than the nearest edge so far is skipped
+        let dx = maxf(maxf(r.x0 - maxf(a.x, b.x), minf(a.x, b.x) - r.x1), 0.0);
+        let dy = maxf(maxf(r.y0 - maxf(a.y, b.y), minf(a.y, b.y) - r.y1), 0.0);
+        if dx * dx + dy * dy >= m * m {
+            continue;
+        }
+        m = minf(m, super::dist_seg_rect(a, b, r));
+    }
+    m
+}
+
 /// Total absolute area of a multi-ring polygon under its fill rule, approximated by the
 /// signed-area sum for non-zero (outer minus holes when holes are oppositely oriented)
 /// and by |outer| − Σ|holes| for even-odd.
@@ -383,6 +443,55 @@ mod tests {
             P::new(x + s, y + s),
             P::new(x, y + s),
         ]
+    }
+
+    /// A `w` × `h` rectangle around (`cx`, `cy`), turned by `deg` (clockwise on screen).
+    fn slab(cx: f64, cy: f64, w: f64, h: f64, deg: f64) -> Vec<P> {
+        let (sin, cos) = crate::math::sin_cos_deg(deg);
+        [(-w, -h), (w, -h), (w, h), (-w, h)]
+            .iter()
+            .map(|&(x, y)| P::new(cx, cy) + P::new(x * 0.5, y * 0.5).rotate(cos, sin))
+            .collect()
+    }
+
+    #[test]
+    fn main_axis_follows_the_long_side() {
+        let o = P::new(0.0, 0.0);
+        for deg in [-60.0, -35.0, 0.0, 20.0, 45.0, 80.0] {
+            let a = main_axis(&[slab(300.0, 200.0, 200.0, 40.0, deg)], o).unwrap();
+            assert!((a - deg).abs() < 1e-9, "{deg}: {a}");
+        }
+        // an upright strip: 90°, whichever way it is wound
+        let mut up = slab(10.0, 10.0, 20.0, 300.0, 0.0);
+        assert_eq!(main_axis(std::slice::from_ref(&up), o), Some(90.0));
+        up.reverse();
+        assert_eq!(main_axis(&[up], o), Some(90.0));
+        // compact and degenerate polygons have none
+        assert_eq!(main_axis(&[square(5.0, 5.0, 40.0)], o), None);
+        assert_eq!(main_axis(&[slab(0.0, 0.0, 50.0, 40.0, 30.0)], o), None);
+        assert_eq!(
+            main_axis(&[vec![o, P::new(10.0, 0.0), P::new(20.0, 0.0)]], o),
+            None
+        );
+        assert_eq!(main_axis(&[], o), None);
+        // a hole (wound the other way) counts: two blocks side by side have an axis
+        let outer = slab(0.0, 0.0, 100.0, 80.0, 0.0);
+        let mut hole = slab(0.0, 0.0, 30.0, 76.0, 0.0);
+        hole.reverse();
+        assert_eq!(main_axis(std::slice::from_ref(&outer), o), None);
+        let a = main_axis(&[outer, hole], o).unwrap();
+        assert!(a.abs() < 1e-9, "{a}");
+    }
+
+    #[test]
+    fn room_rect_is_the_distance_from_the_boundary() {
+        let sq = [square(0.0, 0.0, 100.0)];
+        assert_eq!(room_rect(&sq, &Rect::new(40.0, 45.0, 60.0, 55.0)), 40.0);
+        assert_eq!(room_rect(&sq, &Rect::new(10.0, 45.0, 60.0, 55.0)), 10.0);
+        assert_eq!(room_rect(&sq, &Rect::new(0.0, 45.0, 60.0, 55.0)), 0.0);
+        // a hole counts
+        let holed = [square(0.0, 0.0, 100.0), square(70.0, 40.0, 10.0)];
+        assert_eq!(room_rect(&holed, &Rect::new(40.0, 45.0, 60.0, 55.0)), 10.0);
     }
 
     #[test]

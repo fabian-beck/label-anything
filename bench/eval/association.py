@@ -35,7 +35,7 @@ from __future__ import annotations
 import math
 
 from ..common import spec
-from ..common.geom import Box, GridIndex
+from ..common.geom import Box, GridIndex, box_box_dist
 
 # margins of the clarity measure, em of the label's font: below 0 another point is nearer
 CLEAR_EM = {"misattributed": 0.0, "unclear": 0.2, "weak": 0.5}
@@ -47,7 +47,7 @@ CLOSE_EM = {"tight": 0.2, "close": 0.4}
 REACH_EM = 2.0           # margins and gaps beyond this count as clear (quantiles are capped)
 COINCIDENT_PX = 0.5      # points closer together than this are one spot
 EPS_PX = 1e-3            # rounding: labels placed exactly at a threshold (stacked columns) meet it
-RESERVED = ("items", "labels", "leaders", "canvas_edge")
+RESERVED = spec.NON_OBSTACLE_CLASSES
 
 
 def _quantile(vals: list[float], q: float) -> float | None:
@@ -223,10 +223,6 @@ def points_covered(prob, placed: list, points: list[tuple], box_index: GridIndex
             "examples": examples}
 
 
-def _box_gap(a: Box, b: Box) -> float:
-    return math.hypot(max(0.0, a.x0 - b.x1, b.x0 - a.x1), max(0.0, a.y0 - b.y1, b.y0 - a.y1))
-
-
 def _gap_segment(a: Box, b: Box) -> list[float]:
     """The shortest segment ``[x0, y0, x1, y1]`` from box ``a`` to box ``b`` (a point where they touch)."""
     def span(a0, a1, b0, b1):
@@ -256,7 +252,7 @@ def label_spacing(placed: list, box_index: GridIndex, collect: dict | None = Non
                 continue
             q = placed[j]
             e = max(em, q.item.label.em)
-            d = _box_gap(p.box, q.box)
+            d = box_box_dist(p.box, q.box)
             best = min(best, d / e)
             close = close or d < CLOSE_EM["close"] * e - EPS_PX
             if j > k:

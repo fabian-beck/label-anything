@@ -1250,6 +1250,14 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "aggressiveness": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "description": "How hard the engine tries to place every label: sets the defaults of degrade, placement.max_distance, placement.fan and defaults.margin (spec/defaults.md). high: every means that keeps a label clear (leaders, fans, smaller type, relaxed overlaps); medium: labels keep their type size and the hard classes, distant labels stay within 4 em; low: no leaders but short ones of the models, more room around every label."
+        },
         "models": {
           "$ref": "#/$defs/models"
         },
@@ -1301,6 +1309,12 @@
           "type": "number",
           "minimum": 0,
           "description": "Circles get internal candidates when r >= ratio * label height (internal=auto)."
+        },
+        "area_rotation": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 90,
+          "description": "Degrees: the label of an area anchor may be turned along the polygon's main axis by this angle at most (0: always horizontal). A turned label is reported with its rotation."
         },
         "prune_factor": {
           "type": "number",
@@ -1809,6 +1823,10 @@
                     "type": "string"
                   }
                 }
+              },
+              "rotation": {
+                "type": "number",
+                "description": "The rotation the box was placed with, as in a result (a turned area label)."
               },
               "box": {
                 "type": "object",

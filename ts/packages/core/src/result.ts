@@ -160,7 +160,9 @@ export function build(s: Solve, ver: Verification, phases: readonly [string, num
       const c = s.cands[cid]!;
       const v = s.variants[i]![c.variant]!;
       m.placed = true;
-      m.box = boxJson(c.rect.x0, c.rect.y0, c.rect.w(), c.rect.h());
+      const ub = c.upright();
+      m.box = boxJson(ub.x0, ub.y0, ub.w(), ub.h());
+      if (c.turn !== null) m.rotation = num(c.turn.angle);
       const a = item.shape.reference();
       m.anchor = [a.x, a.y];
       m.anchor_side = sideName(c.side);
@@ -174,7 +176,7 @@ export function build(s: Solve, ver: Verification, phases: readonly [string, num
         m.leader = leaderJson(c.leaders[0]!, s);
         m.leaders = c.leaders.map((l) => leaderJson(l, s));
       }
-      const dynamic = s.state.dynamicCost(c, s.cands, s.obs, item.len.buffer, item.len.clearance, model.leaders.width, i);
+      const dynamic = s.dynamicCost(i, cid);
       const relax = s.state.relaxed[i] === 1 ? c.relaxCost : 0;
       const cost = c.cost + dynamic + relax;
       totalCost += cost;
@@ -362,17 +364,22 @@ export function build(s: Solve, ver: Verification, phases: readonly [string, num
     out.warnings = model.warnings.map((w) => ({ pointer: w.pointer, code: w.code, message: w.message }));
   }
   if (model.output.candidates) {
-    out.candidates = s.cands.map((c) => ({
-      id: model.items[c.item]!.id,
-      box: boxJson(c.rect.x0, c.rect.y0, c.rect.w(), c.rect.h()),
-      model: kindName(c.kind),
-      anchor_side: sideName(c.side),
-      variant: c.variant,
-      level: c.level,
-      cost: num(c.cost),
-      feasible: c.feasible,
-      leader: c.leaders.length > 0 ? leaderJson(c.leaders[0]!, s) : null,
-    }));
+    out.candidates = s.cands.map((c) => {
+      const b = c.upright();
+      const j: Json = {
+        id: model.items[c.item]!.id,
+        box: boxJson(b.x0, b.y0, b.w(), b.h()),
+        model: kindName(c.kind),
+        anchor_side: sideName(c.side),
+        variant: c.variant,
+        level: c.level,
+        cost: num(c.cost),
+        feasible: c.feasible,
+        leader: c.leaders.length > 0 ? leaderJson(c.leaders[0]!, s) : null,
+      };
+      if (c.turn !== null) j.rotation = num(c.turn.angle);
+      return j;
+    });
   }
   return out;
 }

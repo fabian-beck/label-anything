@@ -31,23 +31,20 @@ a couple of minutes here (adjustText stops earlier once no overlap is left); a
 sequence at most about ten minutes (``SEQ_BUDGET``), or it is reported "n/a" when
 that leaves fewer than ``SEQ_MIN_ITER`` iterations per frame.
 
-    python -m bench.baselines.adjusttext_baseline problem.json -o result.json
+    python -m bench.baselines adjusttext problem.json -o result.json
 """
 from __future__ import annotations
 
-import argparse
 import time
 
 import numpy as np
 
 from ..common.geom import Box
-from ..common.jsonio import read_json, write_json
 from . import Unsupported
 from .mpl import Canvas, ensure_matplotlib, fix_extent, px_to_pt
 from .results import build_result
 from .scene import Note, build_scene, ray_exit, sample_polyline
 
-TOOL = "adjusttext"
 ITER_LIM = 100
 MIN_ARROW_LEN = 5.0
 STEPS = (2.0, 4.0, 8.0, 16.0, 32.0)   # line sampling steps tried, finest first
@@ -228,16 +225,3 @@ def solve(problem: dict, problem_path=None, options: dict | None = None) -> dict
     finally:
         cv.close()
     return build_result(scene, out_boxes, ports, runtime, f"adjustText/{version()}", tool_notes)
-
-
-def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("problem")
-    ap.add_argument("-o", "--out", required=True)
-    a = ap.parse_args(argv)
-    write_json(a.out, solve(read_json(a.problem), a.problem), nd=3)
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

@@ -24,10 +24,10 @@
 //! Items that may not get leaders (neither their models nor the ladder have `distant` or
 //! `boundary`), items kept with another, area anchors and grouped items stay out.
 
-use super::repair::{hungarian, stack};
+use super::repair::{hungarian, stack, WORK_MIN, WORK_PER_ITEM};
 use super::{verify, Reason, Solve};
 use crate::boundary::{boundary_leader, slot_area};
-use crate::candidates::{label_shape, Cand, Kind, Side};
+use crate::candidates::{Cand, Kind, Side};
 use crate::cost::Evaluator;
 use crate::geom::{Rect, P};
 use crate::math::maxf;
@@ -40,9 +40,6 @@ pub const MAX_COLUMN: usize = 40;
 /// least run in em.
 pub const RUN_PER_RISE: f64 = 1.0;
 pub const MIN_RUN_EM: f64 = 1.5;
-/// Label evaluations of the pass: at least this many, or this many per item.
-const WORK_MIN: usize = 20_000;
-const WORK_PER_ITEM: usize = 20;
 
 /// A column: its candidates and the members it gives a label.
 pub(super) struct Plan {
@@ -90,7 +87,7 @@ pub fn fan_pass(s: &mut Solve) {
                     || s.variants[i].is_empty()
                     || it.keep_with.is_some()
                     || it.area.is_some()
-                    || model.group_of.get(i).is_some_and(|g| g.is_some())
+                    || model.group_rep(i).is_some()
             })
             .collect(),
         work: WORK_MIN.max(WORK_PER_ITEM * n),
@@ -496,7 +493,7 @@ fn layout(
         if l.len > 0.0 {
             c.leaders.push(l);
         }
-        c.lshape = label_shape(&c.rect, &v.shape);
+        c.set_lshape(&v.shape);
         ev.eval(&mut c, v, None);
         // fan leaders keep to leaders.max_length like distant ones
         if too_long {

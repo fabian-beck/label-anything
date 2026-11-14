@@ -1,6 +1,7 @@
-//! Effective options: `spec/defaults.md` ← preset ← problem (spec §2.4).
+//! Effective options: `spec/defaults.md` ← aggressiveness level ← preset ← problem
+//! (spec §2.4).
 
-use crate::generated::spec_data::{DEFAULTS_JSON, PRESETS};
+use crate::generated::spec_data::{AGGRESSIVENESS, DEFAULTS_JSON, PRESETS};
 use crate::units::Length;
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
@@ -13,6 +14,22 @@ pub fn defaults() -> &'static Map<String, Value> {
         Ok(Value::Object(m)) => m,
         _ => Map::new(),
     })
+}
+
+/// The defaults of a `placement.aggressiveness` level (spec/defaults.md) as a flat map from
+/// dotted key to JSON (`None` if unknown).
+pub fn aggressiveness(level: &str) -> Option<&'static Map<String, Value>> {
+    static L: OnceLock<BTreeMap<&'static str, Map<String, Value>>> = OnceLock::new();
+    let all = L.get_or_init(|| {
+        AGGRESSIVENESS
+            .iter()
+            .filter_map(|(n, j)| match serde_json::from_str(j) {
+                Ok(Value::Object(m)) => Some((*n, m)),
+                _ => None,
+            })
+            .collect()
+    });
+    all.get(level)
 }
 
 /// A preset by name (`None` if unknown).
@@ -67,6 +84,9 @@ pub struct Opts {
     pub preset: Option<&'static Value>,
     /// Which implementation's per-implementation defaults apply ("rust" or "ts").
     pub implementation: &'static str,
+    /// The defaults of the `placement.aggressiveness` level in effect: they take the place
+    /// of the defaults table's for the keys they list (spec §2.4).
+    pub level: Option<&'static Map<String, Value>>,
 }
 
 impl Opts {
@@ -94,11 +114,20 @@ impl Opts {
             Some(opts) => deep_merge(opts, &options),
             None => options,
         };
+        let level = lookup(&merged, "placement.aggressiveness")
+            .and_then(|v| v.as_str())
+            .or_else(|| {
+                defaults()
+                    .get("placement.aggressiveness")
+                    .and_then(|v| v.as_str())
+            })
+            .and_then(aggressiveness);
         Opts {
             merged,
             preset_name: preset_name.to_string(),
             preset,
             implementation: "rust",
+            level,
         }
     }
 
@@ -112,13 +141,21 @@ impl Opts {
         lookup(problem, key).is_some()
     }
 
-    /// Effective value: given value, else the default (resolving per-implementation
-    /// defaults), else `Null`.
+    /// Effective value: given value, else the default of the aggressiveness level, else
+    /// the default (resolving per-implementation defaults), else `Null`.
     pub fn get(&self, key: &str) -> Value {
         if let Some(v) = self.given(key) {
             return v.clone();
         }
-        default_of(key, self.implementation)
+        self.default(key)
+    }
+
+    /// The default of `key`: the aggressiveness level's, else the defaults table's.
+    pub fn default(&self, key: &str) -> Value {
+        match self.level.and_then(|l| l.get(key)) {
+            Some(v) => v.clone(),
+            None => default_of(key, self.implementation),
+        }
     }
 
     pub fn f64(&self, key: &str) -> f64 {
@@ -152,7 +189,7 @@ impl Opts {
 
     /// A class-keyed map: the default map overlaid with the given map, per key.
     pub fn map(&self, key: &str) -> Map<String, Value> {
-        let mut out = match default_of(key, self.implementation) {
+        let mut out = match self.default(key) {
             Value::Object(m) => m,
             _ => Map::new(),
         };
@@ -207,5 +244,31 @@ mod tests {
         let auto = Opts::new(&json!({"items": []}));
         assert_eq!(auto.preset_name, "auto");
         assert_eq!(auto.strings("placement.models"), vec!["adjacent", "slider"]);
+    }
+
+    #[test]
+    fn aggressiveness_sets_defaults_under_preset_and_problem() {
+        let ladder = |p: Value| Opts::new(&p).strings("degrade");
+        assert_eq!(
+            ladder(json!({})),
+            vec!["alternatives", "wrap", "distant", "evict_lower", "omit"]
+        );
+        let high = json!({"placement": {"aggressiveness": "high"}});
+        assert_eq!(ladder(high.clone()).len(), 7);
+        let o = Opts::new(&high);
+        assert_eq!(o.get("placement.max_distance"), json!("8em"));
+        assert_eq!(o.get("defaults.margin"), json!("0.2em"));
+        let low =
+            Opts::new(&json!({"placement": {"aggressiveness": "low", "max_distance": "6em"}}));
+        assert_eq!(low.string("placement.fan"), "off");
+        assert_eq!(low.get("defaults.margin"), json!("0.3em"));
+        // the problem's own value wins over the level's
+        assert_eq!(low.get("placement.max_distance"), json!("6em"));
+        assert_eq!(
+            low.strings("degrade"),
+            vec!["alternatives", "wrap", "evict_lower", "omit"]
+        );
+        // keys the level does not list keep the defaults table's
+        assert_eq!(low.get("placement.min_distance"), json!("1.5em"));
     }
 }

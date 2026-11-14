@@ -8,20 +8,20 @@
  */
 
 import type { Cand } from "../candidates.js";
-import { EPS, P, Rect, segLenInRect, segOverlapsRectXY, segSegDistXY } from "../geom/index.js";
+import { EPS, P, Rect, segLenInRect, segSegDistXY } from "../geom/index.js";
 import { Occupancy } from "../grid/occupancy.js";
-import { type Spacing, candLeadersConflict, leaderHitsLabel } from "../leaders.js";
+import { type Spacing, candLeadersConflict } from "../leaders.js";
 import { maxf, minf } from "../math.js";
 import type { Shape } from "../geom/shape.js";
 import { AvoidKind, type Dynamic, type Obstacles } from "../obstacles.js";
 import { DynIndex, IdList, StaticIndex } from "../spatial.js";
 
 /**
- * Whether a leader of `c` hits the label box `r`: passes through its interior, or, for a
+ * Whether a leader of `c` hits the label of `p`: passes through its interior, or, for a
  * stub, comes closer than `gap` (spec §6.9).
  */
-export function leadersHitLabel(c: Cand, r: Rect, gap: number): boolean {
-  for (const l of c.leaders) if (leaderHitsLabel(l, r, gap)) return true;
+export function leadersHitLabel(c: Cand, p: Cand, gap: number): boolean {
+  for (const l of c.leaders) if (p.leaderHits(l, gap)) return true;
   return false;
 }
 
@@ -264,14 +264,6 @@ export class State {
     return this.maxKey < 0 ? null : this.maxKey;
   }
 
-  /**
-   * Quick, exact rejection: the box `r` of a rectangular label overlaps a placed
-   * rectangular label (`false` means "unknown", not "free").
-   */
-  quickBlocked(r: Rect): boolean {
-    return this.nPlaced > 0 && this.occupancy().blocked(r);
-  }
-
   /** The placed-label occupancy grid (its windows serve grids with the same cells). */
   occupancy(): Occupancy {
     const pend = this.pend;
@@ -414,7 +406,7 @@ export class State {
         out.push(j);
         continue;
       }
-      if (lbHard && leadersHitLabel(c, p.rect, gap)) out.push(j);
+      if (lbHard && leadersHitLabel(c, p, gap)) out.push(j);
     }
     // leaders near the candidate (placed leaders through the candidate label or stubs
     // closer than the margin, leaders crossing or coming closer than the clearance)
@@ -462,7 +454,7 @@ export class State {
       const p = cands[pid]!;
       const gap = maxf(this.margin[c.item]!, this.margin[j]!);
       if (llHard && c.labelOverlapsGap(p, gap)) return j;
-      if (lbHard && leadersHitLabel(c, p.rect, gap)) return j;
+      if (lbHard && leadersHitLabel(c, p, gap)) return j;
     }
     if (this.hasSegs()) {
       // segments near bb grown by 2 EPS and the leader reach (and the stubs' margin)
@@ -492,7 +484,7 @@ export class State {
    */
   private leadersHit(c: Cand, p: Cand, dy: Dynamic, j: number): boolean {
     const gap = maxf(this.margin[c.item]!, this.margin[j]!);
-    if (dy.leaderLabels.kind === AvoidKind.Hard && leadersHitLabel(p, c.rect, gap)) return true;
+    if (dy.leaderLabels.kind === AvoidKind.Hard && leadersHitLabel(p, c, gap)) return true;
     return (
       dy.leaderLeaders.kind === AvoidKind.Hard &&
       c.leaders.length > 0 &&
@@ -584,11 +576,6 @@ export class State {
       }
     }
     return cost;
-  }
-
-  /** Ids of placed items whose labels overlap `r` (no conflict semantics). */
-  labelsNear(r: Rect, out: IdList): void {
-    this.labelIx.query(r, out);
   }
 }
 

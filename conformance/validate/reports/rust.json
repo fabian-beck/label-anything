@@ -137,6 +137,17 @@
       ],
       "warnings": []
     },
+    "validate/area-rotation.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/placement/area_rotation",
+          "code": "range",
+          "message": "must be <= 90"
+        }
+      ],
+      "warnings": []
+    },
     "validate/bad-degrade-step.json": {
       "valid": false,
       "errors": [

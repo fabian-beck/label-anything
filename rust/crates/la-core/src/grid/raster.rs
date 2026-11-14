@@ -425,7 +425,6 @@ impl MaskRaster {
         }
     }
 
-    /// Final `u8` coverage (0..255; touched cells without samples get 1).
     /// Adds everything rasterized into `o` (a raster of the same grid).
     pub fn or_from(&mut self, o: &MaskRaster) {
         debug_assert_eq!(self.mask.len(), o.mask.len());
@@ -434,6 +433,7 @@ impl MaskRaster {
         }
     }
 
+    /// Final `u8` coverage (0..255; touched cells without samples get 1).
     pub fn into_coverage(self) -> Vec<u8> {
         self.mask
             .iter()

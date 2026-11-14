@@ -36,6 +36,8 @@ pub fn boundary_leader(model: &Model, item: &Item, side: u8, port: P) -> Leader 
                 if (start.y - port.y).abs() < 1e-9 {
                     vec![start, port]
                 } else {
+                    // one bend: vertical (orthogonal, po) or diagonal (elbow) to the port
+                    // row, then horizontal
                     let mid = if style == LeaderStyle::Elbow {
                         let dy = port.y - start.y;
                         let sx = if port.x >= start.x { 1.0 } else { -1.0 };
@@ -125,11 +127,10 @@ pub fn boundary_candidates(
     keep: &impl Fn(usize, &Rect) -> bool,
     out: &mut Vec<Cand>,
 ) {
-    let Some(area) = obs.label_area.or(model.canvas) else {
+    let Some(area) = slot_area(model, obs) else {
         return;
     };
     let margin = item.len.boundary_margin;
-    let style = model.leaders.style;
     let it = item.index as u32;
     for &vi in vis {
         let v = &variants[vi];
@@ -176,37 +177,6 @@ pub fn boundary_candidates(
                 if !keep(vi, &rect) {
                     continue;
                 }
-                let start = crate::leaders::leader_start(model, item, port);
-                let pts = match style {
-                    LeaderStyle::Orthogonal | LeaderStyle::Elbow => {
-                        let horizontal = side == "left" || side == "right";
-                        if horizontal {
-                            if (start.y - port.y).abs() < 1e-9 {
-                                vec![start, port]
-                            } else {
-                                // one bend: vertical (orthogonal, po) or diagonal (elbow) to
-                                // the port row, then horizontal
-                                let mid = if style == LeaderStyle::Elbow {
-                                    let dy = port.y - start.y;
-                                    let sx = if port.x >= start.x { 1.0 } else { -1.0 };
-                                    P::new(start.x + sx * dy.abs(), port.y)
-                                } else {
-                                    P::new(start.x, port.y)
-                                };
-                                if (port.x - mid.x) * (port.x - start.x) <= 0.0 {
-                                    vec![start, port]
-                                } else {
-                                    vec![start, mid, port]
-                                }
-                            }
-                        } else if (start.x - port.x).abs() < 1e-9 {
-                            vec![start, port]
-                        } else {
-                            vec![start, P::new(port.x, start.y), port]
-                        }
-                    }
-                    _ => vec![start, port],
-                };
                 let mut c = Cand::new(
                     it,
                     vi as u16,
@@ -217,7 +187,7 @@ pub fn boundary_candidates(
                     rect,
                 );
                 c.bside = side_code(side);
-                let l = Leader::new(pts, style);
+                let l = boundary_leader(model, item, c.bside, port);
                 if l.len > 0.0 {
                     c.leaders.push(l);
                 }

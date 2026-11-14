@@ -636,7 +636,7 @@
             133.08
           ]
         },
-        "cost": 2.9278926158542085,
+        "cost": 2.9278349917654354,
         "degrade_steps": [
           "distant"
         ],
@@ -652,12 +652,13 @@
         "reason": "omitted_by_priority",
         "blocking": [
           "items",
-          "labels"
+          "labels",
+          "leaders"
         ],
         "blocked_by": [
           "m0",
           "m6",
-          "m8"
+          "m11"
         ],
         "priority": {
           "tier": 0,
@@ -669,8 +670,6 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       },
@@ -698,8 +697,6 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       },
@@ -835,74 +832,34 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       },
       {
         "id": "m8",
-        "placed": true,
-        "box": {
-          "x": 189.08340994899265,
-          "y": 128.13422620415054,
-          "w": 18.605819999999994,
-          "h": 8.878080000000011
-        },
-        "anchor": [
-          169.22,
-          145.24
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items",
+          "labels"
         ],
-        "anchor_side": "distant",
-        "model": "distant",
-        "text": {
-          "lines": [
-            "Yew"
-          ],
-          "used": "original",
-          "truncated": false,
-          "baseline_offsets": [
-            7.490879999999998
-          ],
-          "line_widths": [
-            16.004819999999995
-          ],
-          "x_offset": 1.3004999999999998,
-          "x_offsets": [
-            1.3004999999999998
-          ],
-          "align": "center",
-          "font_size": 8.669999999999998,
-          "font_family": "default",
-          "font_weight": 400,
-          "scale": 0.7224999999999999
-        },
-        "leader": {
-          "points": [
-            [
-              172.45357836378952,
-              143.9006079867222
-            ],
-            [
-              189.08340994899265,
-              137.01230620415055
-            ]
-          ],
-          "style": "straight",
-          "port": [
-            189.08340994899265,
-            137.01230620415055
-          ]
-        },
-        "cost": 3.1591995378287576,
-        "degrade_steps": [
-          "shrink:0.7225"
+        "blocked_by": [
+          "m2",
+          "m5",
+          "m13"
         ],
         "priority": {
           "tier": 0,
           "score": 28.0,
           "rank": 8
-        }
+        },
+        "degrade_steps": [
+          "alternatives",
+          "wrap",
+          "distant",
+          "evict_lower",
+          "omit"
+        ]
       },
       {
         "id": "m9",
@@ -974,45 +931,79 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       },
       {
         "id": "m11",
-        "placed": false,
-        "reason": "omitted_by_priority",
-        "blocking": [
-          "items",
-          "labels"
+        "placed": true,
+        "box": {
+          "x": 228.41100059921837,
+          "y": 145.30136244315125,
+          "w": 37.01999999999998,
+          "h": 12.839999999999975
+        },
+        "anchor": [
+          190.07,
+          129.42
         ],
-        "blocked_by": [
-          "m6",
-          "m8",
-          "m32"
+        "anchor_side": "distant",
+        "model": "distant",
+        "text": {
+          "lines": [
+            "Cedar"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            33.42
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": {
+          "points": [
+            [
+              193.3035783637895,
+              130.7593920132778
+            ],
+            [
+              228.41100059921837,
+              145.30136244315125
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            228.41100059921837,
+            145.30136244315125
+          ]
+        },
+        "cost": 2.5411570825338927,
+        "degrade_steps": [
+          "distant"
         ],
         "priority": {
           "tier": 0,
           "score": 25.0,
           "rank": 11
-        },
-        "degrade_steps": [
-          "alternatives",
-          "wrap",
-          "distant",
-          "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
-          "omit"
-        ]
+        }
       },
       {
         "id": "m12",
         "placed": true,
         "box": {
-          "x": 75.01772220571388,
-          "y": 60.63253696265825,
+          "x": 103.02063755684877,
+          "y": 40.4689994007816,
           "w": 24.587999999999994,
           "h": 12.719999999999999
         },
@@ -1047,21 +1038,21 @@
         "leader": {
           "points": [
             [
-              140.2564216362105,
-              90.19060798672218
+              142.1506079867222,
+              88.2964216362105
             ],
             [
-              99.60572220571387,
-              73.35253696265825
+              127.60863755684876,
+              53.1889994007816
             ]
           ],
           "style": "straight",
           "port": [
-            99.60572220571387,
-            73.35253696265825
+            127.60863755684876,
+            53.1889994007816
           ]
         },
-        "cost": 2.5541666666666663,
+        "cost": 2.51405140801733,
         "degrade_steps": [
           "distant"
         ],
@@ -1201,7 +1192,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.5252449038496111,
+        "cost": 0.5133333333333331,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1215,11 +1206,12 @@
         "reason": "omitted_by_priority",
         "blocking": [
           "items",
-          "labels"
+          "labels",
+          "leaders"
         ],
         "blocked_by": [
           "m5",
-          "m8",
+          "m11",
           "m24",
           "m32"
         ],
@@ -1233,8 +1225,6 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       },
@@ -1244,15 +1234,13 @@
         "reason": "omitted_by_priority",
         "blocking": [
           "items",
-          "labels",
-          "leaders"
+          "labels"
         ],
         "blocked_by": [
           "m9",
           "m22",
           "m25",
-          "m30",
-          "m33"
+          "m30"
         ],
         "priority": {
           "tier": 0,
@@ -1264,8 +1252,6 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       },
@@ -1273,8 +1259,8 @@
         "id": "m18",
         "placed": true,
         "box": {
-          "x": 98.93030620415053,
-          "y": 168.45340994899266,
+          "x": 95.10347188049963,
+          "y": 177.69220527410553,
           "w": 24.432000000000016,
           "h": 12.839999999999975
         },
@@ -1313,17 +1299,17 @@
               151.82357836378952
             ],
             [
-              123.36230620415054,
-              168.45340994899266
+              119.53547188049964,
+              177.69220527410553
             ]
           ],
           "style": "straight",
           "port": [
-            123.36230620415054,
-            168.45340994899266
+            119.53547188049964,
+            177.69220527410553
           ]
         },
-        "cost": 2.163422663432386,
+        "cost": 2.2542496632045363,
         "degrade_steps": [
           "distant"
         ],
@@ -1339,11 +1325,12 @@
         "reason": "omitted_by_priority",
         "blocking": [
           "items",
-          "labels"
+          "labels",
+          "leaders"
         ],
         "blocked_by": [
           "m6",
-          "m8",
+          "m11",
           "m14",
           "m32"
         ],
@@ -1357,8 +1344,6 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       },
@@ -1366,8 +1351,8 @@
         "id": "m20",
         "placed": true,
         "box": {
-          "x": 87.34000000000124,
-          "y": 84.6252454224048,
+          "x": 87.34000000000248,
+          "y": 82.87049084480961,
           "w": 37.02000000000001,
           "h": 12.840000000000003
         },
@@ -1400,7 +1385,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.6167556530415667,
+        "cost": 0.5809794135004887,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1431,8 +1416,6 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       },
@@ -1486,10 +1469,10 @@
         "id": "m23",
         "placed": true,
         "box": {
-          "x": 41.135999999999996,
-          "y": 133.08,
+          "x": 49.331999999999994,
+          "y": 123.61999999999999,
           "w": 34.72800000000001,
-          "h": 12.839999999999975
+          "h": 12.83999999999999
         },
         "anchor": [
           115.56,
@@ -1522,21 +1505,21 @@
         "leader": {
           "points": [
             [
-              112.07021848585586,
-              130.30725452949915
+              112.06,
+              130.04
             ],
             [
-              75.864,
-              133.08
+              84.06,
+              130.04
             ]
           ],
           "style": "straight",
           "port": [
-            75.864,
-            133.08
+            84.06,
+            130.04
           ]
         },
-        "cost": 2.506504885447282,
+        "cost": 2.220833333333333,
         "degrade_steps": [
           "distant"
         ],
@@ -1550,8 +1533,8 @@
         "id": "m24",
         "placed": true,
         "box": {
-          "x": 203.34027230971225,
-          "y": 143.69564985078435,
+          "x": 208.62769379584947,
+          "y": 162.96340994899265,
           "w": 26.112000000000023,
           "h": 12.839999999999975
         },
@@ -1559,8 +1542,8 @@
           200.4,
           143.1
         ],
-        "anchor_side": "bottom-right",
-        "model": "slider",
+        "anchor_side": "distant",
+        "model": "distant",
         "text": {
           "lines": [
             "Oak"
@@ -1583,9 +1566,27 @@
           "font_weight": 400,
           "scale": 1.0
         },
-        "leader": null,
-        "cost": 0.35874999999999996,
-        "degrade_steps": [],
+        "leader": {
+          "points": [
+            [
+              201.7393920132778,
+              146.3335783637895
+            ],
+            [
+              208.62769379584947,
+              162.96340994899265
+            ]
+          ],
+          "style": "straight",
+          "port": [
+            208.62769379584947,
+            162.96340994899265
+          ]
+        },
+        "cost": 1.9749999999999996,
+        "degrade_steps": [
+          "distant"
+        ],
         "priority": {
           "tier": 0,
           "score": 12.0,
@@ -1596,8 +1597,8 @@
         "id": "m25",
         "placed": true,
         "box": {
-          "x": 131.45000000000002,
-          "y": 40.69600000000001,
+          "x": 138.0195091551904,
+          "y": 59.196000000002144,
           "w": 28.139999999999986,
           "h": 12.563999999999993
         },
@@ -1605,8 +1606,8 @@
           145.52,
           74.76
         ],
-        "anchor_side": "distant",
-        "model": "distant",
+        "anchor_side": "top",
+        "model": "slider",
         "text": {
           "lines": [
             "Pine"
@@ -1629,27 +1630,9 @@
           "font_weight": 400,
           "scale": 1.0
         },
-        "leader": {
-          "points": [
-            [
-              145.52,
-              71.26
-            ],
-            [
-              145.52,
-              53.260000000000005
-            ]
-          ],
-          "style": "straight",
-          "port": [
-            145.52,
-            53.260000000000005
-          ]
-        },
-        "cost": 1.975,
-        "degrade_steps": [
-          "distant"
-        ],
+        "leader": null,
+        "cost": 0.33519705618928847,
+        "degrade_steps": [],
         "priority": {
           "tier": 0,
           "score": 11.0,
@@ -1662,7 +1645,8 @@
         "reason": "omitted_by_priority",
         "blocking": [
           "items",
-          "labels"
+          "labels",
+          "leaders"
         ],
         "blocked_by": [
           "m13",
@@ -1680,8 +1664,6 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       },
@@ -1707,8 +1689,6 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       },
@@ -1716,8 +1696,8 @@
         "id": "m28",
         "placed": true,
         "box": {
-          "x": 42.306,
-          "y": 109.08,
+          "x": 48.792,
+          "y": 96.61,
           "w": 32.388000000000005,
           "h": 12.840000000000003
         },
@@ -1752,21 +1732,21 @@
         "leader": {
           "points": [
             [
-              109.22356460227272,
-              103.58050371600721
+              109.18,
+              103.03
             ],
             [
-              74.694,
-              109.08
+              81.18,
+              103.03
             ]
           ],
           "style": "straight",
           "port": [
-            74.694,
-            109.08
+            81.18,
+            103.03
           ]
         },
-        "cost": 2.478432752975671,
+        "cost": 2.220833333333333,
         "degrade_steps": [
           "distant"
         ],
@@ -1786,6 +1766,7 @@
         ],
         "blocked_by": [
           "m5",
+          "m11",
           "m24",
           "m34"
         ],
@@ -1799,8 +1780,6 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       },
@@ -1808,8 +1787,8 @@
         "id": "m30",
         "placed": true,
         "box": {
-          "x": 166.7751091551904,
-          "y": 53.95000000000218,
+          "x": 172.6342183103808,
+          "y": 53.95000000000435,
           "w": 24.588000000000022,
           "h": 12.719999999999999
         },
@@ -1817,7 +1796,7 @@
           173.21,
           69.67
         ],
-        "anchor_side": "top",
+        "anchor_side": "top-right",
         "model": "slider",
         "text": {
           "lines": [
@@ -1842,7 +1821,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.16374999999994566,
+        "cost": 0.28374999999989126,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1854,8 +1833,8 @@
         "id": "m31",
         "placed": true,
         "box": {
-          "x": 95.53867965644037,
-          "y": 150.78132034355966,
+          "x": 104.34124542240482,
+          "y": 151.65999999999883,
           "w": 17.879999999999995,
           "h": 12.444000000000017
         },
@@ -1863,8 +1842,8 @@
           115.54,
           148.66
         ],
-        "anchor_side": "bottom-left",
-        "model": "adjacent",
+        "anchor_side": "bottom",
+        "model": "slider",
         "text": {
           "lines": [
             "Fir"
@@ -1888,7 +1867,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.5500000000000004,
+        "cost": 0.27914031750656976,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1934,7 +1913,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.1787499999999687,
+        "cost": 0.18589958068496384,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -1946,16 +1925,16 @@
         "id": "m33",
         "placed": true,
         "box": {
-          "x": 110.3920454224048,
-          "y": 61.05000000000108,
-          "w": 26.111999999999995,
+          "x": 104.22813626721442,
+          "y": 61.05000000000322,
+          "w": 26.11200000000001,
           "h": 12.840000000000003
         },
         "anchor": [
           126.53,
           76.89
         ],
-        "anchor_side": "top",
+        "anchor_side": "top-left",
         "model": "slider",
         "text": {
           "lines": [
@@ -1980,7 +1959,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.1383141632054735,
+        "cost": 0.3317053577191796,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2057,8 +2036,6 @@
           "wrap",
           "distant",
           "evict_lower",
-          "shrink:0.85",
-          "soft_overlap",
           "omit"
         ]
       }
@@ -2066,7 +2043,7 @@
     "stats": {
       "placed": 23,
       "total": 36,
-      "placed_weighted": 0.669740620821484,
+      "placed_weighted": 0.6667617434474685,
       "required_placed": true,
       "hard_violations": 0,
       "leader_crossings": 0,
@@ -2075,7 +2052,7 @@
       "iterations": 10000,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 1640,
+      "candidates": 1616,
       "omission_order": [
         "m35",
         "m29",
@@ -2085,17 +2062,16 @@
         "m19",
         "m17",
         "m16",
-        "m11",
         "m10",
+        "m8",
         "m7",
         "m4",
         "m3"
       ],
       "priority_inversions": 0,
-      "total_cost": 37.1327071926488,
+      "total_cost": 36.00048822146884,
       "degraded": {
-        "distant": 7,
-        "shrunk": 1
+        "distant": 8
       },
       "grid": {
         "cell": 3.0,

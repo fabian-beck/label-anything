@@ -34,10 +34,11 @@ hide:
 
 </div>
 
-<figure markdown>
+<figure markdown data-la-example="economies">
 [![The world's economies as a bubble chart, 147 of its 195 countries labeled](assets/figures/economies.svg)](assets/figures/economies.svg)
 <figcaption>The world's economies: each country a bubble sized by its GDP (Natural Earth,
-2019). Label Anything labels 147 of 195 in a fraction of a second.</figcaption>
+2019). Label Anything labels 147 of 195 in a fraction of a second, here in your browser:
+choose other variables and it labels the chart again.</figcaption>
 </figure>
 
 In this chart:
@@ -127,30 +128,32 @@ labels stay put ([interactive maps](tutorials/interactive-maps.md)).
 
 ## Gallery
 
-Open data, labeled by the engine
-([scripts](gh:examples/showcase/make_showcase.py)); click a picture to enlarge it.
+Open data, labeled by the engine ([scripts](gh:examples/showcase/make_showcase.py)). The
+examples on this page are live: the engine runs in your browser, so hover a label or a
+mark, and change, zoom or drag what is shown.
 
-<figure markdown>
+<figure markdown data-la-example="europe">
 [![The countries and capitals of Europe, labeled](assets/figures/europe.svg)](assets/figures/europe.svg)
 <figcaption markdown>**A map.** Europe's countries and capitals (Natural Earth). Country
 names sit inside the country, abbreviated where it is narrow (U.K., AUST.) and on a leader
 where it is too small (Luxembourg, Malta); no label covers a sea's name. All 91 labels
-placed.</figcaption>
+placed. Pan and zoom: every view is labeled again, the labels stay where they can, and
+more cities come as there is room.</figcaption>
 </figure>
 
-<figure markdown>
+<figure markdown data-la-example="retina">
 [![A fundus photograph with its parts labeled in the margins](assets/figures/retina.svg)](assets/figures/retina.svg)
 <figcaption markdown>**A photograph.** The back of an eye (fundus photograph by
 M. Häggström, CC0), labeled like an anatomy atlas: names in the margins, each with a leader
-to its part.</figcaption>
+to its part. Choose the margins and how the leaders run.</figcaption>
 </figure>
 
-<figure markdown>
+<figure markdown data-la-example="modules">
 [![The module graph of the library's TypeScript packages, labeled](assets/figures/modules.svg)](assets/figures/modules.svg)
 <figcaption markdown>**A diagram.** This library's own TypeScript modules: 112 nodes, 416
 imports. The most imported are labeled first, in bold; labels may cross edges at a cost,
 never nodes, and a label that would stand as near another node as its own goes out on a
-leader. All 112 placed.</figcaption>
+leader. All 112 placed. Drag a node: its edges follow, and the labels make room.</figcaption>
 </figure>
 
 ## Five lines
@@ -202,8 +205,9 @@ All six build the same problem and get the same boxes.
 The [real-world benchmark](project/benchmark.md) compares Label Anything with nine other
 labelers, among them adjustText, ggrepel, vega-label and textalloc, on 62 problems from
 open data. [The results](project/benchmark.md#what-the-results-show): no overlaps and no
-crossing leaders anywhere, and the most usable labels on 60 of the 62, often by only a few
-percent. It falls short on dense data, moving labels and the speed of the largest
+crossing leaders anywhere, and with every means the most usable labels on 60 of the 62,
+often by only a few percent; the default gives up a few percent of them for a calmer
+picture. It falls short on dense data, moving labels and the speed of the largest
 problems.
 
 ## Good to know

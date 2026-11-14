@@ -1,0 +1,54 @@
+{
+  "kind": "place",
+  "name": "a label is turned by placement.area_rotation at most",
+  "$comment": "The strip's main axis is at 65°, more than the 45° a label may be turned by default: the label takes 45°, where it still fits the 44 px wide strip.",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 300
+    },
+    "items": [
+      {
+        "id": "sound",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              119.225,
+              31.945
+            ],
+            [
+              220.653,
+              249.459
+            ],
+            [
+              180.775,
+              268.055
+            ],
+            [
+              79.347,
+              50.541
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Sound"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "model": {
+      "sound": "internal"
+    },
+    "rotation": {
+      "sound": 45
+    }
+  }
+}

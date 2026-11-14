@@ -66,16 +66,8 @@ export class AvoidW {
     return this.kind === o.kind && this.w === o.w;
   }
 
-  isSoft(): boolean {
-    return this.kind === AvoidKind.Soft;
-  }
-
   isIgnore(): boolean {
     return this.kind === AvoidKind.Ignore;
-  }
-
-  weight(): number {
-    return this.kind === AvoidKind.Soft ? this.w : 0;
   }
 }
 
@@ -406,7 +398,7 @@ export class Obstacles {
     const n = nc > 1 ? nc : 1;
     // only the samples that can fall on the grid (the others never count; the margin of
     // one cell absorbs rounding)
-    const area = new Rect(g.ox, g.oy, g.ox + g.cols * step, g.oy + g.rows * step).inflate(step);
+    const area = g.extent().inflate(step);
     const [k0, k1] = sampleRangeInRect(a, b, n, area);
     let acc = 0;
     for (let k = k0; k < k1; k++) {

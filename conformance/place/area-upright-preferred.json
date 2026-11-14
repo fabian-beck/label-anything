@@ -1,0 +1,54 @@
+{
+  "kind": "place",
+  "name": "a label with room inside its slanted area stays upright",
+  "$comment": "Turning costs a quarter of weights.shape per 45°: a label that has 1 em of room around it upright gains nothing from it.",
+  "problem": {
+    "canvas": {
+      "width": 400,
+      "height": 300
+    },
+    "items": [
+      {
+        "id": "bay",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              117.417,
+              33.038
+            ],
+            [
+              342.583,
+              163.038
+            ],
+            [
+              282.583,
+              266.962
+            ],
+            [
+              57.417,
+              136.962
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Bay"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "model": {
+      "bay": "internal"
+    },
+    "rotation": {
+      "bay": 0
+    }
+  }
+}

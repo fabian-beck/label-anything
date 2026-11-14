@@ -27,9 +27,17 @@ The first release, 0.1.0. Nothing is published to a package registry yet.
 - Priority and omission: explicit priorities, attribute expressions, outlierness, tiers
   and per-category coverage decide which labels are left out; the result gives the reason
   for every omitted label. Font classes set important labels larger or bold.
+- Labels of areas go where they have room inside the polygon, at places spread over the
+  part they fit in, and are turned along a slanted area where an upright label has less
+  room (`placement.area_rotation`, 45° at most by default; the placement then has a
+  `rotation` about the center of its `box`).
 - A degradation ladder for labels that do not fit: alternative texts, wrapping, distant
   placement, eviction of lower priorities, shrinking, soft overlap, omission.
-- Presets `scatter`, `map`, `graph`, `illustration` and `auto`.
+- How hard the engine tries to place every label is one option, `placement.aggressiveness`:
+  `medium` (the default) keeps type at its size and leaders within 4 em, `high` also
+  shrinks type, relaxes overlaps and draws leaders up to 8 em, `low` keeps labels next to
+  their marks with more room around them.
+- Presets `auto`, `scatter`, `map`, `graph`, `illustration` and `none`.
 - Warm starts and stability costs for interactive and animated views.
 - A deterministic solver (greedy pass, local search, exact search for small problems)
   with a time budget that does not depend on the machine's speed.

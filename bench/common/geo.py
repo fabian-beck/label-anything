@@ -23,10 +23,6 @@ class Equirect:
         y = (self.lat0 - lat) / (self.lat0 - self.lat1) * self.height
         return (x, y)
 
-    @property
-    def px_per_deg(self) -> float:
-        return self.width / (self.lon1 - self.lon0)
-
 
 @dataclass
 class WebMercator:
@@ -50,9 +46,6 @@ class WebMercator:
         cx, cy = self.world(self.lon, self.lat, self.zoom)
         x, y = self.world(lon, lat, self.zoom)
         return (x - cx + self.width / 2, y - cy + self.height / 2)
-
-    def meters_per_px(self) -> float:
-        return 156543.03392 * math.cos(math.radians(self.lat)) / 2.0 ** self.zoom
 
 
 def simplify(pts: list[tuple[float, float]], tol: float) -> list[tuple[float, float]]:

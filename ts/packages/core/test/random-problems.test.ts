@@ -7,39 +7,11 @@
 // When the Rust CLI has been built (`cargo build --release -p label-anything-cli`), the
 // first seeds are also solved by it (without a clock) and the results must be identical.
 // LA_RANDOM_CASES (default 150) and LA_RANDOM_PARITY (default 40) set the counts.
-import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { BasicEnv } from "../src/env.js";
-import { placeWith } from "../src/place.js";
-import { jsonDiff, withoutTiming } from "./parity-util.js";
-
-const MASK = (BigInt(1) << BigInt(64)) - BigInt(1);
-
-/** Small deterministic generator (SplitMix64), as in the Rust test. */
-export class Rng {
-  private s: bigint;
-  constructor(seed: number) {
-    this.s = BigInt(seed);
-  }
-  next(): bigint {
-    this.s = (this.s + BigInt("0x9E3779B97F4A7C15")) & MASK;
-    let z = this.s;
-    z = ((z ^ (z >> BigInt(30))) * BigInt("0xBF58476D1CE4E5B9")) & MASK;
-    z = ((z ^ (z >> BigInt(27))) * BigInt("0x94D049BB133111EB")) & MASK;
-    return z ^ (z >> BigInt(31));
-  }
-  f(): number {
-    return Number(this.next() >> BigInt(11)) / 9007199254740992;
-  }
-  range(a: number, b: number): number {
-    return a + (b - a) * this.f();
-  }
-  below(n: number): number {
-    return Number(this.next() % BigInt(n));
-  }
-}
+import { solveWith } from "../src/place.js";
+import { HAS_RUST_CLI, jsonDiff, rustResult, withoutTiming } from "./parity-util.js";
+import { Rng, envInt } from "./util.js";
 
 const WORDS = [
   "Alpha",
@@ -57,7 +29,7 @@ const WORDS = [
 ];
 
 /** The random problem of `seed` (the same JSON as the Rust test builds). */
-export function problem(seed: number): Record<string, unknown> {
+function problem(seed: number): Record<string, unknown> {
   const r = new Rng(seed);
   const w = r.range(200, 500);
   const h = r.range(150, 400);
@@ -160,50 +132,31 @@ export function problem(seed: number): Record<string, unknown> {
   };
 }
 
-const envInt = (name: string, d: number): number => {
-  const v = Number(process.env[name]);
-  return Number.isInteger(v) && v >= 0 ? v : d;
-};
 const CASES = envInt("LA_RANDOM_CASES", 150);
 const PARITY = envInt("LA_RANDOM_PARITY", 40);
-
-const BIN = fileURLToPath(new URL("../../../../rust/target/release/label-anything", import.meta.url));
-const HAS_CLI = existsSync(BIN);
-
-/** The Rust CLI's result without a clock (null if this build lacks `--no-clock`). */
-function rustResult(p: unknown): unknown {
-  try {
-    const out = execFileSync(BIN, ["place", "-", "--no-clock"], { input: JSON.stringify(p), maxBuffer: 1 << 28, stdio: ["pipe", "pipe", "pipe"] });
-    return JSON.parse(out.toString());
-  } catch (e) {
-    const msg = String((e as { stderr?: unknown }).stderr ?? e);
-    if (msg.includes("--no-clock")) return null;
-    throw e;
-  }
-}
 
 describe("random_problems", () => {
   type Stats = Record<string, unknown>;
   for (let seed = 0; seed < CASES; seed++) {
     it(`random_problems_keep_the_guarantees: seed ${seed}`, () => {
       const p = problem(seed);
-      const r = placeWith(p, new BasicEnv()) as unknown as { placements: unknown; stats: Stats };
+      const r = solveWith(p, new BasicEnv()) as unknown as { placements: unknown; stats: Stats };
       const failures: string[] = [];
       for (const k of ["hard_violations", "priority_inversions", "leader_crossings"]) {
         if (r.stats[k] !== 0) failures.push(`seed ${seed}: ${k} = ${String(r.stats[k])}`);
       }
-      const r2 = placeWith(p, new BasicEnv()) as unknown as { placements: unknown };
+      const r2 = solveWith(p, new BasicEnv()) as unknown as { placements: unknown };
       if (jsonDiff(r.placements, r2.placements).length > 0) failures.push(`seed ${seed}: not deterministic`);
       expect(failures).toEqual([]);
     });
   }
 
   for (let seed = 0; seed < Math.min(PARITY, CASES); seed++) {
-    it.skipIf(!HAS_CLI)(`same result as the Rust CLI: seed ${seed}`, () => {
+    it.skipIf(!HAS_RUST_CLI)(`same result as the Rust CLI: seed ${seed}`, () => {
       const p = problem(seed);
       const rust = rustResult(p);
       if (rust === null) return; // an older CLI build without --no-clock
-      const ts = withoutTiming(placeWith(p, new BasicEnv(), "rust"));
+      const ts = withoutTiming(solveWith(p, new BasicEnv(), "rust"));
       expect(jsonDiff(ts, withoutTiming(rust))).toEqual([]);
     });
   }

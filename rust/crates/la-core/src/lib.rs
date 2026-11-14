@@ -72,45 +72,36 @@ pub struct DebugData {
     pub grid: grid::GridSpec,
     /// (class name, coverage 0..255 per cell)
     pub classes: Vec<(String, Vec<u8>)>,
-    /// (item id, label box, feasible) of all candidates
+    /// (item id, label box, feasible) of all candidates (a turned label: its box before
+    /// it is turned)
     pub candidates: Vec<(String, geom::Rect, bool)>,
+    /// The rotation of each candidate (degrees, clockwise on screen; 0: not turned).
+    pub rotations: Vec<f64>,
 }
 
 /// Solve a problem. Validation errors are returned as `Err`.
 pub fn place(problem: &Value, env: &dyn Env) -> Result<Value, PlaceError> {
-    place_with_debug(problem, env).map(|(r, _)| r)
-}
-
-/// Solve a problem and, when `output.debug_svg` is set, return grid data for rendering.
-pub fn place_with_debug(
-    problem: &Value,
-    env: &dyn Env,
-) -> Result<(Value, Option<DebugData>), PlaceError> {
     let report = validate::validate(problem);
     if !report.valid {
         return Err(PlaceError {
             errors: report.errors,
         });
     }
-    place_validated(problem, env, report.warnings)
+    place_validated(problem, env, report.warnings).map(|(r, _)| r)
 }
 
-/// Solve a problem that already passed `validate` (its warnings are passed through).
+/// Solve a problem that already passed `validate` (its warnings are passed through) and,
+/// when `output.debug_svg` is set, return grid data for rendering.
 pub fn place_validated(
     problem: &Value,
     env: &dyn Env,
     warnings: Vec<Issue>,
 ) -> Result<(Value, Option<DebugData>), PlaceError> {
     let t0 = env.now_ms();
-    let report = validate::Report {
-        valid: true,
-        errors: vec![],
-        warnings,
-    };
     let mut m = model::build(problem, env).map_err(|e| PlaceError {
         errors: vec![Issue::new(e.pointer, &e.code, e.message)],
     })?;
-    m.warnings.extend(report.warnings);
+    m.warnings.extend(warnings);
     let owned_fonts = labels::user_fonts(&mut m, env).map_err(|(p, msg)| PlaceError {
         errors: vec![Issue::new(p, "invalid_value", msg)],
     })?;
@@ -181,12 +172,7 @@ pub fn place_validated(
     let mut obs = obstacles::prepare(&m, min_font);
     obs.set_points_rule(&m, &variants);
     let t1 = env.now_ms();
-    let measurer = labels::Measurer {
-        fonts,
-        env,
-        shaping: &m.shaping,
-    };
-    let mut s = solver::Solve::new(&m, &obs, env, &pri, measurer, variants, t0);
+    let mut s = solver::Solve::new(&m, &obs, env, &pri, measurer, variants);
     s.generate_level0();
     let t2 = env.now_ms();
     env.progress("greedy", 0.0);
@@ -262,8 +248,9 @@ pub fn place_validated(
             candidates: s
                 .cands
                 .iter()
-                .map(|c| (m.items[c.item as usize].id.clone(), c.rect, c.feasible))
+                .map(|c| (m.items[c.item as usize].id.clone(), c.upright(), c.feasible))
                 .collect(),
+            rotations: s.cands.iter().map(|c| c.angle()).collect(),
         })
     } else {
         None
@@ -272,19 +259,6 @@ pub fn place_validated(
         st["runtime_ms"] = Value::from(env.now_ms() - t0);
     }
     Ok((res, debug))
-}
-
-/// Solve a problem given as JSON text; returns the result as JSON text, or the errors as
-/// a JSON array.
-pub fn place_str(text: &str, env: &dyn Env) -> Result<String, String> {
-    let v: Value = serde_json::from_str(text).map_err(|e| {
-        serde_json::to_string(&vec![Issue::new("", "parse", format!("invalid JSON: {e}"))])
-            .unwrap_or_default()
-    })?;
-    match place(&v, env) {
-        Ok(r) => Ok(serde_json::to_string(&r).unwrap_or_default()),
-        Err(e) => Err(serde_json::to_string(&e.errors).unwrap_or_default()),
-    }
 }
 
 /// The examples of the README are tested with the documentation.

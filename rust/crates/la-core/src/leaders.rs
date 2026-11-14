@@ -3,12 +3,12 @@
 use crate::candidates::{dir_of, Cand, Kind, Leader, Side};
 use crate::geom::{Rect, P};
 use crate::labels::Variant;
-use crate::math::{maxf, minf};
+use crate::math::minf;
 use crate::model::opts::{Attach, LeaderStyle, Port};
 use crate::model::{Item, Model};
 use crate::obstacles::FreeSpace;
 
-/// Leader start on the item for direction `d` (boundary + gap, center or tip).
+/// Leader start on the item for a leader toward `toward` (boundary + gap, center or tip).
 pub fn leader_start(model: &Model, item: &Item, toward: P) -> P {
     let attach = match model.leaders.attach {
         Attach::Auto => {
@@ -65,7 +65,7 @@ impl<'a> Stubs<'a> {
     /// otherwise.
     pub fn stubbed(&self, item: &Item, v: &Variant, mut c: Cand) -> Option<Cand> {
         c.leaders.push(stub_leader(item, &c.rect)?);
-        c.lshape = crate::candidates::label_shape(&c.rect, &v.shape);
+        c.set_lshape(&v.shape);
         self.ev.borrow_mut().eval(&mut c, v, None);
         // evaluated again with the item's other candidates
         c.evaluated = false;
@@ -474,15 +474,6 @@ pub fn curve_points(a: P, b: P, bow: f64) -> Vec<P> {
             )
         })
         .collect()
-}
-
-/// Leader length helper for tests.
-pub fn polyline_len(pts: &[P]) -> f64 {
-    let mut l = 0.0;
-    for w in pts.windows(2) {
-        l += w[0].dist(w[1]);
-    }
-    maxf(minf(l, f64::MAX), 0.0)
 }
 
 /// Spacing rules between the leaders of two items (spec §7).
