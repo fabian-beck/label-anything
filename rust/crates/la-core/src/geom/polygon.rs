@@ -175,6 +175,14 @@ pub fn contains_rect(rings: &[Vec<P>], even_odd: bool, r: &Rect, pad: f64) -> bo
     }
     let rc = rr.corners();
     for (a, b) in edges(rings) {
+        // (an edge whose bounding box misses the rectangle neither enters nor crosses it)
+        if maxf(a.x, b.x) < rr.x0
+            || minf(a.x, b.x) > rr.x1
+            || maxf(a.y, b.y) < rr.y0
+            || minf(a.y, b.y) > rr.y1
+        {
+            continue;
+        }
         // Any boundary edge entering the rectangle invalidates containment.
         if super::seg_overlaps_rect(a, b, &rr) {
             return false;
@@ -439,7 +447,13 @@ pub fn clip_ring(ring: &[P], r: &Rect) -> Vec<P> {
 /// The room of rectangle `r` inside the polygon: its distance from the polygon's boundary
 /// (0 when an edge touches or crosses it). For a rectangle inside the polygon.
 pub fn room_rect(rings: &[Vec<P>], r: &Rect) -> f64 {
-    let mut m = f64::INFINITY;
+    room_rect_within(rings, r, f64::INFINITY)
+}
+
+/// [`room_rect`], but `cap` at most: the edges farther away than the room that counts are
+/// skipped by their bounding boxes.
+pub fn room_rect_within(rings: &[Vec<P>], r: &Rect, cap: f64) -> f64 {
+    let mut m = cap;
     for (a, b) in edges(rings) {
         // an edge whose bounding box is no nearer than the nearest edge so far is skipped
         let dx = maxf(maxf(r.x0 - maxf(a.x, b.x), minf(a.x, b.x) - r.x1), 0.0);

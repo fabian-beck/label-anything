@@ -7,7 +7,7 @@
  */
 
 import { EPS, P, Rect, bboxOf, distPointSegXY } from "./geom/index.js";
-import { clipRing, containsRect, roomRect } from "./geom/polygon.js";
+import { clipRing, containsRect, roomRectWithin } from "./geom/polygon.js";
 import { RoundRectShape, Shape, shapesOverlap } from "./geom/shape.js";
 import type { Variant } from "./labels.js";
 import { ceilFast, clampf, cmpF64, floorFast, len2d, maxf, minf, signEps, sinCosDeg, sinCosDegInto } from "./math.js";
@@ -1142,7 +1142,8 @@ class AreaFrame {
     const r = Rect.fromCenter(c, this.hw, this.hh);
     const rings = this.rings(r);
     if (rings === null) return 0.0;
-    const room = roomRect(rings, r);
+    // (room beyond 1 em lacks nothing: no need to measure it)
+    const room = roomRectWithin(rings, r, this.em);
     return maxf(0.0, 1.0 - room / this.em);
   }
 

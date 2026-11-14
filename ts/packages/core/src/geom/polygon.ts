@@ -235,6 +235,8 @@ export function containsRect(rings: readonly Ring[], evenOdd: boolean, r: Rect, 
     for (let i = 0; i < n; i++) {
       const a = ring[i]!;
       const b = ring[(i + 1) % n]!;
+      // (an edge whose bounding box misses the rectangle neither enters nor crosses it)
+      if (maxf(a.x, b.x) < x0 || minf(a.x, b.x) > x1 || maxf(a.y, b.y) < y0 || minf(a.y, b.y) > y1) continue;
       // Any boundary edge entering the rectangle invalidates containment.
       if (segOverlapsRectXY(a.x, a.y, b.x, b.y, x0, y0, x1, y1)) return false;
       for (let c = 0; c < 4; c++) {
@@ -523,7 +525,15 @@ export function clipRing(ring: Ring, r: Rect): P[] {
  * (0 when an edge touches or crosses it). For a rectangle inside the polygon.
  */
 export function roomRect(rings: readonly Ring[], r: Rect): number {
-  let m = Infinity;
+  return roomRectWithin(rings, r, Infinity);
+}
+
+/**
+ * {@link roomRect}, but `cap` at most: the edges farther away than the room that counts
+ * are skipped by their bounding boxes.
+ */
+export function roomRectWithin(rings: readonly Ring[], r: Rect, cap: number): number {
+  let m = cap;
   for (let k = 0; k < rings.length; k++) {
     const ring = rings[k]!;
     const n = ring.length;

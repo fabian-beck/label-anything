@@ -1196,7 +1196,8 @@ impl AreaFrame<'_> {
         let Some(rings) = self.rings(&r) else {
             return 0.0;
         };
-        let room = crate::geom::polygon::room_rect(rings, &r);
+        // (room beyond 1 em lacks nothing: no need to measure it)
+        let room = crate::geom::polygon::room_rect_within(rings, &r, self.em);
         maxf(0.0, 1.0 - room / self.em)
     }
     /// The distance of `c` from `from` relative to the polygon's size.
