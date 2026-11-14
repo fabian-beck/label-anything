@@ -1243,10 +1243,7 @@
    },
    "label": {
     "type": "text",
-    "text": "RUSSIA",
-    "alternatives": [
-     "RUS."
-    ]
+    "text": "RUSSIA"
    },
    "priority": 1144373535.0,
    "placement": {
@@ -1624,10 +1621,7 @@
    },
    "label": {
     "type": "text",
-    "text": "TURKEY",
-    "alternatives": [
-     "TUR."
-    ]
+    "text": "TURKEY"
    },
    "priority": 1083429615.0,
    "placement": {
@@ -2201,10 +2195,7 @@
    },
    "label": {
     "type": "text",
-    "text": "GERMANY",
-    "alternatives": [
-     "GER."
-    ]
+    "text": "GERMANY"
    },
    "priority": 1083132799.0,
    "placement": {
@@ -2854,10 +2845,7 @@
    },
    "label": {
     "type": "text",
-    "text": "FRANCE",
-    "alternatives": [
-     "FR."
-    ]
+    "text": "FRANCE"
    },
    "priority": 1067059887.0,
    "placement": {
@@ -3520,9 +3508,6 @@
    "label": {
     "type": "text",
     "text": "UNITED KINGDOM",
-    "alternatives": [
-     "U.K."
-    ],
     "wrap": {
      "max_lines": 2
     }
@@ -4071,8 +4056,7 @@
    },
    "label": {
     "type": "text",
-    "text": "ITALY",
-    "alternatives": []
+    "text": "ITALY"
    },
    "priority": 1060297396.0,
    "placement": {
@@ -4530,10 +4514,7 @@
    },
    "label": {
     "type": "text",
-    "text": "SPAIN",
-    "alternatives": [
-     "SP."
-    ]
+    "text": "SPAIN"
    },
    "priority": 1047076781.0,
    "placement": {
@@ -5239,10 +5220,7 @@
    },
    "label": {
     "type": "text",
-    "text": "UKRAINE",
-    "alternatives": [
-     "UKR."
-    ]
+    "text": "UKRAINE"
    },
    "priority": 1044385155.0,
    "placement": {
@@ -5388,10 +5366,7 @@
    },
    "label": {
     "type": "text",
-    "text": "ALGERIA",
-    "alternatives": [
-     "ALG."
-    ]
+    "text": "ALGERIA"
    },
    "priority": 1043053054.0,
    "placement": {
@@ -5741,10 +5716,7 @@
    },
    "label": {
     "type": "text",
-    "text": "POLAND",
-    "alternatives": [
-     "POL."
-    ]
+    "text": "POLAND"
    },
    "priority": 1037970874.0,
    "placement": {
@@ -5846,10 +5818,7 @@
    },
    "label": {
     "type": "text",
-    "text": "MOROCCO",
-    "alternatives": [
-     "MOR."
-    ]
+    "text": "MOROCCO"
    },
    "priority": 1036471769.0,
    "placement": {
@@ -6099,10 +6068,7 @@
    },
    "label": {
     "type": "text",
-    "text": "ROMANIA",
-    "alternatives": [
-     "ROM."
-    ]
+    "text": "ROMANIA"
    },
    "priority": 1019356544.0,
    "placement": {
@@ -6292,10 +6258,7 @@
    },
    "label": {
     "type": "text",
-    "text": "NETHERLANDS",
-    "alternatives": [
-     "NETH."
-    ]
+    "text": "NETHERLANDS"
    },
    "priority": 1017332850.0,
    "placement": {
@@ -6333,8 +6296,7 @@
    },
    "label": {
     "type": "text",
-    "text": "SYRIA",
-    "alternatives": []
+    "text": "SYRIA"
    },
    "priority": 1017070135.0,
    "placement": {
@@ -6460,10 +6422,7 @@
    },
    "label": {
     "type": "text",
-    "text": "TUNISIA",
-    "alternatives": [
-     "TUN."
-    ]
+    "text": "TUNISIA"
    },
    "priority": 1011694719.0,
    "placement": {
@@ -6657,10 +6616,7 @@
    },
    "label": {
     "type": "text",
-    "text": "BELGIUM",
-    "alternatives": [
-     "BELG."
-    ]
+    "text": "BELGIUM"
    },
    "priority": 1011484055.0,
    "placement": {
@@ -7126,8 +7082,7 @@
    },
    "label": {
     "type": "text",
-    "text": "GREECE",
-    "alternatives": []
+    "text": "GREECE"
    },
    "priority": 1010716322.0,
    "placement": {
@@ -7345,10 +7300,7 @@
    },
    "label": {
     "type": "text",
-    "text": "CZECHIA",
-    "alternatives": [
-     "CZ."
-    ]
+    "text": "CZECHIA"
    },
    "priority": 1010669709.0,
    "placement": {
@@ -8058,10 +8010,7 @@
    },
    "label": {
     "type": "text",
-    "text": "SWEDEN",
-    "alternatives": [
-     "SWE."
-    ]
+    "text": "SWEDEN"
    },
    "priority": 1010285453.0,
    "placement": {
@@ -8323,10 +8272,7 @@
    },
    "label": {
     "type": "text",
-    "text": "PORTUGAL",
-    "alternatives": [
-     "PORT."
-    ]
+    "text": "PORTUGAL"
    },
    "priority": 1010269417.0,
    "placement": {
@@ -8536,10 +8482,7 @@
    },
    "label": {
     "type": "text",
-    "text": "HUNGARY",
-    "alternatives": [
-     "HUN."
-    ]
+    "text": "HUNGARY"
    },
    "priority": 1009769949.0,
    "placement": {
@@ -8881,10 +8824,7 @@
    },
    "label": {
     "type": "text",
-    "text": "BELARUS",
-    "alternatives": [
-     "BELA."
-    ]
+    "text": "BELARUS"
    },
    "priority": 1009466856.0,
    "placement": {
@@ -9142,10 +9082,7 @@
    },
    "label": {
     "type": "text",
-    "text": "AUSTRIA",
-    "alternatives": [
-     "AUST."
-    ]
+    "text": "AUSTRIA"
    },
    "priority": 1008877067.0,
    "placement": {
@@ -9379,10 +9316,7 @@
    },
    "label": {
     "type": "text",
-    "text": "SWITZERLAND",
-    "alternatives": [
-     "SWITZ."
-    ]
+    "text": "SWITZERLAND"
    },
    "priority": 1008574832.0,
    "placement": {
@@ -9584,10 +9518,7 @@
    },
    "label": {
     "type": "text",
-    "text": "BULGARIA",
-    "alternatives": [
-     "BULG."
-    ]
+    "text": "BULGARIA"
    },
    "priority": 1006975761.0,
    "placement": {
@@ -9821,10 +9752,7 @@
    },
    "label": {
     "type": "text",
-    "text": "SERBIA",
-    "alternatives": [
-     "SERB."
-    ]
+    "text": "SERBIA"
    },
    "priority": 1006944975.0,
    "placement": {
@@ -10018,10 +9946,7 @@
    },
    "label": {
     "type": "text",
-    "text": "DENMARK",
-    "alternatives": [
-     "DEN."
-    ]
+    "text": "DENMARK"
    },
    "priority": 1005818553.0,
    "placement": {
@@ -10555,10 +10480,7 @@
    },
    "label": {
     "type": "text",
-    "text": "FINLAND",
-    "alternatives": [
-     "FIN."
-    ]
+    "text": "FINLAND"
    },
    "priority": 1005520314.0,
    "placement": {
@@ -10720,10 +10642,7 @@
    },
    "label": {
     "type": "text",
-    "text": "SLOVAKIA",
-    "alternatives": [
-     "SVK."
-    ]
+    "text": "SLOVAKIA"
    },
    "priority": 1005454073.0,
    "placement": {
@@ -12117,10 +12036,7 @@
    },
    "label": {
     "type": "text",
-    "text": "NORWAY",
-    "alternatives": [
-     "NOR."
-    ]
+    "text": "NORWAY"
    },
    "priority": 1005347896.0,
    "placement": {
@@ -12510,10 +12426,7 @@
    },
    "label": {
     "type": "text",
-    "text": "IRELAND",
-    "alternatives": [
-     "IRE."
-    ]
+    "text": "IRELAND"
    },
    "priority": 1004941444.0,
    "placement": {
@@ -12795,10 +12708,7 @@
    },
    "label": {
     "type": "text",
-    "text": "CROATIA",
-    "alternatives": [
-     "CRO."
-    ]
+    "text": "CROATIA"
    },
    "priority": 1004067500.0,
    "placement": {
@@ -12960,10 +12870,7 @@
    },
    "label": {
     "type": "text",
-    "text": "BOSNIA AND HERZ.",
-    "alternatives": [
-     "B.H."
-    ],
+    "text": "BOSNIA AND HERZEGOVINA",
     "wrap": {
      "max_lines": 2
     }
@@ -13104,10 +13011,7 @@
    },
    "label": {
     "type": "text",
-    "text": "ALBANIA",
-    "alternatives": [
-     "ALB."
-    ]
+    "text": "ALBANIA"
    },
    "priority": 1002854191.0,
    "placement": {
@@ -13293,10 +13197,7 @@
    },
    "label": {
     "type": "text",
-    "text": "LITHUANIA",
-    "alternatives": [
-     "LITH."
-    ]
+    "text": "LITHUANIA"
    },
    "priority": 1002786844.0,
    "placement": {
@@ -13462,10 +13363,7 @@
    },
    "label": {
     "type": "text",
-    "text": "MOLDOVA",
-    "alternatives": [
-     "MDA."
-    ]
+    "text": "MOLDOVA"
    },
    "priority": 1002657637.0,
    "placement": {
@@ -13607,10 +13505,7 @@
    },
    "label": {
     "type": "text",
-    "text": "SLOVENIA",
-    "alternatives": [
-     "SLO."
-    ]
+    "text": "SLOVENIA"
    },
    "priority": 1002087946.0,
    "placement": {
@@ -13709,9 +13604,6 @@
    "label": {
     "type": "text",
     "text": "NORTH MACEDONIA",
-    "alternatives": [
-     "N. MAC."
-    ],
     "wrap": {
      "max_lines": 2
     }
@@ -13888,10 +13780,7 @@
    },
    "label": {
     "type": "text",
-    "text": "LATVIA",
-    "alternatives": [
-     "LAT."
-    ]
+    "text": "LATVIA"
    },
    "priority": 1001912789.0,
    "placement": {
@@ -13989,10 +13878,7 @@
    },
    "label": {
     "type": "text",
-    "text": "KOSOVO",
-    "alternatives": [
-     "KOS."
-    ]
+    "text": "KOSOVO"
    },
    "priority": 1001794248.0,
    "placement": {
@@ -14146,10 +14032,7 @@
    },
    "label": {
     "type": "text",
-    "text": "ESTONIA",
-    "alternatives": [
-     "EST."
-    ]
+    "text": "ESTONIA"
    },
    "priority": 1001326590.0,
    "placement": {
@@ -14231,10 +14114,7 @@
    },
    "label": {
     "type": "text",
-    "text": "CYPRUS",
-    "alternatives": [
-     "CYP."
-    ]
+    "text": "CYPRUS"
    },
    "priority": 1001198575.0,
    "placement": {
@@ -14348,10 +14228,7 @@
    },
    "label": {
     "type": "text",
-    "text": "MONTENEGRO",
-    "alternatives": [
-     "MONT."
-    ]
+    "text": "MONTENEGRO"
    },
    "priority": 1000622137.0,
    "placement": {
@@ -14413,10 +14290,7 @@
    },
    "label": {
     "type": "text",
-    "text": "LUXEMBOURG",
-    "alternatives": [
-     "LUX."
-    ]
+    "text": "LUXEMBOURG"
    },
    "priority": 1000619896.0,
    "placement": {
@@ -14450,8 +14324,7 @@
    },
    "label": {
     "type": "text",
-    "text": "MALTA",
-    "alternatives": []
+    "text": "MALTA"
    },
    "priority": 1000502653.0,
    "placement": {
@@ -14957,8 +14830,7 @@
    },
    "label": {
     "type": "text",
-    "text": "ICELAND",
-    "alternatives": []
+    "text": "ICELAND"
    },
    "priority": 1000361313.0,
    "placement": {
@@ -16020,7 +15892,8 @@
    "distant"
   ],
   "max_distance": "5em",
-  "inner_padding": 2
+  "inner_padding": 2,
+  "area_rotation": 60
  },
  "leaders": {
   "style": "straight",
@@ -16047,7 +15920,6 @@
  },
  "degrade": [
   "wrap",
-  "alternatives",
   "distant",
   "omit"
  ],

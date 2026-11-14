@@ -135,10 +135,10 @@ mark, and change, zoom or drag what is shown.
 <figure markdown data-la-example="europe">
 [![The countries and capitals of Europe, labeled](assets/figures/europe.svg)](assets/figures/europe.svg)
 <figcaption markdown>**A map.** Europe's countries and capitals (Natural Earth). Country
-names sit inside the country, abbreviated where it is narrow (U.K., IRE.), turned along
-it where that gives them room (Austria, Portugal) and on a leader where it is too small
-(Luxembourg, Malta); no label covers a sea's name. All 91 labels
-placed. Pan and zoom: every view is labeled again, the labels stay where they can, and
+names, always in full, sit inside the country, turned along it where that gives them room
+(Portugal, Ireland, Austria) and on a leader where it is too small or its capital is in
+the way (Luxembourg, Malta, the United Kingdom); no label covers a sea's name. 90 of 91
+labels placed: among the names of the Balkans, Pristina has no room. Pan and zoom: every view is labeled again, the labels stay where they can, and
 more cities come as there is room.</figcaption>
 </figure>
 

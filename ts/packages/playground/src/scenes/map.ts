@@ -1,6 +1,6 @@
 /**
  * A world map (Natural Earth countries, Equal Earth projection) with a label per country:
- * inside its area where it fits, else next to it or with a leader, abbreviated when space
+ * inside its area where it fits, else next to it or with a leader, abbreviated (an option) when space
  * is short, larger for the more important ones. Pan and zoom: every move is solved again,
  * warm-started, so labels stay put and the label set nests as space opens. Optional
  * flights cross the map as moving labeled points.
@@ -54,7 +54,7 @@ export class MapScene implements Scene {
   readonly title = "World map";
   readonly hint = "Drag to pan, scroll or pinch to zoom: labels stay put and fill in as space opens.";
   readonly about =
-    "Each country is an area item: its label goes inside where it fits, else beside it or on a leader. Abbreviations are shorter alternatives the engine falls back to, and type size follows importance. Every pan and zoom is solved again from the previous labels (warm start): labels stay put, and zooming in only adds labels.";
+    "Each country is an area item: its label goes inside where it fits, else beside it or on a leader. Names are in full; abbreviations can be offered as shorter alternatives the engine falls back to. Type size follows importance. Every pan and zoom is solved again from the previous labels (warm start): labels stay put, and zooming in only adds labels.";
   readonly credits = 'Map data: <a href="https://www.naturalearthdata.com/">Made with Natural Earth</a> (public domain).';
   readonly classes: readonly string[] = [];
   readonly cursor = "grab" as const;
@@ -69,7 +69,7 @@ export class MapScene implements Scene {
         { value: "rank", label: "map rank", title: "Natural Earth's label rank" },
       ],
     },
-    { key: "abbrev", label: "Abbreviations", kind: "toggle", hint: "Offer Natural Earth's abbreviations (Ger., Zimb.) as shorter alternatives" },
+    { key: "abbrev", label: "Abbreviations", kind: "toggle", hint: "Offer Natural Earth's abbreviations (Ger., Zimb.) as shorter alternatives; off: every name in full" },
     {
       key: "flights", label: "Flights", kind: "segmented",
       options: [{ value: 0, label: "none" }, { value: 25, label: "25" }, { value: 60, label: "60" }, { value: 120, label: "120" }],
@@ -77,7 +77,7 @@ export class MapScene implements Scene {
     },
     { key: "flightsFirst", label: "Flights before countries", kind: "toggle", hint: "Flight labels outrank country labels", when: (g) => Number(g("param.flights")) > 0 },
   ];
-  readonly params: Obj = { importance: "pop", abbrev: true, flights: 0, flightsFirst: false };
+  readonly params: Obj = { importance: "pop", abbrev: false, flights: 0, flightsFirst: false };
   playing = false;
 
   #countries: Country[] = [];

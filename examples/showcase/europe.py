@@ -3,8 +3,8 @@
 The countries of Natural Earth (public domain; the playground's ``world.json``) in a
 Lambert azimuthal equal-area projection centred on Europe, drawn as an SVG
 (``europe-map.svg``) with the seas named in it. The problem labels every country as an
-area (its name inside the country where it fits, wrapped or abbreviated where it is
-narrow, out on a leader where it is too small: Luxembourg, Malta) and every capital as a
+area (its name in full inside the country where it fits, wrapped or turned along the
+country where it is narrow, out on a leader where it is too small: Luxembourg, Malta) and every capital as a
 point (next to its dot, in the cartographic order of positions), the countries first and
 the larger set larger (font classes). The seas' names in the SVG are hard obstacles: no
 label covers them; the land, the borders and the graticule may be covered.
@@ -33,6 +33,9 @@ BORDER = "#8c8273"
 COUNTRY_TEXT = "#6e5f4f"
 CITY_TEXT = "#1f2328"
 SEA_TEXT = "#5a7fa8"
+
+# names Natural Earth abbreviates, in full
+FULL = {"BIH": "Bosnia and Herzegovina"}
 
 # the seas' names, drawn in the map: (lines, lon, lat)
 SEAS = [
@@ -187,17 +190,16 @@ def problem(cs: list[dict]) -> dict:
     items = []
     for c in labeled:
         rings = [[[round(x, 1), round(y, 1)] for x, y in r] for r in c["main"]]
-        name = c["name"].upper()
-        alts = [c["abbrev"].upper()] if c["abbrev"] and c["abbrev"].upper() != name else []
+        # every name in full: no abbreviations as alternatives, Natural Earth's spelled out
+        name = FULL.get(c["id"], c["name"]).upper()
         items.append({
             "id": c["id"],
             "anchor": {"type": "area", "polygon": rings[0], **({"holes": rings[1:]} if len(rings) > 1 else {}),
                        "dot": {"shape": "circle", "r": 1}},
-            "label": {"type": "text", "text": name, "alternatives": alts,
-                      **({"wrap": {"max_lines": 2}} if " " in name else {})},
+            "label": {"type": "text", "text": name, **({"wrap": {"max_lines": 2}} if " " in name else {})},
             # countries before capitals
             "priority": 1e9 + (c["pop"] or 0),
-            # inside (wrapped or abbreviated if need be), else out on a leader (the ladder's
+            # inside (wrapped or turned if need be), else out on a leader (the ladder's
             # `distant` step): a name beside a small country would read as its neighbour's
             "placement": {"models": ["internal"]},
         })
@@ -231,12 +233,13 @@ def problem(cs: list[dict]) -> dict:
         # a country's leader may pass a capital's dot (it starts at the country's centre, where
         # the capital often is); labels keep off the dots
         "avoid": {"label": {"seas": "hard"}, "leader": {"seas": "hard", "lower_items": 0.5}},
+        # names turn up to 60° along a country: Portugal's and Ireland's fit inside in full
         "placement": {"models": ["adjacent", "slider", "internal", "distant"], "max_distance": "5em",
-                      "inner_padding": 2},
+                      "inner_padding": 2, "area_rotation": 60},
         "leaders": {"style": "straight", "max_length": "7em"},
         "priority": {"font_classes": [{"first": 9, "scale": 1.3}, {"first": 24, "scale": 1.12},
                                       {"first": n, "scale": 1.0}, {"scale": 1.0}]},
-        "degrade": ["wrap", "alternatives", "distant", "omit"],
+        "degrade": ["wrap", "distant", "omit"],
         "solver": {"seed": 4},
     }
 

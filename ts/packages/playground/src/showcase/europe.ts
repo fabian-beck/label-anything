@@ -4,7 +4,7 @@
  * The countries of Natural Earth in a Lambert azimuthal equal-area projection centred on
  * Europe. The map can be panned and zoomed; every view is labeled again, from the labels
  * shown, so they stay where they can. A country is an area: its name goes inside the part
- * of it that is in view, wrapped or abbreviated where that is narrow, out on a leader
+ * of it that is in view, in full, wrapped or turned where that is narrow, out on a leader
  * where it is too small. Capitals are points; zoomed in, more cities, the smallest states
  * and more seas come. The seas' names are an SVG the engine reads: no label covers them.
  * At the first view the labels are those of the static figure.
@@ -23,6 +23,8 @@ const SCALE = W / (FRAME[2] - FRAME[0]); // px per km
 const H = Math.round((FRAME[3] - FRAME[1]) * SCALE);
 const R_EARTH = 6371.0;
 const PAD = 40; // the land is drawn this far beyond the map's edges
+// names Natural Earth abbreviates, in full
+const FULL: Record<string, string> = { BIH: "Bosnia and Herzegovina" };
 
 const SEA = "#d3e3f1";
 const LAND_OTHER = "#ebe7df";
@@ -100,7 +102,6 @@ const SMALL = new Set(["AND", "MCO", "SMR", "LIE"]);
 interface Land {
   id: string;
   name: string;
-  abbrev: string | null;
   pop: number;
   gdp: number;
   /** Per part, its rings (outer first) in the map's px at zoom 1, uncut. */
@@ -175,7 +176,7 @@ function lands(world: WorldCountry[]): Land[] {
       }
     }
     points.set(c.id, pts);
-    out.push({ id: c.id, name: c.name, abbrev: c.abbrev, pop: c.pop ?? 0, gdp: c.gdp ?? 0, parts, shapes, bounds: b, colour: LAND_OTHER, rank: Infinity });
+    out.push({ id: c.id, name: c.name, pop: c.pop ?? 0, gdp: c.gdp ?? 0, parts, shapes, bounds: b, colour: LAND_OTHER, rank: Infinity });
     (out.at(-1) as Land & { continent?: string }).continent = c.continent;
   }
   // neighbours in different colours (greedy, those with the longest outlines first)
@@ -306,15 +307,15 @@ export class Europe implements Example {
     const size = (rank: number) => 9.5 * (rank < 9 ? 1.3 : rank < 24 ? 1.12 : 1);
     const items: unknown[] = countries.map(({ land, main }) => {
       const rings = main.map((r) => r.map(([x, y]) => [round(x, 1), round(y, 1)]));
-      const name = land.name.toUpperCase();
-      const alts = land.abbrev && land.abbrev.toUpperCase() !== name ? [land.abbrev.toUpperCase()] : [];
+      // every name in full: no abbreviations as alternatives, Natural Earth's spelled out
+      const name = (FULL[land.id] ?? land.name).toUpperCase();
       return {
         id: land.id,
         anchor: { type: "area", polygon: rings[0], ...(rings.length > 1 ? { holes: rings.slice(1) } : {}), dot: { shape: "circle", r: 1 } },
-        label: { type: "text", text: name, alternatives: alts, font: { size: round(size(land.rank), 3) }, ...(name.includes(" ") ? { wrap: { max_lines: 2 } } : {}) },
+        label: { type: "text", text: name, font: { size: round(size(land.rank), 3) }, ...(name.includes(" ") ? { wrap: { max_lines: 2 } } : {}) },
         // countries before cities
         priority: 1e9 + land.pop,
-        // inside (wrapped or abbreviated if need be), else out on a leader (the ladder's
+        // inside (wrapped or turned if need be), else out on a leader (the ladder's
         // `distant` step): a name beside a small country would read as its neighbour's
         placement: { models: ["internal"] },
       };
@@ -345,9 +346,10 @@ export class Europe implements Example {
       // a country's leader may pass a city's dot (it starts at the country's centre, where
       // the capital often is); labels keep off the dots
       avoid: { label: { seas: "hard" }, leader: { seas: "hard", lower_items: 0.5 } },
-      placement: { models: ["adjacent", "slider", "internal", "distant"], max_distance: "5em", inner_padding: 2 },
+      // names turn up to 60° along a country: Portugal's and Ireland's fit inside in full
+      placement: { models: ["adjacent", "slider", "internal", "distant"], max_distance: "5em", inner_padding: 2, area_rotation: 60 },
       leaders: { style: "straight", max_length: "7em" },
-      degrade: ["wrap", "alternatives", "distant", "omit"],
+      degrade: ["wrap", "distant", "omit"],
       solver: { seed: 4 },
     } as unknown as LabelProblem;
   }
