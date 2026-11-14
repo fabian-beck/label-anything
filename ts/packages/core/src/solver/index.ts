@@ -12,10 +12,11 @@ import {
   Kind,
   type KeepFn,
   adjacent,
+  area,
+  areaRank,
   internal,
   internalRank,
   isRectShape,
-  labelShape,
   warm,
   warmNudges,
 } from "../candidates.js";
@@ -26,7 +27,7 @@ import { type Measurer, type Variant, fullSize, ladderVariants } from "../labels
 import { Stubs, distant, distantDirs } from "../leaders.js";
 import { cosDeg } from "../detmath.js";
 import { cmpF64, minf } from "../math.js";
-import { type Model, Models, labelGap } from "../model/index.js";
+import { type Item, type Model, Models, labelGap } from "../model/index.js";
 import type { Obstacles } from "../obstacles.js";
 import type { Priorities } from "../priority.js";
 import { StaticIndex } from "../spatial.js";
@@ -221,9 +222,7 @@ export class Solve {
       if (m === 0) continue;
       const fresh: Cand[] = [];
       if (item.area !== null) {
-        const rank = internalRank(item, v, m, circleRatio);
-        if (rank !== null) internal(item, vi, v, rank, fresh);
-        adjacent(item, vi, v, sliderPerGap, m, this.stubs, fresh, adjKeep);
+        this.areaCandidates(item, vi, v, m, fresh, adjKeep);
       } else {
         adjacent(item, vi, v, sliderPerGap, m, this.stubs, fresh, adjKeep);
         const rank = internalRank(item, v, m, circleRatio);
@@ -233,7 +232,7 @@ export class Solve {
       if (Models.has(m, Models.BOUNDARY)) boundaryCandidates(model, obs, item, variants, [vi], keep, fresh);
       for (const c of fresh) {
         c.level = v.level;
-        c.lshape = labelShape(c.rect, v.shape);
+        c.setLshape(v.shape);
         this.evaluator.eval(c, v, null);
         if (c.feasible || (softOk && c.relaxed)) {
           out.push(c);
@@ -242,6 +241,23 @@ export class Solve {
       }
     }
     return out;
+  }
+
+  /**
+   * The candidates of an area anchor for variant `vi` (spec §6.5): places inside the
+   * polygon; beside the dot at the pole only when the label fits nowhere inside. A pass
+   * for leaders alone (the ladder's `distant` and `boundary` steps) makes none of them
+   * again.
+   */
+  private areaCandidates(item: Item, vi: number, v: Variant, models: Models, fresh: Cand[], adjKeep: KeepFn | null): void {
+    const inside: Cand[] = [];
+    const rank = areaRank(item);
+    if (rank !== null) area(item, vi, v, rank, inside);
+    if (inside.length === 0) {
+      adjacent(item, vi, v, this.model.placement.sliderPerGap, models, this.stubs, fresh, adjKeep);
+    } else if (Models.has(models, Models.ADJACENT) || Models.has(models, Models.SLIDER) || Models.has(models, Models.INTERNAL)) {
+      for (const c of inside) fresh.push(c);
+    }
   }
 
   /**
@@ -269,9 +285,7 @@ export class Solve {
     for (const vi of vis) {
       const v = variants[vi]!;
       if (item.area !== null) {
-        const rank = internalRank(item, v, models, circleRatio);
-        if (rank !== null) internal(item, vi, v, rank, fresh);
-        adjacent(item, vi, v, sliderPerGap, models, this.stubs, fresh, adjKeep);
+        this.areaCandidates(item, vi, v, models, fresh, adjKeep);
       } else {
         adjacent(item, vi, v, sliderPerGap, models, this.stubs, fresh, adjKeep);
         const rank = internalRank(item, v, models, circleRatio);
@@ -282,7 +296,7 @@ export class Solve {
     const out: Cand[] = [];
     for (const c of fresh) {
       c.level = 0;
-      c.lshape = labelShape(c.rect, variants[c.variant]!.shape);
+      c.setLshape(variants[c.variant]!.shape);
       let known = false;
       for (const k of this.byItem[i]!) {
         const o = this.cands[k]!;
@@ -362,10 +376,7 @@ export class Solve {
     for (const vi of vis) {
       const v = variants[vi]!;
       if (item.area !== null) {
-        // area anchors: internal candidates first; external ones around the dot
-        const rank = internalRank(item, v, models, circleRatio);
-        if (rank !== null) internal(item, vi, v, rank, fresh);
-        adjacent(item, vi, v, sliderPerGap, models, this.stubs, fresh, adjKeep);
+        this.areaCandidates(item, vi, v, models, fresh, adjKeep);
       } else {
         adjacent(item, vi, v, sliderPerGap, models, this.stubs, fresh, adjKeep);
         const rank = internalRank(item, v, models, circleRatio);
@@ -377,7 +388,7 @@ export class Solve {
     this.staticDropped[i] += dropped;
     for (const c of fresh) {
       c.level = level;
-      c.lshape = labelShape(c.rect, variants[c.variant]!.shape);
+      c.setLshape(variants[c.variant]!.shape);
     }
     let kept: Cand[] = fresh;
     if (filter) {
@@ -506,7 +517,7 @@ export class Solve {
     if (c === null) return;
     c.warm = true;
     c.level = 0;
-    c.lshape = labelShape(c.rect, v.shape);
+    c.setLshape(v.shape);
     this.evaluator.eval(c, v, null);
     if (c.feasible) {
       this.warmCand[i] = this.cands.length;
@@ -617,7 +628,7 @@ export class Solve {
       if (c === null) return null;
       c.warm = true;
       c.level = level;
-      c.lshape = labelShape(c.rect, v.shape);
+      c.setLshape(v.shape);
       this.evaluator.eval(c, v, null);
       if (!c.feasible) return null;
       const id = this.cands.length;
@@ -648,7 +659,7 @@ export class Solve {
       for (const [si, c] of warmNudges(item, vi, v, rect, steps, this.models[i]!)) {
         c.level = 0;
         c.warm = true;
-        c.lshape = labelShape(c.rect, v.shape);
+        c.setLshape(v.shape);
         this.evaluator.eval(c, v, null);
         if (c.feasible) {
           const id = this.cands.length;

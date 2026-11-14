@@ -29,7 +29,7 @@
  */
 
 import { boundaryLeader, slotArea } from "../boundary.js";
-import { Cand, Kind, SIDE_FAN, labelShape } from "../candidates.js";
+import { Cand, Kind, SIDE_FAN } from "../candidates.js";
 import { EPS, P, Rect } from "../geom/index.js";
 import { cmpF64, maxf, minf } from "../math.js";
 import { FanMode, LeaderStyle, Models, Omission, Pos, labelGap } from "../model/index.js";
@@ -411,7 +411,7 @@ function layout(
     const l = boundaryLeader(model, items[j]!, right ? 1 : 0, new P(x, y));
     const tooLong = l.len > items[j]!.len.leaderMax + 1e-9;
     if (l.len > 0) c.leaders.push(l);
-    c.lshape = labelShape(c.rect, v.shape);
+    c.setLshape(v.shape);
     s.evaluator.eval(c, v, null);
     // fan leaders keep to leaders.max_length like distant ones
     if (tooLong) c.feasible = false;

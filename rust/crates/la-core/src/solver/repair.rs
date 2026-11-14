@@ -274,7 +274,7 @@ fn column_cands(
             None if item.models.has(Models::BOUNDARY) => v.level,
             None => step_level,
         };
-        c.lshape = crate::candidates::label_shape(&c.rect, &v.shape);
+        c.set_lshape(&v.shape);
         ev.eval(&mut c, v, None);
         fresh.push((j, c));
     }

@@ -86,6 +86,26 @@ pub fn crowded(model: &Model, obs: &Obstacles, item: &Item, r: &Rect, buf: &mut 
     })
 }
 
+/// The area of the label of `c` that `f` reports as covered: `f` of its box, or for a
+/// turned label the sum over the boxes of its cover, scaled to the label's area.
+fn covered(c: &Cand, f: impl Fn(&Rect) -> f64) -> f64 {
+    match &c.turn {
+        None => f(&c.rect),
+        Some(t) => {
+            let (mut sum, mut all) = (0.0, 0.0);
+            for b in &t.cover {
+                sum += f(b);
+                all += b.area();
+            }
+            if all > 0.0 {
+                sum * t.upright.area() / all
+            } else {
+                0.0
+            }
+        }
+    }
+}
+
 fn finish(c: &mut Cand, acc: Acc) {
     c.evaluated = true;
     c.cost = acc.cost;
@@ -225,7 +245,7 @@ impl<'a> Evaluator<'a> {
                 acc.violate(Block::Items, false, 0.0);
                 continue;
             }
-            let d = sj.dist_rect(&r);
+            let d = c.dist_shape(sj);
             // the margin (up to rounding), but never more than the mark keeps from the own
             // mark's box
             if margin > crate::geom::EPS
@@ -257,7 +277,7 @@ impl<'a> Evaluator<'a> {
             }
         }
         if let AvoidW::Soft(wt) = dy.label_items {
-            let cov = obs.other_items_covered(i, &r);
+            let cov = covered(c, |b| obs.other_items_covered(i, b));
             let cov = if lower_rule {
                 maxf(cov - lower_cov, 0.0)
             } else {
@@ -290,7 +310,7 @@ impl<'a> Evaluator<'a> {
                 AvoidW::Hard => {
                     let mut hit = false;
                     if cl.has_raster {
-                        hit = sat.any(&obs.grid, &r);
+                        hit = c.boxes().iter().any(|b| sat.any(&obs.grid, b));
                     } else if cl.has_prims {
                         if !hard_prims_checked {
                             self.buf2.clear();
@@ -299,17 +319,18 @@ impl<'a> Evaluator<'a> {
                         }
                         hit = self.buf2.iter().any(|&p| {
                             let (pc, prim) = &obs.prims[p as usize];
-                            *pc == ci && prim.overlaps_rect(&r)
+                            *pc == ci && c.boxes().iter().any(|b| prim.overlaps_rect(b))
                         });
                     }
                     if hit {
-                        let extra = soft_w * sat.covered_area(&obs.grid, &r) / em2;
-                        acc.violate(Block::Class(ci as u16), cl.relaxable, extra);
+                        let cov = covered(c, |b| sat.covered_area(&obs.grid, b));
+                        acc.violate(Block::Class(ci as u16), cl.relaxable, soft_w * cov / em2);
                     }
                 }
                 AvoidW::Soft(wt) => {
-                    if !on_mark && sat.any(&obs.grid, &r) {
-                        acc.add(&cl.name, wt * sat.covered_area(&obs.grid, &r) / em2);
+                    if !on_mark && c.boxes().iter().any(|b| sat.any(&obs.grid, b)) {
+                        let cov = covered(c, |b| sat.covered_area(&obs.grid, b));
+                        acc.add(&cl.name, wt * cov / em2);
                     }
                 }
                 AvoidW::Ignore => {}
@@ -364,9 +385,12 @@ impl<'a> Evaluator<'a> {
         let stub = c.has_stub();
         if c.leaders.is_empty() || stub {
             acc.add("distance", w.distance * gap / em);
+            // inside its area: the room the label lacks and its distance from the pole
+            acc.add("distance", w.distance * c.inside);
         }
-        // 7. shape penalty
+        // 7. shape penalty (a turned label: a quarter per 45°)
         acc.add("shape", w.shape * v.penalty);
+        acc.add("shape", w.shape * c.angle().abs() / 180.0);
         // 8. edge proximity
         if let Some(la) = obs.label_area {
             let d = minf(

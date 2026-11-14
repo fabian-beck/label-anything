@@ -23,8 +23,8 @@ import { leadersHitLabel } from "./state.js";
 export function pairConflict(a: Cand, b: Cand, dy: Dynamic, sp: Spacing): boolean {
   if (dy.labelLabels.kind === AvoidKind.Hard && a.labelOverlapsGap(b, sp.gap)) return true;
   if (dy.leaderLabels.kind === AvoidKind.Hard) {
-    if (leadersHitLabel(a, b.rect, sp.gap)) return true;
-    if (leadersHitLabel(b, a.rect, sp.gap)) return true;
+    if (leadersHitLabel(a, b, sp.gap)) return true;
+    if (leadersHitLabel(b, a, sp.gap)) return true;
   }
   return dy.leaderLeaders.kind === AvoidKind.Hard && candLeadersConflict(a, b, sp);
 }

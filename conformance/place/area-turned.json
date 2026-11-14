@@ -1,0 +1,55 @@
+{
+  "kind": "place",
+  "name": "a label that fits its slanted area only along the area's main axis is turned along it",
+  "$comment": "A 220 × 26 px strip at 30°: an upright label of 15.6 px height with its inner padding fits nowhere, a label along the strip does (spec §6.5). The reported box is the label before it is turned about its center.",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 200
+    },
+    "items": [
+      {
+        "id": "fjord",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              61.237,
+              33.742
+            ],
+            [
+              251.763,
+              143.742
+            ],
+            [
+              238.763,
+              166.258
+            ],
+            [
+              48.237,
+              56.258
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Long Fjord"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "model": {
+      "fjord": "internal"
+    },
+    "rotation": {
+      "fjord": 30
+    },
+    "inside_canvas": true
+  }
+}

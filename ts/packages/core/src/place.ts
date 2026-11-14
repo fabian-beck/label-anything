@@ -193,7 +193,8 @@ export function placeValidated(
     debug = {
       grid: g,
       classes,
-      candidates: s.cands.map((c): [string, Rect, boolean] => [m.items[c.item]!.id, c.rect, c.feasible]),
+      candidates: s.cands.map((c): [string, Rect, boolean] => [m.items[c.item]!.id, c.upright(), c.feasible]),
+      rotations: s.cands.map((c) => c.angle()),
     };
   }
   (res.stats as Record<string, unknown>).runtime_ms = envNow(env) - t0;

@@ -98,7 +98,7 @@
       "iterations": 0,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 48,
+      "candidates": 10,
       "omission_order": [],
       "priority_inversions": 0,
       "total_cost": -0.075,

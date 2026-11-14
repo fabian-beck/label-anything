@@ -27,7 +27,7 @@
 use super::repair::{hungarian, stack};
 use super::{verify, Reason, Solve};
 use crate::boundary::{boundary_leader, slot_area};
-use crate::candidates::{label_shape, Cand, Kind, Side};
+use crate::candidates::{Cand, Kind, Side};
 use crate::cost::Evaluator;
 use crate::geom::{Rect, P};
 use crate::math::maxf;
@@ -496,7 +496,7 @@ fn layout(
         if l.len > 0.0 {
             c.leaders.push(l);
         }
-        c.lshape = label_shape(&c.rect, &v.shape);
+        c.set_lshape(&v.shape);
         ev.eval(&mut c, v, None);
         // fan leaders keep to leaders.max_length like distant ones
         if too_long {

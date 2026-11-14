@@ -121,6 +121,57 @@ impl Leader {
     }
 }
 
+/// A turned label (spec §6.5): the label of an area anchor along the polygon's main axis.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Turn {
+    /// Degrees, clockwise on screen.
+    pub angle: f64,
+    /// The label box before it is turned about its center (the reported box).
+    pub upright: Rect,
+    /// The cover: the bounding boxes of the pieces the label is cut into along its
+    /// length, which stand for it in the tests against upright boxes.
+    pub cover: Vec<Rect>,
+}
+
+/// Most pieces of a turned label's cover.
+const COVER_MAX: f64 = 32.0;
+
+impl Turn {
+    /// The label of half size (`hw`, `hh`) around `c`, turned by `angle` (its `cos` and
+    /// `sin`): its bounding box, the turn and its exact shape.
+    pub fn of(c: P, hw: f64, hh: f64, angle: f64, cos: f64, sin: f64) -> (Rect, Turn, Shape) {
+        let (ac, asn) = (cos.abs(), sin.abs());
+        let bbox = Rect::from_center(c, hw * ac + hh * asn, hw * asn + hh * ac);
+        let n = if hh > 0.0 {
+            crate::math::clampf(crate::math::ceil_fast(hw / hh), 1.0, COVER_MAX)
+        } else {
+            COVER_MAX
+        };
+        let phw = hw / n;
+        let (ex, ey) = (phw * ac + hh * asn, phw * asn + hh * ac);
+        let cover = (0..n as usize)
+            .map(|k| {
+                let t = ((k as f64 + 0.5) / n - 0.5) * 2.0 * hw;
+                Rect::from_center(c + P::new(t, 0.0).rotate(cos, sin), ex, ey)
+            })
+            .collect();
+        let shape = Shape::RoundRect {
+            c,
+            hw,
+            hh,
+            r: 0.0,
+            cos,
+            sin,
+        };
+        let turn = Turn {
+            angle,
+            upright: Rect::from_center(c, hw, hh),
+            cover,
+        };
+        (bbox, turn, shape)
+    }
+}
+
 /// A label candidate.
 #[derive(Clone, Debug)]
 pub struct Cand {
@@ -131,7 +182,13 @@ pub struct Cand {
     pub side: Side,
     /// Position rank (cost term `w_position · rank / 8`).
     pub rank: f64,
+    /// The label box; of a turned label its bounding box.
     pub rect: Rect,
+    /// A turned label (`lshape` is then the turned box).
+    pub turn: Option<Box<Turn>>,
+    /// A label inside its area: the room it lacks and its distance from the pole (spec
+    /// §6.5; cost term `w_distance · inside`).
+    pub inside: f64,
     pub leaders: Vec<Leader>,
     /// Static cost (valid when `feasible` or `relaxed`).
     pub cost: f64,
@@ -225,9 +282,59 @@ impl Cand {
             gap
         };
         if gap > crate::geom::EPS {
+            if self.turn.is_none() && other.turn.is_none() {
+                return self.rect.dist_rect(&other.rect) < gap - crate::geom::EPS;
+            }
+            // a turned label keeps the gap with every box of its cover
             self.rect.dist_rect(&other.rect) < gap - crate::geom::EPS
+                && self.boxes().iter().any(|a| {
+                    other
+                        .boxes()
+                        .iter()
+                        .any(|b| a.dist_rect(b) < gap - crate::geom::EPS)
+                })
         } else {
             self.label_overlaps(other)
+        }
+    }
+    /// The upright boxes that stand for the label: its box, or the cover of a turned
+    /// label.
+    pub fn boxes(&self) -> &[Rect] {
+        match &self.turn {
+            Some(t) => &t.cover,
+            None => std::slice::from_ref(&self.rect),
+        }
+    }
+    /// The label box as reported: before a turned label is turned.
+    pub fn upright(&self) -> Rect {
+        match &self.turn {
+            Some(t) => t.upright,
+            None => self.rect,
+        }
+    }
+    /// The rotation of the label (degrees, clockwise on screen; 0 when it is not turned).
+    pub fn angle(&self) -> f64 {
+        self.turn.as_ref().map_or(0.0, |t| t.angle)
+    }
+    /// The distance between the label (its boxes) and shape `s`.
+    pub fn dist_shape(&self, s: &Shape) -> f64 {
+        let mut d = f64::INFINITY;
+        for b in self.boxes() {
+            d = crate::math::minf(d, s.dist_rect(b));
+        }
+        d
+    }
+    /// Whether leader `l` hits the label (`leaders::leader_hits_label` for its boxes).
+    pub fn leader_hits(&self, l: &Leader, gap: f64) -> bool {
+        self.boxes()
+            .iter()
+            .any(|b| crate::leaders::leader_hits_label(l, b, gap))
+    }
+    /// Set the exact shape of the label for the label shape `shape` (a turned label keeps
+    /// its own).
+    pub fn set_lshape(&mut self, shape: &crate::model::LabelShape) {
+        if self.turn.is_none() {
+            self.lshape = label_shape(&self.rect, shape);
         }
     }
     /// The label's interior overlaps shape `s`.
@@ -257,6 +364,8 @@ impl Cand {
             side,
             rank,
             rect,
+            turn: None,
+            inside: 0.0,
             leaders: Vec::new(),
             cost: 0.0,
             feasible: true,
@@ -384,6 +493,12 @@ pub fn warm(
     rect: Rect,
 ) -> Option<Cand> {
     let it = item.index as u32;
+    if let Some(area) = &item.area {
+        // inside the area: an internal candidate, turned as it was
+        if let Some(c) = area_warm(model, item, area, vi, v, rect) {
+            return Some(c);
+        }
+    }
     let gap = item.shape.dist_rect(&rect);
     if gap < -1e-6 || item.shape.overlaps_rect(&rect) {
         return None; // on the own mark: internal candidates cover that
@@ -994,7 +1109,297 @@ pub fn internal_rank(item: &Item, v: &Variant, models: Models, circle_ratio: f64
 /// (spec §6.5).
 const AREA_SAMPLES: f64 = 65536.0;
 
-/// Internal candidates of one variant (spec §6.3, §6.5).
+/// Whether the labels of variant `v` may be turned (spec §6.5): text in a rectangular
+/// box.
+pub fn can_turn(v: &Variant) -> bool {
+    v.text.is_some() && v.parts.is_empty() && is_rect_shape(&v.shape)
+}
+
+/// The rank of an area anchor's internal candidates (`None`: it has none).
+pub fn area_rank(item: &Item) -> Option<f64> {
+    match item.internal {
+        InternalPolicy::Never => None,
+        InternalPolicy::Allow => Some(0.0),
+        InternalPolicy::Prefer | InternalPolicy::Auto => Some(-1.0),
+    }
+}
+
+/// The frame of an area's labels of one direction: the polygon as the labels see it (for
+/// turned labels: turned back), with the label size.
+struct AreaFrame<'a> {
+    shape: &'a Shape,
+    pole: P,
+    radius: f64,
+    em: f64,
+    hw: f64,
+    hh: f64,
+    pad: f64,
+}
+
+impl AreaFrame<'_> {
+    fn fits(&self, c: P) -> bool {
+        let r = Rect::from_center(c, self.hw, self.hh);
+        // (a box inside the polygon lies in its bounding box: the cheap test first)
+        self.shape.bbox().contains_rect(&r.inflate(self.pad))
+            && self.shape.contains_rect(&r, self.pad)
+    }
+    /// What the place `c` lacks (spec §6.5): the room the label lacks to 1 em from the
+    /// polygon's boundary, in em, plus its distance from the pole relative to the
+    /// polygon's size.
+    fn lack(&self, c: P) -> f64 {
+        self.tight(c) + self.off(c, self.pole)
+    }
+    /// The room the label lacks at `c` to 1 em from the polygon's boundary, in em.
+    fn tight(&self, c: P) -> f64 {
+        let Shape::Polygon(p) = self.shape else {
+            return 0.0;
+        };
+        let room =
+            crate::geom::polygon::room_rect(&p.rings, &Rect::from_center(c, self.hw, self.hh));
+        maxf(0.0, 1.0 - room / self.em)
+    }
+    /// The distance of `c` from `from` relative to the polygon's size.
+    fn off(&self, c: P, from: P) -> f64 {
+        if self.radius > 0.0 {
+            c.dist(from) / self.radius
+        } else {
+            0.0
+        }
+    }
+
+    /// The places of the area's labels in this frame with what they lack (spec §6.5):
+    /// the best sample, improved, then one sample of each of the 3 × 3 cells of the
+    /// samples' bounding box (the one that lacks least as seen from the cell's middle),
+    /// in ascending order.
+    fn places(&self) -> Vec<(P, f64)> {
+        let (hw, hh) = (self.hw, self.hh);
+        // (center, lack, room lacking)
+        let mut pts: Vec<(P, f64, f64)> = Vec::new();
+        let sample = |c: P| {
+            let t = self.tight(c);
+            (c, t + self.off(c, self.pole), t)
+        };
+        if self.fits(self.pole) {
+            pts.push(sample(self.pole));
+        }
+        // grid samples where the label fits; an area far larger than any picture (a
+        // country beyond the view of a map) is sampled more coarsely, at about
+        // `AREA_SAMPLES` places
+        let bb = self.shape.bbox();
+        let step = maxf(maxf(2.0 * hh, 4.0), (bb.w() * bb.h() / AREA_SAMPLES).sqrt());
+        let mut y = bb.y0 + hh;
+        while y <= bb.y1 - hh + 1e-9 {
+            let mut x = bb.x0 + hw;
+            while x <= bb.x1 - hw + 1e-9 {
+                let c = P::new(x, y);
+                if self.fits(c) {
+                    pts.push(sample(c));
+                }
+                // coordinates so large that a step no longer changes them
+                if x + step <= x {
+                    break;
+                }
+                x += step;
+            }
+            if y + step <= y {
+                break;
+            }
+            y += step;
+        }
+        if pts.is_empty() {
+            return Vec::new();
+        }
+        let mut best = 0;
+        let mut sb = Rect::EMPTY;
+        for (k, &(c, g, _)) in pts.iter().enumerate() {
+            if g < pts[best].1 {
+                best = k;
+            }
+            sb = sb.add_point(c);
+        }
+        // one sample of each cell: near the cell's middle, where the label has room
+        let cell = |v: f64, lo: f64, hi: f64| {
+            if hi > lo {
+                crate::math::clampf(
+                    crate::math::floor_fast(3.0 * (v - lo) / (hi - lo)),
+                    0.0,
+                    2.0,
+                ) as usize
+            } else {
+                0
+            }
+        };
+        let mid = |k: usize, lo: f64, hi: f64| lo + (k as f64 + 0.5) * (hi - lo) / 3.0;
+        let mut cells: [Option<(usize, f64)>; 9] = [None; 9];
+        for (k, &(c, _, t)) in pts.iter().enumerate() {
+            let (qx, qy) = (cell(c.x, sb.x0, sb.x1), cell(c.y, sb.y0, sb.y1));
+            let m = P::new(mid(qx, sb.x0, sb.x1), mid(qy, sb.y0, sb.y1));
+            let g = t + self.off(c, m);
+            let q = 3 * qy + qx;
+            if cells[q].is_none_or(|b| g < b.1) {
+                cells[q] = Some((k, g));
+            }
+        }
+        let mut rest: Vec<usize> = cells
+            .iter()
+            .flatten()
+            .map(|b| b.0)
+            .filter(|&k| k != best)
+            .collect();
+        crate::sort::sort_by(&mut rest, |&a, &b| {
+            crate::math::cmp_f64(pts[a].1, pts[b].1).then(a.cmp(&b))
+        });
+        // the best sample moves, by half the grid spacing and then by half of that again
+        // and again down to 0.5 px, to where it lacks less
+        let (mut c, mut g) = (pts[best].0, pts[best].1);
+        let mut s = step * 0.5;
+        while s.is_finite() && s >= 0.5 {
+            for _ in 0..16 {
+                let mut moved = false;
+                for d in [
+                    P::new(s, 0.0),
+                    P::new(-s, 0.0),
+                    P::new(0.0, s),
+                    P::new(0.0, -s),
+                ] {
+                    let q = c + d;
+                    if !self.fits(q) {
+                        continue;
+                    }
+                    let gq = self.lack(q);
+                    if gq < g - 1e-9 {
+                        (c, g) = (q, gq);
+                        moved = true;
+                        break;
+                    }
+                }
+                if !moved {
+                    break;
+                }
+            }
+            s *= 0.5;
+        }
+        let mut out = vec![(c, g)];
+        out.extend(rest.into_iter().map(|k| (pts[k].0, pts[k].1)));
+        out
+    }
+}
+
+/// Internal candidates of an area anchor for one variant (spec §6.5): upright ones, then
+/// the ones turned along the polygon's main axis.
+pub fn area(item: &Item, vi: usize, v: &Variant, rank: f64, out: &mut Vec<Cand>) {
+    let Some(area) = &item.area else { return };
+    let (hw, hh) = (v.w * 0.5, v.h * 0.5);
+    let it = item.index as u32;
+    let frame = |shape| AreaFrame {
+        shape,
+        pole: area.pole,
+        radius: area.radius,
+        em: item.em(),
+        hw,
+        hh,
+        pad: item.len.inner_padding,
+    };
+    let cand = |rect| {
+        Cand::new(
+            it,
+            vi as u16,
+            v.level,
+            Kind::Internal,
+            Side::Internal,
+            rank,
+            rect,
+        )
+    };
+    for (c, g) in frame(&area.shape).places() {
+        let mut cd = cand(Rect::from_center(c, hw, hh));
+        cd.inside = g;
+        out.push(cd);
+    }
+    let Some(t) = area.turn.as_ref().filter(|_| can_turn(v)) else {
+        return;
+    };
+    for (c, g) in frame(&t.shape).places() {
+        let c = area.pole + (c - area.pole).rotate(t.cos, t.sin);
+        let (bbox, turn, shape) = Turn::of(c, hw, hh, t.angle, t.cos, t.sin);
+        let mut cd = cand(bbox);
+        cd.inside = g;
+        cd.turn = Some(Box::new(turn));
+        cd.lshape = Some(Box::new(shape));
+        out.push(cd);
+    }
+}
+
+/// The warm-start box of an area item as an internal candidate of variant `vi`, where it
+/// lies inside the polygon (with the inner padding), turned by the rotation it came with.
+fn area_warm(
+    model: &crate::model::Model,
+    item: &Item,
+    area: &crate::model::Area,
+    vi: usize,
+    v: &Variant,
+    rect: Rect,
+) -> Option<Cand> {
+    let rank = area_rank(item)?;
+    let (hw, hh) = (v.w * 0.5, v.h * 0.5);
+    let c = rect.center();
+    let angle = model.warm_rotation.get(&item.id).copied().unwrap_or(0.0);
+    let mut cd = Cand::new(
+        item.index as u32,
+        vi as u16,
+        v.level,
+        Kind::Internal,
+        Side::Internal,
+        rank,
+        Rect::from_center(c, hw, hh),
+    );
+    let frame = |shape, pole| AreaFrame {
+        shape,
+        pole,
+        radius: area.radius,
+        em: item.em(),
+        hw,
+        hh,
+        pad: item.len.inner_padding,
+    };
+    if angle == 0.0 {
+        let f = frame(&area.shape, area.pole);
+        if !f.fits(c) {
+            return None;
+        }
+        cd.inside = f.lack(c);
+        return Some(cd);
+    }
+    if !can_turn(v) {
+        return None;
+    }
+    // the polygon turned back about the label's center
+    let Shape::Polygon(p) = &area.shape else {
+        return None;
+    };
+    let (sin, cos) = sin_cos_deg(angle);
+    let back = |q: P| c + (q - c).unrotate(cos, sin);
+    let turned = Shape::polygon(
+        p.rings
+            .iter()
+            .map(|r| r.iter().map(|&q| back(q)).collect())
+            .collect(),
+        false,
+        back(area.pole),
+    );
+    let f = frame(&turned, back(area.pole));
+    if !f.fits(c) {
+        return None;
+    }
+    let (bbox, turn, shape) = Turn::of(c, hw, hh, angle, cos, sin);
+    cd.rect = bbox;
+    cd.inside = f.lack(c);
+    cd.turn = Some(Box::new(turn));
+    cd.lshape = Some(Box::new(shape));
+    Some(cd)
+}
+
+/// Internal candidates of one variant (spec §6.3; area anchors: [`area`]).
 pub fn internal(item: &Item, vi: usize, v: &Variant, rank: f64, out: &mut Vec<Cand>) {
     let hw = v.w * 0.5;
     let hh = v.h * 0.5;
@@ -1017,42 +1422,6 @@ pub fn internal(item: &Item, vi: usize, v: &Variant, rank: f64, out: &mut Vec<Ca
             ));
         }
     };
-    if let Some(area) = &item.area {
-        let shape = &area.shape;
-        let mut pts: Vec<(f64, P)> = Vec::new();
-        if shape.contains_rect(&Rect::from_center(area.pole, hw, hh), pad) {
-            pts.push((area.pole_dist, area.pole));
-        }
-        // grid samples where the label fits, by clearance; an area far larger than any
-        // picture (a country beyond the view of a map) is sampled more coarsely, at about
-        // `AREA_SAMPLES` places (spec §6.5)
-        let bb = shape.bbox();
-        let step = maxf(maxf(v.h, 4.0), (bb.w() * bb.h() / AREA_SAMPLES).sqrt());
-        let mut y = bb.y0 + hh;
-        while y <= bb.y1 - hh + 1e-9 {
-            let mut x = bb.x0 + hw;
-            while x <= bb.x1 - hw + 1e-9 {
-                let c = P::new(x, y);
-                if shape.contains_rect(&Rect::from_center(c, hw, hh), pad) {
-                    pts.push((-shape.signed_distance(c), c));
-                }
-                // coordinates so large that a step no longer changes them
-                if x + step <= x {
-                    break;
-                }
-                x += step;
-            }
-            if y + step <= y {
-                break;
-            }
-            y += step;
-        }
-        crate::sort::sort_by(&mut pts, |a, b| crate::math::cmp_f64(b.0, a.0));
-        for (_, c) in pts.into_iter().take(8) {
-            push(c, out);
-        }
-        return;
-    }
     let shape = &item.shape;
     let mut centers = vec![shape.reference()];
     match shape {
@@ -1073,6 +1442,44 @@ mod tests {
 
     fn gap_to(shape: &Shape, r: &Rect, o: f64) -> f64 {
         shape.dist_rect(r) - o
+    }
+
+    #[test]
+    fn cover_of_a_turned_label() {
+        for (hw, hh, deg) in [
+            (40.0, 8.0, 30.0),
+            (40.0, 8.0, -90.0),
+            (5.0, 20.0, 45.0),
+            (500.0, 2.0, 10.0),
+        ] {
+            let c = P::new(100.0, 50.0);
+            let (sin, cos) = sin_cos_deg(deg);
+            let (bbox, turn, shape) = Turn::of(c, hw, hh, deg, cos, sin);
+            assert_eq!(turn.upright, Rect::from_center(c, hw, hh));
+            assert!(turn.cover.len() as f64 == (hw / hh).ceil().clamp(1.0, 32.0));
+            // the label lies in its cover, and the cover in the label's bounding box
+            for k in 0..=40 {
+                for j in 0..=4 {
+                    let q = P::new(
+                        -hw + 2.0 * hw * k as f64 / 40.0,
+                        -hh + 2.0 * hh * j as f64 / 4.0,
+                    );
+                    let p = c + q.rotate(cos, sin);
+                    assert!(
+                        turn.cover.iter().any(|b| b.inflate(1e-9).contains_point(p)),
+                        "{deg}: {p:?}"
+                    );
+                }
+            }
+            for b in &turn.cover {
+                assert!(
+                    bbox.inflate(1e-9).contains_rect(b),
+                    "{deg}: {b:?} in {bbox:?}"
+                );
+            }
+            let sb = shape.bbox();
+            assert!((sb.x0 - bbox.x0).abs() < 1e-9 && (sb.y1 - bbox.y1).abs() < 1e-9);
+        }
     }
 
     #[test]

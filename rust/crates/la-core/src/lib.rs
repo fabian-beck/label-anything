@@ -72,8 +72,11 @@ pub struct DebugData {
     pub grid: grid::GridSpec,
     /// (class name, coverage 0..255 per cell)
     pub classes: Vec<(String, Vec<u8>)>,
-    /// (item id, label box, feasible) of all candidates
+    /// (item id, label box, feasible) of all candidates (a turned label: its box before
+    /// it is turned)
     pub candidates: Vec<(String, geom::Rect, bool)>,
+    /// The rotation of each candidate (degrees, clockwise on screen; 0: not turned).
+    pub rotations: Vec<f64>,
 }
 
 /// Solve a problem. Validation errors are returned as `Err`.
@@ -262,8 +265,9 @@ pub fn place_validated(
             candidates: s
                 .cands
                 .iter()
-                .map(|c| (m.items[c.item as usize].id.clone(), c.rect, c.feasible))
+                .map(|c| (m.items[c.item as usize].id.clone(), c.upright(), c.feasible))
                 .collect(),
+            rotations: s.cands.iter().map(|c| c.angle()).collect(),
         })
     } else {
         None

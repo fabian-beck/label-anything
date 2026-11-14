@@ -7,10 +7,12 @@
  */
 
 import { EPS, P, Rect, bboxOf, distPointSegXY } from "./geom/index.js";
-import { Shape, shapesOverlap } from "./geom/shape.js";
+import { roomRect } from "./geom/polygon.js";
+import { RoundRectShape, Shape, shapesOverlap } from "./geom/shape.js";
 import type { Variant } from "./labels.js";
-import { cmpF64, len2d, maxf, minf, signEps, sinCosDegInto } from "./math.js";
+import { ceilFast, clampf, cmpF64, floorFast, len2d, maxf, minf, signEps, sinCosDeg, sinCosDegInto } from "./math.js";
 import {
+  type Area,
   InternalPolicy,
   type Item,
   type LabelShape,
@@ -25,7 +27,7 @@ import {
   posName,
   remEuclid,
 } from "./model/index.js";
-import { type Stubs, distantDirs, leaderStart } from "./leaders.js";
+import { type Stubs, distantDirs, leaderHitsLabel, leaderStart } from "./leaders.js";
 
 /** Candidate model. */
 export const Kind = { Adjacent: 0, Slider: 1, Internal: 2, Distant: 3, Boundary: 4, Fan: 5 } as const;
@@ -131,9 +133,53 @@ export class Leader {
  */
 export const WARM_MARGIN = 0.5;
 
+/** A turned label (spec §6.5): the label of an area anchor along the polygon's main axis. */
+export interface Turn {
+  /** Degrees, clockwise on screen. */
+  angle: number;
+  /** The label box before it is turned about its center (the reported box). */
+  upright: Rect;
+  /**
+   * The cover: the bounding boxes of the pieces the label is cut into along its length,
+   * which stand for it in the tests against upright boxes.
+   */
+  cover: Rect[];
+}
+
+/** Most pieces of a turned label's cover. */
+const COVER_MAX = 32.0;
+
+/**
+ * `Turn::of`: the label of half size (`hw`, `hh`) around `c`, turned by `angle` (its `cos`
+ * and `sin`): its bounding box, the turn and its exact shape.
+ */
+export function turnOf(c: P, hw: number, hh: number, angle: number, cos: number, sin: number): [Rect, Turn, Shape] {
+  const ac = Math.abs(cos);
+  const asn = Math.abs(sin);
+  const bbox = Rect.fromCenter(c, hw * ac + hh * asn, hw * asn + hh * ac);
+  const n = hh > 0.0 ? clampf(ceilFast(hw / hh), 1.0, COVER_MAX) : COVER_MAX;
+  const phw = hw / n;
+  const ex = phw * ac + hh * asn;
+  const ey = phw * asn + hh * ac;
+  const cover: Rect[] = [];
+  for (let k = 0; k < n; k++) {
+    const t = ((k + 0.5) / n - 0.5) * 2.0 * hw;
+    cover.push(Rect.fromCenter(c.add(new P(t, 0.0).rotate(cos, sin)), ex, ey));
+  }
+  const shape = new RoundRectShape(c, hw, hh, 0.0, cos, sin);
+  return [bbox, { angle, upright: Rect.fromCenter(c, hw, hh), cover }, shape];
+}
+
 /** A label candidate. */
 export class Cand {
   leaders: Leader[] = [];
+  /** A turned label (`lshape` is then the turned box). */
+  turn: Turn | null = null;
+  /**
+   * A label inside its area: the room it lacks and its distance from the pole (spec §6.5;
+   * cost term `w_distance · inside`).
+   */
+  inside = 0;
   /** Static cost (valid when `feasible` or `relaxed`). */
   cost = 0;
   /** Statically feasible under the strict policy. */
@@ -172,6 +218,7 @@ export class Cand {
     public side: Side,
     /** Position rank (cost term `w_position · rank / 8`). */
     public rank: number,
+    /** The label box; of a turned label its bounding box. */
     public rect: Rect,
   ) {}
 
@@ -210,7 +257,61 @@ export class Cand {
    */
   labelOverlapsGap(other: Cand, gap: number): boolean {
     const g = this.warm && other.warm ? WARM_MARGIN * gap : gap;
-    return g > EPS ? this.rect.distRect(other.rect) < g - EPS : this.labelOverlaps(other);
+    if (!(g > EPS)) return this.labelOverlaps(other);
+    if (!(this.rect.distRect(other.rect) < g - EPS)) return false;
+    if (this.turn === null && other.turn === null) return true;
+    // a turned label keeps the gap with every box of its cover
+    const as = this.boxes();
+    const bs = other.boxes();
+    for (let i = 0; i < as.length; i++) {
+      for (let j = 0; j < bs.length; j++) {
+        if (as[i]!.distRect(bs[j]!) < g - EPS) return true;
+      }
+    }
+    return false;
+  }
+
+  /** Cache of the one-box list of {@link boxes}. */
+  private own: Rect[] | null = null;
+
+  /** The upright boxes that stand for the label: its box, or the cover of a turned label. */
+  boxes(): readonly Rect[] {
+    if (this.turn !== null) return this.turn.cover;
+    if (this.own === null || this.own[0] !== this.rect) this.own = [this.rect];
+    return this.own;
+  }
+
+  /** The label box as reported: before a turned label is turned. */
+  upright(): Rect {
+    return this.turn !== null ? this.turn.upright : this.rect;
+  }
+
+  /** The rotation of the label (degrees, clockwise on screen; 0 when it is not turned). */
+  angle(): number {
+    return this.turn !== null ? this.turn.angle : 0.0;
+  }
+
+  /** The distance between the label (its boxes) and shape `s`. */
+  distShape(s: Shape): number {
+    if (this.turn === null) return s.distRect(this.rect);
+    let d = Infinity;
+    for (const b of this.turn.cover) d = minf(d, s.distRect(b));
+    return d;
+  }
+
+  /** Whether leader `l` hits the label (`leaderHitsLabel` for its boxes). */
+  leaderHits(l: Leader, gap: number): boolean {
+    if (this.turn === null) return leaderHitsLabel(l, this.rect, gap);
+    for (const b of this.turn.cover) if (leaderHitsLabel(l, b, gap)) return true;
+    return false;
+  }
+
+  /**
+   * Set the exact shape of the label for the label shape `shape` (a turned label keeps its
+   * own).
+   */
+  setLshape(shape: LabelShape): void {
+    if (this.turn === null) this.lshape = labelShape(this.rect, shape);
   }
 
   /** The label's interior overlaps shape `s`. */
@@ -231,6 +332,8 @@ export class Cand {
     c.bside = this.bside;
     c.lshape = this.lshape;
     c.warm = this.warm;
+    c.turn = this.turn;
+    c.inside = this.inside;
     return c;
   }
 }
@@ -362,6 +465,11 @@ export function pushIn(shape: Shape, o: number, c: P, hw: number, hh: number): P
  */
 export function warm(model: Model, item: Item, vi: number, v: Variant, rect: Rect): Cand | null {
   const it = item.index;
+  if (item.area !== null) {
+    // inside the area: an internal candidate, turned as it was
+    const c = areaWarm(model, item, item.area, vi, v, rect);
+    if (c !== null) return c;
+  }
   const gap = item.shape.distRect(rect);
   if (gap < -1e-6 || item.shape.overlapsRect(rect)) return null; // on the own mark: internal candidates cover that
   const refp = item.shape.reference();
@@ -932,7 +1040,227 @@ export function internalRank(item: Item, v: Variant, models: Models, circleRatio
 /** The grid of an area anchor's internal candidates has about this many samples at most (spec §6.5). */
 const AREA_SAMPLES = 65536;
 
-/** Internal candidates of one variant (spec §6.3, §6.5). */
+/** Whether the labels of variant `v` may be turned (spec §6.5): text in a rectangular box. */
+export function canTurn(v: Variant): boolean {
+  return v.text !== null && v.parts.length === 0 && isRectShape(v.shape);
+}
+
+/** The rank of an area anchor's internal candidates (null: it has none). */
+export function areaRank(item: Item): number | null {
+  switch (item.internal) {
+    case InternalPolicy.Never:
+      return null;
+    case InternalPolicy.Allow:
+      return 0;
+    default:
+      return -1;
+  }
+}
+
+/**
+ * The frame of an area's labels of one direction: the polygon as the labels see it (for
+ * turned labels: turned back), with the label size.
+ */
+class AreaFrame {
+  constructor(
+    readonly shape: Shape,
+    readonly pole: P,
+    readonly radius: number,
+    readonly em: number,
+    readonly hw: number,
+    readonly hh: number,
+    readonly pad: number,
+  ) {}
+
+  fits(c: P): boolean {
+    const r = Rect.fromCenter(c, this.hw, this.hh);
+    // (a box inside the polygon lies in its bounding box: the cheap test first)
+    return this.shape.bbox().containsRect(r.inflate(this.pad)) && this.shape.containsRect(r, this.pad);
+  }
+
+  /**
+   * What the place `c` lacks (spec §6.5): the room the label lacks to 1 em from the
+   * polygon's boundary, in em, plus its distance from the pole relative to the polygon's
+   * size.
+   */
+  lack(c: P): number {
+    return this.tight(c) + this.off(c, this.pole);
+  }
+
+  /** The room the label lacks at `c` to 1 em from the polygon's boundary, in em. */
+  tight(c: P): number {
+    const s = this.shape;
+    if (s.kind !== "polygon") return 0.0;
+    const room = roomRect(s.poly.rings, Rect.fromCenter(c, this.hw, this.hh));
+    return maxf(0.0, 1.0 - room / this.em);
+  }
+
+  /** The distance of `c` from `from` relative to the polygon's size. */
+  off(c: P, from: P): number {
+    return this.radius > 0.0 ? c.dist(from) / this.radius : 0.0;
+  }
+
+  /**
+   * The places of the area's labels in this frame with what they lack (spec §6.5): the
+   * best sample, improved, then one sample of each of the 3 × 3 cells of the samples'
+   * bounding box (the one that lacks least as seen from the cell's middle), in ascending
+   * order.
+   */
+  places(): [P, number][] {
+    const hw = this.hw;
+    const hh = this.hh;
+    // (center, lack, room lacking)
+    const pts: [P, number, number][] = [];
+    const sample = (c: P): [P, number, number] => {
+      const t = this.tight(c);
+      return [c, t + this.off(c, this.pole), t];
+    };
+    if (this.fits(this.pole)) pts.push(sample(this.pole));
+    // grid samples where the label fits; an area far larger than any picture (a country
+    // beyond the view of a map) is sampled more coarsely, at about `AREA_SAMPLES` places
+    const bb = this.shape.bbox();
+    const step = maxf(maxf(2.0 * hh, 4.0), Math.sqrt((bb.w() * bb.h()) / AREA_SAMPLES));
+    let y = bb.y0 + hh;
+    while (y <= bb.y1 - hh + 1e-9) {
+      let x = bb.x0 + hw;
+      while (x <= bb.x1 - hw + 1e-9) {
+        const c = new P(x, y);
+        if (this.fits(c)) pts.push(sample(c));
+        // coordinates so large that a step no longer changes them
+        if (x + step <= x) break;
+        x += step;
+      }
+      if (y + step <= y) break;
+      y += step;
+    }
+    if (pts.length === 0) return [];
+    let best = 0;
+    let sb = Rect.EMPTY;
+    for (let k = 0; k < pts.length; k++) {
+      if (pts[k]![1] < pts[best]![1]) best = k;
+      sb = sb.addPoint(pts[k]![0]);
+    }
+    // one sample of each cell: near the cell's middle, where the label has room
+    const cell = (v: number, lo: number, hi: number): number =>
+      hi > lo ? clampf(floorFast((3.0 * (v - lo)) / (hi - lo)), 0.0, 2.0) : 0;
+    const mid = (k: number, lo: number, hi: number): number => lo + ((k + 0.5) * (hi - lo)) / 3.0;
+    const cells: number[] = [-1, -1, -1, -1, -1, -1, -1, -1, -1];
+    const cellLack: number[] = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    for (let k = 0; k < pts.length; k++) {
+      const c = pts[k]![0];
+      const qx = cell(c.x, sb.x0, sb.x1);
+      const qy = cell(c.y, sb.y0, sb.y1);
+      const m = new P(mid(qx, sb.x0, sb.x1), mid(qy, sb.y0, sb.y1));
+      const g = pts[k]![2] + this.off(c, m);
+      const q = 3 * qy + qx;
+      if (cells[q]! < 0 || g < cellLack[q]!) {
+        cells[q] = k;
+        cellLack[q] = g;
+      }
+    }
+    const rest = cells.filter((k) => k >= 0 && k !== best);
+    rest.sort((a, b) => cmpF64(pts[a]![1], pts[b]![1]) || a - b);
+    // the best sample moves, by half the grid spacing and then by half of that again and
+    // again down to 0.5 px, to where it lacks less
+    let c = pts[best]![0];
+    let g = pts[best]![1];
+    let s = step * 0.5;
+    while (Number.isFinite(s) && s >= 0.5) {
+      for (let it = 0; it < 16; it++) {
+        let moved = false;
+        for (let d = 0; d < 4; d++) {
+          const q = new P(c.x + (d === 0 ? s : d === 1 ? -s : 0.0), c.y + (d === 2 ? s : d === 3 ? -s : 0.0));
+          if (!this.fits(q)) continue;
+          const gq = this.lack(q);
+          if (gq < g - 1e-9) {
+            c = q;
+            g = gq;
+            moved = true;
+            break;
+          }
+        }
+        if (!moved) break;
+      }
+      s *= 0.5;
+    }
+    const out: [P, number][] = [[c, g]];
+    for (const k of rest) out.push([pts[k]![0], pts[k]![1]]);
+    return out;
+  }
+}
+
+/**
+ * Internal candidates of an area anchor for one variant (spec §6.5): upright ones, then
+ * the ones turned along the polygon's main axis.
+ */
+export function area(item: Item, vi: number, v: Variant, rank: number, out: Cand[]): void {
+  const ar = item.area;
+  if (ar === null) return;
+  const hw = v.w * 0.5;
+  const hh = v.h * 0.5;
+  const it = item.index;
+  const frame = (shape: Shape): AreaFrame =>
+    new AreaFrame(shape, ar.pole, ar.radius, item.em(), hw, hh, item.len.innerPadding);
+  for (const [c, g] of frame(ar.shape).places()) {
+    const cd = new Cand(it, vi, v.level, Kind.Internal, SIDE_INTERNAL, rank, Rect.fromCenter(c, hw, hh));
+    cd.inside = g;
+    out.push(cd);
+  }
+  const t = ar.turn;
+  if (t === null || !canTurn(v)) return;
+  for (const [cf, g] of frame(t.shape).places()) {
+    const c = ar.pole.add(cf.sub(ar.pole).rotate(t.cos, t.sin));
+    const [bbox, turn, shape] = turnOf(c, hw, hh, t.angle, t.cos, t.sin);
+    const cd = new Cand(it, vi, v.level, Kind.Internal, SIDE_INTERNAL, rank, bbox);
+    cd.inside = g;
+    cd.turn = turn;
+    cd.lshape = shape;
+    out.push(cd);
+  }
+}
+
+/**
+ * The warm-start box of an area item as an internal candidate of variant `vi`, where it
+ * lies inside the polygon (with the inner padding), turned by the rotation it came with.
+ */
+function areaWarm(model: Model, item: Item, ar: Area, vi: number, v: Variant, rect: Rect): Cand | null {
+  const rank = areaRank(item);
+  if (rank === null) return null;
+  const hw = v.w * 0.5;
+  const hh = v.h * 0.5;
+  const c = rect.center();
+  const angle = model.warmRotation.get(item.id) ?? 0.0;
+  const cd = new Cand(item.index, vi, v.level, Kind.Internal, SIDE_INTERNAL, rank, Rect.fromCenter(c, hw, hh));
+  const frame = (shape: Shape, pole: P): AreaFrame =>
+    new AreaFrame(shape, pole, ar.radius, item.em(), hw, hh, item.len.innerPadding);
+  if (angle === 0.0) {
+    const f = frame(ar.shape, ar.pole);
+    if (!f.fits(c)) return null;
+    cd.inside = f.lack(c);
+    return cd;
+  }
+  if (!canTurn(v)) return null;
+  // the polygon turned back about the label's center
+  const s = ar.shape;
+  if (s.kind !== "polygon") return null;
+  const [sin, cos] = sinCosDeg(angle);
+  const back = (q: P): P => c.add(q.sub(c).unrotate(cos, sin));
+  const turned = Shape.polygon(
+    s.poly.rings.map((r) => r.map(back)),
+    false,
+    back(ar.pole),
+  );
+  const f = frame(turned, back(ar.pole));
+  if (!f.fits(c)) return null;
+  const [bbox, turn, shape] = turnOf(c, hw, hh, angle, cos, sin);
+  cd.rect = bbox;
+  cd.inside = f.lack(c);
+  cd.turn = turn;
+  cd.lshape = shape;
+  return cd;
+}
+
+/** Internal candidates of one variant (spec §6.3; area anchors: {@link area}). */
 export function internal(item: Item, vi: number, v: Variant, rank: number, out: Cand[]): void {
   const hw = v.w * 0.5;
   const hh = v.h * 0.5;
@@ -943,33 +1271,6 @@ export function internal(item: Item, vi: number, v: Variant, rank: number, out: 
     const dup = out.some((x) => x.item === it && x.variant === vi && x.kind === Kind.Internal && x.rect.eq(r));
     if (!dup) out.push(new Cand(it, vi, v.level, Kind.Internal, SIDE_INTERNAL, rank, r));
   };
-  const area = item.area;
-  if (area !== null) {
-    const shape = area.shape;
-    const pts: [number, P][] = [];
-    if (shape.containsRect(Rect.fromCenter(area.pole, hw, hh), pad)) pts.push([area.poleDist, area.pole]);
-    // grid samples where the label fits, by clearance; an area far larger than any
-    // picture (a country beyond the view of a map) is sampled more coarsely, at about
-    // `AREA_SAMPLES` places (spec §6.5)
-    const bb = shape.bbox();
-    const step = maxf(maxf(v.h, 4), Math.sqrt((bb.w() * bb.h()) / AREA_SAMPLES));
-    let y = bb.y0 + hh;
-    while (y <= bb.y1 - hh + 1e-9) {
-      let x = bb.x0 + hw;
-      while (x <= bb.x1 - hw + 1e-9) {
-        const c = new P(x, y);
-        if (shape.containsRect(Rect.fromCenter(c, hw, hh), pad)) pts.push([-shape.signedDistance(c), c]);
-        // coordinates so large that a step no longer changes them
-        if (x + step <= x) break;
-        x += step;
-      }
-      if (y + step <= y) break;
-      y += step;
-    }
-    pts.sort((a, b) => cmpF64(b[0], a[0]));
-    for (let i = 0; i < pts.length && i < 8; i++) push(pts[i]![1]);
-    return;
-  }
   const shape = item.shape;
   const centers: P[] = [shape.reference()];
   if (shape.kind === "polygon") centers.unshift(item.pole());

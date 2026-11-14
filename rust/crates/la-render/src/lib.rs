@@ -49,6 +49,16 @@ fn path_of(points: &[P], close: bool) -> String {
     d
 }
 
+/// The `transform` attribute of a label turned by `angle` degrees about the center of its
+/// box `r` (empty when it is not turned).
+fn turn_attr(angle: f64, r: &Rect) -> String {
+    if angle == 0.0 {
+        return String::new();
+    }
+    let c = r.center();
+    format!(r#" transform="rotate({} {} {})""#, f(angle), f(c.x), f(c.y))
+}
+
 fn shape_svg(s: &Shape, style: &str) -> String {
     match s {
         Shape::Circle { c, r } => format!(
@@ -210,15 +220,16 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
     // candidates
     if let Some(d) = debug {
         s.push_str(r#"<g id="candidates" opacity="0.25" fill="none" stroke-width="0.5">"#);
-        for (_, r, ok) in d.candidates.iter().take(50_000) {
+        for (k, (_, r, ok)) in d.candidates.iter().take(50_000).enumerate() {
             let _ = write!(
                 s,
-                r##"<rect x="{}" y="{}" width="{}" height="{}" stroke="{}"/>"##,
+                r##"<rect x="{}" y="{}" width="{}" height="{}" stroke="{}"{}/>"##,
                 f(r.x0),
                 f(r.y0),
                 f(r.w()),
                 f(r.h()),
-                if *ok { "#2e7d32" } else { "#c62828" }
+                if *ok { "#2e7d32" } else { "#c62828" },
+                turn_attr(d.rotations.get(k).copied().unwrap_or(0.0), r)
             );
         }
         s.push_str("</g>");
@@ -310,8 +321,12 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
             );
             let _ = write!(
                 labels,
-                r##"<g class="label" data-id="{}"><title>{}</title><rect x="{}" y="{}" width="{}" height="{}" fill="#ffffff" fill-opacity="0.75"/>"##,
+                r##"<g class="label" data-id="{}"{}><title>{}</title><rect x="{}" y="{}" width="{}" height="{}" fill="#ffffff" fill-opacity="0.75"/>"##,
                 esc(id),
+                turn_attr(
+                    p["rotation"].as_f64().unwrap_or(0.0),
+                    &Rect::xywh(x, y, w, h)
+                ),
                 esc(&title),
                 f(x),
                 f(y),
