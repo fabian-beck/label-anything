@@ -52,15 +52,18 @@ the same change in its port.
   wherever the leader leaves it.
 * `npm run test:browser -w @label-anything/playground` — builds, then checks in Chromium
   that every scene solves without overlaps, that WebAssembly and TypeScript give identical
-  placements, that options and share links take effect, that labels keep off the controls
+  placements, that options and share links take effect, that the world map's labels are
+  cut at the border of the view and keep their place on the map while it is panned (more
+  of them than with every label kept inside the view), that labels keep off the controls
   on the drawing and that clicking the picture adds a label; that every scene of the
   explainer solves, matches the WebAssembly engine, and can be stepped, dragged and
   solved again; and that the home page's header keeps the name where the static logo has
   it, places every label off its text, stays still until someone interacts, and follows
   drags, clicks and shuffles (`test/hero.pw.mjs`); and that each example of the home page
   takes the place of its static picture with that picture's labels, names what is hovered,
-  and follows a change of variables, a zoom and a pan, a dragged node and a choice of
-  margins and leaders (`test/showcase.pw.mjs`).
+  and follows a change of variables, a zoom and a pan (the zoomed map a window whose
+  labels stay where they are on the map), a dragged node and a choice of margins and
+  leaders (`test/showcase.pw.mjs`).
   CI runs both (job `wasm`) and uploads dist/ as the artifact the Pages workflow
   publishes.
 
