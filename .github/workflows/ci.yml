@@ -105,7 +105,9 @@ jobs:
 
   wasm:
     name: WebAssembly package (@label-anything/wasm)
-    runs-on: ubuntu-latest
+    # pinned: Playwright 1.56.1 (ts/packages/wasm-adapter, ts/packages/playground) cannot
+    # install Chromium on Ubuntu 26.04 (ubuntu-latest)
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
     env:
       LA_WASM_REQUIRED: "1" # the WebAssembly tests fail instead of being skipped without a build
@@ -269,7 +271,9 @@ jobs:
       fail-fast: false
       matrix:
         python: ["3.9", "3.13"]
-    runs-on: ubuntu-latest
+    # pinned: actions/setup-python has no Python 3.9 for Ubuntu 26.04 (ubuntu-latest), and
+    # 3.9 is the oldest version the packages support (requires-python)
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
