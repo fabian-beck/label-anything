@@ -215,7 +215,9 @@ of a less important `j` (the exact test of `items`) **excludes every label of `j
 two labels conflict like overlapping labels, whatever `avoid.label.labels` says. A
 covered mark thus stays unlabeled, never wrongly attributed, and the labels of the
 important items may claim the space of the marks around them — a hub keeps its label
-in a dense region instead of losing it to the marks of minor items nearby.
+in a dense region instead of losing it to the marks of minor items nearby. A label beside
+its own mark may hide such a mark, but not stand beside it or partly on it where a place
+beside its mark avoids that (own mark nearest, below).
 
 **Label margin and spacing** (`defaults.margin`, 0.2 em, 0.3 em with aggressiveness `low`
 (§2.4); `defaults.spacing`, twice the margin unless set; ADR placement/margin). Hard
@@ -255,6 +257,20 @@ marks may stand anywhere, one of two marks 1 px apart on the side away from the 
 Internal labels lie on their own mark, and the leader of a distant label says whose it is:
 they are exempt. The margin above lets a mark that overlaps or touches the own mark come
 closer than the margin; this rule still keeps it farther than the own mark.
+
+The rule holds against the **marks of less important items that the label may cover** as
+well (`avoid.label.lower_items` given and not hard; ADR priority/lower-items), by the same
+test, unless the label hides the mark: a mark is hidden when its bounding box lies inside
+the label box and the label overlaps it, which excludes every label of its item (above).
+Such a label hides a less important mark entirely or is clearly nearer to its own: beside
+the mark it could be that mark's label, whether the mark's item is labeled elsewhere or
+not, and a mark that shows from under the label's edge is as good as beside it. The rule
+holds against these marks only for an item of which one of the 8 fixed positions (§6.1) of
+its first variant hides or keeps clear of each of them by this test with its margin: among
+minor marks so dense that no place beside the mark could, the item's labels follow the rule
+for the marks they may not cover only, and it keeps the place its priority gives it. Marks
+that are soft or ignored through `items` alone stay outside the rule: hiding one does not
+stop its item from being labeled.
 
 The rule holds against the **unlabeled points** as well (ADR placement/unlabeled-points),
 unless `placement.own_nearest` is `"items"`: the discs of vector layers (`points`,
@@ -1046,9 +1062,9 @@ label's side.
   `avoid.leader.labels` hard, other labels also keep from a stub the space two labels keep
   (§4.4): a stub and the box of another label conflict when they come closer than the
   larger label gap of the two items, `g` (`dist < g − EPS`). The label itself follows §4.4 as
-  an adjacent label does, so with `own_nearest` no mark it may not cover is nearer to it
-  than its own mark, `o + stub_length` away (as near is allowed: the stub says whose the
-  label is). Its costs are those of §8 for a leader, except
+  an adjacent label does, so with `own_nearest` no mark it may not cover, and where the
+  rule holds no less important mark it does not hide, is nearer to it than its own mark,
+  `o + stub_length` away (as near is allowed: the stub says whose the label is). Its costs are those of §8 for a leader, except
   that `w_leader_length · len / em` (term `stub`) replaces
   `w_leader + w_leader_length · len / em + w_bends · bends`; the label keeps its
   `w_distance` term (its gap includes the stub) and has no ambiguity term. The uncross

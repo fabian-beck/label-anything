@@ -34,12 +34,8 @@
         "id": "minor",
         "anchor": {
           "type": "point",
-          "x": 85,
-          "y": 50,
-          "mark": {
-            "shape": "circle",
-            "r": 12
-          }
+          "x": 86,
+          "y": 50
         },
         "label": {
           "type": "text",
@@ -47,9 +43,7 @@
         },
         "priority": 1.0,
         "placement": {
-          "position_order": [
-            "top"
-          ]
+          "offset": 8
         }
       }
     ]
@@ -78,16 +72,16 @@
         "id": "minor",
         "placed": true,
         "box": {
-          "x": 66.394,
-          "y": 24.436,
+          "x": 96.0,
+          "y": 43.718,
           "w": 37.21199999999999,
-          "h": 12.564
+          "h": 12.563999999999993
         },
         "anchor": [
-          85.0,
+          86.0,
           50.0
         ],
-        "anchor_side": "top",
+        "anchor_side": "right",
         "model": "adjacent",
         "text": {
           "lines": [
@@ -112,7 +106,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.024999999999999998,
+        "cost": 0.19999999999999998,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -138,7 +132,7 @@
         "hub"
       ],
       "priority_inversions": 0,
-      "total_cost": 0.024999999999999998,
+      "total_cost": 0.19999999999999998,
       "degraded": {},
       "grid": {
         "cell": 3.0,

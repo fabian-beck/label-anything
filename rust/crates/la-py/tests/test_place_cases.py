@@ -233,7 +233,8 @@ def check(problem: Dict[str, Any], exp: Dict[str, Any]) -> List[str]:
                 f.append(f"touch_gap_max: {it['id']} gap {d}")
     if exp.get("own_nearest"):
         # circle marks: no other item's mark is nearer to a label without a distant leader
-        # (adjacent or slider, with or without a stub) than its own mark
+        # (adjacent or slider, with or without a stub) than its own mark, unless the label
+        # hides it entirely (the mark of a less important item under the label)
         default = problem.get("defaults", {}).get("mark") or DEFAULT_MARK
         circles = [(it.get("id", ""), it["anchor"]["x"], it["anchor"]["y"], float(m.get("r", 0.0)))
                    for it in problem["items"] for m in [it["anchor"].get("mark") or default]
@@ -251,7 +252,8 @@ def check(problem: Dict[str, Any], exp: Dict[str, Any]) -> List[str]:
 
             own = dist(ax, ay, ar)
             for j, x, y, rr in circles:
-                if j != i and dist(x, y, rr) < own - 1e-6:
+                hidden = x - rr >= b.x and x + rr <= b.x1 and y - rr >= b.y and y + rr <= b.y1
+                if j != i and not hidden and dist(x, y, rr) < own - 1e-6:
                     f.append(f"own_nearest: {i} is {dist(x, y, rr)} from {j}, {own} from its mark")
     if exp.get("deterministic") and la.place_problem(problem).raw["placements"] != raw:
         f.append("deterministic: two runs differ")
