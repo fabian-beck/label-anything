@@ -54,3 +54,8 @@ pub use error::{RasterError, RasterErrorKind};
 pub use grid::{GridSpec, RasterPlacement};
 pub use process::{process, ClassCoverage, Mode};
 pub use rgba::{rgba_from_base64, Rgba};
+
+/// The examples of the README are tested with the documentation.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;

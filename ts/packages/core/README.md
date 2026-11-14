@@ -41,9 +41,9 @@ interface PlaceOptions {
   cost?: (candidate: CandidateInfo) => number;        // extra static cost per candidate
   measure?: (text, font: FontSpec) => TextMetrics | null; // e.g. CanvasRenderingContext2D.measureText
   progress?: (phase: string, fraction: number) => void;
-  signal?: AbortSignal;                               // or any object with `aborted`
+  signal?: { readonly aborted: boolean };             // an AbortSignal, or any object with `aborted`
   raster?: RgbaPixels;                                // background pixels supplied directly
-  readFile?: (path: string) => Uint8Array;            // svg.path, raster source, font file
+  readFile?: (path: string) => Uint8Array | string;   // svg.path, raster source, font file
 }
 ```
 

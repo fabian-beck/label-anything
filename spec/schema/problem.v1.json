@@ -339,7 +339,8 @@
         },
         "max_lines": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 1,
+          "maximum": 1000
         },
         "balance": {
           "type": "boolean"
@@ -1277,19 +1278,23 @@
         },
         "slider_per_quadrant": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 1000
         },
         "k_distant": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 10000
         },
         "distant_rings": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 1,
+          "maximum": 100
         },
         "distant_directions": {
           "type": "integer",
-          "minimum": 4
+          "minimum": 4,
+          "maximum": 3600
         },
         "free_space_seeds": {
           "type": "boolean"
@@ -1706,6 +1711,7 @@
         "wrap_max_lines": {
           "type": "integer",
           "minimum": 1,
+          "maximum": 1000,
           "description": "Line limit for the wrap step when the label has no wrap settings."
         },
         "soft_overlap_weight": {

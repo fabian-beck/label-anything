@@ -110,7 +110,7 @@ CI runs):
 
 * [Getting started](https://fabian-beck.github.io/label-anything/getting-started/) —
   Python (incl. matplotlib, Plotly, seaborn), JavaScript/TypeScript and WebAssembly,
-  Java, C and Go, the CLI and the HTTP server;
+  Java, Rust, C and Go, the CLI and the HTTP server;
 * [Tutorials](https://fabian-beck.github.io/label-anything/tutorials/) — outliers in five
   lines, SVG and raster backgrounds, leaders, priority and omission, shapes, interactive
   maps, node-link diagrams;

@@ -62,6 +62,38 @@ describe("Leaflet labelLayer", () => {
     expect(pane.querySelector("svg")).toBeNull();
   });
 
+  it("keeps labels on their anchors when they are drawn while the map is dragged", async () => {
+    const map = leafletMap();
+    const base = fakeEngine();
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    const engine = {
+      async place(problem: Parameters<typeof base.place>[0], options?: Parameters<typeof base.place>[1]) {
+        await gate;
+        return base.place(problem, options) as LabelResult;
+      },
+    };
+    labelLayer(L, towns, { engine, latLng: (d) => [d.lat, d.lng], text: (d) => d.name, id: (d) => d.id, measure: false, transition: 0 }).addTo(map);
+    const mapPane = map.getPane("mapPane")!;
+    const svg = map.getPane("labelAnything")!.querySelector("svg")!;
+    // where Bamberg's label is on the screen, relative to its anchor
+    const offset = () => {
+      const text = svg.querySelector('g[data-id="ba"] text')!;
+      const x = L.DomUtil.getPosition(mapPane).x + L.DomUtil.getPosition(svg as never).x + Number(text.getAttribute("x"));
+      return x - map.latLngToContainerPoint([49.89, 10.89]).x;
+    };
+    // a drag moves the map pane, and the overlay with it; the result arrives meanwhile
+    L.DomUtil.setPosition(mapPane, L.DomUtil.getPosition(mapPane).add([-50, 20]));
+    release();
+    await new Promise((r) => setTimeout(r));
+    const dragged = offset();
+    expect(dragged).toBeGreaterThan(0); // right of the anchor, after the mark
+    expect(dragged).toBeLessThan(20);
+    map.fire("moveend");
+    await new Promise((r) => setTimeout(r));
+    expect(offset()).toBeCloseTo(dragged, 6);
+  });
+
   it.skipIf(!cliEngine)("solves with the Rust engine", () => {
     const map = leafletMap();
     const layer = labelLayer(L, towns, { engine: cliEngine!, latLng: (d) => [d.lat, d.lng], text: (d) => d.name, measure: false }).addTo(map);
@@ -175,6 +207,11 @@ describe("MapLibre labels", () => {
     map.fire("move");
     expect(engine.calls.length).toBe(1); // following does not solve
     expect(Number(svg.querySelector("text")!.getAttribute("x"))).toBeCloseTo(x0 + 15, 6);
+    // a label follows its anchor out of the view instead of going back to where it was solved
+    map.state.dx = -400;
+    map.fire("move");
+    expect(Number(svg.querySelector("text")!.getAttribute("x"))).toBeCloseTo(x0 - 400, 6);
+    map.state.dx = 15;
     map.fire("moveend");
     expect(engine.calls.length).toBe(2);
     expect(engine.last.problem.warm_start?.placements.length).toBe(3);

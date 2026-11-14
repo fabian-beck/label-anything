@@ -111,8 +111,10 @@ export class LatestRunner {
   }
 }
 
-function combineSignals(a: AbortSignal | undefined, b: AbortSignal | undefined): AbortSignal | undefined {
+/** The caller's signal (an `AbortSignal` or any object with `aborted`) and the runner's own. */
+function combineSignals(a: PlaceOptions["signal"], b: AbortSignal | undefined): PlaceOptions["signal"] {
   if (!a || !b) return a ?? b;
   const any = (AbortSignal as unknown as { any?: (s: AbortSignal[]) => AbortSignal }).any;
-  return any ? any([a, b]) : a;
+  if (any && a instanceof AbortSignal) return any([a, b]);
+  return { get aborted() { return a.aborted || b.aborted; } }; // engines poll `aborted`
 }

@@ -19,8 +19,11 @@ tools/         code generation and maintenance scripts
 
 Notes for working on the engine sit next to what they cover:
 
-* [`bench/README.md`](gh:bench/README.md) — running the benchmark, the release procedure,
+* [`bench/README.md`](gh:bench/README.md) — running the benchmark, the release gates,
   the state of the performance targets;
+* [`RELEASING.md`](gh:RELEASING.md) and [`CHANGELOG.md`](gh:CHANGELOG.md) — the release
+  procedure, and what changed for users; [`SECURITY.md`](gh:SECURITY.md) — reporting a
+  vulnerability, and what a host of untrusted problems has to do;
 * [`ts/packages/core/PORTING.md`](gh:ts/packages/core/PORTING.md) — how the TypeScript
   engine mirrors the Rust core;
 * [`docs/project/literature/`](gh:docs/project/literature/README.md) — what the research

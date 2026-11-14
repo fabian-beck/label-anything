@@ -194,8 +194,9 @@ result ([interactive maps](../tutorials/interactive-maps.md)). Cytoscape and sig
 
 ### Web Workers
 
-`createWorkerEngine(worker)` returns an asynchronous engine, which every helper accepts;
-the worker runs the engine of your choice.
+`createWorkerEngine(worker)` returns an asynchronous engine, which every helper accepts
+except the Vega transform (a Vega transform returns its result at once); the worker runs
+the engine of your choice.
 
 ```js
 --8<-- "examples/tutorials/js/browser/worker.mjs:worker"

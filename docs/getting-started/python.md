@@ -180,8 +180,10 @@ The default [degradation ladder](../concepts/candidates.md#the-degradation-ladde
 shrink a label that fits nowhere else or relax hard obstacle classes. The example's shorter
 ladder does neither: every label keeps its size, and labels that do not fit are omitted.
 
-Call `label_points` when the figure is final: its size and layout (`tight_layout`), axis
-scales and limits, colorbars and legends. The labels are in data coordinates, so any
+Call `label_points` when the figure is final: its size and layout (`tight_layout` or a
+layout engine such as `layout="constrained"`), axis scales and limits, colorbars and
+legends. A second call adds a second set of labels: remove the first with the `remove()`
+of what the call returned. The labels are in data coordinates, so any
 savefig dpi works, but changing the axes' size or scale afterwards moves the points away
 from their labels.
 

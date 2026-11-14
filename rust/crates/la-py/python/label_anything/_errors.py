@@ -52,7 +52,8 @@ class ValidationError(LabelAnythingError, ValueError):
         head = str(self.args[0]) if self.args else "invalid problem"
         if len(self.errors) <= 1:
             return head
-        lines = [head]
+        # the message names the first error only; here every error has its line
+        lines = [f"{head.split(':', 1)[0]}: {len(self.errors)} errors"]
         for e in self.errors[:10]:
             lines.append(f"  {e['pointer'] or '/'}: {e['message']} ({e['code']})")
         if len(self.errors) > 10:

@@ -204,7 +204,8 @@ enum Cmd {
     /// HTTP server: POST /place and POST /validate with a JSON body, GET /health.
     ///
     /// Relative file paths in problems resolve against the working directory. Problems may
-    /// read files only when the server listens on a loopback address, or with --allow-files.
+    /// read files only when the server listens on a loopback address, or with --allow-files,
+    /// and never when the request comes from a web page (it has an Origin header).
     Serve {
         /// Port to listen on.
         #[arg(long, default_value_t = 7077)]
@@ -218,6 +219,9 @@ enum Cmd {
         /// Requests solved at the same time [default: the number of CPUs].
         #[arg(long, value_parser = clap::value_parser!(u16).range(1..))]
         workers: Option<u16>,
+        /// Largest request body in MiB; a larger one is answered with HTTP 413.
+        #[arg(long, default_value_t = 64, value_parser = clap::value_parser!(u32).range(1..=4095))]
+        max_body: u32,
     },
 }
 
@@ -673,7 +677,8 @@ fn run(cli: Cli) -> Result<ExitCode, Failure> {
             host,
             allow_files,
             workers,
-        } => serve(&host, port, allow_files, workers),
+            max_body,
+        } => serve(&host, port, allow_files, workers, max_body),
     }
 }
 
@@ -712,6 +717,7 @@ fn serve(
     port: u16,
     allow_files: bool,
     workers: Option<u16>,
+    max_body_mib: u32,
 ) -> Result<ExitCode, Failure> {
     let server =
         tiny_http::Server::http((host, port)).map_err(|e| format!("{host}:{port}: {e}"))?;
@@ -736,7 +742,7 @@ fn serve(
             let server = std::sync::Arc::clone(&server);
             std::thread::spawn(move || {
                 for req in server.incoming_requests() {
-                    respond(req, files);
+                    respond(req, files, u64::from(max_body_mib) << 20);
                 }
             })
         })
@@ -751,13 +757,48 @@ fn header(k: &str, v: &str) -> tiny_http::Header {
     tiny_http::Header::from_bytes(k.as_bytes(), v.as_bytes()).expect("valid header")
 }
 
-/// Answers one request of `serve`.
-fn respond(mut req: tiny_http::Request, files: bool) {
+/// Answers one request of `serve`. `files`: problems may read files; `max_body`: the
+/// largest request body in bytes.
+fn respond(mut req: tiny_http::Request, files: bool, max_body: u64) {
+    let cors = header("Access-Control-Allow-Origin", "*");
+    let post = req.method() == &tiny_http::Method::Post;
+    // A request with an Origin header comes from a web page. Any page may ask this server
+    // to solve a problem (CORS, above), so such a problem must not read files: the page
+    // would learn which files exist, and see images through the debug overlay.
+    let from_page = req.headers().iter().any(|h| h.field.equiv("Origin"));
     let mut body = String::new();
-    let _ = req.as_reader().read_to_string(&mut body);
+    if post {
+        // one byte more than allowed tells a body that is too large from one that fits
+        let read = req
+            .as_reader()
+            .take(max_body.saturating_add(1))
+            .read_to_string(&mut body);
+        let too_large =
+            req.body_length().is_some_and(|n| n as u64 > max_body) || body.len() as u64 > max_body;
+        let error = if too_large {
+            Some((
+                413,
+                format!(
+                    "the request body is larger than {} MiB (--max-body)",
+                    max_body >> 20
+                ),
+            ))
+        } else if read.is_err() {
+            Some((400, "the request body is not UTF-8 text".to_string()))
+        } else {
+            None
+        };
+        if let Some((status, message)) = error {
+            let resp = tiny_http::Response::from_string(json!({ "error": message }).to_string())
+                .with_status_code(status)
+                .with_header(header("Content-Type", "application/json"))
+                .with_header(cors);
+            let _ = req.respond(resp);
+            return;
+        }
+    }
     let body = body.strip_prefix('\u{feff}').unwrap_or(&body);
     let path = req.url().split('?').next().unwrap_or("");
-    let cors = header("Access-Control-Allow-Origin", "*");
     if req.method() == &tiny_http::Method::Options {
         // CORS preflight: browsers send it before a POST with Content-Type: application/json
         let resp = tiny_http::Response::empty(204)
@@ -773,19 +814,25 @@ fn respond(mut req: tiny_http::Request, files: bool) {
         // `parse` error in the report of /validate
         (tiny_http::Method::Post, "/place") => {
             let mut env = NativeEnv::new();
-            env.allow_files = files;
-            match label_anything::place_json_with(body, &env) {
-                Ok(r) => (200, r),
-                Err(e) => (422, format!("{{\"errors\":{e}}}")),
+            env.allow_files = files && !from_page;
+            // a panic answers this request with 500 and leaves the worker to the next one
+            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                label_anything::place_json_with(body, &env)
+            })) {
+                Ok(Ok(r)) => (200, r),
+                Ok(Err(e)) => (422, format!("{{\"errors\":{e}}}")),
+                Err(_) => (500, internal_error()),
             }
         }
-        (tiny_http::Method::Post, "/validate") => (
-            200,
-            match parse_json(body) {
+        (tiny_http::Method::Post, "/validate") => {
+            match std::panic::catch_unwind(|| match parse_json(body) {
                 Ok(v) => serde_json::to_string(&label_anything::validate(&v)).unwrap_or_default(),
                 Err(e) => json!({"valid": false, "errors": [e], "warnings": []}).to_string(),
-            },
-        ),
+            }) {
+                Ok(report) => (200, report),
+                Err(_) => (500, internal_error()),
+            }
+        }
         (tiny_http::Method::Get, "/") | (tiny_http::Method::Get, "/health") => (
             200,
             json!({"name": "label-anything", "version": label_anything::VERSION}).to_string(),
@@ -797,6 +844,12 @@ fn respond(mut req: tiny_http::Request, files: bool) {
         .with_header(header("Content-Type", "application/json"))
         .with_header(cors);
     let _ = req.respond(resp);
+}
+
+/// The body of an HTTP 500 answer: an error in the engine, not in the problem.
+fn internal_error() -> String {
+    json!({"errors": [{"pointer": "", "code": "internal", "message": "internal error (panic) in label placement"}]})
+        .to_string()
 }
 
 /// Rasterize an SVG (the debug overlay) to PNG with the bundled Noto Sans.

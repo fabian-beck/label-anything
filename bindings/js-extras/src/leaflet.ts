@@ -25,7 +25,7 @@ type PointLike = { x: number; y: number };
 /** The parts of a Leaflet map used here. */
 export interface LeafletMapLike {
   getSize(): PointLike;
-  latLngToContainerPoint(latlng: LatLngLike): PointLike;
+  latLngToLayerPoint(latlng: LatLngLike): PointLike;
   containerPointToLayerPoint(point: [number, number] | PointLike): PointLike;
   getPane(name: string): HTMLElement | undefined;
   createPane(name: string): HTMLElement;
@@ -69,6 +69,11 @@ export function labelLayer<D>(L: LeafletLike, data: readonly D[], options: Leafl
   let rows = data;
   let map: LeafletMapLike | undefined;
   let overlay: Overlay<D> | undefined;
+  // Where the overlay's top-left corner is in its pane (layer px), as of the last move's
+  // end. Leaflet moves the pane during a drag, and the overlay with it; positions are
+  // taken relative to this corner, so that labels drawn meanwhile (a transition, the
+  // result of a worker) stay on their anchors instead of being shifted a second time.
+  let origin: PointLike = { x: 0, y: 0 };
   const font = resolveFont(options.font, { size: 12, family: "sans-serif" });
   const paneName = options.pane ?? "labelAnything";
 
@@ -80,7 +85,8 @@ export function labelLayer<D>(L: LeafletLike, data: readonly D[], options: Leafl
       const ll = options.latLng(d, i);
       const label = ll ? labelOf(options, d, i) : null;
       if (!ll || !label) return;
-      const p = map!.latLngToContainerPoint(ll);
+      const layer = map!.latLngToLayerPoint(ll);
+      const p = { x: layer.x - origin.x, y: layer.y - origin.y };
       if (!(p.x >= 0 && p.y >= 0 && p.x <= size.x && p.y <= size.y)) return;
       const mark = typeof options.mark === "function" ? options.mark(d, i) : (options.mark ?? { shape: "circle", r: 4 });
       out.push({ id: idOf(options, d, i), x: p.x, y: p.y, label, mark, extras: itemExtras(options, d, i) });
@@ -90,7 +96,8 @@ export function labelLayer<D>(L: LeafletLike, data: readonly D[], options: Leafl
 
   const place = () => {
     if (!map || !overlay) return;
-    L.DomUtil.setPosition(overlay.svg, map.containerPointToLayerPoint([0, 0]));
+    origin = map.containerPointToLayerPoint([0, 0]);
+    L.DomUtil.setPosition(overlay.svg, origin);
     overlay.setVisible(true);
     overlay.follow(); // the labels at the new view until the solve is in
     overlay.update();

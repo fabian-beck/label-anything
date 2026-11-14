@@ -49,10 +49,10 @@ are stale.
 | `placement.offset` | `1` | length ≥ 0 | Gap between the (inflated) mark and an adjacent label. |
 | `placement.max_distance` | `"4em"` | length ≥ 0 | Largest anchor–label distance of distant labels. 2.5 em with `placement.aggressiveness` `low`, 8 em with `high`. |
 | `placement.min_distance` | `"1.5em"` | length ≥ 0 | Innermost ring of distant candidates. |
-| `placement.slider_per_quadrant` | `4` | int ≥ 0 | Slider samples between two fixed positions. |
-| `placement.k_distant` | `24` | int ≥ 0 | Distant candidates kept per item variant (lowest static cost). |
-| `placement.distant_rings` | `4` | int ≥ 1 | Rings between `min_distance` and `max_distance`. |
-| `placement.distant_directions` | `16` | int ≥ 4 | Directions per ring for `straight` leaders. |
+| `placement.slider_per_quadrant` | `4` | int 0…1000 | Slider samples between two fixed positions. |
+| `placement.k_distant` | `24` | int 0…10000 | Distant candidates kept per item variant (lowest static cost). |
+| `placement.distant_rings` | `4` | int 1…100 | Rings between `min_distance` and `max_distance`. |
+| `placement.distant_directions` | `16` | int 4…3600 | Directions per ring for `straight` leaders. |
 | `placement.free_space_seeds` | `true` | bool | Add distant candidates at distance-transform maxima. |
 | `placement.internal` | `"auto"` | auto \| prefer \| allow \| never | auto = prefer for rect/ellipse/polygon/path marks and areas, allow for circles. |
 | `placement.inner_padding` | `"0.2em"` | length ≥ 0 | Clearance of internal labels from the shape boundary. |
@@ -103,7 +103,7 @@ are stale.
 | `solver.grid_cell` | `"auto"` | auto or > 0 | auto = clamp(min font size / 4, 1, 4) px. |
 | `degrade` | `["alternatives","wrap","distant","evict_lower","omit"]` | list | Degradation ladder (spec §10.1). With `placement.aggressiveness` `low` without `distant`, with `high` also `shrink:0.85` and `soft_overlap` before `omit`. No `boundary` step: margin labels need leaders across the picture; use the `boundary` model or step where they are intended. |
 | `degrade_options.min_scale` | `0.7` | (0,1] | Smallest font scale of `shrink:f` steps (f, f², … ≥ min_scale), relative to the size before a smaller font class (spec §9.4). |
-| `degrade_options.wrap_max_lines` | `3` | int ≥ 1 | Line limit of the `wrap` step for labels without wrap settings. |
+| `degrade_options.wrap_max_lines` | `3` | int 1…1000 | Line limit of the `wrap` step for labels without wrap settings. |
 | `degrade_options.soft_overlap_weight` | `10` | ≥ 0 | Weight replacing `hard` for relaxed classes. |
 | `weights.position` | `0.6` | ≥ 0 | × position rank / number of positions. |
 | `weights.distance` | `0.3` | ≥ 0 | × gap between label and own shape, in em. |

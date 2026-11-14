@@ -1,0 +1,48 @@
+name: Bug or bad placement
+description: A wrong result, a label that should not be where it is, an error, a crash
+labels: [bug]
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      options:
+        - Python (label-anything, label-anything-extras)
+        - JavaScript / TypeScript (@label-anything/core)
+        - WebAssembly (@label-anything/wasm)
+        - JavaScript helpers (@label-anything/extras)
+        - Rust crate
+        - CLI or HTTP server
+        - Java
+        - C ABI
+        - Playground or documentation
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The package version or the commit, and `stats.implementation` of a result (e.g. `rust/0.1.0`)
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens, and what you expected
+      description: A screenshot or the debug overlay (`--debug-svg`, `output.debug_svg`) says more than words.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: >-
+        The problem JSON that shows it, as small as you can make it (attach a file if it is
+        long), or the code that builds it. The engine is deterministic: with the problem,
+        we see what you see.
+      render: json
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else
+      description: Operating system, browser, plotting library and its version, the error message

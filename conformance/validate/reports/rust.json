@@ -181,6 +181,37 @@
       ],
       "warnings": []
     },
+    "validate/count-limits.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/degrade_options/wrap_max_lines",
+          "code": "range",
+          "message": "must be <= 1000"
+        },
+        {
+          "pointer": "/items/0/label/wrap/max_lines",
+          "code": "range",
+          "message": "must be <= 1000"
+        },
+        {
+          "pointer": "/placement/distant_directions",
+          "code": "range",
+          "message": "must be <= 3600"
+        },
+        {
+          "pointer": "/placement/distant_rings",
+          "code": "range",
+          "message": "must be <= 100"
+        },
+        {
+          "pointer": "/placement/slider_per_quadrant",
+          "code": "range",
+          "message": "must be <= 1000"
+        }
+      ],
+      "warnings": []
+    },
     "validate/duplicate-ids.json": {
       "valid": false,
       "errors": [
