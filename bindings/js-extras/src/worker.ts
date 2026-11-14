@@ -14,11 +14,14 @@
  * labelMapLibre(map, data, { engine, ... });             // every helper accepts it
  * ```
  *
- * Problems and results are copied; raster pixels are transferred. Text is measured in the
- * worker (with `OffscreenCanvas` where available), so a `measure` passed to `place` is
- * ignored; `priority` and `cost` callbacks cannot cross the thread boundary. Aborting a
- * solve returns the best result so far when the page is cross-origin isolated
- * (`SharedArrayBuffer`); otherwise the worker is restarted and the promise rejects.
+ * Problems, results and raster pixels are copied: the caller keeps its pixels and can
+ * solve with them again. Text is measured in the worker (with `OffscreenCanvas` where
+ * available), so a `measure` passed to `place` is ignored; `priority` and `cost` callbacks
+ * cannot cross the thread boundary. Aborting a solve returns the best result so far when
+ * the page is cross-origin isolated (`SharedArrayBuffer`); otherwise the worker is
+ * restarted and the promise rejects. A worker that fails (a script that does not load, an
+ * uncaught error) rejects the pending solves; the engine then starts a new one if it was
+ * given a factory, and rejects every later solve if it was given a worker.
  */
 import { PlaceError, type Issue, type LabelProblem, type LabelResult, type PlaceOptions } from "@label-anything/core";
 import type { AsyncEngine, Engine } from "./engine.js";
@@ -42,6 +45,7 @@ interface WorkerLike {
   postMessage(message: unknown, transfer?: Transferable[]): void;
   addEventListener(type: "message", listener: (e: MessageEvent) => void): void;
   addEventListener(type: "error", listener: (e: ErrorEvent) => void): void;
+  addEventListener(type: "messageerror", listener: (e: MessageEvent) => void): void;
   terminate(): void;
 }
 
@@ -58,17 +62,35 @@ export function createWorkerEngine(worker: WorkerLike | (() => WorkerLike)): Wor
   const factory = typeof worker === "function" ? worker : undefined;
   let w: WorkerLike | undefined = typeof worker === "function" ? undefined : worker;
   let next = 1;
-  const pending = new Map<number, { resolve(r: LabelResult): void; reject(e: unknown): void; progress?: PlaceOptions["progress"] }>();
+  const pending = new Map<number, { resolve(r: LabelResult): void; reject(e: unknown): void; progress?: PlaceOptions["progress"]; settled(): void }>();
+  /** Why the worker is gone, when it cannot be replaced. */
+  let gone: Error | undefined;
 
   const failAll = (error: unknown) => {
-    for (const p of pending.values()) p.reject(error);
+    const all = [...pending.values()];
     pending.clear();
+    for (const p of all) {
+      p.settled();
+      p.reject(error);
+    }
   };
   const connect = (): WorkerLike => {
     if (w) return w;
-    if (!factory) throw new Error("createWorkerEngine: the worker was terminated");
+    if (!factory) throw gone ?? new Error("createWorkerEngine: the worker was terminated");
     w = attach(factory());
     return w;
+  };
+  /** The worker failed: nothing it was asked will be answered, and it is not asked again. */
+  const failed = (target: WorkerLike, error: Error) => {
+    if (w !== target) return; // a worker replaced after an abort
+    w = undefined;
+    if (!factory) gone = error;
+    try {
+      target.terminate();
+    } catch {
+      // already dead
+    }
+    failAll(error);
   };
   if (w) attach(w);
 
@@ -82,10 +104,12 @@ export function createWorkerEngine(worker: WorkerLike | (() => WorkerLike)): Wor
         return;
       }
       pending.delete(msg.id);
+      p.settled();
       if ("result" in msg) p.resolve(msg.result);
       else p.reject(msg.error.errors ? new PlaceError(msg.error.errors) : new Error(msg.error.message));
     });
-    target.addEventListener("error", (e: ErrorEvent) => failAll(new Error(`label worker failed: ${e.message}`)));
+    target.addEventListener("error", (e: ErrorEvent) => failed(target, new Error(`label worker failed: ${e.message}`)));
+    target.addEventListener("messageerror", () => failed(target, new Error("label worker failed: a message could not be read")));
     return target;
   }
 
@@ -94,36 +118,53 @@ export function createWorkerEngine(worker: WorkerLike | (() => WorkerLike)): Wor
       if (options.priority || options.cost) {
         return Promise.reject(new TypeError("createWorkerEngine: priority and cost callbacks cannot be sent to a worker"));
       }
-      const target = connect();
-      const id = next++;
+      // an AbortSignal tells when it aborts; of another object only `aborted` is known, now
+      const signal = options.signal as ({ readonly aborted: boolean } & Partial<Pick<AbortSignal, "addEventListener" | "removeEventListener">>) | undefined;
       const shared = typeof SharedArrayBuffer === "function" && (globalThis as { crossOriginIsolated?: boolean }).crossOriginIsolated !== false;
-      const abort = shared && options.signal ? new Int32Array(new SharedArrayBuffer(4)) : undefined;
+      const abort = shared && signal ? new Int32Array(new SharedArrayBuffer(4)) : undefined;
+      if (signal?.aborted) {
+        // with shared memory the worker returns the cancelled result, as the engine does;
+        // without, an aborted solve rejects, and this one need not start
+        if (abort) Atomics.store(abort, 0, 1);
+        else return Promise.reject(new DOMException("The solve was aborted", "AbortError"));
+      }
+      let target: WorkerLike;
+      try {
+        target = connect();
+      } catch (error) {
+        return Promise.reject(error);
+      }
+      const id = next++;
       return new Promise<LabelResult>((resolve, reject) => {
-        pending.set(id, { resolve, reject, progress: options.progress });
+        const onAbort = () => {
+          if (!pending.has(id)) return;
+          if (abort) {
+            Atomics.store(abort, 0, 1);
+          } else if (factory) {
+            // no shared memory: restart the worker; this solve (and any queued) is lost
+            const old = w;
+            w = undefined;
+            old?.terminate();
+            failAll(new DOMException("The solve was aborted", "AbortError"));
+          }
+        };
+        const settled = () => signal?.removeEventListener?.("abort", onAbort);
+        pending.set(id, { resolve, reject, progress: options.progress, settled });
         const request: Request = { id, problem, raster: options.raster, abort, progress: !!options.progress };
-        const transfer = options.raster ? [options.raster.data.buffer as ArrayBuffer] : [];
-        target.postMessage(request, transfer);
-        options.signal?.addEventListener(
-          "abort",
-          () => {
-            if (!pending.has(id)) return;
-            if (abort) {
-              Atomics.store(abort, 0, 1);
-            } else if (factory) {
-              // no shared memory: restart the worker; this solve (and any queued) is lost
-              const old = w;
-              w = undefined;
-              old?.terminate();
-              failAll(new DOMException("The solve was aborted", "AbortError"));
-            }
-          },
-          { once: true },
-        );
+        try {
+          target.postMessage(request);
+        } catch (error) {
+          pending.delete(id);
+          reject(error); // e.g. a problem that cannot be cloned
+          return;
+        }
+        signal?.addEventListener?.("abort", onAbort, { once: true });
       });
     },
     terminate() {
       w?.terminate();
       w = undefined;
+      gone = undefined;
       failAll(new Error("label worker terminated"));
     },
   };

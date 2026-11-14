@@ -14,9 +14,11 @@ categories.workspace = true
 
 [features]
 default = ["std-clock", "decode", "parallel"]
-# data-parallel phases (rayon); results do not depend on the number of threads
+# the system clock for the solver's time guard (not on wasm32-unknown-unknown)
 std-clock = []
+# PNG, JPEG and WebP raster backgrounds (raw RGBA always works)
 decode = ["la-core/decode"]
+# data-parallel phases (rayon); results do not depend on the number of threads
 parallel = ["la-core/parallel"]
 
 [dependencies]

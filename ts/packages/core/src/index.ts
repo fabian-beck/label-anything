@@ -30,6 +30,9 @@ export { PlaceError } from "./api.js";
 export { VERSION } from "./version.js";
 export { place, validate, renderDebugSvg, type BudgetProfile } from "./place.js";
 export { BasicEnv, BUILTIN_SVG, type Env, type Geom, type SvgBackend, type SvgDoc } from "./env.js";
+// the point and the rectangle that `Env` and `Geom` name: an environment or an SVG backend
+// of your own needs them
+export { P, Rect } from "./geom/index.js";
 export type {
   SolveTrace,
   TraceCandidate,

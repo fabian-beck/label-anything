@@ -102,6 +102,33 @@ def test_leader_may_start_beside_a_mark_touching_its_own():
     assert m["hard"]["examples"]["leader_item"] == [["A", "C"]]
 
 
+def test_marks_list_every_violation_where_it_happens():
+    # the crossing leaders of A and B both run through D's label; B's label is off the canvas;
+    # E's and F's labels overlap
+    prob = problem([item("A", 20, 80), item("B", 80, 80), item("D", 150, 20), item("E", 120, 110),
+                    item("F", 170, 110)], height=130)
+    la = {"points": [[22, 78], [100, 30]], "style": "straight", "port": [100, 30]}
+    lb = {"points": [[78, 78], [20, 30]], "style": "straight", "port": [20, 30]}
+    res = result([
+        placed("A", 100, 25, side="distant", model="distant", leader=la),
+        placed("B", -10, 25, side="distant", model="distant", leader=lb),
+        placed("D", 40, 50, side="bottom-left"),
+        placed("E", 123, 95, side="top-right"),
+        placed("F", 140, 98, side="top-left"),
+    ])
+    m = evaluate(prob, res, marks=True)
+    mk = m.pop("marks")
+    assert m == evaluate(prob, res)  # the metrics are the same with marks
+    assert mk["labels"] == ["B", "E", "F"]
+    assert mk["leaders"] == ["A", "B"]
+    (x, y), = mk["crossings"]
+    t = 56 / 136  # where la (22 + 78 t, 78 - 48 t) meets lb (78 - 58 t, 78 - 48 t)
+    assert (x, y) == (pytest.approx(22 + 78 * t), pytest.approx(78 - 48 * t))
+    assert mk["overlaps"] == [[140, 98, 153, 105]]
+    # E's and F's labels overlap: the shared area shows it, not a gap
+    assert mk["close"] == [] and m["hard"]["label_label"] == 1
+
+
 def test_hard_vector_class_and_soft_coverage():
     prob = problem([item("A", 50, 50, w=20, h=20), item("B", 150, 50, w=20, h=20)],
                    obstacles={"vector": [
@@ -234,6 +261,28 @@ def test_removal_test_needs_the_own_mark_clearly_nearest():
     items[1]["anchor"]["x"] = 139.5
     prob = problem(items, placement={"position_order": ["right"]})
     assert evaluate(prob, result([omitted("lo"), placed("x", 142.5, 45, side="right")]))["priority"]["inversions"] == 1
+
+
+def test_removal_test_needs_the_own_mark_nearer_than_unlabeled_points():
+    # lo's only position [103, 45, 133, 55] is 1 px from its mark; an unlabeled point 1 px from
+    # the box is not farther than lo's own mark by the margin (spec §4.4, ADR
+    # placement/unlabeled-points)
+    def prob_with(x, own_nearest=None):
+        p = problem([item("lo", 100, 50)], placement={"position_order": ["right"]},
+                    obstacles={"vector": [{"class": "points", "r": 1, "points": [[x, 50]]}]})
+        if own_nearest is not None:
+            p["placement"]["own_nearest"] = own_nearest
+        return p
+
+    assert evaluate(prob_with(135), result([omitted("lo")]))["priority"]["inversions"] == 0
+    assert evaluate(prob_with(135, "items"), result([omitted("lo")]))["priority"]["inversions"] == 1
+    assert evaluate(prob_with(138.5), result([omitted("lo")]))["priority"]["inversions"] == 1   # 4.5 px: clear
+    assert evaluate(prob_with(118), result([omitted("lo")]))["priority"]["inversions"] == 1     # hidden
+    # in a field of points where none of lo's fixed positions is clear, the rule does not hold
+    field = [[x, y] for x in range(60, 141, 5) for y in range(30, 71, 5) if math.dist((x, y), (100, 50)) > 4]
+    p = problem([item("lo", 100, 50)], placement={"position_order": ["right"]},
+                obstacles={"vector": [{"class": "points", "r": 1, "points": field}]})
+    assert evaluate(p, result([omitted("lo")]))["priority"]["inversions"] == 1
 
 
 def test_removal_test_uses_only_the_items_candidates():

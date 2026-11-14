@@ -13,8 +13,8 @@ implementations (Rust and TypeScript) that follow one language-neutral spec.
 3. **Every public option** needs documentation, a default (`spec/defaults.md`), a
    validation rule (both validators) and at least one conformance case.
 4. **Generated files are never edited by hand.** Run `node tools/codegen.mjs` after
-   touching `spec/defaults.md`, `spec/presets/` or `spec/schema/`; CI runs it with
-   `--check`.
+   touching `spec/defaults.md`, `spec/presets/`, `spec/schema/`, `LICENSE` or `NOTICE`
+   (every package carries a copy of the license texts); CI runs it with `--check`.
 5. **Determinism.** No hash-map iteration in decisions, stable sorts with total
    comparators, only `+ − × ÷ sqrt` and `det_math` in float code (ADR solver/determinism).
 6. **Licenses.** Runtime dependencies must be MIT/Apache-2.0/BSD/ISC/Zlib-compatible.
@@ -39,6 +39,13 @@ npm run conformance
 # Schema cross-check
 python3 conformance/check_schema.py
 ```
+
+## Changelog and releases
+
+Say what users will notice in `CHANGELOG.md`, under *Unreleased*: changed placements,
+formats, options and APIs. One version covers every package; `node tools/version.mjs`
+prints, checks and sets it. The release procedure is in `RELEASING.md`. Security reports:
+`SECURITY.md`.
 
 ## Commit messages
 

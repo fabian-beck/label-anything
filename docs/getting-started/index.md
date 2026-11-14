@@ -11,7 +11,7 @@ Every package reads the same problem (`problem.v1`) and returns the same result
 | Java 17+ | `io.github.fabian-beck:label-anything` (Maven) | [Java](java.md) |
 | C, C++, Go, anything with a C FFI | `liblabelanything` and `label_anything.h` | [C and Go](c-go.md) |
 | Shell, or any language that runs processes or speaks HTTP | `label-anything` or `label-anything-ts` | [CLI and HTTP server](cli.md) |
-| Rust | the `label-anything` crate (`place(&serde_json::Value)`) | [`rust/crates/label-anything`](gh:rust/crates/label-anything/src/lib.rs) |
+| Rust | the crate `label-anything` | [Rust](rust.md) |
 
 !!! note "Not in the package registries yet"
 

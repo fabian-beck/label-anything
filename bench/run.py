@@ -10,6 +10,8 @@ Solvers (``--solver``, repeatable; default: the built-in baselines ``naive`` and
 * ``textalloc`` / ``adjusttext`` /       third-party baselines (bench/baselines/; skipped with a
   ``vega-label`` / ``ggrepel`` /         message when their toolchain is missing),
   ``d3fc`` / ``echarts`` / ``d3-labeler``
+* ``mumtaz2019``                         reimplementation of Mumtaz et al. (2019), outlier labeling
+                                         (bench/baselines/mumtaz2019_baseline.py),
 * ``NAME=COMMAND``                       external command template with ``{problem}`` and
                                          ``{result}`` placeholders, e.g.
                                          ``rust=label-anything place {problem} -o {result}``.
@@ -17,7 +19,7 @@ Solvers (``--solver``, repeatable; default: the built-in baselines ``naive`` and
 Solvers named ``rust``, ``wasm`` or ``ts`` (optionally ``-suffix``) are Label Anything
 implementations: they get the performance targets, the parity table and the release
 gates. ``--engine PATH`` adds ``rust=PATH place {problem} -o {result} --warmup N`` and its debug
-overlay; ``--baselines`` adds all nine baselines (what ``label-anything bench --baselines``
+overlay; ``--baselines`` adds all ten baselines (what ``label-anything bench --baselines``
 passes). ``--overlay NAME=COMMAND`` (placeholders ``{problem}``, ``{result}``, ``{svg}``)
 renders an engine debug overlay next to the benchmark rendering, from one extra untimed run.
 
@@ -73,7 +75,8 @@ from bench.solvers import greedy, naive  # noqa: E402
 
 BUILTIN = {"naive": naive.solve, "greedy": greedy.solve}
 BUILTIN_NAMES = set(BUILTIN) | set(BASELINES)
-ALL_BASELINES = ["naive", "greedy", "textalloc", "adjusttext", "vega-label", "ggrepel", "d3fc", "echarts", "d3-labeler"]
+ALL_BASELINES = ["naive", "greedy", "textalloc", "adjusttext", "vega-label", "ggrepel", "d3fc", "echarts", "d3-labeler",
+                 "mumtaz2019"]
 fmt = rep.fmt
 
 
@@ -344,7 +347,8 @@ def run_problem(solver: Solver, prob_entry: dict, out: Path, runs: int, timeout:
         except Exception as e:  # noqa: BLE001 - report and continue
             entry["error"] = f"{type(e).__name__}: {e}"
             return entry
-    metrics = evaluate(problem, res, truth)
+    metrics = evaluate(problem, res, truth, marks=do_render)
+    marks = metrics.pop("marks", None)  # drawn into the images, not written with the metrics
     metrics["runtime"]["wall_ms"] = {"median": statistics.median(walls), "p95": pct(walls, 0.95), "runs": walls}
     if solver.cold_cmd is not None:
         metrics["runtime"]["warm_process_ms"] = {"median": statistics.median(warm_walls), "runs": warm_walls}
@@ -368,12 +372,12 @@ def run_problem(solver: Solver, prob_entry: dict, out: Path, runs: int, timeout:
     if do_render:
         img = out / "img" / solver.name / rel.with_suffix(".png")
         img.parent.mkdir(parents=True, exist_ok=True)
-        render.render_png(problem, res, prob_entry["background_png"]).save(img, optimize=True)
+        render.render_png(problem, res, prob_entry["background_png"], marks=marks).save(img, optimize=True)
         entry["image"] = str(img.relative_to(out))
         if svg:
             sp = img.with_suffix(".svg")
             href = os.path.relpath(out / "fonts" / "NotoSans-Regular.ttf", sp.parent)
-            sp.write_text(render.render_svg(problem, res, font_href=href), encoding="utf-8")
+            sp.write_text(render.render_svg(problem, res, font_href=href, marks=marks), encoding="utf-8")
             entry["svg"] = str(sp.relative_to(out))
         if solver.overlay:
             ov = out / "overlay" / solver.name / rel.with_suffix(".svg")
@@ -466,7 +470,8 @@ def run_sequence(solver: Solver, seq: dict, out: Path, timeout: float, do_render
         for k in (0, len(frames) // 2, len(frames) - 1):
             img = out / "img" / solver.name / seq["scenario"] / seq["name"] / f"frame{k:03d}.png"
             img.parent.mkdir(parents=True, exist_ok=True)
-            render.render_png(frames[k][0], frames[k][1]).save(img, optimize=True)
+            marks = evaluate(frames[k][0], frames[k][1], removal_test=False, marks=True)["marks"]
+            render.render_png(frames[k][0], frames[k][1], marks=marks).save(img, optimize=True)
             imgs.append(str(img.relative_to(out)))
         entry["images"] = imgs
     return entry
@@ -524,6 +529,7 @@ def main(argv=None) -> int:
     ap.add_argument("--suite", choices=["quick", "full"], default="quick")
     ap.add_argument("--solver", action="append",
                     help="naive | greedy | textalloc | adjusttext | vega-label | ggrepel | d3fc | echarts | d3-labeler | "
+                         "mumtaz2019 | "
                          "NAME=COMMAND (repeatable)")
     ap.add_argument("--engine", help="Rust CLI binary: adds rust=ENGINE place {problem} -o {result} and its overlay")
     ap.add_argument("--ts", action="store_true",

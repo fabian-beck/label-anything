@@ -55,7 +55,9 @@ pub fn stack(desired: &[f64], gaps: &[f64], lo: f64, hi: f64) -> Vec<f64> {
 }
 
 /// Minimum-cost perfect assignment of rows to columns (square cost matrix), Hungarian
-/// algorithm with potentials (O(n³)). Ties resolve deterministically by index.
+/// algorithm with potentials (O(n³)). Ties resolve deterministically by index. A matrix
+/// with a row that has no finite cost left (infinite or NaN costs, from geometry beyond
+/// what `f64` holds) has no such assignment: rows keep their columns (the identity).
 pub fn hungarian(cost: &[Vec<f64>]) -> Vec<usize> {
     let n = cost.len();
     if n == 0 {
@@ -88,6 +90,10 @@ pub fn hungarian(cost: &[Vec<f64>]) -> Vec<usize> {
                         j1 = j;
                     }
                 }
+            }
+            if j1 == 0 {
+                // no free column at a finite cost: the search below would never end
+                return (0..n).collect();
             }
             for j in 0..=n {
                 if used[j] {
@@ -1094,5 +1100,20 @@ mod tests {
         let a = hungarian(&c);
         let total: f64 = a.iter().enumerate().map(|(i, &j)| c[i][j]).sum();
         assert_eq!(total, 5.0);
+    }
+
+    /// Costs that are not finite have no minimum: the assignment is the identity, and the
+    /// search ends.
+    #[test]
+    fn hungarian_without_finite_costs() {
+        let inf = f64::INFINITY;
+        assert_eq!(hungarian(&[vec![inf, inf], vec![inf, inf]]), [0, 1]);
+        assert_eq!(
+            hungarian(&[vec![f64::NAN, f64::NAN], vec![1.0, 2.0]]),
+            [0, 1]
+        );
+        assert_eq!(hungarian(&[vec![1.0, 2.0], vec![inf, inf]]), [0, 1]);
+        // a row with one finite cost is still assigned
+        assert_eq!(hungarian(&[vec![inf, 1.0], vec![1.0, inf]]), [1, 0]);
     }
 }

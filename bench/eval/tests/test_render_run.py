@@ -4,6 +4,7 @@ from __future__ import annotations
 import xml.etree.ElementTree as ET
 
 from bench import render
+from bench.eval import evaluate
 from bench.eval.tests.helpers import item, omitted, placed, problem, result
 from bench.run import pct, shifted_warm_start
 from bench.solvers import naive
@@ -58,6 +59,33 @@ def test_standalone_svg_vector_background_font_and_colors(tmp_path):
     # without a background, the vector layers are drawn in grey
     root = ET.fromstring(render.standalone_svg(prob, res))
     assert root.find(f"{ns}g[@class='obstacles']") is not None
+
+
+def test_violations_are_drawn_over_the_result():
+    # E's and F's labels overlap; A's label is about as near to B's mark as to its own
+    prob = problem([item("A", 30, 50), item("B", 67, 50), item("E", 120, 80), item("F", 170, 80)])
+    res = result([placed("A", 33, 45, side="right"), placed("B", 70, 20, side="top-right"),
+                  placed("E", 123, 65), placed("F", 140, 68, side="top-left")])
+    marks = evaluate(prob, res, removal_test=False, marks=True)["marks"]
+    assert marks["overlaps"] == [[140, 68, 153, 75]] and marks["labels"] == ["E", "F"]
+    assert marks["ambiguous"] == [{"label": "A", "level": "unclear", "point": [67, 50]}]
+    ns = "{http://www.w3.org/2000/svg}"
+    for svg in (render.render_svg(prob, res, marks=marks), render.standalone_svg(prob, res, marks=marks)):
+        g = ET.fromstring(svg).find(f"{ns}g[@class='violations']")
+        shared = [e for e in g if e.tag == ns + "rect" and e.get("fill") == render.CONFLICT]
+        assert [(e.get("x"), e.get("width")) for e in shared] == [("140", "13")]
+        assert sum(1 for e in g if e.tag == ns + "rect" and e.get("stroke") == render.CONFLICT) == 2
+        assert any(e.tag == ns + "line" and e.get("stroke") == render.AMBIGUOUS and e.get("stroke-dasharray")
+                   for e in g)
+    assert ET.fromstring(render.render_svg(prob, res)).find(f"{ns}g[@class='violations']") is None
+    plain = render.render_png(prob, res)
+    img = render.render_png(prob, res, marks=marks)
+    # the area the two labels share is tinted red; the ambiguous label's line runs to B's mark
+    r, g, b = img.getpixel((146, 71))
+    assert r > 200 and g < 170 and (r, g, b) != plain.getpixel((146, 71))
+    r, g, b = img.getpixel((65, 50))
+    assert r > 200 and 90 < g < 200 and b < 120
+    assert all(render.violation_icon(k).startswith("<svg") for k, _c, _t in render.VIOLATIONS)
 
 
 def test_warm_start_shift_and_percentile():

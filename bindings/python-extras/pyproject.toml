@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64"]
+requires = ["setuptools>=77"]  # 77: the SPDX `license` string
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -19,7 +19,8 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Visualization",
     "Typing :: Typed",
 ]
-dependencies = ["label-anything>=0.1"]
+# released together with label-anything, with the same version (tools/version.mjs)
+dependencies = ["label-anything==0.1.0"]
 
 [project.optional-dependencies]
 matplotlib = ["matplotlib>=3.5", "numpy>=1.21"]

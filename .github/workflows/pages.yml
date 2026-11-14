@@ -6,8 +6,8 @@ name: Pages
 #
 # * after the CI run of a release tag (v*) succeeded. Its `baselines` job ran the benchmark
 #   with every baseline and the performance targets, passed the release gates and uploaded
-#   the report (artifact bench-report-baselines); it is published at <site>/benchmark-report/,
-#   with the gallery at <site>/benchmark-report/gallery/. The site's links into the
+#   the report (artifact bench-report-baselines) with the gallery's figures; it is published at
+#   <site>/benchmark-report/ (<site>/benchmark-report/gallery/ leads there). The site's links into the
 #   repository point to that tag (docs/_hooks/la_docs.py).
 # * after a weekly or dispatched CI run of main succeeded: the site of main with that run's
 #   report (its `baselines` job runs on schedule and dispatch too).
@@ -78,7 +78,7 @@ jobs:
           fi
           echo "report of CI run: ${RUN_ID:-none}"
           echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
-      - name: The benchmark report and gallery of that CI run
+      - name: The benchmark report of that CI run
         if: steps.report.outputs.run_id != ''
         uses: actions/download-artifact@v4
         with:

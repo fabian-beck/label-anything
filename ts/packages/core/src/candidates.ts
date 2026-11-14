@@ -931,6 +931,9 @@ export function internalRank(item: Item, v: Variant, models: Models, circleRatio
   }
 }
 
+/** The grid of an area anchor's internal candidates has about this many samples at most (spec §6.5). */
+const AREA_SAMPLES = 65536;
+
 /** Internal candidates of one variant (spec §6.3, §6.5). */
 export function internal(item: Item, vi: number, v: Variant, rank: number, out: Cand[]): void {
   const hw = v.w * 0.5;
@@ -947,17 +950,22 @@ export function internal(item: Item, vi: number, v: Variant, rank: number, out: 
     const shape = area.shape;
     const pts: [number, P][] = [];
     if (shape.containsRect(Rect.fromCenter(area.pole, hw, hh), pad)) pts.push([area.poleDist, area.pole]);
-    // grid samples where the label fits, by clearance
+    // grid samples where the label fits, by clearance; an area far larger than any
+    // picture (a country beyond the view of a map) is sampled more coarsely, at about
+    // `AREA_SAMPLES` places (spec §6.5)
     const bb = shape.bbox();
-    const step = maxf(v.h, 4);
+    const step = maxf(maxf(v.h, 4), Math.sqrt((bb.w() * bb.h()) / AREA_SAMPLES));
     let y = bb.y0 + hh;
     while (y <= bb.y1 - hh + 1e-9) {
       let x = bb.x0 + hw;
       while (x <= bb.x1 - hw + 1e-9) {
         const c = new P(x, y);
         if (shape.containsRect(Rect.fromCenter(c, hw, hh), pad)) pts.push([-shape.signedDistance(c), c]);
+        // coordinates so large that a step no longer changes them
+        if (x + step <= x) break;
         x += step;
       }
+      if (y + step <= y) break;
       y += step;
     }
     pts.sort((a, b) => cmpF64(b[0], a[0]));

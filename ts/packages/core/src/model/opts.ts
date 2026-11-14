@@ -461,8 +461,10 @@ export class PlacementOpts {
     public fan: FanMode,
     /** `placement.stubs: auto` (spec §6.9). */
     public stubs: boolean,
-    /** `placement.own_nearest` (spec §4.4). */
+    /** `placement.own_nearest` `true` or `"items"` (spec §4.4). */
     public ownNearest: boolean,
+    /** `placement.own_nearest` `true`: the rule holds against the unlabeled points too. */
+    public ownNearestPoints: boolean,
     /**
      * `placement.max_foreign`: the largest share of the box of an area item's label (not an
      * internal one) or of a label on a leader that may lie in other items' regions (spec §4.8).
@@ -485,7 +487,8 @@ export class PlacementOpts {
       { sides: o.strings("placement.boundary.sides"), spread: o.string("placement.boundary.align") === "spread" },
       fanMode(o.string("placement.fan")),
       o.string("placement.stubs") === "auto",
-      o.bool("placement.own_nearest"),
+      o.get("placement.own_nearest") !== false,
+      o.get("placement.own_nearest") === true,
       o.f64("placement.max_foreign"),
     );
   }

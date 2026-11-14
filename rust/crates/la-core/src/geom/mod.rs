@@ -294,6 +294,32 @@ impl Affine {
 // Segments
 // ---------------------------------------------------------------------------------
 
+/// How squarely the point `p` lies beside a side of `r`, where a label of a mark at `p`
+/// would go: 1 straight across a side (or inside `r`), 0 on the diagonal of a corner, and
+/// `|dx² − dy²| / (dx² + dy²)` for the offset `(dx, dy)` of `p` from `r` (spec §4.4).
+pub fn facing(r: &Rect, p: P) -> f64 {
+    let dx = if p.x < r.x0 {
+        r.x0 - p.x
+    } else if p.x > r.x1 {
+        p.x - r.x1
+    } else {
+        0.0
+    };
+    let dy = if p.y < r.y0 {
+        r.y0 - p.y
+    } else if p.y > r.y1 {
+        p.y - r.y1
+    } else {
+        0.0
+    };
+    let s = dx * dx + dy * dy;
+    if s > 0.0 {
+        (dx * dx - dy * dy).abs() / s
+    } else {
+        1.0
+    }
+}
+
 /// Orientation of the triangle (a, b, c): > 0 counter-clockwise in math orientation.
 #[inline]
 pub fn orient(a: P, b: P, c: P) -> f64 {

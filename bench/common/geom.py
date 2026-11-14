@@ -169,14 +169,19 @@ def segments_cross(p1: Point, p2: Point, q1: Point, q2: Point, tol: float = 0.5)
     d4 = _cross(p1, p2, q2)
     if not (((d1 > 0 > d2) or (d1 < 0 < d2)) and ((d3 > 0 > d4) or (d3 < 0 < d4))):
         return False
-    # intersection point
-    t = d1 / (d1 - d2)
-    ix = p1[0] + t * (p2[0] - p1[0])
-    iy = p1[1] + t * (p2[1] - p1[1])
+    ix, iy = crossing_point(p1, p2, q1, q2)
     for e in (p1, p2, q1, q2):
         if math.hypot(ix - e[0], iy - e[1]) <= tol:
             return False
     return True
+
+
+def crossing_point(p1: Point, p2: Point, q1: Point, q2: Point) -> Point:
+    """Where segment ``p1 p2`` meets the line through ``q1 q2`` (the crossing of two crossing segments)."""
+    d1 = _cross(q1, q2, p1)
+    d2 = _cross(q1, q2, p2)
+    t = d1 / (d1 - d2) if d1 != d2 else 0.5
+    return (p1[0] + t * (p2[0] - p1[0]), p1[1] + t * (p2[1] - p1[1]))
 
 
 def seg_box_intersects(a: Point, b: Point, box: Box) -> bool:

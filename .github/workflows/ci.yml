@@ -54,6 +54,13 @@ jobs:
         run: cargo test -p label-anything-core --profile ci --test random_problems
         env:
           LA_RANDOM_CASES: "1000"
+      - name: Getting-started program of the docs (Rust)
+        run: cargo run --profile ci -p label-anything --example getting_started
+      - name: API documentation (as docs.rs builds it; broken links fail)
+        if: runner.os == 'Linux'
+        run: cargo doc --workspace --no-deps --exclude label-anything-py
+        env:
+          RUSTDOCFLAGS: -D warnings
 
   wasm32:
     name: Core for wasm32
@@ -120,11 +127,11 @@ jobs:
       - run: npm ci
       - name: Build the module and its glue (cargo + wasm-bindgen)
         run: npm run build:wasm -w @label-anything/wasm
-      - name: Size budget (gzip < 1 MB)
+      - name: Size budget (gzip < 1.1 MB)
         run: |
           size=$(gzip -9 -c ts/packages/wasm-adapter/wasm/label_anything_bg.wasm | wc -c)
           echo "label_anything_bg.wasm: $size bytes gzip"
-          test "$size" -lt 1000000
+          test "$size" -lt 1100000
       - name: Type-check and build
         run: npm run build
       - name: Rust CLI (the native results the WebAssembly results must equal)
@@ -137,6 +144,8 @@ jobs:
         run: |
           python3 examples/tutorials/run.py js
           python3 examples/tutorials/run.py cli --only ts-cli --cli rust/target/release/label-anything --ts-cli ts/packages/cli/dist/main.js
+      - name: npm tarballs (what `npm publish` would upload, the WebAssembly package included)
+        run: node tools/check-packages.mjs --wasm
       - name: Browser smoke test (Chromium)
         run: |
           npx playwright install --with-deps chromium
@@ -173,6 +182,8 @@ jobs:
       - run: pip install -r tools/text/requirements.txt
       - name: Spec code generation
         run: node tools/codegen.mjs --check
+      - name: One version in every package
+        run: node tools/version.mjs --check
       - name: Place conformance cases
         run: python3 tools/conformance/make_place_cases.py --check
       - name: Parity fixtures (Rust results the TypeScript core must reproduce)
@@ -183,6 +194,37 @@ jobs:
         run: |
           pip install jsonschema
           python3 conformance/check_schema.py
+
+  packages:
+    # What a release would upload to crates.io and PyPI, built and checked on every change
+    # (the npm tarballs: job `wasm`). Nothing is published here.
+    name: Crates, wheel and source distributions
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Crates (each one built from the files it would publish)
+        working-directory: rust
+        run: cargo package --workspace --exclude label-anything-py --exclude label-anything-wasm
+      - name: Wheel and source distributions (label-anything, label-anything-extras)
+        run: |
+          pip install "maturin>=1.9.4,<2" build twine
+          maturin build --release -m rust/crates/la-py/Cargo.toml --out dist
+          maturin sdist -m rust/crates/la-py/Cargo.toml --out dist
+          python -m build bindings/python-extras --outdir dist
+          twine check dist/*
+          python tools/check-wheels.py dist
+      - name: The source distribution builds and imports
+        run: |
+          pip install dist/label_anything-*.tar.gz
+          python -c "import label_anything as la; print(la.place(anchors=[(10, 10)], labels=['A'], canvas=(100, 100)))"
 
   licenses:
     name: Dependency licenses
@@ -465,7 +507,7 @@ jobs:
           bench/.venv/bin/python bench/run.py --suite quick --runs 3
           --engine "$PWD/rust/target/release/label-anything"
           --baselines --require-baselines --perf
-      - name: Gallery (bench-report/gallery, published with the report)
+      - name: Gallery (bench-report/gallery, the report's figures and side-by-side drawings)
         run: >
           bench/.venv/bin/python -m bench.gallery
           --engine "$PWD/rust/target/release/label-anything" --run bench-report

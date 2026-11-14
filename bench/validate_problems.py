@@ -26,7 +26,8 @@ MAX_QUICK = 20_000_000
 
 def is_problem_file(p: Path) -> bool:
     n = p.name
-    return n.endswith(".json") and not n.endswith(".truth.json") and n not in ("scenario.json", "sequence.json")
+    return (n.endswith(".json") and not n.endswith((".truth.json", ".published.json"))
+            and n not in ("scenario.json", "sequence.json"))
 
 
 def problem_files(root: Path) -> list[Path]:

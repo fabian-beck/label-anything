@@ -5,6 +5,8 @@
 //! the normative semantics. This crate has no I/O; backgrounds, files, the clock and
 //! host callbacks are injected through [`env::Env`].
 
+#![forbid(unsafe_code)]
+
 pub mod boundary;
 pub mod candidates;
 pub mod cost;
@@ -176,7 +178,8 @@ pub fn place_validated(
             )],
         });
     }
-    let obs = obstacles::prepare(&m, min_font);
+    let mut obs = obstacles::prepare(&m, min_font);
+    obs.set_points_rule(&m, &variants);
     let t1 = env.now_ms();
     let measurer = labels::Measurer {
         fonts,
@@ -283,3 +286,8 @@ pub fn place_str(text: &str, env: &dyn Env) -> Result<String, String> {
         Err(e) => Err(serde_json::to_string(&e.errors).unwrap_or_default()),
     }
 }
+
+/// The examples of the README are tested with the documentation.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;

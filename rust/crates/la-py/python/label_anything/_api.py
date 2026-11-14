@@ -272,7 +272,7 @@ def place(
     prune_factor: Optional[float] = None,
     boundary: Any = None,
     fan: Optional[str] = None,
-    own_nearest: Optional[bool] = None,
+    own_nearest: Union[bool, str, None] = None,
     stubs: Optional[str] = None,
     stub_length: Optional[Length] = None,
     stub_reach: Optional[Length] = None,

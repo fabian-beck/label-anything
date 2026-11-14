@@ -17,6 +17,11 @@ benchmark).
   Metropolis rule over the iteration budget. A move's `Δ` counts only the moved labels'
   own costs; the best state is restored at the end only when its total, computed afresh,
   is lower than the walk's.
+- **Weighted insertions keep priorities**: with weighted omission, which no priority repair
+  follows, an insertion is undone when it leaves an omitted item placeable once less
+  important labels were removed, where it was not before. An ejection chain can move a
+  more important label aside and free the room such an item needed, but for the label it
+  inserts.
 - **Exact search** (`strategy: "exact"`, or `auto` for at most 3,000 candidates and a
   budget of at least 500 ms) is a branch and bound over items in priority order on the
   conflict graph: the 24 cheapest feasible candidates per item, the omission objective
@@ -30,7 +35,10 @@ Small and medium problems get proven optima, large ones a bounded improvement. A
 backend could still come as a strategy supplied by the host. The running sum of `Δ` can
 drift from the true total, since a leader through another label's buffer changes that
 label's cost; the restore rule tolerates the drift instead of evaluating every neighbour
-twice more.
+twice more. The guard of weighted insertions removes the 4 priority inversions of the
+benchmark's weighted map of 3,221 airports for one label (698 instead of 699);
+relocations can still leave an inversion in weighted mode, which that mode allows (spec
+§9.2).
 
 ## Alternatives
 - **HiGHS**: see the context.

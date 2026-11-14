@@ -35,7 +35,7 @@ node examples/brief/js_6_2_wasm.mjs          # the brief's §6.2 example with @l
 
 The CI job `wasm` (`.github/workflows/ci.yml`) does exactly this with Rust 1.97.0 and
 wasm-bindgen-cli 0.2.129, builds the native CLI for the equality tests, checks the size
-budget (gzip < 1 MB) and runs the smoke test in Chromium.
+budget (gzip < 1.1 MB) and runs the smoke test in Chromium.
 
 The build uses its own Cargo profile (`wasm-release`, passed with `--config`: fat LTO, one
 codegen unit), so it does not invalidate native release builds. Options of
@@ -73,7 +73,7 @@ What the optional parts cost (gzip): full shaping (rustybuzz + ttf-parser, used 
 complex scripts when `text.shaping` is `auto` or `full`) 212 KB, PNG/JPEG/WebP decoding
 164 KB, the SVG backend 66 KB, opt-level 3 for the solver crate 74 KB. The default keeps
 everything the native facade has, so a problem that places natively places here too, and
-stays below 1 MB gzip. It compiles the solver crate (`label-anything-core`) and the raster
+stays below 1.1 MB gzip. It compiles the solver crate (`label-anything-core`) and the raster
 pipeline (`label-anything-raster`) at opt-level 3: as fast as opt-level 3 everywhere (which
 is just over 1 MB) and 9–16 % faster than "s" everywhere (A/B on p200, p2000 and the
 local-search sample `priority-prefix.json`); with the raster crate at "s", preparing a

@@ -3,7 +3,8 @@
  * MIT License. https://github.com/fabian-beck/label-anything
  *
  * All strings are UTF-8 and NUL-terminated. Every string returned through an out
- * parameter is owned by the library and must be released with la_free().
+ * parameter is owned by the library and must be released with la_free(). An out
+ * parameter may be NULL: nothing is written then.
  *
  * Return codes: LA_OK (0) success; LA_INVALID (1) the problem is invalid — *result holds a
  * JSON array of {pointer, code, message}; LA_ERROR (2) other failure — *result holds a
@@ -35,10 +36,13 @@ extern "C" {
 int32_t la_place_json(const char *problem, const uint8_t *rgba, uint32_t width, uint32_t height, char **result);
 
 /* Validate `problem`; writes the report JSON ({valid, errors, warnings}) to *report.
- * Returns LA_OK when valid, LA_INVALID otherwise. */
+ * Returns LA_OK when valid, LA_INVALID otherwise (LA_ERROR, with the JSON array of one
+ * error, only for a failure inside the library). */
 int32_t la_validate_json(const char *problem, char **report);
 
-/* Render the debug SVG overlay of a problem and a result. */
+/* Render the debug SVG overlay of a problem and a result. The problem is not validated:
+ * what cannot be read of it is not drawn. On LA_OK *svg holds the SVG; otherwise (text
+ * that is not JSON) the JSON array of one error. */
 int32_t la_render_svg(const char *problem, const char *result, char **svg);
 
 /* Library version, e.g. "0.1.0" (static string, do not free). */

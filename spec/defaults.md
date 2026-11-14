@@ -46,10 +46,10 @@ are stale.
 | `placement.offset` | `1` | length ≥ 0 | Gap between the (inflated) mark and an adjacent label. |
 | `placement.max_distance` | `"8em"` | length ≥ 0 | Largest anchor–label distance of distant labels. |
 | `placement.min_distance` | `"1.5em"` | length ≥ 0 | Innermost ring of distant candidates. |
-| `placement.slider_per_quadrant` | `4` | int ≥ 0 | Slider samples between two fixed positions. |
-| `placement.k_distant` | `24` | int ≥ 0 | Distant candidates kept per item variant (lowest static cost). |
-| `placement.distant_rings` | `4` | int ≥ 1 | Rings between `min_distance` and `max_distance`. |
-| `placement.distant_directions` | `16` | int ≥ 4 | Directions per ring for `straight` leaders. |
+| `placement.slider_per_quadrant` | `4` | int 0…1000 | Slider samples between two fixed positions. |
+| `placement.k_distant` | `24` | int 0…10000 | Distant candidates kept per item variant (lowest static cost). |
+| `placement.distant_rings` | `4` | int 1…100 | Rings between `min_distance` and `max_distance`. |
+| `placement.distant_directions` | `16` | int 4…3600 | Directions per ring for `straight` leaders. |
 | `placement.free_space_seeds` | `true` | bool | Add distant candidates at distance-transform maxima. |
 | `placement.internal` | `"auto"` | auto \| prefer \| allow \| never | auto = prefer for rect/ellipse/polygon/path marks and areas, allow for circles. |
 | `placement.inner_padding` | `"0.2em"` | length ≥ 0 | Clearance of internal labels from the shape boundary. |
@@ -60,7 +60,7 @@ are stale.
 | `placement.boundary.gap` | `2` | length ≥ 0 | Gap between stacked boundary labels. |
 | `placement.boundary.margin` | `4` | length ≥ 0 | Distance of boundary labels from the canvas (region) edge. |
 | `placement.fan` | `"auto"` | auto \| always \| off | Fan labels (spec §6.8): a crowd's labels stacked in a column beside it with fanning leaders. `auto`: crowds of items left without a label, when that places more labels; `always`: every crowd of two or more items. |
-| `placement.own_nearest` | `true` | bool | A label without a distant leader comes no closer to another item's mark than to its own, and without a stub it is nearer to its own by its margin (at most by the distance between the two marks; marks it may not cover; spec §4.4). |
+| `placement.own_nearest` | `true` | true \| items \| false | A label without a distant leader comes no closer to another item's mark, or to an unlabeled point it does not hide, than to its own, and without a stub it is nearer to its own by its margin (at most by the distance between the two marks; marks it may not cover; unlabeled points where some fixed position beside the mark keeps clear of them; spec §4.4). `"items"`: other items' marks only. |
 | `placement.stubs` | `"off"` | off \| auto | Stubs (spec §6.9): with `auto`, a label next to its mark that another item's mark comes within `stub_reach` of stands `stub_length` farther out, joined to its mark by a short leader at a right angle to its side (`leader.stub`; in the middle of a left or right side), where that is feasible; such a crowded label without a stub costs as much as a leader (`w_leader`). |
 | `placement.stub_length` | `"0.5em"` | length ≥ 0 | How much farther out a label with a stub stands than an adjacent one. |
 | `placement.stub_reach` | `"0.75em"` | length ≥ 0 | A label is ambiguous where another item's mark comes closer than this to its adjacent box. |
@@ -101,7 +101,7 @@ are stale.
 | `solver.grid_cell` | `"auto"` | auto or > 0 | auto = clamp(min font size / 4, 1, 4) px. |
 | `degrade` | `["alternatives","wrap","distant","evict_lower","shrink:0.85","soft_overlap","omit"]` | list | Degradation ladder (spec §10.1). No `boundary` step: margin labels need leaders across the picture; use the `boundary` model or step where they are intended. |
 | `degrade_options.min_scale` | `0.7` | (0,1] | Smallest font scale of `shrink:f` steps (f, f², … ≥ min_scale), relative to the size before a smaller font class (spec §9.4). |
-| `degrade_options.wrap_max_lines` | `3` | int ≥ 1 | Line limit of the `wrap` step for labels without wrap settings. |
+| `degrade_options.wrap_max_lines` | `3` | int 1…1000 | Line limit of the `wrap` step for labels without wrap settings. |
 | `degrade_options.soft_overlap_weight` | `10` | ≥ 0 | Weight replacing `hard` for relaxed classes. |
 | `weights.position` | `0.6` | ≥ 0 | × position rank / number of positions. |
 | `weights.distance` | `0.3` | ≥ 0 | × gap between label and own shape, in em. |

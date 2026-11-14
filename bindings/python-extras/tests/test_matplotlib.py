@@ -341,3 +341,33 @@ def test_shim_module() -> None:
 
     assert shim.label_points is label_points
     assert shim.svg_classes is svg_classes and shim.figure_background is figure_background
+
+
+@pytest.mark.parametrize("layout", ["constrained", "tight", "compressed"])
+def test_labels_stay_at_their_points_with_a_layout_engine(layout: str) -> None:
+    """Reading the figure without its texts must not let the layout engine move the axes."""
+    rng = np.random.default_rng(3)
+    x, y = rng.uniform(0, 10, 30), rng.uniform(0, 10, 30)
+    fig, ax = plt.subplots(figsize=(6.4, 4.8), dpi=100, layout=layout)
+    ax.scatter(x, y, s=16)
+    ax.set_title("A title")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    fig.canvas.draw()
+    position = ax.get_position().bounds
+    out = label_points(ax, x, y, [f"point {i}" for i in range(30)])
+    assert ax.get_position().bounds == pytest.approx(position)
+    fig.canvas.draw()
+    assert ax.get_position().bounds == pytest.approx(position)
+    assert len(out.result.placed) == 30
+    # every label is where the engine put it: beside its point, on no other label
+    boxes = extents(out.texts, fig)
+    assert not any(overlaps(a, b) for i, a in enumerate(boxes) for b in boxes[i + 1 :])
+
+
+@pytest.mark.parametrize("weight", ["semibold", "light", "bold", 600])
+def test_matplotlib_weight_names(weight: Any) -> None:
+    fig, ax, x, y = scatter(20)
+    out = label_points(ax, x, y, [f"p{i}" for i in range(20)], fontweight=weight)
+    number = {"semibold": 600, "light": 200, "bold": 700}.get(weight, weight)
+    assert out.texts and all(t.get_fontweight() in (weight, number) for t in out.texts)

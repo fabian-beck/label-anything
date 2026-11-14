@@ -12,13 +12,21 @@ The same renderer is used for every implementation and baseline in the report:
 * labels: box outline and text drawn at the reported baselines and x offsets,
   font Noto Sans from ``fonts/`` (PNG: glyphs positioned with the same GPOS
   kerning as the measurement, so drawn text matches the reported boxes),
-* leaders (polylines, underlines) and unplaced items as red ×.
+* leaders (polylines, underlines) and unplaced items as red ×,
+* with ``marks`` (``evaluate(..., marks=True)["marks"]``), the violations the evaluator counts,
+  drawn over the result (``VIOLATIONS``): conflicts in red (the area two labels share, the
+  outline of a label over a mark, an obstacle or the canvas edge, a leader through a label or a
+  mark, a ring where leaders cross), ambiguous labels in orange (outlined, with a line to the
+  point a label may be taken for: solid where that point is nearer than its own, dashed where it
+  is about as near), covered data points with a magenta ring, and labels too close to each
+  other in purple (a line across the gap; leaders too close to another leader or a mark
+  dashed).
 
 ``standalone_svg`` draws the same picture as one self-contained vector image (the gallery's
 images): SVG backgrounds inlined, raster backgrounds embedded, the label text set in a subset
 of Noto Sans embedded in the file, every glyph at the pen position of the measurement.
 
-    python bench/render.py problem.json result.json -o out.svg [--png out.png] [--standalone]
+    python bench/render.py problem.json result.json -o out.svg [--png out.png] [--standalone] [--violations]
 """
 from __future__ import annotations
 
@@ -50,6 +58,49 @@ LABEL_TEXT = "#000000"
 LEADER = "#333333"
 OBST = "#b8b8b8"
 UNPLACED = "#d62728"
+CONFLICT = "#e31a1c"
+AMBIGUOUS = "#ff7f00"
+COVERED = "#c51b7d"
+CLOSE = "#6a3d9a"
+MARK_W = 1.5
+"""Stroke width of the violation marks (px of the canvas)."""
+RING_W = 1.0
+"""Stroke width of the rings around covered points (often many: thinner)."""
+VIOLATIONS = [
+    ("conflict", CONFLICT, "conflict: two labels overlap (filled), a label lies over a mark, an obstacle or the "
+                           "canvas edge (outlined), a leader runs through a label or a mark, leaders cross (ring)"),
+    ("ambiguous", AMBIGUOUS, "ambiguous label: outlined, with a line to the point it may be taken for; solid where "
+                             "that point is nearer than its own (misattributed), dashed where it is about as near, "
+                             "less than 0.2 em farther (unclear), or comes that near a label with a leader"),
+    ("covered", COVERED, "data point covered by the label of another item"),
+    ("close", CLOSE, "labels less than 0.4 em apart (a line across the gap, a dot where they touch); a leader "
+                     "nearer than the clearance to another leader or a mark (dashed)"),
+]
+"""The violation marks: key, color and meaning (for the legends of the report and the gallery)."""
+
+
+def violation_icon(key: str) -> str:
+    """A small inline SVG of the violation mark ``key`` of ``VIOLATIONS``, on a grey ground, for legends."""
+    box = 'fill="#ffffff" fill-opacity="0.9"'
+    dot = f'fill="{MARK_FILL}" stroke="{MARK_STROKE}" stroke-width="0.8"'
+    body = {
+        "conflict": (f'<rect x="3" y="3" width="22" height="9" {box} stroke="{CONFLICT}" stroke-width="{MARK_W}"/>'
+                     f'<rect x="17" y="7" width="24" height="8" {box} stroke="{CONFLICT}" stroke-width="{MARK_W}"/>'
+                     f'<rect x="17" y="7" width="8" height="5" fill="{CONFLICT}" fill-opacity="0.45"/>'),
+        "ambiguous": (f'<circle cx="6" cy="9" r="3" {dot}/><rect x="10" y="4" width="20" height="10" {box} '
+                      f'stroke="{AMBIGUOUS}" stroke-width="{MARK_W}" stroke-dasharray="3 2"/>'
+                      f'<circle cx="38" cy="9" r="3" {dot}/>'
+                      f'<line x1="30" y1="9" x2="38" y2="9" stroke="{AMBIGUOUS}" stroke-width="{MARK_W}" '
+                      f'stroke-dasharray="3 2"/><circle cx="38" cy="9" r="2" fill="{AMBIGUOUS}"/>'),
+        "covered": (f'<circle cx="30" cy="10" r="3" {dot}/><rect x="6" y="4" width="26" height="10" {box}/>'
+                    f'<circle cx="30" cy="10" r="4.5" fill="none" stroke="{COVERED}" stroke-width="{RING_W}"/>'),
+        "close": (f'<rect x="2" y="4" width="16" height="10" {box}/><rect x="26" y="4" width="16" height="10" {box}/>'
+                  f'<line x1="18" y1="9" x2="26" y2="9" stroke="{CLOSE}" stroke-width="{MARK_W}"/>'),
+    }[key]
+    return (f'<svg width="44" height="18" viewBox="0 0 44 18" aria-hidden="true"><rect width="44" height="18" '
+            f'fill="{OBST}"/>{body}</svg>')
+
+
 _HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
@@ -136,8 +187,66 @@ def _background_items(problem: dict, bg_svg_path: Path | None) -> list[str]:
     return out
 
 
+def _box_point(b: dict, q) -> tuple[float, float]:
+    """The point of the box ``b`` (``x, y, w, h``) nearest to ``q``."""
+    return (min(max(q[0], b["x"]), b["x"] + b["w"]), min(max(q[1], b["y"]), b["y"] + b["h"]))
+
+
+def _leader_lines(p: dict | None) -> list:
+    if not p:
+        return []
+    return [L["points"] for L in ([p["leader"]] if p.get("leader") else []) + list(p.get("leaders") or [])]
+
+
+def _marks_svg(marks: dict | None, by_id: dict) -> list[str]:
+    """The violations of ``marks`` (``evaluate(..., marks=True)["marks"]``) as one SVG group, drawn over
+    the result: too close, covered, ambiguous, then the conflicts on top (``VIOLATIONS``)."""
+    if not marks:
+        return []
+    o = [f'<g class="violations" fill="none" stroke-width="{MARK_W}" stroke-linecap="round" '
+         f'stroke-linejoin="round">']
+    for x0, y0, x1, y1 in marks.get("close", []):
+        if math.hypot(x1 - x0, y1 - y0) < 1.0:
+            o.append(f'<circle cx="{_fmt(x0)}" cy="{_fmt(y0)}" r="1.5" fill="{CLOSE}" stroke="none"/>')
+        else:
+            o.append(f'<line x1="{_fmt(x0)}" y1="{_fmt(y0)}" x2="{_fmt(x1)}" y2="{_fmt(y1)}" stroke="{CLOSE}"/>')
+    for lid in marks.get("tight_leaders", []):
+        for pts in _leader_lines(by_id.get(lid)):
+            o.append(f'<polyline points="{_pts(pts)}" stroke="{CLOSE}" stroke-dasharray="3 2"/>')
+    for c in marks.get("covered", []):
+        x, y = c["point"]
+        o.append(f'<circle cx="{_fmt(x)}" cy="{_fmt(y)}" r="{_fmt(max(c["r"] + 1.5, 3))}" stroke="{COVERED}" '
+                 f'stroke-width="{RING_W}"/>')
+    for a in marks.get("ambiguous", []):
+        p = by_id.get(a["label"])
+        if not p or "box" not in p:
+            continue
+        b = p["box"]
+        (x0, y0), (x1, y1) = _box_point(b, a["point"]), a["point"]
+        dash = "" if a["level"] == "misattributed" else ' stroke-dasharray="4 2"'
+        o.append(f'<rect x="{_fmt(b["x"])}" y="{_fmt(b["y"])}" width="{_fmt(b["w"])}" height="{_fmt(b["h"])}" '
+                 f'stroke="{AMBIGUOUS}"{dash}/>'
+                 f'<line x1="{_fmt(x0)}" y1="{_fmt(y0)}" x2="{_fmt(x1)}" y2="{_fmt(y1)}" stroke="{AMBIGUOUS}"{dash}/>'
+                 f'<circle cx="{_fmt(x1)}" cy="{_fmt(y1)}" r="2" fill="{AMBIGUOUS}" stroke="none"/>')
+    for x0, y0, x1, y1 in marks.get("overlaps", []):
+        o.append(f'<rect x="{_fmt(x0)}" y="{_fmt(y0)}" width="{_fmt(x1 - x0)}" height="{_fmt(y1 - y0)}" '
+                 f'fill="{CONFLICT}" fill-opacity="0.45" stroke="none"/>')
+    for lid in marks.get("labels", []):
+        b = (by_id.get(lid) or {}).get("box")
+        if b:
+            o.append(f'<rect x="{_fmt(b["x"])}" y="{_fmt(b["y"])}" width="{_fmt(b["w"])}" height="{_fmt(b["h"])}" '
+                     f'stroke="{CONFLICT}"/>')
+    for lid in marks.get("leaders", []):
+        for pts in _leader_lines(by_id.get(lid)):
+            o.append(f'<polyline points="{_pts(pts)}" stroke="{CONFLICT}"/>')
+    for x, y in marks.get("crossings", []):
+        o.append(f'<circle cx="{_fmt(x)}" cy="{_fmt(y)}" r="4" stroke="{CONFLICT}"/>')
+    o.append("</g>")
+    return o
+
+
 def render_svg(problem: dict, result: dict, font_href: str | None = None, title: str | None = None,
-               show_obstacles: bool = True) -> str:
+               show_obstacles: bool = True, marks: dict | None = None) -> str:
     prob = load_problem(problem)
     W = prob.width or 800
     H = prob.height or 600
@@ -209,13 +318,88 @@ def render_svg(problem: dict, result: dict, font_href: str | None = None, title:
             x, y = it.ref
             o.append(f'<path d="M{_fmt(x - 3)} {_fmt(y - 3)} L{_fmt(x + 3)} {_fmt(y + 3)} '
                      f'M{_fmt(x - 3)} {_fmt(y + 3)} L{_fmt(x + 3)} {_fmt(y - 3)}"/>')
-    o.append("</g></svg>")
+    o.append("</g>")
+    o += _marks_svg(marks, by_id)
+    o.append("</svg>")
     return "\n".join(o) + "\n"
 
 
 # ---------------------------------------------------------------------------
 # PNG (Pillow)
 # ---------------------------------------------------------------------------
+def _dashed(dr: ImageDraw.ImageDraw, pts: list, fill, width: int, dash: tuple[float, float]) -> None:
+    """A polyline (pixel coordinates) drawn in dashes of ``dash = (on, off)`` pixels."""
+    on, off = dash
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+        n = math.hypot(x1 - x0, y1 - y0)
+        if n <= 0:
+            continue
+        ux, uy = (x1 - x0) / n, (y1 - y0) / n
+        t = 0.0
+        while t < n:
+            e = min(t + on, n)
+            dr.line([(x0 + ux * t, y0 + uy * t), (x0 + ux * e, y0 + uy * e)], fill=fill, width=width)
+            t += on + off
+
+
+def _marks_png(size: tuple[int, int], marks: dict, by_id: dict, s: float) -> Image.Image:
+    """The violations of ``marks`` on a transparent layer of ``size`` at scale ``s`` (as ``_marks_svg``)."""
+    layer = Image.new("RGBA", size, (0, 0, 0, 0))
+    dr = ImageDraw.Draw(layer)
+    w = max(1, int(round(MARK_W * s)))
+
+    def ring(x, y, r, color, width=w):
+        dr.ellipse([(x - r) * s, (y - r) * s, (x + r) * s, (y + r) * s], outline=_hex(color), width=width)
+
+    def dot(x, y, r, color):
+        dr.ellipse([(x - r) * s, (y - r) * s, (x + r) * s, (y + r) * s], fill=_hex(color))
+
+    def line(pts, color, dash=None):
+        px = [(x * s, y * s) for x, y in pts]
+        if dash:
+            _dashed(dr, px, _hex(color), w, (dash[0] * s, dash[1] * s))
+        else:
+            dr.line(px, fill=_hex(color), width=w, joint="curve")
+
+    for x0, y0, x1, y1 in marks.get("close", []):
+        if math.hypot(x1 - x0, y1 - y0) < 1.0:
+            dot(x0, y0, 1.5, CLOSE)
+        else:
+            line([(x0, y0), (x1, y1)], CLOSE)
+    for lid in marks.get("tight_leaders", []):
+        for pts in _leader_lines(by_id.get(lid)):
+            line(pts, CLOSE, (3, 2))
+    for c in marks.get("covered", []):
+        ring(c["point"][0], c["point"][1], max(c["r"] + 1.5, 3), COVERED, max(1, int(round(RING_W * s))))
+    for a in marks.get("ambiguous", []):
+        p = by_id.get(a["label"])
+        if not p or "box" not in p:
+            continue
+        b = p["box"]
+        dash = None if a["level"] == "misattributed" else (4, 2)
+        x0, y0, x1, y1 = b["x"], b["y"], b["x"] + b["w"], b["y"] + b["h"]
+        line([(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)], AMBIGUOUS, dash)
+        line([_box_point(b, a["point"]), a["point"]], AMBIGUOUS, dash)
+        dot(a["point"][0], a["point"][1], 2, AMBIGUOUS)
+    fills = Image.new("RGBA", size, (0, 0, 0, 0))
+    fd = ImageDraw.Draw(fills)
+    for x0, y0, x1, y1 in marks.get("overlaps", []):
+        fd.rectangle([x0 * s, y0 * s, x1 * s, y1 * s], fill=_hex(CONFLICT, round(255 * 0.45)))
+    layer.alpha_composite(fills)
+    dr = ImageDraw.Draw(layer)
+    for lid in marks.get("labels", []):
+        b = (by_id.get(lid) or {}).get("box")
+        if b:
+            dr.rectangle([b["x"] * s, b["y"] * s, (b["x"] + b["w"]) * s, (b["y"] + b["h"]) * s],
+                         outline=_hex(CONFLICT), width=w)
+    for lid in marks.get("leaders", []):
+        for pts in _leader_lines(by_id.get(lid)):
+            line(pts, CONFLICT)
+    for x, y in marks.get("crossings", []):
+        ring(x, y, 4, CONFLICT)
+    return layer
+
+
 _FONT_CACHE: dict[tuple[int, float], ImageFont.FreeTypeFont] = {}
 
 
@@ -258,8 +442,9 @@ def _hex(c: str, a: int = 255):
 
 
 def render_png(problem: dict, result: dict, background_png: str | Path | None = None, scale: float = 1.0,
-               supersample: int = 2, show_obstacles: bool | str = "auto") -> Image.Image:
-    """``show_obstacles``: True / False, or "auto" = draw vector layers only without a background image."""
+               supersample: int = 2, show_obstacles: bool | str = "auto", marks: dict | None = None) -> Image.Image:
+    """``show_obstacles``: True / False, or "auto" = draw vector layers only without a background image;
+    ``marks``: the violations to draw over the result (``evaluate(..., marks=True)["marks"]``)."""
     prob = load_problem(problem)
     W = prob.width or 800
     H = prob.height or 600
@@ -342,6 +527,8 @@ def render_png(problem: dict, result: dict, background_png: str | Path | None = 
             k = 3 * s
             dr.line([(x * s - k, y * s - k), (x * s + k, y * s + k)], fill=_hex(UNPLACED), width=max(1, int(1.2 * s)))
             dr.line([(x * s - k, y * s + k), (x * s + k, y * s - k)], fill=_hex(UNPLACED), width=max(1, int(1.2 * s)))
+    if marks:
+        img.alpha_composite(_marks_png(img.size, marks, by_id, s))
     if supersample > 1:
         img = img.resize((int(math.ceil(W * scale)), int(math.ceil(H * scale))), Image.LANCZOS)
     return img.convert("RGB")
@@ -418,10 +605,11 @@ def _inline_svg(src: str, w: float, h: float) -> str:
 
 def standalone_svg(problem: dict, result: dict, background_svg: str | Path | None = None,
                    background_png: str | Path | None = None, title: str | None = None,
-                   show_obstacles: bool | str = "auto") -> str:
+                   show_obstacles: bool | str = "auto", marks: dict | None = None) -> str:
     """One self-contained SVG of a result: the problem's background (its SVG sources inlined and its
     raster sources embedded; otherwise ``background_svg``, else ``background_png``), item marks,
-    leaders, labels set in an embedded subset of Noto Sans and omitted items as red ×.
+    leaders, labels set in an embedded subset of Noto Sans, omitted items as red × and the
+    violations of ``marks`` (``evaluate(..., marks=True)["marks"]``).
     ``show_obstacles``: draw the vector obstacle layers in grey — True, False, or "auto" = only when
     there is no background."""
     prob = load_problem(problem)
@@ -537,7 +725,9 @@ def standalone_svg(problem: dict, result: dict, background_svg: str | Path | Non
             x, y = it.ref
             o.append(f'<path d="M{_fmt(x - 3)} {_fmt(y - 3)} L{_fmt(x + 3)} {_fmt(y + 3)} '
                      f'M{_fmt(x - 3)} {_fmt(y + 3)} L{_fmt(x + 3)} {_fmt(y - 3)}"/>')
-    o.append("</g></svg>")
+    o.append("</g>")
+    o += _marks_svg(marks, by_id)
+    o.append("</svg>")
     return "\n".join(o) + "\n"
 
 
@@ -559,8 +749,16 @@ def main(argv=None) -> int:
     ap.add_argument("--no-obstacles", action="store_true", help="do not draw vector obstacle layers")
     ap.add_argument("--standalone", action="store_true",
                     help="-o writes a self-contained SVG (background inlined, font subset embedded)")
+    ap.add_argument("--violations", action="store_true", help="mark the violations the evaluator counts")
+    ap.add_argument("--truth", help="the scenario's truth.json (obstacle classes), for --violations")
     a = ap.parse_args(argv)
     problem, result = read_json(a.problem), read_json(a.result)
+    marks = None
+    if a.violations:
+        from bench.eval import evaluate
+
+        truth = read_json(a.truth) if a.truth else None
+        marks = evaluate(problem, result, truth, removal_test=False, marks=True)["marks"]
     if not a.out and not a.png:
         ap.error("give -o OUT.svg and/or --png OUT.png")
     if a.out and a.standalone:
@@ -568,14 +766,15 @@ def main(argv=None) -> int:
         stem = pp.name[:-len(".json")] if pp.name.endswith(".json") else pp.stem
         Path(a.out).write_text(standalone_svg(problem, result, pp.with_name(stem + ".bg.svg"),
                                               a.background or default_background_png(pp),
-                                              show_obstacles=False if a.no_obstacles else "auto"), encoding="utf-8")
-    elif a.out:
-        Path(a.out).write_text(render_svg(problem, result, a.font_href, show_obstacles=not a.no_obstacles),
+                                              show_obstacles=False if a.no_obstacles else "auto", marks=marks),
                                encoding="utf-8")
+    elif a.out:
+        Path(a.out).write_text(render_svg(problem, result, a.font_href, show_obstacles=not a.no_obstacles,
+                                          marks=marks), encoding="utf-8")
     if a.png:
         bg = a.background or default_background_png(Path(a.problem))
-        render_png(problem, result, bg, a.scale, show_obstacles=False if a.no_obstacles else "auto").save(
-            a.png, optimize=True)
+        render_png(problem, result, bg, a.scale, show_obstacles=False if a.no_obstacles else "auto",
+                   marks=marks).save(a.png, optimize=True)
     return 0
 
 
