@@ -895,7 +895,8 @@ def _removal_test(prob: Problem, placed: list[Placed], infos: dict, classes: dic
                         ok = False
                         break
             if ok and own_nearest and own is not None:
-                # clearly nearer to its own mark than to any mark it may not cover (spec §4.4)
+                # clearly nearer to its own mark than to any mark it may not cover, or may cover
+                # but does not hide (spec §4.4)
                 d_own = own.sdist_box(b)
                 for j in item_index.query(b.grow(max(d_own, 0.0) + m_h + tol)):
                     other = prob.items[j]
