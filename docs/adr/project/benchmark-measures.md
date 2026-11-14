@@ -84,7 +84,7 @@ what they hide, which `points` and `labels_over` count.
 Counting every leader pair (2026-11-14) can only raise the near crossings and the parallel
 leaders, and only for results with bent or underlined leaders or with labels of different
 font sizes; values measured before are lower bounds. For Label Anything's results on the
-66 static problems of the full suite nothing changes: 34 near crossings and no parallel
-leaders among 3,786 leaders, before and after, because only 14 of the leaders have a bend
+66 static problems of the full suite nothing changes: 23 near crossings and no parallel
+leaders among 3,654 leaders, before and after, because only 11 of the leaders have a bend
 and none an underline. The baselines draw straight leaders of two points without
 underlines (`bench/baselines/results.py`), so their near crossings do not change either.
