@@ -87,32 +87,16 @@ pub fn decode_base64(input: &str) -> Result<Vec<u8>, RasterError> {
     // padding), three bytes at a time; the general decoder continues from the first
     // other character
     let mut out = vec![0u8; bytes.len() / 4 * 3 + 3];
-    let mut o = 0;
-    let mut i = 0;
-    let [t0, t1, t2, t3] = &SHIFTED;
-    for (q, dst) in bytes
-        .as_chunks::<4>()
-        .0
-        .iter()
-        .zip(out.as_chunks_mut::<3>().0)
-    {
-        let v = t0[q[0] as usize] | t1[q[1] as usize] | t2[q[2] as usize] | t3[q[3] as usize];
-        if v >> 31 != 0 {
-            break;
-        }
-        *dst = [(v >> 16) as u8, (v >> 8) as u8, v as u8];
-        o += 3;
-        i += 4;
-    }
-    out.truncate(o);
-    decode_from(bytes, i, out)
+    let quanta = decode_quanta(bytes, &mut out);
+    out.truncate(quanta * 3);
+    decode_from(bytes, quanta * 4, out)
 }
 
-/// Whole quanta of alphabet characters into `dst` (three bytes per quantum); false at the
-/// first other character.
-#[cfg(feature = "parallel")]
-fn decode_quanta(src: &[u8], dst: &mut [u8]) -> bool {
+/// The leading whole quanta of four alphabet characters of `src` into `dst` (three bytes
+/// per quantum), up to the first other character: the number of quanta decoded.
+fn decode_quanta(src: &[u8], dst: &mut [u8]) -> usize {
     let [t0, t1, t2, t3] = &SHIFTED;
+    let mut n = 0;
     for (q, d) in src
         .as_chunks::<4>()
         .0
@@ -121,11 +105,12 @@ fn decode_quanta(src: &[u8], dst: &mut [u8]) -> bool {
     {
         let v = t0[q[0] as usize] | t1[q[1] as usize] | t2[q[2] as usize] | t3[q[3] as usize];
         if v >> 31 != 0 {
-            return false;
+            break;
         }
         *d = [(v >> 16) as u8, (v >> 8) as u8, v as u8];
+        n += 1;
     }
-    true
+    n
 }
 
 /// Large inputs of whole quanta: all but the last quantum decoded in parallel slices, the
@@ -144,7 +129,7 @@ fn decode_parallel(bytes: &[u8]) -> Option<Result<Vec<u8>, RasterError>> {
     let ok = out
         .par_chunks_mut(per * 3)
         .zip(bytes[..body].par_chunks(per * 4))
-        .all(|(dst, src)| decode_quanta(src, dst));
+        .all(|(dst, src)| decode_quanta(src, dst) == src.len() / 4);
     ok.then(|| decode_from(bytes, body, out))
 }
 
@@ -199,7 +184,7 @@ fn is_ascii_ws(c: u8) -> bool {
     matches!(c, b' ' | b'\t' | b'\n' | b'\r' | 0x0C)
 }
 
-fn hex_value(c: u8) -> Option<u8> {
+pub(crate) fn hex_value(c: u8) -> Option<u8> {
     match c {
         b'0'..=b'9' => Some(c - b'0'),
         b'a'..=b'f' => Some(c - b'a' + 10),

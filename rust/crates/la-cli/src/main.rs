@@ -36,7 +36,7 @@ fn keep_freed_memory() {
 }
 
 use clap::{Parser, Subcommand};
-use label_anything::{Env, Issue, NativeEnv, Report};
+use label_anything::{Issue, NativeEnv, Report};
 use serde_json::{json, Value};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -169,10 +169,10 @@ enum Cmd {
     /// Arguments after `--` are passed to bench/run.py unchanged.
     Bench {
         /// Problem suite: quick or full.
-        #[arg(long, default_value = "quick")]
+        #[arg(long, default_value = "quick", value_parser = ["quick", "full"])]
         suite: String,
         /// Also run the baselines (naive, greedy, textalloc, adjustText, vega-label, ggrepel, d3fc,
-        /// ECharts, D3-Labeler).
+        /// ECharts, D3-Labeler, Mumtaz et al. 2019).
         #[arg(long)]
         baselines: bool,
         /// Measure the performance targets.
@@ -244,25 +244,6 @@ fn parse_canvas(s: &str) -> Result<(f64, f64), String> {
         .ok_or_else(|| "expected WxH, e.g. 800x600".to_string())
 }
 
-/// An environment without a clock (`now_ms() = 0`): no wall-clock guards, so results
-/// depend only on the iteration budgets (`place --no-clock`, used by parity tests).
-struct Clockless<'a>(&'a NativeEnv);
-
-impl Env for Clockless<'_> {
-    fn svg(&self) -> Option<&dyn label_anything::SvgBackend> {
-        self.0.svg()
-    }
-    fn read_file(&self, path: &str) -> Result<Vec<u8>, String> {
-        self.0.read_file(path)
-    }
-    fn now_ms(&self) -> f64 {
-        0.0
-    }
-    fn has_measure_callback(&self) -> bool {
-        false
-    }
-}
-
 /// Read a text input (`-` = stdin), without a leading UTF-8 byte order mark.
 fn read_input(path: &str) -> Result<String, String> {
     let mut s = String::new();
@@ -277,11 +258,6 @@ fn read_input(path: &str) -> Result<String, String> {
         s.drain(..'\u{feff}'.len_utf8());
     }
     Ok(s)
-}
-
-/// Parse JSON text; a syntax error is reported like a validation error (code `parse`).
-fn parse_json(text: &str) -> Result<Value, Issue> {
-    serde_json::from_str(text).map_err(|e| Issue::new("", "parse", format!("invalid JSON: {e}")))
 }
 
 fn write_output(path: &str, data: &str) -> Result<(), String> {
@@ -407,10 +383,11 @@ fn run(cli: Cli) -> Result<ExitCode, Failure> {
             no_clock,
             warmup,
         } => {
-            let (mut p, env) = match (&problem, &anchors) {
+            let (mut p, mut env) = match (&problem, &anchors) {
                 (Some(path), None) => {
                     let text = read_input(path)?;
-                    let v = parse_json(&text).map_err(|e| Failure::Invalid(vec![e]))?;
+                    let v =
+                        label_anything::parse_json(&text).map_err(|e| Failure::Invalid(vec![e]))?;
                     (v, env_for(Some(path)))
                 }
                 (None, Some(csv_path)) => {
@@ -497,14 +474,15 @@ fn run(cli: Cli) -> Result<ExitCode, Failure> {
                 return Ok(ExitCode::from(1));
             }
             let validation_warnings = report.warnings.clone();
-            let clockless = Clockless(&env);
-            let env: &dyn Env = if no_clock { &clockless } else { &env };
+            // without a clock there are no wall-clock guards: the result depends only on
+            // the iteration budgets (parity tests)
+            env.clock = !no_clock;
             for _ in 0..warmup {
-                label_anything::place_validated(&p, env, label_anything::validate(&p))
+                label_anything::place_validated(&p, &env, label_anything::validate(&p))
                     .map_err(|e| e.to_string())?;
             }
             let mut result =
-                label_anything::place_validated(&p, env, report).map_err(|e| e.to_string())?;
+                label_anything::place_validated(&p, &env, report).map_err(|e| e.to_string())?;
             // warnings found while preparing (the validation warnings are printed already)
             let more: Vec<Issue> = result["warnings"]
                 .as_array()
@@ -541,7 +519,8 @@ fn run(cli: Cli) -> Result<ExitCode, Failure> {
             result,
             output,
         } => {
-            let p = parse_json(&read_input(&problem)?).map_err(|e| Failure::Invalid(vec![e]))?;
+            let p = label_anything::parse_json(&read_input(&problem)?)
+                .map_err(|e| Failure::Invalid(vec![e]))?;
             let report = label_anything::validate(&p);
             print_issues("warning", &report.warnings);
             if !report.valid {
@@ -567,14 +546,7 @@ fn run(cli: Cli) -> Result<ExitCode, Failure> {
         }
         Cmd::Validate { problem, json } => {
             let text = read_input(&problem)?;
-            let report = match parse_json(&text) {
-                Ok(v) => label_anything::validate(&v),
-                Err(e) => Report {
-                    valid: false,
-                    errors: vec![e],
-                    warnings: vec![],
-                },
-            };
+            let report = label_anything::validate_json(&text);
             if json {
                 println!(
                     "{}",
@@ -817,9 +789,8 @@ fn respond(mut req: tiny_http::Request, files: bool, max_body: u64) {
             }
         }
         (tiny_http::Method::Post, "/validate") => {
-            match std::panic::catch_unwind(|| match parse_json(body) {
-                Ok(v) => serde_json::to_string(&label_anything::validate(&v)).unwrap_or_default(),
-                Err(e) => json!({"valid": false, "errors": [e], "warnings": []}).to_string(),
+            match std::panic::catch_unwind(|| {
+                serde_json::to_string(&label_anything::validate_json(body)).unwrap_or_default()
             }) {
                 Ok(report) => (200, report),
                 Err(_) => (500, internal_error()),

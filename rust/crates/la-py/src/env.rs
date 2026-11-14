@@ -1,6 +1,6 @@
 //! [`PyEnv`]: the solve environment of the Python binding.
 //!
-//! It wraps [`NativeEnv`] (files, clock), delegates SVG parsing to the facade's backend,
+//! It wraps [`NativeEnv`] (files, clock), keeps the built-in SVG backend,
 //! hands a raster background to the core through `raster_override`, and forwards the host
 //! callbacks (`measure`, `cost`, `progress`, `cancelled`) to Python.
 //!
@@ -11,8 +11,7 @@
 //! clock check. The caller re-raises the stored exception once the core has returned.
 //! Cancellation works the same way.
 
-use la_core::geom::Rect;
-use label_anything::{Env, FontSpec, NativeEnv, RgbaImage, SvgBackend, TextMetrics};
+use label_anything::{Env, FontSpec, NativeEnv, Rect, RgbaImage, TextMetrics};
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList, PyTuple};
@@ -271,10 +270,6 @@ fn parse_metrics(r: &Bound<'_, PyAny>) -> PyResult<Option<TextMetrics>> {
 }
 
 impl Env for PyEnv {
-    fn svg(&self) -> Option<&dyn SvgBackend> {
-        label_anything::svg_backend()
-    }
-
     fn raster_override(&self) -> Option<RgbaImage> {
         let mut slot = lock(&self.raster);
         if self.keep_raster {

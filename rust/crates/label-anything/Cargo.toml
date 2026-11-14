@@ -20,6 +20,8 @@ std-clock = []
 decode = ["la-core/decode"]
 # data-parallel phases (rayon); results do not depend on the number of threads
 parallel = ["la-core/parallel"]
+# WOFF2 fonts in `font.file` (TrueType and OpenType always work); not a default
+woff2 = ["la-core/woff2"]
 
 [dependencies]
 la-core = { workspace = true }
@@ -27,7 +29,6 @@ la-render = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
-la-core = { workspace = true }
 la-svg = { workspace = true }
 la-raster = { workspace = true, features = ["decode"] }
 resvg = { version = "0.48", default-features = false, features = ["text"] }

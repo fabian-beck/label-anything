@@ -2,7 +2,7 @@
 //!
 //! * Clock: `performance.now()` (`std::time::Instant` panics on wasm32-unknown-unknown).
 //! * Files: only through the optional `readFile` callback.
-//! * SVG: the backend compiled into the facade ([`label_anything::svg_backend`]).
+//! * SVG: the built-in backend (the default of [`Env::svg`]).
 //! * Raster: `options.raster` pixels, copied once into WASM memory per model build.
 //! * `measure`, `cost`, `progress`: JavaScript functions. The first exception thrown by
 //!   any callback is kept; from then on no callback is called again (they return neutral
@@ -15,7 +15,7 @@
 
 use crate::js;
 use js_sys::{ArrayBuffer, Function, Reflect, Uint8Array};
-use label_anything::{Env, FontSpec, Rect, RgbaImage, SvgBackend, TextMetrics};
+use label_anything::{Env, FontSpec, Rect, RgbaImage, TextMetrics};
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use wasm_bindgen::{JsCast, JsValue};
@@ -217,10 +217,6 @@ impl JsEnv {
 }
 
 impl Env for JsEnv {
-    fn svg(&self) -> Option<&dyn SvgBackend> {
-        label_anything::svg_backend()
-    }
-
     fn raster_override(&self) -> Option<RgbaImage> {
         let p = self.raster.as_ref()?;
         Some(RgbaImage {

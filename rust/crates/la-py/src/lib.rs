@@ -351,7 +351,7 @@ fn version() -> &'static str {
 fn capabilities(py: Python<'_>) -> PyResult<Bound<'_, PyDict>> {
     let d = PyDict::new(py);
     d.set_item("version", label_anything::VERSION)?;
-    d.set_item("svg", label_anything::svg_backend().is_some())?;
+    d.set_item("svg", true)?;
     let formats: Vec<&str> = if cfg!(feature = "decode") {
         vec!["png", "jpeg", "webp"]
     } else {
