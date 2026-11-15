@@ -31,7 +31,8 @@ export class LabelMemory {
   }
 
   /**
-   * `warm_start` for items now at `anchors`: each previous label box moved with its anchor.
+   * `warm_start` for items now at `anchors`: each previous label box moved with its anchor,
+   * with its rotation and its leader.
    * Items that were omitted stay omitted-preferred (`placed: false`); new items have no entry.
    */
   warmStart(anchors: Anchors): WarmStart | undefined {
@@ -46,10 +47,15 @@ export class LabelMemory {
         placements.push({ id: p.id, placed: false });
         continue;
       }
+      const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
       placements.push({
         id: p.id,
         placed: true,
-        box: { x: p.box.x + b[0] - a[0], y: p.box.y + b[1] - a[1], w: p.box.w, h: p.box.h },
+        box: { x: p.box.x + dx, y: p.box.y + dy, w: p.box.w, h: p.box.h },
+        // a turned label stays turned, and a leader keeps its way (a label is its box
+        // only with both: without them a pinned label, `warm_start.pin`, is placed anew)
+        ...(p.rotation ? { rotation: p.rotation } : {}),
+        ...(p.leader ? { leader: { points: p.leader.points.map((q) => [q[0]! + dx, q[1]! + dy] as [number, number]), style: p.leader.style } } : {}),
       });
     }
     return placements.length ? { placements } : undefined;

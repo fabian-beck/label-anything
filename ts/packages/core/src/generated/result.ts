@@ -68,7 +68,12 @@ export interface Placement {
   degrade_steps?: string[];
   priority?: PriorityInfo;
   reason?:
-    "omitted_by_priority" | "no_feasible_candidate" | "budget_exhausted" | "keep_with" | "grouped";
+    | "omitted_by_priority"
+    | "no_feasible_candidate"
+    | "budget_exhausted"
+    | "keep_with"
+    | "grouped"
+    | "outside";
   /**
    * Hard classes that rejected candidates, most frequent first.
    */
@@ -213,6 +218,10 @@ export interface Stats {
   degraded?: {
     [k: string]: number | undefined;
   };
+  /**
+   * Labels that kept their warm-start box as pinned labels (only with warm_start.pin).
+   */
+  pinned?: number;
   flicker?: {
     moved?: number;
     added?: number;

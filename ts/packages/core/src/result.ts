@@ -349,6 +349,7 @@ export function build(s: Solve, ver: Verification, phases: readonly [string, num
     },
     implementation: `ts/${VERSION}`,
   };
+  if (model.warmPin) stats.pinned = s.pinned.filter((p) => p).length;
   if (model.warm.size > 0) {
     stats.flicker = {
       moved: fMoved,

@@ -75,6 +75,35 @@ of all geometry grown by `max(placement.max_distance, 20 em)`.
 `canvas.allow_outside`. This is the `canvas_edge` class. Leaders may leave the region,
 but not the canvas.
 
+**Windows.** With `canvas.overscan` (a length, not `null`) the canvas is a **window** on
+a larger drawing, as the view of a map that pans and zooms (ADR motion/windows). The
+drawing goes on beyond the canvas edges: the host passes the items and obstacles up to
+`overscan` beyond them, areas and lines whole, and cuts the labels and leaders it draws
+at the edges. Then:
+
+* The canvas bounds neither labels nor leaders. Labels must lie inside `canvas.region`
+  shrunk by the padding when a region is given: the bounds of the whole drawing in canvas
+  coordinates, which may reach beyond the canvas. Without a region there is no label
+  area: no `canvas_edge` class and no edge term (§8).
+* The **working extent** is the canvas grown by `overscan` on every side. The grids
+  (§4.1) cover it, so a label is placed in the overscan as it is on the canvas, and keeps
+  its place when the view moves it across an edge.
+* Beyond the working extent, as beyond the canvas with `allow_outside`, the exact tests
+  hold (§4.3) and the grids are empty: no coverage costs, no free-space seeds.
+* An item with a point anchor whose mark lies entirely beyond the working extent (its
+  bounding box does not touch it) is a **mark only**: it gets no candidates and no label
+  (reason `outside`, §9.3), and its mark counts like every item's. Not so while its
+  warm-start box (§6.7) touches the canvas: a label that still shows is not taken away
+  because its point has gone far. A host passes the
+  points about a label's reach beyond the overscan: the labels placed in the overscan
+  then keep off marks that are yet to come in, and need not make way for them later. The
+  `auto` preset's crowding rule (§6.6) counts the other items only.
+
+Everything else that refers to the canvas keeps to it: the default `priority.focus`, the
+sides of the boundary model (§6.6), the position of raster backgrounds. Only
+`priority.budget.max_ink_fraction` counts the labels of the whole working extent, as a
+fraction of its area.
+
 `canvas.background` (default white) is the colour of the canvas where no raster lies. It
 only enters the backdrop luma of the `contrast` cost term (§4.6, §8): labels avoid
 straddling the edge between a dark raster and a light canvas.
@@ -154,8 +183,10 @@ intersection tests.
 
 Cell size `c = solver.grid_cell`, or `auto` = `clamp(min_font_size / 4, 1, 4)` where
 `min_font_size` is the smallest effective font size of all labels. The grid covers the
-canvas (or the unbounded working extent) with `cols = ceil(W / c)`, `rows = ceil(H / c)`
-cells, origin at the canvas origin (or the extent's top-left).
+working extent, `W × H` px — the canvas, in a window the canvas grown by the overscan,
+without a canvas the unbounded extent (§2.3) — with `cols = ceil(W / c)`,
+`rows = ceil(H / c)` cells, origin at the extent's top-left (the canvas origin, without
+overscan).
 
 The grid has at most 16 000 000 cells. When the `auto` cell size would exceed that (a
 canvas of more than about 16 000 × 16 000 px), `c` becomes `max(c, sqrt(W·H / 16·10⁶))`
@@ -608,7 +639,8 @@ is a warning `unknown_region`, and the rule below applies); else the region of t
 containing its reference point (§11: point items' anchors, area items' poles); when that
 cell is open, the region with the most cells among those touched by the bounding box of
 the item's mark grown by one cell (ties: the lower number) — the dot of a coastal city may
-lie in the sea; else open space.
+lie in the sea; else open space. In a window (§2.3) the pole of an area passed whole can
+lie beyond the grid, where every cell reads as open: such an item names its home.
 
 **A label box on the map.** For a box `B`, its overlap with each cell (the cell-unit
 interval lengths `wx`, `wy` of the box clamped to the grid, `w = wx · wy`) is summed by
@@ -627,7 +659,8 @@ an area item, internal ones aside, and any label with a leader — is infeasible
 foreign area exceeds `placement.max_foreign · A` (default 0.25): a country's name lies at
 home or in open space, at most a quarter of it in other countries, and a name with no such
 place is smaller, on a leader into open space, or omitted rather than misplaced. The hard
-class that rejects it is `regions` (`blocking`, §9.3); the ladder does not relax it. The
+class that rejects it is `regions` (`blocking`, §9.3); the ladder does not relax it, and
+only the box of a pinned solve is exempt (§10.1). The
 internal labels of area items and the labels of point items without a leader may lie in
 other regions at the cost `w_foreign`: a capital near a border has its name next to its
 dot, wherever that is.
@@ -938,6 +971,30 @@ the cell| / R` (the first on ties; without the sample that was improved), these 
 ascending lack. So a label has places all over the part of the polygon it fits in, the
 best one first. Upright candidates come before turned ones; all are `internal`
 (rank −1, with `internal: allow` 0; none with `never`).
+
+**In a window** (§2.3) the area is passed whole and may be far larger than the view, so
+the work keeps to the view. With `E` the working extent (for turned labels: the bounding
+box of `E` turned back by `α` about the pole):
+
+* The grid's samples are those whose label box touches `E`: `(x₀ + i · s, y₀ + j · s)`
+  with `(x₀, y₀)` the bounding box's top-left corner plus half the label size, `s` the
+  label height, at least 4 px (no coarser for a large polygon), `i` from
+  `max(0, ⌊(E.x0 − w/2 − x₀) / s⌋)` while `x ≤ min(x1 − w/2, E.x1 + w/2) + 10⁻⁹`, `j`
+  likewise. The grid is refined as above when these samples lie in fewer than three rows
+  or columns, from the points of these `i` and `j`, and of the refined points those
+  count whose label box touches `E`. The pole is a sample wherever it lies, and the best sample is improved as
+  above; the 3 × 3 cells divide the bounding box of the samples' centers without a pole
+  whose box does not touch `E`. So an area whose pole has room for the label is labeled
+  there, in view or not, and the other places are near the view.
+* For a box that touches `E`, containment and room are those of the polygon **cut** to
+  `E` grown by `w + em + inner_padding + 1` px to the left and right and by
+  `h + em + inner_padding + 1` px above and below: every ring by Sutherland–Hodgman
+  against the left, right, top and bottom side in this order (a vertex on a side counts
+  as inside; an edge from `a` to `b` is cut at `a + (b − a) · (side − a) / (b − a)` in the
+  other coordinate), rings left with fewer than 3 vertices dropped. The cut polygon
+  contains such a box exactly when the whole one does, and the box has the same room in
+  both up to 1 em, where the lack ends. Other boxes (a pole beyond `E`, the places its
+  improvement tries, a warm-start box) are tested against the whole polygon.
 
 **Cost.** An area label has no gap to its mark; its `w_distance` term is `w_distance ·
 lack`. A turned label adds `|α| / 180` to the shape penalty of its variant (§5.4): a
@@ -1269,6 +1326,9 @@ cost = Σ_class w_label[class] · covered(label_k, class) / em²
   which hides what lies under it: they have no soft class costs (hard classes still
   apply).
 * `ring_k` = the label box grown by `buffer`, minus the label box.
+* `dist_to_label_area_edge` = the least distance of the label box's sides from the sides
+  of the label area (§2.3), at least 0; the term is 0 where there is no label area (no
+  canvas, `allow_outside`, a window without a region).
 * `D(label_k)` (ADR obstacles/contrast): how much the backdrop luma `s` (§4.6) varies under the label
   box, `D = I₂ − I₁ · I₁ / A`, with `I₁` and `I₂` the exact integrals of `s` and `s²` over
   the box on the backdrop grid (as covered areas, §4.1, in backdrop cells) and `A` the
@@ -1375,7 +1435,7 @@ static hard constraint), `omitted_by_priority` (blocked only by placed labels/le
 higher or equal key, or cut by `prefix`/`max_labels`), `budget_exhausted` (not reached
 before a cancellation, or past the time guard without a free level-0 candidate: its ladder
 did not run, §10.1), `keep_with` (a member of its set failed), `grouped` (merged into a
-group label). `blocking` lists the hard classes that rejected candidates (most frequent
+group label), `outside` (a point beyond the working extent of a window, §2.3). `blocking` lists the hard classes that rejected candidates (most frequent
 first); `blocked_by` lists the placed items whose label or leader conflicts with the
 item's best feasible candidates (the 5 cheapest statically feasible ones). Candidates
 dropped while they were generated because placed labels blocked them (§6.7) count: when
@@ -1458,6 +1518,29 @@ Warm starts (`warm_start`, with `weights.stability` > 0; ADR motion/warm-starts)
   candidate of that variant and level as for level 0 (§6.7). When it is statically
   feasible and free, the item takes it; otherwise the ladder runs as usual. The steps
   run only once per item (the ladder reuses their candidates).
+
+Pinned labels (`warm_start.pin`, whatever `weights.stability`; ADR motion/pinned-labels):
+for a view that only moved, as a map that was panned, where every label can stay.
+
+* Before the first band, the items (except `keep_with` members) take their warm-start
+  candidate in total order, whatever their keys: the level-0 one (§6.7), else the one of
+  a ladder variant (above). An item takes it when it is statically feasible, free of the
+  labels pinned before it and within the label budgets; its label is then **pinned**.
+  With `prefix` omission the pinned labels are no part of the prefix. The `regions` class
+  (§4.8) does not reject these two candidates of a pinned solve: the region map is a
+  raster, its cells lie elsewhere on the drawing once the view has moved, and a box at
+  the limit of `max_foreign` would lose its place to that. Their region costs count.
+* The bands then run for the other items as always. No ladder step removes a pinned
+  label: `evict_lower` takes no candidate that conflicts with one.
+* When a label is pinned, the solve ends with the greedy pass: no local search, no exact
+  search, no fans, no boundary columns, no repairs (§10.2, §10.3). It only adds labels
+  around the pinned ones; the verification still runs. `stats.strategy_used` is
+  `greedy`, `stats.pinned` the number of pinned labels.
+
+So a label keeps its box exactly, where the hard rules still allow it, and an item that
+is more important than a pinned label in its way waits: `stats.priority_inversions`
+counts such items, and their reason is `omitted_by_priority`. Nothing is pinned without
+a warm-start box of the size of a variant.
 
 ### 10.2 Local search
 

@@ -17,6 +17,7 @@ const REASONS: Record<string, string> = {
   label_budget: "the label budget (max_labels) is used up",
   ink_budget: "the ink budget (max_ink_fraction) is used up",
   keep_with: "a member of its keep_with set has no label",
+  outside: "it lies beyond the part of the map that is labeled (the view and its overscan): its mark counts, it gets no label",
   group_member: "its group is labeled by another member",
 };
 

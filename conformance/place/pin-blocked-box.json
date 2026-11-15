@@ -1,0 +1,74 @@
+{
+  "kind": "place",
+  "name": "pin: a label whose box a hard obstacle covers now is placed like any other",
+  "$comment": "With warm_start.pin every label keeps its warm-start box, moved with its anchor, where the hard rules still allow it, whatever its priority; the solve only adds labels around the pinned ones.",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 120
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      }
+    ],
+    "obstacles": {
+      "vector": [
+        {
+          "class": "wall",
+          "rects": [
+            [
+              80,
+              40,
+              40,
+              10
+            ]
+          ]
+        }
+      ]
+    },
+    "avoid": {
+      "label": {
+        "wall": "hard"
+      }
+    },
+    "warm_start": {
+      "pin": true,
+      "placements": [
+        {
+          "id": "a",
+          "placed": true,
+          "box": {
+            "x": 82.054,
+            "y": 41.4,
+            "w": 35.892,
+            "h": 15.6
+          },
+          "anchor": [
+            100,
+            60
+          ]
+        }
+      ]
+    }
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "anchor_side": {
+      "a": "right"
+    }
+  }
+}

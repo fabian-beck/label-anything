@@ -377,8 +377,9 @@ export class Evaluator {
     if (rm !== null && !onMark) {
       const sp = rm.split(r, obs.home[i]!, this.split);
       // a label that names a region by where it lies (an area's, not inside it, or one on a
-      // leader) lies mostly at home or in open space
-      if (sp.foreign > model.placement.maxForeign * sp.area && c.kind !== Kind.Internal && (item.area !== null || c.leaders.length > 0)) {
+      // leader) lies mostly at home or in open space. Not so the box of a pinned solve: the
+      // view has moved, and with it the map's cells under a box that had its place
+      if (sp.foreign > model.placement.maxForeign * sp.area && c.kind !== Kind.Internal && (item.area !== null || c.leaders.length > 0) && !c.pin) {
         acc.violate(BLOCK_REGIONS, false, 0);
         return finish(c, acc);
       }

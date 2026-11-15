@@ -1,0 +1,144 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 200
+    },
+    "items": [
+      {
+        "id": "fjord",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              101.237,
+              43.742
+            ],
+            [
+              291.763,
+              153.742
+            ],
+            [
+              278.763,
+              176.258
+            ],
+            [
+              88.237,
+              66.258
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Long Fjord"
+        }
+      }
+    ],
+    "warm_start": {
+      "pin": true,
+      "placements": [
+        {
+          "id": "fjord",
+          "placed": true,
+          "rotation": 30,
+          "anchor": [
+            150,
+            100
+          ],
+          "box": {
+            "x": 152.769,
+            "y": 112.2,
+            "w": 63.744,
+            "h": 15.6
+          }
+        }
+      ]
+    }
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "fjord",
+        "placed": true,
+        "box": {
+          "x": 192.76899999999995,
+          "y": 122.2,
+          "w": 63.74399999999997,
+          "h": 15.600000000000009
+        },
+        "rotation": 30.0,
+        "anchor": [
+          189.99999999999994,
+          109.99999999999999
+        ],
+        "anchor_side": "internal",
+        "model": "internal",
+        "text": {
+          "lines": [
+            "Long Fjord"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            60.144
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.2771627335663205,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        },
+        "displacement": 0.0
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 1,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 5,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.2771627335663205,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 100,
+        "rows": 67,
+        "classes": []
+      },
+      "pinned": 1,
+      "flicker": {
+        "moved": 0,
+        "added": 0,
+        "removed": 0,
+        "mean_displacement": 0.0
+      }
+    },
+    "debug_svg": null
+  }
+}

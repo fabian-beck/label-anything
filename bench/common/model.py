@@ -210,6 +210,7 @@ class Problem:
     padding: float
     region: Box | None
     allow_outside: bool
+    overscan: float | None
     items: list[Item]
     vectors: dict[str, list[Primitive]]
     tx: Callable[[float, float], Point]
@@ -219,17 +220,29 @@ class Problem:
     def bounded(self) -> bool:
         return self.width is not None
 
+    @property
+    def window(self) -> bool:
+        """The canvas is a window on a larger drawing (``canvas.overscan``, spec §2.3)."""
+        return self.width is not None and self.overscan is not None
+
     def canvas_box(self) -> Box | None:
         if self.width is None:
             return None
         return Box(0.0, 0.0, self.width, self.height)
 
     def label_area(self) -> Box | None:
-        """The rectangle labels must stay inside (spec §2.3), or None when unconstrained."""
+        """The rectangle labels must stay inside (spec §2.3), or None when unconstrained: in a
+        window the region alone, the bounds of the whole drawing."""
         if self.width is None or self.allow_outside:
+            return None
+        if self.window and self.region is None:
             return None
         r = self.region if self.region is not None else self.canvas_box()
         return r.shrink(self.padding) if self.padding > 0 else r
+
+    def leader_area(self) -> Box | None:
+        """The rectangle leaders must stay inside (spec §2.3): the canvas, unless it is a window."""
+        return None if self.window else self.canvas_box()
 
     def item_by_id(self) -> dict[str, Item]:
         return {it.id: it for it in self.items}
@@ -378,6 +391,8 @@ def load_problem(problem: dict, ranks: dict[str, int] | None = None) -> Problem:
     region = copts.get("region")
     region_box = Box.xywh(*region) if region else None
     allow_outside = bool(copts.get("allow_outside", False))
+    overscan = copts.get("overscan") if problem.get("canvas") else None
+    overscan = None if overscan is None else spec.length(overscan, em0)
     dmark = opts.get("defaults", {}).get("mark", {"shape": "circle", "r": 2})
     pl = opts.get("placement", {})
     items = []
@@ -410,7 +425,7 @@ def load_problem(problem: dict, ranks: dict[str, int] | None = None) -> Problem:
             dot = make_mark(a.get("dot", {"shape": "circle", "r": 2}), pole, tx)
             items.append(Item(i, iid, "area", pole, None, area, dot, **common))
     vectors = _layers(problem, tx)
-    prob = Problem(problem, opts, width, height, padding, region_box, allow_outside, items, vectors, tx, warnings)
+    prob = Problem(problem, opts, width, height, padding, region_box, allow_outside, overscan, items, vectors, tx, warnings)
     classes = (opts.get("priority", {}) or {}).get("font_classes") or []
     if classes:
         apply_font_classes(prob, classes, ranks)

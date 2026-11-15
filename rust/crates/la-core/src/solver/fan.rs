@@ -326,7 +326,7 @@ fn column(
                 members.retain(|&j| j != k);
             }
             Ok(cands) => {
-                if let (Some(f), Some(canvas)) = (model.max_ink_fraction, model.canvas) {
+                if let (Some(f), Some(whole)) = (model.max_ink_fraction, model.ink_area()) {
                     let mut ink = s.state.label_area_sum;
                     for (j, c) in &cands {
                         if let Some(p) = s.state.placed[*j] {
@@ -334,7 +334,7 @@ fn column(
                         }
                         ink += c.rect.area();
                     }
-                    if ink / canvas.area().max(1e-9) > f {
+                    if ink / whole.max(1e-9) > f {
                         if !drop_lowest_unlabeled(s, &mut members) {
                             return None;
                         }

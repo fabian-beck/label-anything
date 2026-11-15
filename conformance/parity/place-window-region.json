@@ -1,0 +1,223 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 160,
+      "height": 100,
+      "overscan": 60,
+      "region": [
+        -50,
+        0,
+        260,
+        100
+      ],
+      "padding": 4
+    },
+    "items": [
+      {
+        "id": "c",
+        "anchor": {
+          "type": "point",
+          "x": 155,
+          "y": 80
+        },
+        "label": {
+          "type": "text",
+          "text": "Crossing"
+        }
+      },
+      {
+        "id": "e",
+        "anchor": {
+          "type": "point",
+          "x": 205,
+          "y": 30
+        },
+        "label": {
+          "type": "text",
+          "text": "EdgeOfDrawing"
+        }
+      },
+      {
+        "id": "top",
+        "anchor": {
+          "type": "point",
+          "x": 60,
+          "y": 3
+        },
+        "label": {
+          "type": "text",
+          "text": "TopOfDrawing"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "c",
+        "placed": true,
+        "box": {
+          "x": 128.726,
+          "y": 61.675999999999995,
+          "w": 52.548,
+          "h": 15.324000000000005
+        },
+        "anchor": [
+          155.0,
+          80.0
+        ],
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Crossing"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.643999999999998
+          ],
+          "line_widths": [
+            48.948
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.024999999999999998,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "e",
+        "placed": true,
+        "box": {
+          "x": 109.168,
+          "y": 22.17,
+          "w": 92.832,
+          "h": 15.659999999999997
+        },
+        "anchor": [
+          205.0,
+          30.0
+        ],
+        "anchor_side": "left",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "EdgeOfDrawing"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.98
+          ],
+          "line_widths": [
+            89.232
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.3833333333333333,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 1
+        }
+      },
+      {
+        "id": "top",
+        "placed": true,
+        "box": {
+          "x": 17.448,
+          "y": 5.999999999999999,
+          "w": 85.10399999999998,
+          "h": 15.659999999999997
+        },
+        "anchor": [
+          60.0,
+          3.0
+        ],
+        "anchor_side": "bottom",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "TopOfDrawing"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.98
+          ],
+          "line_widths": [
+            81.504
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.3416666666666667,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 2
+        }
+      }
+    ],
+    "stats": {
+      "placed": 3,
+      "total": 3,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 1200,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 120,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.75,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 94,
+        "rows": 74,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

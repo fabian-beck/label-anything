@@ -131,7 +131,10 @@ export function solveValidated(
   const t3 = envNow(env);
   let strategy = "greedy";
   const st = m.solver.strategy;
-  if ((st === Strategy.Local || st === Strategy.Auto || st === Strategy.Exact) && m.items.length > 1) {
+  // pinned labels (spec §10.1): the solve only adds labels around them, in the greedy
+  // pass; what follows it would move labels
+  const pinned = s.pinned.includes(true);
+  if (!pinned && (st === Strategy.Local || st === Strategy.Auto || st === Strategy.Exact) && m.items.length > 1) {
     const budget = m.solver.timeBudgetMs;
     const rate = profile === "rust" ? local.MOVES_PER_MS_RUST : local.MOVES_PER_MS;
     const iters = toIndex(maxf(minf(minf(m.solver.maxIterations, budget * rate), 400 * m.items.length), 0));
@@ -155,15 +158,17 @@ export function solveValidated(
       strategy = "exact";
     }
   }
-  if (trace !== null) trace.phase("fan");
-  fanPass(s);
-  if (trace !== null) trace.phase("boundary");
-  repair.boundaryPass(s);
-  repair.boundaryFill(s);
-  if (trace !== null) trace.phase("uncross");
-  repair.uncross(s);
-  if (trace !== null) trace.phase("repair");
-  repair.priorityRepair(s);
+  if (!pinned) {
+    if (trace !== null) trace.phase("fan");
+    fanPass(s);
+    if (trace !== null) trace.phase("boundary");
+    repair.boundaryPass(s);
+    repair.boundaryFill(s);
+    if (trace !== null) trace.phase("uncross");
+    repair.uncross(s);
+    if (trace !== null) trace.phase("repair");
+    repair.priorityRepair(s);
+  }
   const t4 = envNow(env);
   if (trace !== null) trace.phase("verify");
   const ver = verify(s);

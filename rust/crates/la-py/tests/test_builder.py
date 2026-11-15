@@ -377,6 +377,25 @@ def test_warm_start_from_a_result() -> None:
     assert all(p.raw.get("displacement") == 0.0 for p in again.placed)
 
 
+def test_pinned_labels_keep_their_boxes() -> None:
+    names = ["one", "two", "three"]
+    first = la.place([(50, 50), (60, 52), (120, 90)], names, canvas=(200, 200))
+    # the view moved by (30, 20), and a more important point came in beside the labels
+    pts = [(80, 70), (90, 72), (150, 110), (86, 60)]
+    kw: Dict[str, Any] = dict(canvas=(200, 200), priority=[1, 1, 1, 9], warm_start=first)
+    pinned = la.place(pts, names + ["new"], pin=True, **kw)
+    assert pinned.problem["warm_start"]["pin"] is True
+    assert pinned.stats["pinned"] == 3
+    for a, b in zip(first.placements, pinned.placements):
+        assert (b.box.x, b.box.y) == (a.box.x + 30, a.box.y + 20)
+    # the builder's method, and no pin: nothing is counted
+    built = la.Problem(canvas=(200, 200)).items(pts[:3], names).warm_start(first, pin=True)
+    assert built.build()["warm_start"]["pin"] is True
+    assert "pinned" not in la.place(pts, names + ["new"], **kw).stats
+    # a pin without a warm start pins nothing
+    assert la.place(pts[:3], names, canvas=(200, 200), pin=True).stats["pinned"] == 0
+
+
 def test_builder_copy_is_independent() -> None:
     p = la.Problem(canvas=(10, 10)).item((1, 1), "a")
     q = p.copy().item((2, 2), "b").set(seed=4)

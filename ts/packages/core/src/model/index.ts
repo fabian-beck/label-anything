@@ -468,8 +468,15 @@ export class Model {
   labelArea: Rect | null = null;
   /** Leaders must stay inside (the canvas); null = unbounded. */
   leaderArea: Rect | null = null;
-  /** Extent of the grid. */
+  /** Extent of the grid: the canvas, grown by `canvas.overscan` in a window (spec §2.3). */
   extent: Rect = new Rect(0, 0, 1, 1);
+  /** The canvas is a window on a larger drawing (`canvas.overscan`, spec §2.3). */
+  window = false;
+  /**
+   * In a window, the point items whose mark lies entirely beyond the working extent: they
+   * are not labeled, their marks count (spec §2.3).
+   */
+  beyond: boolean[] = [];
   items: Item[] = [];
   /** Vector obstacles by class (problem vector layers and SVG geometry). */
   vector: [string, Prim][] = [];
@@ -510,6 +517,8 @@ export class Model {
   defaultEm = 12;
   shaping = "auto";
   warm: Map<string, Rect | null> = new Map();
+  /** `warm_start.pin`: labels keep their warm-start boxes exactly where they still can (spec §10.1). */
+  warmPin = false;
   /**
    * The leader of each warm-start box, moved with it, for the `angles`, `elbow` and
    * `orthogonal` leader styles (the entry's `leader` of the same style; spec §6.7).
@@ -522,6 +531,30 @@ export class Model {
   groups: [number, number[]][] = [];
   /** For each item: the representative of its group (itself for representatives). */
   groupOf: (number | null)[] = [];
+
+  /**
+   * The area `priority.budget.max_ink_fraction` is a fraction of: the canvas, in a window
+   * the working extent (spec §2.3); `null` without a canvas.
+   */
+  inkArea(): number | null {
+    return this.canvas !== null ? this.extent.area() : null;
+  }
+
+  /**
+   * Whether item `i` lies beyond the working extent of a window: it gets no label (reason
+   * `outside`), its mark counts (spec §2.3).
+   */
+  isBeyond(i: number): boolean {
+    return this.beyond[i] === true;
+  }
+
+  /**
+   * In a window, the working extent: where the labels of areas are looked for (spec §6.5).
+   * `null`: everywhere in the area.
+   */
+  areaView(): Rect | null {
+    return this.window ? this.extent : null;
+  }
 
   /**
    * Whether item `j` has a lower priority key than item `i` (spec §9.1): the `lower_items`
@@ -1078,9 +1111,13 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   }
 
   // --- extent ---
+  // a window (spec §2.3): the canvas shows part of a larger drawing, and the working
+  // extent reaches `canvas.overscan` beyond its edges
+  const overscanLen = get(problem, "canvas") !== undefined ? Length.fromValue(o.get("canvas.overscan")) : null;
+  const overscan = overscanLen === null ? null : maxf(overscanLen.px(defaultEm), 0);
   const maxDistGlobal = o.length("placement.max_distance").px(defaultEm);
   let extent: Rect;
-  if (canvas !== null) extent = canvas;
+  if (canvas !== null) extent = canvas.inflate(overscan ?? 0);
   else {
     let bb = Rect.EMPTY;
     for (const it of items) {
@@ -1102,8 +1139,15 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
     const v = rv.filter((x): x is number => typeof x === "number");
     if (v.length === 4) region = Rect.xywh(v[0]!, v[1]!, v[2]!, v[3]!);
   }
-  const labelArea = canvas !== null && !allowOutside ? (region ?? canvas).inflate(-pad) : null;
-  const leaderArea = allowOutside ? null : canvas;
+  // the canvas bounds the labels and the leaders, unless it is a window: then only a
+  // region bounds the labels (the drawing's own bounds)
+  const window = overscan !== null;
+  let labelArea: Rect | null = null;
+  if (canvas !== null && !allowOutside) {
+    if (window) labelArea = region !== null ? region.inflate(-pad) : null;
+    else labelArea = (region ?? canvas).inflate(-pad);
+  }
+  const leaderArea = allowOutside || window ? null : canvas;
 
   // --- priority options ---
   let omission: Omission;
@@ -1211,6 +1255,7 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.labelArea = labelArea;
   m.leaderArea = leaderArea;
   m.extent = extent;
+  m.window = window;
   m.items = items;
   m.vector = vector;
   m.rasters = rasters;
@@ -1245,6 +1290,14 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   m.defaultEm = defaultEm;
   m.shaping = o.string("text.shaping");
   m.warm = warm;
+  // in a window, a point beyond the working extent is a mark only (spec §2.3), unless the
+  // label it comes with still shows: that one is not taken away
+  m.beyond = items.map((it) => {
+    if (overscan === null || it.area !== null || extent.touches(it.shape.bbox())) return false;
+    const b = warm.get(it.id);
+    return !(b !== undefined && b !== null && canvas !== null && canvas.touches(b));
+  });
+  m.warmPin = lookup(problem, "warm_start.pin") === true;
   m.warmLeaders = warmLeaders;
   m.warmRotation = warmRotation;
   m.warnings = warnings;

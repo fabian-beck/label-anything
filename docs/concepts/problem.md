@@ -22,7 +22,7 @@ JavaScript objects.
 | [`solver`](solver.md) | strategy, time budget, seed, grid cell |
 | [`degrade`, `degrade_options`](candidates.md#the-degradation-ladder) | the degradation ladder |
 | [`weights`](candidates.md#costs) | weights of the cost terms |
-| [`warm_start`](../tutorials/interactive-maps.md) | a previous result to stay close to |
+| [`warm_start`](../tutorials/interactive-maps.md) | a previous result to stay close to; with `pin: true` its labels keep their boxes exactly ([a pan moves no label](../tutorials/interactive-maps.md#a-pan-moves-no-label)) |
 | [`output`](#output) | extras in the result: debug SVG, cost breakdown, candidates, item shapes |
 
 ## Lengths
@@ -75,6 +75,13 @@ Mark rotations are degrees **clockwise** on screen (as in SVG); leader angles ar
 * `region` `[x, y, w, h]`: labels must stay inside this sub-rectangle, e.g. a chart's plot
   area.
 * `allow_outside: true` drops the `canvas_edge` class.
+* `overscan` (a length) makes the canvas a **window** on a larger drawing, for a view
+  that pans and zooms: labels are placed up to that far beyond the canvas as on it and
+  cross its edges, where you cut what you draw, so a label at the border keeps its place
+  while the view moves. Pass the points farther than the overscan (those beyond it are
+  marks only, reason `outside`), areas and lines whole. `region` then gives the bounds of
+  the whole drawing, which may reach beyond the canvas: labels stay inside them
+  ([interactive maps](../tutorials/interactive-maps.md#the-view-is-a-window)).
 * `background` (`"#rrggbb"`, default white): the colour of the canvas where no raster
   lies. Labels avoid straddling the edge between it and a raster of another lightness
   ([the contrast cost](../tutorials/raster-backgrounds.md#contrast-borders)).

@@ -87,6 +87,17 @@ pub fn run(s: &mut Solve) {
         }
         g.set_members.push(set);
     }
+    // in a window, the points beyond the working extent are marks only (spec §2.3; a
+    // member of a `keep_with` set fails with its set)
+    for i in 0..n {
+        if s.model.is_beyond(i) && !g.done[i] && g.sets[i].is_none() {
+            g.done[i] = true;
+            s.reasons[i] = Some(Reason::Outside);
+        }
+    }
+    if s.model.warm_pin {
+        pin(s, &mut g);
+    }
     // the guard runs from the start of this pass: preparation always completes, and its
     // time must not leave the most important bands unplaced (ADR solver/time-budget)
     let budget_guard = s.model.solver.time_budget_ms * 10.0;
@@ -261,6 +272,33 @@ pub fn run(s: &mut Solve) {
     }
     let all: Vec<usize> = (0..n).collect();
     exhaust(s, &mut g, &all, true);
+}
+
+/// Pinned labels (`warm_start.pin`, spec §10.1): before any band, every item keeps its
+/// warm-start box, in total order and whatever its key, where the box is statically
+/// feasible, free of the labels pinned before it and within the label budgets. The box
+/// is the level-0 warm-start candidate, else that of a ladder variant (a label the
+/// previous solve degraded). Not for the members of `keep_with` sets.
+fn pin(s: &mut Solve, g: &mut Greedy) {
+    for i in s.pri.order.clone() {
+        if g.done[i] || g.sets[i].is_some() {
+            continue;
+        }
+        let c = match s.warm_cand[i] {
+            // (level-0 candidates are tracked: dead once a pinned label is in the way)
+            Some(c) => g.alive[c as usize].then_some(c),
+            None => s
+                .warm_ladder_candidate(i)
+                .filter(|&c| s.state.is_free(&s.cands[c as usize], &s.cands, s.obs, i)),
+        };
+        let Some(c) = c else { continue };
+        if !s.budget_allows(&s.cands[c as usize], &[]) {
+            continue;
+        }
+        commit(s, g, i, c, false);
+        g.done[i] = true;
+        s.pinned[i] = true;
+    }
 }
 
 /// After the greedy guard (ADR solver/time-budget): the undecided items, in total order, get their
@@ -741,10 +779,11 @@ fn evict_lower(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<(u32, bool)> {
         if confl.is_empty() {
             continue; // would have been chosen already
         }
-        if !confl
-            .iter()
-            .all(|&j| s.pri.prio[j as usize].key > key_i && !s.model.items[j as usize].required)
-        {
+        if !confl.iter().all(|&j| {
+            s.pri.prio[j as usize].key > key_i
+                && !s.model.items[j as usize].required
+                && !s.pinned[j as usize]
+        }) {
             continue;
         }
         let gain: f64 = confl.iter().map(|&j| s.pri.prio[j as usize].gain).sum();

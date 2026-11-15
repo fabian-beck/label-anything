@@ -257,7 +257,8 @@ export const SECTIONS: Section[] = [
     controls: [
       { key: "view.warmStart", label: "Warm start", kind: "toggle", hint: "Each solve starts from the previous labels (warm_start)" },
       { key: "weights.stability", label: "Stability", kind: "range", min: 0, max: 4, step: 0.1, format: (n) => n.toFixed(1), hint: "Cost of moving away from the previous place", when: (g) => g("view.warmStart") === true },
-      { key: "view.settle", label: "Settle at rest", kind: "toggle", hint: "One more solve, freer to improve, once things stop", when: (g) => g("view.warmStart") === true },
+      { key: "view.pin", label: "Pin labels while panning", kind: "toggle", hint: "While the map is only panned, no label moves: each solve only adds labels where the map moves on (warm_start.pin). After a zoom every label may move", when: (g) => g("view.warmStart") === true },
+      { key: "view.settle", label: "Settle at rest", kind: "toggle", hint: "One more solve, freer to improve, once things stop (not after a pan with pinned labels)", when: (g) => g("view.warmStart") === true },
       { key: "view.transition", label: "Smooth transitions", kind: "range", min: 0, max: 1000, step: 10, format: (n) => (n === 0 ? "off" : ms(n)), hint: "Labels glide and fade (LabelMotion)" },
       { key: "view.moveDelay", label: "Move delay", kind: "range", min: 0, max: 2000, step: 10, format: ms, hint: "A label the solver moved stays until its new place has held this long", when: transitions },
       { key: "view.appearDelay", label: "Appear delay", kind: "range", min: 0, max: 1000, step: 10, format: ms, hint: "A new label shows only if it is still placed after this time", when: transitions },

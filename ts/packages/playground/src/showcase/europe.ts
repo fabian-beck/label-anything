@@ -8,7 +8,11 @@
  * leader into the sea, its type size growing with the country's area. Capitals are points,
  * every one with its dot; zoomed in, more cities, the smallest states and more seas come.
  * The countries and the seas' names are an SVG the engine reads: no label covers a sea's
- * name. At the first view the problem is that of the static figure.
+ * name. At the first view the problem is that of the static figure. A zoomed view is a
+ * window on the map (`canvas.overscan`): what lies a little beyond it is labeled as well,
+ * and a name at its border keeps its place on the map and is cut there. While the map is
+ * only panned, the names are pinned (`warm_start.pin`): none moves, names come where the
+ * map moves on, and a zoom places them anew.
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
 import type { MotionFrame } from "@label-anything/extras";
@@ -24,6 +28,8 @@ const SCALE = W / (FRAME[2] - FRAME[0]); // px per km
 const H = Math.round((FRAME[3] - FRAME[1]) * SCALE);
 const R_EARTH = 6371.0;
 const PAD = 40; // the land is drawn this far beyond the map's edges
+/** How far beyond a zoomed view the map is labeled as well, in px (`canvas.overscan`): about a label's width. */
+const OVERSCAN = 80;
 
 const SEA = "#d3e3f1";
 const LAND_OTHER = "#ebe7df";
@@ -213,7 +219,7 @@ export class Europe implements Example {
   readonly width = W;
   readonly height = H;
   readonly title = "The countries and capitals of Europe, labeled live by Label Anything";
-  readonly hint = "Drag to pan; zoom with the buttons, a double click, a pinch or Ctrl + scroll: more cities come as there is room. Hover or tap a country or a city.";
+  readonly hint = "Drag to pan; zoom with the buttons, a double click, a pinch or Ctrl + scroll: more cities come as there is room, and names at the border stay where they are. Hover or tap a country or a city.";
   readonly render = {
     font: { family: LABEL_FAMILY, size: 9.5, weight: 400, italic: false },
     fill: CITY_TEXT,
@@ -244,6 +250,8 @@ export class Europe implements Example {
   #noteTimer = 0;
   /** Where each item's anchor is on the map at zoom 1 (from the latest result). */
   #base = new Map<string, Pt>();
+  /** The view the labels shown were placed for. */
+  #solved: View | null = null;
   #glide: { from: View; to: View; t0: number } | null = null;
   #pointers = new Map<number, Pt>();
   #moved = false;
@@ -263,18 +271,32 @@ export class Europe implements Example {
     return [x * v.k + v.x, y * v.k + v.y];
   }
 
-  /** The countries to label in a view, each with the part that carries the name: the largest in view. */
+  /** A zoomed view is a window on the map: what lies up to this far beyond it is labeled as well. */
+  #overscan(v: View): number {
+    return v.k > 1 ? OVERSCAN : 0;
+  }
+
+  /**
+   * The countries to label in a view, each with the part that carries the name: the
+   * largest on the map, whole. The view does not cut it, so that the name has its place
+   * in the country wherever the view is.
+   */
   #countries(v: View): { land: Land; main: Ring[] }[] {
     const out: { land: Land; main: Ring[] }[] = [];
+    const m = this.#overscan(v);
+    // the map's edges in the view (the whole map: the view's own)
+    const [mx0, my0] = this.#to(v, [0, 0]);
+    const [mx1, my1] = this.#to(v, [W, H]);
     for (const land of this.#lands) {
       if (!STATES.has(land.id) && !(SMALL.has(land.id) && v.k >= ZOOM_SMALL)) continue;
       const [x0, y0] = this.#to(v, [land.bounds[0], land.bounds[1]]);
       const [x1, y1] = this.#to(v, [land.bounds[2], land.bounds[3]]);
-      if (x1 < 3 || y1 < 3 || x0 > W - 3 || y0 > H - 3) continue;
+      // (a name on a leader can show while its country is out of reach)
+      if ((x1 < 3 - m || y1 < 3 - m || x0 > W - 3 + m || y0 > H - 3 + m) && !this.#labelShows(land.id, v)) continue;
       let main: Ring[] | undefined;
       let best = 0;
       for (const part of land.parts) {
-        const rings = part.map((ring) => clipRing(ring.map((p) => this.#to(v, p)), 3, 3, W - 3, H - 3));
+        const rings = part.map((ring) => clipRing(ring.map((p) => this.#to(v, p)), mx0 + 3, my0 + 3, mx1 - 3, my1 - 3));
         if (rings[0]!.length < 3) continue;
         const a = ringArea(rings[0]!);
         if (a > best) {
@@ -290,53 +312,77 @@ export class Europe implements Example {
   /** The seas' names in a view, as SVG markup: drawn, and read by the engine. */
   #seaMarkup(v: View): string {
     const o = [`<g class="seas" fill="${SEA_TEXT}" font-size="12.5" font-style="italic" text-anchor="middle">`];
+    const m = this.#overscan(v);
     for (const [lines, lon, lat, zoom] of SEAS) {
       if (v.k < zoom) continue;
       const [x, y] = this.#to(v, project(lon, lat));
-      if (x < -80 || x > W + 80 || y < -40 || y > H + 40) continue;
+      if (x < -80 - m || x > W + 80 + m || y < -40 - m || y > H + 40 + m) continue;
       lines.forEach((line, i) => o.push(`<text x="${f2(x)}" y="${f2(y + (i - (lines.length - 1) / 2) * 15 + 4)}">${esc(line)}</text>`));
     }
     o.push("</g>");
     return o.join("\n");
   }
 
-  /** The countries in a view, as SVG markup for the engine: each path a region (europe-map.svg's at zoom 1). */
-  #landMarkup(v: View): string {
+  /**
+   * The countries in a view, as SVG markup for the engine: each path a region
+   * (europe-map.svg's at zoom 1), up to where a window is labeled. With the countries
+   * that have a path.
+   */
+  #landMarkup(v: View): { markup: string; drawn: Set<string> } {
     const o = ['<g class="land">'];
+    const drawn = new Set<string>();
+    const m = PAD + this.#overscan(v);
     for (const c of this.#lands) {
       const shapes =
         v.k === 1 && v.x === 0 && v.y === 0
           ? c.shapes
-          : c.parts.map((rings) => rings.map((r) => clipRing(r.map((p) => this.#to(v, p)), -PAD, -PAD, W + PAD, H + PAD))).filter((rings) => rings[0]!.length >= 3);
+          : c.parts.map((rings) => rings.map((r) => clipRing(r.map((p) => this.#to(v, p)), -m, -m, W + m, H + m))).filter((rings) => rings[0]!.length >= 3);
       const d = shapes.map(ringsPath).join("");
-      if (d) o.push(`<path id="${c.id}" fill-rule="evenodd" d="${d}"/>`);
+      if (!d) continue;
+      o.push(`<path id="${c.id}" fill-rule="evenodd" d="${d}"/>`);
+      drawn.add(c.id);
     }
     o.push("</g>");
-    return o.join("\n");
+    return { markup: o.join("\n"), drawn };
   }
 
   problem(v: View = this.view): LabelProblem {
     const countries = this.#countries(v).sort((a, b) => b.land.pop - a.land.pop);
-    const items: unknown[] = countries.map(({ land, main }) => {
-      const rings = main.map((r) => r.map(([x, y]) => [round(x, 1), round(y, 1)]));
+    const window = v.k > 1;
+    const land = this.#landMarkup(v);
+    // (a window has its coordinates unrounded: the same outlines in every view, so that
+    // their poles stay put and the labels move with the map exactly)
+    const at = (c: number): number => (window ? c : round(c, 1));
+    const items: unknown[] = countries.map(({ land: c, main }) => {
+      const rings = main.map((r) => r.map(([x, y]) => [at(x), at(y)]));
       return {
-        id: land.id,
+        id: c.id,
+        // a country is its own region; in a window it says so, as the whole country's
+        // pole, where the engine would look its region up, can lie beyond the view
+        ...(window && land.drawn.has(c.id) ? { region: c.id } : {}),
         anchor: { type: "area", polygon: rings[0], ...(rings.length > 1 ? { holes: rings.slice(1) } : {}) },
-        label: { type: "text", text: land.name.toUpperCase(), font: { size: typeSize(land.area) } },
+        label: { type: "text", text: c.name.toUpperCase(), font: { size: typeSize(c.area) } },
         // countries before cities, by population
         tier: 1,
-        priority: land.pop,
+        priority: c.pop,
         // a country's name may go out on a leader (into the sea, where the regions want it)
         placement: { models: ["adjacent", "slider", "distant"] },
       };
     });
+    // in a window, the engine labels the places up to the overscan beyond the view; those
+    // farther out are passed as marks only, so that no name has to make way when they come in
+    const m = 3 * this.#overscan(v);
+    const [mx0, my0] = this.#to(v, [0, 0]);
+    const [mx1, my1] = this.#to(v, [W, H]);
     for (const p of this.#places.values()) {
       if (!p.capital && v.k < ZOOM_CITIES) continue;
       const [x, y] = this.#to(v, p.at);
-      if (!(x > 4 && x < W - 4 && y > 4 && y < H - 4)) continue;
+      // on the map, and in the view or near it
+      if (!(x > mx0 + 4 && x < mx1 - 4 && y > my0 + 4 && y < my1 - 4)) continue;
+      if (!(x > 4 - m && x < W - 4 + m && y > 4 - m && y < H - 4 + m)) continue;
       items.push({
         id: p.id,
-        anchor: { type: "point", x: round(x, 1), y: round(y, 1), mark: { shape: "circle", r: p.capital ? 2.6 : 2 } },
+        anchor: { type: "point", x: at(x), y: at(y), mark: { shape: "circle", r: p.capital ? 2.6 : 2 } },
         label: { type: "text", text: p.name, font: { size: p.capital ? 8 : 7.5 } },
         priority: p.priority,
       });
@@ -344,13 +390,17 @@ export class Europe implements Example {
     return {
       version: "1",
       preset: "map",
-      canvas: { width: W, height: H },
+      // a zoomed view is a window on the map: labels may cross its edges, where they are
+      // cut, and stay inside the map (the canvas' region)
+      canvas: window
+        ? { width: W, height: H, overscan: OVERSCAN, region: [round(mx0, 2), round(my0, 2), round(mx1 - mx0, 2), round(my1 - my0, 2)] }
+        : { width: W, height: H },
       defaults: { wrap: { max_lines: 2 } },
       // every label keeps its size: the ladder's shrink step stops at the full size
       degrade_options: { min_scale: 1 },
       obstacles: {
         svg: {
-          source: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">\n${this.#landMarkup(v)}\n${this.#seaMarkup(v)}\n</svg>\n`,
+          source: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">\n${land.markup}\n${this.#seaMarkup(v)}\n</svg>\n`,
           // nothing in the picture is an obstacle but the seas' names; the countries are the regions
           classes: [{ selector: ".seas text", class: "seas" }, { selector: "*", class: "ignore" }],
           regions: ".land path",
@@ -574,14 +624,31 @@ export class Europe implements Example {
       const id = it.id as string;
       anchors.set(id, this.#to(view, this.#base.get(id) ?? this.#home(id)));
     }
-    return { problem, anchors, view };
+    // a zoomed map that was only panned since its names were placed: they stay
+    const pin = view.k > 1 && this.#solved !== null && this.#solved.k === view.k;
+    return { problem, anchors, view, pin };
   }
 
   solved(result: LabelResult, solve: Solve): void {
     const v = (solve as EuropeSolve).view;
+    this.#solved = v;
     for (const p of result.placements) {
       if (p.anchor) this.#base.set(p.id, [(p.anchor[0]! - v.x) / v.k, (p.anchor[1]! - v.y) / v.k]);
+      if (p.placed && p.box && p.anchor) this.#labels.set(p.id, [p.box.x - p.anchor[0]!, p.box.y - p.anchor[1]!, p.box.w, p.box.h]);
+      else this.#labels.delete(p.id);
     }
+  }
+
+  /** Where each item's label is from its anchor, as of the latest result: x, y, width, height in px. */
+  #labels = new Map<string, [number, number, number, number]>();
+
+  /** Whether the label an item has shows in a view (some of it). */
+  #labelShows(id: string, v: View): boolean {
+    const l = this.#labels.get(id);
+    const base = this.#base.get(id);
+    if (!l || !base) return false;
+    const [x, y] = this.#to(v, base);
+    return x + l[0] < W && y + l[1] < H && x + l[0] + l[2] > 0 && y + l[1] + l[3] > 0;
   }
 
   anchors(): Map<string, Pt> {

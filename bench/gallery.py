@@ -213,7 +213,7 @@ NAMES = {"rust": "Label Anything", "ggrepel": "ggrepel (R)", "adjusttext": "adju
          "naive": "Naive (no collision test)"}
 REASONS = {"omitted_by_priority": "blocked by more important labels", "no_feasible_candidate": "no free position",
            "budget_exhausted": "time budget exhausted", "keep_with": "with linked items",
-           "grouped": "merged into a group label"}
+           "grouped": "merged into a group label", "outside": "beyond the window"}
 
 
 # ---------------------------------------------------------------------------

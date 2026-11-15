@@ -226,7 +226,24 @@ public final class LabelProblem {
       return put("canvas.allow_outside", allow);
     }
 
-    /** Sub-rectangle labels must stay inside (leaders may leave it). */
+    /**
+     * Makes the canvas a window on a larger drawing, for views that pan and zoom: labels
+     * are placed this far (px) beyond every edge as on the canvas and may cross the edges,
+     * where the host cuts them. Pass the items up to there.
+     */
+    public Builder overscan(double px) {
+      return put("canvas.overscan", px);
+    }
+
+    /** As {@link #overscan(double)}, with a unit ({@code "8em"}). */
+    public Builder overscan(String length) {
+      return put("canvas.overscan", length);
+    }
+
+    /**
+     * Rectangle labels must stay inside (leaders may leave it). In a window ({@link
+     * #overscan(double)}): the bounds of the whole drawing, which may reach beyond the canvas.
+     */
     public Builder region(double x, double y, double w, double h) {
       return put("canvas.region", new double[] {x, y, w, h});
     }
@@ -613,6 +630,16 @@ public final class LabelProblem {
      * they were placed for (boxes move with their items) and their leaders.
      */
     public Builder warmStart(LabelResult previous) {
+      return warmStart(previous, false);
+    }
+
+    /**
+     * As {@link #warmStart(LabelResult)}; with {@code pin}, every label keeps its box exactly
+     * (moved with its item) where the hard rules still allow it, whatever its priority, and
+     * the solve only adds labels around them. For a view that only moved since {@code
+     * previous}, as a map that was panned: no label moves.
+     */
+    public Builder warmStart(LabelResult previous, boolean pin) {
       List<Object> placements = new ArrayList<>();
       for (LabelPlacement p : previous.placements()) {
         Map<String, Object> m = new LinkedHashMap<>();
@@ -631,7 +658,12 @@ public final class LabelProblem {
         }
         placements.add(m);
       }
-      return put("warm_start", Map.of("placements", placements));
+      Map<String, Object> warm = new LinkedHashMap<>();
+      if (pin) {
+        warm.put("pin", true);
+      }
+      warm.put("placements", placements);
+      return put("warm_start", warm);
     }
 
     /** Emit the debug SVG overlay in {@link LabelResult#debugSvg()}. */

@@ -42,13 +42,15 @@ export const Reason = {
   BudgetExhausted: 2,
   KeepWith: 3,
   Grouped: 4,
+  /** Beyond the working extent of a window (spec §2.3). */
+  Outside: 5,
 } as const;
 export type Reason = (typeof Reason)[keyof typeof Reason];
 
 /** No removed items (`Solve.budgetAllows`). */
 const NO_ITEMS: readonly number[] = [];
 
-const REASON_NAMES = ["omitted_by_priority", "no_feasible_candidate", "budget_exhausted", "keep_with", "grouped"] as const;
+const REASON_NAMES = ["omitted_by_priority", "no_feasible_candidate", "budget_exhausted", "keep_with", "grouped", "outside"] as const;
 
 /** `Reason::name`. */
 export function reasonName(r: Reason): string {
@@ -86,6 +88,11 @@ export class Solve {
   prunedLevel0: boolean[];
   /** The warm-start candidate of each item (see `generateWarm`). */
   warmCand: (number | null)[];
+  /**
+   * Items whose label is pinned to its warm-start box (`warm_start.pin`, spec §10.1):
+   * nothing moves or removes it.
+   */
+  pinned: boolean[];
   /**
    * The warm-start candidate of each item for a ladder variant, once computed (see
    * `warmLadderCandidate`): `undefined` = not computed yet.
@@ -158,6 +165,7 @@ export class Solve {
     this.levelDone = new Array<number>(n).fill(0);
     this.distantPending = new Array<boolean>(n).fill(false);
     this.warmCand = new Array<number | null>(n).fill(null);
+    this.pinned = new Array<boolean>(n).fill(false);
     this.warmLadder = new Array<number | null | undefined>(n).fill(undefined);
     this.warmBox = new Array<[number, Rect] | null>(n).fill(null);
     this.warmNudge = new Array<[number, number][] | null>(n).fill(null);
@@ -192,7 +200,7 @@ export class Solve {
 
   /** Generate and evaluate candidates for `variants[vis]` of item `i` with `models`. */
   generate(i: number, vis: readonly number[], models: Models, level: number): number[] {
-    if (this.model.isGroupMember(i)) return [];
+    if (this.model.isGroupMember(i) || this.model.isBeyond(i)) return [];
     return this.generateMode(i, vis, models, level, false);
   }
 
@@ -260,7 +268,7 @@ export class Solve {
   private areaCandidates(item: Item, vi: number, v: Variant, models: Models, fresh: Cand[], adjKeep: KeepFn | null): void {
     const inside: Cand[] = [];
     const rank = areaRank(item);
-    if (rank !== null) area(item, vi, v, rank, inside);
+    if (rank !== null) area(item, vi, v, rank, this.model.areaView(), inside);
     if (inside.length === 0) {
       adjacent(item, vi, v, this.model.placement.sliderPerGap, models, this.stubs, fresh, adjKeep);
     } else if (Models.has(models, Models.ADJACENT) || Models.has(models, Models.SLIDER) || Models.has(models, Models.INTERNAL)) {
@@ -495,8 +503,14 @@ export class Solve {
     const ac = this.model.autoCrowded;
     if (ac !== null) {
       const [frac, crowdedModels] = ac;
+      // (the items a window labels: those beyond its working extent have no candidates)
+      let nLabeled = n;
       let lacking = 0;
       for (let i = 0; i < n; i++) {
+        if (this.model.isBeyond(i)) {
+          nLabeled -= 1;
+          continue;
+        }
         let ok = false;
         for (const cid of this.byItem[i]!) {
           const c = this.cands[cid]!;
@@ -507,7 +521,7 @@ export class Solve {
         }
         if (!ok) lacking += 1;
       }
-      if (n > 0 && lacking > frac * n) {
+      if (n > 0 && lacking > frac * nLabeled) {
         if (this.trace !== null) this.trace.crowded(lacking, n);
         for (let i = 0; i < n; i++) {
           const add = crowdedModels & ~this.models[i]!;
@@ -536,7 +550,7 @@ export class Solve {
     const item = this.model.items[i]!;
     const b = this.model.warm.get(item.id);
     if (b === undefined || b === null) return;
-    if (this.model.isGroupMember(i)) return;
+    if (this.model.isGroupMember(i) || this.model.isBeyond(i)) return;
     const vs = this.variants[i]!;
     const v0 = vs.findIndex((v) => v.level === 0 && Math.abs(v.w - b.w()) <= 0.5 && Math.abs(v.h - b.h()) <= 0.5);
     if (v0 >= 0) this.warmBox[i] = [v0, b];
@@ -546,6 +560,7 @@ export class Solve {
     const c = warm(this.model, item, vi, v, b);
     if (c === null) return;
     c.warm = true;
+    c.pin = this.model.warmPin;
     c.level = 0;
     c.setLshape(v.shape);
     this.evaluator.eval(c, v, null);
@@ -591,11 +606,11 @@ export class Solve {
     const m = this.model.maxLabels;
     if (m !== null && this.state.nPlaced + 1 > m + removed.length) return false;
     const f = this.model.maxInkFraction;
-    const canvas = this.model.canvas;
-    if (f !== null && canvas !== null) {
+    const whole = this.model.inkArea();
+    if (f !== null && whole !== null) {
       let area = this.state.labelAreaSum;
       for (const j of removed) area -= this.cands[this.state.placed[j]!]!.rect.area();
-      if ((area + c.rect.area()) / maxf(canvas.area(), 1e-9) > f) return false;
+      if ((area + c.rect.area()) / maxf(whole, 1e-9) > f) return false;
     }
     return true;
   }
@@ -668,6 +683,7 @@ export class Solve {
     const known = this.warmLadder[i];
     if (known !== undefined) return known;
     this.warmLadder[i] = null;
+    if (this.model.isBeyond(i)) return null;
     const item = this.model.items[i]!;
     const b = this.model.warm.get(item.id);
     if (b === undefined || b === null) return null;
@@ -690,6 +706,7 @@ export class Solve {
       const c = warm(this.model, item, vi, v, b);
       if (c === null) return null;
       c.warm = true;
+      c.pin = this.model.warmPin;
       c.level = level;
       c.setLshape(v.shape);
       this.evaluator.eval(c, v, null);

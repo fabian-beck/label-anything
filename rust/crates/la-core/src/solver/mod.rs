@@ -30,6 +30,8 @@ pub enum Reason {
     BudgetExhausted,
     KeepWith,
     Grouped,
+    /// Beyond the working extent of a window (spec §2.3).
+    Outside,
 }
 
 impl Reason {
@@ -40,6 +42,7 @@ impl Reason {
             Reason::BudgetExhausted => "budget_exhausted",
             Reason::KeepWith => "keep_with",
             Reason::Grouped => "grouped",
+            Reason::Outside => "outside",
         }
     }
 }
@@ -77,6 +80,9 @@ pub struct Solve<'a> {
     pub pruned_level0: Vec<bool>,
     /// The warm-start candidate of each item (see `Solve::generate_warm`).
     pub warm_cand: Vec<Option<u32>>,
+    /// Items whose label is pinned to its warm-start box (`warm_start.pin`, spec §10.1):
+    /// nothing moves or removes it.
+    pub pinned: Vec<bool>,
     /// The warm-start candidate of each item for a ladder variant, once computed (see
     /// [`Solve::warm_ladder_candidate`]).
     pub warm_ladder: Vec<Option<Option<u32>>>,
@@ -148,6 +154,7 @@ impl<'a> Solve<'a> {
             level_done: vec![0; n],
             distant_pending: vec![false; n],
             warm_cand: vec![None; n],
+            pinned: vec![false; n],
             warm_ladder: vec![None; n],
             warm_box: vec![None; n],
             warm_nudge: vec![None; n],
@@ -185,7 +192,7 @@ impl<'a> Solve<'a> {
 
     /// Generate and evaluate candidates for the variants `vis` of item `i` with `models`.
     pub fn generate(&mut self, i: usize, vis: &[usize], models: Models, level: u8) -> Vec<u32> {
-        if self.model.is_group_member(i) {
+        if self.model.is_group_member(i) || self.model.is_beyond(i) {
             return vec![];
         }
         self.generate_mode(i, vis, models, level, false)
@@ -395,7 +402,7 @@ impl<'a> Solve<'a> {
             .map(|m| Models(m.0 & !Models::DISTANT))
             .collect();
         let per_item = |env: &dyn Env, i: usize| -> (Vec<Cand>, u32, Option<Cand>, bool) {
-            if model.is_group_member(i) {
+            if model.is_group_member(i) || model.is_beyond(i) {
                 return (Vec::new(), 0, None, false);
             }
             let item = &model.items[i];
@@ -444,16 +451,19 @@ impl<'a> Solve<'a> {
         }
         // auto preset: enable distant labels when crowded
         if let Some((frac, crowded_models)) = self.model.auto_crowded {
+            // (the items a window labels: those beyond its working extent have no candidates)
+            let n_labeled = n - self.model.beyond.iter().filter(|&&b| b).count();
             let lacking = (0..n)
                 .filter(|&i| {
-                    !self.by_item[i].iter().any(|&c| {
-                        let c = &self.cands[c as usize];
-                        c.feasible
-                            && matches!(c.kind, Kind::Adjacent | Kind::Slider | Kind::Internal)
-                    })
+                    !self.model.is_beyond(i)
+                        && !self.by_item[i].iter().any(|&c| {
+                            let c = &self.cands[c as usize];
+                            c.feasible
+                                && matches!(c.kind, Kind::Adjacent | Kind::Slider | Kind::Internal)
+                        })
                 })
                 .count();
-            if n > 0 && lacking as f64 > frac * n as f64 {
+            if n > 0 && lacking as f64 > frac * n_labeled as f64 {
                 for i in 0..n {
                     let add = Models(crowded_models.0 & !self.models[i].0);
                     if add.0 != 0 {
@@ -523,14 +533,14 @@ impl<'a> Solve<'a> {
                 return false;
             }
         }
-        if let (Some(f), Some(canvas)) = (self.model.max_ink_fraction, self.model.canvas) {
+        if let (Some(f), Some(whole)) = (self.model.max_ink_fraction, self.model.ink_area()) {
             let mut area = self.state.label_area_sum;
             for &j in removed {
                 area -= self.cands[self.state.placed[j as usize].unwrap() as usize]
                     .rect
                     .area();
             }
-            if (area + c.rect.area()) / canvas.area().max(1e-9) > f {
+            if (area + c.rect.area()) / whole.max(1e-9) > f {
                 return false;
             }
         }
@@ -611,6 +621,9 @@ impl<'a> Solve<'a> {
             return c;
         }
         self.warm_ladder[i] = Some(None);
+        if self.model.is_beyond(i) {
+            return None;
+        }
         let Some(Some(b)) = self.model.warm.get(&self.model.items[i].id) else {
             return None;
         };
@@ -643,6 +656,7 @@ impl<'a> Solve<'a> {
             let v = &self.variants[i][vi];
             let mut c = candidates::warm(self.model, item, vi, v, b)?;
             c.warm = true;
+            c.pin = self.model.warm_pin;
             c.level = level;
             c.set_lshape(&v.shape);
             Evaluator::new(self.model, self.obs, self.env).eval(&mut c, v, None);
@@ -807,7 +821,7 @@ fn raw_candidates(
             // (the ladder's `distant` and `boundary` steps) makes none of them again.
             let mut inside: Vec<Cand> = Vec::new();
             if let Some(rank) = candidates::area_rank(item) {
-                candidates::area(item, vi, v, rank, &mut inside);
+                candidates::area(item, vi, v, rank, model.area_view(), &mut inside);
             }
             if inside.is_empty() {
                 candidates::adjacent(
@@ -929,7 +943,7 @@ fn warm_variant(
     item: &crate::model::Item,
     variants: &[Variant],
 ) -> Option<(usize, Rect)> {
-    if model.is_group_member(item.index) {
+    if model.is_group_member(item.index) || model.is_beyond(item.index) {
         return None;
     }
     let Some(Some(b)) = model.warm.get(&item.id) else {
@@ -959,6 +973,7 @@ fn warm_candidate(
     let v = &variants[vi];
     let mut c = candidates::warm(model, item, vi, v, *b)?;
     c.warm = true;
+    c.pin = model.warm_pin;
     c.level = 0;
     c.set_lshape(&v.shape);
     Evaluator::new(model, obs, env).eval(&mut c, v, None);

@@ -1,0 +1,687 @@
+{
+  "canvas": {
+    "width": 480,
+    "height": 320,
+    "overscan": "6em"
+  },
+  "preset": "map",
+  "items": [
+    {
+      "id": "w0",
+      "anchor": {
+        "type": "point",
+        "x": -60,
+        "y": -60
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 0"
+      },
+      "priority": 0
+    },
+    {
+      "id": "w1",
+      "anchor": {
+        "type": "point",
+        "x": 37,
+        "y": -7
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 1"
+      },
+      "priority": 14
+    },
+    {
+      "id": "w2",
+      "anchor": {
+        "type": "point",
+        "x": 134,
+        "y": 46
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 2"
+      },
+      "priority": 11
+    },
+    {
+      "id": "w3",
+      "anchor": {
+        "type": "point",
+        "x": 231,
+        "y": 99
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 3"
+      },
+      "priority": 8
+    },
+    {
+      "id": "w4",
+      "anchor": {
+        "type": "point",
+        "x": 328,
+        "y": 152
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 4"
+      },
+      "priority": 5
+    },
+    {
+      "id": "w5",
+      "anchor": {
+        "type": "point",
+        "x": 425,
+        "y": 205
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 5"
+      },
+      "priority": 2
+    },
+    {
+      "id": "w6",
+      "anchor": {
+        "type": "point",
+        "x": 522,
+        "y": 258
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 6"
+      },
+      "priority": 16
+    },
+    {
+      "id": "w7",
+      "anchor": {
+        "type": "point",
+        "x": 19,
+        "y": 311
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 7"
+      },
+      "priority": 13
+    },
+    {
+      "id": "w8",
+      "anchor": {
+        "type": "point",
+        "x": 116,
+        "y": 364
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 8"
+      },
+      "priority": 10
+    },
+    {
+      "id": "w9",
+      "anchor": {
+        "type": "point",
+        "x": 213,
+        "y": -23
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 9"
+      },
+      "priority": 7
+    },
+    {
+      "id": "w10",
+      "anchor": {
+        "type": "point",
+        "x": 310,
+        "y": 30
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 10"
+      },
+      "priority": 4
+    },
+    {
+      "id": "w11",
+      "anchor": {
+        "type": "point",
+        "x": 407,
+        "y": 83
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 11"
+      },
+      "priority": 1
+    },
+    {
+      "id": "w12",
+      "anchor": {
+        "type": "point",
+        "x": 504,
+        "y": 136
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 12"
+      },
+      "priority": 15
+    },
+    {
+      "id": "w13",
+      "anchor": {
+        "type": "point",
+        "x": 1,
+        "y": 189
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 13"
+      },
+      "priority": 12
+    },
+    {
+      "id": "w14",
+      "anchor": {
+        "type": "point",
+        "x": 98,
+        "y": 242
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 14"
+      },
+      "priority": 9
+    },
+    {
+      "id": "w15",
+      "anchor": {
+        "type": "point",
+        "x": 195,
+        "y": 295
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 15"
+      },
+      "priority": 6
+    },
+    {
+      "id": "w16",
+      "anchor": {
+        "type": "point",
+        "x": 292,
+        "y": 348
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 16"
+      },
+      "priority": 3
+    },
+    {
+      "id": "w17",
+      "anchor": {
+        "type": "point",
+        "x": 389,
+        "y": -39
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 17"
+      },
+      "priority": 0
+    },
+    {
+      "id": "w18",
+      "anchor": {
+        "type": "point",
+        "x": 486,
+        "y": 14
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 18"
+      },
+      "priority": 14
+    },
+    {
+      "id": "w19",
+      "anchor": {
+        "type": "point",
+        "x": -17,
+        "y": 67
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 19"
+      },
+      "priority": 11
+    },
+    {
+      "id": "w20",
+      "anchor": {
+        "type": "point",
+        "x": 80,
+        "y": 120
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 20"
+      },
+      "priority": 8
+    },
+    {
+      "id": "w21",
+      "anchor": {
+        "type": "point",
+        "x": 177,
+        "y": 173
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 21"
+      },
+      "priority": 5
+    },
+    {
+      "id": "w22",
+      "anchor": {
+        "type": "point",
+        "x": 274,
+        "y": 226
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 22"
+      },
+      "priority": 2
+    },
+    {
+      "id": "w23",
+      "anchor": {
+        "type": "point",
+        "x": 371,
+        "y": 279
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 23"
+      },
+      "priority": 16
+    },
+    {
+      "id": "w24",
+      "anchor": {
+        "type": "point",
+        "x": 468,
+        "y": 332
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 24"
+      },
+      "priority": 13
+    },
+    {
+      "id": "w25",
+      "anchor": {
+        "type": "point",
+        "x": -35,
+        "y": -55
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 25"
+      },
+      "priority": 10
+    },
+    {
+      "id": "w26",
+      "anchor": {
+        "type": "point",
+        "x": 62,
+        "y": -2
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 26"
+      },
+      "priority": 7
+    },
+    {
+      "id": "w27",
+      "anchor": {
+        "type": "point",
+        "x": 159,
+        "y": 51
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 27"
+      },
+      "priority": 4
+    },
+    {
+      "id": "w28",
+      "anchor": {
+        "type": "point",
+        "x": 256,
+        "y": 104
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 28"
+      },
+      "priority": 1
+    },
+    {
+      "id": "w29",
+      "anchor": {
+        "type": "point",
+        "x": 353,
+        "y": 157
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 29"
+      },
+      "priority": 15
+    },
+    {
+      "id": "w30",
+      "anchor": {
+        "type": "point",
+        "x": 450,
+        "y": 210
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 30"
+      },
+      "priority": 12
+    },
+    {
+      "id": "w31",
+      "anchor": {
+        "type": "point",
+        "x": -53,
+        "y": 263
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 31"
+      },
+      "priority": 9
+    },
+    {
+      "id": "w32",
+      "anchor": {
+        "type": "point",
+        "x": 44,
+        "y": 316
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 32"
+      },
+      "priority": 6
+    },
+    {
+      "id": "w33",
+      "anchor": {
+        "type": "point",
+        "x": 141,
+        "y": 369
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 33"
+      },
+      "priority": 3
+    },
+    {
+      "id": "w34",
+      "anchor": {
+        "type": "point",
+        "x": 238,
+        "y": -18
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 34"
+      },
+      "priority": 0
+    },
+    {
+      "id": "w35",
+      "anchor": {
+        "type": "point",
+        "x": 335,
+        "y": 35
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 35"
+      },
+      "priority": 14
+    },
+    {
+      "id": "w36",
+      "anchor": {
+        "type": "point",
+        "x": 432,
+        "y": 88
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 36"
+      },
+      "priority": 11
+    },
+    {
+      "id": "w37",
+      "anchor": {
+        "type": "point",
+        "x": 529,
+        "y": 141
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 37"
+      },
+      "priority": 8
+    },
+    {
+      "id": "w38",
+      "anchor": {
+        "type": "point",
+        "x": 26,
+        "y": 194
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 38"
+      },
+      "priority": 5
+    },
+    {
+      "id": "w39",
+      "anchor": {
+        "type": "point",
+        "x": 123,
+        "y": 247
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 39"
+      },
+      "priority": 2
+    },
+    {
+      "id": "w40",
+      "anchor": {
+        "type": "point",
+        "x": 220,
+        "y": 300
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 40"
+      },
+      "priority": 16
+    },
+    {
+      "id": "w41",
+      "anchor": {
+        "type": "point",
+        "x": 317,
+        "y": 353
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 41"
+      },
+      "priority": 13
+    },
+    {
+      "id": "w42",
+      "anchor": {
+        "type": "point",
+        "x": 414,
+        "y": -34
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 42"
+      },
+      "priority": 10
+    },
+    {
+      "id": "w43",
+      "anchor": {
+        "type": "point",
+        "x": 511,
+        "y": 19
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 43"
+      },
+      "priority": 7
+    },
+    {
+      "id": "w44",
+      "anchor": {
+        "type": "point",
+        "x": 8,
+        "y": 72
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 44"
+      },
+      "priority": 4
+    },
+    {
+      "id": "w45",
+      "anchor": {
+        "type": "point",
+        "x": 105,
+        "y": 125
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 45"
+      },
+      "priority": 1
+    },
+    {
+      "id": "w46",
+      "anchor": {
+        "type": "point",
+        "x": 202,
+        "y": 178
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 46"
+      },
+      "priority": 15
+    },
+    {
+      "id": "w47",
+      "anchor": {
+        "type": "point",
+        "x": 299,
+        "y": 231
+      },
+      "label": {
+        "type": "text",
+        "text": "Place 47"
+      },
+      "priority": 12
+    },
+    {
+      "id": "lake",
+      "anchor": {
+        "type": "area",
+        "polygon": [
+          [
+            380,
+            120
+          ],
+          [
+            640,
+            150
+          ],
+          [
+            620,
+            260
+          ],
+          [
+            400,
+            240
+          ]
+        ]
+      },
+      "label": {
+        "type": "text",
+        "text": "Lake"
+      },
+      "priority": 20
+    }
+  ],
+  "obstacles": {
+    "vector": [
+      {
+        "class": "lines",
+        "polylines": [
+          [
+            [
+              -200,
+              40
+            ],
+            [
+              200,
+              180
+            ],
+            [
+              700,
+              120
+            ]
+          ]
+        ],
+        "width": 2
+      }
+    ]
+  }
+}

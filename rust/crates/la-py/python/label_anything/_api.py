@@ -213,6 +213,7 @@ def place(
     canvas: Any = None,
     canvas_padding: Optional[Length] = None,
     allow_outside: Optional[bool] = None,
+    overscan: Optional[Length] = None,
     device_pixel_ratio: Optional[float] = None,
     region: Optional[Sequence[float]] = None,
     canvas_background: Optional[str] = None,
@@ -309,6 +310,7 @@ def place(
     degrade_options: Optional[Mapping[str, Any]] = None,
     weights: Optional[Mapping[str, float]] = None,
     warm_start: Any = None,
+    pin: Optional[bool] = None,
     # --- output ---
     debug_svg: Optional[bool] = None,
     cost_breakdown: Optional[bool] = None,

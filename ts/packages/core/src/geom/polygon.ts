@@ -235,6 +235,8 @@ export function containsRect(rings: readonly Ring[], evenOdd: boolean, r: Rect, 
     for (let i = 0; i < n; i++) {
       const a = ring[i]!;
       const b = ring[(i + 1) % n]!;
+      // (an edge whose bounding box misses the rectangle neither enters nor crosses it)
+      if (maxf(a.x, b.x) < x0 || minf(a.x, b.x) > x1 || maxf(a.y, b.y) < y0 || minf(a.y, b.y) > y1) continue;
       // Any boundary edge entering the rectangle invalidates containment.
       if (segOverlapsRectXY(a.x, a.y, b.x, b.y, x0, y0, x1, y1)) return false;
       for (let c = 0; c < 4; c++) {
@@ -484,11 +486,54 @@ export function mainAxis(rings: readonly Ring[], origin: P): number | null {
 }
 
 /**
+ * A ring cut to a rectangle (Sutherland–Hodgman: against the left, right, top and bottom
+ * side in this order; a vertex on a side counts as inside). Where the ring leaves the
+ * rectangle, the result runs along its sides instead: inside the rectangle the polygon
+ * covers the same points, with the same winding, and its boundary is the same (spec §6.5).
+ * Empty when nothing of the ring is left.
+ */
+export function clipRing(ring: Ring, r: Rect): P[] {
+  let pts: readonly P[] = ring;
+  for (let side = 0; side < 4; side++) {
+    if (pts.length === 0) break;
+    const inside = (q: P): boolean => (side === 0 ? q.x >= r.x0 : side === 1 ? q.x <= r.x1 : side === 2 ? q.y >= r.y0 : q.y <= r.y1);
+    const cut = (a: P, b: P): P =>
+      side === 0
+        ? new P(r.x0, a.y + ((b.y - a.y) * (r.x0 - a.x)) / (b.x - a.x))
+        : side === 1
+          ? new P(r.x1, a.y + ((b.y - a.y) * (r.x1 - a.x)) / (b.x - a.x))
+          : side === 2
+            ? new P(a.x + ((b.x - a.x) * (r.y0 - a.y)) / (b.y - a.y), r.y0)
+            : new P(a.x + ((b.x - a.x) * (r.y1 - a.y)) / (b.y - a.y), r.y1);
+    const n = pts.length;
+    const out: P[] = [];
+    for (let i = 0; i < n; i++) {
+      const a = pts[(i + n - 1) % n]!;
+      const b = pts[i]!;
+      if (inside(b)) {
+        if (!inside(a)) out.push(cut(a, b));
+        out.push(b);
+      } else if (inside(a)) out.push(cut(a, b));
+    }
+    pts = out;
+  }
+  return pts === ring ? ring.slice() : (pts as P[]);
+}
+
+/**
  * The room of rectangle `r` inside the polygon: its distance from the polygon's boundary
  * (0 when an edge touches or crosses it). For a rectangle inside the polygon.
  */
 export function roomRect(rings: readonly Ring[], r: Rect): number {
-  let m = Infinity;
+  return roomRectWithin(rings, r, Infinity);
+}
+
+/**
+ * {@link roomRect}, but `cap` at most: the edges farther away than the room that counts
+ * are skipped by their bounding boxes.
+ */
+export function roomRectWithin(rings: readonly Ring[], r: Rect, cap: number): number {
+  let m = cap;
   for (let k = 0; k < rings.length; k++) {
     const ring = rings[k]!;
     const n = ring.length;

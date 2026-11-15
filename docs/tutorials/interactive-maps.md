@@ -1,9 +1,11 @@
 # Interactive maps and stability
 
-A map is labeled again after every pan and zoom. Besides a good layout in each frame, two
-things matter. Labels should not **jump** to the other side of their point while the view
-moves. And zooming in should keep the labels already shown: the set of labels should
-**nest**, growing as space appears.
+A map is labeled again after every pan and zoom. Besides a good layout in each frame,
+three things matter. While the map is only **panned**, no label should move at all: the
+map is the same, only another part of it shows. A label at the **border** of the view
+should stay where it is and be cut there, not be pushed inside as its point comes to the
+edge: whoever wants to read it pans a little. And zooming in should keep the labels
+already shown: the set of labels should **nest**, growing as space appears.
 
 ## Warm starts
 
@@ -13,29 +15,84 @@ its mark. Only if that fails does it move on, and then to a nearby place rather 
 other side of its point: the `weights.stability` cost grows with the distance
 ([ADR motion/warm-starts](../adr/motion/warm-starts.md) has the rules).
 
-A camera moving over the 40 cities of the [priority tutorial](priority.md), first panning,
-then zooming in:
+## The view is a window
+
+A canvas keeps its labels inside: right for a chart, wrong for a view that moves. A label
+would change sides when its point comes near the edge, and a point that leaves the view
+would take its label along while half of it still shows. `canvas.overscan` makes the canvas
+a **window** on a larger drawing ([ADR motion/windows](../adr/motion/windows.md)):
+
+* labels are placed up to `overscan` beyond the view as in it, about a label's width;
+  they cross its edges and are cut there by whatever draws them (an SVG or a canvas does
+  that by itself);
+* pass the points farther than that, three times the overscan say: those beyond the
+  overscan are **marks only** (reason `outside`). The labels in the overscan keep off
+  them, so that none has to make way when they come in. Pass areas and lines whole;
+* `canvas.region`, if the drawing has bounds of its own (a map that ends somewhere),
+  gives them in view coordinates: labels stay on the map, however far it reaches beyond
+  the view.
+
+## A pan moves no label
+
+A warm start prefers the previous places; `warm_start.pin` keeps them
+([ADR motion/pinned-labels](../adr/motion/pinned-labels.md)). Every label that is still
+allowed where it is stays there exactly, whatever its priority, and the solve only adds
+labels around them, where the view has moved on. Pin when the view was only panned since
+the previous result, not after a zoom: then the labels have to be placed anew, and the
+warm start alone keeps them close.
+
+A camera over the 40 cities of the [priority tutorial](priority.md) pans, zooms in twice,
+pans and zooms in again:
 
 ```python
 --8<-- "examples/tutorials/python/stability.py:frames"
 ```
 
 ```text
-zoom 1.0: <Result placed=37/40 hard_violations=0 omitted=3> None
-zoom 1.0: <Result placed=37/40 hard_violations=0 omitted=3> {'moved': 0, 'added': 0, 'removed': 0, 'mean_displacement': 0.0}
-zoom 1.3: <Result placed=40/40 hard_violations=0 omitted=0> {'moved': 12, 'added': 3, 'removed': 0, 'mean_displacement': 12.9}
-zoom 1.7: <Result placed=36/36 hard_violations=0 omitted=0> {'moved': 9, 'added': 0, 'removed': 0, 'mean_displacement': 5.2}
-zoom 2.2: <Result placed=25/25 hard_violations=0 omitted=0> {'moved': 4, 'added': 0, 'removed': 0, 'mean_displacement': 2.6}
+zoom 1.0: <Result placed=34/40 hard_violations=0 omitted=6> None
+zoom 1.0: <Result placed=34/40 hard_violations=0 omitted=6> {'moved': 0, 'added': 0, 'removed': 0, 'mean_displacement': 0.0}
+zoom 1.3: <Result placed=39/40 hard_violations=0 omitted=1> {'moved': 10, 'added': 5, 'removed': 0, 'mean_displacement': 6.1}
+zoom 1.7: <Result placed=40/40 hard_violations=0 omitted=0> {'moved': 1, 'added': 1, 'removed': 0, 'mean_displacement': 1.7}
+zoom 1.7: <Result placed=40/40 hard_violations=0 omitted=0> {'moved': 0, 'added': 0, 'removed': 0, 'mean_displacement': 0.0}
+zoom 2.2: <Result placed=38/40 hard_violations=0 omitted=2> {'moved': 1, 'added': 0, 'removed': 2, 'mean_displacement': 0.6}
 ```
 
 `stats.flicker` counts the labels moved, added and removed since the previous frame; each
-placement reports its `displacement`. Measured by how much each label's offset from its
-point changes, labels move 5.4 px per frame with warm starts and 14.2 px without. The
-remaining moves come from labels whose place a newly shown label takes, or that find a
-better place as space opens: here mostly at the first zoom step, where three more labels
-fit, as 40 cities at 14 px leave little room once labels keep their margin from other
-cities and twice that from each other. A smaller margin (`defaults.margin`) trades spacing
-for steadier labels (0.1 em: 3.1 px warm-started; 0: 1.8 px).
+placement reports its `displacement`. The counts include the labels in the overscan and
+the cities that are marks only (the two without a label at zoom 2.2 have left the
+overscan). The two frames after a pan are pinned: nothing moved. Over the zooms, measured
+by how much each label's offset from its point changes, labels move 1.6 px per frame with
+warm starts and 8.6 px without. Those moves come from labels whose place a newly shown
+label takes, or that find a better place as space opens: here mostly at the first zoom
+step, where five more labels fit, as 40 cities at 14 px leave little room once labels keep
+their margin from other cities and twice that from each other. A smaller margin
+(`defaults.margin`) trades spacing for steadier labels.
+
+On a pan in steps of 6 px, the same cities pinned, warm-started in a window, and with
+every label kept inside the view:
+
+```python
+--8<-- "examples/tutorials/python/stability.py:border"
+```
+
+```text
+pinned: of 307 labels in view, 0 moved and 0 went
+window: of 307 labels in view, 0 moved and 0 went
+contained: of 310 labels in view, 8 moved and 3 went
+```
+
+Kept inside the view, eight labels change their place beside their point as it comes to
+the border, and three go while still in view, with their points. In the window none
+does on this small map; on a dense one the warm start alone still moves labels, and the
+pin does not ([ADR motion/pinned-labels](../adr/motion/pinned-labels.md) has the
+numbers).
+
+A pin has a price. An item that is more important than a pinned label in its way waits
+without a label until the next solve without the pin (`stats.priority_inversions` counts
+them), and what a pan adds is placed by the greedy pass alone. And it holds only what the
+problem holds still: give every label its size yourself rather than through
+`priority.font_classes`, which ranks the items of each problem, and pass the same
+unrounded outlines in every view.
 
 ## Nesting
 
@@ -102,8 +159,11 @@ these options in its Motion section.
 ## Leaflet
 
 `labelLayer` from `@label-anything/extras/leaflet` is a Leaflet layer. It collects the
-visible points in container pixels, solves, and draws the labels in an SVG pane, again
-after each move.
+points in view and a little beyond it in container pixels, solves, and draws the labels in
+an SVG pane, again after each move. The map is a window as above: `overscan` is how far
+beyond its edge points are labeled as well, in px (default: 8 times the font size, 96 px at
+12 px; `false` keeps every label inside the map, as on a canvas). After a pan the labels
+are pinned, after a zoom placed anew (`pin: false`: warm starts alone).
 
 ```js
 --8<-- "examples/tutorials/js/browser/leaflet.mjs:leaflet"
@@ -115,7 +175,8 @@ labels avoid the whole pin. Pass the geometry of other layers as `obstacles`.
 ## MapLibre GL and Mapbox GL
 
 `labelMapLibre` draws labels in an SVG overlay that follows the map while it moves and
-solves again on `moveend`. `avoidLayers` turns the rendered
+solves again on `moveend`; the map is a window, with the same `overscan` and `pin` options
+as the Leaflet layer (a pan is a move with the same zoom, bearing and pitch). `avoidLayers` turns the rendered
 features of style layers into obstacle classes named after the layers.
 
 ```js
@@ -126,6 +187,8 @@ features of style layers into obstacle classes named after the layers.
 
 * **Solve every few frames** (about ten times per second), not on every frame, and draw
   smooth transitions in between.
+* **Keep the overscan to a label's width.** What lies in it is solved like the view: 100 px
+  around a view of 800 × 600 px are two thirds more area, and about as many more labels.
 * **Use a short time budget.** With `solver.time_budget_ms: 10`, a frame of a 77-node graph
   takes about 12 ms natively and 20 ms in JavaScript, and the labels move about as little
   as with the default budget. Results stay deterministic for a given budget

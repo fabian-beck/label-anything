@@ -7,7 +7,7 @@
  */
 
 import { EPS, P, Rect, bboxOf, distPointSegXY } from "./geom/index.js";
-import { roomRect } from "./geom/polygon.js";
+import { clipRing, containsRect, roomRectWithin } from "./geom/polygon.js";
 import { RoundRectShape, Shape, shapesOverlap } from "./geom/shape.js";
 import type { Variant } from "./labels.js";
 import { ceilFast, clampf, cmpF64, floorFast, len2d, maxf, minf, signEps, sinCosDeg, sinCosDegInto } from "./math.js";
@@ -211,6 +211,11 @@ export class Cand {
    * {@link WARM_MARGIN} of the margin.
    */
   warm = false;
+  /**
+   * The previous box itself in a pinned solve (`warm_start.pin`, spec §10.1): the
+   * `regions` rule does not reject it.
+   */
+  pin = false;
 
   constructor(
     public item: number,
@@ -342,6 +347,7 @@ export class Cand {
     c.bside = this.bside;
     c.lshape = this.lshape;
     c.warm = this.warm;
+    c.pin = this.pin;
     c.turn = this.turn;
     c.inside = this.inside;
     return c;
@@ -1072,20 +1078,62 @@ export function areaRank(item: Item): number | null {
  * turned labels: turned back), with the label size.
  */
 class AreaFrame {
+  /**
+   * In a window (spec §6.5): the polygon cut to the view's surroundings, for the tests of
+   * boxes that touch the view (`null`: no window).
+   */
+  readonly cut: P[][] | null;
+
+  /** `view`: in a window, the view, which the label box of a grid sample touches. */
   constructor(
     readonly shape: Shape,
+    readonly view: Rect | null,
     readonly pole: P,
     readonly radius: number,
     readonly em: number,
     readonly hw: number,
     readonly hh: number,
     readonly pad: number,
-  ) {}
+  ) {
+    this.cut = view === null ? null : AreaFrame.near(shape, view, hw, hh, em, pad);
+  }
+
+  /**
+   * The polygon near the view, for labels of this frame's size: cut to the view grown by
+   * the label's size twice, 1 em, the inner padding and 1 px. A box that touches the view
+   * is as much inside the cut polygon as inside the whole one, and has the same room up to
+   * 1 em (spec §6.5).
+   */
+  static near(shape: Shape, view: Rect, hw: number, hh: number, em: number, pad: number): P[][] {
+    if (shape.kind !== "polygon") return [];
+    const gx = 2.0 * hw + em + pad + 1.0;
+    const gy = 2.0 * hh + em + pad + 1.0;
+    const cut = new Rect(view.x0 - gx, view.y0 - gy, view.x1 + gx, view.y1 + gy);
+    const rings: P[][] = [];
+    for (const r of shape.poly.rings) {
+      const c = clipRing(r, cut);
+      if (c.length >= 3) rings.push(c);
+    }
+    return rings;
+  }
+
+  /**
+   * The rings to test the box `r` against: the polygon cut to the view's surroundings for
+   * a box that touches the view, else the whole polygon.
+   */
+  rings(r: Rect): readonly (readonly P[])[] | null {
+    if (this.cut !== null && this.view!.touches(r)) return this.cut;
+    return this.shape.kind === "polygon" ? this.shape.poly.rings : null;
+  }
 
   fits(c: P): boolean {
     const r = Rect.fromCenter(c, this.hw, this.hh);
     // (a box inside the polygon lies in its bounding box: the cheap test first)
-    return this.shape.bbox().containsRect(r.inflate(this.pad)) && this.shape.containsRect(r, this.pad);
+    if (!this.shape.bbox().containsRect(r.inflate(this.pad))) return false;
+    const s = this.shape;
+    const rings = this.rings(r);
+    if (rings !== null && s.kind === "polygon") return containsRect(rings, s.poly.evenOdd, r, this.pad);
+    return s.containsRect(r, this.pad);
   }
 
   /**
@@ -1099,9 +1147,11 @@ class AreaFrame {
 
   /** The room the label lacks at `c` to 1 em from the polygon's boundary, in em. */
   tight(c: P): number {
-    const s = this.shape;
-    if (s.kind !== "polygon") return 0.0;
-    const room = roomRect(s.poly.rings, Rect.fromCenter(c, this.hw, this.hh));
+    const r = Rect.fromCenter(c, this.hw, this.hh);
+    const rings = this.rings(r);
+    if (rings === null) return 0.0;
+    // (room beyond 1 em lacks nothing: no need to measure it)
+    const room = roomRectWithin(rings, r, this.em);
     return maxf(0.0, 1.0 - room / this.em);
   }
 
@@ -1112,22 +1162,57 @@ class AreaFrame {
 
   /**
    * The points of the sampling grid with spacing `step`, row by row from the top (spec
-   * §6.5): from the bounding box's top-left corner plus half the label size.
+   * §6.5): from the bounding box's top-left corner plus half the label size. In a window:
+   * its rows and columns from the last before the view to the last whose label boxes can
+   * touch it, however large the area is.
    */
   grid(step: number, f: (c: P) => void): void {
     const bb = this.shape.bbox();
-    let y = bb.y0 + this.hh;
-    while (y <= bb.y1 - this.hh + 1e-9) {
-      let x = bb.x0 + this.hw;
-      while (x <= bb.x1 - this.hw + 1e-9) {
-        f(new P(x, y));
-        // coordinates so large that a step no longer changes them
-        if (x + step <= x) break;
-        x += step;
+    const hw = this.hw;
+    const hh = this.hh;
+    const view = this.view;
+    if (view === null) {
+      let y = bb.y0 + hh;
+      while (y <= bb.y1 - hh + 1e-9) {
+        let x = bb.x0 + hw;
+        while (x <= bb.x1 - hw + 1e-9) {
+          f(new P(x, y));
+          // coordinates so large that a step no longer changes them
+          if (x + step <= x) break;
+          x += step;
+        }
+        if (y + step <= y) break;
+        y += step;
       }
-      if (y + step <= y) break;
-      y += step;
+      return;
     }
+    const x0 = bb.x0 + hw;
+    const y0 = bb.y0 + hh;
+    // the last row and column before the view (the first of the grid at least)
+    const first = (lo: number, o: number): number => maxf(floorFast((lo - o) / step), 0.0);
+    const xl = minf(bb.x1 - hw, view.x1 + hw) + 1e-9;
+    const yl = minf(bb.y1 - hh, view.y1 + hh) + 1e-9;
+    let j = first(view.y0 - hh, y0);
+    let y = y0 + j * step;
+    while (y <= yl) {
+      let i = first(view.x0 - hw, x0);
+      let x = x0 + i * step;
+      while (x <= xl) {
+        f(new P(x, y));
+        i += 1.0;
+        // coordinates so large that a step no longer changes them
+        if (x0 + i * step <= x) break;
+        x = x0 + i * step;
+      }
+      j += 1.0;
+      if (y0 + j * step <= y) break;
+      y = y0 + j * step;
+    }
+  }
+
+  /** Whether the label box at `c` touches the view of a window (elsewhere: always). */
+  shown(c: P): boolean {
+    return this.view === null || this.view.touches(Rect.fromCenter(c, this.hw, this.hh));
   }
 
   /**
@@ -1145,14 +1230,21 @@ class AreaFrame {
       const t = this.tight(c);
       return [c, t + this.off(c, this.pole), t];
     };
-    if (this.fits(this.pole)) pts.push(sample(this.pole));
-    // grid samples where the label fits; an area far larger than any picture (a country
-    // beyond the view of a map) is sampled more coarsely, at about `AREA_SAMPLES` places
+    // (in a window: a pole beyond the view is a place, but not one of the view's)
+    let farPole = false;
+    const view = this.view;
+    if (this.fits(this.pole)) {
+      pts.push(sample(this.pole));
+      farPole = view !== null && !view.touches(Rect.fromCenter(this.pole, hw, hh));
+    }
     const bb = this.shape.bbox();
-    const step = maxf(maxf(2.0 * hh, 4.0), Math.sqrt((bb.w() * bb.h()) / AREA_SAMPLES));
+    // an area far larger than any picture is sampled more coarsely, at about
+    // `AREA_SAMPLES` places; in a window the grid keeps to the view instead
+    const step =
+      view === null ? maxf(maxf(2.0 * hh, 4.0), Math.sqrt((bb.w() * bb.h()) / AREA_SAMPLES)) : maxf(2.0 * hh, 4.0);
     const first = pts.length;
     this.grid(step, (c) => {
-      if (this.fits(c)) pts.push(sample(c));
+      if (this.shown(c) && this.fits(c)) pts.push(sample(c));
     });
     if (pts.length === 0) return [];
     // where the label fits only narrowly, the grid's samples lie in fewer than three rows
@@ -1175,7 +1267,7 @@ class AreaFrame {
       this.grid(step, (c) => {
         for (const [on, d] of shifts) {
           const q = c.add(d);
-          if (on && q.x <= x1 && q.y <= y1 && this.fits(q)) pts.push(sample(q));
+          if (on && q.x <= x1 && q.y <= y1 && this.shown(q) && this.fits(q)) pts.push(sample(q));
         }
       });
     }
@@ -1183,7 +1275,7 @@ class AreaFrame {
     let sb = Rect.EMPTY;
     for (let k = 0; k < pts.length; k++) {
       if (pts[k]![1] < pts[best]![1]) best = k;
-      sb = sb.addPoint(pts[k]![0]);
+      if (!(farPole && k === 0)) sb = sb.addPoint(pts[k]![0]);
     }
     // one sample of each cell: near the cell's middle, where the label has room
     const cell = (v: number, lo: number, hi: number): number =>
@@ -1236,24 +1328,31 @@ class AreaFrame {
 
 /**
  * Internal candidates of an area anchor for one variant (spec §6.5): upright ones, then
- * the ones turned along the polygon's main axis.
+ * the ones turned along the polygon's main axis. `view`: in a window, the working extent,
+ * where the grid's places are looked for.
  */
-export function area(item: Item, vi: number, v: Variant, rank: number, out: Cand[]): void {
+export function area(item: Item, vi: number, v: Variant, rank: number, view: Rect | null, out: Cand[]): void {
   const ar = item.area;
   if (ar === null) return;
   const hw = v.w * 0.5;
   const hh = v.h * 0.5;
   const it = item.index;
-  const frame = (shape: Shape): AreaFrame =>
-    new AreaFrame(shape, ar.pole, ar.radius, item.em(), hw, hh, item.len.innerPadding);
-  for (const [c, g] of frame(ar.shape).places()) {
+  const frame = (shape: Shape, view: Rect | null): AreaFrame =>
+    new AreaFrame(shape, view, ar.pole, ar.radius, item.em(), hw, hh, item.len.innerPadding);
+  for (const [c, g] of frame(ar.shape, view).places()) {
     const cd = new Cand(it, vi, v.level, Kind.Internal, SIDE_INTERNAL, rank, Rect.fromCenter(c, hw, hh));
     cd.inside = g;
     out.push(cd);
   }
   const t = ar.turn;
   if (t === null || !canTurn(v)) return;
-  for (const [cf, g] of frame(t.shape).places()) {
+  // the view in the frame of the turned labels: the bounding box of the view turned back
+  let turnedView: Rect | null = null;
+  if (view !== null) {
+    turnedView = Rect.EMPTY;
+    for (const q of view.corners()) turnedView = turnedView.addPoint(ar.pole.add(q.sub(ar.pole).unrotate(t.cos, t.sin)));
+  }
+  for (const [cf, g] of frame(t.shape, turnedView).places()) {
     const c = ar.pole.add(cf.sub(ar.pole).rotate(t.cos, t.sin));
     const [bbox, turn, shape] = turnOf(c, hw, hh, t.angle, t.cos, t.sin);
     const cd = new Cand(it, vi, v.level, Kind.Internal, SIDE_INTERNAL, rank, bbox);
@@ -1277,7 +1376,7 @@ function areaWarm(model: Model, item: Item, ar: Area, vi: number, v: Variant, re
   const angle = model.warmRotation.get(item.id) ?? 0.0;
   const cd = new Cand(item.index, vi, v.level, Kind.Internal, SIDE_INTERNAL, rank, Rect.fromCenter(c, hw, hh));
   const frame = (shape: Shape, pole: P): AreaFrame =>
-    new AreaFrame(shape, pole, ar.radius, item.em(), hw, hh, item.len.innerPadding);
+    new AreaFrame(shape, null, pole, ar.radius, item.em(), hw, hh, item.len.innerPadding);
   if (angle === 0.0) {
     const f = frame(ar.shape, ar.pole);
     if (!f.fits(c)) return null;

@@ -157,6 +157,15 @@ export function run(s: Solve): void {
     for (const i of set) g.sets[i] = si;
     g.setMembers.push(set);
   });
+  // in a window, the points beyond the working extent are marks only (spec §2.3; a member
+  // of a `keep_with` set fails with its set)
+  for (let i = 0; i < n; i++) {
+    if (s.model.isBeyond(i) && !g.done[i] && g.sets[i]! < 0) {
+      g.done[i] = 1;
+      s.reasons[i] = Reason.Outside;
+    }
+  }
+  if (s.model.warmPin) pin(s, g);
   // the guard runs from the start of this pass: preparation always completes, and its
   // time must not leave the most important bands unplaced (ADR solver/time-budget)
   const budgetGuard = s.model.solver.timeBudgetMs * 10;
@@ -315,6 +324,33 @@ export function run(s: Solve): void {
   const all: number[] = [];
   for (let i = 0; i < n; i++) all.push(i);
   exhaust(s, g, all, true);
+}
+
+/**
+ * Pinned labels (`warm_start.pin`, spec §10.1): before any band, every item keeps its
+ * warm-start box, in total order and whatever its key, where the box is statically
+ * feasible, free of the labels pinned before it and within the label budgets. The box is
+ * the level-0 warm-start candidate, else that of a ladder variant (a label the previous
+ * solve degraded). Not for the members of `keep_with` sets.
+ */
+function pin(s: Solve, g: Greedy): void {
+  for (const i of s.pri.order.slice()) {
+    if (g.done[i] || g.sets[i]! >= 0) continue;
+    let c: number | null;
+    const w = s.warmCand[i];
+    if (w !== null && w !== undefined) {
+      // (level-0 candidates are tracked: dead once a pinned label is in the way)
+      c = g.alive[w] ? w : null;
+    } else {
+      c = s.warmLadderCandidate(i);
+      if (c !== null && !s.state.isFree(s.cands[c]!, s.cands, s.obs, i)) c = null;
+    }
+    if (c === null) continue;
+    if (!s.budgetAllows(s.cands[c]!)) continue;
+    commit(s, g, i, c, false);
+    g.done[i] = 1;
+    s.pinned[i] = true;
+  }
 }
 
 /**
@@ -733,7 +769,7 @@ function evictLower(s: Solve, g: Greedy, i: number): [number, boolean] | null {
     if (!cand.feasible) continue;
     s.state.conflicts(cand, s.cands, s.obs, i, confl);
     if (confl.length === 0) continue; // would have been chosen already
-    if (!confl.every((j) => s.pri.prio[j]!.key > keyI && !s.model.items[j]!.required)) continue;
+    if (!confl.every((j) => s.pri.prio[j]!.key > keyI && !s.model.items[j]!.required && !s.pinned[j])) continue;
     let gain = -0;
     for (const j of confl) gain += s.pri.prio[j]!.gain;
     const s0 = confl.length;

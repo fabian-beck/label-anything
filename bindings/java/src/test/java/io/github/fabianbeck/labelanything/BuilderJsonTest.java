@@ -382,6 +382,14 @@ class BuilderJsonTest {
          "warm_start": {"placements": [
            {"id": "a", "placed": true, "box": {"x": 1, "y": 2, "w": 3, "h": 4}},
            {"id": "b", "placed": false}]}}""", problem.toJson());
+    // pinned: every label keeps its box
+    assertSameJson("""
+        {"items": [{"id": "a", "anchor": {"type": "point", "x": 1, "y": 2},
+                    "label": {"type": "text", "text": "A"}}],
+         "warm_start": {"pin": true, "placements": [
+           {"id": "a", "placed": true, "box": {"x": 1, "y": 2, "w": 3, "h": 4}},
+           {"id": "b", "placed": false}]}}""",
+        LabelProblem.builder().item("a", 1, 2, Label.text("A")).warmStart(prev, true).build().toJson());
     assertEquals(Reason.OMITTED_BY_PRIORITY, prev.placement("b").orElseThrow().reason());
     assertEquals(List.of("b"), prev.omissionOrder());
     Map<String, Object> map = problem.toMap();

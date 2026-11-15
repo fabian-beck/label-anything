@@ -1107,6 +1107,190 @@ CASES["region"] = case(
     {"problem_file": "../problems/region.json"},
     {"placed_min": 9})
 
+# --- windows (canvas.overscan, spec §2.3) --------------------------------------------------
+WINDOW = {"width": 160, "height": 100, "overscan": 40}
+WINDOW_ABOUT = ("The canvas is a window on a larger drawing: with canvas.overscan, labels are placed as if "
+                "the drawing went on beyond its edges.")
+
+CASES["window-crosses-edge"] = case(
+    "window: a label next to the canvas edge keeps its first position and crosses the edge",
+    {"canvas": WINDOW, "items": [pt("r", 150, 50, "RightEdge"), pt("t", 80, 3, "TopEdge")]},
+    {"placed": 2, "anchor_side": {"r": "top", "t": "top"}, "model": {"r": "adjacent", "t": "adjacent"},
+     "box": {"r": {"x": 119.256, "y": 31.4, "w": 61.488, "h": 15.6, "tol": 0.01},
+             "t": {"x": 53.864, "y": -15.6, "w": 52.272, "h": 15.6, "tol": 0.01}}},
+    WINDOW_ABOUT + " Without the overscan, r would go to the left and t below (case canvas-edge).")
+
+CASES["window-overscan-item"] = case(
+    "window: the label of an item beyond the canvas takes its place, and labels in view keep off it",
+    {"canvas": WINDOW,
+     "items": [pt("out", 190, 50, "Outside", priority=2, placement={"position_order": ["left"]}),
+               pt("in", 130, 50, "Inside", priority=1, placement={"position_order": ["right", "left"]})]},
+    {"placed": 2, "anchor_side": {"out": "left", "in": "left"}, "model": {"out": "adjacent", "in": "adjacent"}},
+    WINDOW_ABOUT + " out is 30 px beyond the right edge; its label reaches into the canvas, where in's first "
+    "position (right) would cover it.")
+
+CASES["window-obstacle-beyond-edge"] = case(
+    "window: an obstacle is avoided beyond the canvas edge as well",
+    {"canvas": WINDOW, "obstacles": {"vector": [{"class": "wall", "rects": [[162, 20, 40, 26]]}]},
+     "avoid": {"label": {"wall": "hard"}}, "items": [pt("r", 150, 50, "RightEdge")]},
+    {"placed": 1, "anchor_side": {"r": "bottom"}},
+    WINDOW_ABOUT + " The wall lies beyond the right edge; the top position would cross the edge into it.")
+
+CASES["window-region"] = case(
+    "window: labels stay inside canvas.region, the bounds of the whole drawing, and may cross the canvas edge",
+    {"canvas": {"width": 160, "height": 100, "overscan": 60, "region": [-50, 0, 260, 100], "padding": 4},
+     "items": [pt("c", 155, 80, "Crossing"), pt("e", 205, 30, "EdgeOfDrawing"), pt("top", 60, 3, "TopOfDrawing")]},
+    {"placed": 3, "anchor_side": {"c": "top", "e": "left", "top": "bottom"},
+     "box": {"c": {"x": 128.726, "y": 61.676, "w": 52.548, "h": 15.324, "tol": 0.01}}},
+    WINDOW_ABOUT + " The drawing is 260 px wide and begins 50 px left of the canvas: c crosses the canvas edge, "
+    "e and top keep 4 px inside the drawing's right and top edges.")
+
+CASES["window-area"] = case(
+    "window: the label of an area that reaches beyond the canvas stays where the whole area has room",
+    {"canvas": WINDOW,
+     "items": [{"id": "a", "anchor": {"type": "area", "polygon": [[100, 20], [300, 20], [300, 80], [100, 80]]},
+                "label": {"type": "text", "text": "Area"}}]},
+    {"placed": 1, "model": {"a": "internal"},
+     "box": {"a": {"x": 185.258, "y": 43.838, "w": 29.484, "h": 12.324, "tol": 0.01}}},
+    WINDOW_ABOUT + " The area is passed whole; its label is in its middle, beyond the right edge of the "
+    "canvas, not in the part in view.")
+
+CASES["window-area-large"] = case(
+    "window: an area far larger than the view is labeled at its pole, far beyond the view",
+    {"canvas": WINDOW,
+     "items": [_area("a", [[-300, -400], [4000, -200], [4200, 2600], [-500, 2400]], "Area")]},
+    {"placed": 1, "model": {"a": "internal"},
+     "box": {"a": {"x": 985.624, "y": 1056.118, "w": 29.484, "h": 12.324, "tol": 0.01}}},
+    WINDOW_ABOUT + " Only the grid's places near the view are tried besides the pole (spec §6.5): the work "
+    "does not grow with the area.")
+
+CASES["window-area-near-view"] = case(
+    "window: where the pole of a large area is taken, its label goes to a place near the view",
+    {"canvas": WINDOW, "obstacles": {"vector": [{"class": "wall", "rects": [[20, 20, 120, 60]]}]},
+     "avoid": {"label": {"wall": "hard"}},
+     "items": [_area("a", [[-900, -700], [1060, -700], [1060, 800], [-900, 800]], "Area")]},
+    {"placed": 1, "model": {"a": "internal"},
+     "box": {"a": {"x": 61.272, "y": -22.18, "w": 29.484, "h": 12.324, "tol": 0.01}}},
+    WINDOW_ABOUT + " The pole is in the middle of the view, under the wall; the label takes the place of "
+    "the grid nearest to it, in the overscan above the view. That place is tested against the polygon "
+    "cut to the view's surroundings.")
+
+CASES["window-area-turned"] = case(
+    "window: a slanted area through the view has its turned label at its pole, as without a window",
+    {"canvas": WINDOW, "items": [_area("fjord", _slab(420, 220, 1400, 26, 30), "Long Fjord")]},
+    {"placed": 1, "model": {"fjord": "internal"}, "rotation": {"fjord": 30},
+     "box": {"fjord": {"x": 388.128, "y": 212.2, "w": 63.744, "h": 15.6, "tol": 0.01}}},
+    WINDOW_ABOUT + " A 1400 × 26 px strip at 30° through the view; its pole lies beyond the view.")
+
+CASES["window-marks-only"] = case(
+    "window: a point beyond the working extent is a mark only, and labels keep off it",
+    {"canvas": WINDOW, "items": [pt("near", 185, 50, "NearEdge"), pt("far", 205, 40, "Far")]},
+    {"placed_ids": ["near"], "unplaced_ids": ["far"], "reasons": {"far": "outside"},
+     "anchor_side": {"near": "bottom"}},
+    WINDOW_ABOUT + " The working extent ends at x = 200. far lies beyond it: it gets no label, and its mark "
+    "is where near's first position (top) would be. When the view moves on and far comes in, near's "
+    "label is not in its way.")
+
+CASES["window-label-still-shows"] = case(
+    "window: a point beyond the working extent keeps the label that still reaches into the canvas",
+    {"canvas": WINDOW,
+     "items": [pt("far", 215, 50, "Far", label={"type": "text", "text": "Far", "width": 70, "height": 14, "padding": 0})],
+     "warm_start": {"pin": True, "placements": [{"id": "far", "placed": True, "box": {"x": 142, "y": 43, "w": 70, "h": 14}}]}},
+    {"placed": 1, "anchor_side": {"far": "left"}, "box": {"far": {"x": 142, "y": 43, "w": 70, "h": 14, "tol": 0.001}}},
+    WINDOW_ABOUT + " far lies 15 px beyond the working extent, and would be a mark only (case "
+    "window-marks-only); its label of the previous solve begins 18 px inside the canvas, so it stays.")
+
+# --- pinned labels (warm_start.pin, spec §10.1) ---------------------------------------------
+PIN_ABOUT = ("With warm_start.pin every label keeps its warm-start box, moved with its anchor, where the hard "
+             "rules still allow it, whatever its priority; the solve only adds labels around the pinned ones.")
+ALPHA_BOX = {"x": 82.054, "y": 41.4, "w": 35.892, "h": 15.6}  # "Alpha" above (100, 60)
+
+
+def pinned(*entries):
+    return {"pin": True, "placements": [{"id": i, "placed": True, "box": box, "anchor": anchor}
+                                         for i, box, anchor in entries]}
+
+
+CASES["pin-keeps-box"] = case(
+    "pin: a label keeps its box, moved with its anchor, and a newcomer takes a place beside it",
+    {"canvas": {"width": 300, "height": 120},
+     "items": [pt("a", 140, 70, "Alpha", priority=1), pt("b", 164, 54, "Beta", priority=2)],
+     "warm_start": pinned(("a", ALPHA_BOX, [100, 60]))},
+    {"placed": 2, "anchor_side": {"a": "top", "b": "right"},
+     "box": {"a": {"x": 122.054, "y": 51.4, "w": 35.892, "h": 15.6, "tol": 0.001}}},
+    PIN_ABOUT + " The view moved by (40, 10) since a was labeled above its point; b is new.")
+
+CASES["pin-outranks-priority"] = case(
+    "pin: a more important newcomer waits for a pinned label in its way",
+    {"canvas": {"width": 300, "height": 120}, "degrade": ["evict_lower", "omit"],
+     "items": [pt("a", 100, 60, "Alpha", priority=1),
+               pt("b", 100, 30, "Beta", priority=2, placement={"position_order": ["bottom"]})],
+     "warm_start": pinned(("a", ALPHA_BOX, [100, 60]))},
+    {"placed_ids": ["a"], "unplaced_ids": ["b"], "reasons": {"b": "omitted_by_priority"},
+     "priority_inversions": 1, "box": {"a": {**ALPHA_BOX, "tol": 0.001}}},
+    PIN_ABOUT + " b may only stand below its point, where a's label is. Without the pin, b takes that "
+    "place first and a moves to the right; evict_lower would remove a for b, but not a pinned label.")
+
+CASES["pin-blocked-box"] = case(
+    "pin: a label whose box a hard obstacle covers now is placed like any other",
+    {"canvas": {"width": 300, "height": 120}, "items": [pt("a", 100, 60, "Alpha")],
+     "obstacles": {"vector": [{"class": "wall", "rects": [[80, 40, 40, 10]]}]},
+     "avoid": {"label": {"wall": "hard"}}, "warm_start": pinned(("a", ALPHA_BOX, [100, 60]))},
+    {"placed": 1, "anchor_side": {"a": "right"}},
+    PIN_ABOUT)
+
+CASES["pin-degraded-label"] = case(
+    "pin: an abbreviated label keeps its text and its box, although the full text fits now",
+    {"canvas": {"width": 300, "height": 120},
+     "items": [pt("a", 150, 60, "Alphabetical",
+                  label={"type": "text", "text": "Alphabetical", "alternatives": ["Alph."]})],
+     "warm_start": pinned(("a", {"x": 13.812, "y": 41.4, "w": 32.376, "h": 15.6}, [30, 60]))},
+    {"placed": 1, "text_lines": {"a": ["Alph."]},
+     "box": {"a": {"x": 133.812, "y": 41.4, "w": 32.376, "h": 15.6, "tol": 0.001}}},
+    PIN_ABOUT + " The warm-start box has the size of the alternative text, which a canvas of 60 px had "
+    "forced; without the pin the label grows back to its full text.")
+
+CASES["pin-turned-label"] = case(
+    "pin: a turned label keeps its box and its rotation",
+    {"canvas": {"width": 300, "height": 200},
+     "items": [_area("fjord", _slab(190, 110, 220, 26, 30), "Long Fjord")],
+     "warm_start": {"pin": True, "placements": [
+         {"id": "fjord", "placed": True, "rotation": 30, "anchor": [150, 100],
+          "box": {"x": 152.769, "y": 112.2, "w": 63.744, "h": 15.6}}]}},
+    {"placed": 1, "model": {"fjord": "internal"}, "rotation": {"fjord": 30},
+     "box": {"fjord": {"x": 192.769, "y": 122.2, "w": 63.744, "h": 15.6, "tol": 0.001}}},
+    PIN_ABOUT + " The strip of case area-turned, moved by (40, 10) with the view. Its label was 40 px "
+    "along the strip from the pole, where a fresh solve has it; with its rotation the warm start names "
+    "that turned label, and it stays. Without the rotation it would be an upright box, which the strip "
+    "has no room for.")
+
+CASES["pin-regions"] = case(
+    "pin: a label keeps its box, wherever the cells of the region map lie under it now",
+    {"canvas": {"width": 300, "height": 80},
+     "obstacles": {"vector": [{"region": "west", "rects": [[0, 0, 160, 80]]},
+                              {"region": "east", "rects": [[180, 0, 120, 80]]},
+                              {"region": "each", "rects": [[160, 0, 20, 80]]}]},
+     "items": [{**STRIP_ITEM, "anchor": {"type": "area", "polygon": [[160, 0], [180, 0], [180, 80], [160, 80]]}}],
+     "warm_start": pinned(("s", {"x": 153, "y": 32.2, "w": 54.576, "h": 15.6}, [150, 40]))},
+    {"placed": 1, "anchor_side": {"s": "right"},
+     "box": {"s": {"x": 173, "y": 32.2, "w": 54.576, "h": 15.6, "tol": 0.001}}},
+    PIN_ABOUT + " The strip of case regions-area-omitted, moved by 20 px with the view. Its name lay "
+    "in the east, more than max_foreign of it; the regions class, which the cells of the region map "
+    "decide, does not take the place of a pinned label. Without the pin the name is left out.")
+
+CASES["window-raster"] = case(
+    "window: a raster background keeps its place on the canvas, and its borders count as without overscan",
+    {"canvas": {"width": 300, "height": 120, "overscan": 30}, "obstacles": {"raster": BLACK_STRIP},
+     "items": [pt("a", 100, 60, "Border"), pt("b", 310, 60, "Beyond")]},
+    {"placed": 2, "anchor_side": {"a": "right", "b": "top"}},
+    WINDOW_ABOUT + " As in contrast-border, a keeps off the edge between the black raster and the white "
+    "canvas: the grids begin 30 px left of and above the canvas, the raster at the canvas origin.")
+
+CASES["window"] = case(
+    "window: a view of a map with items, an area and a road beyond its edges",
+    {"problem_file": "../problems/window.json"},
+    {"placed_min": 40})
+
 CASES["scatter-basic"] = case(
     "scatter preset over points and a trend line",
     {"problem_file": "../problems/scatter-basic.json"},

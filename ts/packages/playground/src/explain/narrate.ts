@@ -106,6 +106,7 @@ const REASONS: Record<string, string> = {
   budget_exhausted: "the time guard stopped the greedy pass",
   keep_with: "its keep_with set could not be placed together",
   grouped: "a group label covers it",
+  outside: "it lies beyond the window's working extent: a mark only",
 };
 
 const IDLE: Record<string, string> = {

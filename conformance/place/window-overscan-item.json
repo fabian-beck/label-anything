@@ -1,0 +1,66 @@
+{
+  "kind": "place",
+  "name": "window: the label of an item beyond the canvas takes its place, and labels in view keep off it",
+  "$comment": "The canvas is a window on a larger drawing: with canvas.overscan, labels are placed as if the drawing went on beyond its edges. out is 30 px beyond the right edge; its label reaches into the canvas, where in's first position (right) would cover it.",
+  "problem": {
+    "canvas": {
+      "width": 160,
+      "height": 100,
+      "overscan": 40
+    },
+    "items": [
+      {
+        "id": "out",
+        "anchor": {
+          "type": "point",
+          "x": 190,
+          "y": 50
+        },
+        "label": {
+          "type": "text",
+          "text": "Outside"
+        },
+        "priority": 2,
+        "placement": {
+          "position_order": [
+            "left"
+          ]
+        }
+      },
+      {
+        "id": "in",
+        "anchor": {
+          "type": "point",
+          "x": 130,
+          "y": 50
+        },
+        "label": {
+          "type": "text",
+          "text": "Inside"
+        },
+        "priority": 1,
+        "placement": {
+          "position_order": [
+            "right",
+            "left"
+          ]
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 2,
+    "anchor_side": {
+      "out": "left",
+      "in": "left"
+    },
+    "model": {
+      "out": "adjacent",
+      "in": "adjacent"
+    }
+  }
+}

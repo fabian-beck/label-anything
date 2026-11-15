@@ -38,6 +38,9 @@ OPTION_PATHS: Dict[str, str] = {
     # canvas
     "canvas_padding": "canvas.padding",
     "allow_outside": "canvas.allow_outside",
+    "overscan": "canvas.overscan",
+    # warm start (the previous result itself: keyword warm_start)
+    "pin": "warm_start.pin",
     "device_pixel_ratio": "canvas.device_pixel_ratio",
     "region": "canvas.region",
     "canvas_background": "canvas.background",
@@ -542,6 +545,8 @@ class Problem:
         for k, path in OPTION_PATHS.items():
             if k in opts:
                 set_path(doc, path, _normalize(k, opts[k]))
+        if "pin" in opts:
+            doc["warm_start"].setdefault("placements", [])      # (nothing to pin without a warm start)
         if "priority" in opts:
             self.priority(opts["priority"])
         if "tiers" in opts:
@@ -806,9 +811,13 @@ class Problem:
         pr.setdefault("tiers", []).append({"where": where, "tier": int(tier)})
         return self
 
-    def warm_start(self, previous: Any) -> Problem:
-        """Stay close to a previous result (spec ``warm_start``)."""
+    def warm_start(self, previous: Any, *, pin: Optional[bool] = None) -> Problem:
+        """Stay close to a previous result (spec ``warm_start``). With ``pin``, every label
+        keeps its box exactly where the hard rules still allow it, whatever its priority, and
+        the solve only adds labels: for a view that only moved, as a map that was panned."""
         self._doc["warm_start"] = warm_start_dict(previous)
+        if pin is not None:
+            self._doc["warm_start"]["pin"] = bool(pin)
         return self
 
     # --- output -------------------------------------------------------------------

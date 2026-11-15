@@ -61,7 +61,7 @@ object. Lengths are a number (px) or a string with a unit (`"0.5em"`, `"3px"`, `
 
 | Builder | Problem field |
 |---|---|
-| `canvas(w, h)`, `canvasPadding`, `allowOutside`, `region`, `canvasBackground`, `devicePixelRatio`, `yAxisUp()`, `transform(a..f)`, `preset(Preset)` | `canvas`, `y_axis`, `transform`, `preset` |
+| `canvas(w, h)`, `canvasPadding`, `allowOutside`, `overscan`, `region`, `canvasBackground`, `devicePixelRatio`, `yAxisUp()`, `transform(a..f)`, `preset(Preset)` | `canvas`, `y_axis`, `transform`, `preset` |
 | `fontSize`, `font(Font.of("default").size(14).bold().lineHeight(1.3))`, `labelPadding`, `buffer`, `margin`, `spacing`, `defaultMark(Mark)`, `wrap(Wrap)`, `truncate(Truncate)`, `align(Label.Align)`, `textShaping` | `defaults`, `text.shaping` |
 | `item(id, x, y, label)`, `item(id, x, y, label, it -> it.mark(..).attr(..))`, `item(Item.point(..)...)`, `area(id, polygon, label)`, `items(...)` | `items` |
 | `backgroundRaster(Path or byte[], RasterMode)`, `backgroundPixels(w, h, ByteBuffer or byte[], mode)`, `backgroundSvg(String or Path)`, `background(Raster... or Svg...)`, `vector(VectorLayer)` | `obstacles` |
@@ -71,7 +71,7 @@ object. Lengths are a number (px) or a string with a unit (`"0.5em"`, `"3px"`, `
 | `priority(Priority)`, `tier(where, tier)`, `omission(Omission)`, `coverage(by, n)`, `ties`, `tiesRandom(seed)`, `band`, `maxLabels`, `maxInkFraction`, `focus`, `fontClasses(FontClass...)` | `priority` |
 | `timeBudgetMs`, `seed`, `strategy(Strategy)`, `maxIterations`, `gridCell` | `solver` |
 | `degrade(Degrade.ALTERNATIVES, Degrade.shrink(0.85), ...)`, `minScale`, `wrapMaxLines`, `softOverlapWeight` | `degrade`, `degrade_options` |
-| `weights(Weights.defaults().position(1))`, `warmStart(previousResult)` | `weights`, `warm_start` |
+| `weights(Weights.defaults().position(1))`, `warmStart(previousResult)`, `warmStart(previousResult, true)` (pinned) | `weights`, `warm_start`, `warm_start.pin` |
 | `debugSvg`, `costBreakdown`, `reportCandidates`, `itemShape` | `output` |
 | `option("placement.k_distant", 12)` | any field, by its dotted path |
 

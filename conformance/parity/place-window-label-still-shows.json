@@ -1,0 +1,126 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 160,
+      "height": 100,
+      "overscan": 40
+    },
+    "items": [
+      {
+        "id": "far",
+        "anchor": {
+          "type": "point",
+          "x": 215,
+          "y": 50
+        },
+        "label": {
+          "type": "text",
+          "text": "Far",
+          "width": 70,
+          "height": 14,
+          "padding": 0
+        }
+      }
+    ],
+    "warm_start": {
+      "pin": true,
+      "placements": [
+        {
+          "id": "far",
+          "placed": true,
+          "box": {
+            "x": 142,
+            "y": 43,
+            "w": 70,
+            "h": 14
+          }
+        }
+      ]
+    }
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "far",
+        "placed": true,
+        "box": {
+          "x": 142.0,
+          "y": 43.0,
+          "w": 70.0,
+          "h": 14.0
+        },
+        "anchor": [
+          215.0,
+          50.0
+        ],
+        "anchor_side": "left",
+        "model": "slider",
+        "text": {
+          "lines": [
+            "Far"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            11.200000000000001
+          ],
+          "line_widths": [
+            70.0
+          ],
+          "x_offset": 0.0,
+          "x_offsets": [
+            0.0
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.26875,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        },
+        "displacement": 0.0
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 1,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 24,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 0.26875,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 80,
+        "rows": 60,
+        "classes": []
+      },
+      "pinned": 1,
+      "flicker": {
+        "moved": 0,
+        "added": 0,
+        "removed": 0,
+        "mean_displacement": 0.0
+      }
+    },
+    "debug_svg": null
+  }
+}

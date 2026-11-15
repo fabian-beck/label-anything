@@ -1,0 +1,116 @@
+{
+  "kind": "place",
+  "name": "pin: a label keeps its box, wherever the cells of the region map lie under it now",
+  "$comment": "With warm_start.pin every label keeps its warm-start box, moved with its anchor, where the hard rules still allow it, whatever its priority; the solve only adds labels around the pinned ones. The strip of case regions-area-omitted, moved by 20 px with the view. Its name lay in the east, more than max_foreign of it; the regions class, which the cells of the region map decide, does not take the place of a pinned label. Without the pin the name is left out.",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 80
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "region": "west",
+          "rects": [
+            [
+              0,
+              0,
+              160,
+              80
+            ]
+          ]
+        },
+        {
+          "region": "east",
+          "rects": [
+            [
+              180,
+              0,
+              120,
+              80
+            ]
+          ]
+        },
+        {
+          "region": "each",
+          "rects": [
+            [
+              160,
+              0,
+              20,
+              80
+            ]
+          ]
+        }
+      ]
+    },
+    "items": [
+      {
+        "id": "s",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              160,
+              0
+            ],
+            [
+              180,
+              0
+            ],
+            [
+              180,
+              80
+            ],
+            [
+              160,
+              80
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Stripland"
+        }
+      }
+    ],
+    "warm_start": {
+      "pin": true,
+      "placements": [
+        {
+          "id": "s",
+          "placed": true,
+          "box": {
+            "x": 153,
+            "y": 32.2,
+            "w": 54.576,
+            "h": 15.6
+          },
+          "anchor": [
+            150,
+            40
+          ]
+        }
+      ]
+    }
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "anchor_side": {
+      "s": "right"
+    },
+    "box": {
+      "s": {
+        "x": 173,
+        "y": 32.2,
+        "w": 54.576,
+        "h": 15.6,
+        "tol": 0.001
+      }
+    }
+  }
+}

@@ -541,8 +541,13 @@ pub struct Model {
     pub label_area: Option<Rect>,
     /// Leaders must stay inside (the canvas); `None` = unbounded.
     pub leader_area: Option<Rect>,
-    /// Extent of the grid.
+    /// Extent of the grid: the canvas, grown by `canvas.overscan` in a window (spec §2.3).
     pub extent: Rect,
+    /// The canvas is a window on a larger drawing (`canvas.overscan`, spec §2.3).
+    pub window: bool,
+    /// In a window, the point items whose mark lies entirely beyond the working extent:
+    /// they are not labeled, their marks count (spec §2.3).
+    pub beyond: Vec<bool>,
     pub items: Vec<Item>,
     /// Vector obstacle primitives (problem vector layers and SVG geometry) with their
     /// class (names shared between primitives).
@@ -585,6 +590,9 @@ pub struct Model {
     pub default_em: f64,
     pub shaping: String,
     pub warm: BTreeMap<String, Option<Rect>>,
+    /// `warm_start.pin`: labels keep their warm-start boxes exactly where they still can
+    /// (spec §10.1).
+    pub warm_pin: bool,
     /// The leader of each warm-start box, moved with it, for the `angles`, `elbow` and
     /// `orthogonal` leader styles (the entry's `leader` of the same style; spec §6.7).
     pub warm_leaders: BTreeMap<String, Vec<P>>,
@@ -598,6 +606,25 @@ pub struct Model {
 }
 
 impl Model {
+    /// The area `priority.budget.max_ink_fraction` is a fraction of: the canvas, in a
+    /// window the working extent (spec §2.3); `None` without a canvas.
+    pub fn ink_area(&self) -> Option<f64> {
+        self.canvas.map(|_| self.extent.area())
+    }
+
+    /// Whether item `i` lies beyond the working extent of a window: it gets no label
+    /// (reason `outside`), its mark counts (spec §2.3).
+    #[inline]
+    pub fn is_beyond(&self, i: usize) -> bool {
+        self.beyond.get(i).copied().unwrap_or(false)
+    }
+
+    /// In a window, the working extent: where the labels of areas are looked for (spec
+    /// §6.5). `None`: everywhere in the area.
+    pub fn area_view(&self) -> Option<Rect> {
+        self.window.then_some(self.extent)
+    }
+
     /// Whether item `j` has a lower priority key than item `i` (spec §9.1): the
     /// `lower_items` policy applies to its mark for the labels and leaders of `i`.
     pub fn is_lower(&self, i: usize, j: usize) -> bool {
@@ -1351,9 +1378,16 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     }
 
     // --- extent ---
+    // a window (spec §2.3): the canvas shows part of a larger drawing, and the working
+    // extent reaches `canvas.overscan` beyond its edges
+    let overscan = match problem.get("canvas") {
+        Some(_) => Length::from_value(&o.get("canvas.overscan"))
+            .map(|l| crate::math::maxf(l.px(default_em), 0.0)),
+        None => None,
+    };
     let max_dist_global = o.length("placement.max_distance").px(default_em);
     let extent = match canvas {
-        Some(c) => c,
+        Some(c) => c.inflate(overscan.unwrap_or(0.0)),
         None => {
             let mut bb = Rect::EMPTY;
             for it in &items {
@@ -1383,14 +1417,22 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
             let v: Vec<f64> = r.iter().filter_map(|x| x.as_f64()).collect();
             (v.len() == 4).then(|| Rect::xywh(v[0], v[1], v[2], v[3]))
         });
+    // the canvas bounds the labels and the leaders, unless it is a window: then only a
+    // region bounds the labels (the drawing's own bounds)
+    let window = overscan.is_some();
     let label_area = match (canvas, allow_outside) {
+        (Some(_), false) if window => region.map(|r| r.inflate(-pad)),
         (Some(c), false) => {
             let base = region.unwrap_or(c);
             Some(base.inflate(-pad))
         }
         _ => None,
     };
-    let leader_area = if allow_outside { None } else { canvas };
+    let leader_area = if allow_outside || window {
+        None
+    } else {
+        canvas
+    };
 
     // --- priority options ---
     let omission = match o.string("priority.omission").as_str() {
@@ -1511,12 +1553,27 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         }
     }
 
+    // in a window, a point beyond the working extent is a mark only (spec §2.3), unless
+    // the label it comes with still shows: that one is not taken away
+    let beyond: Vec<bool> = items
+        .iter()
+        .map(|it| {
+            let shows = || match (warm.get(&it.id), canvas) {
+                (Some(Some(b)), Some(c)) => c.touches(b),
+                _ => false,
+            };
+            overscan.is_some() && it.area.is_none() && !extent.touches(&it.shape.bbox()) && !shows()
+        })
+        .collect();
+
     let grid_cell = o.get("solver.grid_cell").as_f64();
 
     Ok(Model {
         canvas,
         label_area,
         leader_area,
+        window,
+        beyond,
         extent,
         items,
         vector,
@@ -1558,6 +1615,9 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         default_em,
         shaping: o.string("text.shaping"),
         warm,
+        warm_pin: lookup(problem, "warm_start.pin")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false),
         warm_leaders,
         warm_rotation,
         warnings,

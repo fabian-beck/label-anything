@@ -13,7 +13,7 @@ problem, solves it, and draws or applies the result:
 | `@label-anything/extras/d3` | d3 | `labelSelection(selection, text, options)` labels the selected SVG elements; the rest of the `<svg>` is the obstacle background |
 | `@label-anything/extras/plot` | Observable Plot | `labelAnything(data, options)`: a text mark whose labels avoid each other and the marks drawn before it |
 | `@label-anything/extras/vega` | Vega | `registerVegaTransform(vega)` adds a `labelAnything` transform (a drop-in for Vega's `label`) |
-| `@label-anything/extras/leaflet` | Leaflet | `labelLayer(L, data, options)`: a layer re-solved after every move, warm-started from the previous result |
+| `@label-anything/extras/leaflet` | Leaflet | `labelLayer(L, data, options)`: a layer re-solved after every move, warm-started from the previous result, its labels cut at the map's edge |
 | `@label-anything/extras/maplibre` | MapLibre GL / Mapbox GL | `labelMapLibre(map, data, options)`: an SVG overlay that follows the map and avoids rendered features of chosen layers |
 | `@label-anything/extras/cytoscape` | Cytoscape.js | `labelCytoscape(cy, options)` positions Cytoscape's own node labels |
 | `@label-anything/extras/sigma` | sigma.js v2/v3 | `labelSigma(renderer, options)` replaces sigma's label renderer |
@@ -93,6 +93,32 @@ Interactive helpers keep the previous result and pass it, moved with the anchors
 `warm_start`: labels keep their side while you pan or zoom and only move when they must.
 Use stable `id`s and the same `priority` across updates so that label sets nest when
 zooming (labels are only added or removed in priority order).
+
+The Leaflet, MapLibre and sigma.js helpers treat the view as a window on a larger drawing
+(`canvas.overscan`): points up to `overscan` px beyond the view are labeled as well, and a
+label at the border keeps its place while the view moves and is cut there, instead of
+changing sides to stay inside
+([ADR motion/windows](https://github.com/fabian-beck/label-anything/blob/main/docs/adr/motion/windows.md)).
+
+| Option | Default | |
+|---|---|---|
+| `overscan` | 8 × the font size (96 px at 12 px) | px beyond the view that are labeled as well, about a label's width; `false`: only what is in view is labeled, every label inside the view |
+| `pin` | `true` | while the view is only panned, every label keeps its place on the map exactly, and labels are only added where the view has moved on (`warm_start.pin`); `false`: warm starts alone, which keep most labels |
+
+**No label moves while the view is panned.** The helpers compare the view with that of
+the labels shown: the zoom for Leaflet, also bearing and pitch for MapLibre, the camera's
+ratio and angle and the graph for sigma. When only the position changed, the solve is
+pinned; after a zoom the labels are placed anew, warm-started. For labels in the overscan
+to keep off the marks that come in next, the helpers also pass the points up to three
+times the overscan beyond the view, which get no label there (reason `outside`). A pin
+gives way to nothing: a more important point that comes in next to a pinned label waits
+for its label until the next zoom
+([ADR motion/pinned-labels](https://github.com/fabian-beck/label-anything/blob/main/docs/adr/motion/pinned-labels.md)).
+
+For an overlay of your own, `resolveOverscan`, `marksMargin` and `inView` give the same
+margins. `Overlay` takes `overscan`, and pins when `viewKey()` returns what it returned
+for the labels shown: a number or string for everything but the position (the zoom, a
+rotation), compared with `===`.
 
 ## Smooth transitions
 

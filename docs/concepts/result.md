@@ -117,6 +117,7 @@ the `box` is optional; a halo or a background behind the text usually looks bett
 | `total_cost` | the sum of the placed labels' costs |
 | `degraded` | placed labels per degradation kind (`wrapped`, `alternative`, `truncated`, `shrunk`, `soft_overlap`, `distant`, `boundary`) |
 | `flicker` | with `warm_start`: labels `moved`, `added`, `removed`, `mean_displacement` |
+| `pinned` | with `warm_start.pin`: the labels that kept their box as [pinned labels](../tutorials/interactive-maps.md#a-pan-moves-no-label) |
 | `grid` | the coverage grid: `cell` size, `cols`, `rows`, the obstacle `classes` that occur |
 | `implementation` | engine and version: `rust/0.1.0` (native), `wasm/0.1.0` (the Rust core as WebAssembly), `ts/0.1.0` |
 

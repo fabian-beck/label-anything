@@ -231,7 +231,7 @@ def evaluate(problem: dict, result: dict, truth: dict | None = None, *, tol: flo
     hard_classes = sorted(c for c in classes if c not in RESERVED and spec.is_hard(a_label, c))
     leader_hard_classes = sorted(c for c in classes if c not in RESERVED and spec.is_hard(a_leader, c))
     area = prob.label_area()
-    canvas = prob.canvas_box()
+    canvas = prob.leader_area()
 
     # -- label vs label
     overlap_pairs = []

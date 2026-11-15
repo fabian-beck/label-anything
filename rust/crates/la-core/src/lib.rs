@@ -181,10 +181,15 @@ pub fn place_validated(
     let t3 = env.now_ms();
     use model::opts::Strategy;
     let mut strategy = "greedy";
-    if matches!(
-        m.solver.strategy,
-        Strategy::Local | Strategy::Auto | Strategy::Exact
-    ) && m.items.len() > 1
+    // pinned labels (spec §10.1): the solve only adds labels around them, in the greedy
+    // pass; what follows it would move labels
+    let pinned = s.pinned.iter().any(|&p| p);
+    if !pinned
+        && matches!(
+            m.solver.strategy,
+            Strategy::Local | Strategy::Auto | Strategy::Exact
+        )
+        && m.items.len() > 1
     {
         let budget = m.solver.time_budget_ms;
         let iters = (m.solver.max_iterations as f64)
@@ -213,11 +218,13 @@ pub fn place_validated(
             strategy = "exact";
         }
     }
-    solver::fan::fan_pass(&mut s);
-    solver::repair::boundary_pass(&mut s);
-    solver::repair::boundary_fill(&mut s);
-    solver::repair::uncross(&mut s);
-    solver::repair::priority_repair(&mut s);
+    if !pinned {
+        solver::fan::fan_pass(&mut s);
+        solver::repair::boundary_pass(&mut s);
+        solver::repair::boundary_fill(&mut s);
+        solver::repair::uncross(&mut s);
+        solver::repair::priority_repair(&mut s);
+    }
     let t4 = env.now_ms();
     let ver = solver::verify::verify(&mut s);
     let t5 = env.now_ms();

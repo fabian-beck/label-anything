@@ -124,7 +124,8 @@ problem format for any chart, map or diagram, any label with a size and every la
 
 Hundreds of labels take milliseconds, thousands a few hundred milliseconds. When things
 move — a dragged node, a panned map — each solve starts from the previous result, so
-labels stay put ([interactive maps](tutorials/interactive-maps.md)).
+labels stay put, and a label at the border of a view is cut there instead of being pushed
+inside ([interactive maps](tutorials/interactive-maps.md)).
 
 ## Gallery
 

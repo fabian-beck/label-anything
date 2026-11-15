@@ -1,0 +1,78 @@
+{
+  "kind": "place",
+  "name": "pin: a label keeps its box, moved with its anchor, and a newcomer takes a place beside it",
+  "$comment": "With warm_start.pin every label keeps its warm-start box, moved with its anchor, where the hard rules still allow it, whatever its priority; the solve only adds labels around the pinned ones. The view moved by (40, 10) since a was labeled above its point; b is new.",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 120
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 140,
+          "y": 70
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        },
+        "priority": 1
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 164,
+          "y": 54
+        },
+        "label": {
+          "type": "text",
+          "text": "Beta"
+        },
+        "priority": 2
+      }
+    ],
+    "warm_start": {
+      "pin": true,
+      "placements": [
+        {
+          "id": "a",
+          "placed": true,
+          "box": {
+            "x": 82.054,
+            "y": 41.4,
+            "w": 35.892,
+            "h": 15.6
+          },
+          "anchor": [
+            100,
+            60
+          ]
+        }
+      ]
+    }
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 2,
+    "anchor_side": {
+      "a": "top",
+      "b": "right"
+    },
+    "box": {
+      "a": {
+        "x": 122.054,
+        "y": 51.4,
+        "w": 35.892,
+        "h": 15.6,
+        "tol": 0.001
+      }
+    }
+  }
+}
