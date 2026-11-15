@@ -22,7 +22,7 @@ JavaScript objects.
 | [`solver`](solver.md) | strategy, time budget, seed, grid cell |
 | [`degrade`, `degrade_options`](candidates.md#the-degradation-ladder) | the degradation ladder |
 | [`weights`](candidates.md#costs) | weights of the cost terms |
-| [`warm_start`](../tutorials/interactive-maps.md) | a previous result to stay close to; with `pin: true` its labels keep their boxes exactly ([a pan moves no label](../tutorials/interactive-maps.md#a-pan-moves-no-label)) |
+| [`warm_start`](../tutorials/interactive-maps.md) | a previous result to stay close to; with `pin: true` its labels keep their boxes exactly, with `pin: "yield"` unless a more important label needs the place ([a pan moves no label](../tutorials/interactive-maps.md#a-pan-moves-no-label)) |
 | [`output`](#output) | extras in the result: debug SVG, cost breakdown, candidates, item shapes |
 
 ## Lengths

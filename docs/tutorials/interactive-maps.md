@@ -1,11 +1,13 @@
 # Interactive maps and stability
 
 A map is labeled again after every pan and zoom. Besides a good layout in each frame,
-three things matter. While the map is only **panned**, no label should move at all: the
-map is the same, only another part of it shows. A label at the **border** of the view
-should stay where it is and be cut there, not be pushed inside as its point comes to the
-edge: whoever wants to read it pans a little. And zooming in should keep the labels
-already shown: the set of labels should **nest**, growing as space appears.
+four things matter. While the map is only **panned**, no label should move at all: the
+map is the same, only another part of it shows. When it is **zoomed**, a label should
+stay beside its point, and labels should come and go as room does. A label at the
+**border** of the view should stay where it is and be cut there, not be pushed inside as
+its point comes to the edge: whoever wants to read it pans a little. And zooming in
+should keep the labels already shown: the set of labels should **nest**, growing as
+space appears.
 
 ## Warm starts
 
@@ -37,9 +39,14 @@ a **window** on a larger drawing ([ADR motion/windows](../adr/motion/windows.md)
 A warm start prefers the previous places; `warm_start.pin` keeps them
 ([ADR motion/pinned-labels](../adr/motion/pinned-labels.md)). Every label that is still
 allowed where it is stays there exactly, whatever its priority, and the solve only adds
-labels around them, where the view has moved on. Pin when the view was only panned since
-the previous result, not after a zoom: then the labels have to be placed anew, and the
-warm start alone keeps them close.
+labels around them, where the view has moved on. Pin with `pin: true` when the view was
+only panned since the previous result.
+
+After a zoom the labels move with their items, so most can stay too; but the distances
+between them have changed. `pin: "yield"` keeps every label whose place is still good,
+and lets it give way to a more important one that needs the place. A label on a leader
+was put aside for lack of room, which a zoom changes: mark it `pin: false` in the warm
+start, and it is free to take a better place.
 
 A camera over the 40 cities of the [priority tutorial](priority.md) pans, zooms in twice,
 pans and zooms in again:
@@ -51,22 +58,20 @@ pans and zooms in again:
 ```text
 zoom 1.0: <Result placed=34/40 hard_violations=0 omitted=6> None
 zoom 1.0: <Result placed=34/40 hard_violations=0 omitted=6> {'moved': 0, 'added': 0, 'removed': 0, 'mean_displacement': 0.0}
-zoom 1.3: <Result placed=39/40 hard_violations=0 omitted=1> {'moved': 10, 'added': 5, 'removed': 0, 'mean_displacement': 6.1}
-zoom 1.7: <Result placed=40/40 hard_violations=0 omitted=0> {'moved': 1, 'added': 1, 'removed': 0, 'mean_displacement': 1.7}
+zoom 1.3: <Result placed=37/40 hard_violations=0 omitted=3> {'moved': 0, 'added': 3, 'removed': 0, 'mean_displacement': 0.0}
+zoom 1.7: <Result placed=40/40 hard_violations=0 omitted=0> {'moved': 1, 'added': 3, 'removed': 0, 'mean_displacement': 1.0}
 zoom 1.7: <Result placed=40/40 hard_violations=0 omitted=0> {'moved': 0, 'added': 0, 'removed': 0, 'mean_displacement': 0.0}
-zoom 2.2: <Result placed=38/40 hard_violations=0 omitted=2> {'moved': 1, 'added': 0, 'removed': 2, 'mean_displacement': 0.6}
+zoom 2.2: <Result placed=38/40 hard_violations=0 omitted=2> {'moved': 1, 'added': 0, 'removed': 2, 'mean_displacement': 0.0}
 ```
 
 `stats.flicker` counts the labels moved, added and removed since the previous frame; each
 placement reports its `displacement`. The counts include the labels in the overscan and
 the cities that are marks only (the two without a label at zoom 2.2 have left the
-overscan). The two frames after a pan are pinned: nothing moved. Over the zooms, measured
-by how much each label's offset from its point changes, labels move 1.6 px per frame with
-warm starts and 8.6 px without. Those moves come from labels whose place a newly shown
-label takes, or that find a better place as space opens: here mostly at the first zoom
-step, where five more labels fit, as 40 cities at 14 px leave little room once labels keep
-their margin from other cities and twice that from each other. A smaller margin
-(`defaults.margin`) trades spacing for steadier labels.
+overscan). The two frames after a pan are pinned: nothing moved. The three after a zoom
+are pinned with `"yield"`: two labels move in all, each for a more important one, and
+labels come as space opens. Measured by how much each label's offset from its point
+changes, labels move 0.2 px per frame so, and 8.6 px placed from scratch; with warm
+starts alone, without a pin, ten labels moved at the first zoom step.
 
 On a pan in steps of 6 px, the same cities pinned, warm-started in a window, and with
 every label kept inside the view:
@@ -87,9 +92,10 @@ does on this small map; on a dense one the warm start alone still moves labels, 
 pin does not ([ADR motion/pinned-labels](../adr/motion/pinned-labels.md) has the
 numbers).
 
-A pin has a price. An item that is more important than a pinned label in its way waits
-without a label until the next solve without the pin (`stats.priority_inversions` counts
-them), and what a pan adds is placed by the greedy pass alone. And it holds only what the
+A pin has a price. With `pin: true`, an item that is more important than a pinned label
+in its way waits without a label until the next solve without it
+(`stats.priority_inversions` counts them); what a pinned solve adds is placed by the
+greedy pass alone; and the layout depends on the way the view came. And it holds only what the
 problem holds still: give every label its size yourself rather than through
 `priority.font_classes`, which ranks the items of each problem, and pass the same
 unrounded outlines in every view.
@@ -163,7 +169,8 @@ points in view and a little beyond it in container pixels, solves, and draws the
 an SVG pane, again after each move. The map is a window as above: `overscan` is how far
 beyond its edge points are labeled as well, in px (default: 8 times the font size, 96 px at
 12 px; `false` keeps every label inside the map, as on a canvas). After a pan the labels
-are pinned, after a zoom placed anew (`pin: false`: warm starts alone).
+are pinned; after a zoom those beside their points are too, giving way to more important
+ones (`pin: false`: warm starts alone).
 
 ```js
 --8<-- "examples/tutorials/js/browser/leaflet.mjs:leaflet"
@@ -176,8 +183,9 @@ labels avoid the whole pin. Pass the geometry of other layers as `obstacles`.
 
 `labelMapLibre` draws labels in an SVG overlay that follows the map while it moves and
 solves again on `moveend`; the map is a window, with the same `overscan` and `pin` options
-as the Leaflet layer (a pan is a move with the same zoom, bearing and pitch). `avoidLayers` turns the rendered
-features of style layers into obstacle classes named after the layers.
+as the Leaflet layer (a pan is a move with the same zoom, bearing and pitch; any other
+move counts as a zoom). `avoidLayers` turns the rendered features of style layers into
+obstacle classes named after the layers.
 
 ```js
 --8<-- "examples/tutorials/js/browser/maplibre.mjs:maplibre"

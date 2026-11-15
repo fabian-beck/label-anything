@@ -136,7 +136,7 @@ CI runs):
 | Candidates | models adjacent + slider + distant up to 4 em (preset `auto`: distant only when crowded) · perceptual position order (top first) · fan labels for crowds left without labels |
 | Leaders | straight, crossings hard, 0.4 em clear of other marks and leaders |
 | Label vs. | labels, items, text, canvas edge: **hard** · ink 0.1 per em² · across a light–dark border of a raster background 0.5 per em² · across a region border or in another region 0.5 per em², an area's or a leader's label at most ¼ in other regions |
-| Views that pan and zoom | `canvas.overscan` makes the canvas a window on a larger drawing: labels cross its edges and are cut there, so they keep their place at the border (off by default; the Leaflet, MapLibre and sigma helpers use 8 em) · `warm_start.pin` keeps every label where it is, for a view that was only panned (off by default; the helpers pin after a pan) |
+| Views that pan and zoom | `canvas.overscan` makes the canvas a window on a larger drawing: labels cross its edges and are cut there, so they keep their place at the border (off by default; the Leaflet, MapLibre and sigma helpers use 8 em) · `warm_start.pin` keeps every label where it is, for a view that was only panned; `"yield"`, for one that was zoomed, lets a label give way to a more important one (off by default; the helpers pin after a pan and a zoom) |
 | Leader vs. | labels, items, leaders **hard** |
 | Solver | time budget 100 ms (Rust) / 250 ms (TS) · seed 0 · deterministic |
 | Degradation | alternatives → wrap → distant → evict_lower → omit (`high`: … → shrink 0.85 → soft_overlap → omit) |

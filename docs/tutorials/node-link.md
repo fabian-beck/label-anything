@@ -52,7 +52,8 @@ camera move (debounced), starting from the previous result. The viewport is a
 [window](interactive-maps.md#the-view-is-a-window) on the graph: nodes up to `overscan`
 px beyond it are labeled as well (default: 8 times the font size; `false`: every label
 inside the viewport), and a label at its edge is cut there. While the camera only pans
-over the same graph, the labels are pinned: none moves (`pin: false`: warm starts alone). Between solves, labels follow
+over the same graph, the labels are pinned: none moves. After a zoom those beside their
+nodes stay there (`pin: false`: warm starts alone). Between solves, labels follow
 their nodes; after one, they move and fade calmly
 ([smooth transitions](interactive-maps.md#smooth-transitions)).
 

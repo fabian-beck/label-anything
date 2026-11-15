@@ -55,9 +55,10 @@ The first release, 0.1.0. Nothing is published to a package registry yet.
 - Pinned labels for a view that is only panned: with `warm_start.pin` every label keeps
   its box exactly where the hard rules still allow it, whatever its priority, and the
   solve only adds labels around them (`stats.pinned`). No label moves while a map is
-  panned; after a zoom, solve without the pin. A turned label is pinned with its
-  rotation, and the region map, a raster that shifts with the view, does not unpin a
-  label.
+  panned. A turned label is pinned with its rotation, and the region map, a raster that
+  shifts with the view, does not unpin a label. For a view that was zoomed,
+  `pin: "yield"` keeps the labels likewise but lets one give way to a more important
+  label, and `pin: false` on a warm-start placement leaves that label free.
 - A deterministic solver (greedy pass, local search, exact search for small problems)
   with a time budget that does not depend on the machine's speed.
 - Text measurement with a bundled Noto Sans subset, with the host's fonts, or through a
@@ -76,8 +77,8 @@ The first release, 0.1.0. Nothing is published to a package registry yet.
   `@label-anything/cli`, and `@label-anything/extras` for d3, Observable Plot, Vega,
   Leaflet, MapLibre, Cytoscape, sigma and Web Workers. The Leaflet, MapLibre and sigma
   helpers treat the view as a window (option `overscan`, 8 times the font size by
-  default; `false` keeps every label inside the view) and pin the labels while it is
-  only panned (option `pin`).
+  default; `false` keeps every label inside the view) and pin the labels (option `pin`):
+  while the view is panned none moves, after a zoom those beside their points stay.
 - Java ≥ 17: `io.github.fabian-beck:label-anything`, through FFM on Java 22+ and JNI
   before.
 - C ABI: `liblabelanything` with `label_anything.h`, with examples in C and Go.

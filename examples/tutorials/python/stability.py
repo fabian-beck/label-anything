@@ -1,6 +1,7 @@
 """Interactive maps and stability (docs/tutorials/interactive-maps.md): re-label a map
 after every pan and zoom from the previous frame, as a window on the map whose labels are
-cut at the border of the view. A pan pins the labels: none moves."""
+cut at the border of the view. A pan pins the labels: none moves. After a zoom they keep
+their places beside their points, and give way only to more important ones."""
 
 import json
 import math
@@ -42,8 +43,9 @@ frames, prev, zoomed = [], None, None
 for zoom, cx, cy in camera:
     pos = view(zoom, cx, cy)
     # the previous result: its boxes move with their points. After a pan (the same zoom)
-    # they are pinned: no label moves, the solve only adds labels
-    res = label(pos, zoom, cx, cy, prev, pin=zoom == zoomed)
+    # they are pinned: no label moves, the solve only adds labels. After a zoom they are
+    # pinned too, but give way to more important labels: "yield"
+    res = label(pos, zoom, cx, cy, prev, pin=True if zoom == zoomed else "yield")
     flicker = res.stats.get("flicker")   # labels moved, added, removed since the previous frame
     print(f"zoom {zoom}: {res}", flicker and {k: round(v, 1) for k, v in flicker.items()})
     frames.append((pos, res))
@@ -128,9 +130,10 @@ assert warm_move < cold_move, (warm_move, cold_move)
 assert all(r.stats["hard_violations"] == 0 for _, r in frames)
 assert all("flicker" in r.stats for _, r in frames[1:])
 assert nested >= len(frames) - 3, nested
-# the frames after a pan are pinned: no label moved
-assert [r.stats.get("pinned") is not None for _, r in frames] == [False, True, False, False, True, False]
+# every frame but the first is pinned; after a pan no label moved, after a zoom few
+assert [r.stats.get("pinned") is not None for _, r in frames] == [False, True, True, True, True, True]
 assert all(r.stats["flicker"]["moved"] == 0 for _, r in (frames[1], frames[4]))
+assert sum(r.stats["flicker"]["moved"] for _, r in frames[1:]) <= 3
 # while the view only pans, no label moves and none goes; kept inside the view, some do
 assert pinned[:2] == (0, 0) and pinned[2] > 50, pinned
 assert sum(inside[:2]) > sum(window[:2]) >= 0, (window, inside)
