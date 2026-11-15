@@ -299,9 +299,9 @@ et al. (2005) and the multi-criteria models of Rylov & Reimer (2014, 2015) add c
 cost model lacks, such as contrast against a raster basemap and its layer hierarchy (Rylov
 & Reimer 2015).
 
-**Q2 — Weights backed by studies.** The perceptual position order rests on a study (Bobák et
-al.; the project cites it as CVM 2026; the searches found the preprint arXiv:2407.11996 but
-no CVM record). Participants of Scheuerman et al. (2023) preferred labels aligned with
+**Q2 — Weights backed by studies.** The perceptual position order is inspired by a study (Bobák et
+al. 2026, accepted in CVM; arXiv:2407.11996) but is not its measured order: the engine
+puts right before bottom and left before the diagonals. Participants of Scheuerman et al. (2023) preferred labels aligned with
 their point over labels close to it, which suggests an alignment term. No study was found
 that measures to which point a reader assigns a label, so the `ambiguity` term has no
 perceptual calibration; a pairwise-comparison study like that of Bobák et al. (2024) could
@@ -314,29 +314,31 @@ as in the bibliography.
 
 | Building block | Code | Source | Status | Matches? |
 |---|---|---|---|---|
-| summed-area tables | `grid/mod.rs`, `grid/occupancy.rs`, [ADR obstacles/coverage-grids](../../adr/obstacles/coverage-grids.md) | Crow 1984 | VERIFIED-SEARCH | yes; [ADR obstacles/coverage-grids](../../adr/obstacles/coverage-grids.md) does not cite it |
-| exact Euclidean distance transform | `grid/dt.rs` | Felzenszwalb & Huttenlocher 2012; Meijster et al. 2000 | VERIFIED-SEARCH; PARTIAL | a hybrid: Meijster's column pass, Felzenszwalb–Huttenlocher's row pass; spec §4.7 cites only the latter |
+| summed-area tables | `grid/mod.rs`, `grid/occupancy.rs`, [ADR obstacles/coverage-grids](../../adr/obstacles/coverage-grids.md) | Crow 1984 | VERIFIED-SEARCH | yes; cited in [ADR obstacles/coverage-grids](../../adr/obstacles/coverage-grids.md) |
+| exact Euclidean distance transform | `grid/dt.rs` | Felzenszwalb & Huttenlocher 2012; Meijster et al. 2000 | VERIFIED-SEARCH; VERIFIED-REGISTRY | a hybrid: Meijster's column pass, Felzenszwalb–Huttenlocher's row pass; spec §4.7 cites only the latter |
 | pole of inaccessibility | `geom/polygon.rs:205` | Garcia-Castellanos & Lombardo 2007; Agafonkin 2016 (polylabel) | VERIFIED-SEARCH | follows polylabel, with iteration caps and deterministic ties; largest inscribed circle, not box (S3) |
-| PCG32 | `la-expr/src/det_math/pcg.rs` | O'Neill 2014 | VERIFIED-SEARCH | PCG-XSH-RR 64/32; `next_below` is Lemire's (2019) multiply-shift without its rejection step, so slightly biased (at most n/2³²), undocumented |
-| simulated annealing | `solver/local.rs` | Metropolis et al. 1953; Kirkpatrick et al. 1983; Christensen et al. 1995; Johnson et al. 1989 | VERIFIED-SEARCH | yes; T₀ is the median of the *positive* probe deltas, the spec (§10.2) says "median \|Δ\|" |
-| ejection chains | `solver/local.rs:354-544` | Glover 1996 | UNVERIFIED | depth ≤ 3 as in the spec; first feasible chain, not the best |
-| most-constrained item first | `solver/greedy.rs` | Brélaz 1979; Haralick & Elliott 1980 | UNVERIFIED | fewest live level-0 candidates, without regard to their cost |
+| PCG32 | `la-expr/src/det_math/pcg.rs` | O'Neill 2014 | VERIFIED-SEARCH | PCG-XSH-RR 64/32; `next_below` is Lemire's (2019, VERIFIED-REGISTRY) multiply-shift without its rejection step, so slightly biased (at most n/2³²), undocumented |
+| simulated annealing | `solver/local.rs` | Metropolis et al. 1953; Kirkpatrick et al. 1983; Christensen et al. 1995; Johnson et al. 1989 | VERIFIED-SEARCH | yes; T₀ is the median of the *positive* probe deltas, as spec §10.2 now says |
+| ejection chains | `solver/local.rs:354-544` | Glover 1996 | VERIFIED-REGISTRY | depth ≤ 3 as in the spec; first feasible chain, not the best |
+| most-constrained item first | `solver/greedy.rs` | Brélaz 1979; Haralick & Elliott 1980 | VERIFIED-REGISTRY | fewest live level-0 candidates, without regard to their cost |
 | lookahead | `solver/greedy.rs:541`, spec §8 | no label-placement source found; value ordering in constraint satisfaction (Geelen 1992; Frost & Dechter 1995) | UNVERIFIED | ignores what the neighbours' killed candidates cost |
-| branch and bound | `solver/exact.rs` | Verweij & Aardal 1999; Klau & Mutzel 2003 | UNVERIFIED; VERIFIED-SEARCH | same conflict-graph model, much weaker bound (O3) |
+| branch and bound | `solver/exact.rs` | Verweij & Aardal 1999; Klau & Mutzel 2003 | VERIFIED-REGISTRY; VERIFIED-SEARCH | same conflict-graph model, much weaker bound (O3) |
 | leader uncrossing by exchange | `solver/repair.rs:507` | the exchange argument of boundary labeling (Bekos et al. 2007) | UNVERIFIED for the argument | yes; runs only when leaders are soft |
-| column stacking, slot assignment | `solver/repair.rs:13-121` | pool adjacent violators (Ayer et al. 1955); Hungarian method (Kuhn 1955; Munkres 1957) | UNVERIFIED | yes |
-| balanced wrapping | `la-text/src/wrap.rs:276` | contrast: Knuth & Plass 1981 | UNVERIFIED | smallest maximum line width by search with greedy fitting, optimal for the box; lines come out top-heavy |
-| curve flattening, grid traversal | `la-svg/src/flatten.rs`, `grid/raster.rs` | Wang 1984 via Filip et al. 1986; Amanatides & Woo 1987 | UNVERIFIED | yes |
+| column stacking, slot assignment | `solver/repair.rs:13-121` | pool adjacent violators (Ayer et al. 1955); Hungarian method (Kuhn 1955; Munkres 1957) | VERIFIED-REGISTRY | yes |
+| balanced wrapping | `la-text/src/wrap.rs:276` | contrast: Knuth & Plass 1981 | VERIFIED-REGISTRY | smallest maximum line width by search with greedy fitting, optimal for the box; lines come out top-heavy |
+| curve flattening, grid traversal | `la-svg/src/flatten.rs`, `grid/raster.rs` | Wang 1984 via Filip et al. 1986; Amanatides & Woo 1987 | VERIFIED-REGISTRY; UNVERIFIED | yes |
 | slider model | `candidates.rs` | van Kreveld et al. 1999 | VERIFIED-SEARCH | sampled (4 per quadrant), not continuous (O5) |
 | buffer ring | `cost.rs` | Mumtaz et al. 2019 (cited) | not checked | — |
-| position orders | `model/opts.rs` | perceptual: Bobák et al. (cited); cartographic: Imhof 1975 | PARTIAL | the exact cartographic order could not be traced to Imhof's text |
+| position orders | `model/opts.rs` | perceptual: inspired by Bobák et al. 2026; cartographic: Yoeli 1972 | PARTIAL; VERIFIED-REGISTRY | the cartographic order is Yoeli's second model ("YoeliB" in Table 1 of Bobák et al.) exactly; Imhof's (1975) five positions are top-right, right, top, bottom, left. The perceptual order is the engine's own: Bobák et al. measured top, bottom, right, top-right, bottom-right, left, top-left, bottom-left (PerceptPPO) |
 | ambiguity term | `cost.rs`, spec §8 | criteria in van Dijk et al. 2002, Rylov & Reimer 2014 | not compared | a linear ramp on the difference of distances |
 
-Small fixes this suggests: cite the sources in [ADR obstacles/coverage-grids](../../adr/obstacles/coverage-grids.md), `dt.rs`, `polygon.rs`, `pcg.rs`,
+Small fixes this suggests: cite the sources in `dt.rs`, `polygon.rs`, `pcg.rs`,
 `local.rs` and `flatten.rs`; correct spec §4.7 (no early rejection by the distance
-transform) and §10.2 (positive deltas); document the bias of `next_below` (removing it
-changes every seeded result, so it needs a version note); add arXiv:2407.11996 to the
-Bobák et al. entry of `CITATION.cff` once the CVM record is confirmed.
+transform); document the bias of `next_below` (removing it changes every seeded result, so
+it needs a version note); add the DOI of the Bobák et al. entry of `CITATION.cff` once
+CrossRef has the CVM record. Done (2026-11-15): [ADR obstacles/coverage-grids](../../adr/obstacles/coverage-grids.md)
+cites Crow 1984; spec §10.2 states the positive deltas; `CITATION.cff` lists Bobák et al.
+as a CVM article with arXiv:2407.11996, and the position orders are attributed as above.
 
 ## Suggested order
 
@@ -363,8 +365,10 @@ Bobák et al. entry of `CITATION.cff` once the CVM record is confirmed.
 * **Verification levels.** VERIFIED-SEARCH: authors, venue, volume, pages and DOI appeared
   in search results citing a publisher, DBLP, repository or indexing record (not opened).
   PARTIAL: some fields only from a citing paper, or missing. UNVERIFIED: from memory, not
-  checked; DOIs of such entries are marked "(memory)". Where two searches reached
-  different levels, the higher one is given.
+  checked; DOIs of such entries are marked "(memory)". VERIFIED-REGISTRY: DOI, title
+  and the listed fields resolved against CrossRef or DataCite on 2026-11-15, in a later
+  check of the documentation. Where two checks reached different levels, the higher one
+  is given.
 * **Limits.** The searches shared a budget of 200 web searches, which ran out; the open
   items are listed at the end of each notes file. Statements a notes file marks as
   interpretation or memory are not from the source.
@@ -391,30 +395,30 @@ read, open questions). "–" = no DOI found.
 |---|---|---|---|
 | Agarwal, van Kreveld, Suri (1998). Label placement by maximum independent set in rectangles. *Comput. Geom.* 11(3–4):209–218 | 10.1016/S0925-7721(98)00028-5 | VERIFIED-SEARCH (DOI from citing papers) | a |
 | Alvim, Taillard (2009). POPMUSIC for the point feature label placement problem. *EJOR* 192(2):396–413 | 10.1016/j.ejor.2007.10.002 | VERIFIED-SEARCH | a |
-| Andrade, Resende, Werneck (2012). Fast local search for the maximum independent set problem. *J. Heuristics* 18(4):525–547 | DOI not confirmed | VERIFIED-SEARCH (venue, volume, pages) | this page |
+| Andrade, Resende, Werneck (2012). Fast local search for the maximum independent set problem. *J. Heuristics* 18(4):525–547 | 10.1007/s10732-012-9196-4 | VERIFIED-REGISTRY | this page |
 | Bhore, Li, Nöllenburg (2022). An algorithmic study of fully dynamic independent sets for map labeling. *ACM JEA* 27:1–36; ESA 2020 | 10.1145/3514240; 10.4230/LIPIcs.ESA.2020.19 | VERIFIED-SEARCH | a, b |
 | Borowitz, Großmann, Schulz (2025). Optimal neighborhood exploration for dynamic independent sets. ALENEX 2025; arXiv:2407.06912 | 10.1137/1.9781611978339.1 | VERIFIED-SEARCH | this page |
 | Christensen, Marks, Shieber (1995). An empirical study of algorithms for point-feature label placement. *ACM TOG* 14(3):203–232 | 10.1145/212332.212334 | VERIFIED-SEARCH | a, d, e |
-| Dahlum, Lamm, Sanders, Schulz, Strash, Werneck (2016). Accelerating local search for the maximum independent set problem. SEA 2016, LNCS 9685:118–133; arXiv:1602.01659 | DOI not confirmed | VERIFIED-SEARCH (arXiv listing, pages from a citing record) | this page |
-| Formann, Wagner (1991). A packing problem with applications to lettering of maps. SoCG '91, 281–288 | 10.1145/109648.109680 | PARTIAL (DOI not tied to an ACM page) | a |
+| Dahlum, Lamm, Sanders, Schulz, Strash, Werneck (2016). Accelerating local search for the maximum independent set problem. SEA 2016, LNCS 9685:118–133; arXiv:1602.01659 | 10.1007/978-3-319-38851-9_9 | VERIFIED-REGISTRY | this page |
+| Formann, Wagner (1991). A packing problem with applications to lettering of maps. SoCG '91, 281–288 | 10.1145/109648.109680 | VERIFIED-REGISTRY | a |
 | Großmann, Lamm, Schulz, Strash (2024). Finding near-optimal weight independent sets at scale. *JGAA* 28(1):439–473 | 10.7155/jgaa.v28i1.2997 | VERIFIED-SEARCH | this page |
 | Guerine, Rosseti, Plastino (2020). A hybrid data mining heuristic to solve the point-feature cartographic label placement problem. *ITOR* 27:1189–1209 | 10.1111/itor.12666 | VERIFIED-SEARCH (author order differs between sources) | a |
 | Haunert, Wolff (2017). Beyond maximum independent set: an extended integer programming formulation for point labeling. *ISPRS IJGI* 6(11):342 | 10.3390/ijgi6110342 | VERIFIED-SEARCH | a |
 | Klau, Mutzel (2003). Optimal labeling of point features in rectangular labeling models. *Math. Program.* 94(2–3):435–458 | 10.1007/s10107-002-0327-9 | VERIFIED-SEARCH | a, e |
-| Klute, Li, Löffler, Nöllenburg, Schmidt (2019). Exploring semi-automatic map labeling. SIGSPATIAL '19, 13–22; arXiv:1910.07799 | 10.1145/3347146.3359359 | PARTIAL (DOI from a reference list) | a |
+| Klute, Li, Löffler, Nöllenburg, Schmidt (2019). Exploring semi-automatic map labeling. SIGSPATIAL '19, 13–22; arXiv:1910.07799 | 10.1145/3347146.3359359 | VERIFIED-REGISTRY | a |
 | Lamm, Sanders, Schulz, Strash, Werneck (2017). Finding near-optimal independent sets at scale. *J. Heuristics* 23(4):207–229 | 10.1007/s10732-017-9337-x | VERIFIED-SEARCH | a, this page |
 | Laurent, Taillard et al. libpal (PAL), the labeling library of QGIS (software, GPL) | https://api.qgis.org/api/pal_8h_source.html | VERIFIED-SEARCH (header content); co-author Ertz unverified | a |
-| Mauri, Ribeiro, Lorena (2010). A new mathematical model and a Lagrangean decomposition for the point-feature cartographic label placement problem. *Comput. Oper. Res.* 37(12):2164–2172 | DOI not confirmed | PARTIAL | a |
+| Mauri, Ribeiro, Lorena (2010). A new mathematical model and a Lagrangean decomposition for the point-feature cartographic label placement problem. *Comput. Oper. Res.* 37(12):2164–2172 | 10.1016/j.cor.2010.03.005 | VERIFIED-REGISTRY | a |
 | Poon, Shin, Strijk, Uno, Wolff (2004). Labeling points with weights. *Algorithmica* 38(2):341–362 | 10.1007/s00453-003-1063-0 | VERIFIED-SEARCH | a |
 | Rabello, Mauri, Ribeiro, Lorena (2014). A clustering search metaheuristic for the point-feature cartographic label placement problem. *EJOR* 234(3):802–808 | 10.1016/j.ejor.2013.10.021 | VERIFIED-SEARCH | a |
-| Ribeiro, Lorena (2008a). Lagrangean relaxation with clusters for point-feature cartographic label placement problems. *Comput. Oper. Res.* 35(7):2129– | 10.1016/j.cor.2006.09.024 | PARTIAL (from a reference list) | a |
+| Ribeiro, Lorena (2008a). Lagrangean relaxation with clusters for point-feature cartographic label placement problems. *Comput. Oper. Res.* 35(7):2129–2140 | 10.1016/j.cor.2006.09.024 | VERIFIED-REGISTRY | a |
 | Ribeiro, Lorena (2008b). Column generation approach for the point-feature cartographic label placement problem. *J. Comb. Optim.* 15(2):147–164 | 10.1007/s10878-007-9073-5 | VERIFIED-SEARCH | a |
 | Ribeiro, Mauri, Lorena (2011). A Lagrangean decomposition for the maximum independent set problem applied to map labeling. *Oper. Res. Int. J.* 11(3):229–243 | 10.1007/s12351-009-0075-1 | VERIFIED-SEARCH | a |
-| Rylov, Reimer (2014). A comprehensive multi-criteria model for high cartographic quality point-feature label placement. *Cartographica* 49(1):52–68 | 10.3138/carto.49.1.2137 | PARTIAL (secondary sources only) | a, d |
+| Rylov, Reimer (2014). A comprehensive multi-criteria model for high cartographic quality point-feature label placement. *Cartographica* 49(1):52–68 | 10.3138/carto.49.1.2137 | VERIFIED-REGISTRY | a, d |
 | Strijk, Verweij, Aardal (2000). Algorithms for maximum independent set applied to map labelling. Tech. rep. UU-CS-2000-22, Utrecht University | https://ics-archive.science.uu.nl/research/techreps/repo/CS-2000/2000-22.pdf | VERIFIED-SEARCH | a |
 | van Kreveld, Strijk, Wolff (1999). Point labeling with sliding labels. *Comput. Geom.* 13(1):21–47 | 10.1016/S0925-7721(99)00005-X | VERIFIED-SEARCH | a |
 | Verner, Wainwright, Schoenefeld (1997). Placing text labels on maps and diagrams using genetic algorithms with masking. *INFORMS J. Comput.* 9(3):266–275 | 10.1287/ijoc.9.3.266 | VERIFIED-SEARCH | a |
-| Verweij, Aardal (1999). An optimisation algorithm for maximum independent set with applications in map labelling. ESA '99, LNCS 1643:426–437 | 10.1007/3-540-48481-7_37 (memory) | UNVERIFIED | a, e |
+| Verweij, Aardal (1999). An optimisation algorithm for maximum independent set with applications in map labelling. ESA '99, LNCS 1643:426–437 | 10.1007/3-540-48481-7_37 | VERIFIED-REGISTRY | a, e |
 | Wagner, Wolff, Kapoor, Strijk (2001). Three rules suffice for good label placement. *Algorithmica* 30(2):334–349 | 10.1007/s00453-001-0009-7 | VERIFIED-SEARCH (rules 2 and 3 from memory) | a, d |
 | Yamamoto, Câmara, Lorena (2002). Tabu search heuristic for point-feature cartographic label placement. *GeoInformatica* 6:77–90 | 10.1023/A:1013720231747 | VERIFIED-SEARCH | a |
 | Zoraster (1990). The solution of large 0–1 integer programming problems encountered in automated cartography. *Oper. Res.* 38(5):752–759 | 10.1287/opre.38.5.752 | VERIFIED-SEARCH | a |
@@ -425,10 +429,10 @@ read, open questions). "–" = no DOI found.
 |---|---|---|---|
 | Bobák, Čmolík, Čadík (2024). Reinforced labels: multi-agent deep reinforcement learning for point-feature label placement. *IEEE TVCG* 30(9):5908–5922 | 10.1109/TVCG.2023.3313729 | VERIFIED-SEARCH | a, d |
 | Cao, Zhang, Li, Ren, Chen (2026). Progressive reinforcement learning for point-feature label placement in map annotation. *ISPRS IJGI* 15(4):162 | 10.3390/ijgi15040162 | VERIFIED-SEARCH (results not seen) | a |
-| Oucheikh, Harrie (2024). A feasibility study of applying generative deep learning models for map labeling. *Cartogr. Geogr. Inf. Sci.* | DOI not confirmed | PARTIAL | a |
-| Qu, Zhang, Che, Chen, Ling (2025). Graph transformer for label placement. *IEEE TVCG* 31(1):1257–1267 | 10.1109/TVCG.2024.3456141 | PARTIAL (DOI from the authors' GitHub) | a, d |
+| Oucheikh, Harrie (2024). A feasibility study of applying generative deep learning models for map labeling. *Cartogr. Geogr. Inf. Sci.* | 10.1080/15230406.2023.2291051 | VERIFIED-REGISTRY | a |
+| Qu, Zhang, Che, Chen, Ling (2025). Graph transformer for label placement. *IEEE TVCG* 31(1):1257–1267 | 10.1109/TVCG.2024.3456141 | VERIFIED-REGISTRY | a, d |
 | Shomer, Xu (2025). Automated label placement on maps via large language models. arXiv:2507.22952 | arXiv:2507.22952 | VERIFIED-SEARCH (listing only) | a, d |
-| Zhang, Che, Chen, Huang, Ling, Qu (2025). Mixture of cluster-guided experts for retrieval-augmented label placement. IEEE VIS 2025 | – | PARTIAL (program listing only) | a |
+| Zhang, Che, Chen, Huang, Ling, Qu (2026). Mixture of cluster-guided experts for retrieval-augmented label placement (LPCE). *IEEE TVCG* 32(1):418–428 (presented at IEEE VIS 2025) | 10.1109/TVCG.2025.3642518 | VERIFIED-REGISTRY | a |
 
 ### Dynamic and interactive labeling
 
@@ -436,27 +440,27 @@ read, open questions). "–" = no DOI found.
 |---|---|---|---|
 | Barth, Niedermann, Nöllenburg, Strash (2016). Temporal map labeling: a new unified framework with experiments. SIGSPATIAL '16, art. 23 | 10.1145/2996913.2996957 | VERIFIED-SEARCH | b |
 | Been, Daiches, Yap (2006). Dynamic map labeling. *IEEE TVCG* 12(5):773–780 | 10.1109/TVCG.2006.136 | VERIFIED-SEARCH (DOI from a citing paper) | b, d |
-| Been, Nöllenburg, Poon, Wolff (2010). Optimizing active ranges for consistent dynamic map labeling. *Comput. Geom.* 43(3):312–328 | – | PARTIAL | b |
+| Been, Nöllenburg, Poon, Wolff (2010). Optimizing active ranges for consistent dynamic map labeling. *Comput. Geom.* 43(3):312–328 | 10.1016/j.comgeo.2009.03.006 | VERIFIED-REGISTRY | b |
 | Bobák, Čmolík, Čadík (2020). Temporally stable boundary labeling for interactive and non-interactive dynamic scenes. *Comput. Graph.* 91:265–278 | 10.1016/j.cag.2020.08.005 | VERIFIED-SEARCH | b |
-| Buchin, Gerrits (2013). Dynamic point labeling is strongly PSPACE-complete. ISAAC 2013, LNCS 8283:262–272 | – | PARTIAL | b |
-| de Berg, Gerrits (2012). Approximation algorithms for free-label maximization. *Comput. Geom.* 45(4):153–168 | 10.1016/j.comgeo.2011.10.004 | PARTIAL | b |
-| de Berg, Gerrits (2013). Labeling moving points with a trade-off between label speed and label overlap. ESA 2013, LNCS 8125:373–384 | – | PARTIAL | b |
-| Depian, Li, Nöllenburg, Wulms (2023). Transitions in dynamic point labeling. GIScience 2023, LIPIcs 277:2 | 10.4230/LIPIcs.GIScience.2023.2 | VERIFIED-SEARCH | b |
+| Buchin, Gerrits (2013). Dynamic point labeling is strongly PSPACE-complete. ISAAC 2013, LNCS 8283:262–272 | 10.1007/978-3-642-45030-3_25 | VERIFIED-REGISTRY | b |
+| de Berg, Gerrits (2012). Approximation algorithms for free-label maximization. *Comput. Geom.* 45(4):153–168 | 10.1016/j.comgeo.2011.10.004 | VERIFIED-REGISTRY | b |
+| de Berg, Gerrits (2013). Labeling moving points with a trade-off between label speed and label overlap. ESA 2013, LNCS 8125:373–384 | 10.1007/978-3-642-40450-4_32 | VERIFIED-REGISTRY | b |
+| Depian, Li, Nöllenburg, Wulms (2023). Transitions in dynamic point labeling. GIScience 2023, LIPIcs 277:2; journal version *Cartogr. Geogr. Inf. Sci.* (2026) | 10.4230/LIPIcs.GIScience.2023.2; 10.1080/15230406.2025.2555426 | VERIFIED-SEARCH | b |
 | Gedicke, Bonerath, Niedermann, Haunert (2021). Zoomless maps: external labeling methods for the interactive exploration of dense point sets at a fixed map scale. *IEEE TVCG* 27(2):1247–1256 | 10.1109/TVCG.2020.3030399 | VERIFIED-SEARCH | b |
 | Gedicke, Jabrayilov, Niedermann, Mutzel, Haunert (2021). Point feature label placement for multi-page maps on small-screen devices. *Comput. Graph.* 100:66–80 | 10.1016/j.cag.2021.07.019 | VERIFIED-SEARCH | b |
-| Gemsa, Niedermann, Nöllenburg (2013). Trajectory-based dynamic map labeling. ISAAC 2013, LNCS 8283:413–423; arXiv:1309.3963 | – | PARTIAL | b |
-| Gemsa, Nöllenburg, Rutter (2016a). Consistent labeling of rotating maps. *JoCG* 7(1):308–331 | 10.20382/jocg.v7i1a15 | VERIFIED-SEARCH | b |
+| Gemsa, Niedermann, Nöllenburg (2013). Trajectory-based dynamic map labeling. ISAAC 2013, LNCS 8283:413–423; arXiv:1309.3963 | 10.1007/978-3-642-45030-3_39 | VERIFIED-REGISTRY | b |
+| Gemsa, Nöllenburg, Rutter (2016a). Consistent labeling of rotating maps. *JoCG* 7(1):308–331 | 10.20382/jocg.v7i1a15 | VERIFIED-REGISTRY (DataCite) | b |
 | Gemsa, Nöllenburg, Rutter (2016b). Evaluation of labeling strategies for rotating maps. *ACM JEA* 21(1), art. 1.4 | 10.1145/2851493 | VERIFIED-SEARCH | b |
-| Kouřil et al. (2019). Labels on levels: labeling of multi-scale multi-instance and crowded 3D biological environments. *IEEE TVCG* 25(1):977–986 | 10.1109/TVCG.2018.2864491 | PARTIAL | b |
-| Krumpe (2018). Labeling points of interest in dynamic maps using disk labels. GIScience 2018, LIPIcs 114:8 | 10.4230/LIPIcs.GISCIENCE.2018.8 | VERIFIED-SEARCH | b |
-| Liao, Liang, Poon (2016). Approximation algorithms on consistent dynamic map labeling. *Theor. Comput. Sci.* 640:84–93 | – | PARTIAL | b |
+| Kouřil et al. (2019). Labels on levels: labeling of multi-scale multi-instance and crowded 3D biological environments. *IEEE TVCG* 25(1):977–986 | 10.1109/TVCG.2018.2864491 | VERIFIED-REGISTRY | b |
+| Krumpe (2018). Labeling points of interest in dynamic maps using disk labels. GIScience 2018, LIPIcs 114:8 | 10.4230/LIPIcs.GISCIENCE.2018.8 | VERIFIED-REGISTRY (DataCite) | b |
+| Liao, Liang, Poon (2016). Approximation algorithms on consistent dynamic map labeling. *Theor. Comput. Sci.* 640:84–93 | 10.1016/j.tcs.2016.06.006 | VERIFIED-REGISTRY | b |
 | Maass, Döllner (2006). Efficient view management for dynamic annotation placement in virtual landscapes. Smart Graphics 2006, LNCS 4073:1–12 | 10.1007/11795018_1 | VERIFIED-SEARCH | b |
 | MapLibre GL JS (`placement.ts`, `collision_index.ts`, `cross_tile_symbol_index.ts`) and the Mapbox GL Native wiki page "Collision Detection" (software, not peer-reviewed) | https://github.com/maplibre/maplibre-gl-js | read in full on GitHub | b, d |
 | Mote (2007). Fast point-feature label placement for dynamic visualizations. *Inf. Vis.* 6(4):249–260 | 10.1057/palgrave.ivs.9500163 | VERIFIED-SEARCH (year given as 2007 or 2008) | b, d |
 | Tatzgern, Kalkofen, Grasset, Schmalstieg (2014). Hedgehog labeling: view management techniques for external labels in 3D space. IEEE VR 2014, 27–32 | 10.1109/VR.2014.6802046 | VERIFIED-SEARCH | b |
 | Tatzgern et al. (2016). Adaptive information density for augmented reality displays. IEEE VR 2016, 83–92 | 10.1109/VR.2016.7504691 | VERIFIED-SEARCH | b |
-| Töpfer, Pillewizer (1966). The principles of selection. *Cartogr. J.* 3(1):10–16 | – | PARTIAL | b |
-| Vaaraniemi, Treib, Westermann (2012). Temporally coherent real-time labeling of dynamic scenes. COM.Geo 2012 | – | PARTIAL | b |
+| Töpfer, Pillewizer (1966). The principles of selection. *Cartogr. J.* 3(1):10–16 | 10.1179/caj.1966.3.1.10 | VERIFIED-REGISTRY | b |
+| Vaaraniemi, Treib, Westermann (2012). Temporally coherent real-time labeling of dynamic scenes. COM.Geo 2012 | 10.1145/2345316.2345337 | VERIFIED-REGISTRY | b |
 
 ### Leaders and external labeling
 
@@ -469,20 +473,20 @@ read, open questions). "–" = no DOI found.
 | Bekos, Kaufmann, Symvonis, Wolff (2007). Boundary labeling: models and efficient algorithms for rectangular maps. *Comput. Geom.* 36(3):215–236 | 10.1016/j.comgeo.2006.05.003 | VERIFIED-SEARCH | c, e |
 | Benkert, Haverkort, Kroll, Nöllenburg (2009). Algorithms for multi-criteria boundary labeling. *JGAA* 13(3):289–317 | 10.7155/jgaa.00189 | VERIFIED-SEARCH | c |
 | Bertini, Rigamonti, Lalanne (2009). Extended excentric labeling. *Comput. Graph. Forum* 28(3):927–934 | 10.1111/j.1467-8659.2009.01456.x | VERIFIED-SEARCH | c |
-| Čmolík, Bittner (2010). Layout-aware optimization for interactive labeling of 3D models. *Comput. Graph.* 34(4):378–387 | 10.1016/j.cag.2010.05.002 (reconstructed) | PARTIAL | b, c |
+| Čmolík, Bittner (2010). Layout-aware optimization for interactive labeling of 3D models. *Comput. Graph.* 34(4):378–387 | 10.1016/j.cag.2010.05.002 | VERIFIED-REGISTRY | b, c |
 | directlabels, R package (T. D. Hocking) — line-end label stacking (software) | https://github.com/tdhock/directlabels | source read on GitHub | c |
-| Fekete, Plaisant (1999). Excentric labeling: dynamic neighborhood labeling for data visualization. CHI '99, 512–519 | 10.1145/302979.303148 | PARTIAL | c |
+| Fekete, Plaisant (1999). Excentric labeling: dynamic neighborhood labeling for data visualization. CHI '99, 512–519 | 10.1145/302979.303148 | VERIFIED-REGISTRY | c |
 | Fink, Haunert, Schulz, Spoerhase, Wolff (2012). Algorithms for labeling focus regions. *IEEE TVCG* 18(12):2583–2592 | 10.1109/TVCG.2012.193 | VERIFIED-SEARCH | c |
 | ggrepel, R package (K. Slowikowski) (software) | https://github.com/slowkow/ggrepel | documentation read on GitHub | c |
-| Hartmann, Götzelmann, Ali, Strothotte (2005). Metrics for functional and aesthetic label layouts. Smart Graphics 2005, LNCS 3638:115–126 | 10.1007/11536482_10 | PARTIAL | c, d |
-| Heinsohn, Gerasch, Kaufmann (2014). Boundary labeling methods for dynamic focus regions. PacificVis 2014, 243–247 | 10.1109/PacificVis.2014.20 | PARTIAL | c |
+| Hartmann, Götzelmann, Ali, Strothotte (2005). Metrics for functional and aesthetic label layouts. Smart Graphics 2005, LNCS 3638:115–126 | 10.1007/11536482_10 | VERIFIED-REGISTRY | c, d |
+| Heinsohn, Gerasch, Kaufmann (2014). Boundary labeling methods for dynamic focus regions. PacificVis 2014, 243–247 | 10.1109/PacificVis.2014.20 | VERIFIED-REGISTRY | c |
 | Kindermann, Niedermann, Rutter, Schaefer, Schulz, Wolff (2016). Multi-sided boundary labeling. *Algorithmica* 76(1):225–258 | 10.1007/s00453-015-0028-4 | VERIFIED-SEARCH | c |
 | Lhuillier, van Garderen, Weiskopf (2019). Density-based label placement. *Vis. Comput.* 35(6–8):1041–1052 | 10.1007/s00371-019-01686-7 | VERIFIED-SEARCH | c |
 | Lin, Kao, Yen (2008). Many-to-one boundary labeling. *JGAA* 12(3):319–356 | 10.7155/jgaa.00169 | VERIFIED-SEARCH | c |
-| Löffler, Nöllenburg, Staals (2016). Mixed map labeling. *JOSIS* 13:3–32 | 10.5311/JOSIS.2016.13.264 | VERIFIED-SEARCH | c |
-| Meng, Zhang, Liu, Liu (2015). Clutter-aware label layout. PacificVis 2015, 207–214 | DOI not confirmed | PARTIAL | c |
-| Niedermann, Haunert (2019). Focus+context map labeling with optimized clutter reduction. *Int. J. Cartogr.* 5(2–3):158–177 | 10.1080/23729333.2019.1613072 | PARTIAL | c |
-| Niedermann, Nöllenburg, Rutter (2017). Radial contour labeling with straight leaders. PacificVis 2017, 295–304; arXiv:1702.01799 | 10.1109/PACIFICVIS.2017.8031608 | PARTIAL (DOI from a citing paper) | c |
+| Löffler, Nöllenburg, Staals (2016). Mixed map labeling. *JOSIS* 13:3–32 | 10.5311/JOSIS.2016.13.264 | VERIFIED-SEARCH (the CrossRef record lists Nöllenburg first; the author order here is the publication's) | c |
+| Meng, Zhang, Liu, Liu (2015). Clutter-aware label layout. PacificVis 2015, 207–214 | 10.1109/PACIFICVIS.2015.7156379 | VERIFIED-REGISTRY | c |
+| Niedermann, Haunert (2019). Focus+context map labeling with optimized clutter reduction. *Int. J. Cartogr.* 5(2–3):158–177 | 10.1080/23729333.2019.1613072 | VERIFIED-REGISTRY | c |
+| Niedermann, Nöllenburg, Rutter (2017). Radial contour labeling with straight leaders. PacificVis 2017, 295–304; arXiv:1702.01799 | 10.1109/PACIFICVIS.2017.8031608 | VERIFIED-REGISTRY | c |
 | Nöllenburg, Polishchuk, Sysikaski (2010). Dynamic one-sided boundary labeling. ACM GIS '10, 310–319 | 10.1145/1869790.1869834 | VERIFIED-SEARCH | c |
 | Wolff, Knipping, van Kreveld, Strijk, Agarwal (2000). A simple and efficient algorithm for high-quality line labeling. *Innovations in GIS VII*, 147–159 | – | PARTIAL (year differs between sources) | c |
 
@@ -490,16 +494,16 @@ read, open questions). "–" = no DOI found.
 
 | Reference | DOI / URL | Status | Notes |
 |---|---|---|---|
-| Bobák, Čmolík, Čadík. From top-right to user-right: perceptual prioritization of point-feature label positions. arXiv:2407.11996 (cited by the project as CVM 2026) | arXiv:2407.11996 | PARTIAL (no CVM record found) | d |
-| Chazelle, Drysdale, Lee (1986). Computing the largest empty rectangle. *SIAM J. Comput.* 15(1):300–315 | DOI not confirmed | VERIFIED-SEARCH (volume, pages) | d |
-| Chu et al. (2025). What makes a visualization image complex? IEEE VIS 2025; arXiv:2510.08332 | arXiv:2510.08332 | PARTIAL (search summaries only; edge density is the dominant predictor in v3, the best for node-link diagrams in v1) | ADR project/benchmark-measures |
-| Fan, Zhang, Du (2005). Quality evaluation model for map labeling. *Geo-spatial Inf. Sci.* 8(1):72–78 | 10.1007/BF02826996 | VERIFIED-SEARCH | d |
+| Bobák, Čmolík, Čadík (2026). From top-right to user-right: perceptual prioritization of point-feature label positions. *Computational Visual Media*, accepted; arXiv:2407.11996 | arXiv:2407.11996 | PARTIAL (accepted in CVM 2026 per the authors' pages; no DOI registered yet, 2026-11-15). Their measured order (PerceptPPO, Table 1) is top, bottom, right, top-right, bottom-right, left, top-left, bottom-left | d |
+| Chazelle, Drysdale, Lee (1986). Computing the largest empty rectangle. *SIAM J. Comput.* 15(1):300–315 | 10.1137/0215022 | VERIFIED-REGISTRY | d |
+| Chu, Qiu, Ling, Jiang, Laramee, Sedlmair, Chen (2025). What makes a visualization image complex? *IEEE TVCG*; arXiv:2510.08332 | 10.1109/TVCG.2025.3633827 | VERIFIED-REGISTRY (edge density is the dominant predictor, strongest for node-link diagrams) | ADR project/benchmark-measures |
+| Fan, Zhang, Du (2005). Quality evaluation model for map labeling. *Geo-spatial Inf. Sci.* 8(1):72–78 | 10.1007/BF02826996 | VERIFIED-SEARCH (the CrossRef record swaps given and family names) | d |
 | Henderson, Chanceaux, Smith (2009). The influence of clutter on real-world scene search: evidence from search efficiency and eye movements. *J. Vis.* 9(1):32, 1–8 | 10.1167/9.1.32 | VERIFIED-SEARCH | ADR project/benchmark-measures |
-| Imhof (1975). Positioning names on maps. *Am. Cartogr.* 2(2):128–144 | 10.1559/152304075784313304 (memory) | PARTIAL (secondary sources) | d, e |
-| Kittivorawong, Moritz, Wongsuphasawat, Heer (2020). Fast and flexible overlap detection for chart labeling with occupancy bitmap. IEEE VIS 2020 Short Papers (cited) | 10.1109/VIS47514.2020.00027 | PARTIAL | d |
+| Imhof (1975). Positioning names on maps. *Am. Cartogr.* 2(2):128–144 | 10.1559/152304075784313304 | VERIFIED-REGISTRY | d, e |
+| Kittivorawong, Moritz, Wongsuphasawat, Heer (2020). Fast and flexible overlap detection for chart labeling with occupancy bitmap. IEEE VIS 2020 Short Papers (cited) | 10.1109/VIS47514.2020.00027 | VERIFIED-REGISTRY | d |
 | Luboschik, Schumann, Cords (2008). Particle-based labeling: fast point-feature labeling without obscuring other visual features. *IEEE TVCG* 14(6):1237–1244 | 10.1109/TVCG.2008.152 | VERIFIED-SEARCH | d |
-| Mack, Oliva (2004). Computational estimation of visual complexity (conference presentation, as cited by Rosenholtz et al. 2007) | – | PARTIAL (not seen; cited as the origin of edge density as a complexity measure) | ADR project/benchmark-measures |
-| Naamad, Lee, Hsu (1984). On the maximum empty rectangle problem. *Discrete Appl. Math.* 8(3):267–277 | DOI not confirmed | PARTIAL | d |
+| Mack, Oliva (2004). Computational estimation of visual complexity (conference presentation, as cited by Rosenholtz et al. 2007) | – | PARTIAL (no DOI; not seen; cited as the origin of edge density as a complexity measure) | ADR project/benchmark-measures |
+| Naamad, Lee, Hsu (1984). On the maximum empty rectangle problem. *Discrete Appl. Math.* 8(3):267–277 | 10.1016/0166-218X(84)90124-0 | VERIFIED-REGISTRY | d |
 | Ooms, Kellens, Fack (2009). Dynamic map labeling for users. ICC 2009, Santiago | – | PARTIAL | d |
 | Pavlovec, Čmolík (2022). Rapid labels: point-feature labeling on GPU. *IEEE TVCG* 28(1):604–613 (cited) | 10.1109/TVCG.2021.3114854 | VERIFIED-SEARCH | d |
 | Petzold, Gröger, Plümer (2003). Fast screen map labeling — data structures and algorithms. ICC 2003, Durban, 288–298 | – | PARTIAL | d |
@@ -509,7 +513,7 @@ read, open questions). "–" = no DOI found.
 | Theophil, Schödl (2006). An efficient algorithm for scatter chart labeling. AAAI 2006, 1064–1069 | – | VERIFIED-SEARCH | d |
 | van Dijk, van Kreveld, Strijk, Wolff (2002). Towards an evaluation of quality for names placement methods. *IJGIS* 16(7):641–661 | 10.1080/13658810210138742 | VERIFIED-SEARCH | d |
 | Wolff, Strijk. The map-labeling bibliography (web resource, last updated about 2009) | https://i11www.iti.kit.edu/map-labeling/bibliography/ | PARTIAL | d |
-| Yoeli (1972). The logic of automated map lettering. *Cartogr. J.* 9:99–108 | 10.1179/000870472787352505 | PARTIAL | d |
+| Yoeli (1972). The logic of automated map lettering. *Cartogr. J.* 9(2):99–108 | 10.1179/caj.1972.9.2.99 (alias 10.1179/000870472787352505) | VERIFIED-REGISTRY | d |
 
 ### Building blocks
 
@@ -517,21 +521,21 @@ read, open questions). "–" = no DOI found.
 |---|---|---|---|
 | Agafonkin (2016). A new algorithm for finding a visual center of a polygon (polylabel). Mapbox blog | https://blog.mapbox.com/a-new-algorithm-for-finding-a-visual-center-of-a-polygon-7c77e6492fbc | VERIFIED-SEARCH | e |
 | Amanatides, Woo (1987). A fast voxel traversal algorithm for ray tracing. Eurographics '87 | – | UNVERIFIED | e |
-| Ayer, Brunk, Ewing, Reid, Silverman (1955). An empirical distribution function for sampling with incomplete information. *Ann. Math. Stat.* 26(4):641–647 | 10.1214/aoms/1177728423 (memory) | UNVERIFIED | e |
-| Brélaz (1979). New methods to color the vertices of a graph. *CACM* 22(4):251–256 | 10.1145/359094.359101 (memory) | UNVERIFIED | e |
+| Ayer, Brunk, Ewing, Reid, Silverman (1955). An empirical distribution function for sampling with incomplete information. *Ann. Math. Stat.* 26(4):641–647 | 10.1214/aoms/1177728423 | VERIFIED-REGISTRY | e |
+| Brélaz (1979). New methods to color the vertices of a graph. *CACM* 22(4):251–256 | 10.1145/359094.359101 | VERIFIED-REGISTRY | e |
 | Crow (1984). Summed-area tables for texture mapping. SIGGRAPH '84, *Comput. Graph.* 18(3):207–212 | 10.1145/800031.808600 (a second DOI, 10.1145/964965.808600, also appears) | VERIFIED-SEARCH | e |
 | Felzenszwalb, Huttenlocher (2012). Distance transforms of sampled functions. *Theory Comput.* 8(19):415–428 | 10.4086/toc.2012.v008a019 | VERIFIED-SEARCH | e |
-| Filip, Magedson, Markot (1986). Surface algorithms using bounds on derivatives. *Comput. Aided Geom. Des.* 3(4) (Wang's formula) | – | UNVERIFIED | e |
+| Filip, Magedson, Markot (1986). Surface algorithms using bounds on derivatives. *Comput. Aided Geom. Des.* 3(4) (Wang's formula) | 10.1016/0167-8396(86)90005-1 | VERIFIED-REGISTRY | e |
 | Frost, Dechter (1995). Look-ahead value ordering for constraint satisfaction problems. IJCAI '95 | – | UNVERIFIED | e |
 | Garcia-Castellanos, Lombardo (2007). Poles of inaccessibility: a calculation algorithm for the remotest places on Earth. *Scott. Geogr. J.* 123(3):227–233 | 10.1080/14702540801897809 | VERIFIED-SEARCH (secondary bibliographies) | e |
 | Geelen (1992). Dual viewpoint heuristics for binary constraint satisfaction problems. ECAI '92 | – | UNVERIFIED | e |
-| Glover (1996). Ejection chains, reference structures and alternating path methods for traveling salesman problems. *Discrete Appl. Math.* 65:223–253 | 10.1016/0166-218X(94)00037-E (memory) | UNVERIFIED | e |
-| Haralick, Elliott (1980). Increasing tree search efficiency for constraint satisfaction problems. *Artif. Intell.* 14(3):263–313 | 10.1016/0004-3702(80)90051-X (memory) | UNVERIFIED | e |
+| Glover (1996). Ejection chains, reference structures and alternating path methods for traveling salesman problems. *Discrete Appl. Math.* 65:223–253 | 10.1016/0166-218X(94)00037-E | VERIFIED-REGISTRY | e |
+| Haralick, Elliott (1980). Increasing tree search efficiency for constraint satisfaction problems. *Artif. Intell.* 14(3):263–313 | 10.1016/0004-3702(80)90051-X | VERIFIED-REGISTRY | e |
 | Johnson, Aragon, McGeoch, Schevon (1989). Optimization by simulated annealing: an experimental evaluation; part I, graph partitioning. *Oper. Res.* 37(6):865–892 | 10.1287/opre.37.6.865 | VERIFIED-SEARCH | e |
 | Kirkpatrick, Gelatt, Vecchi (1983). Optimization by simulated annealing. *Science* 220(4598):671–680 | 10.1126/science.220.4598.671 | VERIFIED-SEARCH | e |
-| Knuth, Plass (1981). Breaking paragraphs into lines. *Softw. Pract. Exp.* 11(11):1119–1184 | 10.1002/spe.4380111102 (memory) | UNVERIFIED | e |
-| Kuhn (1955). The Hungarian method for the assignment problem. *Nav. Res. Logist. Q.* 2:83–97; Munkres (1957). Algorithms for the assignment and transportation problems. *J. SIAM* 5(1):32–38 | 10.1002/nav.3800020109 (memory) | UNVERIFIED | e |
-| Lemire (2019). Fast random integer generation in an interval. *ACM TOMACS* 29(1) | 10.1145/3230636 | PARTIAL | e |
-| Meijster, Roerdink, Hesselink (2000). A general algorithm for computing distance transforms in linear time. ISMM 2000, *Comput. Imaging Vis.* 18:331–340 | 10.1007/0-306-47025-X_36 | PARTIAL | e |
+| Knuth, Plass (1981). Breaking paragraphs into lines. *Softw. Pract. Exp.* 11(11):1119–1184 | 10.1002/spe.4380111102 | VERIFIED-REGISTRY | e |
+| Kuhn (1955). The Hungarian method for the assignment problem. *Nav. Res. Logist. Q.* 2:83–97; Munkres (1957). Algorithms for the assignment and transportation problems. *J. SIAM* 5(1):32–38 | 10.1002/nav.3800020109; 10.1137/0105003 | VERIFIED-REGISTRY | e |
+| Lemire (2019). Fast random integer generation in an interval. *ACM TOMACS* 29(1) | 10.1145/3230636 | VERIFIED-REGISTRY | e |
+| Meijster, Roerdink, Hesselink (2000). A general algorithm for computing distance transforms in linear time. ISMM 2000, *Comput. Imaging Vis.* 18:331–340 | 10.1007/0-306-47025-X_36 | VERIFIED-REGISTRY | e |
 | Metropolis, Rosenbluth, Rosenbluth, Teller, Teller (1953). Equation of state calculations by fast computing machines. *J. Chem. Phys.* 21(6):1087–1092 | 10.1063/1.1699114 | VERIFIED-SEARCH | e |
 | O'Neill (2014). PCG: a family of simple fast space-efficient statistically good algorithms for random number generation. Tech. rep. HMC-CS-2014-0905, Harvey Mudd College | https://www.pcg-random.org/ | VERIFIED-SEARCH | e |
