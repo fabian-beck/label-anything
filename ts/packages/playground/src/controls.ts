@@ -106,7 +106,7 @@ export const MODELS: Choice[] = [
 
 export const POSITION_ORDERS: Choice[] = [
   { value: "perceptual", label: "Perceptual", title: "top, right, bottom, left, then the diagonals" },
-  { value: "cartographic", label: "Cartographic", title: "Imhof: top-right first" },
+  { value: "cartographic", label: "Cartographic", title: "Yoeli 1972: top-right first" },
   { value: ["right", "top-right", "bottom-right"], label: "Right" },
   { value: ["left", "top-left", "bottom-left"], label: "Left" },
   { value: ["top", "bottom"], label: "Above / below" },

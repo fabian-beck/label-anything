@@ -894,9 +894,11 @@ i.e. the label's corner (diagonal positions) or side midpoint (axis positions) o
 to `d` sits on the support point. The label touches `S ⊕ o` and does not intersect it
 (exact for convex shapes; concave shapes use the hull). `position_order` gives the rank
 `0..7`: `perceptual` = top, right, bottom, left, top-right, bottom-right, top-left,
-bottom-left (Bobák et al. 2026); `cartographic` = top-right, top-left, bottom-right,
-bottom-left, right, left, top, bottom (Imhof); or an explicit list (unlisted positions
-are not generated).
+bottom-left — the engine's order, which follows [Bobák et al. (2026)](https://arxiv.org/abs/2407.11996) in preferring top over
+the conventional top-right; their measured order (PerceptPPO) is top, bottom, right,
+top-right, bottom-right, left, top-left, bottom-left; `cartographic` = top-right, top-left,
+bottom-right, bottom-left, right, left, top, bottom ([Yoeli 1972](https://doi.org/10.1179/caj.1972.9.2.99)); or an explicit list
+(unlisted positions are not generated).
 
 ### 6.2 Slider
 

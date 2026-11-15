@@ -85,7 +85,10 @@ export function posFromAngularIndex(i: number): Pos {
   return POS_BY_ANGLE[i % 8]!;
 }
 
-/** Perceptual order (Bobák et al. 2026, PerceptPPO-like). */
+/**
+ * Perceptual order: the engine's own, inspired by Bobák et al. (2026) in putting top
+ * first; not their measured PerceptPPO order (top, bottom, right, top-right, ...).
+ */
 export const PERCEPTUAL: readonly Pos[] = [
   Pos.Top,
   Pos.Right,
@@ -97,7 +100,7 @@ export const PERCEPTUAL: readonly Pos[] = [
   Pos.BottomLeft,
 ];
 
-/** Cartographic (Imhof) order. */
+/** Cartographic order (Yoeli 1972). */
 export const CARTOGRAPHIC: readonly Pos[] = [
   Pos.TopRight,
   Pos.TopLeft,

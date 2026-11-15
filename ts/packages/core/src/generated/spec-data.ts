@@ -397,7 +397,7 @@ export const PRESETS: Readonly<Record<string, PresetData>> = {
     ]
   },
   "map": {
-    "description": "Maps: cartographic (Imhof) position order, labels stay adjacent, roads and ink are soft, existing map text is hard, important labels may cover the dots of less important places.",
+    "description": "Maps: cartographic position order (Yoeli 1972, top-right first), labels stay adjacent, roads and ink are soft, existing map text is hard, important labels may cover the dots of less important places.",
     "options": {
       "placement": {
         "models": [

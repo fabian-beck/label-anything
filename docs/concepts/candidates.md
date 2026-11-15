@@ -18,8 +18,10 @@ touches the mark, grown by `placement.offset` (1 px), in the position's directio
 `position_order` ranks them for the position cost:
 
 * `perceptual` (default): top, right, bottom, left, top-right, bottom-right, top-left,
-  bottom-left;
-* `cartographic` (the `map` preset, after Imhof): top-right, top-left, bottom-right,
+  bottom-left — the engine's own order, which follows [Bobák et al. (2026)](https://arxiv.org/abs/2407.11996) in preferring
+  top over the conventional top-right (their measured order, PerceptPPO, is top, bottom,
+  right, top-right, bottom-right, left, top-left, bottom-left);
+* `cartographic` (the `map` preset, after [Yoeli 1972](https://doi.org/10.1179/caj.1972.9.2.99)): top-right, top-left, bottom-right,
   bottom-left, right, left, top, bottom;
 * a list of position names: only those positions, in that order. Distant labels then keep
   to the same sides, within 22.5° of a listed position, so `["right"]` keeps the end labels

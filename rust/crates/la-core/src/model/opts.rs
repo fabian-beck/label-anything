@@ -87,7 +87,8 @@ impl Pos {
     }
 }
 
-/// Perceptual order (Bobák et al. 2026, PerceptPPO-like).
+/// Perceptual order: the engine's own, inspired by Bobák et al. (2026) in putting top
+/// first; not their measured PerceptPPO order (top, bottom, right, top-right, ...).
 pub const PERCEPTUAL: [Pos; 8] = [
     Pos::Top,
     Pos::Right,
@@ -98,7 +99,7 @@ pub const PERCEPTUAL: [Pos; 8] = [
     Pos::TopLeft,
     Pos::BottomLeft,
 ];
-/// Cartographic (Imhof) order.
+/// Cartographic order (Yoeli 1972).
 pub const CARTOGRAPHIC: [Pos; 8] = [
     Pos::TopRight,
     Pos::TopLeft,
