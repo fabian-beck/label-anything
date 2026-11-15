@@ -1,0 +1,3004 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 200,
+      "height": 120
+    },
+    "degrade": [
+      "omit"
+    ],
+    "placement": {
+      "models": [
+        "adjacent"
+      ]
+    },
+    "avoid": {
+      "label": {
+        "lower_items": 2.0
+      }
+    },
+    "priority": {
+      "budget": {
+        "max_labels": 1
+      }
+    },
+    "items": [
+      {
+        "id": "hub",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Hub"
+        },
+        "priority": 2.0,
+        "placement": {
+          "position_order": [
+            "top"
+          ]
+        }
+      },
+      {
+        "id": "m0",
+        "anchor": {
+          "type": "point",
+          "x": 64,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m1",
+        "anchor": {
+          "type": "point",
+          "x": 64,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m2",
+        "anchor": {
+          "type": "point",
+          "x": 64,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m3",
+        "anchor": {
+          "type": "point",
+          "x": 64,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m4",
+        "anchor": {
+          "type": "point",
+          "x": 64,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m5",
+        "anchor": {
+          "type": "point",
+          "x": 64,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m6",
+        "anchor": {
+          "type": "point",
+          "x": 64,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m7",
+        "anchor": {
+          "type": "point",
+          "x": 70,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m8",
+        "anchor": {
+          "type": "point",
+          "x": 70,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m9",
+        "anchor": {
+          "type": "point",
+          "x": 70,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m10",
+        "anchor": {
+          "type": "point",
+          "x": 70,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m11",
+        "anchor": {
+          "type": "point",
+          "x": 70,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m12",
+        "anchor": {
+          "type": "point",
+          "x": 70,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m13",
+        "anchor": {
+          "type": "point",
+          "x": 70,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m14",
+        "anchor": {
+          "type": "point",
+          "x": 76,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m15",
+        "anchor": {
+          "type": "point",
+          "x": 76,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m16",
+        "anchor": {
+          "type": "point",
+          "x": 76,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m17",
+        "anchor": {
+          "type": "point",
+          "x": 76,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m18",
+        "anchor": {
+          "type": "point",
+          "x": 76,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m19",
+        "anchor": {
+          "type": "point",
+          "x": 76,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m20",
+        "anchor": {
+          "type": "point",
+          "x": 76,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m21",
+        "anchor": {
+          "type": "point",
+          "x": 82,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m22",
+        "anchor": {
+          "type": "point",
+          "x": 82,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m23",
+        "anchor": {
+          "type": "point",
+          "x": 82,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m24",
+        "anchor": {
+          "type": "point",
+          "x": 82,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m25",
+        "anchor": {
+          "type": "point",
+          "x": 82,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m26",
+        "anchor": {
+          "type": "point",
+          "x": 82,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m27",
+        "anchor": {
+          "type": "point",
+          "x": 82,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m28",
+        "anchor": {
+          "type": "point",
+          "x": 88,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m29",
+        "anchor": {
+          "type": "point",
+          "x": 88,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m30",
+        "anchor": {
+          "type": "point",
+          "x": 88,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m31",
+        "anchor": {
+          "type": "point",
+          "x": 88,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m32",
+        "anchor": {
+          "type": "point",
+          "x": 88,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m33",
+        "anchor": {
+          "type": "point",
+          "x": 88,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m34",
+        "anchor": {
+          "type": "point",
+          "x": 88,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m35",
+        "anchor": {
+          "type": "point",
+          "x": 94,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m36",
+        "anchor": {
+          "type": "point",
+          "x": 94,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m37",
+        "anchor": {
+          "type": "point",
+          "x": 94,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m38",
+        "anchor": {
+          "type": "point",
+          "x": 94,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m39",
+        "anchor": {
+          "type": "point",
+          "x": 94,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m40",
+        "anchor": {
+          "type": "point",
+          "x": 94,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m41",
+        "anchor": {
+          "type": "point",
+          "x": 94,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m42",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m43",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m44",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m45",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m46",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m47",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m48",
+        "anchor": {
+          "type": "point",
+          "x": 106,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m49",
+        "anchor": {
+          "type": "point",
+          "x": 106,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m50",
+        "anchor": {
+          "type": "point",
+          "x": 106,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m51",
+        "anchor": {
+          "type": "point",
+          "x": 106,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m52",
+        "anchor": {
+          "type": "point",
+          "x": 106,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m53",
+        "anchor": {
+          "type": "point",
+          "x": 106,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m54",
+        "anchor": {
+          "type": "point",
+          "x": 106,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m55",
+        "anchor": {
+          "type": "point",
+          "x": 112,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m56",
+        "anchor": {
+          "type": "point",
+          "x": 112,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m57",
+        "anchor": {
+          "type": "point",
+          "x": 112,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m58",
+        "anchor": {
+          "type": "point",
+          "x": 112,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m59",
+        "anchor": {
+          "type": "point",
+          "x": 112,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m60",
+        "anchor": {
+          "type": "point",
+          "x": 112,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m61",
+        "anchor": {
+          "type": "point",
+          "x": 112,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m62",
+        "anchor": {
+          "type": "point",
+          "x": 118,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m63",
+        "anchor": {
+          "type": "point",
+          "x": 118,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m64",
+        "anchor": {
+          "type": "point",
+          "x": 118,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m65",
+        "anchor": {
+          "type": "point",
+          "x": 118,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m66",
+        "anchor": {
+          "type": "point",
+          "x": 118,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m67",
+        "anchor": {
+          "type": "point",
+          "x": 118,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m68",
+        "anchor": {
+          "type": "point",
+          "x": 118,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m69",
+        "anchor": {
+          "type": "point",
+          "x": 124,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m70",
+        "anchor": {
+          "type": "point",
+          "x": 124,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m71",
+        "anchor": {
+          "type": "point",
+          "x": 124,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m72",
+        "anchor": {
+          "type": "point",
+          "x": 124,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m73",
+        "anchor": {
+          "type": "point",
+          "x": 124,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m74",
+        "anchor": {
+          "type": "point",
+          "x": 124,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m75",
+        "anchor": {
+          "type": "point",
+          "x": 124,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m76",
+        "anchor": {
+          "type": "point",
+          "x": 130,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m77",
+        "anchor": {
+          "type": "point",
+          "x": 130,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m78",
+        "anchor": {
+          "type": "point",
+          "x": 130,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m79",
+        "anchor": {
+          "type": "point",
+          "x": 130,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m80",
+        "anchor": {
+          "type": "point",
+          "x": 130,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m81",
+        "anchor": {
+          "type": "point",
+          "x": 130,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m82",
+        "anchor": {
+          "type": "point",
+          "x": 130,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m83",
+        "anchor": {
+          "type": "point",
+          "x": 136,
+          "y": 42,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m84",
+        "anchor": {
+          "type": "point",
+          "x": 136,
+          "y": 48,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m85",
+        "anchor": {
+          "type": "point",
+          "x": 136,
+          "y": 54,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m86",
+        "anchor": {
+          "type": "point",
+          "x": 136,
+          "y": 60,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m87",
+        "anchor": {
+          "type": "point",
+          "x": 136,
+          "y": 66,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m88",
+        "anchor": {
+          "type": "point",
+          "x": 136,
+          "y": 72,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      },
+      {
+        "id": "m89",
+        "anchor": {
+          "type": "point",
+          "x": 136,
+          "y": 78,
+          "mark": {
+            "shape": "circle",
+            "r": 0.5
+          }
+        },
+        "label": {
+          "type": "text",
+          "text": "m"
+        },
+        "priority": 1.0
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "hub",
+        "placed": true,
+        "box": {
+          "x": 86.356,
+          "y": 44.16,
+          "w": 27.28800000000001,
+          "h": 12.840000000000003
+        },
+        "anchor": [
+          100.0,
+          60.0
+        ],
+        "anchor_side": "top",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Hub"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            23.688
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.7964230199348615,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 2.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "m0",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 1
+        }
+      },
+      {
+        "id": "m1",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 2
+        }
+      },
+      {
+        "id": "m2",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 3
+        }
+      },
+      {
+        "id": "m3",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 4
+        }
+      },
+      {
+        "id": "m4",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 5
+        }
+      },
+      {
+        "id": "m5",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 6
+        }
+      },
+      {
+        "id": "m6",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 7
+        }
+      },
+      {
+        "id": "m7",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 8
+        }
+      },
+      {
+        "id": "m8",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 9
+        }
+      },
+      {
+        "id": "m9",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 10
+        }
+      },
+      {
+        "id": "m10",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 11
+        }
+      },
+      {
+        "id": "m11",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 12
+        }
+      },
+      {
+        "id": "m12",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 13
+        }
+      },
+      {
+        "id": "m13",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 14
+        }
+      },
+      {
+        "id": "m14",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 15
+        }
+      },
+      {
+        "id": "m15",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 16
+        }
+      },
+      {
+        "id": "m16",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 17
+        }
+      },
+      {
+        "id": "m17",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 18
+        }
+      },
+      {
+        "id": "m18",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 19
+        }
+      },
+      {
+        "id": "m19",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 20
+        }
+      },
+      {
+        "id": "m20",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 21
+        }
+      },
+      {
+        "id": "m21",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 22
+        }
+      },
+      {
+        "id": "m22",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 23
+        }
+      },
+      {
+        "id": "m23",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 24
+        }
+      },
+      {
+        "id": "m24",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 25
+        }
+      },
+      {
+        "id": "m25",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 26
+        }
+      },
+      {
+        "id": "m26",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 27
+        }
+      },
+      {
+        "id": "m27",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 28
+        }
+      },
+      {
+        "id": "m28",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 29
+        }
+      },
+      {
+        "id": "m29",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 30
+        }
+      },
+      {
+        "id": "m30",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 31
+        }
+      },
+      {
+        "id": "m31",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 32
+        }
+      },
+      {
+        "id": "m32",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 33
+        }
+      },
+      {
+        "id": "m33",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 34
+        }
+      },
+      {
+        "id": "m34",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 35
+        }
+      },
+      {
+        "id": "m35",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 36
+        }
+      },
+      {
+        "id": "m36",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 37
+        }
+      },
+      {
+        "id": "m37",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 38
+        }
+      },
+      {
+        "id": "m38",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 39
+        }
+      },
+      {
+        "id": "m39",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 40
+        }
+      },
+      {
+        "id": "m40",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 41
+        }
+      },
+      {
+        "id": "m41",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 42
+        }
+      },
+      {
+        "id": "m42",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 43
+        }
+      },
+      {
+        "id": "m43",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 44
+        }
+      },
+      {
+        "id": "m44",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 45
+        }
+      },
+      {
+        "id": "m45",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 46
+        }
+      },
+      {
+        "id": "m46",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 47
+        }
+      },
+      {
+        "id": "m47",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 48
+        }
+      },
+      {
+        "id": "m48",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 49
+        }
+      },
+      {
+        "id": "m49",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 50
+        }
+      },
+      {
+        "id": "m50",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 51
+        }
+      },
+      {
+        "id": "m51",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 52
+        }
+      },
+      {
+        "id": "m52",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 53
+        }
+      },
+      {
+        "id": "m53",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 54
+        }
+      },
+      {
+        "id": "m54",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 55
+        }
+      },
+      {
+        "id": "m55",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 56
+        }
+      },
+      {
+        "id": "m56",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 57
+        }
+      },
+      {
+        "id": "m57",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 58
+        }
+      },
+      {
+        "id": "m58",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 59
+        }
+      },
+      {
+        "id": "m59",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 60
+        }
+      },
+      {
+        "id": "m60",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 61
+        }
+      },
+      {
+        "id": "m61",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 62
+        }
+      },
+      {
+        "id": "m62",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 63
+        }
+      },
+      {
+        "id": "m63",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 64
+        }
+      },
+      {
+        "id": "m64",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 65
+        }
+      },
+      {
+        "id": "m65",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 66
+        }
+      },
+      {
+        "id": "m66",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 67
+        }
+      },
+      {
+        "id": "m67",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 68
+        }
+      },
+      {
+        "id": "m68",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 69
+        }
+      },
+      {
+        "id": "m69",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 70
+        }
+      },
+      {
+        "id": "m70",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 71
+        }
+      },
+      {
+        "id": "m71",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 72
+        }
+      },
+      {
+        "id": "m72",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 73
+        }
+      },
+      {
+        "id": "m73",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 74
+        }
+      },
+      {
+        "id": "m74",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 75
+        }
+      },
+      {
+        "id": "m75",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 76
+        }
+      },
+      {
+        "id": "m76",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 77
+        }
+      },
+      {
+        "id": "m77",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 78
+        }
+      },
+      {
+        "id": "m78",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 79
+        }
+      },
+      {
+        "id": "m79",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 80
+        }
+      },
+      {
+        "id": "m80",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 81
+        }
+      },
+      {
+        "id": "m81",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 82
+        }
+      },
+      {
+        "id": "m82",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 83
+        }
+      },
+      {
+        "id": "m83",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 84
+        }
+      },
+      {
+        "id": "m84",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 85
+        }
+      },
+      {
+        "id": "m85",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 86
+        }
+      },
+      {
+        "id": "m86",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 87
+        }
+      },
+      {
+        "id": "m87",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 88
+        }
+      },
+      {
+        "id": "m88",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 89
+        }
+      },
+      {
+        "id": "m89",
+        "placed": false,
+        "reason": "omitted_by_priority",
+        "blocking": [
+          "items"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 90
+        }
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 91,
+      "placed_weighted": 0.051085921712805425,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 10000,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 721,
+      "omission_order": [
+        "m89",
+        "m88",
+        "m87",
+        "m86",
+        "m85",
+        "m84",
+        "m83",
+        "m82",
+        "m81",
+        "m80",
+        "m79",
+        "m78",
+        "m77",
+        "m76",
+        "m75",
+        "m74",
+        "m73",
+        "m72",
+        "m71",
+        "m70",
+        "m69",
+        "m68",
+        "m67",
+        "m66",
+        "m65",
+        "m64",
+        "m63",
+        "m62",
+        "m61",
+        "m60",
+        "m59",
+        "m58",
+        "m57",
+        "m56",
+        "m55",
+        "m54",
+        "m53",
+        "m52",
+        "m51",
+        "m50",
+        "m49",
+        "m48",
+        "m47",
+        "m46",
+        "m45",
+        "m44",
+        "m43",
+        "m42",
+        "m41",
+        "m40",
+        "m39",
+        "m38",
+        "m37",
+        "m36",
+        "m35",
+        "m34",
+        "m33",
+        "m32",
+        "m31",
+        "m30",
+        "m29",
+        "m28",
+        "m27",
+        "m26",
+        "m25",
+        "m24",
+        "m23",
+        "m22",
+        "m21",
+        "m20",
+        "m19",
+        "m18",
+        "m17",
+        "m16",
+        "m15",
+        "m14",
+        "m13",
+        "m12",
+        "m11",
+        "m10",
+        "m9",
+        "m8",
+        "m7",
+        "m6",
+        "m5",
+        "m4",
+        "m3",
+        "m2",
+        "m1",
+        "m0"
+      ],
+      "priority_inversions": 0,
+      "total_cost": 0.7964230199348615,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 67,
+        "rows": 40,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

@@ -216,6 +216,29 @@ impl State {
         });
     }
 
+    /// Whether a placed label of a more important item covers the mark of item `i` (see
+    /// [`LowerMarks`]): `i` then has no candidate.
+    pub fn mark_covered(&mut self, i: usize, cands: &[Cand]) -> bool {
+        let Some(lw) = &self.lower else { return false };
+        let mark = &lw.marks[i];
+        let mut buf = std::mem::take(&mut self.lbuf);
+        self.label_ix.query(&mark.bbox(), &mut buf);
+        let mut hit = false;
+        for &j in &buf {
+            let j = j as usize;
+            if j == i || self.keys[j] >= self.keys[i] || lw.group_of[i] == Some(j) {
+                continue;
+            }
+            let Some(pid) = self.placed[j] else { continue };
+            if cands[pid as usize].label_overlaps_shape(mark) {
+                hit = true;
+                break;
+            }
+        }
+        self.lbuf = buf;
+        hit
+    }
+
     /// The bounding box of item `i`'s mark (when labels may cover less important marks).
     pub fn mark_bbox(&self, i: usize) -> Option<Rect> {
         self.lower.as_ref().map(|lw| lw.marks[i].bbox())

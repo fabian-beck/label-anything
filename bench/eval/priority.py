@@ -165,13 +165,7 @@ def reference(prob: Problem) -> dict[str, PriorityInfo]:
             node = ex.parse(t["expr"])
             raw = []
             for it in items:
-                v = ex.evaluate(node, ex.item_context(it.raw, it.index, it.ref))
-                if isinstance(v, bool):
-                    raw.append(1.0 if v else 0.0)
-                elif isinstance(v, float):
-                    raw.append(v)
-                else:
-                    raw.append(None)
+                raw.append(ex.term_number(ex.evaluate(node, ex.item_context(it.raw, it.index, it.ref))))
         else:
             raw = _builtin_values(t["builtin"], prob, t)
         tr = t.get("transform", "none")

@@ -30,6 +30,9 @@
     { "id": "region",
       "anchor": { "type": "area", "polygon": [[440, 280], [560, 262], [620, 320], [580, 368], [450, 360]] },
       "label": { "type": "text", "text": "Region" } },
+    { "id": "lake",
+      "anchor": { "type": "area", "polygon": [[501, 126], [616, 45], [631, 66], [516, 147]] },
+      "label": { "type": "text", "text": "Slanted lake" } },
     { "id": "islet",
       "anchor": { "type": "area", "polygon": [[352, 330], [372, 322], [376, 342], [356, 348]] },
       "label": { "type": "text", "text": "Tiny region" } }

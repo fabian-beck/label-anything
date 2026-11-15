@@ -265,6 +265,79 @@ impl Sink<'_> {
     }
 }
 
+/// The keywords of a schema object, found in one pass over its entries (instead of a
+/// hash lookup per keyword the interpreter knows).
+#[derive(Default)]
+struct Kw<'s> {
+    r#ref: Option<&'s Value>,
+    r#type: Option<&'s Value>,
+    r#const: Option<&'s Value>,
+    r#enum: Option<&'s Value>,
+    minimum: Option<&'s Value>,
+    maximum: Option<&'s Value>,
+    exclusive_minimum: Option<&'s Value>,
+    exclusive_maximum: Option<&'s Value>,
+    min_length: Option<&'s Value>,
+    pattern: Option<&'s Value>,
+    min_items: Option<&'s Value>,
+    max_items: Option<&'s Value>,
+    prefix_items: Option<&'s Value>,
+    items: Option<&'s Value>,
+    unique_items: Option<&'s Value>,
+    required: Option<&'s Value>,
+    properties: Option<&'s Value>,
+    additional_properties: Option<&'s Value>,
+    property_names: Option<&'s Value>,
+    dependent_required: Option<&'s Value>,
+    all_of: Option<&'s Value>,
+    any_of: Option<&'s Value>,
+    one_of: Option<&'s Value>,
+    r#if: Option<&'s Value>,
+    then: Option<&'s Value>,
+    r#else: Option<&'s Value>,
+    unevaluated_properties: Option<&'s Value>,
+}
+
+impl<'s> Kw<'s> {
+    fn of(o: &'s serde_json::Map<String, Value>) -> Kw<'s> {
+        let mut k = Kw::default();
+        for (key, v) in o {
+            let slot = match key.as_str() {
+                "$ref" => &mut k.r#ref,
+                "type" => &mut k.r#type,
+                "const" => &mut k.r#const,
+                "enum" => &mut k.r#enum,
+                "minimum" => &mut k.minimum,
+                "maximum" => &mut k.maximum,
+                "exclusiveMinimum" => &mut k.exclusive_minimum,
+                "exclusiveMaximum" => &mut k.exclusive_maximum,
+                "minLength" => &mut k.min_length,
+                "pattern" => &mut k.pattern,
+                "minItems" => &mut k.min_items,
+                "maxItems" => &mut k.max_items,
+                "prefixItems" => &mut k.prefix_items,
+                "items" => &mut k.items,
+                "uniqueItems" => &mut k.unique_items,
+                "required" => &mut k.required,
+                "properties" => &mut k.properties,
+                "additionalProperties" => &mut k.additional_properties,
+                "propertyNames" => &mut k.property_names,
+                "dependentRequired" => &mut k.dependent_required,
+                "allOf" => &mut k.all_of,
+                "anyOf" => &mut k.any_of,
+                "oneOf" => &mut k.one_of,
+                "if" => &mut k.r#if,
+                "then" => &mut k.then,
+                "else" => &mut k.r#else,
+                "unevaluatedProperties" => &mut k.unevaluated_properties,
+                _ => continue,
+            };
+            *slot = Some(v);
+        }
+        k
+    }
+}
+
 impl<'s> Interp<'s> {
     fn resolve(&self, r: &str) -> Option<&'s Value> {
         let mut cur = self.root;
@@ -333,8 +406,9 @@ impl<'s> Interp<'s> {
             Value::Object(o) => o,
             _ => return evaluated,
         };
-        let need = collect || o.contains_key("unevaluatedProperties");
-        if let Some(Value::String(r)) = o.get("$ref") {
+        let k = Kw::of(o);
+        let need = collect || k.unevaluated_properties.is_some();
+        if let Some(Value::String(r)) = k.r#ref {
             if let Some(target) = self.resolve(r) {
                 let unit2 = unit || r == "#/$defs/length" || r == "#/$defs/nonNegLength";
                 let ev = self.check(target, v, ptr, unit2, need, sink);
@@ -346,7 +420,7 @@ impl<'s> Interp<'s> {
                 }
             }
         }
-        if let Some(t) = o.get("type") {
+        if let Some(t) = k.r#type {
             let ok = match t {
                 Value::String(t) => type_is(t, v),
                 Value::Array(ts) => ts.iter().filter_map(|t| t.as_str()).any(|t| type_is(t, v)),
@@ -368,7 +442,7 @@ impl<'s> Interp<'s> {
                 return evaluated;
             }
         }
-        if let Some(c) = o.get("const") {
+        if let Some(c) = k.r#const {
             if !json_eq(c, v) {
                 sink.err(ptr, "const", || format!("must be {}", short(c)));
                 if sink.failed() {
@@ -376,7 +450,7 @@ impl<'s> Interp<'s> {
                 }
             }
         }
-        if let Some(Value::Array(e)) = o.get("enum") {
+        if let Some(Value::Array(e)) = k.r#enum {
             if !e.iter().any(|x| json_eq(x, v)) {
                 sink.err(ptr, "enum", || {
                     let list: Vec<String> = e.iter().map(short).collect();
@@ -398,13 +472,13 @@ impl<'s> Interp<'s> {
         match v {
             Value::Number(n) => {
                 let x = n.as_f64().unwrap_or(0.0);
-                for (kw, msg) in [
-                    ("minimum", ">="),
-                    ("maximum", "<="),
-                    ("exclusiveMinimum", ">"),
-                    ("exclusiveMaximum", "<"),
+                for (kw, msg, bound) in [
+                    ("minimum", ">=", k.minimum),
+                    ("maximum", "<=", k.maximum),
+                    ("exclusiveMinimum", ">", k.exclusive_minimum),
+                    ("exclusiveMaximum", "<", k.exclusive_maximum),
                 ] {
-                    if let Some(m) = o.get(kw).and_then(|m| m.as_f64()) {
+                    if let Some(m) = bound.and_then(|m| m.as_f64()) {
                         let bad = match kw {
                             "minimum" => x < m,
                             "maximum" => x > m,
@@ -418,14 +492,14 @@ impl<'s> Interp<'s> {
                 }
             }
             Value::String(st) => {
-                if let Some(m) = o.get("minLength").and_then(|m| m.as_u64()) {
+                if let Some(m) = k.min_length.and_then(|m| m.as_u64()) {
                     if (st.chars().count() as u64) < m {
                         sink.err(ptr, "length", || {
                             format!("must have at least {m} characters")
                         });
                     }
                 }
-                if let Some(Value::String(p)) = o.get("pattern") {
+                if let Some(Value::String(p)) = k.pattern {
                     if !self.regex_match(p, st) {
                         let code = if unit { "unit" } else { "pattern" };
                         sink.err(ptr, code, || {
@@ -442,12 +516,12 @@ impl<'s> Interp<'s> {
                 }
             }
             Value::Array(a) => {
-                if let Some(m) = o.get("minItems").and_then(|m| m.as_u64()) {
+                if let Some(m) = k.min_items.and_then(|m| m.as_u64()) {
                     if (a.len() as u64) < m {
                         sink.err(ptr, "length", || format!("must have at least {m} items"));
                     }
                 }
-                if let Some(m) = o.get("maxItems").and_then(|m| m.as_u64()) {
+                if let Some(m) = k.max_items.and_then(|m| m.as_u64()) {
                     if (a.len() as u64) > m {
                         sink.err(ptr, "length", || format!("must have at most {m} items"));
                     }
@@ -456,7 +530,7 @@ impl<'s> Interp<'s> {
                     return evaluated;
                 }
                 let mut start = 0;
-                if let Some(Value::Array(pre)) = o.get("prefixItems") {
+                if let Some(Value::Array(pre)) = k.prefix_items {
                     for (i, ps) in pre.iter().enumerate() {
                         if let Some(item) = a.get(i) {
                             self.check(ps, item, &Path::Idx(ptr, i), unit, false, sink);
@@ -467,7 +541,7 @@ impl<'s> Interp<'s> {
                     }
                     start = pre.len();
                 }
-                if let Some(is) = o.get("items") {
+                if let Some(is) = k.items {
                     // fast path for the common `[x, y]` point arrays
                     let is_point = is.get("$ref").and_then(|r| r.as_str()) == Some("#/$defs/point");
                     for (i, item) in a.iter().enumerate().skip(start) {
@@ -484,7 +558,7 @@ impl<'s> Interp<'s> {
                         }
                     }
                 }
-                if o.get("uniqueItems") == Some(&Value::Bool(true)) {
+                if k.unique_items == Some(&Value::Bool(true)) {
                     'outer: for i in 0..a.len() {
                         for j in 0..i {
                             if json_eq(&a[i], &a[j]) {
@@ -496,7 +570,7 @@ impl<'s> Interp<'s> {
                 }
             }
             Value::Object(m) => {
-                if let Some(Value::Array(req)) = o.get("required") {
+                if let Some(Value::Array(req)) = k.required {
                     for r in req.iter().filter_map(|r| r.as_str()) {
                         if !m.contains_key(r) {
                             sink.err(&Path::Key(ptr, r), "required", || {
@@ -508,7 +582,7 @@ impl<'s> Interp<'s> {
                 if sink.failed() {
                     return evaluated;
                 }
-                let props = o.get("properties").and_then(|p| p.as_object());
+                let props = k.properties.and_then(|p| p.as_object());
                 if let Some(props) = props {
                     for (k, val) in m {
                         if let Some(ps) = props.get(k) {
@@ -522,7 +596,7 @@ impl<'s> Interp<'s> {
                         }
                     }
                 }
-                if let Some(ap) = o.get("additionalProperties") {
+                if let Some(ap) = k.additional_properties {
                     for (k, val) in m {
                         if props.map(|p| p.contains_key(k)).unwrap_or(false) {
                             continue;
@@ -549,7 +623,7 @@ impl<'s> Interp<'s> {
                         }
                     }
                 }
-                if let Some(pn) = o.get("propertyNames") {
+                if let Some(pn) = k.property_names {
                     for k in m.keys() {
                         self.check(
                             pn,
@@ -564,7 +638,7 @@ impl<'s> Interp<'s> {
                         }
                     }
                 }
-                if let Some(Value::Object(dr)) = o.get("dependentRequired") {
+                if let Some(Value::Object(dr)) = k.dependent_required {
                     for (k, deps) in dr {
                         if m.contains_key(k) {
                             for d in deps
@@ -588,7 +662,7 @@ impl<'s> Interp<'s> {
         if sink.failed() {
             return evaluated;
         }
-        if let Some(Value::Array(all)) = o.get("allOf") {
+        if let Some(Value::Array(all)) = k.all_of {
             for sub in all {
                 let ev = self.check(sub, v, ptr, unit, need, sink);
                 if sink.failed() {
@@ -599,7 +673,7 @@ impl<'s> Interp<'s> {
                 }
             }
         }
-        if let Some(Value::Array(any)) = o.get("anyOf") {
+        if let Some(Value::Array(any)) = k.any_of {
             let valid: Vec<usize> = (0..any.len())
                 .filter(|&k| self.valid(&any[k], v, unit))
                 .collect();
@@ -633,7 +707,7 @@ impl<'s> Interp<'s> {
                 }
             }
         }
-        if let Some(Value::Array(one)) = o.get("oneOf") {
+        if let Some(Value::Array(one)) = k.one_of {
             let valid: Vec<usize> = (0..one.len())
                 .filter(|&k| self.valid(&one[k], v, unit))
                 .collect();
@@ -680,12 +754,12 @@ impl<'s> Interp<'s> {
                 }
             }
         }
-        if let Some(cond) = o.get("if") {
+        if let Some(cond) = k.r#if {
             if self.valid(cond, v, unit) {
                 if need {
                     evaluated.extend(self.evaluated_of(cond, v, unit));
                 }
-                if let Some(t) = o.get("then") {
+                if let Some(t) = k.then {
                     let ev = self.check(t, v, ptr, unit, need, sink);
                     if sink.failed() {
                         return evaluated;
@@ -694,7 +768,7 @@ impl<'s> Interp<'s> {
                         evaluated.extend(ev);
                     }
                 }
-            } else if let Some(e) = o.get("else") {
+            } else if let Some(e) = k.r#else {
                 let ev = self.check(e, v, ptr, unit, need, sink);
                 if sink.failed() {
                     return evaluated;
@@ -704,7 +778,7 @@ impl<'s> Interp<'s> {
                 }
             }
         }
-        if let (Some(up), Value::Object(m)) = (o.get("unevaluatedProperties"), v) {
+        if let (Some(up), Value::Object(m)) = (k.unevaluated_properties, v) {
             for (k, val) in m {
                 if evaluated.contains(&k.as_str()) {
                     continue;

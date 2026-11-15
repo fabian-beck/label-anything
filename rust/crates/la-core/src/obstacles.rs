@@ -4,6 +4,7 @@
 use crate::geom::{dist_point_seg, dist_seg_rect, polygon, seg_overlaps_rect, Rect, EPS, P};
 use crate::grid::dt::{distance_transform, dt_maxima};
 use crate::grid::raster::MaskRaster;
+use crate::grid::regions::RegionMap;
 use crate::grid::{Backdrop, GridSpec, Sat};
 use crate::index::StaticIndex;
 use crate::labels::Variant;
@@ -104,6 +105,11 @@ pub struct Obstacles {
     /// Per item, whether the rule holds against the unlabeled points: one of the fixed
     /// positions of its first variant keeps clear of them ([`Obstacles::set_points_rule`]).
     pub points_rule: Vec<bool>,
+    /// Per item, whether the rule holds against the marks of less important items that its
+    /// labels may cover: one of the fixed positions of its first variant hides or keeps
+    /// clear of them ([`Obstacles::set_lower_rule`]). Empty when labels may not cover such
+    /// marks, or without `placement.own_nearest`.
+    pub lower_rule: Vec<bool>,
     /// Item marks.
     pub item_index: StaticIndex,
     /// Cells inside item marks, when labels may overlap no mark at all (`label_items`,
@@ -117,6 +123,10 @@ pub struct Obstacles {
     /// The luma behind labels, for the `contrast` cost term (`None` without rasters, with
     /// `weights.contrast` 0, or when the backdrop is uniform).
     pub backdrop: Option<Backdrop>,
+    /// The region map (`None` without regions, or when the region weights are all 0).
+    pub regions: Option<RegionMap>,
+    /// The home region of every item (0 = open; all 0 without a region map).
+    pub home: Vec<u32>,
     /// Free space, computed on first use (see [`Obstacles::free_space`]).
     free: std::sync::OnceLock<FreeSpace>,
     pub label_area: Option<Rect>,
@@ -188,6 +198,70 @@ impl Obstacles {
             })
             .collect();
         self.points_rule = rule;
+    }
+
+    /// Whether the mark of a less important item (not of the item's group) that the label
+    /// box `r` of `item` does not hide comes nearer to it than its own mark (`d_own`) plus
+    /// `clear`, at most the distance between the two marks' reference points (spec §4.4).
+    pub fn lower_nearer(
+        &self,
+        model: &Model,
+        item: &Item,
+        r: &Rect,
+        d_own: f64,
+        clear: f64,
+    ) -> bool {
+        let i = item.index;
+        let own_ref = item.shape.reference();
+        self.item_index
+            .find(&r.inflate(d_own + clear), |j| {
+                let j = j as usize;
+                if j == i || !model.is_lower(i, j) || model.group_rep(j) == Some(i) {
+                    return false;
+                }
+                let sj = &model.items[j].shape;
+                // a mark entirely under the label is hidden, not a competitor
+                if r.contains_rect(&sj.bbox()) && sj.overlaps_rect(r) {
+                    return false;
+                }
+                let sep = if clear > 0.0 {
+                    minf(clear, sj.reference().dist(own_ref))
+                } else {
+                    0.0
+                };
+                sj.dist_rect(r) < d_own + sep - EPS
+            })
+            .is_some()
+    }
+
+    /// Whether the rule holds against the marks of less important items that labels may
+    /// cover (`avoid.label.lower_items` given and not hard), per item (spec §4.4): when one
+    /// of the 8 fixed positions (spec §6.1) of the item's first variant hides or keeps clear
+    /// of them by its margin. Among marks so dense that none does, no place beside the mark
+    /// could, and the item's labels follow the rule for the marks they may not cover only.
+    pub fn set_lower_rule(&mut self, model: &Model, variants: &[Vec<Variant>]) {
+        if !self.dynamic.lower_cover || !model.placement.own_nearest {
+            return;
+        }
+        let rule = model
+            .items
+            .iter()
+            .zip(variants)
+            .map(|(it, vs)| {
+                let Some(v) = vs.first() else {
+                    return false;
+                };
+                let (hw, hh) = (0.5 * v.w, 0.5 * v.h);
+                (0..8).any(|k| {
+                    let d = crate::candidates::dir_of(45.0 * k as f64);
+                    let c = crate::candidates::touch_center(&it.shape, it.len.offset, d, hw, hh);
+                    let b = Rect::from_center(c, hw, hh);
+                    let d_own = it.shape.dist_rect(&b);
+                    !self.lower_nearer(model, it, &b, d_own, it.len.margin)
+                })
+            })
+            .collect();
+        self.lower_rule = rule;
     }
 
     /// The free space of the obstacles prepared from `model`. Only free-space seeds of
@@ -295,6 +369,30 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         )
     } else {
         None
+    };
+    // the region map and the home of every item (spec §4.8)
+    let w = &model.weights;
+    let regions = if w.straddle > 0.0 || w.foreign > 0.0 || w.leader_borders > 0.0 {
+        RegionMap::new(grid, &model.region_fills)
+    } else {
+        None
+    };
+    let home: Vec<u32> = match &regions {
+        Some(rm) => model
+            .items
+            .iter()
+            .map(|it| {
+                match it
+                    .region
+                    .as_ref()
+                    .and_then(|name| model.region_ids.get(name))
+                {
+                    Some(&r) => r,
+                    None => rm.home(it.shape.reference(), &it.shape.bbox()),
+                }
+            })
+            .collect(),
+        None => vec![0; model.items.len()],
     };
     names.remove("ignore");
     names.remove("items");
@@ -464,11 +562,14 @@ pub fn prepare(model: &Model, min_font: f64) -> Obstacles {
         prim_index,
         point_flag,
         points_rule: Vec::new(),
+        lower_rule: Vec::new(),
         item_index,
         item_occ,
         items_sat,
         own,
         backdrop,
+        regions,
+        home,
         free: std::sync::OnceLock::new(),
         label_area: model.label_area,
         leader_area: model.leader_area,
@@ -535,8 +636,10 @@ fn free_space(model: &Model, obs: &Obstacles) -> FreeSpace {
         .filter(|&i| classes[i].label.is_hard())
         .collect();
     let la = model.label_area;
+    // on a region map, the free space is the open space (spec §4.8): seeds lie in the sea
+    let regions = obs.regions.as_ref().map(|rm| &rm.ids);
     let dt = distance_transform(&grid, |i| {
-        if hard_cov[i] > 0 {
+        if hard_cov[i] > 0 || regions.is_some_and(|ids| ids[i] != 0) {
             return true;
         }
         let (c, r) = (i % grid.cols, i / grid.cols);

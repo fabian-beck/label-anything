@@ -1,0 +1,28 @@
+{
+  "kind": "validate",
+  "name": "region-rule-unknown-property",
+  "problem": {
+    "items": [],
+    "obstacles": {
+      "svg": {
+        "source": "<svg/>",
+        "regions": [
+          {
+            "selector": "path",
+            "kind": "each"
+          }
+        ]
+      }
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/obstacles/svg/regions/0/kind",
+        "code": "unknown_property"
+      }
+    ],
+    "warnings": []
+  }
+}

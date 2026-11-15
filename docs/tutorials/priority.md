@@ -160,7 +160,8 @@ can compute each item's priority, a score or `(tier, score)`, once before the so
 * `strict` (default) — an omitted label would not fit even if only the labels of higher
   or equal priority were placed; within that, as many labels as possible.
 * `prefix` — the placed labels are a prefix of the priority order: every label more
-  important than a shown one is shown.
+  important than a shown one is shown (apart from the members of a group label and items
+  whose mark a more important label covers, [below](#important-labels-over-minor-marks)).
 * `weighted` — maximize the sum of the (non-negative) scores, tiers strictly first;
   inversions are allowed and reported.
 
@@ -187,13 +188,18 @@ By default every mark keeps every other item's label away, whatever the prioriti
 crowd, the dots of minor items can leave an important item no place. With
 `avoid.label.lower_items` set to a weight, a label may cover the marks of less important
 items, which then stay unlabeled: a mark is labeled or covered, never both
-(`avoid.leader.lower_items` lets leaders pass such marks). On a world map of the 1,000
+(`avoid.leader.lower_items` lets leaders pass such marks). Where a place next to its mark
+allows it, a label hides such a mark entirely or keeps clear of it, so that it is not read
+as the minor mark's label. On a world map of the 1,000
 busiest airports, this brings back the labels of ATL, ORD, LHR, CDG and FRA, which the
 dots of smaller airports nearby had blocked.
 
 ```json
 {"avoid": {"label": {"lower_items": 10}, "leader": {"lower_items": 2.5}}}
 ```
+
+With `prefix` omission a covered item does not end the prefix: the labels after it in the
+order still get their places.
 
 The `map` preset sets these values, as do the plotting and map helpers whenever you give
 them a priority; `"lower_items": "hard"` keeps every mark clear again

@@ -171,6 +171,7 @@ pub fn place_validated(
     }
     let mut obs = obstacles::prepare(&m, min_font);
     obs.set_points_rule(&m, &variants);
+    obs.set_lower_rule(&m, &variants);
     let t1 = env.now_ms();
     let mut s = solver::Solve::new(&m, &obs, env, &pri, measurer, variants);
     s.generate_level0();

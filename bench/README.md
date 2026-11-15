@@ -225,7 +225,7 @@ Hard/soft/ignore come from the effective options (defaults.md ← preset ← pro
 | | `own_mark_violations`, `internal_outside` | as above |
 | | `internal_eligible`, `internal_rate` | placed items whose shape can contain the placed box grown by `placement.inner_padding` (circles exactly, rects/ellipses at the center, polygons at the pole of inaccessibility); rate = fraction of them placed internally |
 | position | `position.rank_mean`, `hist` | PerceptPPO rank (top 0, right 1, bottom 2, left 3, top-right 4, bottom-right 5, top-left 6, bottom-left 7) of adjacent labels by `anchor_side` |
-| priority | `inversions` | **removal test**: an omitted h counts if any of its fixed adjacent positions (support-function placement around the true shape ⊕ offset, spec §6.1: the 8 positions, or only those of an explicit `position_order` list, when the `adjacent` model is enabled; area anchors also their pole unless `internal: never`) is free given only the placed labels/leaders of key ≥ key(h), the marks of all other items (those of lower key per `lower_items`) and the hard classes; with `avoid.label.lower_items` soft, h whose mark a placed label of higher key covers is not counted; hard labels keep the label gap (`defaults.spacing`, twice the margin unless set, at least the margin) and hard marks the label margin (spec §4.4) from the position, and with `placement.own_nearest` the position is nearer to the item's own mark than to any other mark it may not cover by the margin or the distance between the two marks (ADR placement/margin), and (unless `"items"`) likewise than to any unlabeled circle it does not hide entirely, for items of which one of the 8 fixed positions keeps clear of those circles by that test (ADR placement/unlabeled-points) — granting the circles of an SVG background the engine's flattening tolerance (`tolerance`, 0.25 px): there they are polygons up to that much inside the circle; conservative: the candidate box is *grown* by t (and the gap, the margin and the clear margin by t); key = (required, tier, reserved, band(score)); items without such candidates (e.g. `models: ["distant"]`) are counted in `removal_untestable` |
+| priority | `inversions` | **removal test**: an omitted h counts if any of its fixed adjacent positions (support-function placement around the true shape ⊕ offset, spec §6.1: the 8 positions, or only those of an explicit `position_order` list, when the `adjacent` model is enabled; area anchors also their pole unless `internal: never`) is free given only the placed labels/leaders of key ≥ key(h), the marks of all other items (those of lower key per `lower_items`) and the hard classes; with `avoid.label.lower_items` soft, h whose mark a placed label of higher key covers is not counted; hard labels keep the label gap (`defaults.spacing`, twice the margin unless set, at least the margin) and hard marks the label margin (spec §4.4) from the position, and with `placement.own_nearest` the position is nearer to the item's own mark than to any other mark it may not cover by the margin or the distance between the two marks (ADR placement/margin), likewise than to the mark of any less important item it may cover (`lower_items` given and not hard) but does not hide entirely, for items of which one of the 8 fixed positions hides or keeps clear of those marks by that test (ADR priority/lower-items), and (unless `"items"`) likewise than to any unlabeled circle it does not hide entirely, for items of which one of the 8 fixed positions keeps clear of those circles by that test (ADR placement/unlabeled-points) — granting the circles of an SVG background the engine's flattening tolerance (`tolerance`, 0.25 px): there they are polygons up to that much inside the circle; conservative: the candidate box is *grown* by t (and the gap, the margin and the clear margin by t); key = (required, tier, reserved, band(score)); items without such candidates (e.g. `models: ["distant"]`) are counted in `removal_untestable` |
 | | `prefix_length`, `prefix_rate` | items at the start of the priority order that are all placed |
 | | `ndcg_at_k` | k = placed; DCG = Σ_j g(rank of the j-th placed in rank order)/log2(j + 2), normalized by the ideal (the top-k); 1 iff the placed set is a prefix |
 | | `coverage.satisfaction` | groups of `priority.coverage.by` (canonical JSON of the value) with ≥ min(min_per_group, group size) placed labels / groups |
@@ -251,6 +251,12 @@ the ink of the glyph outlines: a text box spans from the ink top of its first li
 ink bottom of its last, ADR text/measurement) and §5.3 line breaking with fontTools on the bundled Noto
 Sans; the label box is the first normal variant (`balanced(L_min)` under wrap settings),
 its lines aligned per `align` (default `center`, ADR text/line-breaking).
+
+Both re-implementations are held to the repository's conformance cases
+(`bench/tests/test_conformance.py`): the line breaking, wrapping, truncation and variants of
+`conformance/text/wrap-*.json`, and every case of `conformance/expr/` with its value bit
+for bit or its error code and offset. The expression functions `log` and `log1p` are the
+platform's, not the engine's deterministic ones (spec §10.4), so their last bit can differ.
 
 ## Renderer
 
@@ -415,6 +421,22 @@ more (224 against 199 ms) for 994 labels instead of 871. The rule against standi
 an unlabeled point than to the own mark (ADR placement/unlabeled-points) added 4 % to both
 point problems on 2026-10-25 (228 against 220 ms, 14.3 against 13.7 ms; TypeScript 40
 against 36 ms for the 200 labels), with the same labels placed.
+
+A profile of 2026-10-25 by instruction counts (without a clock) found more work that
+changes no result. Explaining an omitted label (`reason`, `blocked_by`) generates its
+candidates again without the placed labels and keeps only the statically usable ones, but
+evaluated each of them completely: on the airports with strict omission that was 46 % of
+all instructions, on the class metrics 40 %. The evaluation now stops at the first rule
+that disqualifies a candidate. The schema check of the input looked up each keyword it
+knows in every schema object by hashing its name, up to a fifth of a CLI call on large
+inputs; it now reads each object once (2.8 times faster). And the static spatial index
+keeps, with each entry of a bucket, the bucket where its box begins, which every query
+reads (another 1 to 4 % of the instructions). On the 62 benchmark problems,
+single-threaded (medians of alternating runs, without the index change), the 41 that the
+native engine solves within its time guards took 8.8 % less engine time and 12 % less per
+CLI call, with the same results; the TypeScript engine's took as long as before, within the
+noise. The problems that reach a guard placed 143 (native) and 206 (TypeScript) more labels
+in 5.5 % and 9.2 % less time.
 
 ## Report
 

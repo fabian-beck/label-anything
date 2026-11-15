@@ -1,6 +1,6 @@
 /**
  * A world map (Natural Earth countries, Equal Earth projection) with a label per country:
- * inside its area where it fits, else next to it or with a leader, abbreviated when space
+ * inside its area where it fits, else next to it or with a leader, abbreviated (an option) when space
  * is short, larger for the more important ones. Pan and zoom: every move is solved again,
  * warm-started, so labels stay put and the label set nests as space opens. The view is a
  * window on the map (`canvas.overscan`): a country is passed whole, with what lies a
@@ -75,7 +75,7 @@ export class MapScene implements Scene {
   readonly title = "World map";
   readonly hint = "Drag to pan, scroll or pinch to zoom: labels stay put, also at the border, and fill in as space opens.";
   readonly about =
-    "Each country is an area item: its label goes inside where it fits, else beside it or on a leader. Abbreviations are shorter alternatives the engine falls back to, and type size follows importance. Every pan and zoom is solved again from the previous labels (warm start): labels stay put, and zooming in only adds labels. The view is a window on the map (canvas.overscan): a label at its border keeps its place and is cut there.";
+    "Each country is an area item: its label goes inside where it fits, else beside it or on a leader. Names are in full; abbreviations can be offered as shorter alternatives the engine falls back to. Type size follows importance. Every pan and zoom is solved again from the previous labels (warm start): labels stay put, and zooming in only adds labels. The view is a window on the map (canvas.overscan): a label at its border keeps its place and is cut there.";
   readonly credits = 'Map data: <a href="https://www.naturalearthdata.com/">Made with Natural Earth</a> (public domain).';
   readonly classes: readonly string[] = [];
   readonly cursor = "grab" as const;
@@ -94,7 +94,7 @@ export class MapScene implements Scene {
         { value: "rank", label: "map rank", title: "Natural Earth's label rank" },
       ],
     },
-    { key: "abbrev", label: "Abbreviations", kind: "toggle", hint: "Offer Natural Earth's abbreviations (Ger., Zimb.) as shorter alternatives" },
+    { key: "abbrev", label: "Abbreviations", kind: "toggle", hint: "Offer Natural Earth's abbreviations (Ger., Zimb.) as shorter alternatives; off: every name in full" },
     {
       key: "window", label: "Labels cut at the border", kind: "toggle",
       hint: "The view is a window on the map (canvas.overscan): a label at its border keeps its place and is cut there. Off: only the part in view is labeled, every label inside the view, so labels at the border move with it",
@@ -106,7 +106,7 @@ export class MapScene implements Scene {
     },
     { key: "flightsFirst", label: "Flights before countries", kind: "toggle", hint: "Flight labels outrank country labels", when: (g) => Number(g("param.flights")) > 0 },
   ];
-  readonly params: Obj = { importance: "pop", abbrev: true, window: true, flights: 0, flightsFirst: false };
+  readonly params: Obj = { importance: "pop", abbrev: false, window: true, flights: 0, flightsFirst: false };
   playing = false;
 
   #countries: Country[] = [];

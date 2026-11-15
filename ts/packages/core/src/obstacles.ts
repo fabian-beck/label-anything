@@ -22,6 +22,7 @@ import * as polygon from "./geom/polygon.js";
 import { Backdrop, GridSpec, Sat } from "./grid/index.js";
 import { distanceTransform, dtMaxima, type Seed } from "./grid/dt.js";
 import { Occupancy } from "./grid/occupancy.js";
+import { RegionMap } from "./grid/regions.js";
 import { MaskRaster } from "./grid/raster.js";
 import { asF64, get } from "./json.js";
 import { clampf, cmpStr, maxf, minf, toIndex } from "./math.js";
@@ -136,6 +137,13 @@ export class Obstacles {
    * positions of its first variant keeps clear of them ({@link setPointsRule}).
    */
   pointsRule: boolean[] = [];
+  /**
+   * Per item, whether the rule holds against the marks of less important items that its
+   * labels may cover: one of the fixed positions of its first variant hides or keeps clear
+   * of them ({@link setLowerRule}). Empty when labels may not cover such marks, or without
+   * `placement.own_nearest`.
+   */
+  lowerRule: boolean[] = [];
   /** {@link itemsSat} and {@link own} once built. */
   private itemsSatCache: Sat | null = null;
   private ownCache: ([GridSpec, Sat] | null)[] | null = null;
@@ -168,6 +176,10 @@ export class Obstacles {
      * `weights.contrast` 0, or when the backdrop is uniform).
      */
     public backdrop: Backdrop | null,
+    /** The region map (`null` without regions, or when the region weights are all 0). */
+    public regions: RegionMap | null,
+    /** The home region of every item (0 = open; all 0 without a region map). */
+    public home: Uint32Array,
   ) {}
 
   private free: FreeSpace | null = null;
@@ -313,6 +325,50 @@ export class Obstacles {
         const c = touchCenter(it.shape, it.len.offset, dirOf(45 * k), hw, hh);
         const b = Rect.fromCenter(c, hw, hh);
         if (this.pointNearer(it, b, it.shape.distRect(b), it.len.margin) === null) return true;
+      }
+      return false;
+    });
+  }
+
+  /**
+   * Whether the mark of a less important item (not of the item's group) that the label box
+   * `r` of `item` does not hide comes nearer to it than its own mark (`dOwn`) plus `clear`,
+   * at most the distance between the two marks' reference points (spec §4.4; Rust
+   * `Obstacles::lower_nearer`).
+   */
+  lowerNearer(model: Model, item: Item, r: Rect, dOwn: number, clear: number): boolean {
+    const i = item.index;
+    const ownRef = item.shape.reference();
+    const hit = this.itemIndex.find(r.inflate(dOwn + clear), (j) => {
+      if (j === i || !model.isLower(i, j) || model.groupRep(j) === i) return false;
+      const sj = model.items[j]!.shape;
+      // a mark entirely under the label is hidden, not a competitor
+      if (r.containsRect(sj.bbox()) && sj.overlapsRect(r)) return false;
+      const sep = clear > 0 ? minf(clear, sj.reference().dist(ownRef)) : 0;
+      return sj.distRect(r) < dOwn + sep - EPS;
+    });
+    return hit >= 0;
+  }
+
+  /**
+   * Whether the rule holds against the marks of less important items that labels may cover
+   * (`avoid.label.lower_items` given and not hard), per item (spec §4.4): when one of the 8
+   * fixed positions (spec §6.1) of the item's first variant hides or keeps clear of them by
+   * its margin. Among marks so dense that none does, no place beside the mark could, and the
+   * item's labels follow the rule for the marks they may not cover only (Rust
+   * `Obstacles::set_lower_rule`).
+   */
+  setLowerRule(model: Model, variants: readonly (readonly Variant[])[]): void {
+    if (!this.dynamic.lowerCover || !model.placement.ownNearest) return;
+    this.lowerRule = model.items.map((it, i) => {
+      const v = variants[i]?.[0];
+      if (v === undefined) return false;
+      const hw = 0.5 * v.w;
+      const hh = 0.5 * v.h;
+      for (let k = 0; k < 8; k++) {
+        const c = touchCenter(it.shape, it.len.offset, dirOf(45 * k), hw, hh);
+        const b = Rect.fromCenter(c, hw, hh);
+        if (!this.lowerNearer(model, it, b, it.shape.distRect(b), it.len.margin)) return true;
       }
       return false;
     });
@@ -468,6 +524,16 @@ export function prepare(model: Model, minFont: number): Obstacles {
     const bgrid = { originX: bg.ox, originY: bg.oy, cell: bg.cell, cols: bg.cols, rows: bg.rows };
     backdrop = Backdrop.of(bg, backdropLuma(layers, model.background, bgrid));
   }
+  // the region map and the home of every item (spec §4.8)
+  const w = model.weights;
+  const regions = w.straddle > 0 || w.foreign > 0 || w.leaderBorders > 0 ? RegionMap.of(grid, model.regionFills) : null;
+  const home = new Uint32Array(model.items.length);
+  if (regions !== null) {
+    model.items.forEach((it, i) => {
+      const r = it.region === null ? undefined : model.regionIds.get(it.region);
+      home[i] = r !== undefined ? r : regions.home(it.shape.reference(), it.shape.bbox());
+    });
+  }
   for (const k of ["ignore", "items", "labels", "leaders", "canvas_edge"]) nameSet.delete(k);
   const names = Array.from(nameSet).sort(cmpStr);
   const pol = (map: Record<string, unknown>, k: string): AvoidW =>
@@ -575,7 +641,7 @@ export function prepare(model: Model, minFont: number): Obstacles {
   }
   // distance transform of static hard obstacles (incl. items and outside the label area),
   // computed on first use
-  const freeSource = (): FreeSpace => freeSpace(model, grid, classes, dynamic, indexCell);
+  const freeSource = (): FreeSpace => freeSpace(model, grid, classes, dynamic, indexCell, regions);
   return new Obstacles(
     grid,
     classes,
@@ -590,6 +656,8 @@ export function prepare(model: Model, minFont: number): Obstacles {
     model.leaderArea,
     indexCell,
     backdrop,
+    regions,
+    home,
   );
 }
 
@@ -600,7 +668,14 @@ interface FreeSpace {
   seedIndex: StaticIndex;
 }
 
-function freeSpace(model: Model, grid: GridSpec, classes: Class[], dynamic: Dynamic, indexCell: number): FreeSpace {
+function freeSpace(
+  model: Model,
+  grid: GridSpec,
+  classes: Class[],
+  dynamic: Dynamic,
+  indexCell: number,
+  regions: RegionMap | null,
+): FreeSpace {
   const hardMask = new MaskRaster(grid);
   if (dynamic.labelItems.isHard()) for (const it of model.items) hardMask.shape(it.shape);
   const hardCov = hardMask.intoCoverage();
@@ -608,8 +683,10 @@ function freeSpace(model: Model, grid: GridSpec, classes: Class[], dynamic: Dyna
   for (const c of classes) if (c.label.isHard() && c.sat !== null) hardSats.push(c.sat);
   const la = model.labelArea;
   const cols = grid.cols;
+  // on a region map, the free space is the open space (spec §4.8): seeds lie in the sea
+  const ids = regions !== null ? regions.ids : null;
   const dt = distanceTransform(grid, (i) => {
-    if (hardCov[i]! > 0) return true;
+    if (hardCov[i]! > 0 || (ids !== null && ids[i] !== 0)) return true;
     const c = i % cols;
     const r = Math.trunc(i / cols);
     for (let k = 0; k < hardSats.length; k++) if (hardSats[k]!.cell(c, r) > 0) return true;

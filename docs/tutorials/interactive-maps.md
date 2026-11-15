@@ -51,7 +51,7 @@ pans and zooms in again:
 ```text
 zoom 1.0: <Result placed=34/40 hard_violations=0 omitted=6> None
 zoom 1.0: <Result placed=34/40 hard_violations=0 omitted=6> {'moved': 0, 'added': 0, 'removed': 0, 'mean_displacement': 0.0}
-zoom 1.3: <Result placed=39/40 hard_violations=0 omitted=1> {'moved': 8, 'added': 5, 'removed': 0, 'mean_displacement': 5.7}
+zoom 1.3: <Result placed=39/40 hard_violations=0 omitted=1> {'moved': 10, 'added': 5, 'removed': 0, 'mean_displacement': 6.1}
 zoom 1.7: <Result placed=40/40 hard_violations=0 omitted=0> {'moved': 1, 'added': 1, 'removed': 0, 'mean_displacement': 1.7}
 zoom 1.7: <Result placed=40/40 hard_violations=0 omitted=0> {'moved': 0, 'added': 0, 'removed': 0, 'mean_displacement': 0.0}
 zoom 2.2: <Result placed=38/40 hard_violations=0 omitted=2> {'moved': 1, 'added': 0, 'removed': 2, 'mean_displacement': 0.6}
@@ -61,8 +61,8 @@ zoom 2.2: <Result placed=38/40 hard_violations=0 omitted=2> {'moved': 1, 'added'
 placement reports its `displacement`. The counts include the labels in the overscan and
 the cities that are marks only (the two without a label at zoom 2.2 have left the
 overscan). The two frames after a pan are pinned: nothing moved. Over the zooms, measured
-by how much each label's offset from its point changes, labels move 1.5 px per frame with
-warm starts and 9.8 px without. Those moves come from labels whose place a newly shown
+by how much each label's offset from its point changes, labels move 1.6 px per frame with
+warm starts and 8.6 px without. Those moves come from labels whose place a newly shown
 label takes, or that find a better place as space opens: here mostly at the first zoom
 step, where five more labels fit, as 40 cities at 14 px leave little room once labels keep
 their margin from other cities and twice that from each other. A smaller margin

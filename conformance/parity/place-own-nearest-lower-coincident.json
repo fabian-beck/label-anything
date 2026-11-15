@@ -1,0 +1,182 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 200,
+      "height": 80
+    },
+    "degrade": [
+      "omit"
+    ],
+    "placement": {
+      "models": [
+        "adjacent"
+      ]
+    },
+    "avoid": {
+      "label": {
+        "lower_items": 2.0
+      }
+    },
+    "items": [
+      {
+        "id": "hub",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 40
+        },
+        "label": {
+          "type": "text",
+          "text": "Hub"
+        },
+        "priority": 2.0,
+        "placement": {
+          "position_order": [
+            "right"
+          ]
+        }
+      },
+      {
+        "id": "minor",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 40
+        },
+        "label": {
+          "type": "text",
+          "text": "Minor"
+        },
+        "priority": 1.0,
+        "placement": {
+          "position_order": [
+            "left"
+          ]
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "hub",
+        "placed": true,
+        "box": {
+          "x": 103.0,
+          "y": 33.58,
+          "w": 27.28800000000001,
+          "h": 12.840000000000003
+        },
+        "anchor": [
+          100.0,
+          40.0
+        ],
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Hub"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            23.688
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.525,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 2.0,
+          "rank": 0
+        }
+      },
+      {
+        "id": "minor",
+        "placed": true,
+        "box": {
+          "x": 59.788000000000004,
+          "y": 33.718,
+          "w": 37.211999999999996,
+          "h": 12.563999999999993
+        },
+        "anchor": [
+          100.0,
+          40.0
+        ],
+        "anchor_side": "left",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Minor"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.643999999999998
+          ],
+          "line_widths": [
+            33.612
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.525,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 1.0,
+          "rank": 1
+        }
+      }
+    ],
+    "stats": {
+      "placed": 2,
+      "total": 2,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 800,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 2,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 1.05,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 67,
+        "rows": 27,
+        "classes": []
+      }
+    },
+    "debug_svg": null
+  }
+}

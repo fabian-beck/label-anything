@@ -75,13 +75,17 @@ def test_text_measurement_kerning_and_wrapping():
     assert f.width("Hello", 12) == pytest.approx(f.units("Hello") * 12 / 1000)
     meas = text.measure_fn(12, 400)
     s = "com.facebook.react.uimanager.UIManagerModule"
-    assert text.break_opportunities("a::b") == [3]
+    assert text.break_opportunities("a::b") == [2]  # a line may end after the second colon
     lines = text.greedy(s, 120, meas)
     assert "".join(lines) == s and all(meas(l) <= 120 for l in lines)
     bal = text.balanced(s, 2, meas)
     assert len(bal) == 2 and "".join(bal) == s
-    tr = text.truncate_end(s, 60, 1, meas)
-    assert len(tr) == 1 and tr[0].endswith(text.ELLIPSIS) and meas(tr[0]) <= 60
+    tr = text.truncate_end(s, 60, meas)
+    assert tr.endswith(text.ELLIPSIS) and s.startswith(tr[:-1]) and meas(tr) <= 60
+    lay = text.normal_variant(s, 12, 400, 1.2, {"max_width": 60}, "end")  # max_lines: 1
+    assert lay.lines == [tr] and lay.truncated and lay.used == "truncated"
+    hard = text.normal_variant("two\r\nlines ", 12, 400, 1.2, {"max_width": 10, "max_lines": 1}, "end")
+    assert hard.lines == ["two", "lines "] and not hard.truncated  # hard breaks: as given
 
 
 def test_text_boxes_fit_the_ink():

@@ -974,8 +974,8 @@
         "id": "w21",
         "placed": true,
         "box": {
-          "x": 179.12132034355966,
-          "y": 158.03867965644037,
+          "x": 173.87661831038076,
+          "y": 157.16000000000403,
           "w": 50.06400000000002,
           "h": 12.839999999999975
         },
@@ -984,7 +984,7 @@
           173.0
         ],
         "anchor_side": "top-right",
-        "model": "adjacent",
+        "model": "slider",
         "text": {
           "lines": [
             "Place 21"
@@ -1008,7 +1008,7 @@
           "scale": 1.0
         },
         "leader": null,
-        "cost": 0.18227069148996544,
+        "cost": 0.22412662664982913,
         "degrade_steps": [],
         "priority": {
           "tier": 0,
@@ -2271,10 +2271,10 @@
       "iterations": 10000,
       "time_guard_hit": false,
       "cancelled": false,
-      "candidates": 1683,
+      "candidates": 1738,
       "omission_order": [],
       "priority_inversions": 0,
-      "total_cost": 3.2869459378963435,
+      "total_cost": 3.328801873056207,
       "degraded": {},
       "grid": {
         "cell": 3.0,

@@ -1,0 +1,78 @@
+{
+  "kind": "place",
+  "name": "a label is clearly nearer to its own mark than to the mark of a less important item beside it",
+  "$comment": "In its only position the hub's label could be the minor item's, whose own label stands right of its mark (spec §4.4).",
+  "problem": {
+    "canvas": {
+      "width": 200,
+      "height": 80
+    },
+    "degrade": [
+      "omit"
+    ],
+    "placement": {
+      "models": [
+        "adjacent"
+      ]
+    },
+    "avoid": {
+      "label": {
+        "lower_items": 2.0
+      }
+    },
+    "items": [
+      {
+        "id": "hub",
+        "anchor": {
+          "type": "point",
+          "x": 60,
+          "y": 50
+        },
+        "label": {
+          "type": "text",
+          "text": "Hub"
+        },
+        "priority": 2.0,
+        "placement": {
+          "position_order": [
+            "right"
+          ]
+        }
+      },
+      {
+        "id": "minor",
+        "anchor": {
+          "type": "point",
+          "x": 93.5,
+          "y": 50
+        },
+        "label": {
+          "type": "text",
+          "text": "Minor"
+        },
+        "priority": 1.0,
+        "placement": {
+          "position_order": [
+            "right"
+          ]
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed_ids": [
+      "minor"
+    ],
+    "unplaced_ids": [
+      "hub"
+    ],
+    "reasons": {
+      "hub": "no_feasible_candidate"
+    },
+    "own_nearest": true
+  }
+}

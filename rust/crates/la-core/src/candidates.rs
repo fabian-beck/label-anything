@@ -61,6 +61,8 @@ pub enum Block {
     Items,
     Labels,
     Leaders,
+    /// A label too much in other items' regions (`placement.max_foreign`).
+    Regions,
     /// A static obstacle class (index into `Obstacles::classes`).
     Class(u16),
 }
@@ -1209,6 +1211,67 @@ impl AreaFrame<'_> {
         }
     }
 
+    /// The points of the sampling grid with spacing `step`, row by row from the top
+    /// (spec §6.5): from the bounding box's top-left corner plus half the label size.
+    /// In a window: its rows and columns from the last before the view to the last whose
+    /// label boxes can touch it, however large the area is.
+    fn grid(&self, step: f64, mut f: impl FnMut(P)) {
+        let bb = self.shape.bbox();
+        let (hw, hh) = (self.hw, self.hh);
+        let Some((view, _)) = &self.near else {
+            let mut y = bb.y0 + hh;
+            while y <= bb.y1 - hh + 1e-9 {
+                let mut x = bb.x0 + hw;
+                while x <= bb.x1 - hw + 1e-9 {
+                    f(P::new(x, y));
+                    // coordinates so large that a step no longer changes them
+                    if x + step <= x {
+                        break;
+                    }
+                    x += step;
+                }
+                if y + step <= y {
+                    break;
+                }
+                y += step;
+            }
+            return;
+        };
+        let (x0, y0) = (bb.x0 + hw, bb.y0 + hh);
+        // the last row and column before the view (the first of the grid at least)
+        let first = |lo: f64, o: f64| maxf(crate::math::floor_fast((lo - o) / step), 0.0);
+        let (xl, yl) = (
+            minf(bb.x1 - hw, view.x1 + hw) + 1e-9,
+            minf(bb.y1 - hh, view.y1 + hh) + 1e-9,
+        );
+        let mut j = first(view.y0 - hh, y0);
+        let mut y = y0 + j * step;
+        while y <= yl {
+            let mut i = first(view.x0 - hw, x0);
+            let mut x = x0 + i * step;
+            while x <= xl {
+                f(P::new(x, y));
+                i += 1.0;
+                // coordinates so large that a step no longer changes them
+                if x0 + i * step <= x {
+                    break;
+                }
+                x = x0 + i * step;
+            }
+            j += 1.0;
+            if y0 + j * step <= y {
+                break;
+            }
+            y = y0 + j * step;
+        }
+    }
+    /// Whether the label box at `c` touches the view of a window (elsewhere: always).
+    fn shown(&self, c: P) -> bool {
+        self.near
+            .as_ref()
+            .is_none_or(|(view, _)| view.touches(&Rect::from_center(c, self.hw, self.hh)))
+    }
+
     /// The places of the area's labels in this frame with what they lack (spec §6.5):
     /// the best sample, improved, then one sample of each of the 3 × 3 cells of the
     /// samples' bounding box (the one that lacks least as seen from the cell's middle),
@@ -1231,71 +1294,47 @@ impl AreaFrame<'_> {
                 .is_some_and(|(view, _)| !view.touches(&Rect::from_center(self.pole, hw, hh)));
         }
         let bb = self.shape.bbox();
+        // an area far larger than any picture is sampled more coarsely, at about
+        // `AREA_SAMPLES` places; in a window the grid keeps to the view instead
         let step = match &self.near {
-            // grid samples where the label fits; an area far larger than any picture is
-            // sampled more coarsely, at about `AREA_SAMPLES` places
-            None => {
-                let step = maxf(maxf(2.0 * hh, 4.0), (bb.w() * bb.h() / AREA_SAMPLES).sqrt());
-                let mut y = bb.y0 + hh;
-                while y <= bb.y1 - hh + 1e-9 {
-                    let mut x = bb.x0 + hw;
-                    while x <= bb.x1 - hw + 1e-9 {
-                        let c = P::new(x, y);
-                        if self.fits(c) {
-                            pts.push(sample(c));
-                        }
-                        // coordinates so large that a step no longer changes them
-                        if x + step <= x {
-                            break;
-                        }
-                        x += step;
-                    }
-                    if y + step <= y {
-                        break;
-                    }
-                    y += step;
-                }
-                step
-            }
-            // in a window: the samples of the same grid whose label box touches the view,
-            // however large the area is
-            Some((view, _)) => {
-                let step = maxf(2.0 * hh, 4.0);
-                let (x0, y0) = (bb.x0 + hw, bb.y0 + hh);
-                // the last row and column before the view (the first of the grid at least)
-                let first = |lo: f64, o: f64| maxf(crate::math::floor_fast((lo - o) / step), 0.0);
-                let (xl, yl) = (
-                    minf(bb.x1 - hw, view.x1 + hw) + 1e-9,
-                    minf(bb.y1 - hh, view.y1 + hh) + 1e-9,
-                );
-                let mut j = first(view.y0 - hh, y0);
-                let mut y = y0 + j * step;
-                while y <= yl {
-                    let mut i = first(view.x0 - hw, x0);
-                    let mut x = x0 + i * step;
-                    while x <= xl {
-                        let c = P::new(x, y);
-                        if view.touches(&Rect::from_center(c, hw, hh)) && self.fits(c) {
-                            pts.push(sample(c));
-                        }
-                        i += 1.0;
-                        // coordinates so large that a step no longer changes them
-                        if x0 + i * step <= x {
-                            break;
-                        }
-                        x = x0 + i * step;
-                    }
-                    j += 1.0;
-                    if y0 + j * step <= y {
-                        break;
-                    }
-                    y = y0 + j * step;
-                }
-                step
-            }
+            None => maxf(maxf(2.0 * hh, 4.0), (bb.w() * bb.h() / AREA_SAMPLES).sqrt()),
+            Some(_) => maxf(2.0 * hh, 4.0),
         };
+        let first = pts.len();
+        self.grid(step, |c| {
+            if self.shown(c) && self.fits(c) {
+                pts.push(sample(c));
+            }
+        });
         if pts.is_empty() {
             return Vec::new();
+        }
+        // where the label fits only narrowly, the grid's samples lie in fewer than three
+        // rows (columns), and the cells below would have no places above and below
+        // (beside) each other: the points half a spacing below (right of, and with both
+        // below and right of) the grid's points are sampled too
+        let mut gb = Rect::EMPTY;
+        for &(c, _, _) in &pts[first..] {
+            gb = gb.add_point(c);
+        }
+        let rows = gb.h() < 1.5 * step;
+        let cols = gb.w() < 1.5 * step;
+        if rows || cols {
+            let s = step * 0.5;
+            let (x1, y1) = (bb.x1 - hw + 1e-9, bb.y1 - hh + 1e-9);
+            let shifts = [
+                (rows, P::new(0.0, s)),
+                (cols, P::new(s, 0.0)),
+                (rows && cols, P::new(s, s)),
+            ];
+            self.grid(step, |c| {
+                for &(on, d) in &shifts {
+                    let q = c + d;
+                    if on && q.x <= x1 && q.y <= y1 && self.shown(q) && self.fits(q) {
+                        pts.push(sample(q));
+                    }
+                }
+            });
         }
         let mut best = 0;
         let mut sb = Rect::EMPTY;

@@ -1,0 +1,71 @@
+{
+  "kind": "place",
+  "name": "prefix omission: a member of a group label does not end the prefix",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 120
+    },
+    "priority": {
+      "omission": "prefix"
+    },
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 80,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Pair"
+        },
+        "group": "g",
+        "priority": 1.0
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 84,
+          "y": 62
+        },
+        "label": {
+          "type": "text",
+          "text": "Pair"
+        },
+        "group": "g",
+        "priority": 3.0
+      },
+      {
+        "id": "c",
+        "anchor": {
+          "type": "point",
+          "x": 220,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Gamma"
+        },
+        "priority": 2.0
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "prefix": true,
+    "placed": 2,
+    "placed_ids": [
+      "a",
+      "c"
+    ],
+    "reasons": {
+      "b": "grouped"
+    }
+  }
+}

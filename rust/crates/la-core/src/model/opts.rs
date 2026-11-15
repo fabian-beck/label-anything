@@ -347,6 +347,9 @@ pub struct Weights {
     pub lookahead: f64,
     pub starve: f64,
     pub contrast: f64,
+    pub straddle: f64,
+    pub foreign: f64,
+    pub leader_borders: f64,
     pub stability: f64,
 }
 
@@ -364,6 +367,9 @@ impl Weights {
             lookahead: o.f64("weights.lookahead"),
             starve: o.f64("weights.starve"),
             contrast: o.f64("weights.contrast"),
+            straddle: o.f64("weights.straddle"),
+            foreign: o.f64("weights.foreign"),
+            leader_borders: o.f64("weights.leader_borders"),
             stability: o.f64("weights.stability"),
         }
     }
@@ -468,6 +474,10 @@ pub struct PlacementOpts {
     pub own_nearest: bool,
     /// `placement.own_nearest` `true`: the rule holds against the unlabeled points too.
     pub own_nearest_points: bool,
+    /// `placement.max_foreign`: the largest share of the box of an area item's label (not
+    /// an internal one) or of a label on a leader that may lie in other items' regions
+    /// (spec §4.8).
+    pub max_foreign: f64,
 }
 
 impl PlacementOpts {
@@ -500,6 +510,7 @@ impl PlacementOpts {
             stubs: o.string("placement.stubs") == "auto",
             own_nearest: o.get("placement.own_nearest").as_bool() != Some(false),
             own_nearest_points: o.get("placement.own_nearest").as_bool() == Some(true),
+            max_foreign: o.f64("placement.max_foreign"),
         }
     }
 }

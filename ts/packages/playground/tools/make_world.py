@@ -3,10 +3,14 @@
     bench/.venv/bin/python ts/packages/playground/tools/make_world.py
 
 Source: ``ne_50m_admin_0_countries.geojson`` (Natural Earth, public domain), the pinned and
-checksummed file of the benchmark (bench/common/sources.py, fetched into bench/data/).
-Each country keeps its names, population, GDP, Natural Earth's label point and label rank,
-its land area (computed from the full outline) and its outline, simplified (Douglas–Peucker,
-0.05°) with islands below 0.01 deg² dropped unless they are all the country has.
+checksummed file of the benchmark (bench/common/sources.py, fetched into bench/data/), with the
+internationally recognized borders instead of Natural Earth's de facto ones (Crimea is part of
+Ukraine, the Golan Heights of Syria, Northern Cyprus of Cyprus and Somaliland of Somalia; see
+bench/common/borders.py). Each country keeps its names (written out: Natural Earth's short name,
+or its English name where the short one abbreviates, "Bosnia and Herz."), its abbreviation,
+population, GDP, Natural Earth's label point and label rank, its land area (computed from the full
+outline) and its outline, simplified (Douglas–Peucker, 0.05°) with islands below 0.01 deg²
+dropped unless they are all the country has.
 """
 from __future__ import annotations
 
@@ -18,7 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT))
 
-from bench.common import fetch  # noqa: E402
+from bench.common import borders  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[1] / "data" / "world.json"
 TOLERANCE = 0.05
@@ -88,11 +92,9 @@ def rounded(ring: list[list[float]]) -> list[list[float]]:
 
 
 def main() -> None:
-    path = fetch.ensure("ne-50m-countries")
-    data = json.loads(Path(path).read_text(encoding="utf-8"))
     countries = []
     vertices = 0
-    for f in data["features"]:
+    for f in borders.countries():
         pr = f["properties"]
         g = f["geometry"]
         polys = g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]
@@ -112,7 +114,7 @@ def main() -> None:
         parts.sort(key=lambda t: -t[0])
         kept = [rings for a, rings in parts if a >= MIN_PART] or [parts[0][1]]
         vertices += sum(len(r) for rings in kept for r in rings)
-        name = pr["NAME"]
+        name = pr["NAME"] if "." not in pr["NAME"] else pr["NAME_EN"]
         abbrev = pr.get("ABBREV") or name
         countries.append({
             "id": pr["ADM0_A3"],
@@ -129,7 +131,8 @@ def main() -> None:
         })
     countries.sort(key=lambda c: c["id"])
     out = {
-        "source": "Natural Earth 1:50m admin 0 countries (public domain), naturalearthdata.com; simplified",
+        "source": "Natural Earth 1:50m admin 0 countries (public domain), naturalearthdata.com; "
+                  "internationally recognized borders; simplified",
         "countries": countries,
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)

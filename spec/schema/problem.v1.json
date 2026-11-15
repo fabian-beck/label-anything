@@ -395,6 +395,10 @@
           ],
           "description": "Space a label keeps from other labels and their stubs while avoid.label.labels is hard (the larger of the two labels' spacings, each at least its margin; spec §4.4); null: twice the margin. Half for warm-start candidates."
         },
+        "side_margin": {
+          "$ref": "#/$defs/nonNegLength",
+          "description": "With placement.own_nearest: how much nearer its own mark a label without a stub is than another point's mark that lies more squarely beside one of its sides than its own, where that point's own label would go (spec §4.4): the full side margin for a mark straight across a side when the own mark is on a corner's diagonal, the margin when the own mark is as squarely beside the label, and never less than the margin. Half for warm-start candidates."
+        },
         "mark": {
           "$ref": "#/$defs/mark",
           "description": "Mark used for point anchors without an explicit mark."
@@ -814,6 +818,11 @@
           "type": "string",
           "description": "Element id in the background SVG that draws this item (used by svg.auto_mark_items)."
         },
+        "region": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The name of the item's home region (spec §4.8). Default: the region at its anchor."
+        },
         "placement": {
           "$ref": "#/$defs/itemPlacement"
         }
@@ -822,12 +831,25 @@
     "vectorLayer": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "class"
+      "anyOf": [
+        {
+          "required": [
+            "class"
+          ]
+        },
+        {
+          "required": [
+            "region"
+          ]
+        }
       ],
       "properties": {
         "class": {
           "$ref": "#/$defs/className"
+        },
+        "region": {
+          "$ref": "#/$defs/regionName",
+          "description": "The layer's polygons, rects, circles and shapes on the region map (spec §4.8); a layer with a region and no class adds no obstacles."
         },
         "points": {
           "type": "array",
@@ -923,6 +945,29 @@
         }
       }
     },
+    "regionName": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What the matched geometry is on the region map (spec §4.8): \"each\" (every SVG element, or every vector polygon, rect, circle or shape, is a region of its own; SVG regions are named by the element's id), \"open\" (open space: it clears the regions below), \"none\" (not on the region map) or a region name (all matching geometry is that region)."
+    },
+    "svgRegionRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selector"
+      ],
+      "properties": {
+        "selector": {
+          "type": "string",
+          "minLength": 1,
+          "description": "CSS subset, as in class rules. A drawn fill belongs to the nearest element (itself or an ancestor) that a rule matches; the first rule matching that element decides."
+        },
+        "region": {
+          "$ref": "#/$defs/regionName",
+          "description": "Default \"each\"."
+        }
+      }
+    },
     "svgSource": {
       "type": "object",
       "additionalProperties": false,
@@ -949,6 +994,21 @@
             },
             {
               "const": "ignore"
+            }
+          ]
+        },
+        "regions": {
+          "description": "Regions of the picture (spec §4.8): a selector (every matching element is a region of its own), or region rules, first match wins. Labels keep inside one region; only fills count.",
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/svgRegionRule"
+              }
             }
           ]
         },
@@ -1174,7 +1234,7 @@
       "properties": {
         "label": {
           "type": "object",
-          "description": "Label box vs. classes. Key \"*\" sets the weight of classes not listed. Key own_mark sets the own-mark policy. Key lower_items sets the policy for the marks of items of lower priority key (default: that of items); when given and not hard, a label covering such a mark excludes that item's label.",
+          "description": "Label box vs. classes. Key \"*\" sets the weight of classes not listed. Key own_mark sets the own-mark policy. Key lower_items sets the policy for the marks of items of lower priority key (default: that of items); when given and not hard, a label covering such a mark excludes that item's label, and with placement.own_nearest a label beside its mark hides such a mark entirely or keeps clear of it, where some fixed position beside the mark can.",
           "propertyNames": {
             "anyOf": [
               {
@@ -1378,7 +1438,7 @@
             false,
             "items"
           ],
-          "description": "A label without a distant leader comes no closer to another item's mark, or to an unlabeled point (a disc of a vector layer, a shape of class points) it does not hide, than to its own, and without a stub it is nearer to its own by its margin (at most by the distance between the two marks; marks it may not cover; unlabeled points only where some fixed position beside the mark keeps clear of them). items: other items' marks only; false: no such rule."
+          "description": "A label without a distant leader comes no closer to another item's mark, or to an unlabeled point (a disc of a vector layer, a shape of class points) it does not hide, than to its own, and without a stub it is nearer to its own by its margin (at most by the distance between the two marks; marks it may not cover; marks of less important items it may cover (lower_items) but does not hide, and unlabeled points, each only where some fixed position beside the mark keeps clear of them). items: other items' marks only; false: no such rule."
         },
         "stubs": {
           "enum": [
@@ -1394,6 +1454,12 @@
         "stub_reach": {
           "$ref": "#/$defs/nonNegLength",
           "description": "A label is ambiguous where another item's mark comes closer than this to its adjacent box."
+        },
+        "max_foreign": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "On a region map (spec §4.8): the largest share of the box of an area item's label (internal ones aside) or of a label on a leader that may lie in other items' regions; 1: no limit, the foreign weight decides."
         }
       }
     },
@@ -1783,6 +1849,18 @@
           "minimum": 0
         },
         "contrast": {
+          "type": "number",
+          "minimum": 0
+        },
+        "straddle": {
+          "type": "number",
+          "minimum": 0
+        },
+        "foreign": {
+          "type": "number",
+          "minimum": 0
+        },
+        "leader_borders": {
           "type": "number",
           "minimum": 0
         },

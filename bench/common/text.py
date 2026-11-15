@@ -18,15 +18,17 @@ The bundled Noto Sans subset in ``fonts/`` is used for the family ``default``.
 """
 from __future__ import annotations
 
+import bisect
 import functools
+import math
 import struct
-import unicodedata
 from dataclasses import dataclass, field
 
 from fontTools.ttLib import TTFont
 
 from . import paths
 from .spec import length
+from .unicode_data import COMBINING_MARKS
 
 ELLIPSIS = "…"
 
@@ -258,123 +260,260 @@ def font_file(weight: int = 400) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Line breaking (spec §5.3)
+# Line breaking, wrapping, truncation (spec §5.3)
+#
+# A transcription of the spec's rules; `conformance/text/wrap-*.json` holds the expected
+# results (bench/tests/test_conformance.py). Positions are code point indices; widths are
+# compared as the spec says, without a tolerance.
 # ---------------------------------------------------------------------------
+WHITE_SPACE = frozenset([*range(0x09, 0x0E), 0x20, 0x85, 0xA0, 0x1680, *range(0x2000, 0x200B), 0x2028, 0x2029,
+                         0x202F, 0x205F, 0x3000])  # the Unicode property White_Space
+_NO_BREAK_SPACES = frozenset([0xA0, 0x2007, 0x202F])
+_SPACES = "".join(map(chr, sorted(WHITE_SPACE)))
+_PUNCTUATION = frozenset("/\\._-,;:|")
+_DIGITS = frozenset("0123456789")
+_CJK = ((0x2E80, 0x9FFF), (0xAC00, 0xD7AF), (0xF900, 0xFAFF), (0xFF00, 0xFFEF), (0x20000, 0x2FFFF))
+_MARK_STARTS = [a for a, _ in COMBINING_MARKS]
+
+
+def is_space(ch: str) -> bool:
+    return ord(ch) in WHITE_SPACE
+
+
+def is_mark(ch: str) -> bool:
+    """Combining mark (General_Category Mn, Mc or Me of Unicode 15.1: the table every implementation
+    shares, not the one of this Python)."""
+    cp = ord(ch)
+    i = bisect.bisect_right(_MARK_STARTS, cp) - 1
+    return i >= 0 and cp <= COMBINING_MARKS[i][1]
+
+
 def _is_cjk(ch: str) -> bool:
     cp = ord(ch)
-    return (0x4E00 <= cp <= 0x9FFF or 0x3400 <= cp <= 0x4DBF or 0x20000 <= cp <= 0x2A6DF
-            or 0xF900 <= cp <= 0xFAFF)
+    return any(a <= cp <= b for a, b in _CJK)
 
 
 def break_opportunities(text: str) -> list[int]:
-    """Sorted end positions e (a line may end after text[e-1])."""
+    """The positions k, ascending, after which a line may end (between ``text[k]`` and ``text[k + 1]``;
+    the end of the text is not listed): the table of spec §5.3."""
     out = []
     n = len(text)
     for k in range(n - 1):
-        c, d = text[k], text[k + 1]
-        ok = False
-        if c == " ":
-            ok = True
-        elif c in "/._-,;":
-            ok = True
-        elif c == ":":
-            ok = d != ":"
-        elif c.isalpha() and unicodedata.category(c) == "Ll" and unicodedata.category(d) == "Lu":
-            ok = True
-        elif c.isalpha() and d.isdigit():
-            ok = True
-        elif _is_cjk(c) and _is_cjk(d):
-            ok = True
+        a, b = text[k], text[k + 1]
+        if is_mark(b):
+            continue
+        if is_space(a):
+            ok = ord(a) not in _NO_BREAK_SPACES
+        elif a in _PUNCTUATION:
+            colons = a == ":" and b == ":"
+            number = a in ".," and k > 0 and text[k - 1] in _DIGITS and b in _DIGITS
+            ok = not colons and not number
+        else:
+            ok = (a.islower() and b.isupper()  # camelCase (the properties Lowercase and Uppercase)
+                  or a.isupper() and b.isupper() and k + 2 < n and text[k + 2].islower()  # acronym
+                  or _is_cjk(a) and _is_cjk(b))
         if ok:
-            out.append(k + 1)
+            out.append(k)
     return out
 
 
-def _trim(s: str) -> str:
-    return s.strip(" ")
+def trim(text: str) -> str:
+    return text.strip(_SPACES)
+
+
+class _Wrap:
+    """A text prepared for wrapping: its break opportunities, and the width of every line asked for,
+    measured once. A line ``(s, e)`` is the text from ``s`` to ``e`` without trailing white space."""
+
+    def __init__(self, text: str, measure):
+        self.text = text
+        self.n = len(text)
+        self.breaks = break_opportunities(text)
+        self.measure = measure
+        self._widths: dict[tuple[int, int], float] = {}
+
+    def skip_spaces(self, i: int) -> int:
+        while i < self.n and is_space(self.text[i]):
+            i += 1
+        return i
+
+    def line(self, s: int, e: int) -> str:
+        return self.text[s:e + 1].rstrip(_SPACES)
+
+    def width(self, s: int, e: int) -> float:
+        w = self._widths.get((s, e))
+        if w is None:
+            w = self._widths[(s, e)] = self.measure(self.line(s, e))
+        return w
+
+    def breaks_from(self, s: int) -> list[int]:
+        return self.breaks[bisect.bisect_left(self.breaks, s):]
+
+    def segment_end(self, s: int) -> int:
+        """The first break opportunity at or after ``s``, else the last position."""
+        i = bisect.bisect_left(self.breaks, s)
+        return self.breaks[i] if i < len(self.breaks) else self.n - 1
+
+    def greedy(self, w: float) -> list[tuple[int, int]]:
+        spans = []
+        s = self.skip_spaces(0)
+        while s < self.n:
+            if self.width(s, self.n - 1) <= w:
+                e = self.n - 1
+            else:
+                e = None
+                for k in self.breaks_from(s):  # up to the first break that does not fit
+                    if self.width(s, k) > w:
+                        break
+                    e = k
+                if e is None:
+                    e = self.emergency(s, w)
+            spans.append((s, e))
+            s = self.skip_spaces(e + 1)
+        return spans
+
+    def emergency(self, s: int, w: float) -> int:
+        """No break fits: the line ends inside its first segment, at the last position that fits and is
+        not followed by a combining mark, else at the first such position, else at the segment's end."""
+        t = self.segment_end(s)
+        end = None
+        for e in range(s, t):
+            if e + 1 < self.n and is_mark(self.text[e + 1]):
+                continue
+            if self.width(s, e) > w:
+                return e if end is None else end
+            end = e
+        return t if end is None else end
+
+    def balanced(self, n_lines: int, max_width: float | None) -> list[tuple[int, int]]:
+        first = self.skip_spaces(0)
+        if first >= self.n:
+            return []
+        starts = [first]
+        for k in self.breaks:
+            s = self.skip_spaces(k + 1)
+            if s < self.n and s != starts[-1]:
+                starts.append(s)
+        cands = set()
+        floor = 0.0  # the widest first segment of a line: a narrower width needs an emergency break
+        for s in starts:
+            floor = max(floor, self.width(s, self.segment_end(s)))
+            for k in self.breaks_from(s) + [self.n - 1]:
+                c = self.width(s, k)
+                if max_width is not None and c > max_width:
+                    break
+                cands.add(c)
+        if max_width is not None:
+            cands.add(max_width)
+            floor = min(floor, max_width)
+        cands = sorted(c for c in cands if c >= floor)
+        if not cands:
+            return self.greedy(math.inf if max_width is None else max_width)
+        lo, hi = 0, len(cands) - 1
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if len(self.greedy(cands[mid])) <= max(n_lines, 1):
+                hi = mid
+            else:
+                lo = mid + 1
+        spans = self.greedy(cands[lo])
+        if max_width is not None and len(spans) > max(n_lines, 1):
+            spans = self.greedy(max_width)
+        return spans
+
+    def lines(self, spans: list[tuple[int, int]]) -> list[str]:
+        """The lines as strings; a blank text is one empty line."""
+        return [self.line(s, e) for s, e in spans] or [""]
 
 
 def greedy(text: str, max_width: float, measure) -> list[str]:
-    opps = break_opportunities(text)
-    n = len(text)
-    lines: list[str] = []
-    start = 0
-    while start < n:
-        while start < n and text[start] == " ":
-            start += 1
-        if start >= n:
-            break
-        cands = [e for e in opps if e > start] + [n]
-        best = None
-        for e in cands:
-            if measure(_trim(text[start:e])) <= max_width + 1e-9:
-                best = e
-            else:
-                break
-        if best is None:  # emergency break inside the first token
-            e = cands[0]
-            k = start + 1
-            while k < e and measure(text[start:k + 1]) <= max_width + 1e-9:
-                k += 1
-            best = max(start + 1, k)
-        line = _trim(text[start:best])
-        if line:
-            lines.append(line)
-        start = best
-    return lines or [""]
+    """``greedy(W)``: every line takes the rest of the text if it fits, else reaches to the last break
+    opportunity that fits; a segment wider than ``max_width`` is broken inside (emergency break)."""
+    w = _Wrap(text, measure)
+    return w.lines(w.greedy(max_width))
 
 
-def candidate_widths(text: str, measure) -> list[float]:
-    opps = break_opportunities(text)
-    starts = [0] + opps
-    ends = opps + [len(text)]
-    ws = set()
-    for a in starts:
-        for e in ends:
-            if e > a:
-                s = _trim(text[a:e])
-                if s:
-                    ws.add(measure(s))
-    return sorted(ws)
+def balanced(text: str, n: int, measure, max_width: float | None = None) -> list[str]:
+    """``balanced(N, M)``: the greedy wrap at the smallest candidate width that needs at most ``n``
+    lines; with ``max_width`` no candidate is wider, and its greedy wrap is the result if even that
+    has more lines."""
+    w = _Wrap(text, measure)
+    return w.lines(w.balanced(n, max_width))
 
 
-def balanced(text: str, n: int, measure) -> list[str]:
-    # no width narrower than the widest first segment of a line (it would need an emergency break)
-    opps = break_opportunities(text)
-    ends = opps + [len(text)]
-    floor = max((measure(_trim(text[a:min(e for e in ends if e > a)])) for a in [0] + opps if a < len(text)),
-                default=0.0)
-    for w in candidate_widths(text, measure):
-        if w < floor:
+def truncate_end(text: str, max_width: float, measure) -> str:
+    """The text if it fits, else its longest prefix (not cut before a combining mark, without trailing
+    white space) that fits with ``…`` appended; ``…`` if none does."""
+    if measure(text) <= max_width:
+        return text
+    best = ELLIPSIS
+    for m in range(1, len(text)):
+        if is_mark(text[m]):
             continue
-        lines = greedy(text, w, measure)
-        if len(lines) <= n:
-            return lines
-    return [_trim(text)]
-
-
-def truncate_end(text: str, max_width: float, max_lines: int, measure) -> list[str]:
-    lines = greedy(text, max_width, measure)
-    if len(lines) <= max_lines:
-        return lines
-    keep = lines[:max_lines]
-    last = keep[-1]
-    while last and measure(last + ELLIPSIS) > max_width + 1e-9:
-        last = last[:-1].rstrip(" ")
-    keep[-1] = last + ELLIPSIS
-    return keep
+        cand = text[:m].rstrip(_SPACES) + ELLIPSIS
+        if measure(cand) > max_width:
+            break
+        best = cand
+    return best
 
 
 def truncate_middle(text: str, max_width: float, max_lines: int, measure) -> list[str]:
+    """The greedy wrap of the trimmed text with the fewest code points of its middle replaced by ``…``
+    such that it has at most ``max_lines`` lines."""
+    text = trim(text)
+    max_lines = max(max_lines, 1)
+    lines = greedy(text, max_width, measure)
+    if len(lines) <= max_lines:
+        return lines
     n = len(text)
-    for remove in range(1, n):
-        left = (n - remove + 1) // 2
-        right = n - remove - left
-        cand = text[:left] + ELLIPSIS + (text[n - right:] if right > 0 else "")
-        lines = greedy(cand, max_width, measure)
-        if len(lines) <= max_lines:
-            return lines
-    return [ELLIPSIS]
+
+    def candidate(removed: int) -> str:
+        keep = n - removed
+        left, right = (keep + 1) // 2, n - keep // 2
+        while left > 0 and is_mark(text[left]):
+            left -= 1
+        while right < n and is_mark(text[right]):
+            right += 1
+        return text[:left].rstrip(_SPACES) + ELLIPSIS + text[right:].lstrip(_SPACES)
+
+    lo, hi = 1, n
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if len(_Wrap(candidate(mid), measure).greedy(max_width)) <= max_lines:
+            hi = mid
+        else:
+            lo = mid + 1
+    return greedy(candidate(lo), max_width, measure)
+
+
+def wrap_variants(text: str, max_width: float | None, max_lines: int, measure, balance: bool = True,
+                  truncate: str = "none") -> list[tuple[list[str], bool]]:
+    """The variants of a text label with wrap settings, as (lines, truncated) (spec §5.3 "Variants")."""
+    w = _Wrap(text, measure)
+    max_lines = max(max_lines, 1)
+    if max_width is not None:
+        spans = w.greedy(max_width)
+    else:
+        first = w.skip_spaces(0)
+        spans = [(first, w.n - 1)] if first < w.n else []
+    l_min = max(len(spans), 1)
+    if l_min <= max_lines:
+        if not balance:
+            return [(w.lines(spans), False)]
+        out: list[tuple[list[str], bool]] = []
+        for n in range(l_min, min(l_min + 2, max_lines) + 1):
+            lines = w.lines(w.balanced(n, max_width))
+            if all(v[0] != lines for v in out):
+                out.append((lines, False))
+        return out
+    if truncate == "end":
+        lines = [w.line(s, e) for s, e in spans[:max_lines - 1]]
+        rest = w.line(spans[max_lines - 1][0], w.n - 1)
+        return [(lines + [truncate_end(rest, max_width, measure)], True)]
+    if truncate == "middle":
+        return [(truncate_middle(text, max_width, max_lines, measure), True)]
+    # keep the text and give up the width: the narrowest wrap into max_lines lines
+    return [(w.lines(w.balanced(max_lines, None)), False)]
 
 
 @dataclass
@@ -423,34 +562,22 @@ def measure_fn(size: float, weight: int):
 
 def normal_variant(text: str, size: float, weight: int, line_height: float, wrap: dict | None,
                    truncate: str = "none", em: float | None = None, ink: bool = True) -> TextLayout:
-    """The first normal variant of a text label (spec §5.3): balanced(L_min) with wrap
-    settings, else the single line; truncated per ``truncate`` when L_min > max_lines."""
-    meas = measure_fn(size, weight)
+    """The first normal variant of a text label (spec §5.3): its lines between line feeds if it has
+    any, without wrap settings the single line, else the first of ``wrap_variants``."""
 
     def lay_out(lines):
         return layout_lines(lines, size, weight, line_height, ink)
 
-    if "\n" in text:
-        return lay_out(text.split("\n"))
-    if not wrap:
+    if "\n" in text:  # hard breaks: the author's lines, never wrapped or truncated
+        return lay_out([s[:-1] if s.endswith("\r") else s for s in text.split("\n")])
+    if not isinstance(wrap, dict):
         return lay_out([text])
     mw = wrap.get("max_width")
     max_w = length(mw, em if em is not None else size) if mw is not None else None
-    max_lines = wrap.get("max_lines")
-    if max_w is None:
-        return lay_out([text])
-    g = greedy(text, max_w, meas)
-    l_min = len(g)
-    if max_lines is not None and l_min > max_lines:
-        if truncate == "end":
-            lay = lay_out(truncate_end(text, max_w, max_lines, meas))
-            lay.used, lay.truncated = "truncated", True
-            return lay
-        if truncate == "middle":
-            lay = lay_out(truncate_middle(text, max_w, max_lines, meas))
-            lay.used, lay.truncated = "truncated", True
-            return lay
-        return lay_out(balanced(text, max_lines, meas))
-    if wrap.get("balance", True) is False:
-        return lay_out(g)
-    return lay_out(balanced(text, l_min, meas))
+    # a missing max_lines counts as 1, as in the engine
+    lines, truncated = wrap_variants(text, max_w, int(wrap.get("max_lines") or 1), measure_fn(size, weight),
+                                     wrap.get("balance", True) is not False, truncate)[0]
+    lay = lay_out(lines)
+    if truncated:
+        lay.used, lay.truncated = "truncated", True
+    return lay

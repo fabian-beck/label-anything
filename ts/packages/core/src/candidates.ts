@@ -68,6 +68,8 @@ export const BLOCK_EDGE: Block = -1;
 export const BLOCK_ITEMS: Block = -2;
 export const BLOCK_LABELS: Block = -3;
 export const BLOCK_LEADERS: Block = -4;
+/** A label too much in other items' regions (`placement.max_foreign`). */
+export const BLOCK_REGIONS: Block = -5;
 
 /** A leader polyline from the item to the label's port. */
 export class Leader {
@@ -1153,6 +1155,61 @@ class AreaFrame {
   }
 
   /**
+   * The points of the sampling grid with spacing `step`, row by row from the top (spec
+   * §6.5): from the bounding box's top-left corner plus half the label size. In a window:
+   * its rows and columns from the last before the view to the last whose label boxes can
+   * touch it, however large the area is.
+   */
+  grid(step: number, f: (c: P) => void): void {
+    const bb = this.shape.bbox();
+    const hw = this.hw;
+    const hh = this.hh;
+    const view = this.view;
+    if (view === null) {
+      let y = bb.y0 + hh;
+      while (y <= bb.y1 - hh + 1e-9) {
+        let x = bb.x0 + hw;
+        while (x <= bb.x1 - hw + 1e-9) {
+          f(new P(x, y));
+          // coordinates so large that a step no longer changes them
+          if (x + step <= x) break;
+          x += step;
+        }
+        if (y + step <= y) break;
+        y += step;
+      }
+      return;
+    }
+    const x0 = bb.x0 + hw;
+    const y0 = bb.y0 + hh;
+    // the last row and column before the view (the first of the grid at least)
+    const first = (lo: number, o: number): number => maxf(floorFast((lo - o) / step), 0.0);
+    const xl = minf(bb.x1 - hw, view.x1 + hw) + 1e-9;
+    const yl = minf(bb.y1 - hh, view.y1 + hh) + 1e-9;
+    let j = first(view.y0 - hh, y0);
+    let y = y0 + j * step;
+    while (y <= yl) {
+      let i = first(view.x0 - hw, x0);
+      let x = x0 + i * step;
+      while (x <= xl) {
+        f(new P(x, y));
+        i += 1.0;
+        // coordinates so large that a step no longer changes them
+        if (x0 + i * step <= x) break;
+        x = x0 + i * step;
+      }
+      j += 1.0;
+      if (y0 + j * step <= y) break;
+      y = y0 + j * step;
+    }
+  }
+
+  /** Whether the label box at `c` touches the view of a window (elsewhere: always). */
+  shown(c: P): boolean {
+    return this.view === null || this.view.touches(Rect.fromCenter(c, this.hw, this.hh));
+  }
+
+  /**
    * The places of the area's labels in this frame with what they lack (spec §6.5): the
    * best sample, improved, then one sample of each of the 3 × 3 cells of the samples'
    * bounding box (the one that lacks least as seen from the cell's middle), in ascending
@@ -1175,53 +1232,39 @@ class AreaFrame {
       farPole = view !== null && !view.touches(Rect.fromCenter(this.pole, hw, hh));
     }
     const bb = this.shape.bbox();
-    let step: number;
-    if (view === null) {
-      // grid samples where the label fits; an area far larger than any picture is sampled
-      // more coarsely, at about `AREA_SAMPLES` places
-      step = maxf(maxf(2.0 * hh, 4.0), Math.sqrt((bb.w() * bb.h()) / AREA_SAMPLES));
-      let y = bb.y0 + hh;
-      while (y <= bb.y1 - hh + 1e-9) {
-        let x = bb.x0 + hw;
-        while (x <= bb.x1 - hw + 1e-9) {
-          const c = new P(x, y);
-          if (this.fits(c)) pts.push(sample(c));
-          // coordinates so large that a step no longer changes them
-          if (x + step <= x) break;
-          x += step;
-        }
-        if (y + step <= y) break;
-        y += step;
-      }
-    } else {
-      // in a window: the samples of the same grid whose label box touches the view,
-      // however large the area is
-      step = maxf(2.0 * hh, 4.0);
-      const x0 = bb.x0 + hw;
-      const y0 = bb.y0 + hh;
-      // the last row and column before the view (the first of the grid at least)
-      const first = (lo: number, o: number): number => maxf(floorFast((lo - o) / step), 0.0);
-      const xl = minf(bb.x1 - hw, view.x1 + hw) + 1e-9;
-      const yl = minf(bb.y1 - hh, view.y1 + hh) + 1e-9;
-      let j = first(view.y0 - hh, y0);
-      let y = y0 + j * step;
-      while (y <= yl) {
-        let i = first(view.x0 - hw, x0);
-        let x = x0 + i * step;
-        while (x <= xl) {
-          const c = new P(x, y);
-          if (view.touches(Rect.fromCenter(c, hw, hh)) && this.fits(c)) pts.push(sample(c));
-          i += 1.0;
-          // coordinates so large that a step no longer changes them
-          if (x0 + i * step <= x) break;
-          x = x0 + i * step;
-        }
-        j += 1.0;
-        if (y0 + j * step <= y) break;
-        y = y0 + j * step;
-      }
-    }
+    // an area far larger than any picture is sampled more coarsely, at about
+    // `AREA_SAMPLES` places; in a window the grid keeps to the view instead
+    const step =
+      view === null ? maxf(maxf(2.0 * hh, 4.0), Math.sqrt((bb.w() * bb.h()) / AREA_SAMPLES)) : maxf(2.0 * hh, 4.0);
+    const first = pts.length;
+    this.grid(step, (c) => {
+      if (this.shown(c) && this.fits(c)) pts.push(sample(c));
+    });
     if (pts.length === 0) return [];
+    // where the label fits only narrowly, the grid's samples lie in fewer than three rows
+    // (columns), and the cells below would have no places above and below (beside) each
+    // other: the points half a spacing below (right of, and with both below and right of)
+    // the grid's points are sampled too
+    let gb = Rect.EMPTY;
+    for (let k = first; k < pts.length; k++) gb = gb.addPoint(pts[k]![0]);
+    const rows = gb.h() < 1.5 * step;
+    const cols = gb.w() < 1.5 * step;
+    if (rows || cols) {
+      const s = step * 0.5;
+      const x1 = bb.x1 - hw + 1e-9;
+      const y1 = bb.y1 - hh + 1e-9;
+      const shifts: [boolean, P][] = [
+        [rows, new P(0.0, s)],
+        [cols, new P(s, 0.0)],
+        [rows && cols, new P(s, s)],
+      ];
+      this.grid(step, (c) => {
+        for (const [on, d] of shifts) {
+          const q = c.add(d);
+          if (on && q.x <= x1 && q.y <= y1 && this.shown(q) && this.fits(q)) pts.push(sample(q));
+        }
+      });
+    }
     let best = 0;
     let sb = Rect.EMPTY;
     for (let k = 0; k < pts.length; k++) {
