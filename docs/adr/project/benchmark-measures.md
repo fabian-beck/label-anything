@@ -103,3 +103,15 @@ class names broke one segment early (`uimanager.` · `UIImplementationProvider` 
 66 instead of 68, adjustText 55 instead of 59, the others as before; ggrepel not measured),
 still behind the engine's 74, whose own numbers do not change. No problem of the quick
 suite is affected.
+
+## References
+- Chu, Qiu, Ling, Jiang, Laramee, Sedlmair, Chen (2025). What makes a visualization image
+  complex? *IEEE Transactions on Visualization and Computer Graphics*.
+  [doi:10.1109/TVCG.2025.3633827](https://doi.org/10.1109/TVCG.2025.3633827)
+- Henderson, Chanceaux, Smith (2009). The influence of clutter on real-world scene search.
+  *Journal of Vision* 9(1):32.
+  [doi:10.1167/9.1.32](https://doi.org/10.1167/9.1.32)
+- Mack, Oliva (2004). Computational estimation of visual complexity. Presentation at
+  Object, Perception, Attention, and Memory (OPAM) 2004; no DOI.
+- Rosenholtz, Li, Nakano (2007). Measuring visual clutter. *Journal of Vision* 7(2):17.
+  [doi:10.1167/7.2.17](https://doi.org/10.1167/7.2.17)

@@ -36,7 +36,7 @@ are stale.
 | `defaults.font.style` | `"normal"` | normal \| italic | Bundled font has no italic; italic falls back to upright. |
 | `defaults.font.line_height` | `1.2` | > 0 | Line pitch in em for wrapped text. |
 | `defaults.padding` | `"0.15em"` | length ≥ 0 | Label box inflation (part of the reported box). |
-| `defaults.buffer` | `"0.3em"` | length ≥ 0 | Soft ambiguity buffer ring around each label (Mumtaz et al. 2019). |
+| `defaults.buffer` | `"0.3em"` | length ≥ 0 | Soft ambiguity buffer ring around each label ([Mumtaz et al. 2019](https://doi.org/10.2312/evs.20191161)). |
 | `defaults.margin` | `"0.2em"` | length ≥ 0 | Space a label keeps from other items' marks while `avoid.label.items` is hard (spec §4.4): not from its own mark (`placement.offset`), never more than another mark keeps from the own mark's box, half for warm-start candidates; also the least space from other labels. 0.3 em with `placement.aggressiveness` `low`. |
 | `defaults.spacing` | `null` | length ≥ 0 or null | Space a label keeps from other labels and their stubs while `avoid.label.labels` is hard (the larger of the two labels' spacings, each at least its margin; spec §4.4); `null`: twice the margin (0.4 em), so that with the padding their letters stand farther apart than the lines of one label. Half for warm-start candidates. |
 | `defaults.side_margin` | `"0.5em"` | length ≥ 0 | With `placement.own_nearest`: how much nearer its own mark a label without a stub is than another point's mark that lies more squarely beside one of its sides than its own, where that point's own label would go (spec §4.4): the full side margin for a mark straight across a side when the own mark is on a corner's diagonal, the margin when the own mark is as squarely beside the label, and never less than the margin. Half for warm-start candidates. |
@@ -47,7 +47,7 @@ are stale.
 | `text.shaping` | `"auto"` | auto \| simple \| full | `simple` is identical in every implementation. |
 | `placement.aggressiveness` | `"medium"` | low \| medium \| high | How hard the engine tries to place every label (spec §2.4): sets the defaults of `degrade`, `placement.max_distance`, `placement.fan` and `defaults.margin` ([below](#aggressiveness)). `high`: every means that keeps a label clear (leaders, fans, smaller type, relaxed overlaps); `medium`: labels keep their type size and the hard classes, distant labels stay within 4 em; `low`: no leaders but short ones of the models, more room around every label. |
 | `placement.models` | `["adjacent","slider","distant"]` | list | Candidate models. Preset `auto` adds `distant` only when crowded. |
-| `placement.position_order` | `"perceptual"` | enum or list | perceptual = top, right, bottom, left, top-right, bottom-right, top-left, bottom-left. A list also keeps distant labels on its sides (spec §6.4). |
+| `placement.position_order` | `"perceptual"` | enum or list | perceptual = top, right, bottom, left, top-right, bottom-right, top-left, bottom-left (the engine's order, inspired by Bobák et al. 2026, not their measured PerceptPPO order); cartographic = Yoeli's (1972) order, top-right first. A list also keeps distant labels on its sides (spec §6.4). |
 | `placement.offset` | `1` | length ≥ 0 | Gap between the (inflated) mark and an adjacent label. |
 | `placement.max_distance` | `"4em"` | length ≥ 0 | Largest anchor–label distance of distant labels. 2.5 em with `placement.aggressiveness` `low`, 8 em with `high`. |
 | `placement.min_distance` | `"1.5em"` | length ≥ 0 | Innermost ring of distant candidates. |

@@ -7,7 +7,8 @@ with "label placement" wherever it introduces itself.
 "Label Anything" was free on crates.io, npm and PyPI (checked 2026-10-16). It says what
 the engine does and gives the short alias `la`, and *anything* is the difference to tools
 that serve one host: adjustText, ggrepel, vega-label, d3fc-label-layout, Maplex, PAL. But
-the name collides. A few-shot segmentation model of the same name (ECAI 2025) is
+the name collides. A few-shot segmentation model of the same name
+([De Marinis et al., ECAI 2025](https://doi.org/10.3233/FAIA251289)) is
 open-source research software; "*X* Anything" has read as a vision model since Segment
 Anything; and in machine learning, labeling means annotating data. People search for
 "label placement", which the front pages did not say first.

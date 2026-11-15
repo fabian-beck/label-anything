@@ -26,7 +26,7 @@ and TypeScript implementations of Label Anything and ten baselines — `naive`, 
 | 10 | stress / scale | airports at 10× density, up to 20,000 anchors |
 | 11 | interactive stability | a zoom-and-pan camera path over the airports |
 | 12 | priority showcase | metrics and airports with attribute, outlier and coverage priorities |
-| 13 | outlier labeling after Mumtaz et al. (2019) | the paper's four figures, digitized, with its published layouts |
+| 13 | outlier labeling after Mumtaz et al. (2019) | four of the paper's labeled scatterplots (Figures 1, 3, 4 and 8), digitized, with its published layouts |
 
 ## What is measured
 

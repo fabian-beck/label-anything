@@ -30,7 +30,7 @@ a hard rule.
   candidates keep within 22.5° of the listed directions, so the end labels of a line chart
   restricted to `right` never go left across the lines.
 - **One bend**: orthogonal leaders to boundary and fan labels are `po` (parallel to the
-  side, then straight into the label), the shape Barth et al. (2019) recommend; never the
+  side, then straight into the label), the shape [Barth et al. (2019)](https://doi.org/10.1177/1473871618799500) recommend; never the
   twice-bent `opo`.
 
 ## Consequences

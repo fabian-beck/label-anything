@@ -17,10 +17,10 @@ keywords:
   - visualization
 references:
   - type: conference-paper
-    title: "Point Labeling with Leaders for Convex Polygons and Scatterplots"
+    title: "Label Placement for Outliers in Scatterplots"
     authors:
       - family-names: Mumtaz
-        given-names: Hamid
+        given-names: Haris
       - family-names: van Garderen
         given-names: Mereke
       - family-names: Beck
@@ -28,7 +28,12 @@ references:
       - family-names: Weiskopf
         given-names: Daniel
     collection-title: "EuroVis 2019 - Short Papers"
+    publisher:
+      name: "The Eurographics Association"
     year: 2019
+    start: 1
+    end: 5
+    doi: 10.2312/evs.20191161
     notes: "Cost-based greedy labeling of scatterplots with leaders and label buffers."
   - type: conference-paper
     title: "Fast and Flexible Overlap Detection for Chart Labeling with Occupancy Bitmap"
@@ -43,6 +48,7 @@ references:
         given-names: Jeffrey
     collection-title: "IEEE VIS 2020 Short Papers"
     year: 2020
+    doi: 10.1109/VIS47514.2020.00027
   - type: article
     title: "Rapid Labels: Point-Feature Labeling on GPU"
     authors:
@@ -52,6 +58,7 @@ references:
         given-names: Ladislav
     journal: "IEEE Transactions on Visualization and Computer Graphics"
     year: 2022
+    doi: 10.1109/TVCG.2021.3114854
   - type: article
     title: "Mixed Labeling: Integrating Internal and External Labels"
     authors:
@@ -65,6 +72,7 @@ references:
         given-names: Martin
     journal: "IEEE Transactions on Visualization and Computer Graphics"
     year: 2022
+    doi: 10.1109/TVCG.2020.3027368
   - type: article
     title: "External Labeling Techniques: A Taxonomy and Survey"
     authors:
@@ -76,7 +84,8 @@ references:
         given-names: Martin
     journal: "Computer Graphics Forum"
     year: 2019
-  - type: conference-paper
+    doi: 10.1111/cgf.13729
+  - type: article
     title: "From Top-Right to User-Right: Perceptual Prioritization of Point-Feature Label Positions"
     authors:
       - family-names: Bobák
@@ -85,5 +94,10 @@ references:
         given-names: Ladislav
       - family-names: Čadík
         given-names: Martin
-    collection-title: "Computational Visual Media (CVM)"
+    journal: "Computational Visual Media"
     year: 2026
+    url: "https://arxiv.org/abs/2407.11996"
+    identifiers:
+      - type: other
+        value: "arXiv:2407.11996"
+        description: "Preprint; accepted in Computational Visual Media, DOI not yet registered (checked 2026-11-15)."

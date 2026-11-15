@@ -1,6 +1,7 @@
 # Coverage grids
 
-Soft costs read obstacle coverage from one grid per class with a summed-area table:
+Soft costs read obstacle coverage from one grid per class with a summed-area table
+([Crow 1984](https://doi.org/10.1145/800031.808600)):
 constant time per rectangle, exact for the rasterized coverage, and continuous as a label
 moves.
 

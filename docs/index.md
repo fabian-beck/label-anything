@@ -233,7 +233,8 @@ problems.
 * **Labels for points and areas.** Labels go to points and areas of any shape; lines such
   as roads or rivers are obstacles, not labeled features.
 * **Not for labeling data.** Despite its name, Label Anything is not a data-labeling tool,
-  and it is unrelated to the few-shot segmentation model of the same name (ECAI 2025).
+  and it is unrelated to the few-shot segmentation model of the same name
+  ([ECAI 2025](https://doi.org/10.3233/FAIA251289)).
 
 ## Where next
 
