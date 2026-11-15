@@ -472,9 +472,9 @@
         "type": {
           "enum": [
             "point",
-            "area"
-          ],
-          "description": "\"line\" is reserved for v2 and rejected in v1."
+            "area",
+            "line"
+          ]
         }
       },
       "allOf": [
@@ -539,6 +539,40 @@
               "dot": {
                 "$ref": "#/$defs/mark",
                 "description": "Mark drawn at the pole when the label falls back to an external position. Default: circle r=2."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "line"
+              }
+            }
+          },
+          "then": {
+            "additionalProperties": false,
+            "required": [
+              "points"
+            ],
+            "properties": {
+              "type": true,
+              "points": {
+                "$ref": "#/$defs/polyline",
+                "description": "The line: an edge of a node-link diagram, a street, a river. The label goes along it."
+              },
+              "width": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Stroke width of the line (px). Labels beside the line keep clear of the stroke; with placement.internal auto, a label goes on a line at least as wide as the label is high. Default: 1."
+              },
+              "dot": {
+                "$ref": "#/$defs/mark",
+                "description": "Mark drawn halfway along the line when the label falls back to a position beside that point. Default: circle r=2."
               }
             }
           }
@@ -1387,6 +1421,12 @@
           "minimum": 0,
           "maximum": 90,
           "description": "Degrees: the label of an area anchor may be turned along the polygon's main axis by this angle at most (0: always horizontal). A turned label is reported with its rotation."
+        },
+        "line_rotation": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 90,
+          "description": "Degrees: the label of a line anchor is turned along the line where the line is at most this far from the horizontal, and upright elsewhere (0: always upright; 90: always along the line). A turned label is reported with its rotation."
         },
         "prune_factor": {
           "type": "number",

@@ -132,7 +132,7 @@
         "id": { "type": "string" },
         "placed": { "type": "boolean" },
         "box": { "$ref": "#/$defs/box", "description": "The label box. For a turned label (rotation): the box before it is turned about its center." },
-        "rotation": { "type": "number", "minimum": -90, "maximum": 90, "description": "Degrees, clockwise on screen, by which the label is turned about the center of its box (only the label of an area anchor, placement.area_rotation; absent: 0). Hosts draw the label in box and rotate it." },
+        "rotation": { "type": "number", "minimum": -90, "maximum": 90, "description": "Degrees, clockwise on screen, by which the label is turned about the center of its box (only the label of an area anchor, placement.area_rotation, or of a line anchor, placement.line_rotation; absent: 0). Hosts draw the label in box and rotate it." },
         "anchor": { "$ref": "#/$defs/point", "description": "The item's reference point in canvas px (point items: the anchor; area items: the pole). Passed back in warm_start, the box moves with the item's anchor." },
         "anchor_side": {
           "enum": ["top", "right", "bottom", "left", "top-right", "bottom-right", "top-left", "bottom-left", "internal", "distant", "boundary", "fan"]

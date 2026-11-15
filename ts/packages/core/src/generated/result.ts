@@ -32,7 +32,7 @@ export interface Placement {
   placed: boolean;
   box?: Box;
   /**
-   * Degrees, clockwise on screen, by which the label is turned about the center of its box (only the label of an area anchor, placement.area_rotation; absent: 0). Hosts draw the label in box and rotate it.
+   * Degrees, clockwise on screen, by which the label is turned about the center of its box (only the label of an area anchor, placement.area_rotation, or of a line anchor, placement.line_rotation; absent: 0). Hosts draw the label in box and rotate it.
    */
   rotation?: number;
   anchor?: Point;

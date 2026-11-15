@@ -50,13 +50,15 @@ place (`units` module). Invalid unit strings are validation errors (`code: "unit
 ### 2.2 Coordinates
 
 Canvas pixels, origin top-left, y down. Input coordinates (anchors, absolute item
-polygons and paths, area polygons, vector obstacles, `priority.focus`) are mapped by
+polygons and paths, area polygons, the points of line anchors, vector obstacles,
+`priority.focus`) are mapped by
 
 1. `transform` `[a,b,c,d,e,f]` if present: `x' = a·x + c·y + e`, `y' = b·x + d·y + f`;
 2. then, if `y_axis = "up"`, `y'' = canvas.height − y'` (requires `canvas`).
 
 Radii, widths, sizes, offsets and `relative` mark geometry are pixel lengths and are
-never transformed: a mark's `r`, `rx`, `ry`, `w`, `h`, the radius of a vector layer's
+never transformed: a mark's `r`, `rx`, `ry`, `w`, `h`, the `width` of a line anchor, the
+radius of a vector layer's
 `points` and `circles`, the stroke `width` of its `polylines` and the sizes of its
 `shapes`. A vector layer's `rects` (`[x, y, w, h]`) are geometry, not sizes: the corners
 `(x, y)` and `(x + w, y + h)` are both mapped, so the extent scales with `transform` (and
@@ -96,7 +98,8 @@ at the edges. Then:
 * Beyond the working extent, as beyond the canvas with `allow_outside`, the exact tests
   hold (§4.3) and the grids are empty: no coverage costs, no free-space seeds.
 * An item with a point anchor whose mark lies entirely beyond the working extent (its
-  bounding box does not touch it) is a **mark only**: it gets no candidates and no label
+  bounding box does not touch it; not an area or a line anchor, which are passed whole)
+  is a **mark only**: it gets no candidates and no label
   (reason `outside`, §9.3), and its mark counts like every item's. Not so while its
   warm-start box (§6.7) touches the canvas: a label that still shows is not taken away
   because its point has gone far. A host passes the
@@ -231,7 +234,8 @@ are tested on their grid: a rectangle "touches" a raster class iff its covered a
 
 ### 4.4 Classes
 
-* `items`: all item marks (their true shapes; area anchors contribute nothing, see §6.5).
+* `items`: all item marks (their true shapes; area and line anchors contribute their dot
+  only, see §6.5 and §6.5a).
 * `labels`, `leaders`: placed labels and leaders (dynamic, exact).
 * `canvas_edge`: outside of the label area (§2.3).
 * `ink`, `text`: produced by SVG/raster backgrounds (and usable in vector layers).
@@ -286,7 +290,7 @@ nearer to its own by its margin: it is infeasible when
 group) whose mark the label may not cover (`items`, or `lower_items` for a less important
 `j`, hard), where `s = min(m + (k − m) · max(0, f_j − f_i), |p_j − p_i|)` for a label
 without a stub (`m` its margin and `k` its side margin `defaults.side_margin`, 0.5 em, at
-least `m`, both at half for warm-start candidates; `k = m` for an area item's mark, its dot;
+least `m`, both at half for warm-start candidates; `k = m` for an area or line item's mark, its dot;
 `p` the marks' reference points) and `s = 0` for one with a stub. `f` says how squarely a
 mark lies beside a side of the box: for the offset `(dx, dy)` of its reference point from
 the box (0 along an axis where the point lies within the box's extent),
@@ -641,7 +645,8 @@ open. A cell is on a **border** when one of its 4 neighbours has another number.
 
 **Home.** The home of an item is the region named by `item.region` (a name no region has
 is a warning `unknown_region`, and the rule below applies); else the region of the cell
-containing its reference point (§11: point items' anchors, area items' poles); when that
+containing its reference point (§11: point items' anchors, area items' poles, the
+middle of line items' lines); when that
 cell is open, the region with the most cells among those touched by the bounding box of
 the item's mark grown by one cell (ties: the lower number) — the dot of a coastal city may
 lie in the sea; else open space. In a window (§2.3) the pole of an area passed whole can
@@ -1021,6 +1026,93 @@ point-like for that variant: a point at the pole with mark `anchor.dot` (default
 r = 2), with adjacent and slider candidates. Distant candidates and the ladder's leader
 steps lead to that point in either case.
 
+### 6.5a Line anchors
+
+The label of a line anchor goes along the line: an edge of a node-link diagram, a street,
+a river (ADR placement/lines). The line is `anchor.points`, a polyline of at least two
+points (consecutive equal points count once) and a stroke of `anchor.width` px (default
+1). Its length is `L`. The item's reference point is the point halfway along the line,
+at arc length `L / 2`. The line is not an obstacle of other labels: a host that wants
+labels kept off it lists it in `obstacles` as well.
+
+**Places.** A label of size `w × h` centered at arc length `s` lies over the **stretch**
+of the line between the arc lengths `max(0, s − w/2)` and `min(L, s + w/2)`. The places
+are spread over a **range** `[r₀, r₁]` of the line: the whole line `[0, L]`; in a window
+(§2.3), with `E` the working extent, the longest piece of the line inside the closed
+rectangle `E` (the first on ties; pieces are the runs of consecutive segments' parts in
+`E`, by Liang–Barsky clipping, that follow each other within 10⁻⁹ of arc length; the
+whole line when none lies in `E`). With `lo = r₀ + w/2` and `hi = r₁ − w/2`:
+
+* `hi ≤ lo` (the range is not longer than the label): one place, the middle of the range
+  `(r₀ + r₁) / 2` clamped to `[w/2, L − w/2]`, or `L / 2` when `L < w`.
+* else the middle `m = (lo + hi) / 2`, then `m + j·d` and `m − j·d` for `j = 1 … k`, with
+  `k = min(4, ⌊(hi − lo) / (2 · max(h, 4))⌋)` and `d = (hi − lo) / (2k)`: up to nine places
+  from end to end of the range, at least a label height apart.
+
+**Direction.** The **chord** of a stretch runs between its two ends `a` and `b`; a place
+whose ends are less than 10⁻⁹ apart is not used. Its direction `u = (b − a) / |b − a|` is
+reversed when `u.x < 0`, or `u.x = 0` and `u.y > 0`: text reads from left to right, and
+upwards on a vertical stretch. The chord's angle is `α = atan2(u.y, u.x)` in degrees,
+clockwise on screen, in [−90°, 90°); with `(cos α, sin α)` of that angle, the normal
+`n = (−sin α, cos α)` points below the line as the text reads. The label is **turned**
+by `α` about its center when `α ≠ 0`, `|α| ≤ placement.line_rotation` (default 90°) and
+it is text in a rectangular box without parts (as in §6.5); else it is upright. `e` is
+how far the label reaches from its center towards the line: `h/2` for a turned label,
+`(w/2)·|n.x| + (h/2)·|n.y|` for an upright one.
+
+**Bend.** The offsets `(p − a) · n` of the stretch's ends and of the line's points between
+them have a least value `d₀` and a largest `d₁`; the **bend** is `d₁ − d₀`. A place with
+a bend of more than `h` (+ 10⁻⁹) is not used: a label is straight, and the line would
+leave it. Nor is a place whose chord is shorter than 0.9 times the stretch's length: there
+the line folds under the label, as a zigzag does, however little it leaves its chord.
+
+**Positions.** With `c₀` the middle of the chord and `g = width/2 + placement.offset`:
+
+| position | center | `anchor_side` | rank | when |
+|---|---|---|---|---|
+| on the line | `c₀ + n · (d₀ + d₁)/2` | `internal` | −1 (`internal: allow`: 0) | `internal` is `prefer` or `allow`, or `auto` and `width ≥ h` |
+| above | `c₀ + n · (d₀ − g − e)` | `top` | its place among `top` and `bottom` in the item's `position_order` (0 or 1) | `position_order` lists `top` |
+| below | `c₀ + n · (d₁ + g + e)` | `bottom` | likewise | `position_order` lists `bottom` |
+
+A label beside the line is used only when it keeps `g − 10⁻⁶` from the whole line (the
+distance between the label's box, turned as the label is, and every segment), so that it
+does not stand where the line comes back to it beyond the stretch, e.g. past a corner.
+The candidates of a place come in this order, the places in the order above. All are
+`internal` candidates (§6.3): the label belongs to the line as an area's label to its
+area, without a gap to its mark or a rule about other marks being nearer; they are made
+when the item's models include `adjacent`, `slider` or `internal`.
+
+**Cost.** The `w_distance` term of a line label is `w_distance · lack` with
+
+```
+lack = 2 · |s − (r₀ + r₁)/2| / (r₁ − r₀)  +  bend / h  +  max(0, 1 − span / w)
+```
+
+(`span` the length of the stretch; the first term is 0 for an empty range): a label
+stands in the middle of its line, where the line is straight, and a line shorter than
+its label is labeled at a price. A turned label adds `|α| / 180` to the shape penalty,
+and is tested as in §6.5 (*Tests of a turned label*).
+
+**Fallback.** A variant without a place (every stretch bent or folded too far, or no position
+allowed) makes the item point-like for that variant: a point halfway along the line with
+mark `anchor.dot` (default circle r = 2), with adjacent and slider candidates. Distant
+candidates and the ladder's leader steps lead to that point in either case. The dot is
+the item's mark (`items`, §4.4) in either case.
+
+**Warm start.** The warm-start box of a line item (§6.7), turned by the `rotation` it
+came with, is an internal candidate when it still lies along the line. With `s` the arc
+length of the line's point nearest to the box's center (the first on ties) clamped to
+`[w/2, L − w/2]` (`L / 2` when `L < w`), the stretch at `s`, and `t = 1 + h/4` px: a turned
+box must be within 5° of the chord's angle (`min(|Δ|, 180 − |Δ|) ≤ 5`) and be text that
+can be turned; `n` is the normal of the box's rotation (turned) or of the chord
+(upright), `e` as above; `d₀` and `d₁` are the least and the largest offset of the
+stretch from the box's center along `n`; the bend `d₁ − d₀` is at most `h + t`. The box is
+on the line when `|(d₀ + d₁)/2| ≤ t`, above it when `|d₀ − (g + e)| ≤ t`, below it when
+`|d₁ + g + e| ≤ t` (the first that holds, if the item has that position), and beside the
+line it keeps `max(g − t, 0)` from the whole line. A box that fails is no candidate at
+all while the variant has places along the line; the box of a point-like label is the
+candidate of §6.7.
+
 ### 6.6 Boundary
 
 Boundary candidates come from the `boundary` model or the `boundary` ladder step; the
@@ -1131,7 +1223,7 @@ places at least as many; `off`. There are no fans with `prefix` omission, with t
 `angles` leader style (its leaders keep to the allowed rays, which a column of labels
 cannot), after a cancellation or after the time guard. Items that may not get leaders
 (neither their models, as extended by the `auto` preset, nor the ladder have `distant` or
-`boundary`), `keep_with` members, area anchors and grouped items take no part. `h` below
+`boundary`), `keep_with` members, area and line anchors and grouped items take no part. `h` below
 is the height of an item's first variant, `em` its font size.
 
 * **Crowds.** In total order, every item not yet in a crowd seeds one (`auto`: only items
@@ -1666,8 +1758,9 @@ See `schema/result.v1.json`. Placements are reported in input order. `cost` is t
 total cost of the label (static + dynamic). `stats.hard_violations` and
 `stats.leader_crossings` are computed by the independent verification pass. A placed
 label reports `anchor`, its item's reference point in canvas px (point items: the
-anchor; area items: the pole of their polygon, §6.5), so that a result passed as
-`warm_start` moves with the anchors (§6.7). A turned label (§6.5) reports `rotation`, in
+anchor; area items: the pole of their polygon, §6.5; line items: the point halfway along
+the line, §6.5a), so that a result passed as
+`warm_start` moves with the anchors (§6.7). A turned label (§6.5, §6.5a) reports `rotation`, in
 degrees clockwise on screen, and as `box` the label before it is turned about the box's
 center: a host draws the text in `box` as for any label and turns it
 (SVG: `transform="rotate(rotation, box.x + box.w/2, box.y + box.h/2)"`). The same holds

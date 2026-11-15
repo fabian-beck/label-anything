@@ -56,10 +56,11 @@ are stale.
 | `placement.distant_rings` | `4` | int 1…100 | Rings between `min_distance` and `max_distance`. |
 | `placement.distant_directions` | `16` | int 4…3600 | Directions per ring for `straight` leaders. |
 | `placement.free_space_seeds` | `true` | bool | Add distant candidates at distance-transform maxima. |
-| `placement.internal` | `"auto"` | auto \| prefer \| allow \| never | auto = prefer for rect/ellipse/polygon/path marks and areas, allow for circles. |
+| `placement.internal` | `"auto"` | auto \| prefer \| allow \| never | auto = prefer for rect/ellipse/polygon/path marks and areas, allow for circles; on a line: a label goes on a line at least as wide as the label is high. |
 | `placement.inner_padding` | `"0.2em"` | length ≥ 0 | Clearance of internal labels from the shape boundary. |
 | `placement.internal_circle_ratio` | `1.5` | ≥ 0 | Circles get internal candidates when r ≥ ratio × label height. |
 | `placement.area_rotation` | `45` | 0–90 degrees | The label of an area anchor may be turned along the polygon's main axis, by this angle at most (spec §6.5), where it has more room than a horizontal one; `0`: always horizontal. Hosts draw a turned label rotated by the placement's `rotation` about the center of its `box`. |
+| `placement.line_rotation` | `90` | 0–90 degrees | The label of a line anchor is turned along the line where the line is at most this far from the horizontal, and upright on steeper stretches (spec §6.5a); `0`: always upright. Hosts draw a turned label rotated by the placement's `rotation` about the center of its `box`. |
 | `placement.prune_factor` | `4` | ≥ 1 | Drop candidates whose static cost exceeds factor × the item's best (+ 1). |
 | `placement.boundary.sides` | `["right","left"]` | list | Canvas sides used by the boundary model. |
 | `placement.boundary.align` | `"stack"` | stack \| spread | stack: as close to the anchors as possible; spread: evenly distributed. |

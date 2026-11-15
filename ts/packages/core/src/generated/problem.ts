@@ -179,7 +179,85 @@ export type Anchor =
             svg_id?: string;
             selector: string;
           };
+    }
+  | {
+      type: "line";
+      points: Polyline;
+      /**
+       * Stroke width of the line (px). Labels beside the line keep clear of the stroke; with placement.internal auto, a label goes on a line at least as wide as the label is high. Default: 1.
+       */
+      width?: number;
+      /**
+       * Geometry of a labeled feature (or of an unlabeled obstacle shape). Reference point = the anchor (center for circle/ellipse/rect).
+       */
+      dot?:
+        | {
+            shape: "circle";
+            r?: number;
+          }
+        | {
+            shape: "ellipse";
+            rx: number;
+            ry: number;
+            /**
+             * Degrees, clockwise on screen (SVG convention).
+             */
+            rotation?: number;
+          }
+        | {
+            shape: "rect";
+            w: number;
+            h: number;
+            corner_radius?: number;
+            /**
+             * Degrees, clockwise on screen, around the anchor.
+             */
+            rotation?: number;
+          }
+        | {
+            shape: "polygon";
+            points: Ring;
+            holes?: Ring[];
+            /**
+             * true: points are px offsets from the anchor; false (default): absolute input coordinates.
+             */
+            relative?: boolean;
+          }
+        | {
+            shape: "path";
+            /**
+             * SVG path data, flattened with 0.25 px tolerance.
+             */
+            d: string;
+            /**
+             * true: path coordinates are px offsets from the anchor.
+             */
+            relative?: boolean;
+          }
+        | {
+            shape: "icon";
+            w: number;
+            h: number;
+            tip?: Point1;
+            silhouette?: Ring1;
+          }
+        | {
+            shape: "from_svg";
+            svg_id: string;
+            selector?: string;
+          }
+        | {
+            shape: "from_svg";
+            svg_id?: string;
+            selector: string;
+          };
     };
+/**
+ * The line: an edge of a node-link diagram, a street, a river. The label goes along it.
+ *
+ * @minItems 2
+ */
+export type Polyline = [Point, Point, ...Point[]];
 export type Label = TextLabel | SizedLabel | CompositeLabel;
 export type TextLabel = TextLabel1 & {
   type: "text";
@@ -239,7 +317,7 @@ export type VectorLayer = VectorLayer1 & {
    * [x, y, r] triples.
    */
   circles?: [number, number, number][];
-  polylines?: Polyline[];
+  polylines?: Polyline1[];
   /**
    * Stroke width for polylines (px).
    */
@@ -262,7 +340,7 @@ export type ClassName = string;
 /**
  * @minItems 2
  */
-export type Polyline = [Point, Point, ...Point[]];
+export type Polyline1 = [Point, Point, ...Point[]];
 /**
  * A mark shape whose reference point (center for circle/ellipse/rect, tip for icons) is at (x, y). Used for unlabeled obstacles.
  */
@@ -880,6 +958,10 @@ export interface Placement {
    * Degrees: the label of an area anchor may be turned along the polygon's main axis by this angle at most (0: always horizontal). A turned label is reported with its rotation.
    */
   area_rotation?: number;
+  /**
+   * Degrees: the label of a line anchor is turned along the line where the line is at most this far from the horizontal, and upright elsewhere (0: always upright; 90: always along the line). A turned label is reported with its rotation.
+   */
+  line_rotation?: number;
   prune_factor?: number;
   boundary?: {
     /**
