@@ -839,6 +839,27 @@ fn raw_candidates(
             {
                 fresh.append(&mut inside);
             }
+        } else if item.line.is_some() {
+            // line anchors: places along the line; beside the dot halfway along it only
+            // when the label has none (spec §6.5a)
+            let mut along: Vec<Cand> = Vec::new();
+            candidates::line(item, vi, v, model.area_view(), &mut along);
+            if along.is_empty() {
+                candidates::adjacent(
+                    item,
+                    vi,
+                    v,
+                    model.placement.slider_per_gap,
+                    models,
+                    stubs.as_ref(),
+                    &mut fresh,
+                );
+            } else if models.has(Models::ADJACENT)
+                || models.has(Models::SLIDER)
+                || models.has(Models::INTERNAL)
+            {
+                fresh.append(&mut along);
+            }
         } else {
             candidates::adjacent(
                 item,

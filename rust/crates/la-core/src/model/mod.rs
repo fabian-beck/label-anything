@@ -264,6 +264,165 @@ pub fn area_angle(axis: Option<f64>, max: f64) -> Option<f64> {
     })
 }
 
+/// A line anchor's polyline (spec §6.5a): an edge of a node-link diagram, a street, a
+/// river.
+#[derive(Clone, Debug)]
+pub struct Line {
+    /// The points in canvas px (consecutive duplicates dropped).
+    pub pts: Vec<P>,
+    /// The arc length up to each point.
+    pub cum: Vec<f64>,
+    pub len: f64,
+    /// The stroke width (px).
+    pub width: f64,
+    /// The point halfway along the line: the item's reference point.
+    pub mid: P,
+    /// A label is turned along a stretch at most this far from the horizontal (degrees).
+    pub max_rotation: f64,
+}
+
+impl Line {
+    pub fn new(points: Vec<P>, width: f64, max_rotation: f64) -> Line {
+        let mut pts: Vec<P> = Vec::with_capacity(points.len());
+        for q in points {
+            if pts.last() != Some(&q) {
+                pts.push(q);
+            }
+        }
+        let mut cum = vec![0.0; pts.len()];
+        for k in 1..pts.len() {
+            cum[k] = cum[k - 1] + pts[k - 1].dist(pts[k]);
+        }
+        let len = cum.last().copied().unwrap_or(0.0);
+        let mut line = Line {
+            pts,
+            cum,
+            len,
+            width: if width.is_finite() && width > 0.0 {
+                width
+            } else {
+                0.0
+            },
+            mid: P::new(0.0, 0.0),
+            max_rotation,
+        };
+        line.mid = line.at(0.5 * len).1;
+        line
+    }
+
+    /// The point at arc length `s` (clamped to the line) and the index of its segment:
+    /// the first whose end lies at `s` or beyond.
+    pub fn at(&self, s: f64) -> (usize, P) {
+        let n = self.pts.len();
+        if n < 2 {
+            return (0, self.pts.first().copied().unwrap_or(P::new(0.0, 0.0)));
+        }
+        let mut i = 0;
+        while i + 2 < n && self.cum[i + 1] < s {
+            i += 1;
+        }
+        let l = self.cum[i + 1] - self.cum[i];
+        let t = if l > 0.0 {
+            crate::math::clampf((s - self.cum[i]) / l, 0.0, 1.0)
+        } else {
+            0.0
+        };
+        (i, self.pts[i].lerp(self.pts[i + 1], t))
+    }
+
+    /// The arc length of the point of the line nearest to `p` (the first on ties).
+    pub fn project(&self, p: P) -> f64 {
+        let mut best = (f64::INFINITY, 0.0);
+        for k in 0..self.pts.len().saturating_sub(1) {
+            let (a, b) = (self.pts[k], self.pts[k + 1]);
+            let q = crate::geom::closest_on_seg(p, a, b);
+            let d = p.dist(q);
+            if d < best.0 {
+                best = (d, self.cum[k] + a.dist(q));
+            }
+        }
+        best.1
+    }
+
+    /// The least and the largest offset from `o` along `n` of the stretch between the arc
+    /// lengths `s0` and `s1`: of its two ends and the points between them.
+    pub fn deviation(&self, s0: f64, s1: f64, o: P, n: P) -> (f64, f64) {
+        let (ia, a) = self.at(s0);
+        let (ib, b) = self.at(s1);
+        let da = (a - o).dot(n);
+        let db = (b - o).dot(n);
+        let (mut lo, mut hi) = (crate::math::minf(da, db), crate::math::maxf(da, db));
+        for k in ia + 1..=ib {
+            let d = (self.pts[k] - o).dot(n);
+            lo = crate::math::minf(lo, d);
+            hi = crate::math::maxf(hi, d);
+        }
+        (lo, hi)
+    }
+
+    /// The arc lengths between which the labels' places are spread (spec §6.5a): the whole
+    /// line, or in a window (`view`) its longest piece inside the view (the first on
+    /// ties; the whole line when none is).
+    pub fn range(&self, view: Option<Rect>) -> (f64, f64) {
+        let whole = (0.0, self.len);
+        let Some(view) = view else { return whole };
+        let mut best: Option<(f64, f64)> = None;
+        let mut cur: Option<(f64, f64)> = None;
+        let longer = |c: Option<(f64, f64)>, best: Option<(f64, f64)>| match (c, best) {
+            (Some(c), Some(b)) if c.1 - c.0 > b.1 - b.0 => Some(c),
+            (Some(c), None) => Some(c),
+            (_, b) => b,
+        };
+        for k in 0..self.pts.len().saturating_sub(1) {
+            let l = self.cum[k + 1] - self.cum[k];
+            match crate::geom::clip_seg_rect(self.pts[k], self.pts[k + 1], &view) {
+                Some((t0, t1)) => {
+                    let (x0, x1) = (self.cum[k] + t0 * l, self.cum[k] + t1 * l);
+                    cur = match cur {
+                        Some((c0, c1)) if x0 <= c1 + 1e-9 => Some((c0, x1)),
+                        _ => {
+                            best = longer(cur, best);
+                            Some((x0, x1))
+                        }
+                    };
+                }
+                None => {
+                    best = longer(cur, best);
+                    cur = None;
+                }
+            }
+        }
+        longer(cur, best).unwrap_or(whole)
+    }
+
+    /// Whether the label box of half size (`hw`, `hh`) around `c`, turned by (`cos`,
+    /// `sin`), keeps `need` px from the line.
+    pub fn clear(&self, c: P, hw: f64, hh: f64, cos: f64, sin: f64, need: f64) -> bool {
+        let r = Rect::new(-hw, -hh, hw, hh);
+        let (rx, ry) = (hw + need, hh + need);
+        let Some(&first) = self.pts.first() else {
+            return true;
+        };
+        let mut a = (first - c).unrotate(cos, sin);
+        for &q in &self.pts[1..] {
+            let b = (q - c).unrotate(cos, sin);
+            let away = (a.x < -rx && b.x < -rx)
+                || (a.x > rx && b.x > rx)
+                || (a.y < -ry && b.y < -ry)
+                || (a.y > ry && b.y > ry);
+            if !away && crate::geom::dist_seg_rect(a, b, &r) < need {
+                return false;
+            }
+            a = b;
+        }
+        true
+    }
+
+    pub fn bbox(&self) -> Rect {
+        crate::geom::bbox_of(&self.pts)
+    }
+}
+
 /// Per-item resolved lengths (px).
 #[derive(Clone, Debug)]
 pub struct ItemLengths {
@@ -412,9 +571,11 @@ pub struct Item {
     pub id: String,
     /// Reference point in canvas px.
     pub anchor: P,
-    /// The labeled mark (for area anchors: the fallback dot at the pole).
+    /// The labeled mark (for area anchors: the fallback dot at the pole; for line anchors:
+    /// the one halfway along the line).
     pub shape: Shape,
     pub area: Option<Area>,
+    pub line: Option<Line>,
     /// Leaders attach at the tip (icon marks).
     pub tip: bool,
     pub label: LabelSpec,
@@ -446,6 +607,12 @@ pub struct Item {
 impl Item {
     pub fn em(&self) -> f64 {
         self.font.size
+    }
+
+    /// An area or a line anchor: the label belongs to a polygon or a polyline, and
+    /// `shape` is only the dot of a label that fits nowhere in or along it.
+    pub fn extended(&self) -> bool {
+        self.area.is_some() || self.line.is_some()
     }
 
     /// Scale the label's text by `f` (font sizes, host-measured text sizes, wrap widths),
@@ -1395,6 +1562,9 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
                 if let Some(a) = &it.area {
                     bb = bb.union(&a.shape.bbox());
                 }
+                if let Some(l) = &it.line {
+                    bb = bb.union(&l.bbox());
+                }
             }
             for (_, p) in &vector {
                 bb = bb.union(&p.bbox());
@@ -1562,7 +1732,7 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
                 (Some(Some(b)), Some(c)) => c.touches(b),
                 _ => false,
             };
-            overscan.is_some() && it.area.is_none() && !extent.touches(&it.shape.bbox()) && !shows()
+            overscan.is_some() && !it.extended() && !extent.touches(&it.shape.bbox()) && !shows()
         })
         .collect();
 
@@ -1957,6 +2127,7 @@ struct ItemDefaults {
     internal: String,
     position_order: Value,
     area_rotation: f64,
+    line_rotation: f64,
 }
 
 impl ItemDefaults {
@@ -1988,6 +2159,7 @@ impl ItemDefaults {
             internal: o.string("placement.internal"),
             position_order: o.get("placement.position_order"),
             area_rotation: o.f64("placement.area_rotation"),
+            line_rotation: o.f64("placement.line_rotation"),
         }
     }
 }
@@ -2030,7 +2202,7 @@ fn build_item(
         .get("svg_id")
         .and_then(|v| v.as_str())
         .map(str::to_string);
-    let (anchor, shape, area, tip) = match anchor_v["type"].as_str() {
+    let (anchor, shape, area, line, tip) = match anchor_v["type"].as_str() {
         Some("area") => {
             let mut rings = vec![points_of(&anchor_v["polygon"])
                 .into_iter()
@@ -2053,7 +2225,26 @@ fn build_item(
                 }
                 None => Shape::circle(pole, 2.0),
             };
-            (pole, dot, Some(area), false)
+            (pole, dot, Some(area), None, false)
+        }
+        Some("line") => {
+            let pts = points_of(&anchor_v["points"])
+                .into_iter()
+                .map(|p| to_px.apply(p))
+                .collect::<Vec<_>>();
+            let width = anchor_v
+                .get("width")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(1.0);
+            let line = Line::new(pts, width, defs.line_rotation);
+            let mid = line.mid;
+            let dot = match anchor_v.get("dot") {
+                Some(m) => {
+                    mark_shape(m, mid, to_px, svgs, warnings, &format!("{ptr}/anchor/dot"))?.0
+                }
+                None => Shape::circle(mid, 2.0),
+            };
+            (mid, dot, None, Some(line), false)
         }
         _ => {
             let at = to_px.apply(P::new(
@@ -2082,7 +2273,7 @@ fn build_item(
                 warnings,
                 &format!("{ptr}/anchor/mark"),
             )?;
-            (at, s, None, tip)
+            (at, s, None, None, tip)
         }
     };
     // label
@@ -2255,6 +2446,7 @@ fn build_item(
         anchor,
         shape,
         area,
+        line,
         tip,
         label,
         font,

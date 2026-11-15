@@ -86,7 +86,7 @@ pub fn fan_pass(s: &mut Solve) {
                 !leaders
                     || s.variants[i].is_empty()
                     || it.keep_with.is_some()
-                    || it.area.is_some()
+                    || it.extended()
                     || model.group_rep(i).is_some()
             })
             .collect(),

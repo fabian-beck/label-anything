@@ -358,7 +358,7 @@ impl<'a> Evaluator<'a> {
             // more squarely beside a side than the own (at most as far as the two marks'
             // reference points lie apart; the marks of the item's group aside)
             let sep = if clear > 0.0 {
-                let need = if hard && side > clear && model.items[j].area.is_none() {
+                let need = if hard && side > clear && !model.items[j].extended() {
                     clear + (side - clear) * maxf(facing(&r, sj.reference()) - own_facing, 0.0)
                 } else {
                     clear
@@ -414,7 +414,7 @@ impl<'a> Evaluator<'a> {
         }
         // 3. static classes (an internal label of a mark covers only the mark, which hides
         // what lies under it: no soft coverage costs)
-        let on_mark = c.kind == Kind::Internal && item.area.is_none();
+        let on_mark = c.kind == Kind::Internal && !item.extended();
         let mut hard_prims_checked = false;
         for (ci, cl) in obs.classes.iter().enumerate() {
             let Some(sat) = &cl.sat else { continue };

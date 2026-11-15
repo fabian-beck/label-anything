@@ -896,20 +896,6 @@ fn with_article(t: &str) -> String {
 fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
     let Some(root) = p.as_object() else { return };
     let items = root.get("items").and_then(|v| v.as_array());
-    // anchor type "line" is reserved for v2
-    if let Some(items) = items {
-        for (i, it) in items.iter().enumerate() {
-            if it.pointer("/anchor/type").and_then(|t| t.as_str()) == Some("line") {
-                let base = format!("/items/{i}/anchor");
-                errors.retain(|e| e.pointer != base && !e.pointer.starts_with(&format!("{base}/")));
-                errors.push(Issue::new(
-                    format!("{base}/type"),
-                    "unsupported",
-                    "anchor type 'line' is reserved for v2",
-                ));
-            }
-        }
-    }
     // ids
     let mut ids: BTreeMap<String, usize> = BTreeMap::new();
     if let Some(items) = items {
@@ -981,6 +967,23 @@ fn semantic(p: &Value, errors: &mut Vec<Issue>, warnings: &mut Vec<Issue>) {
                             format!("/items/{i}/anchor/polygon"),
                             "invalid_value",
                             "area polygon has zero area",
+                        ));
+                    }
+                }
+            }
+            // line anchors must have a length
+            if it.pointer("/anchor/type").and_then(|t| t.as_str()) == Some("line") {
+                if let Some(Value::Array(line)) = it.pointer("/anchor/points") {
+                    let pts: Vec<(f64, f64)> = line
+                        .iter()
+                        .filter_map(|q| Some((q.get(0)?.as_f64()?, q.get(1)?.as_f64()?)))
+                        .collect();
+                    if pts.len() >= 2 && pts.len() == line.len() && pts.iter().all(|q| *q == pts[0])
+                    {
+                        errors.push(Issue::new(
+                            format!("/items/{i}/anchor/points"),
+                            "invalid_value",
+                            "line has zero length",
                         ));
                     }
                 }
@@ -1276,7 +1279,7 @@ mod tests {
             "{c:?}"
         );
         assert!(
-            c.contains(&("/items/2/anchor/type".into(), "unsupported".into())),
+            c.contains(&("/items/2/anchor/points".into(), "required".into())),
             "{c:?}"
         );
         assert!(

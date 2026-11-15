@@ -244,6 +244,19 @@ pub fn debug_svg(model: Option<&Model>, result: &Value, debug: Option<&DebugData
                     r##"fill="#bbdefb" fill-opacity="0.5" stroke="#1565c0" stroke-width="0.75""##,
                 ));
             }
+            if let Some(l) = &it.line {
+                let pts: Vec<String> = l
+                    .pts
+                    .iter()
+                    .map(|q| format!("{},{}", f(q.x), f(q.y)))
+                    .collect();
+                let _ = write!(
+                    s,
+                    r##"<polyline points="{}" fill="none" stroke="#1565c0" stroke-opacity="0.5" stroke-width="{}" stroke-linejoin="round"/>"##,
+                    pts.join(" "),
+                    f(l.width.max(0.75))
+                );
+            }
             s.push_str(&shape_svg(
                 &it.shape,
                 r##"fill="#1565c0" fill-opacity="0.35" stroke="#0d47a1" stroke-width="0.75""##,

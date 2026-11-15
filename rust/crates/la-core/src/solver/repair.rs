@@ -814,6 +814,9 @@ fn near_freed(s: &Solve, h: usize, freed: &[crate::geom::Rect]) -> bool {
     if let Some(a) = &item.area {
         r = r.union(&a.shape.bbox());
     }
+    if let Some(l) = &item.line {
+        r = r.union(&l.bbox());
+    }
     let size = s.variants[h]
         .iter()
         .filter(|v| v.level == 0)

@@ -123,7 +123,8 @@ impl Leader {
     }
 }
 
-/// A turned label (spec §6.5): the label of an area anchor along the polygon's main axis.
+/// A turned label: the label of an area anchor along the polygon's main axis (spec §6.5)
+/// or of a line anchor along the line (spec §6.5a).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Turn {
     /// Degrees, clockwise on screen.
@@ -509,6 +510,19 @@ pub fn warm(
         // inside the area: an internal candidate, turned as it was
         if let Some(c) = area_warm(model, item, area, vi, v, rect) {
             return Some(c);
+        }
+    }
+    if let Some(l) = &item.line {
+        // along the line: an internal candidate, turned as it was
+        if let Some(c) = line_warm(model, item, l, vi, v, rect) {
+            return Some(c);
+        }
+        // a box that has left the line of a label that goes along it is no place: only
+        // the label beside the dot of a line without places keeps one
+        let mut places = Vec::new();
+        line(item, vi, v, model.area_view(), &mut places);
+        if !places.is_empty() {
+            return None;
         }
     }
     let gap = item.shape.dist_rect(&rect);
@@ -1546,6 +1560,301 @@ fn area_warm(
     cd.inside = f.lack(c);
     cd.turn = Some(Box::new(turn));
     cd.lshape = Some(Box::new(shape));
+    Some(cd)
+}
+
+/// Most pairs of places on either side of the middle one that a line anchor's labels
+/// have along the line (spec §6.5a).
+const LINE_PAIRS: f64 = 4.0;
+
+/// The chord of a stretch under a label is at least this share of the stretch's length
+/// (spec §6.5a).
+const LINE_CHORD: f64 = 0.9;
+
+/// The rank of a line anchor's label on the line (spec §6.5a; `None`: it has none): with
+/// `internal: auto`, a label goes on a line at least as wide as the label is high.
+pub fn line_on_rank(item: &Item, line: &crate::model::Line, v: &Variant) -> Option<f64> {
+    match item.internal {
+        InternalPolicy::Never => None,
+        InternalPolicy::Allow => Some(0.0),
+        InternalPolicy::Prefer => Some(-1.0),
+        InternalPolicy::Auto => (line.width >= v.h).then_some(-1.0),
+    }
+}
+
+/// The sides of a line its labels may stand on (spec §6.5a), in the order of the item's
+/// positions: `top` (above the line as the label reads, −1) and `bottom` (+1), with
+/// their ranks 0 and 1.
+fn line_sides(item: &Item) -> Vec<(Pos, f64, f64)> {
+    let mut out: Vec<(Pos, f64, f64)> = Vec::new();
+    for &p in &item.positions {
+        let sign = match p {
+            Pos::Top => -1.0,
+            Pos::Bottom => 1.0,
+            _ => continue,
+        };
+        if out.iter().all(|s| s.0 != p) {
+            out.push((p, out.len() as f64, sign));
+        }
+    }
+    out
+}
+
+/// A stretch of a line under a label (spec §6.5a).
+struct Stretch {
+    /// The middle of the chord between the stretch's ends.
+    m: P,
+    /// The chord's direction as text reads: degrees clockwise on screen, in [−90°, 90°).
+    angle: f64,
+    cos: f64,
+    sin: f64,
+    /// The least and the largest offset of the stretch from the chord, along the normal
+    /// (−sin, cos): below the line as the label reads.
+    lo: f64,
+    hi: f64,
+    /// The length of the stretch.
+    span: f64,
+    /// The length of the chord.
+    chord: f64,
+}
+
+/// The stretch of `line` under a label of width `w` centered at arc length `s` (`None`:
+/// its ends coincide).
+fn line_stretch(line: &crate::model::Line, s: f64, w: f64) -> Option<Stretch> {
+    let s0 = maxf(s - 0.5 * w, 0.0);
+    let s1 = minf(s + 0.5 * w, line.len);
+    let (a, b) = (line.at(s0).1, line.at(s1).1);
+    let d = b - a;
+    if d.len() <= 1e-9 {
+        return None;
+    }
+    let mut u = d.norm();
+    // text reads from left to right, and upwards on a vertical stretch
+    if u.x < 0.0 || (u.x == 0.0 && u.y > 0.0) {
+        u = -u;
+    }
+    let angle = la_expr::det_math::atan2_deg(u.y, u.x);
+    let (sin, cos) = sin_cos_deg(angle);
+    let (lo, hi) = line.deviation(s0, s1, a, P::new(-sin, cos));
+    Some(Stretch {
+        m: a.lerp(b, 0.5),
+        angle,
+        cos,
+        sin,
+        lo,
+        hi,
+        span: s1 - s0,
+        chord: d.len(),
+    })
+}
+
+/// What a label of size `w` × `h` lacks at arc length `s` of a line whose places lie
+/// between `ra` and `rb` (spec §6.5a): its distance from the middle, the bend of the line
+/// under it and the length the line is shorter than the label.
+fn line_lack(s: f64, (ra, rb): (f64, f64), bend: f64, span: f64, w: f64, h: f64) -> f64 {
+    let off = if rb > ra {
+        2.0 * (s - 0.5 * (ra + rb)).abs() / (rb - ra)
+    } else {
+        0.0
+    };
+    let bent = if h > 0.0 { bend / h } else { 0.0 };
+    let short = if w > 0.0 {
+        maxf(0.0, 1.0 - span / w)
+    } else {
+        0.0
+    };
+    off + bent + short
+}
+
+/// The arc lengths of the places of a label of size `w` × `h` on a line of length `len`
+/// whose places lie between `ra` and `rb` (spec §6.5a): the middle, then pairs on either
+/// side of it, evenly spread, at least a label height apart.
+fn line_positions(len: f64, (ra, rb): (f64, f64), w: f64, h: f64) -> Vec<f64> {
+    let (lo, hi) = (ra + 0.5 * w, rb - 0.5 * w);
+    if hi <= lo || hi.is_nan() || lo.is_nan() {
+        let mid = 0.5 * (ra + rb);
+        return vec![if len >= w {
+            crate::math::clampf(mid, 0.5 * w, len - 0.5 * w)
+        } else {
+            0.5 * len
+        }];
+    }
+    let mid = 0.5 * (lo + hi);
+    let pairs = minf(
+        crate::math::floor_fast((hi - lo) / (2.0 * maxf(h, 4.0))),
+        LINE_PAIRS,
+    );
+    let mut out = vec![mid];
+    if pairs >= 1.0 {
+        let d = 0.5 * (hi - lo) / pairs;
+        for j in 1..=pairs as usize {
+            out.push(mid + j as f64 * d);
+            out.push(mid - j as f64 * d);
+        }
+    }
+    out
+}
+
+/// Candidates of a line anchor for one variant (spec §6.5a): at places along the line,
+/// on it and beside it, turned along it. `view`: in a window, the working extent, on
+/// whose piece of the line the places lie.
+pub fn line(item: &Item, vi: usize, v: &Variant, view: Option<Rect>, out: &mut Vec<Cand>) {
+    let Some(line) = &item.line else { return };
+    let on = line_on_rank(item, line, v);
+    let sides = line_sides(item);
+    if (on.is_none() && sides.is_empty()) || line.pts.len() < 2 {
+        return;
+    }
+    let (hw, hh) = (v.w * 0.5, v.h * 0.5);
+    let it = item.index as u32;
+    let turnable = can_turn(v);
+    let need = 0.5 * line.width + item.len.offset;
+    let range = line.range(view);
+    for s in line_positions(line.len, range, v.w, v.h) {
+        let Some(st) = line_stretch(line, s, v.w) else {
+            continue;
+        };
+        let bend = st.hi - st.lo;
+        // a label is straight: not where the line leaves it or folds under it
+        if bend > v.h + 1e-9 || st.chord < LINE_CHORD * st.span {
+            continue;
+        }
+        let turned = turnable && st.angle != 0.0 && st.angle.abs() <= line.max_rotation;
+        let n = P::new(-st.sin, st.cos);
+        // how far the label reaches from its center towards the line
+        let e = if turned {
+            hh
+        } else {
+            hw * n.x.abs() + hh * n.y.abs()
+        };
+        let (cos, sin) = if turned { (st.cos, st.sin) } else { (1.0, 0.0) };
+        let lack = line_lack(s, range, bend, st.span, v.w, v.h);
+        let cand = |c: P, side: Side, rank: f64| {
+            let mut cd = Cand::new(
+                it,
+                vi as u16,
+                v.level,
+                Kind::Internal,
+                side,
+                rank,
+                Rect::from_center(c, hw, hh),
+            );
+            cd.inside = lack;
+            if turned {
+                let (bbox, turn, shape) = Turn::of(c, hw, hh, st.angle, cos, sin);
+                cd.rect = bbox;
+                cd.turn = Some(Box::new(turn));
+                cd.lshape = Some(Box::new(shape));
+            }
+            cd
+        };
+        if let Some(rank) = on {
+            out.push(cand(
+                st.m + n * (0.5 * (st.lo + st.hi)),
+                Side::Internal,
+                rank,
+            ));
+        }
+        for &(p, rank, sign) in &sides {
+            let d = if sign < 0.0 {
+                st.lo - need - e
+            } else {
+                st.hi + need + e
+            };
+            let c = st.m + n * d;
+            // not where the line comes back to the label beyond the stretch
+            if line.clear(c, hw, hh, cos, sin, need - 1e-6) {
+                out.push(cand(c, Side::Pos(p), rank));
+            }
+        }
+    }
+}
+
+/// The warm-start box of a line item as a candidate of variant `vi`, where it still lies
+/// on or beside the line as the labels of [`line`] do (within 1 px and a quarter of the
+/// label's height), turned by the rotation it came with.
+fn line_warm(
+    model: &crate::model::Model,
+    item: &Item,
+    line: &crate::model::Line,
+    vi: usize,
+    v: &Variant,
+    rect: Rect,
+) -> Option<Cand> {
+    if line.pts.len() < 2 {
+        return None;
+    }
+    let (hw, hh) = (v.w * 0.5, v.h * 0.5);
+    let c = rect.center();
+    let angle = model.warm_rotation.get(&item.id).copied().unwrap_or(0.0);
+    let turned = angle != 0.0;
+    if turned && !can_turn(v) {
+        return None;
+    }
+    let s = line.project(c);
+    let s = if line.len >= v.w {
+        crate::math::clampf(s, hw, line.len - hw)
+    } else {
+        0.5 * line.len
+    };
+    let st = line_stretch(line, s, v.w)?;
+    // a turned label still goes along the line (within 5°, the same at ±90°)
+    let off = (angle - st.angle).abs();
+    if turned && minf(off, 180.0 - off) > 5.0 {
+        return None;
+    }
+    let (sin, cos) = if turned {
+        sin_cos_deg(angle)
+    } else {
+        (0.0, 1.0)
+    };
+    let n = if turned {
+        P::new(-sin, cos)
+    } else {
+        P::new(-st.sin, st.cos)
+    };
+    let e = if turned {
+        hh
+    } else {
+        hw * n.x.abs() + hh * n.y.abs()
+    };
+    let (lo, hi) = line.deviation(maxf(s - hw, 0.0), minf(s + hw, line.len), c, n);
+    let tol = 1.0 + 0.25 * v.h;
+    let bend = hi - lo;
+    if bend > v.h + tol {
+        return None;
+    }
+    let need = 0.5 * line.width + item.len.offset;
+    let sides = line_sides(item);
+    let side_of = |p: Pos| sides.iter().find(|s| s.0 == p).map(|s| (Side::Pos(p), s.1));
+    let (side, rank) = if (0.5 * (lo + hi)).abs() <= tol {
+        (Side::Internal, line_on_rank(item, line, v)?)
+    } else if (lo - (need + e)).abs() <= tol {
+        side_of(Pos::Top)?
+    } else if (hi + need + e).abs() <= tol {
+        side_of(Pos::Bottom)?
+    } else {
+        return None;
+    };
+    if side != Side::Internal && !line.clear(c, hw, hh, cos, sin, maxf(need - tol, 0.0)) {
+        return None;
+    }
+    let mut cd = Cand::new(
+        item.index as u32,
+        vi as u16,
+        v.level,
+        Kind::Internal,
+        side,
+        rank,
+        Rect::from_center(c, hw, hh),
+    );
+    cd.inside = line_lack(s, line.range(model.area_view()), bend, st.span, v.w, v.h);
+    if turned {
+        let (bbox, turn, shape) = Turn::of(c, hw, hh, angle, cos, sin);
+        cd.rect = bbox;
+        cd.turn = Some(Box::new(turn));
+        cd.lshape = Some(Box::new(shape));
+    }
     Some(cd)
 }
 
