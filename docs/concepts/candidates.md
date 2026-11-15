@@ -48,6 +48,15 @@ a slanted polygon, the same turned along its main axis (`placement.area_rotation
 45° by default). It gets positions beside a point only when it fits nowhere inside
 (ADR placement/areas).
 
+The label of a **line** goes along it ([edge labels](../tutorials/node-link.md#edge-labels),
+spec §6.5a): at up to nine places from end to end, the middle first, above or below the
+line (`top` and `bottom` of `position_order`) or on it (`placement.internal`; `auto`: on a
+line at least as wide as the label is high), turned to the direction of the stretch under
+it (`placement.line_rotation`, 90° by default). Stretches that bend by more than the
+label's height are left out, and so are places beside a corner the line comes back
+through. These candidates are `internal` ones; a label without any stands beside a dot
+halfway along the line (ADR placement/lines).
+
 **`distant`** — away from the mark, with a leader: `distant_rings` (4) rings between
 `min_distance` (1.5 em) and `max_distance` (4 em; per [aggressiveness](#aggressiveness)),
 in `distant_directions` (16) directions

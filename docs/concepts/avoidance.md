@@ -24,7 +24,7 @@ per class how much covering it matters, separately for labels and for leaders:
 
 | Class | Contents |
 |---|---|
-| `items` | the marks of all items (their true shapes); area anchors contribute nothing |
+| `items` | the marks of all items (their true shapes); area and line anchors contribute only their dot, not the polygon or the line |
 | `labels`, `leaders` | the labels and leaders placed so far (dynamic) |
 | `canvas_edge` | everything outside the label area (canvas or `region` minus `padding`) |
 | `ink`, `text` | produced by SVG and raster backgrounds (the default class of drawn SVG elements and raster modes; SVG text) |

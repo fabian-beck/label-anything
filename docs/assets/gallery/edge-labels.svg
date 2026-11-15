@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="580" height="400" viewBox="0 0 580 400">
+<style>@font-face{font-family:'LA Noto Sans';src:url(data:font/woff;base64,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) format('woff');font-weight:400;font-style:normal}@font-face{font-family:'LA Noto Sans';src:url(data:font/woff;base64,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) format('woff');font-weight:700;font-style:normal}text{font-family:'LA Noto Sans',sans-serif;white-space:pre}</style>
+<rect width="580" height="400" fill="#ffffff"/>
+<g class="obstacles" fill="#b8b8b8" stroke="#b8b8b8" fill-opacity="0.6">
+<polyline points="81,74.9 239,145.1" fill="none" stroke-width="1.5"/>
+<polyline points="261.3,146.1 468.7,73.9" fill="none" stroke-width="1.5"/>
+<polyline points="260.8,155.2 489.2,264.8" fill="none" stroke-width="1.5"/>
+<polyline points="481.2,81.9 498.8,258.1" fill="none" stroke-width="1.5"/>
+<polyline points="488.4,273 281.6,327" fill="none" stroke-width="1.5"/>
+<polyline points="81.5,273.4 258.5,326.6" fill="none" stroke-width="1.5"/>
+<polyline points="251.3,161.9 268.7,318.1" fill="none" stroke-width="1.5"/>
+</g>
+<g class="marks">
+<circle cx="70" cy="70" r="12" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="250" cy="150" r="12" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="480" cy="70" r="12" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="500" cy="270" r="12" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="270" cy="330" r="12" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<circle cx="70" cy="270" r="12" fill="#7aa6d8" fill-opacity="0.55" stroke="#2c5d8f" stroke-width="0.8"/>
+<polyline points="81,74.9 239,145.1" fill="none" stroke="#2c5d8f" stroke-opacity="0.55" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="261.3,146.1 468.7,73.9" fill="none" stroke="#2c5d8f" stroke-opacity="0.55" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="260.8,155.2 489.2,264.8" fill="none" stroke="#2c5d8f" stroke-opacity="0.55" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="481.2,81.9 498.8,258.1" fill="none" stroke="#2c5d8f" stroke-opacity="0.55" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="488.4,273 281.6,327" fill="none" stroke="#2c5d8f" stroke-opacity="0.55" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="81.5,273.4 258.5,326.6" fill="none" stroke="#2c5d8f" stroke-opacity="0.55" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="251.3,161.9 268.7,318.1" fill="none" stroke="#2c5d8f" stroke-opacity="0.55" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+</g>
+<g class="leaders" fill="none" stroke="#333333" stroke-width="1" stroke-linejoin="round">
+</g>
+<g class="labels">
+<rect x="51.44" y="44.15" width="37.13" height="12.85" fill="#ffffff" fill-opacity="0.75"/>
+<text x="53.24 59.43 63 66.59 73.76 81.56" y="55.08" font-size="12" font-weight="700" fill="#000000">client</text>
+<rect x="222.59" y="122.58" width="54.82" height="14.42" fill="#ffffff" fill-opacity="0.75"/>
+<text x="224.39 231.98 239.16 244.37 251.3 261.57 268.76" y="132.32" font-size="12" font-weight="700" fill="#000000">gateway</text>
+<rect x="458.82" y="44.16" width="42.36" height="12.84" fill="#ffffff" fill-opacity="0.75"/>
+<text x="460.62 468.12 473.24 480.83 487.99 493.36" y="55.08" font-size="12" font-weight="700" fill="#000000">orders</text>
+<rect x="513" y="262.19" width="40.9" height="15.61" fill="#ffffff" fill-opacity="0.75"/>
+<text x="514.8 522.38 525.97 529.55 533.12 536.71 544.51" y="273.13" font-size="12" font-weight="700" fill="#000000">billing</text>
+<rect x="248.98" y="343" width="42.04" height="15.6" fill="#ffffff" fill-opacity="0.75"/>
+<text x="250.78 254.36 261.52 269.11 276.69 283.85" y="353.92" font-size="12" font-weight="700" fill="#000000">ledger</text>
+<rect x="52.52" y="244.15" width="34.97" height="12.85" fill="#ffffff" fill-opacity="0.75"/>
+<text x="54.32 61.5 69.3 76.89 80.48" y="255.08" font-size="12" font-weight="700" fill="#000000">audit</text>
+<g transform="rotate(23.96 162.81 103.68)">
+<rect x="146.17" y="98.51" width="33.27" height="10.34" fill="#ffffff" fill-opacity="0.75"/>
+<text x="147.67 155.08 160.84 166.4 172.45" y="107.25" font-size="10" fill="#000000">HTTPS</text>
+</g>
+<g transform="rotate(-19.19 362.35 102.38)">
+<rect x="348.48" y="96.06" width="27.74" height="12.64" fill="#ffffff" fill-opacity="0.75"/>
+<text x="349.98 356.13 362.35 368.4" y="104.8" font-size="10" fill="#000000">gRPC</text>
+</g>
+<g transform="rotate(25.63 378.49 202.72)">
+<rect x="364.62" y="196.4" width="27.74" height="12.64" fill="#ffffff" fill-opacity="0.75"/>
+<text x="366.12 372.27 378.49 384.54" y="205.14" font-size="10" fill="#000000">gRPC</text>
+</g>
+<g transform="rotate(84.3 496.56 169.34)">
+<rect x="479.69" y="164.5" width="33.74" height="9.69" fill="#ffffff" fill-opacity="0.75"/>
+<text x="481.19 486.63 491.71 497.35 503.53 507.14" y="172.59" font-size="10" fill="#000000">events</text>
+</g>
+<g transform="rotate(-14.63 383.24 293.24)">
+<rect x="367.43" y="288.01" width="31.61" height="10.47" fill="#ffffff" fill-opacity="0.75"/>
+<text x="368.93 376.79 380.92 383.5 387.11 392.75" y="296.88" font-size="10" fill="#000000">writes</text>
+</g>
+<g transform="rotate(16.73 172.04 293.2)">
+<rect x="157.48" y="287.85" width="29.12" height="10.7" fill="#ffffff" fill-opacity="0.75"/>
+<text x="158.98 162.91 168.55 174.16 180.31" y="296.95" font-size="10" fill="#000000">reads</text>
+</g>
+<g transform="rotate(83.64 266.94 239.23)">
+<rect x="251.14" y="233.99" width="31.61" height="10.47" fill="#ffffff" fill-opacity="0.75"/>
+<text x="252.64 260.5 264.63 267.21 270.82 276.46" y="242.86" font-size="10" fill="#000000">writes</text>
+</g>
+</g>
+<g class="unplaced" stroke="#d62728" stroke-width="1.2" stroke-linecap="round">
+</g>
+</svg>

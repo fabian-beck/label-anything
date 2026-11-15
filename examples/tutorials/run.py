@@ -225,6 +225,8 @@ PROBLEM_CHECKS: dict[str, tuple[int, Callable[[dict[str, Any]], str | None] | No
     "priority-cities.json": (29, all_checks(omitted_with("omitted_by_priority"), priority_cities)),
     "shapes.json": (11, model_of(big="internal", ellipse="internal", card="internal", region="internal", lake="internal", islet="adjacent", medium="adjacent")),
     "graph.json": (14, model_of(core="internal", api="internal", db="internal", cache="internal", web="adjacent")),
+    "edge-labels.json": (13, model_of(**{"client": "adjacent", "client-gateway": "internal", "orders-billing": "internal",
+                                         "gateway-ledger": "internal"})),
 }
 
 

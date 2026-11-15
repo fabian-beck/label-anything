@@ -38,6 +38,13 @@ The first release, 0.1.0. Nothing is published to a package registry yet.
   part they fit in, and are turned along a slanted area where an upright label has less
   room (`placement.area_rotation`, 45° at most by default; the placement then has a
   `rotation` about the center of its `box`).
+- Labels of lines: an item with a `line` anchor (`points`, `width`) is an edge of a
+  node-link diagram, a street or a river, and its label goes along it — above or below
+  the line (`top` and `bottom` of `position_order`), or on a line wide enough for it
+  (`placement.internal`) —, turned to the line's direction (`placement.line_rotation`,
+  90° by default; `0`: upright labels), at one of up to nine places from end to end. The
+  anchor type `line` was reserved and rejected before (`unsupported`); the Python
+  (`la.Line`) and Java (`Item.line`) builders have it too.
 - A degradation ladder for labels that do not fit: alternative texts, wrapping, distant
   placement, eviction of lower priorities, shrinking, soft overlap, omission.
 - How hard the engine tries to place every label is one option, `placement.aggressiveness`:

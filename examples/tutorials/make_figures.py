@@ -49,6 +49,7 @@ RENDERINGS = [
     ("priority-cities", "problems/priority-cities.json"),
     ("shapes", "problems/shapes.json"),
     ("node-link", "problems/graph.json"),
+    ("edge-labels", "problems/edge-labels.json"),
 ]
 COMPOSITES = [
     ("outliers", "data/outliers.json"),

@@ -27,7 +27,9 @@ a **window** on a larger drawing ([ADR motion/windows](../adr/motion/windows.md)
   that by itself);
 * pass the points farther than that, three times the overscan say: those beyond the
   overscan are **marks only** (reason `outside`). The labels in the overscan keep off
-  them, so that none has to make way when they come in. Pass areas and lines whole;
+  them, so that none has to make way when they come in. Pass areas and lines whole: an
+  area is labeled where it shows, and a [street](#street-names) on its longest piece in
+  the view;
 * `canvas.region`, if the drawing has bounds of its own (a map that ends somewhere),
   gives them in view coordinates: labels stay on the map, however far it reaches beyond
   the view.
@@ -109,6 +111,40 @@ computed from the positions on screen (`outlierness` and `centrality` change as 
 In a dense region, also let important labels cover the dots of less important places
 ([important labels over minor marks](priority.md#important-labels-over-minor-marks)); the
 map helpers below do that whenever you give them a priority.
+
+## Street names
+
+Streets and rivers are items with a `line` anchor, like the
+[edges of a graph](node-link.md#edge-labels): the name runs along the line, turned to its
+direction.
+
+```json
+{
+  "canvas": { "width": 800, "height": 600, "overscan": "8em" },
+  "preset": "map",
+  "items": [
+    { "id": "main-street",
+      "anchor": { "type": "line", "points": [[-340, 420], [180, 395], [520, 310], [1150, 240]], "width": 18 },
+      "label": { "type": "text", "text": "Main Street" } },
+    { "id": "mill-lane",
+      "anchor": { "type": "line", "points": [[300, 40], [330, 180], [410, 290]], "width": 4 },
+      "label": { "type": "text", "text": "Mill Lane" } }
+  ]
+}
+```
+
+* `width` is the width the street is drawn with. A name fits on a street at least as wide
+  as the label is high ("Main Street"); a narrower one has its name above or below it
+  ("Mill Lane"), 1 px clear of the stroke.
+* The name lies on a stretch that is straight enough for it: a label is a straight box,
+  and text is not bent along a curve. A street that winds everywhere under its name gets
+  the name beside a dot halfway along it.
+* Pass a street whole, however far it runs beyond the view. In a window the name is
+  placed on the longest piece inside the view and its overscan, so it stays readable
+  while the street's ends are far away; with a [pinned](#a-pan-moves-no-label) pan it
+  keeps its place like every label.
+* A street is not an obstacle by being labeled. If the place names should keep off the
+  streets, the streets are part of the background (`obstacles`) as before.
 
 ## Moving points
 

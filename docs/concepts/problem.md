@@ -35,7 +35,7 @@ validation error (`unit`).
 ## Coordinates
 
 Output is always in **canvas pixels, origin top-left, y down**. Input coordinates
-(anchors, absolute polygons and paths, area polygons, vector obstacles, `priority.focus`)
+(anchors, absolute polygons and paths, area polygons, the points of lines, vector obstacles, `priority.focus`)
 are mapped by
 
 1. `transform` `[a, b, c, d, e, f]` (SVG matrix order): `x' = a·x + c·y + e`,
@@ -116,7 +116,7 @@ canvas edge, and the working area is the bounding box of everything plus a margi
 | Key | |
 |---|---|
 | `id` | unique; default the index as a string (`"0"`, `"1"`, …) |
-| `anchor` | `{"type": "point", "x", "y", "mark"}` or `{"type": "area", "polygon", "holes", "dot"}` — see [shapes](../tutorials/shapes.md) |
+| `anchor` | `{"type": "point", "x", "y", "mark"}`, `{"type": "area", "polygon", "holes", "dot"}` or `{"type": "line", "points", "width", "dot"}` — see [shapes](../tutorials/shapes.md) and [edge labels](../tutorials/node-link.md#edge-labels) |
 | `label` | text, icon, box or composite — see [labels](#labels) |
 | `attrs` | free data for priority terms and expressions |
 | `priority`, `tier`, `required` | an explicit score, tier, or "never omit while a non-required label is placed" |

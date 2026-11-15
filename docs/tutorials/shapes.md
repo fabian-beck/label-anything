@@ -83,6 +83,12 @@ for (const p of result.placements) {
 
 The renderers of the packages (`renderSvg`, the debug overlay) do this already.
 
+## Line anchors
+
+An item with a `line` anchor labels a line: an edge of a diagram, a street, a river. Its
+label goes along the line and is turned the same way; [edge labels](node-link.md#edge-labels)
+shows them in a graph, [street names](interactive-maps.md#street-names) on a map.
+
 ## Covering one's own mark
 
 By default a label never covers its own mark (`avoid.label.own_mark: "hard"`).

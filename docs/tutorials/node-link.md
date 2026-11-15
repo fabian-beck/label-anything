@@ -60,6 +60,40 @@ their nodes; after one, they move and fade calmly
 --8<-- "examples/tutorials/js/browser/sigma.mjs:sigma"
 ```
 
+## Edge labels
+
+An edge with a label is an item too, with a `line` anchor: the points of the edge as it
+is drawn, and the width of its stroke.
+
+```json
+--8<-- "examples/tutorials/problems/edge-labels.json:16:17"
+```
+
+![A service graph whose edges are labeled along their lines](../assets/gallery/edge-labels.svg)
+
+* **Along the line.** The label stands above the middle of its edge, turned to the
+  edge's direction and reading from left to right (upwards on a vertical edge), at
+  `placement.offset` (1 px) from the stroke. The placement has a `rotation` about the
+  center of its `box`, as the label of a [slanted area](shapes.md#area-anchors) has; with
+  `"placement": {"line_rotation": 0}` every label stays upright beside its edge, and a
+  smaller angle than the default 90° keeps the labels of steep edges upright.
+* **Out of the way.** When a node, another label or a hard obstacle is in the way, the
+  label moves along the edge (up to nine places from end to end) or to its other side.
+  `position_order` chooses the sides and their order: `["bottom", "top"]` prefers the
+  side below, `["top"]` allows only the one above.
+* **On the line.** `"placement": {"internal": "prefer"}` on the item centers the label on
+  the edge, for a host that draws it on a background. By default (`auto`) only a line at
+  least as wide as its label is high carries it, such as a street on a map.
+* **Corners.** A polyline may bend: an orthogonal or bundled edge is labeled on a stretch
+  that is straight enough for the label (it leaves its chord by no more than the label's
+  height), never across a corner. An edge without such a stretch gets its label beside
+  a small dot halfway along it (`anchor.dot`), like any point.
+* **Edges are still obstacles.** A `line` anchor keeps no other label off its line. List
+  the edges under `obstacles` as before, so that the node labels avoid them; an edge's
+  own label stands clear of its line.
+
+In Python the anchor is `la.Line(points, width=1.5)`, in Java `Item.line(id, points)`.
+
 ## Edges as obstacles
 
 Edges can be any geometry: straight segments as above, polylines of orthogonal or bundled

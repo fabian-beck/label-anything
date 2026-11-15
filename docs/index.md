@@ -15,7 +15,7 @@ hide:
 
     ---
 
-    The items to label — points, shapes, areas — with their labels (text, icons, any
+    The items to label — points, shapes, lines, areas — with their labels (text, icons, any
     box), and what must stay visible: marks, lines, or the whole chart as SVG or image.
 
 -   :material-numeric-2-circle:{ .lg .middle } **It places**
@@ -92,8 +92,9 @@ problem format for any chart, map or diagram, any label with a size and every la
 
     ---
 
-    Circles, ellipses, rotated rectangles, polygons, paths, pins, areas. Large shapes hold
-    their labels inside, small ones get them outside or on leaders.
+    Circles, ellipses, rotated rectangles, polygons, paths, pins, areas, lines. Large
+    shapes hold their labels inside, small ones get them outside or on leaders; edges and
+    streets are labeled along their line.
     [Shapes](tutorials/shapes.md)
 
 -   :material-layers-outline:{ .lg .middle } **Any background**
@@ -230,8 +231,9 @@ problems.
 * **Open source.** MIT License; the bundled font, Noto Sans, is under the SIL Open Font
   License 1.1. In research, please cite the methods it builds on
   ([`CITATION.cff`](gh:CITATION.cff)).
-* **Labels for points and areas.** Labels go to points and areas of any shape; lines such
-  as roads or rivers are obstacles, not labeled features.
+* **Labels for points, lines and areas.** Labels go to points and areas of any shape and
+  along lines such as the edges of a graph, roads or rivers. A label is a straight box:
+  text is not bent along a curve.
 * **Not for labeling data.** Despite its name, Label Anything is not a data-labeling tool,
   and it is unrelated to the few-shot segmentation model of the same name (ECAI 2025).
 

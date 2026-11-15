@@ -33,7 +33,7 @@ The overlay has one SVG group per layer, which a viewer or a script can toggle:
 | `heatmap-<class>` | the coverage grid of one obstacle class (during the solve only) |
 | `obstacles` | vector and SVG obstacle geometry in grey (title: its class) |
 | `candidates` | candidate boxes (during the solve only) |
-| `items` | item marks in blue, area anchors lighter |
+| `items` | item marks in blue, area anchors lighter, line anchors as their line |
 | `leaders` | leaders, underlines and their start points |
 | `labels` | label boxes and their text (title: id, side, cost, rank) |
 | `unplaced` | a red cross per omitted item (title: reason, blocking classes, blocked by) |

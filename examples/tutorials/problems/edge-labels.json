@@ -1,0 +1,24 @@
+{
+  "canvas": { "width": 580, "height": 400 },
+  "preset": "graph",
+  "obstacles": { "vector": [ { "class": "lines", "width": 1.5, "polylines": [
+      [[81.0, 74.9], [239.0, 145.1]], [[261.3, 146.1], [468.7, 73.9]], [[260.8, 155.2], [489.2, 264.8]],
+      [[481.2, 81.9], [498.8, 258.1]], [[488.4, 273.0], [281.6, 327.0]], [[81.5, 273.4], [258.5, 326.6]],
+      [[251.3, 161.9], [268.7, 318.1]]
+  ] } ] },
+  "items": [
+    { "id": "client", "anchor": { "type": "point", "x": 70, "y": 70, "mark": { "shape": "circle", "r": 12 } }, "label": { "type": "text", "text": "client", "font": { "weight": 700 } } },
+    { "id": "gateway", "anchor": { "type": "point", "x": 250, "y": 150, "mark": { "shape": "circle", "r": 12 } }, "label": { "type": "text", "text": "gateway", "font": { "weight": 700 } } },
+    { "id": "orders", "anchor": { "type": "point", "x": 480, "y": 70, "mark": { "shape": "circle", "r": 12 } }, "label": { "type": "text", "text": "orders", "font": { "weight": 700 } } },
+    { "id": "billing", "anchor": { "type": "point", "x": 500, "y": 270, "mark": { "shape": "circle", "r": 12 } }, "label": { "type": "text", "text": "billing", "font": { "weight": 700 } } },
+    { "id": "ledger", "anchor": { "type": "point", "x": 270, "y": 330, "mark": { "shape": "circle", "r": 12 } }, "label": { "type": "text", "text": "ledger", "font": { "weight": 700 } } },
+    { "id": "audit", "anchor": { "type": "point", "x": 70, "y": 270, "mark": { "shape": "circle", "r": 12 } }, "label": { "type": "text", "text": "audit", "font": { "weight": 700 } } },
+    { "id": "client-gateway", "anchor": { "type": "line", "points": [[81.0, 74.9], [239.0, 145.1]], "width": 1.5 }, "label": { "type": "text", "text": "HTTPS", "font": { "size": 10 } } },
+    { "id": "gateway-orders", "anchor": { "type": "line", "points": [[261.3, 146.1], [468.7, 73.9]], "width": 1.5 }, "label": { "type": "text", "text": "gRPC", "font": { "size": 10 } } },
+    { "id": "gateway-billing", "anchor": { "type": "line", "points": [[260.8, 155.2], [489.2, 264.8]], "width": 1.5 }, "label": { "type": "text", "text": "gRPC", "font": { "size": 10 } } },
+    { "id": "orders-billing", "anchor": { "type": "line", "points": [[481.2, 81.9], [498.8, 258.1]], "width": 1.5 }, "label": { "type": "text", "text": "events", "font": { "size": 10 } } },
+    { "id": "billing-ledger", "anchor": { "type": "line", "points": [[488.4, 273.0], [281.6, 327.0]], "width": 1.5 }, "label": { "type": "text", "text": "writes", "font": { "size": 10 } } },
+    { "id": "audit-ledger", "anchor": { "type": "line", "points": [[81.5, 273.4], [258.5, 326.6]], "width": 1.5 }, "label": { "type": "text", "text": "reads", "font": { "size": 10 } } },
+    { "id": "gateway-ledger", "anchor": { "type": "line", "points": [[251.3, 161.9], [268.7, 318.1]], "width": 1.5 }, "label": { "type": "text", "text": "writes", "font": { "size": 10 } } }
+  ]
+}

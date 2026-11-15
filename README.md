@@ -23,15 +23,15 @@
 
 **Label placement for charts, maps and diagrams, from any language.** Label Anything
 decides where labels go: it places text, icons, or anything with a size next to selected
-points and areas of scatterplots, maps, node-link diagrams and illustrations. It avoids
+points, lines and areas of scatterplots, maps, node-link diagrams and illustrations. It avoids
 whatever you say should not be covered, draws leader lines when labels must sit at a
 distance, and never lets leaders cross.
 
 The *anything* is the host and the label: one engine and one problem format for any
 chart, map or diagram, any label with a size and every language, where adjustText
 (matplotlib), ggrepel (ggplot2) or vega-label (Vega) each serve one plotting library.
-Labels go to points and areas of any shape; lines such as roads or rivers are obstacles,
-not labeled features. Label Anything places labels in graphics: it is not a tool for
+Labels go to points and areas of any shape and along lines such as the edges of a graph,
+roads or rivers. Label Anything places labels in graphics: it is not a tool for
 labeling data, and it is unrelated to the few-shot segmentation model of the same name
 (De Marinis et al., ECAI 2025).
 
@@ -61,6 +61,8 @@ steps through a real solve: candidates and their costs, the greedy pass, local s
 * **Shape-aware.** Labeled items can be circles, ellipses, (rounded, rotated)
   rectangles, polygons, paths or pins; labels touch the true shape, large shapes get
   internal labels, small ones external labels or leaders.
+* **Lines too.** The label of an edge or a street goes along its line, turned to its
+  direction, above or below it or on a line wide enough, clear of the line's corners.
 * **Deterministic, everywhere.** A Rust core (native, WASM, Python, C ABI, Java) and a
   pure TypeScript implementation pass the same conformance suite and give the same
   placements. Hundreds of labels take milliseconds, thousands a few hundred milliseconds.

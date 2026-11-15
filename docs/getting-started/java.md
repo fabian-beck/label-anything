@@ -63,7 +63,7 @@ object. Lengths are a number (px) or a string with a unit (`"0.5em"`, `"3px"`, `
 |---|---|
 | `canvas(w, h)`, `canvasPadding`, `allowOutside`, `overscan`, `region`, `canvasBackground`, `devicePixelRatio`, `yAxisUp()`, `transform(a..f)`, `preset(Preset)` | `canvas`, `y_axis`, `transform`, `preset` |
 | `fontSize`, `font(Font.of("default").size(14).bold().lineHeight(1.3))`, `labelPadding`, `buffer`, `margin`, `spacing`, `defaultMark(Mark)`, `wrap(Wrap)`, `truncate(Truncate)`, `align(Label.Align)`, `textShaping` | `defaults`, `text.shaping` |
-| `item(id, x, y, label)`, `item(id, x, y, label, it -> it.mark(..).attr(..))`, `item(Item.point(..)...)`, `area(id, polygon, label)`, `items(...)` | `items` |
+| `item(id, x, y, label)`, `item(id, x, y, label, it -> it.mark(..).attr(..))`, `item(Item.point(..)...)`, `area(id, polygon, label)`, `line(id, points, label)`, `items(...)` | `items` |
 | `backgroundRaster(Path or byte[], RasterMode)`, `backgroundPixels(w, h, ByteBuffer or byte[], mode)`, `backgroundSvg(String or Path)`, `background(Raster... or Svg...)`, `vector(VectorLayer)` | `obstacles` |
 | `avoid(Avoid.label().hard(..).weight(..), Avoid.leader()..., Avoid.buffer()..., Avoid.relaxable(..))` | `avoid` (merged key by key) |
 | `leaders(Leaders.straight()/angles(..)/orthogonal()/elbow(..)/curved().port(..).clearance(..))` | `leaders` |
@@ -75,7 +75,8 @@ object. Lengths are a number (px) or a string with a unit (`"0.5em"`, `"3px"`, `
 | `debugSvg`, `costBreakdown`, `reportCandidates`, `itemShape` | `output` |
 | `option("placement.k_distant", 12)` | any field, by its dotted path |
 
-Items are `Item.point(id, x, y)` or `Item.area(id, polygon)` with a `label`, `mark`
+Items are `Item.point(id, x, y)`, `Item.area(id, polygon)` or `Item.line(id, points)`
+(with `width`) with a `label`, `mark`
 (`Mark.circle/ellipse/rect/polygon/path/icon/fromSvg`), `attr`/`attrs`, `priority`, `tier`,
 `required`, `group`, `keepWith(set)`, `keepWithItems(ids...)`, `svgId` and `placement`.
 Labels are `Label.text(..)` (with `alternatives`, `wrap`, `truncate`, `font`, `fontSize`,
