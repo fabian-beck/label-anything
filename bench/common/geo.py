@@ -93,6 +93,65 @@ def simplify_ring(ring: list[tuple[float, float]], tol: float) -> list[tuple[flo
     return out
 
 
+def simplify_shared(rings: list[list[tuple[float, float]]], tol: float) -> list[list[tuple[float, float]]]:
+    """Douglas–Peucker on many open rings at once, so that neighbours keep meeting.
+
+    Simplified one by one, the two outlines of a border lose different vertices and no longer
+    meet: they leave gaps and overlaps between the countries. Here a stretch that rings share
+    (the same vertices, in either direction) is simplified once and both rings get the same
+    result, as TopoJSON does. The rings are cut into arcs at their junctions, the vertices
+    with more than two distinct neighbours (where a border meets the coast or a third
+    country); a ring without a junction is simplified as a whole, the same for every ring
+    with the same vertices (an enclave and the hole it fills). Returns the rings in their
+    order and direction (one may start at another vertex); a ring may come back with fewer
+    than three vertices.
+    """
+    Pt = tuple[float, float]
+    rings = [[(p[0], p[1]) for p in r] for r in rings]
+    rings = [r[:-1] if len(r) > 1 and r[0] == r[-1] else r for r in rings]
+    near: dict[Pt, set[Pt]] = {}
+    for r in rings:
+        n = len(r)
+        for i, p in enumerate(r):
+            s = near.setdefault(p, set())
+            s.add(r[i - 1])
+            s.add(r[(i + 1) % n])
+    junction = {p for p, s in near.items() if len(s) > 2}
+    done: dict[tuple[Pt, ...], list[Pt]] = {}
+
+    def arc(pts: list[Pt]) -> list[Pt]:
+        fwd, rev = tuple(pts), tuple(reversed(pts))
+        key = min(fwd, rev)
+        if key not in done:
+            done[key] = simplify(list(key), tol)
+        return done[key] if key == fwd else done[key][::-1]
+
+    out = []
+    for r in rings:
+        if len(r) < 4:
+            out.append(list(r))
+            continue
+        cuts = [i for i, p in enumerate(r) if p in junction]
+        if not cuts:
+            # the same ring whatever vertex it starts at and whichever way it runs
+            k = min(range(len(r)), key=lambda i: r[i])
+            fwd = r[k:] + r[:k]
+            rev = fwd[:1] + fwd[:0:-1]
+            key = min(tuple(fwd), tuple(rev))
+            if key not in done:
+                done[key] = simplify_ring(list(key), tol)
+            s = done[key]
+            out.append(s if key == tuple(fwd) else s[:1] + s[:0:-1])
+            continue
+        ring = r[cuts[0]:] + r[:cuts[0]] + [r[cuts[0]]]
+        idx = [i - cuts[0] for i in cuts] + [len(r)]
+        res: list[Pt] = []
+        for a, b in zip(idx, idx[1:]):
+            res.extend(arc(ring[a:b + 1])[:-1])
+        out.append(res)
+    return out
+
+
 def project_rings(rings, proj, tol: float, clip: Box | None = None, min_area: float = 0.5):
     """Project lon/lat rings, simplify in px and clip to ``clip``; drops tiny rings."""
     out = []

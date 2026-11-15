@@ -241,7 +241,6 @@ export class Europe implements Example {
   #map!: SVGGElement;
   #coast!: SVGGElement;
   #blur!: SVGElement;
-  #seams!: SVGGElement;
   #seas!: SVGGElement;
   #dots!: SVGGElement;
   #dot = new Map<string, SVGCircleElement>();
@@ -420,13 +419,10 @@ export class Europe implements Example {
     const filter = svg("filter", { id: "la-ex-soft", x: "-5%", y: "-5%", width: "110%", height: "110%" }, this.#map);
     this.#blur = svg("feGaussianBlur", { stdDeviation: 2.2 }, filter);
     this.#coast = svg("g", { fill: "none", stroke: "#a7c4de", "stroke-width": 6, "stroke-linejoin": "round", filter: "url(#la-ex-soft)" }, this.#map);
-    // zoomed in, the simplified outlines of neighbours no longer meet: each country's colour closes the gaps
-    this.#seams = svg("g", { fill: "none", "stroke-width": 2, "stroke-linejoin": "round", display: "none" }, this.#map);
     const land = svg("g", { stroke: BORDER, "stroke-width": 0.45, "stroke-linejoin": "round" }, this.#map);
     for (const c of this.#lands) {
       const d = c.shapes.map(ringsPath).join("");
       svg("path", { d }, this.#coast);
-      svg("path", { d, stroke: c.colour, "vector-effect": "non-scaling-stroke" }, this.#seams);
       svg("path", { d, fill: c.colour, "fill-rule": "evenodd", "vector-effect": "non-scaling-stroke" }, land);
     }
     this.#seas = svg("g", {}, stage.picture);
@@ -501,7 +497,6 @@ export class Europe implements Example {
     set(this.#map, { transform: `translate(${f2(x)} ${f2(y)}) scale(${round(k, 4)})` });
     set(this.#coast, { "stroke-width": round(6 / k, 3) });
     set(this.#blur, { stdDeviation: round(2.2 / k, 3) });
-    set(this.#seams, { display: k > 1 ? undefined : "none" });
     this.#seas.innerHTML = this.#seaMarkup(this.view);
     const whole = k === 1 && x === 0 && y === 0;
     if (this.#buttons.reset) this.#buttons.reset.disabled = whole;

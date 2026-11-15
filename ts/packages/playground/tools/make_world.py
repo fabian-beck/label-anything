@@ -9,8 +9,9 @@ Ukraine, the Golan Heights of Syria, Northern Cyprus of Cyprus and Somaliland of
 bench/common/borders.py). Each country keeps its names (written out: Natural Earth's short name,
 or its English name where the short one abbreviates, "Bosnia and Herz."), its abbreviation,
 population, GDP, Natural Earth's label point and label rank, its land area (computed from the full
-outline) and its outline, simplified (Douglas–Peucker, 0.05°) with islands below 0.01 deg²
-dropped unless they are all the country has.
+outline) and its outline, simplified (Douglas–Peucker, 0.05°; a border once for both its
+countries, so that neighbours meet) with islands below 0.01 deg² dropped unless they are all the
+country has.
 """
 from __future__ import annotations
 
@@ -23,48 +24,12 @@ ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT))
 
 from bench.common import borders  # noqa: E402
+from bench.common.geo import simplify_shared  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[1] / "data" / "world.json"
 TOLERANCE = 0.05
 MIN_PART = 0.01
 R_KM = 6371.0088
-
-
-def simplify(points: list[list[float]], tol: float) -> list[list[float]]:
-    """Douglas–Peucker on an open polyline (iterative)."""
-    if len(points) < 3:
-        return points
-    keep = [False] * len(points)
-    keep[0] = keep[-1] = True
-    stack = [(0, len(points) - 1)]
-    while stack:
-        a, b = stack.pop()
-        ax, ay = points[a]
-        bx, by = points[b]
-        dx, dy = bx - ax, by - ay
-        norm = math.hypot(dx, dy)
-        best, idx = -1.0, -1
-        for i in range(a + 1, b):
-            px, py = points[i]
-            d = abs(dy * (px - ax) - dx * (py - ay)) / norm if norm > 0 else math.hypot(px - ax, py - ay)
-            if d > best:
-                best, idx = d, i
-        if best > tol:
-            keep[idx] = True
-            stack.append((a, idx))
-            stack.append((idx, b))
-    return [p for p, k in zip(points, keep) if k]
-
-
-def simplify_ring(ring: list[list[float]], tol: float) -> list[list[float]]:
-    pts = ring[:-1] if ring[0] == ring[-1] else ring
-    if len(pts) < 4:
-        return pts
-    # split at the point farthest from the first so that both halves are open polylines
-    far = max(range(len(pts)), key=lambda i: (pts[i][0] - pts[0][0]) ** 2 + (pts[i][1] - pts[0][1]) ** 2)
-    a = simplify(pts[: far + 1], tol)
-    b = simplify(pts[far:] + [pts[0]], tol)
-    return a[:-1] + b[:-1]
 
 
 def planar_area(ring: list[list[float]]) -> float:
@@ -88,20 +53,25 @@ def rounded(ring: list[list[float]]) -> list[list[float]]:
         p = [round(x, 2), round(y, 2)]
         if not out or out[-1] != p:
             out.append(p)
+    if len(out) > 1 and out[0] == out[-1]:
+        out.pop()
     return out
 
 
 def main() -> None:
+    features = borders.countries()
+    shapes = [f["geometry"]["coordinates"] if f["geometry"]["type"] == "MultiPolygon" else [f["geometry"]["coordinates"]]
+              for f in features]
+    # all outlines at once, so that the two sides of a border are simplified alike
+    simple = iter(simplify_shared([r for polys in shapes for poly in polys for r in poly], TOLERANCE))
     countries = []
     vertices = 0
-    for f in borders.countries():
+    for f, polys in zip(features, shapes):
         pr = f["properties"]
-        g = f["geometry"]
-        polys = g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]
         area = sum(spherical_area_km2(p[0]) - sum(spherical_area_km2(h) for h in p[1:]) for p in polys)
         parts = []
         for poly in polys:
-            rings = [rounded(simplify_ring(r, TOLERANCE)) for r in poly]
+            rings = [rounded(next(simple)) for _ in poly]
             rings = [r for r in rings if len(r) >= 3]
             if not rings:
                 continue
