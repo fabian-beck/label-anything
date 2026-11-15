@@ -161,3 +161,60 @@ fn the_points_beyond_the_overscan_are_marks_only() {
         "{inside} to label, {beyond} beyond"
     );
 }
+
+/// A turned label is its box with its rotation: with both it is pinned, also where a
+/// fresh solve would not put it; a warm start without the rotation is another label's.
+#[test]
+fn a_turned_label_is_pinned_with_its_rotation() {
+    // a strip of 220 × 26 px at 30° around (`cx`, `cy`): its label only fits along it
+    let problem = |cx: f64, cy: f64, warm: Option<Value>| {
+        let (c, s) = (30f64.to_radians().cos(), 30f64.to_radians().sin());
+        let strip: Vec<[f64; 2]> = [
+            (-110.0, -13.0),
+            (110.0, -13.0),
+            (110.0, 13.0),
+            (-110.0, 13.0),
+        ]
+        .iter()
+        .map(|&(x, y): &(f64, f64)| [cx + x * c - y * s, cy + x * s + y * c])
+        .collect();
+        let mut p = json!({"version": "1", "canvas": {"width": 300, "height": 200},
+            "items": [{"id": "fjord", "anchor": {"type": "area", "polygon": strip},
+                       "label": {"type": "text", "text": "Fjord", "width": 60, "height": 14, "padding": 0}}]});
+        if let Some(w) = warm {
+            p["warm_start"] = w;
+        }
+        place(&p, &BasicEnv).unwrap()
+    };
+    let first = problem(150.0, 100.0, None);
+    let p = &first["placements"][0];
+    let f = |v: &Value| v.as_f64().unwrap();
+    assert!((f(&p["rotation"]) - 30.0).abs() < 0.01, "{p}");
+    // the label as it was shown: 40 px along the strip from where a fresh solve has it
+    let shown = json!({"x": f(&p["box"]["x"]) + 40.0 * 30f64.to_radians().cos(),
+        "y": f(&p["box"]["y"]) + 40.0 * 30f64.to_radians().sin(), "w": 60, "h": 14});
+    let warm = |rotation: bool| {
+        let mut w = json!({"id": "fjord", "placed": true, "box": shown, "anchor": p["anchor"]});
+        if rotation {
+            w["rotation"] = p["rotation"].clone();
+        }
+        json!({"pin": true, "placements": [w]})
+    };
+    // the view moves by (40, 10), and the label with it
+    let pinned = problem(190.0, 110.0, Some(warm(true)));
+    let q = &pinned["placements"][0];
+    assert_eq!(pinned["stats"]["pinned"], 1, "{}", pinned["stats"]);
+    assert!(
+        (f(&q["box"]["x"]) - f(&shown["x"]) - 40.0).abs() < 1e-9
+            && (f(&q["box"]["y"]) - f(&shown["y"]) - 10.0).abs() < 1e-9
+            && q["rotation"] == p["rotation"],
+        "{q} after {shown}"
+    );
+    // without the rotation the warm start is an upright box, which does not fit the strip
+    let upright = problem(190.0, 110.0, Some(warm(false)));
+    let q = &upright["placements"][0];
+    assert!(
+        q.get("rotation").is_none() && q["model"] != "internal",
+        "{q}"
+    );
+}

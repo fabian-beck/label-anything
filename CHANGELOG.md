@@ -55,7 +55,9 @@ The first release, 0.1.0. Nothing is published to a package registry yet.
 - Pinned labels for a view that is only panned: with `warm_start.pin` every label keeps
   its box exactly where the hard rules still allow it, whatever its priority, and the
   solve only adds labels around them (`stats.pinned`). No label moves while a map is
-  panned; after a zoom, solve without the pin.
+  panned; after a zoom, solve without the pin. A turned label is pinned with its
+  rotation, and the region map, a raster that shifts with the view, does not unpin a
+  label.
 - A deterministic solver (greedy pass, local search, exact search for small problems)
   with a time budget that does not depend on the machine's speed.
 - Text measurement with a bundled Noto Sans subset, with the host's fonts, or through a

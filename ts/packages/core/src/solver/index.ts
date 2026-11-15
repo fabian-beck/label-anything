@@ -560,6 +560,7 @@ export class Solve {
     const c = warm(this.model, item, vi, v, b);
     if (c === null) return;
     c.warm = true;
+    c.pin = this.model.warmPin;
     c.level = 0;
     c.setLshape(v.shape);
     this.evaluator.eval(c, v, null);
@@ -705,6 +706,7 @@ export class Solve {
       const c = warm(this.model, item, vi, v, b);
       if (c === null) return null;
       c.warm = true;
+      c.pin = this.model.warmPin;
       c.level = level;
       c.setLshape(v.shape);
       this.evaluator.eval(c, v, null);

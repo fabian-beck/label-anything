@@ -639,7 +639,8 @@ is a warning `unknown_region`, and the rule below applies); else the region of t
 containing its reference point (§11: point items' anchors, area items' poles); when that
 cell is open, the region with the most cells among those touched by the bounding box of
 the item's mark grown by one cell (ties: the lower number) — the dot of a coastal city may
-lie in the sea; else open space.
+lie in the sea; else open space. In a window (§2.3) the pole of an area passed whole can
+lie beyond the grid, where every cell reads as open: such an item names its home.
 
 **A label box on the map.** For a box `B`, its overlap with each cell (the cell-unit
 interval lengths `wx`, `wy` of the box clamped to the grid, `w = wx · wy`) is summed by
@@ -658,7 +659,8 @@ an area item, internal ones aside, and any label with a leader — is infeasible
 foreign area exceeds `placement.max_foreign · A` (default 0.25): a country's name lies at
 home or in open space, at most a quarter of it in other countries, and a name with no such
 place is smaller, on a leader into open space, or omitted rather than misplaced. The hard
-class that rejects it is `regions` (`blocking`, §9.3); the ladder does not relax it. The
+class that rejects it is `regions` (`blocking`, §9.3); the ladder does not relax it, and
+only the box of a pinned solve is exempt (§10.1). The
 internal labels of area items and the labels of point items without a leader may lie in
 other regions at the cost `w_foreign`: a capital near a border has its name next to its
 dot, wherever that is.
@@ -1524,7 +1526,10 @@ for a view that only moved, as a map that was panned, where every label can stay
   candidate in total order, whatever their keys: the level-0 one (§6.7), else the one of
   a ladder variant (above). An item takes it when it is statically feasible, free of the
   labels pinned before it and within the label budgets; its label is then **pinned**.
-  With `prefix` omission the pinned labels are no part of the prefix.
+  With `prefix` omission the pinned labels are no part of the prefix. The `regions` class
+  (§4.8) does not reject these two candidates of a pinned solve: the region map is a
+  raster, its cells lie elsewhere on the drawing once the view has moved, and a box at
+  the limit of `max_foreign` would lose its place to that. Their region costs count.
 * The bands then run for the other items as always. No ladder step removes a pinned
   label: `evict_lower` takes no candidate that conflicts with one.
 * When a label is pinned, the solve ends with the greedy pass: no local search, no exact

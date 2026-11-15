@@ -1,0 +1,83 @@
+{
+  "kind": "place",
+  "name": "pin: a turned label keeps its box and its rotation",
+  "$comment": "With warm_start.pin every label keeps its warm-start box, moved with its anchor, where the hard rules still allow it, whatever its priority; the solve only adds labels around the pinned ones. The strip of case area-turned, moved by (40, 10) with the view. Its label was 40 px along the strip from the pole, where a fresh solve has it; with its rotation the warm start names that turned label, and it stays. Without the rotation it would be an upright box, which the strip has no room for.",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 200
+    },
+    "items": [
+      {
+        "id": "fjord",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              101.237,
+              43.742
+            ],
+            [
+              291.763,
+              153.742
+            ],
+            [
+              278.763,
+              176.258
+            ],
+            [
+              88.237,
+              66.258
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Long Fjord"
+        }
+      }
+    ],
+    "warm_start": {
+      "pin": true,
+      "placements": [
+        {
+          "id": "fjord",
+          "placed": true,
+          "rotation": 30,
+          "anchor": [
+            150,
+            100
+          ],
+          "box": {
+            "x": 152.769,
+            "y": 112.2,
+            "w": 63.744,
+            "h": 15.6
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "model": {
+      "fjord": "internal"
+    },
+    "rotation": {
+      "fjord": 30
+    },
+    "box": {
+      "fjord": {
+        "x": 192.769,
+        "y": 122.2,
+        "w": 63.744,
+        "h": 15.6,
+        "tol": 0.001
+      }
+    }
+  }
+}

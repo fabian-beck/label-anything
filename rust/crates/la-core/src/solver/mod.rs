@@ -656,6 +656,7 @@ impl<'a> Solve<'a> {
             let v = &self.variants[i][vi];
             let mut c = candidates::warm(self.model, item, vi, v, b)?;
             c.warm = true;
+            c.pin = self.model.warm_pin;
             c.level = level;
             c.set_lshape(&v.shape);
             Evaluator::new(self.model, self.obs, self.env).eval(&mut c, v, None);
@@ -972,6 +973,7 @@ fn warm_candidate(
     let v = &variants[vi];
     let mut c = candidates::warm(model, item, vi, v, *b)?;
     c.warm = true;
+    c.pin = model.warm_pin;
     c.level = 0;
     c.set_lshape(&v.shape);
     Evaluator::new(model, obs, env).eval(&mut c, v, None);

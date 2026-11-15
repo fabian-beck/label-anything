@@ -39,18 +39,21 @@ border moved on the map at each pan step of 30 px.
   to the view, the grid's places are those whose label box touches the working extent,
   besides the pole, and they are tested against the polygon cut to the surroundings of
   the extent: the same containment, and the same room up to the 1 em that counts
-  (spec §6.5).
+  (spec §6.5). Where the picture has regions (ADR obstacles/regions), such an item names
+  its home (`item.region`): the pole, where the engine looks the home up, can lie beyond
+  the grid.
 - **The map helpers are windows.** Leaflet, MapLibre and sigma label the points up to
   `overscan` px beyond the view, 8 times the font size unless set, and pass it on, with
   the points up to three times as far as marks; `overscan: false` gives the labels of a
   canvas. Their overlays are cut by the map's own element.
 - **The examples**: the playground's world map and the home page's map of Europe pass
-  whole countries and the region of the map; Europe at the whole map is the problem of
-  the static figure, a canvas. The world map no longer takes the controls drawn over it
-  as obstacles, which pushed labels around like a border, sizes the names by their rank
-  among all countries instead of `priority.font_classes`, which ranks the items of each
-  problem, and moves the previous labels with the map for the warm start instead of
-  leaving that to each country's pole of the moment.
+  whole countries and the region of the map; Europe at the whole map is the problem of the
+  static figure, a canvas, and zoomed in each country names the region it is. The world
+  map no longer takes the controls drawn over it as obstacles, which pushed labels around
+  like a border, sizes the names by their rank among all countries instead of
+  `priority.font_classes`, which ranks the items of each problem, and moves the previous
+  labels with the map for the warm start instead of leaving that to each country's pole of
+  the moment.
 
 ## Consequences
 On the pan over 600 points, 2.2 % of the labels at the border change their place per

@@ -479,10 +479,13 @@ impl<'a> Evaluator<'a> {
             if !on_mark {
                 let sp = rm.split(&r, obs.home[i], &mut self.split);
                 // a label that names a region by where it lies (an area's, not inside it, or
-                // one on a leader) lies mostly at home or in open space
+                // one on a leader) lies mostly at home or in open space. Not so the box of
+                // a pinned solve: the view has moved, and with it the map's cells under a
+                // box that had its place
                 if sp.foreign > model.placement.max_foreign * sp.area
                     && c.kind != Kind::Internal
                     && (item.area.is_some() || !c.leaders.is_empty())
+                    && !c.pin
                 {
                     acc.violate(Block::Regions, false, 0.0);
                     return finish(c, acc);

@@ -211,6 +211,11 @@ export class Cand {
    * {@link WARM_MARGIN} of the margin.
    */
   warm = false;
+  /**
+   * The previous box itself in a pinned solve (`warm_start.pin`, spec §10.1): the
+   * `regions` rule does not reject it.
+   */
+  pin = false;
 
   constructor(
     public item: number,
@@ -342,6 +347,7 @@ export class Cand {
     c.bside = this.bside;
     c.lshape = this.lshape;
     c.warm = this.warm;
+    c.pin = this.pin;
     c.turn = this.turn;
     c.inside = this.inside;
     return c;

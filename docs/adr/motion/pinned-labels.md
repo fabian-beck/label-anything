@@ -25,7 +25,14 @@ On a pan over 600 points in a window (160 steps of 6 px, warm-started), 1,265 of
   total order, where the box is statically feasible, free of the labels pinned before it
   and within the label budgets: the level-0 candidate, else that of a ladder variant, so
   an abbreviated or wrapped label stays as it is. The bands then run for the other items;
-  `evict_lower` removes no pinned label.
+  `evict_lower` removes no pinned label. A label is its box with its rotation and its
+  leader: a warm start without the rotation of a turned label names an upright box, which
+  is another label or none.
+- **The region map does not unpin a label.** The `regions` class (ADR obstacles/regions)
+  is decided on a raster, whose cells lie elsewhere on the map once the view has moved: a
+  name with just a quarter of its box in other countries would lose its place to a pan of
+  one pixel. The warm-start box of a pinned solve is exempt from that class; no other
+  hard rule is decided on a raster of vector data.
 - **The greedy pass is the whole solve** once a label is pinned: no local search, no
   exact search, no fans, no boundary columns, no repairs. All of them move labels; what a
   pan needs is places for the items that came in.
@@ -39,7 +46,8 @@ On a pan over 600 points in a window (160 steps of 6 px, warm-started), 1,265 of
 - **Hosts pin after a pan, not after a zoom.** The Leaflet, MapLibre and sigma helpers
   compare the zoom (bearing, pitch, camera ratio and angle, the graph) with that of the
   labels shown, pin when it is the same, and pass the points up to three times the
-  overscan (`pin: false`: warm starts alone). The playground's world map and the map of
+  overscan (`pin: false`: warm starts alone). `LabelMemory` passes each label's rotation
+  and its leader, moved with the box. The playground's world map and the map of
   Europe do the same, run no settle solve after a pan, pass unrounded coordinates (a
   rounded outline has its pole elsewhere in the next view) and keep an item whose label
   still shows.
@@ -47,8 +55,10 @@ On a pan over 600 points in a window (160 steps of 6 px, warm-started), 1,265 of
 ## Consequences
 On the two pans, no label in view moves and none is lost (one of 21,000 without the marks
 beyond the overscan). In the world map, over four zoom levels and 200 solves while
-panning, none of 16,000 labels in view moves or is lost, and none of 7,000 in the map of
-Europe; browser tests hold both at zero. A pinned solve costs what the greedy pass costs:
+panning, none of 16,000 labels in view moves or is lost, and none of 11,800 in the map
+of Europe (240 pans at three zoom levels, its countries regions, 260 of the names turned;
+before the region map was kept from unpinning labels, a name at the limit slid by a pixel
+once in some hundred pans); browser tests hold both at zero. A pinned solve costs what the greedy pass costs:
 8 ms instead of 9 ms for the 600 points in TypeScript.
 
 The layout now depends on the way the view came: labels placed during a pan are those of

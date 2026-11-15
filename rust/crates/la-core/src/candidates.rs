@@ -213,6 +213,9 @@ pub struct Cand {
     /// A warm-start candidate: the previous box (at any size) or a nudge of it; it keeps
     /// [`WARM_MARGIN`] of the margin.
     pub warm: bool,
+    /// The previous box itself in a pinned solve (`warm_start.pin`, spec §10.1): the
+    /// `regions` rule does not reject it.
+    pub pin: bool,
 }
 
 /// The share of `defaults.margin` a label needs to keep its warm-start place (spec
@@ -378,6 +381,7 @@ impl Cand {
             bside: 255,
             lshape: None,
             warm: false,
+            pin: false,
         }
     }
     /// The static cost, with the extra cost of the relaxed classes when the candidate is

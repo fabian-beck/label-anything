@@ -1250,6 +1250,34 @@ CASES["pin-degraded-label"] = case(
     PIN_ABOUT + " The warm-start box has the size of the alternative text, which a canvas of 60 px had "
     "forced; without the pin the label grows back to its full text.")
 
+CASES["pin-turned-label"] = case(
+    "pin: a turned label keeps its box and its rotation",
+    {"canvas": {"width": 300, "height": 200},
+     "items": [_area("fjord", _slab(190, 110, 220, 26, 30), "Long Fjord")],
+     "warm_start": {"pin": True, "placements": [
+         {"id": "fjord", "placed": True, "rotation": 30, "anchor": [150, 100],
+          "box": {"x": 152.769, "y": 112.2, "w": 63.744, "h": 15.6}}]}},
+    {"placed": 1, "model": {"fjord": "internal"}, "rotation": {"fjord": 30},
+     "box": {"fjord": {"x": 192.769, "y": 122.2, "w": 63.744, "h": 15.6, "tol": 0.001}}},
+    PIN_ABOUT + " The strip of case area-turned, moved by (40, 10) with the view. Its label was 40 px "
+    "along the strip from the pole, where a fresh solve has it; with its rotation the warm start names "
+    "that turned label, and it stays. Without the rotation it would be an upright box, which the strip "
+    "has no room for.")
+
+CASES["pin-regions"] = case(
+    "pin: a label keeps its box, wherever the cells of the region map lie under it now",
+    {"canvas": {"width": 300, "height": 80},
+     "obstacles": {"vector": [{"region": "west", "rects": [[0, 0, 160, 80]]},
+                              {"region": "east", "rects": [[180, 0, 120, 80]]},
+                              {"region": "each", "rects": [[160, 0, 20, 80]]}]},
+     "items": [{**STRIP_ITEM, "anchor": {"type": "area", "polygon": [[160, 0], [180, 0], [180, 80], [160, 80]]}}],
+     "warm_start": pinned(("s", {"x": 153, "y": 32.2, "w": 54.576, "h": 15.6}, [150, 40]))},
+    {"placed": 1, "anchor_side": {"s": "right"},
+     "box": {"s": {"x": 173, "y": 32.2, "w": 54.576, "h": 15.6, "tol": 0.001}}},
+    PIN_ABOUT + " The strip of case regions-area-omitted, moved by 20 px with the view. Its name lay "
+    "in the east, more than max_foreign of it; the regions class, which the cells of the region map "
+    "decide, does not take the place of a pinned label. Without the pin the name is left out.")
+
 CASES["window-raster"] = case(
     "window: a raster background keeps its place on the canvas, and its borders count as without overscan",
     {"canvas": {"width": 300, "height": 120, "overscan": 30}, "obstacles": {"raster": BLACK_STRIP},

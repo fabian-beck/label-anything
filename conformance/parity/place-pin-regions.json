@@ -1,0 +1,179 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 80
+    },
+    "obstacles": {
+      "vector": [
+        {
+          "region": "west",
+          "rects": [
+            [
+              0,
+              0,
+              160,
+              80
+            ]
+          ]
+        },
+        {
+          "region": "east",
+          "rects": [
+            [
+              180,
+              0,
+              120,
+              80
+            ]
+          ]
+        },
+        {
+          "region": "each",
+          "rects": [
+            [
+              160,
+              0,
+              20,
+              80
+            ]
+          ]
+        }
+      ]
+    },
+    "items": [
+      {
+        "id": "s",
+        "anchor": {
+          "type": "area",
+          "polygon": [
+            [
+              160,
+              0
+            ],
+            [
+              180,
+              0
+            ],
+            [
+              180,
+              80
+            ],
+            [
+              160,
+              80
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Stripland"
+        }
+      }
+    ],
+    "warm_start": {
+      "pin": true,
+      "placements": [
+        {
+          "id": "s",
+          "placed": true,
+          "box": {
+            "x": 153,
+            "y": 32.2,
+            "w": 54.576,
+            "h": 15.6
+          },
+          "anchor": [
+            150,
+            40
+          ]
+        }
+      ]
+    }
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "s",
+        "placed": true,
+        "box": {
+          "x": 173.0,
+          "y": 32.2,
+          "w": 54.57599999999999,
+          "h": 15.600000000000001
+        },
+        "anchor": [
+          170.0,
+          40.0
+        ],
+        "anchor_side": "right",
+        "model": "slider",
+        "text": {
+          "lines": [
+            "Stripland"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            50.976
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 4.0179200478842985,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        },
+        "displacement": 0.0
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 1,
+      "placed_weighted": 1.0,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "greedy",
+      "seed": 0,
+      "iterations": 0,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 41,
+      "omission_order": [],
+      "priority_inversions": 0,
+      "total_cost": 4.0179200478842985,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 100,
+        "rows": 27,
+        "classes": []
+      },
+      "pinned": 1,
+      "flicker": {
+        "moved": 0,
+        "added": 0,
+        "removed": 0,
+        "mean_displacement": 0.0
+      }
+    },
+    "debug_svg": null
+  }
+}

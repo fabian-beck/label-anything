@@ -121,4 +121,44 @@ describe("pinned labels (warm_start.pin)", () => {
     expect(inside).toBeGreaterThan(60);
     expect(beyond).toBeGreaterThan(60);
   });
+
+  // with both it is pinned, also where a fresh solve would not put it; a warm start
+  // without the rotation is another label's
+  it("a turned label is pinned with its rotation", () => {
+    type Turned = { stats: Record<string, unknown>; placements: { box: { x: number; y: number }; anchor: [number, number]; rotation: number }[] };
+    // a strip of 220 × 26 px at 30° around (`cx`, `cy`): its label only fits along it
+    const [c, s] = [Math.cos((30 * Math.PI) / 180), Math.sin((30 * Math.PI) / 180)];
+    const problem = (cx: number, cy: number, warm?: Obj): Turned =>
+      solve({
+        version: "1",
+        canvas: { width: 300, height: 200 },
+        items: [
+          {
+            id: "fjord",
+            anchor: { type: "area", polygon: [[-110, -13], [110, -13], [110, 13], [-110, 13]].map(([x, y]) => [cx + x! * c - y! * s, cy + x! * s + y! * c]) },
+            label: { type: "text", text: "Fjord", width: 60, height: 14, padding: 0 },
+          },
+        ],
+        ...(warm ? { warm_start: warm } : {}),
+      }) as unknown as Turned;
+    const p = problem(150, 100).placements[0]!;
+    expect(Math.abs(p.rotation - 30)).toBeLessThan(0.01);
+    // the label as it was shown: 40 px along the strip from where a fresh solve has it
+    const shown = { x: p.box.x + 40 * c, y: p.box.y + 40 * s, w: 60, h: 14 };
+    const warm = (rotation: boolean): Obj => ({
+      pin: true,
+      placements: [{ id: "fjord", placed: true, box: shown, anchor: p.anchor, ...(rotation ? { rotation: p.rotation } : {}) }],
+    });
+    // the view moves by (40, 10), and the label with it
+    const pinned = problem(190, 110, warm(true));
+    const q = pinned.placements[0]!;
+    expect(pinned.stats.pinned).toBe(1);
+    expect(Math.abs(q.box.x - shown.x - 40)).toBeLessThan(1e-9);
+    expect(Math.abs(q.box.y - shown.y - 10)).toBeLessThan(1e-9);
+    expect(q.rotation).toBe(p.rotation);
+    // without the rotation the warm start is an upright box, which does not fit the strip
+    const upright = problem(190, 110, warm(false)).placements[0]! as unknown as { rotation?: number; model: string };
+    expect(upright.rotation).toBeUndefined();
+    expect(upright.model).not.toBe("internal");
+  });
 });
