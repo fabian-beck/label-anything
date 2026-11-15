@@ -141,6 +141,8 @@ class Item:
     position_order: Any
     raw: dict
     font_class: int | None = None  # priority.font_classes entry (spec §9.4)
+    line: list | None = None       # the polyline of a line anchor (spec §6.5a), in px
+    line_width: float = 1.0        # its stroke width
 
     @property
     def own_shape(self) -> Shape:
@@ -416,6 +418,14 @@ def load_problem(problem: dict, ranks: dict[str, int] | None = None) -> Problem:
                 warnings.append(f"item {iid}: from_svg marks are approximated by their anchor point")
             shape = make_mark(mark, ref, tx, float(dmark.get("r", 2)) if dmark.get("shape") == "circle" else 2.0)
             items.append(Item(i, iid, "point", ref, shape, None, None, **common))
+        elif a["type"] == "line":
+            # a line anchor (spec §6.5a): drawn as its polyline; for the measures it is the
+            # point halfway along it, with its dot as the mark
+            pts = [tx(p[0], p[1]) for p in a["points"]]
+            ref = _midpoint(pts)
+            dot = make_mark(a.get("dot", {"shape": "circle", "r": 2}), ref, tx)
+            items.append(Item(i, iid, "line", ref, dot, None, dot, **common, line=pts,
+                              line_width=float(a.get("width", 1))))
         else:
             rings = [[tx(p[0], p[1]) for p in a["polygon"]]] + [[tx(p[0], p[1]) for p in h]
                                                                 for h in a.get("holes", [])]
@@ -430,6 +440,18 @@ def load_problem(problem: dict, ranks: dict[str, int] | None = None) -> Problem:
     if classes:
         apply_font_classes(prob, classes, ranks)
     return prob
+
+
+def _midpoint(pts: list) -> Point:
+    """The point halfway along a polyline."""
+    lens = [math.dist(a, b) for a, b in zip(pts, pts[1:])]
+    half = sum(lens) / 2
+    for (a, b), d in zip(zip(pts, pts[1:]), lens):
+        if half <= d and d > 0:
+            t = half / d
+            return (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
+        half -= d
+    return pts[-1]
 
 
 def class_ends(classes: list[dict], n: int) -> list[int]:

@@ -54,8 +54,9 @@ public record LabelPlacement(
 
   /**
    * Degrees, clockwise on screen, by which the label is turned about the center of {@link
-   * #box()}: the label of an area anchor along the area ({@code placement.area_rotation}); 0
-   * for an upright label. The box is the label before it is turned.
+   * #box()}: the label of an area anchor along the area ({@code placement.area_rotation}) or of
+   * a line anchor along the line ({@code placement.line_rotation}); 0 for an upright label. The
+   * box is the label before it is turned.
    */
   public double rotation() {
     return raw.get("rotation") instanceof Number n ? n.doubleValue() : 0.0;

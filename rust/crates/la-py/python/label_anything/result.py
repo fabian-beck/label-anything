@@ -73,7 +73,8 @@ class Placement:
     #: The label box; of a turned label (``rotation``) the box before it is turned.
     box: Optional[BBox] = None
     #: Degrees, clockwise on screen, by which the label is turned about the center of
-    #: ``box`` (the label of an area anchor along the area, ``placement.area_rotation``).
+    #: ``box`` (the label of an area anchor along the area, ``placement.area_rotation``, or of
+    #: a line anchor along the line, ``placement.line_rotation``).
     rotation: float = 0.0
     #: The item's anchor point (area items: the pole of the polygon). Passed back as
     #: ``warm_start``, the label box moves with it.

@@ -274,6 +274,15 @@ public final class Placement extends Spec {
     return with("area_rotation", degrees);
   }
 
+  /**
+   * The label of a line anchor is turned along the line where the line is at most this many
+   * degrees from the horizontal, and upright elsewhere (0–90, default 90; 0: always upright).
+   * See {@link LabelPlacement#rotation()}.
+   */
+  public Placement lineRotation(double degrees) {
+    return with("line_rotation", degrees);
+  }
+
   /** Drop candidates costing more than factor × the item's best + 1 (default 4). */
   public Placement pruneFactor(double factor) {
     return with("prune_factor", factor);

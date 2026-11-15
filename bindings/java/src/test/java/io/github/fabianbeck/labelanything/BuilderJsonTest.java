@@ -146,6 +146,9 @@ class BuilderJsonTest {
         .item(Item.area("isle", new double[][] {{20, 20}, {30, 20}, {30, 30}})
             .holes(new double[][] {{22, 22}, {24, 22}, {24, 24}}).dot(Mark.circle(1))
             .label(Label.text("Isle")))
+        .line("edge", new double[][] {{0, 0}, {40, 30}}, Label.text("Edge"))
+        .item(Item.line("street", new double[][] {{0, 50}, {40, 50}, {80, 60}}).width(12)
+            .dot(Mark.circle(1)).label(Label.text("Street")))
         .vector(VectorLayer.of("points").point(5, 5).points(new double[][] {{6, 6}}).r(2.5)
             .circle(7, 7, 1).polyline(0, 0, 10, 10).width(2)
             .polygon(new double[][] {{0, 0}, {1, 0}, {1, 1}})
@@ -179,7 +182,12 @@ class BuilderJsonTest {
             {"id": "isle", "anchor": {"type": "area", "polygon": [[20, 20], [30, 20], [30, 30]],
                                       "holes": [[[22, 22], [24, 22], [24, 24]]],
                                       "dot": {"shape": "circle", "r": 1}},
-             "label": {"type": "text", "text": "Isle"}}
+             "label": {"type": "text", "text": "Isle"}},
+            {"id": "edge", "anchor": {"type": "line", "points": [[0, 0], [40, 30]]},
+             "label": {"type": "text", "text": "Edge"}},
+            {"id": "street", "anchor": {"type": "line", "points": [[0, 50], [40, 50], [80, 60]],
+                                        "width": 12, "dot": {"shape": "circle", "r": 1}},
+             "label": {"type": "text", "text": "Street"}}
           ],
           "obstacles": {
             "vector": [{"class": "points", "points": [[5, 5], [6, 6]], "r": 2.5,

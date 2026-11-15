@@ -401,6 +401,11 @@ public final class LabelProblem {
       return item(b);
     }
 
+    /** Add a line item (labeled along its polyline). */
+    public Builder line(String id, double[][] points, Label label) {
+      return item(Item.line(id, points).label(label));
+    }
+
     /** Add an area item (labeled inside its polygon when the label fits). */
     public Builder area(String id, double[][] polygon, Label label) {
       return item(Item.area(id, polygon).label(label));

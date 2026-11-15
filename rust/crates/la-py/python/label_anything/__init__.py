@@ -22,7 +22,7 @@ from ._errors import Cancelled, LabelAnythingError, ValidationError
 from ._native import CancelToken, capabilities
 from ._native import version as _version
 from ._types import BBox, Candidate, FontSpec, Issue, TextMetrics
-from .labels import Area, Box, Composite, Font, Icon, Leaders, Mark, Text, Wrap
+from .labels import Area, Box, Composite, Font, Icon, Leaders, Line, Mark, Text, Wrap
 from .priority import Priority
 from .problem import Problem
 from .result import Leader, Placement, Report, Result
@@ -50,6 +50,7 @@ __all__ = [
     "LabelAnythingError",
     "Leader",
     "Leaders",
+    "Line",
     "Mark",
     "Placement",
     "Priority",

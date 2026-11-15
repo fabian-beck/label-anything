@@ -297,6 +297,21 @@ def test_anchor_forms() -> None:
     # dicts without a type: an area with a polygon, else a point
     items = la.Problem().item({"x": 1, "y": 2}, "p").item({"polygon": [(0, 0), (9, 0), (0, 9)]}, "a").build()["items"]
     assert [it["anchor"]["type"] for it in items] == ["point", "area"]
+    # a line: the class, or a dict with points
+    items = (
+        la.Problem(line_rotation=45)
+        .item(la.Line([(0, 0), (40, 30)], width=6, dot=la.Mark.circle(1)), "edge")
+        .item({"points": [(0, 0), (9, 0)]}, "street")
+        .build()
+    )
+    assert items["placement"] == {"line_rotation": 45}
+    assert items["items"][0]["anchor"] == {
+        "type": "line",
+        "points": [[0.0, 0.0], [40.0, 30.0]],
+        "width": 6.0,
+        "dot": {"shape": "circle", "r": 1},
+    }
+    assert items["items"][1]["anchor"]["type"] == "line"
     with pytest.raises(la.ValidationError) as info:
         la.place([{"X": 1, "Y": 2}], ["a"], canvas=(100, 100))
     assert {e["pointer"] for e in info.value.errors} >= {"/items/0/anchor/X", "/items/0/anchor/Y"}

@@ -273,6 +273,7 @@ def place(
     inner_padding: Optional[Length] = None,
     internal_circle_ratio: Optional[float] = None,
     area_rotation: Optional[float] = None,
+    line_rotation: Optional[float] = None,
     max_foreign: Optional[float] = None,
     prune_factor: Optional[float] = None,
     boundary: Any = None,
@@ -327,7 +328,7 @@ def place(
 
     ``anchors`` are ``(x, y)`` pairs in canvas pixels (or data units with ``transform`` /
     ``y_axis``; an ``(N, 2)`` array or a two-column DataFrame works too), :class:`Area`
-    polygons or anchor dicts; ``labels`` are strings, :class:`Text`, :class:`Icon`,
+    polygons, :class:`Line` polylines or anchor dicts; ``labels`` are strings, :class:`Text`, :class:`Icon`,
     :class:`Box`, :class:`Composite` or label dicts. ``attrs`` values may be dates
     (ISO 8601 strings in the problem) and durations (seconds).
     Every other keyword maps 1:1 to a schema field (see ``docs/getting-started/python.md``);

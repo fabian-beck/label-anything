@@ -286,6 +286,9 @@ def render_svg(problem: dict, result: dict, font_href: str | None = None, show_o
     for it in prob.items:
         if it.anchor_type == "area":
             o.append(_shape_svg(it.area, MARK_FILL, MARK_STROKE, 0.12, dash="4 3"))
+        elif it.anchor_type == "line":
+            o.append(f'<polyline points="{_pts(it.line)}" fill="none" stroke="{MARK_STROKE}" stroke-opacity="0.55" '
+                     f'stroke-width="{_fmt(max(it.line_width, 0.75))}" stroke-linejoin="round" stroke-linecap="round"/>')
         else:
             c = mark_color(it)
             o.append(_shape_svg(it.shape, c, _darker(c), 0.75) if c else _shape_svg(it.shape, MARK_FILL, MARK_STROKE))
@@ -494,6 +497,9 @@ def render_png(problem: dict, result: dict, background_png: str | Path | None = 
     for it in prob.items:
         if it.anchor_type == "area":
             _shape_png(dr, it.area, s, _hex(MARK_FILL, 30), _hex(MARK_STROKE, 160))
+        elif it.anchor_type == "line":
+            dr.line([(x * s, y * s) for x, y in it.line], fill=_hex(MARK_STROKE, 140),
+                    width=max(1, int(round(max(it.line_width, 0.75) * s))))
         else:
             c = mark_color(it)
             _shape_png(dr, it.shape, s, _hex(c or MARK_FILL, 190 if c else 150),
@@ -712,6 +718,9 @@ def standalone_svg(problem: dict, result: dict, background_svg: str | Path | Non
     for it in prob.items:
         if it.anchor_type == "area":
             o.append(_shape_svg(it.area, MARK_FILL, MARK_STROKE, 0.12, dash="4 3"))
+        elif it.anchor_type == "line":
+            o.append(f'<polyline points="{_pts(it.line)}" fill="none" stroke="{MARK_STROKE}" stroke-opacity="0.55" '
+                     f'stroke-width="{_fmt(max(it.line_width, 0.75))}" stroke-linejoin="round" stroke-linecap="round"/>')
         else:
             c = mark_color(it)
             o.append(_shape_svg(it.shape, c, _darker(c), 0.75) if c else _shape_svg(it.shape, MARK_FILL, MARK_STROKE))

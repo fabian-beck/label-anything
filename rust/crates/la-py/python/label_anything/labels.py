@@ -22,6 +22,7 @@ __all__ = [
     "Font",
     "Icon",
     "Leaders",
+    "Line",
     "Mark",
     "Text",
     "Wrap",
@@ -328,6 +329,30 @@ class Area:
     __la_json__ = to_dict
 
 
+@dataclass(frozen=True)
+class Line:
+    """A line anchor: the label goes along the polyline, on it or beside it (spec §6.5a):
+    an edge of a node-link diagram, a street, a river."""
+
+    points: Sequence[Point]
+    #: Stroke width of the line in px (default 1).
+    width: Optional[float] = None
+    #: Mark drawn halfway along the line when the label falls back to a position beside it.
+    dot: Optional[Mapping[str, Any]] = None
+
+    def to_dict(self) -> JSONDict:
+        return _compact(
+            {
+                "type": "line",
+                "points": _points(self.points),
+                "width": float(self.width) if self.width is not None else None,
+                "dot": dict(self.dot) if self.dot is not None else None,
+            }
+        )
+
+    __la_json__ = to_dict
+
+
 def _finite(v: Any, pointer: str) -> float:
     try:
         x = float(v)
@@ -341,16 +366,16 @@ def _finite(v: Any, pointer: str) -> float:
 
 
 def anchor_dict(anchor: Any, pointer: str = "/anchor") -> JSONDict:
-    """Normalize an anchor: ``(x, y)``, :class:`Area`, an anchor dict or an object with
-    ``x``/``y`` attributes."""
-    if isinstance(anchor, Area):
+    """Normalize an anchor: ``(x, y)``, :class:`Area`, :class:`Line`, an anchor dict or an
+    object with ``x``/``y`` attributes."""
+    if isinstance(anchor, (Area, Line)):
         return anchor.to_dict()
     if isinstance(anchor, Mapping):
         d = dict(anchor)
-        d.setdefault("type", "area" if "polygon" in d else "point")
+        d.setdefault("type", "area" if "polygon" in d else "line" if "points" in d else "point")
         return d
     if isinstance(anchor, (str, bytes)):
-        raise TypeError(f"an anchor must be (x, y), Area or a dict (got {anchor!r})")
+        raise TypeError(f"an anchor must be (x, y), Area, Line or a dict (got {anchor!r})")
     try:
         n = len(anchor)
     except TypeError:
@@ -360,7 +385,7 @@ def anchor_dict(anchor: Any, pointer: str = "/anchor") -> JSONDict:
                 "x": _finite(anchor.x, f"{pointer}/x"),
                 "y": _finite(anchor.y, f"{pointer}/y"),
             }
-        raise TypeError(f"an anchor must be (x, y), Area or a dict (got {anchor!r})") from None
+        raise TypeError(f"an anchor must be (x, y), Area, Line or a dict (got {anchor!r})") from None
     if n != 2:
         raise ValueError(f"a point anchor needs two coordinates (got {n})")
     return {

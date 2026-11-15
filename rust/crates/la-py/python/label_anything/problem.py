@@ -76,6 +76,7 @@ OPTION_PATHS: Dict[str, str] = {
     "inner_padding": "placement.inner_padding",
     "internal_circle_ratio": "placement.internal_circle_ratio",
     "area_rotation": "placement.area_rotation",
+    "line_rotation": "placement.line_rotation",
     "max_foreign": "placement.max_foreign",
     "prune_factor": "placement.prune_factor",
     "boundary": "placement.boundary",
@@ -598,7 +599,7 @@ class Problem:
         svg_id: Optional[str] = None,
         placement: Optional[Mapping[str, Any]] = None,
     ) -> Problem:
-        """Add one item: an anchor ``(x, y)`` / :class:`Area` / dict and a label."""
+        """Add one item: an anchor ``(x, y)`` / :class:`Area` / :class:`Line` / dict and a label."""
         self._items.append(
             make_item(
                 len(self._items),
@@ -635,7 +636,7 @@ class Problem:
         placement: Optional[Iterable[Optional[Mapping[str, Any]]]] = None,
     ) -> Problem:
         """Add many items. ``anchors``: ``(x, y)`` pairs, an ``(N, 2)`` array or a two-column
-        DataFrame, :class:`Area` polygons or anchor dicts. Every keyword is a sequence with
+        DataFrame, :class:`Area` polygons, :class:`Line` polylines or anchor dicts. Every keyword is a sequence with
         one entry per item (``None`` entries are skipped); ``attrs`` may also be a dict of
         columns or a DataFrame, ``marks`` a single mark for all, ``required`` a set of ids."""
         if isinstance(labels, (str, bytes)):

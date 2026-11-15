@@ -45,6 +45,14 @@ public final class Item extends Spec {
     return new Builder(id, obj("type", "area", "polygon", points(polygon, 3, "area polygon")));
   }
 
+  /**
+   * A line anchor: a polyline {@code {{x, y}, ...}} (an edge of a node-link diagram, a street)
+   * whose label goes along it, on the line or beside it.
+   */
+  public static Builder line(String id, double[][] points) {
+    return new Builder(id, obj("type", "line", "points", points(points, 2, "line")));
+  }
+
   Item withIndex(int i) {
     return i == index ? this : new Item(json, i);
   }
@@ -66,6 +74,11 @@ public final class Item extends Spec {
   /** Whether the anchor is an area polygon. */
   public boolean isArea() {
     return "area".equals(anchor().get("type"));
+  }
+
+  /** Whether the anchor is a line. */
+  public boolean isLine() {
+    return "line".equals(anchor().get("type"));
   }
 
   /** Anchor x in input coordinates ({@code NaN} for areas). */
@@ -172,10 +185,25 @@ public final class Item extends Spec {
       return this;
     }
 
-    /** Mark drawn at the pole of an area when its label falls back to an external position. */
+    /**
+     * Mark drawn at the pole of an area, or halfway along a line, when its label falls back to
+     * an external position.
+     */
     public Builder dot(Mark dot) {
-      requireAnchor("area", "dot");
+      if (!"line".equals(anchor.get("type"))) {
+        requireAnchor("area", "dot");
+      }
       anchor = Spec.with(anchor, "dot", dot);
+      return this;
+    }
+
+    /**
+     * Stroke width of a line anchor in px (default 1): labels beside the line keep clear of the
+     * stroke, and a label goes on a line at least as wide as the label is high.
+     */
+    public Builder width(double px) {
+      requireAnchor("line", "width");
+      anchor = Spec.with(anchor, "width", px);
       return this;
     }
 
