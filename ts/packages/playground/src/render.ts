@@ -88,24 +88,12 @@ export function drawLabels(
     if (a <= 0) continue;
     ctx.globalAlpha = a;
     for (const l of leadersOf(p)) {
-      // a stub (placement.stubs) is drawn lighter, without the dot at its start
-      if (l.stub) {
-        ctx.globalAlpha = a * 0.7;
-        leaderPath(ctx, l);
-        ctx.stroke();
-        ctx.globalAlpha = a;
-        continue;
-      }
+      // a stub (placement.stubs) is drawn lighter
+      ctx.globalAlpha = l.stub ? a * 0.7 : a;
       leaderPath(ctx, l);
       ctx.stroke();
-      const s = l.points[0];
-      if (s) {
-        ctx.beginPath();
-        ctx.arc(s[0]!, s[1]!, 1.4, 0, Math.PI * 2);
-        ctx.fillStyle = "#2b2f36";
-        ctx.fill();
-      }
     }
+    ctx.globalAlpha = a;
   }
   ctx.textBaseline = "alphabetic";
   for (const p of result.placements) {
