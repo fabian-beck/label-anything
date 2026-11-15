@@ -3,8 +3,9 @@
  * from the previous result, so labels keep their places while you pan and zoom. The map is
  * a window on a larger drawing: points a little beyond its edge are labeled too
  * (`overscan`), and a label at the edge is cut there instead of being pushed inside.
- * While the map is only panned, no label moves at all (`pin`): labels come where the map
- * moves on, and the others stay until the next zoom.
+ * The labels keep their places (`pin`): while the map is only panned, none moves, and
+ * labels come where the map moves on; after a zoom those beside their points stay there,
+ * and labels come and go as room does.
  *
  * ```js
  * import L from "leaflet";
@@ -55,10 +56,11 @@ export interface LeafletLabelOptions<D> extends LabelOptions<D>, Omit<RenderOpti
    */
   overscan?: Overscan;
   /**
-   * While the map is only panned, the labels keep their places exactly: none moves, and
-   * labels are added where the map moves on (default `true`; needs `overscan`). After a
-   * zoom every label may move. `false`: labels may move after every pan as well, as the
-   * priorities ask.
+   * The labels keep their places (default `true`; needs `overscan`). While the map is only
+   * panned, none moves, and labels are added where the map moves on. After a zoom the
+   * labels beside their points stay there, labels come and go as room does, and only
+   * those on leaders are placed anew. `false`: every label may move after every pan and
+   * zoom, as the priorities ask.
    */
   pin?: boolean;
   /** Map pane for the labels (created with z-index 640 if missing). */

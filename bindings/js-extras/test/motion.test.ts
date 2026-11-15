@@ -33,6 +33,16 @@ describe("LabelMotion", () => {
     expect(g.result.placements.find((p) => p.id === "a")!.anchor).toEqual([15, 2]);
   });
 
+  // a name inside an area goes with its own middle: it keeps its place on a map that is zoomed
+  it("follows the point the host gives for a label, not the placement's anchor", () => {
+    const m = new LabelMotion();
+    // the area's pole is at (10, 5), the name's middle at (27, 5)
+    m.target(result(lab("a", [12, 0, 30, 10], [10, 5])), at(["a", 27, 5]), 0);
+    expect(boxOf(m.frame(at(["a", 27, 5]), 0), "a")).toEqual({ x: 12, y: 0, w: 30, h: 10 });
+    // zoomed by 2 about the origin: the middle is at (54, 10), and the name with it
+    expect(boxOf(m.frame(at(["a", 54, 10]), 10), "a")).toEqual({ x: 39, y: 5, w: 30, h: 10 });
+  });
+
   it("glides to a new place without overshooting and settles within the duration", () => {
     const m = new LabelMotion({ duration: 300, moveDelay: 0 });
     // 30 px: less than two label heights

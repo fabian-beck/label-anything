@@ -191,5 +191,15 @@ describe("following anchors", () => {
         { id: "l", placed: true, box: { x: 50, y: 30, w: 30, h: 12 }, leader: { points: [[40, 60], [50, 42]], style: "straight" } },
       ],
     });
+    // pinned: after a pan every label; after a zoom those that sit at their items, while
+    // one on a leader is free to take a better place
+    const now = new Map([["t", [5, 5] as const], ["l", [40, 60] as const]]);
+    const panned = m.warmStart(now, true)!;
+    expect(panned.pin).toBe(true);
+    expect(panned.placements.some((p) => "pin" in p)).toBe(false);
+    const zoomed = m.warmStart(now, "yield")!;
+    expect(zoomed.pin).toBe("yield");
+    expect(zoomed.placements.map((p) => [p.id, p.pin])).toEqual([["t", undefined], ["l", false]]);
+    expect(m.warmStart(now, false)!.pin).toBeUndefined();
   });
 });

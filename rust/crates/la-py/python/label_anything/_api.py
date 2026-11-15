@@ -310,7 +310,7 @@ def place(
     degrade_options: Optional[Mapping[str, Any]] = None,
     weights: Optional[Mapping[str, float]] = None,
     warm_start: Any = None,
-    pin: Optional[bool] = None,
+    pin: Union[bool, str, None] = None,
     # --- output ---
     debug_svg: Optional[bool] = None,
     cost_breakdown: Optional[bool] = None,

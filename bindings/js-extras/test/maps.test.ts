@@ -59,13 +59,14 @@ describe("Leaflet labelLayer", () => {
     const prev = layer.result!.placements[0]!.box!;
     expect(warm.x).toBeCloseTo(prev.x, 6);
 
-    // after a zoom the labels are placed anew, from the previous ones (Leaflet may report
-    // the new view more than once: the first solve of it counts)
+    // after a zoom the labels beside their points stay there, giving way only to more
+    // important ones (Leaflet may report the new view more than once: the first solve of
+    // it counts)
     const solved = engine.calls.length;
     map.setView([49.6, 11.0], 9, { animate: false });
     const zoomed = engine.calls[solved]!.problem;
     expect(zoomed.warm_start?.placements.length).toBeGreaterThan(0);
-    expect(zoomed.warm_start?.pin).toBeUndefined();
+    expect(zoomed.warm_start?.pin).toBe("yield");
     map.panBy([-20, 0], { animate: false });
     expect(engine.last.problem.warm_start?.pin).toBe(true);
 
@@ -317,11 +318,12 @@ describe("MapLibre labels", () => {
     map.fire("moveend");
     expect(engine.calls.length).toBe(2);
     expect(engine.last.problem.warm_start?.placements.length).toBe(3);
-    // the map only moved: its labels are pinned; after a zoom they are placed anew
+    // the map only moved: its labels are pinned; after a zoom they give way to more
+    // important ones
     expect(engine.last.problem.warm_start?.pin).toBe(true);
     map.state.zoom = 8;
     map.fire("moveend");
-    expect(engine.last.problem.warm_start?.pin).toBeUndefined();
+    expect(engine.last.problem.warm_start?.pin).toBe("yield");
     map.fire("moveend");
     expect(engine.last.problem.warm_start?.pin).toBe(true);
     expect(engine.calls.length).toBe(4);

@@ -103,22 +103,31 @@ changing sides to stay inside
 | Option | Default | |
 |---|---|---|
 | `overscan` | 8 × the font size (96 px at 12 px) | px beyond the view that are labeled as well, about a label's width; `false`: only what is in view is labeled, every label inside the view |
-| `pin` | `true` | while the view is only panned, every label keeps its place on the map exactly, and labels are only added where the view has moved on (`warm_start.pin`); `false`: warm starts alone, which keep most labels |
+| `pin` | `true` | the labels keep their places (`warm_start.pin`): while the view is only panned, every one exactly, and labels are only added where the view has moved on; after a zoom those beside their points, giving way to more important ones; `false`: warm starts alone, which keep most labels |
 
 **No label moves while the view is panned.** The helpers compare the view with that of
 the labels shown: the zoom for Leaflet, also bearing and pitch for MapLibre, the camera's
 ratio and angle and the graph for sigma. When only the position changed, the solve is
-pinned; after a zoom the labels are placed anew, warm-started. For labels in the overscan
-to keep off the marks that come in next, the helpers also pass the points up to three
-times the overscan beyond the view, which get no label there (reason `outside`). A pin
-gives way to nothing: a more important point that comes in next to a pinned label waits
-for its label until the next zoom
+pinned with `pin: true`. For labels in the overscan to keep off the marks that come in
+next, the helpers also pass the points up to three times the overscan beyond the view,
+which get no label there (reason `outside`). This pin gives way to nothing: a more
+important point that comes in next to a pinned label waits for its label until the next
+zoom.
+
+**After a zoom, the labels stay beside their points.** They move with their points, so
+most can keep their places; the solve is pinned with `pin: "yield"`. A label whose place
+is no longer good (another point's mark lies there now, or a more important label needs
+it) is placed anew, labels come as room opens and go as it closes, and a label on a
+leader is free to take a better place
 ([ADR motion/pinned-labels](https://github.com/fabian-beck/label-anything/blob/main/docs/adr/motion/pinned-labels.md)).
 
 For an overlay of your own, `resolveOverscan`, `marksMargin` and `inView` give the same
-margins. `Overlay` takes `overscan`, and pins when `viewKey()` returns what it returned
-for the labels shown: a number or string for everything but the position (the zoom, a
-rotation), compared with `===`.
+margins. `Overlay` takes `overscan`, and pins by what `viewKey()` returns: a number or
+string for everything but the position (the zoom, a rotation), compared with `===` to
+what it returned for the labels shown. `LabelMemory.warmStart(anchors, pin)` builds the
+warm start of either kind (`true`, `"yield"`). To keep a label somewhere else than
+beside its item's anchor, give `LabelMemory` and `LabelMotion` another point for it: a
+name inside an area goes with its own middle, and stays there on a map that is zoomed.
 
 ## Smooth transitions
 

@@ -9,7 +9,7 @@ export { LatestRunner, resolveEngine, setDefaultEngine, type AnyEngine, type Asy
 export { canvasMeasure, cssFont, type CssFont, type MeasureFn } from "./measure.js";
 export { buildProblem, inView, marksMargin, resolveFont, resolveOverscan, type FontOptions, type Item, type Label, type LabelOptions, type LeaderStyle, type Mark, type Overscan } from "./options.js";
 export { followAnchors, leaderPath, renderLabels, type RenderOptions } from "./render.js";
-export { LabelMemory, type Anchors } from "./stable.js";
+export { LabelMemory, type Anchors, type Pin } from "./stable.js";
 export { LabelMotion, type MotionFrame, type MotionOptions } from "./motion.js";
 export { Overlay, type OverlayConfig, type OverlayItem } from "./overlay.js";
 export { snapshotSvg, type SnapshotOptions, type SvgSnapshot } from "./svg.js";

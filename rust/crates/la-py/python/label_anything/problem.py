@@ -15,7 +15,7 @@ import copy
 import difflib
 import math
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from . import _background
 from ._errors import ValidationError
@@ -811,13 +811,15 @@ class Problem:
         pr.setdefault("tiers", []).append({"where": where, "tier": int(tier)})
         return self
 
-    def warm_start(self, previous: Any, *, pin: Optional[bool] = None) -> Problem:
-        """Stay close to a previous result (spec ``warm_start``). With ``pin``, every label
-        keeps its box exactly where the hard rules still allow it, whatever its priority, and
-        the solve only adds labels: for a view that only moved, as a map that was panned."""
+    def warm_start(self, previous: Any, *, pin: Union[bool, str, None] = None) -> Problem:
+        """Stay close to a previous result (spec ``warm_start``). With ``pin=True``, every
+        label keeps its box exactly where the hard rules still allow it, whatever its priority,
+        and the solve only adds labels: for a view that only moved, as a map that was panned.
+        With ``pin="yield"`` the labels keep their boxes likewise, but give way to more
+        important ones: for a view that was zoomed."""
         self._doc["warm_start"] = warm_start_dict(previous)
         if pin is not None:
-            self._doc["warm_start"]["pin"] = bool(pin)
+            self._doc["warm_start"]["pin"] = pin if isinstance(pin, str) else bool(pin)
         return self
 
     # --- output -------------------------------------------------------------------

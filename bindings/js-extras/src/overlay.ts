@@ -38,10 +38,12 @@ export interface OverlayConfig<D> {
    */
   overscan?: number | null;
   /**
-   * What stays the same while the view only pans: its zoom, its rotation. While it does,
-   * the labels of a window are pinned (`warm_start.pin`): none moves, the solve only adds
-   * labels where the view moves on. Without it, or with `pin: false`, every solve may move
-   * labels, as after a zoom.
+   * What stays the same while the view only pans: its zoom, its rotation. The labels of a
+   * window are then pinned (`warm_start.pin`). While it stays, none moves, and the solve
+   * only adds labels where the view moves on. When it changes, as after a zoom, the labels
+   * that sit at their items keep their places beside them, giving way only to more
+   * important ones (`pin: "yield"`), and those on leaders may take a better place.
+   * Without it, or with `pin: false`, every solve may move labels.
    */
   viewKey?(): unknown;
   pin?: boolean;
@@ -111,10 +113,10 @@ export class Overlay<D> {
     const items = c.collect();
     const anchors = this.#anchors(items);
     const key = c.viewKey?.();
-    // the view only moved since the labels were placed: they stay where they are
-    const pin = c.pin !== false && typeof c.overscan === "number" && key !== undefined && key === this.#solvedKey;
-    const placed = this.memory.warmStart(anchors);
-    const warm = placed && pin ? { ...placed, pin: true } : placed;
+    // the view only moved since the labels were placed: they stay where they are. Zoomed
+    // or turned: those that sit at their items stay there
+    const pins = c.pin !== false && typeof c.overscan === "number" && key !== undefined && this.#solvedKey !== undefined;
+    const warm = this.memory.warmStart(anchors, pins ? (key === this.#solvedKey ? true : "yield") : undefined);
     const obstacles = c.obstacles?.();
     const problem = buildProblem(
       {

@@ -3,7 +3,8 @@
  * their anchors while the map moves and are re-solved (warm-started) on `moveend`. The map
  * is a window on a larger drawing: points a little beyond its edge are labeled too
  * (`overscan`), and a label at the edge is cut there instead of being pushed inside.
- * While the map is only panned, no label moves at all (`pin`).
+ * The labels keep their places (`pin`): while the map is only panned, none moves; after
+ * a zoom or a turn those beside their points stay there.
  * Rendered features of other layers can be obstacles (`avoidLayers`).
  *
  * ```js
@@ -57,9 +58,11 @@ export interface MapLibreLabelOptions<D> extends LabelOptions<D>, Omit<RenderOpt
    */
   overscan?: Overscan;
   /**
-   * While the map is only panned (the same zoom, bearing and pitch), the labels keep their
-   * places exactly: none moves, and labels are added where the map moves on (default
-   * `true`; needs `overscan`). `false`: labels may move after every pan as well.
+   * The labels keep their places (default `true`; needs `overscan`). While the map is only
+   * panned (the same zoom, bearing and pitch), none moves, and labels are added where the
+   * map moves on. After a zoom or a turn the labels beside their points stay there, and
+   * only those on leaders are placed anew. `false`: every label may move after every move
+   * of the map.
    */
   pin?: boolean;
   /** Style layers whose rendered features are obstacles (class = layer id). */

@@ -28,7 +28,7 @@
  * ```
  *
  * Positions are kept relative to each label's anchor (`placement.anchor`, which results
- * report), so the labels move with their points between solves; labels in a column (fan
+ * report, or the point the host gives), so the labels move with their points between solves; labels in a column (fan
  * and boundary labels) stay where the column is, their leaders follow the points. Moves
  * follow a critically damped spring (no overshoot; a move that is retargeted mid-way bends
  * smoothly into the new one); fades are linear. The engine's results stay as they are
@@ -153,10 +153,11 @@ interface Label {
 }
 
 function anchorOf(p: Placement, anchors: Anchors | undefined): Pt {
-  if (p.anchor) return [p.anchor[0], p.anchor[1]];
+  // the host's point for the label first: it is the one `frame` gets later
   const a = anchors?.get(p.id);
+  if (a) return [a[0], a[1]];
   // without an anchor the box stays where it is
-  return a ? [a[0], a[1]] : [0, 0];
+  return p.anchor ? [p.anchor[0], p.anchor[1]] : [0, 0];
 }
 
 function targetOf(p: Placement, anchors: Anchors | undefined): Target {
@@ -358,7 +359,10 @@ export class LabelMotion {
 
   /**
    * Moves the labels towards a new result, from where they are at `now` (ms). `anchors`:
-   * the positions the result was solved for, for placements without `anchor`.
+   * the points the labels go with, where they were when the result was solved: the ones
+   * `frame` is given later. A label without an entry goes with its placement's `anchor`.
+   * A host can so tie a label to another point than its item's anchor: a name inside an
+   * area to the name's own middle, which keeps it in place on a map that is zoomed.
    */
   target(result: LabelResult, anchors?: Anchors, now: number = performance.now()): void {
     this.#advance(now);

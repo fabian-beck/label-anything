@@ -394,6 +394,11 @@ def test_pinned_labels_keep_their_boxes() -> None:
     assert "pinned" not in la.place(pts, names + ["new"], **kw).stats
     # a pin without a warm start pins nothing
     assert la.place(pts[:3], names, canvas=(200, 200), pin=True).stats["pinned"] == 0
+    # after a zoom: the labels keep their boxes, but give way to more important ones
+    zoomed = la.place(pts, names + ["new"], pin="yield", **kw)
+    assert zoomed.problem["warm_start"]["pin"] == "yield"
+    assert zoomed.stats["pinned"] >= 2
+    assert la.Problem(canvas=(200, 200)).items(pts[:3], names).warm_start(first, pin="yield").build()["warm_start"]["pin"] == "yield"
 
 
 def test_builder_copy_is_independent() -> None:

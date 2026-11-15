@@ -71,7 +71,7 @@ object. Lengths are a number (px) or a string with a unit (`"0.5em"`, `"3px"`, `
 | `priority(Priority)`, `tier(where, tier)`, `omission(Omission)`, `coverage(by, n)`, `ties`, `tiesRandom(seed)`, `band`, `maxLabels`, `maxInkFraction`, `focus`, `fontClasses(FontClass...)` | `priority` |
 | `timeBudgetMs`, `seed`, `strategy(Strategy)`, `maxIterations`, `gridCell` | `solver` |
 | `degrade(Degrade.ALTERNATIVES, Degrade.shrink(0.85), ...)`, `minScale`, `wrapMaxLines`, `softOverlapWeight` | `degrade`, `degrade_options` |
-| `weights(Weights.defaults().position(1))`, `warmStart(previousResult)`, `warmStart(previousResult, true)` (pinned) | `weights`, `warm_start`, `warm_start.pin` |
+| `weights(Weights.defaults().position(1))`, `warmStart(previousResult)`, `warmStart(previousResult, true)` (pinned; after a zoom `option("warm_start.pin", "yield")`) | `weights`, `warm_start`, `warm_start.pin` |
 | `debugSvg`, `costBreakdown`, `reportCandidates`, `itemShape` | `output` |
 | `option("placement.k_distant", 12)` | any field, by its dotted path |
 

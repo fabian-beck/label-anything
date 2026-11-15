@@ -10,7 +10,9 @@
  * runs in viewport pixels: after camera moves and graph changes (debounced), warm-started
  * from the previous result. The viewport is a window on the graph: nodes a little beyond
  * its edge are labeled too (`overscan`), and a label at the edge is cut there instead of
- * being pushed inside. While the camera only pans, no label moves at all (`pin`). In between, labels follow their nodes; after a solve they glide
+ * being pushed inside. The labels keep their places (`pin`): while the camera only pans,
+ * none moves; after a zoom those beside their nodes stay there. In between, labels follow
+ * their nodes; after a solve they glide
  * into their new places and fade in and out (`transition`). Labels are drawn by a
  * replacement of sigma's label renderer; omitted labels are hidden via `nodeReducer`.
  */
@@ -76,9 +78,10 @@ export interface SigmaLabelOptions extends Omit<LabelOptions<SigmaNode>, "id" | 
    */
   overscan?: Overscan;
   /**
-   * While the camera only pans (the same zoom and angle, the same graph), the labels keep
-   * their places exactly: none moves, and labels are added where the view moves on
-   * (default `true`; needs `overscan`). `false`: labels may move after every pan as well.
+   * The labels keep their places (default `true`; needs `overscan`). While the camera only
+   * pans over the same graph, none moves, and labels are added where the view moves on.
+   * After a zoom or a turn the labels beside their nodes stay there, and only those on
+   * leaders are placed anew. `false`: every label may move after every move of the camera.
    */
   pin?: boolean;
   /** Edges as obstacles (default `true`). */
@@ -223,13 +226,13 @@ export function labelSigma(renderer: SigmaLike, options: SigmaLabelOptions = {})
         if (a && b) polylines.push([[a.x, a.y], [b.x, b.y]]);
       });
     }
-    // the camera only panned since the labels were placed, over the same graph: they stay
+    // the camera only panned since the labels were placed, over the same graph: they
+    // stay. Zoomed or turned: those that sit at their nodes stay there
     const state = renderer.getCamera().getState?.();
     const key = state ? `${state.ratio}/${state.angle}` : undefined;
-    const pin = options.pin !== false && overscan !== null && key !== undefined && key === solvedKey && !graphChanged;
+    const pins = options.pin !== false && overscan !== null && key !== undefined && solvedKey !== undefined && !graphChanged;
     graphChanged = false;
-    const placed = memory.warmStart(anchors);
-    const warm = placed && pin ? { ...placed, pin: true } : placed;
+    const warm = memory.warmStart(anchors, pins ? (key === solvedKey ? true : "yield") : undefined);
     const problem = buildProblem(
       {
         canvas: overscan === null ? { width, height } : { width, height, overscan },

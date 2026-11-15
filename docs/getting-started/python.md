@@ -44,7 +44,7 @@ Every other keyword sets a field of the [problem](../concepts/problem.md). `None
 | Keywords | Problem field |
 |---|---|
 | `canvas=(w, h)` or a dict; `canvas_padding`, `allow_outside`, `overscan`, `region`, `device_pixel_ratio`, `canvas_background` | `canvas` |
-| `y_axis`, `transform`, `preset`, `weights`, `degrade`, `warm_start` (a `Result` works; `pin=True` pins its labels) | the field of that name; `warm_start.pin` |
+| `y_axis`, `transform`, `preset`, `weights`, `degrade`, `warm_start` (a `Result` works; `pin=True` pins its labels, `pin="yield"` after a zoom) | the field of that name; `warm_start.pin` |
 | `font` (`la.Font`), `font_family`, `font_size`, `font_weight`, `font_style`, `line_height`, `font_file` | `defaults.font` |
 | `padding`, `buffer`, `margin`, `spacing`, `side_margin`, `mark`, `wrap`, `truncate`, `align`; `shaping` | `defaults`; `text.shaping` |
 | every field of `placement` (`aggressiveness`, `models`, `position_order`, `offset`, `max_distance`, `internal`, `boundary`, `fan`, …) | `placement` |
