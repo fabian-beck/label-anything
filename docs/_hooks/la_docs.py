@@ -6,9 +6,9 @@
 * "ADR <area>/<name>" in a page's text links to that record. A record without its title,
   summary and sections, and a citation anywhere in the repository that names no record,
   is a warning, which fails ``mkdocs build --strict``.
-* Links written as ``gh:path/in/the/repo`` point to that file on GitHub, at the tag being
-  built (``LA_DOCS_TAG``, set by the Pages workflow, or ``GITHUB_REF_NAME`` on a ``v*``
-  tag) or at ``main``.
+* Links written as ``gh:path/in/the/repo`` point to that file or directory on GitHub, at
+  the tag being built (``LA_DOCS_TAG``, set by the Pages workflow, or ``GITHUB_REF_NAME``
+  on a ``v*`` tag) or at ``main``.
 * The JSON Schemas and presets of ``spec/`` are published with the site, under
   ``schema/`` and ``presets/``.
 """
@@ -170,4 +170,10 @@ def on_page_markdown(markdown: str, page, config, files) -> str:
         markdown = markdown.replace("<!-- la:adr-index -->", _adr_index(page.file.src_uri))
     markdown = _link_adrs(markdown, page.file.src_uri)
     ref = _ref()
-    return GH_LINK.sub(lambda m: f"]({REPO}/blob/{ref}/{m.group(1)})", markdown)
+    return GH_LINK.sub(lambda m: f"]({_gh_url(m.group(1), ref)})", markdown)
+
+
+def _gh_url(path: str, ref: str) -> str:
+    """A file links as ``blob/<ref>/…``, a directory as ``tree/<ref>/…``."""
+    kind = "tree" if (ROOT / path.split("#", 1)[0]).is_dir() else "blob"
+    return f"{REPO}/{kind}/{ref}/{path}"
