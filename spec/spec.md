@@ -56,8 +56,13 @@ polygons and paths, area polygons, vector obstacles, `priority.focus`) are mappe
 2. then, if `y_axis = "up"`, `y'' = canvas.height − y'` (requires `canvas`).
 
 Radii, widths, sizes, offsets and `relative` mark geometry are pixel lengths and are
-never transformed. SVG and raster backgrounds are in canvas pixels (see §4). Output is
-always canvas pixels, y down.
+never transformed: a mark's `r`, `rx`, `ry`, `w`, `h`, the radius of a vector layer's
+`points` and `circles`, the stroke `width` of its `polylines` and the sizes of its
+`shapes`. A vector layer's `rects` (`[x, y, w, h]`) are geometry, not sizes: the corners
+`(x, y)` and `(x + w, y + h)` are both mapped, so the extent scales with `transform` (and
+a rotating or shearing `transform` maps the rect to the parallelogram of its four
+corners). SVG and raster backgrounds are in canvas pixels (see §4). Output is always
+canvas pixels, y down.
 
 Angles: mark rotations are degrees **clockwise on screen** (SVG `rotate`). Leader angles
 (`leaders.angles`) are degrees **counter-clockwise from +x as seen on screen** (0 = right,

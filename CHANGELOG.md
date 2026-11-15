@@ -72,7 +72,8 @@ The first release, 0.1.0. Nothing is published to a package registry yet.
 - Python ≥ 3.9: `label-anything`, with helpers for matplotlib, Plotly and seaborn in
   `label-anything-extras`.
 - JavaScript and TypeScript: `@label-anything/core` (pure TypeScript, the same placements
-  as the Rust engine), `@label-anything/wasm` (the Rust engine as WebAssembly),
+  as the Rust engine), `@label-anything/wasm` (the Rust engine as WebAssembly, without dependencies: it
+  installs without the TypeScript engine),
   `@label-anything/cli`, and `@label-anything/extras` for d3, Observable Plot, Vega,
   Leaflet, MapLibre, Cytoscape, sigma and Web Workers. The Leaflet, MapLibre and sigma
   helpers treat the view as a window (option `overscan`, 8 times the font size by

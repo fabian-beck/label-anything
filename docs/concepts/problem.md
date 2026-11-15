@@ -45,6 +45,13 @@ are mapped by
 Radii, widths, sizes and offsets are pixel lengths and are never transformed. SVG and
 raster backgrounds are in canvas pixels already.
 
+!!! note "Rect obstacles scale, rect marks do not"
+    The `rects` of a vector layer (`[x, y, w, h]`) are geometry: both corners are mapped,
+    so their width and height scale with `transform`. A mark's `w`, `h` and radii, the
+    radius of a layer's `points` and `circles` and the `width` of its `polylines` stay in
+    pixels; a host that zooms through `transform` multiplies those by the zoom factor
+    itself.
+
 ```json
 {
   "canvas": { "width": 400, "height": 300 },

@@ -1,0 +1,177 @@
+{
+  "kind": "parity",
+  "problem": {
+    "canvas": {
+      "width": 400,
+      "height": 300
+    },
+    "transform": [
+      2,
+      0,
+      0,
+      2,
+      200,
+      100
+    ],
+    "placement": {
+      "models": [
+        "adjacent"
+      ],
+      "position_order": [
+        "right"
+      ]
+    },
+    "degrade": [
+      "omit"
+    ],
+    "obstacles": {
+      "vector": [
+        {
+          "class": "blocker",
+          "rects": [
+            [
+              -20,
+              -3,
+              25,
+              6
+            ],
+            [
+              -20,
+              47,
+              12,
+              6
+            ]
+          ]
+        }
+      ]
+    },
+    "avoid": {
+      "label": {
+        "blocker": "hard"
+      }
+    },
+    "items": [
+      {
+        "id": "reached",
+        "anchor": {
+          "type": "point",
+          "x": 0,
+          "y": 0
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      },
+      {
+        "id": "clear",
+        "anchor": {
+          "type": "point",
+          "x": 0,
+          "y": 50
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        }
+      }
+    ]
+  },
+  "result": {
+    "version": "1",
+    "placements": [
+      {
+        "id": "reached",
+        "placed": false,
+        "reason": "no_feasible_candidate",
+        "blocking": [
+          "blocker"
+        ],
+        "blocked_by": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 0
+        },
+        "degrade_steps": [
+          "omit"
+        ]
+      },
+      {
+        "id": "clear",
+        "placed": true,
+        "box": {
+          "x": 203.0,
+          "y": 192.2,
+          "w": 35.891999999999996,
+          "h": 15.600000000000023
+        },
+        "anchor": [
+          200.0,
+          200.0
+        ],
+        "anchor_side": "right",
+        "model": "adjacent",
+        "text": {
+          "lines": [
+            "Alpha"
+          ],
+          "used": "original",
+          "truncated": false,
+          "baseline_offsets": [
+            10.919999999999998
+          ],
+          "line_widths": [
+            32.292
+          ],
+          "x_offset": 1.7999999999999998,
+          "x_offsets": [
+            1.7999999999999998
+          ],
+          "align": "center",
+          "font_size": 12.0,
+          "font_family": "default",
+          "font_weight": 400,
+          "scale": 1.0
+        },
+        "leader": null,
+        "cost": 0.024999999999999998,
+        "degrade_steps": [],
+        "priority": {
+          "tier": 0,
+          "score": 0.0,
+          "rank": 1
+        }
+      }
+    ],
+    "stats": {
+      "placed": 1,
+      "total": 2,
+      "placed_weighted": 0.38685280723454163,
+      "required_placed": true,
+      "hard_violations": 0,
+      "leader_crossings": 0,
+      "strategy_used": "local",
+      "seed": 0,
+      "iterations": 800,
+      "time_guard_hit": false,
+      "cancelled": false,
+      "candidates": 2,
+      "omission_order": [
+        "reached"
+      ],
+      "priority_inversions": 0,
+      "total_cost": 0.024999999999999998,
+      "degraded": {},
+      "grid": {
+        "cell": 3.0,
+        "cols": 134,
+        "rows": 100,
+        "classes": [
+          "blocker"
+        ]
+      }
+    },
+    "debug_svg": null
+  }
+}

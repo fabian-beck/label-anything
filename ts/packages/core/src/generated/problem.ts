@@ -12,7 +12,7 @@ export type NonNegLength = number | string;
  */
 export type Rect4 = [number, number, number, number];
 /**
- * Affine map [a,b,c,d,e,f] from input units to canvas pixels: x' = a*x + c*y + e, y' = b*x + d*y + f (SVG matrix order). Applied to anchors, item polygons with absolute coordinates, area polygons and vector obstacles. Lengths (radii, widths, sizes) are never transformed.
+ * Affine map [a,b,c,d,e,f] from input units to canvas pixels: x' = a*x + c*y + e, y' = b*x + d*y + f (SVG matrix order). Applied to anchors, item polygons with absolute coordinates, area polygons and vector obstacles. Lengths (radii, widths, sizes) are never transformed; the rects of a vector layer are geometry (both corners are mapped).
  *
  * @minItems 6
  * @maxItems 6
@@ -246,6 +246,9 @@ export type VectorLayer = VectorLayer1 & {
   width?: number;
   polygons?: Ring[];
   fill_rule?: "nonzero" | "evenodd";
+  /**
+   * [x, y, w, h] in input units: both corners are mapped by transform, so w and h scale with it.
+   */
   rects?: Rect4[];
   shapes?: PositionedShape[];
 };

@@ -28,7 +28,7 @@
     },
     "transform": {
       "$ref": "#/$defs/affine",
-      "description": "Affine map [a,b,c,d,e,f] from input units to canvas pixels: x' = a*x + c*y + e, y' = b*x + d*y + f (SVG matrix order). Applied to anchors, item polygons with absolute coordinates, area polygons and vector obstacles. Lengths (radii, widths, sizes) are never transformed."
+      "description": "Affine map [a,b,c,d,e,f] from input units to canvas pixels: x' = a*x + c*y + e, y' = b*x + d*y + f (SVG matrix order). Applied to anchors, item polygons with absolute coordinates, area polygons and vector obstacles. Lengths (radii, widths, sizes) are never transformed; the rects of a vector layer are geometry (both corners are mapped)."
     },
     "preset": {
       "enum": [
@@ -907,6 +907,7 @@
           ]
         },
         "rects": {
+          "description": "[x, y, w, h] in input units: both corners are mapped by transform, so w and h scale with it.",
           "type": "array",
           "items": {
             "$ref": "#/$defs/rect4"
