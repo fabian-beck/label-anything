@@ -10,14 +10,16 @@
  * The countries and the seas' names are an SVG the engine reads: no label covers a sea's
  * name. At the first view the problem is that of the static figure. A zoomed view is a
  * window on the map (`canvas.overscan`): what lies a little beyond it is labeled as well,
- * and a name at its border keeps its place on the map and is cut there. While the map is
- * only panned, the names are pinned (`warm_start.pin`): none moves, names come where the
- * map moves on, and a zoom places them anew.
+ * and a name at its border keeps its place on the map and is cut there. The names are
+ * pinned (`warm_start.pin`): while the map is panned none moves, and names come where the
+ * map moves on; when it is zoomed, a city's name stays beside its dot and a country's
+ * name at its place in the country, names come and go as room does, and only a name out
+ * on a leader may take a better place.
  */
 import type { LabelProblem, LabelResult } from "@label-anything/core";
-import type { MotionFrame } from "@label-anything/extras";
+import type { MotionFrame, Pin } from "@label-anything/extras";
 import type { WorldCountry } from "./economies.js";
-import type { Example, Info, Solve, Stage } from "./stage.js";
+import type { Example, Info, Placement, Solve, Stage } from "./stage.js";
 import { LABEL_FAMILY, button, clamp, clipRing, compact, easeInOut, esc, f2, html, inRing, ringArea, ringsPath, round, set, svg, type Pt, type Ring } from "./util.js";
 
 const LON0 = 10.0;
@@ -140,6 +142,8 @@ export interface View {
 
 interface EuropeSolve extends Solve {
   view: View;
+  /** The whole map, solved from no labels: its first labels. */
+  fresh: boolean;
 }
 
 /** Lambert azimuthal equal-area (sphere), in px of the map at zoom 1. */
@@ -248,7 +252,7 @@ export class Europe implements Example {
   #buttons: { in?: HTMLButtonElement; out?: HTMLButtonElement; reset?: HTMLButtonElement } = {};
   #note!: HTMLDivElement;
   #noteTimer = 0;
-  /** Where each item's anchor is on the map at zoom 1 (from the latest result). */
+  /** Where each label's anchor (`anchorOf`) is on the map at zoom 1, from the latest result. */
   #base = new Map<string, Pt>();
   /** The view the labels shown were placed for. */
   #solved: View | null = null;
@@ -437,7 +441,7 @@ export class Europe implements Example {
     this.#buttons.in.setAttribute("aria-label", "Zoom in");
     this.#buttons.out = button(zoom, "−", () => this.zoomBy(1 / 1.7));
     this.#buttons.out.setAttribute("aria-label", "Zoom out");
-    this.#buttons.reset = button(stage.controls, "Whole map", () => this.go({ k: 1, x: 0, y: 0 }));
+    this.#buttons.reset = button(stage.controls, "Whole map", () => this.go({ k: 1, x: 0, y: 0 }, true));
     this.#note = html("div", "la-example__note", "Hold Ctrl (⌘ on a Mac) and scroll to zoom the map", stage.frameEl);
     this.#note.hidden = true;
 
@@ -466,9 +470,10 @@ export class Europe implements Example {
     this.go({ k, x: about[0] - ((about[0] - from.x) * k) / from.k, y: about[1] - ((about[1] - from.y) * k) / from.k });
   }
 
-  /** Glides to a view. */
-  go(to: View): void {
+  /** Glides to a view; `fresh`: its labels are placed anew there, not from those shown. */
+  go(to: View, fresh = false): void {
     to = this.#fit(to);
+    this.#fresh = fresh;
     this.#stage.setHover(null);
     if (this.#stage.reduced) {
       this.#set(to, true);
@@ -482,10 +487,19 @@ export class Europe implements Example {
     this.view = this.#fit(v);
     this.#soft(rest);
     this.#show();
-    // back at the whole map, the labels are those of the first view: solved afresh
-    this.#stage.request(rest, rest && this.view.k === 1);
+    // "Whole map" asks for the labels of the first view: solved afresh. Zoomed out to the
+    // whole map, the names shown stay like after any zoom
+    this.#stage.request(rest, rest && this.#fresh && this.#whole(this.view));
     this.#stage.kick();
   }
+
+  #whole(v: View): boolean {
+    return v.k === 1 && v.x === 0 && v.y === 0;
+  }
+  /** "Whole map" was asked for: the view glides there, and its labels are placed anew. */
+  #fresh = false;
+  /** The labels shown are those of the first view (the whole map, placed afresh). */
+  #first = true;
 
   /**
    * The band along the coasts is blurred while the map is still: blurring it anew for
@@ -503,8 +517,8 @@ export class Europe implements Example {
     set(this.#blur, { stdDeviation: round(2.2 / k, 3) });
     set(this.#seams, { display: k > 1 ? undefined : "none" });
     this.#seas.innerHTML = this.#seaMarkup(this.view);
-    const whole = k === 1 && x === 0 && y === 0;
-    if (this.#buttons.reset) this.#buttons.reset.disabled = whole;
+    // (the whole map with other labels than its first ones: "Whole map" brings those back)
+    if (this.#buttons.reset) this.#buttons.reset.disabled = this.#whole(this.view) && this.#first;
     if (this.#buttons.out) this.#buttons.out.disabled = k <= 1;
     if (this.#buttons.in) this.#buttons.in.disabled = k >= MAX_ZOOM;
     this.#stage.svg.classList.toggle("is-zoomed", k > 1);
@@ -515,6 +529,7 @@ export class Europe implements Example {
     this.#pointers.set(ev.pointerId, [ev.clientX, ev.clientY]);
     this.#moved = false;
     this.#glide = null;
+    this.#fresh = false;
     // a touch pans a zoomed map; the whole map lets the page scroll
     if (ev.pointerType !== "touch" || this.view.k > 1 || this.#pointers.size > 1) this.#stage.svg.setPointerCapture(ev.pointerId);
   }
@@ -578,6 +593,7 @@ export class Europe implements Example {
     ev.preventDefault();
     this.#note.hidden = true;
     this.#glide = null;
+    this.#fresh = false;
     const about = this.#stage.toCanvas(ev);
     // a pinch on a trackpad comes as small steps, a wheel's notch as a large one: at most √2 each
     const factor = 2 ** clamp(-ev.deltaY * (ev.deltaMode === 1 ? 0.3 : ev.deltaMode ? 1 : 0.01), -0.5, 0.5);
@@ -616,7 +632,7 @@ export class Europe implements Example {
     return b ? [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2] : [0, 0];
   }
 
-  solve(): EuropeSolve {
+  solve(rest: boolean): EuropeSolve {
     const view = this.view;
     const problem = this.problem(view);
     const anchors = new Map<string, Pt>();
@@ -624,17 +640,37 @@ export class Europe implements Example {
       const id = it.id as string;
       anchors.set(id, this.#to(view, this.#base.get(id) ?? this.#home(id)));
     }
-    // a zoomed map that was only panned since its names were placed: they stay
-    const pin = view.k > 1 && this.#solved !== null && this.#solved.k === view.k;
-    return { problem, anchors, view, pin };
+    // the map as it was when its names were placed, panned: they all stay. Zoomed: those
+    // that sit at their item stay, a city's name beside its dot and a country's inside
+    // it, at its place on the map, unless a more important name has no other place; a
+    // name out on a leader is free to take a better place, as the room has changed
+    const solved = this.#solved;
+    const pin: Pin | undefined = solved === null ? undefined : solved.k === view.k ? true : "yield";
+    // (the first solve, and the one "Whole map" asked for, start from no labels)
+    const fresh = this.#whole(view) && (solved === null || (rest && this.#fresh));
+    if (fresh) this.#fresh = false;
+    return { problem, anchors, view, pin, fresh };
+  }
+
+  /**
+   * The point of the map a label goes with. A name inside its country has its own middle:
+   * it stays at that place of the map when the map is zoomed. Any other label goes with
+   * its item's anchor: a city's name with its dot, a country's name beside the country's
+   * middle or out on a leader with that middle.
+   */
+  anchorOf(p: Placement): readonly number[] | undefined {
+    return p.placed && p.box && p.model === "internal" && !this.#places.has(p.id) ? [p.box.x + p.box.w / 2, p.box.y + p.box.h / 2] : p.anchor;
   }
 
   solved(result: LabelResult, solve: Solve): void {
     const v = (solve as EuropeSolve).view;
     this.#solved = v;
+    this.#first = this.#whole(v) && ((solve as EuropeSolve).fresh || this.#first);
+    if (this.#buttons.reset) this.#buttons.reset.disabled = this.#whole(this.view) && this.#first;
     for (const p of result.placements) {
-      if (p.anchor) this.#base.set(p.id, [(p.anchor[0]! - v.x) / v.k, (p.anchor[1]! - v.y) / v.k]);
-      if (p.placed && p.box && p.anchor) this.#labels.set(p.id, [p.box.x - p.anchor[0]!, p.box.y - p.anchor[1]!, p.box.w, p.box.h]);
+      const a = this.anchorOf(p);
+      if (a) this.#base.set(p.id, [(a[0]! - v.x) / v.k, (a[1]! - v.y) / v.k]);
+      if (p.placed && p.box && a) this.#labels.set(p.id, [p.box.x - a[0]!, p.box.y - a[1]!, p.box.w, p.box.h]);
       else this.#labels.delete(p.id);
     }
   }

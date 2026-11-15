@@ -127,12 +127,13 @@ export function inRing(p: readonly [number, number], ring: Ring): boolean {
  * `at`: where the item's anchor is now, when the host knows better than the engine can
  * tell (a map that moved under an area's label). The box and the leader are then moved
  * with it here, and the engine takes them as they are; otherwise the engine moves them, by
- * the item's reference point of the moment.
+ * the item's reference point of the moment. `from`: where that anchor was when the label
+ * was placed (default: the placement's own anchor).
  */
-export function warmPlacement(p: LabelResult["placements"][number], at?: readonly [number, number]): Obj {
+export function warmPlacement(p: LabelResult["placements"][number], at?: readonly [number, number], from: readonly number[] | undefined = p.anchor): Obj {
   const out: Obj = { id: p.id, placed: p.placed };
   if (p.placed && p.box) {
-    const by = at && p.anchor ? [at[0] - p.anchor[0]!, at[1] - p.anchor[1]!] : null;
+    const by = at && from ? [at[0] - from[0]!, at[1] - from[1]!] : null;
     out.box = by ? { ...p.box, x: p.box.x + by[0]!, y: p.box.y + by[1]! } : p.box;
     if (p.rotation) out.rotation = p.rotation;
     if (!by && p.anchor) out.anchor = p.anchor;

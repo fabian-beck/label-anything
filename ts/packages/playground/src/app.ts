@@ -340,9 +340,12 @@ export class App {
     }
     if (kind !== "cold" && this.view.warmStart && this.result) {
       const now = s.anchorsFromResults ? s.anchors() : undefined;
-      // a view that only moved since the labels were placed: they are pinned, none moves
-      const pin = kind === "warm" && this.view.pin && this.#resultSnapshot !== undefined && s.pannedSince?.(this.#resultSnapshot) === true;
-      p.warm_start = { ...(pin ? { pin: true } : {}), placements: this.result.placements.map((q) => warmPlacement(q, now?.get(q.id))) };
+      // a view that only moved since the labels were placed: they are pinned, none moves.
+      // Zoomed: those that sit at their items are (the scene says which)
+      const pin = kind === "warm" && this.view.pin && this.#resultSnapshot !== undefined ? s.pinSince?.(this.#resultSnapshot) : undefined;
+      // (a label on a leader is free to take a better place after a zoom)
+      const free = (q: LabelResult["placements"][number]): Obj => (pin === "yield" && q.placed && q.leader ? { pin: false } : {});
+      p.warm_start = { ...(pin ? { pin } : {}), placements: this.result.placements.map((q) => ({ ...warmPlacement(q, now?.get(q.id), s.anchorOf?.(q)), ...free(q) })) };
     }
     if (kind === "settle") {
       const stability = lookup(this.effectiveOptions(), "weights.stability");
@@ -414,6 +417,13 @@ export class App {
         this.problem = built.problem;
         this.#resultSnapshot = snapshot;
         this.scene.onResult?.(result, snapshot);
+        // (the points the labels go with, where the scene says them, as of this result)
+        if (this.scene.anchorOf) {
+          for (const q of result.placements) {
+            const a = this.scene.anchorOf(q);
+            if (a) anchors.set(q.id, [a[0]!, a[1]!]);
+          }
+        }
         this.#motion.target(result, anchors);
         const st = result.stats;
         this.history.push({
@@ -422,7 +432,7 @@ export class App {
         });
         if (this.history.length > 240) this.history.splice(0, this.history.length - 240);
         // (pinned labels have not moved: there is nothing to settle)
-        const pinned = (built.problem.warm_start as { pin?: boolean } | null | undefined)?.pin === true;
+        const pinned = Boolean((built.problem.warm_start as { pin?: boolean | string } | null | undefined)?.pin);
         if (kind === "warm" && this.view.settle && this.view.warmStart && !pinned) this.#needsSettle = true;
         this.#redraw = true;
         this.#renderStats();

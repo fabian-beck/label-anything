@@ -6,7 +6,7 @@
  * tooltip gives the item's name (also of an item whose label was left out) and its values.
  */
 import type { LabelProblem, LabelResult, RgbaPixels } from "@label-anything/core";
-import { LabelMemory, LabelMotion, renderLabels, type Anchors, type MotionFrame, type MotionOptions, type RenderOptions } from "@label-anything/extras";
+import { LabelMemory, LabelMotion, renderLabels, type Anchors, type MotionFrame, type MotionOptions, type Pin, type RenderOptions } from "@label-anything/extras";
 import type { WorkerEngine } from "@label-anything/extras/worker";
 import { html, svg, type Pt } from "./util.js";
 
@@ -25,10 +25,12 @@ export interface Solve {
   anchors: Map<string, Pt>;
   raster?: RgbaPixels;
   /**
-   * The view only moved since the labels shown were placed, as a map that was panned:
-   * they are pinned (`warm_start.pin`), none moves, and the solve only adds labels.
+   * The labels shown are pinned (`warm_start.pin`): they keep their places, and the solve
+   * only adds labels. `true`: the view only moved since they were placed, as a map that
+   * was panned. `"yield"`: it was zoomed; the labels that sit at their items stay there,
+   * unless a more important one has no other place.
    */
-  pin?: boolean;
+  pin?: Pin;
 }
 
 export interface Example {
@@ -53,6 +55,13 @@ export interface Example {
   /** After the labels of a frame are drawn. */
   drawn?(frame: MotionFrame): void;
   solved?(result: LabelResult, solve: Solve): void;
+  /**
+   * The point of the drawing a placed label goes with, in the result's coordinates
+   * (default: its item's anchor, as the result has it). `anchors()` says where these
+   * points are at any time. A map gives a name inside its country the name's own middle:
+   * it then keeps its place on the map when the map is zoomed.
+   */
+  anchorOf?(p: Placement): readonly number[] | undefined;
   /** The item whose mark is at a point of the drawing. */
   hit(x: number, y: number): string | null;
   info(id: string): Info | null;
@@ -262,20 +271,23 @@ export class Stage {
       this.#cold = false;
       const solve = this.#ex.solve(rest);
       // from the labels shown; an item left out before is free to get a label now
-      const shown = this.#memory.warmStart(solve.anchors)?.placements.filter((p) => p.placed);
-      const warm = shown?.length ? { ...(solve.pin ? { pin: true } : {}), placements: shown } : undefined;
+      const shown = this.#memory.warmStart(solve.anchors, solve.pin)?.placements.filter((p) => p.placed);
+      const warm = shown?.length ? { ...(solve.pin ? { pin: solve.pin } : {}), placements: shown } : undefined;
       const solver = { ...solve.problem.solver, ...(rest ? {} : { time_budget_ms: BUDGET_MOVING }) };
       const problem = { ...solve.problem, solver, ...(warm ? { warm_start: warm } : {}) } as LabelProblem;
       try {
         const result = await this.#engine.place(problem, solve.raster ? { raster: solve.raster } : {});
         this.result = result;
         this.solves++;
-        // an area's anchor is where the engine put it: the result says
+        // an area's anchor is where the engine put it: the result says (or the example)
         const at = new Map(solve.anchors);
-        for (const p of result.placements) if (p.anchor) at.set(p.id, [p.anchor[0]!, p.anchor[1]!]);
+        for (const p of result.placements) {
+          const a = this.#ex.anchorOf ? this.#ex.anchorOf(p) : p.anchor;
+          if (a) at.set(p.id, [a[0]!, a[1]!]);
+        }
         this.#memory.remember(result, at);
         this.#ex.solved?.(result, solve);
-        this.#motion.target(result, solve.anchors);
+        this.#motion.target(result, at);
         this.#showStatus(result, problem, solve.anchors);
         this.kick();
       } catch (e) {

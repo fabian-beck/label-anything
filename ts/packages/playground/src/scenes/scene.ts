@@ -4,6 +4,7 @@
  * The app owns the engine, the options the user set, the labels and their motion.
  */
 import type { LabelProblem, LabelResult, RgbaPixels } from "@label-anything/core";
+import type { Pin } from "@label-anything/extras";
 import type { Control } from "../controls.js";
 import type { View } from "../view.js";
 
@@ -82,11 +83,20 @@ export interface Scene {
   /** State taken when a problem is built, handed back with its result (e.g. the map's view). */
   snapshot?(): unknown;
   /**
-   * Whether the view only moved since `snapshot`, as a map that was panned. The app then
-   * pins the labels (`warm_start.pin`): none moves, the solve only adds labels where the
-   * view moves on, and no settle solve follows.
+   * How the labels keep their places since `snapshot` (`warm_start.pin`). `true`: the
+   * view only moved, as a map that was panned, and every label stays. `"yield"`: the
+   * view was zoomed, and the labels that sit at their items stay there unless a more
+   * important one has no other place. The app then pins them: the solve only adds
+   * labels, and no settle solve follows. `undefined`: no label is pinned.
    */
-  pannedSince?(snapshot: unknown): boolean;
+  pinSince?(snapshot: unknown): Pin | undefined;
+  /**
+   * The point of the drawing a placed label goes with, in the result's coordinates
+   * (default: its item's anchor, as the result has it); `anchors()` says where these
+   * points are at any time. A map gives a name inside its country the name's own middle:
+   * it then keeps its place on the map when the map is zoomed.
+   */
+  anchorOf?(p: LabelResult["placements"][number]): readonly number[] | undefined;
   /** A result arrived for the problem built at `snapshot`. */
   onResult?(result: LabelResult, snapshot: unknown): void;
 

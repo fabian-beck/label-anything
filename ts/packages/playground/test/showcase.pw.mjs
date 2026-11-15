@@ -274,6 +274,68 @@ test("the map zooms and pans: more cities come, and the whole map has its first 
   expect(errors).toEqual([]);
 });
 
+test("the map is zoomed: the names that sit at their item stay there, and Whole map brings the first labels back", async ({ page }) => {
+  const { fig, errors } = await open(page, "europe");
+  const first = await state(page, "europe");
+  // every label with where it is: beside its item's anchor, and on the map (px at zoom 1)
+  const names = () =>
+    page.evaluate(() => {
+      const sc = globalThis.labelAnythingShowcase;
+      const v = sc.examples.europe.view;
+      return {
+        v: { ...v },
+        list: sc.stages.europe.result.placements
+          .filter((p) => p.placed)
+          .map((p) => {
+            const c = [p.box.x + p.box.w / 2, p.box.y + p.box.h / 2];
+            return { id: p.id, model: p.model, leader: !!p.leader, off: [c[0] - p.anchor[0], c[1] - p.anchor[1]], map: [(c[0] - v.x) / v.k, (c[1] - v.y) / v.k] };
+          }),
+      };
+    });
+  // of the labels both views have, without a leader: the cities' names that kept their
+  // place beside their dot, and the countries' names inside that kept theirs on the map
+  const compare = (a, b) => {
+    const now = new Map(b.list.map((l) => [l.id, l]));
+    const t = { cities: 0, citiesMoved: 0, inside: 0, insideMoved: 0 };
+    for (const l of a.list) {
+      const m = now.get(l.id);
+      if (!m || l.leader || m.leader) continue;
+      // (the whole map has its coordinates rounded to 0.1 px, a zoomed view has not)
+      if (/^(capital|city)-/.test(l.id)) t[Math.hypot(m.off[0] - l.off[0], m.off[1] - l.off[1]) < 0.2 ? "cities" : "citiesMoved"]++;
+      else if (l.model === "internal" && m.model === "internal") t[Math.hypot(m.map[0] - l.map[0], m.map[1] - l.map[1]) * b.v.k < 0.5 ? "inside" : "insideMoved"]++;
+    }
+    return t;
+  };
+  const whole = await names();
+  await fig.getByRole("button", { name: "Zoom in" }).click();
+  await rest(page, "europe");
+  const zoomed = await names();
+  expect(zoomed.v.k).toBeGreaterThan(1.5);
+  const into = compare(whole, zoomed);
+  // (a city's name gives way where a new city's dot or a more important name comes)
+  expect(into.cities).toBeGreaterThan(20);
+  expect(into.citiesMoved).toBeLessThanOrEqual(6);
+  expect(into.inside).toBeGreaterThan(10);
+  expect(into.insideMoved).toBeLessThanOrEqual(2);
+  // zoomed out again, the names shown stay like after any zoom; "Whole map" is there to
+  // bring the first labels back
+  await fig.getByRole("button", { name: "Zoom out" }).click();
+  await rest(page, "europe");
+  const out = await names();
+  expect(out.v).toEqual({ k: 1, x: 0, y: 0 });
+  const back = compare(zoomed, out);
+  expect(back.cities).toBeGreaterThan(20);
+  expect(back.citiesMoved).toBeLessThanOrEqual(6);
+  const reset = fig.getByRole("button", { name: "Whole map" });
+  await expect(reset).toBeEnabled();
+  await reset.click();
+  await rest(page, "europe");
+  const again = await state(page, "europe");
+  expect(again.placed.map((p) => [p.id, p.box])).toEqual(first.placed.map((p) => [p.id, p.box]));
+  await expect(reset).toBeDisabled();
+  expect(errors).toEqual([]);
+});
+
 test("a node of the graph can be dragged: its edges follow, the labels make room, reset restores", async ({ page }) => {
   const { fig, errors } = await open(page, "modules");
   const first = await state(page, "modules");

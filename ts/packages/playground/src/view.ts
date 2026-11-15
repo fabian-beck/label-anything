@@ -3,7 +3,7 @@ import type { LabelStyle } from "./render.js";
 
 export interface View {
   warmStart: boolean;
-  /** While a scene's view only pans, its labels are pinned (`warm_start.pin`): none moves. */
+  /** While a scene's view pans and zooms, its labels are pinned (`warm_start.pin`): they keep their places. */
   pin: boolean;
   settle: boolean;
   transition: number;

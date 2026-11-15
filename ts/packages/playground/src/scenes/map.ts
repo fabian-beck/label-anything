@@ -9,6 +9,7 @@
  */
 import { geoEqualEarth, geoGraticule10, geoInterpolate, geoPath, type GeoProjection } from "d3-geo";
 import type { LabelResult } from "@label-anything/core";
+import type { Pin } from "@label-anything/extras";
 import type { Control } from "../controls.js";
 import { clamp, inRing, ringArea, rng, round2, type Obj } from "../util.js";
 import type { Anchors, DrawState, Item, PointerInfo, Scene, SceneHost } from "./scene.js";
@@ -192,6 +193,7 @@ export class MapScene implements Scene {
       } as Country;
     });
     this.#poles.clear();
+    this.#spots.clear();
     this.#labels.clear();
     this.#simple.clear();
   }
@@ -458,24 +460,49 @@ export class MapScene implements Scene {
     return { ...this.#v, w: this.#w, h: this.#h };
   }
 
-  /** Panned, not zoomed or resized: the map is where it was, only moved. */
-  pannedSince(at: unknown): boolean {
+  /**
+   * The map as it was, not resized. Panned: every label stays. Zoomed: those that sit at
+   * their item stay, a name inside its country at its place on the map and a name beside
+   * a dot, unless a more important one has no other place; a name out on a leader is
+   * free to take a better place, as the room has changed.
+   */
+  pinSince(at: unknown): Pin | undefined {
     const s = at as Snapshot;
-    return this.#window && s.k === this.#v.k && s.w === this.#w && s.h === this.#h;
+    if (!this.#window || s.w !== this.#w || s.h !== this.#h) return undefined;
+    return s.k === this.#v.k ? true : "yield";
   }
 
-  /** Remember where the engine put each area label's anchor (its pole), so labels follow it while panning. */
+  /**
+   * The point of the map a label goes with. A name inside its country has its own middle:
+   * it stays at that place of the map when the map is zoomed. Any other label goes with
+   * its item's anchor: a name beside a country's dot or out on a leader with that dot, a
+   * flight's with the flight, wherever that is now.
+   */
+  anchorOf(p: LabelResult["placements"][number]): readonly number[] | undefined {
+    if (p.id.startsWith("f")) return undefined;
+    return p.placed && p.box && p.model === "internal" ? [p.box.x + p.box.w / 2, p.box.y + p.box.h / 2] : p.anchor;
+  }
+
+  /**
+   * Remember where the engine put each country's anchor (its pole) and where its label
+   * has its own (`anchorOf`), so labels follow that while the map moves.
+   */
   onResult(result: LabelResult, at: unknown): void {
     const v = at as ViewT;
+    const onMap = (a: readonly number[]): P => [(a[0]! - v.x) / v.k, (a[1]! - v.y) / v.k];
     this.#external.clear();
     for (const p of result.placements) {
       if (p.id.startsWith("f")) continue;
-      if (p.anchor) this.#poles.set(p.id, [(p.anchor[0] - v.x) / v.k, (p.anchor[1] - v.y) / v.k]);
+      if (p.anchor) this.#poles.set(p.id, onMap(p.anchor));
+      const a = this.anchorOf(p);
+      if (a) this.#spots.set(p.id, onMap(a));
       if (p.placed && p.model !== "internal") this.#external.add(p.id);
-      if (p.placed && p.box && p.anchor) this.#labels.set(p.id, [p.box.x - p.anchor[0], p.box.y - p.anchor[1], p.box.w, p.box.h]);
+      if (p.placed && p.box && a) this.#labels.set(p.id, [p.box.x - a[0]!, p.box.y - a[1]!, p.box.w, p.box.h]);
       else this.#labels.delete(p.id);
     }
   }
+  /** Where each country's label has its anchor on the map (`anchorOf`), as of the latest result. */
+  #spots = new Map<string, P>();
 
   /** Where each country's label is from its anchor, as of the latest result: x, y, width, height in px. */
   #labels = new Map<string, [number, number, number, number]>();
@@ -483,9 +510,9 @@ export class MapScene implements Scene {
   /** Whether the label a country has shows in the view (some of it). */
   #labelShows(id: string): boolean {
     const l = this.#labels.get(id);
-    const pole = this.#poles.get(id);
-    if (!l || !pole) return false;
-    const s = this.#toScreen(pole);
+    const spot = this.#spots.get(id);
+    if (!l || !spot) return false;
+    const s = this.#toScreen(spot);
     return s[0] + l[0] < this.#w && s[1] + l[1] < this.#h && s[0] + l[0] + l[2] > 0 && s[1] + l[1] + l[3] > 0;
   }
 
@@ -494,7 +521,7 @@ export class MapScene implements Scene {
     // (a window's anchors are not rounded: the labels move with the map exactly)
     const at = (v: number): number => (this.#window ? v : round2(v));
     for (const c of this.#countries) {
-      const base = this.#poles.get(c.id) ?? c.labelXY;
+      const base = this.#spots.get(c.id) ?? c.labelXY;
       const s = this.#toScreen(base);
       m.set(c.id, [at(s[0]), at(s[1])]);
     }

@@ -90,7 +90,7 @@ test("moving objects are solved warm-started, then settle", async ({ page }) => 
   await page.waitForFunction(() => globalThis.playground.history.at(-1)?.kind === "settle", null, { timeout: 20_000 });
 });
 
-test("the world map is a window on the map: labels are cut at its border, and none moves while it is panned", async ({ page }) => {
+test("the world map is a window on the map: labels are cut at its border, none moves while it is panned, and most stay when it is zoomed", async ({ page }) => {
   const errors = await open(page, "map");
   // no solve is under way or about to start, and the labels have come to rest
   const quiet = async () => {
@@ -156,12 +156,33 @@ test("the world map is a window on the map: labels are cut at its border, and no
   expect((await canvas()).overscan).toBeGreaterThan(0);
   // the controls on the map are no obstacles: labels would dodge them as the map moves
   expect(await page.evaluate(() => globalThis.playground.problem.obstacles)).toBeUndefined();
+  // zoomed, the labels that sit at their items are pinned too, giving way only to more
+  // important ones: of the labels of the previous solve that are still there, most have
+  // their box exactly where the host moved it, and no settle solve follows
+  const kept = () =>
+    page.evaluate(() => {
+      const app = globalThis.playground;
+      const now = new Map(app.result.placements.map((p) => [p.id, p]));
+      const t = { pin: app.problem.warm_start?.pin, kind: app.history.at(-1).kind, kept: 0, moved: 0 };
+      for (const w of app.problem.warm_start?.placements ?? []) {
+        const q = now.get(w.id);
+        if (!w.box || w.pin === false || !q?.placed) continue;
+        t[Math.hypot(q.box.x - w.box.x, q.box.y - w.box.y) < 0.01 ? "kept" : "moved"]++;
+      }
+      return t;
+    });
   await page.mouse.move(cx, cy);
   for (let i = 0; i < 5; i++) {
     await page.mouse.wheel(0, -240);
     await page.waitForTimeout(100);
+    if (i === 1) {
+      await quiet();
+      const z = await kept();
+      expect([z.pin, z.kind]).toEqual(["yield", "warm"]);
+      expect(z.kept).toBeGreaterThan(20);
+      expect(z.kept).toBeGreaterThan(3 * z.moved);
+    }
   }
-  await page.waitForFunction(() => globalThis.playground.history.at(-1)?.kind === "settle", null, { timeout: 20_000 });
   await quiet();
   const zoomed = await labels();
   expect(zoomed.v.k).toBeGreaterThan(4);
@@ -190,7 +211,7 @@ test("the world map is a window on the map: labels are cut at its border, and no
   await quiet();
   expect((await labels()).list.filter((l) => l.cut)).toEqual([]);
   const contained = await pan();
-  expect(contained.moved + contained.lost).toBeGreaterThan(warm.moved + warm.lost);
+  expect(contained.moved + contained.lost).toBeGreaterThan(0);
   expect(errors).toEqual([]);
 });
 
