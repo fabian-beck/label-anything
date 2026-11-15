@@ -1,0 +1,194 @@
+{
+  "canvas": {
+    "width": 400,
+    "height": 300
+  },
+  "preset": "graph",
+  "items": [
+    {
+      "id": "a",
+      "anchor": {
+        "type": "point",
+        "x": 60,
+        "y": 60,
+        "mark": {
+          "shape": "circle",
+          "r": 8
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "Alpha"
+      }
+    },
+    {
+      "id": "b",
+      "anchor": {
+        "type": "point",
+        "x": 340,
+        "y": 90,
+        "mark": {
+          "shape": "circle",
+          "r": 8
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "Beta"
+      }
+    },
+    {
+      "id": "c",
+      "anchor": {
+        "type": "point",
+        "x": 200,
+        "y": 250,
+        "mark": {
+          "shape": "circle",
+          "r": 8
+        }
+      },
+      "label": {
+        "type": "text",
+        "text": "Gamma"
+      }
+    },
+    {
+      "id": "ab",
+      "anchor": {
+        "type": "line",
+        "points": [
+          [
+            60,
+            60
+          ],
+          [
+            340,
+            90
+          ]
+        ]
+      },
+      "label": {
+        "type": "text",
+        "text": "knows"
+      }
+    },
+    {
+      "id": "bc",
+      "anchor": {
+        "type": "line",
+        "points": [
+          [
+            340,
+            90
+          ],
+          [
+            200,
+            250
+          ]
+        ]
+      },
+      "label": {
+        "type": "text",
+        "text": "works with"
+      }
+    },
+    {
+      "id": "ca",
+      "anchor": {
+        "type": "line",
+        "points": [
+          [
+            200,
+            250
+          ],
+          [
+            60,
+            60
+          ]
+        ],
+        "width": 20
+      },
+      "label": {
+        "type": "text",
+        "text": "Main Street"
+      }
+    },
+    {
+      "id": "bend",
+      "anchor": {
+        "type": "line",
+        "points": [
+          [
+            100,
+            285
+          ],
+          [
+            300,
+            285
+          ],
+          [
+            300,
+            200
+          ],
+          [
+            385,
+            200
+          ]
+        ]
+      },
+      "label": {
+        "type": "text",
+        "text": "orthogonal edge"
+      }
+    }
+  ],
+  "obstacles": {
+    "vector": [
+      {
+        "class": "lines",
+        "width": 1,
+        "polylines": [
+          [
+            [
+              60,
+              60
+            ],
+            [
+              340,
+              90
+            ]
+          ],
+          [
+            [
+              340,
+              90
+            ],
+            [
+              200,
+              250
+            ]
+          ],
+          [
+            [
+              100,
+              285
+            ],
+            [
+              300,
+              285
+            ],
+            [
+              300,
+              200
+            ],
+            [
+              385,
+              200
+            ]
+          ]
+        ]
+      }
+    ]
+  }
+}

@@ -59,7 +59,7 @@ Error codes (shared by all implementations):
 | `duplicate_id` | two items with the same id |
 | `unknown_ref` | reference to an unknown item id (`keep_with`) |
 | `expr_syntax`, `expr_unknown_identifier`, `expr_arity` | expression errors |
-| `unsupported` | reserved for a later version (e.g. anchor type `line`) |
+| `unsupported` | reserved for a later version (none at present) |
 | `invalid_value` | semantically invalid (non-finite number, degenerate polygon, …) |
 
 Warning codes: `unknown_class` (an `avoid` key that no source produces and that is not

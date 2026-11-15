@@ -1,0 +1,22 @@
+{
+  "kind": "place",
+  "name": "the edges and the nodes of a node-link diagram are labeled together",
+  "problem_file": "../problems/line-anchor.json",
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 7,
+    "model": {
+      "ab": "internal",
+      "bc": "internal",
+      "ca": "internal",
+      "bend": "internal"
+    },
+    "anchor_side": {
+      "ca": "internal"
+    },
+    "inside_canvas": true
+  }
+}

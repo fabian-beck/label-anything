@@ -1,0 +1,20 @@
+{
+  "kind": "validate",
+  "name": "line-rotation-range",
+  "problem": {
+    "items": [],
+    "placement": {
+      "line_rotation": 120
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/placement/line_rotation",
+        "code": "range"
+      }
+    ],
+    "warnings": []
+  }
+}

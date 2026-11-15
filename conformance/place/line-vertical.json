@@ -1,0 +1,58 @@
+{
+  "kind": "place",
+  "name": "the label of a vertical line reads upwards",
+  "$comment": "The box is the label before it is turned by -90° about its center (191.5, 150): 1.5 px to the left of the line, the side above the text.",
+  "problem": {
+    "canvas": {
+      "width": 400,
+      "height": 300
+    },
+    "items": [
+      {
+        "id": "pole",
+        "anchor": {
+          "type": "line",
+          "points": [
+            [
+              200,
+              40
+            ],
+            [
+              200,
+              260
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Line",
+          "width": 60,
+          "height": 14,
+          "padding": 0
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "model": {
+      "pole": "internal"
+    },
+    "rotation": {
+      "pole": -90
+    },
+    "box": {
+      "pole": {
+        "x": 161.5,
+        "y": 143,
+        "w": 60,
+        "h": 14,
+        "tol": 0.01
+      }
+    }
+  }
+}

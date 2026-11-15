@@ -8,6 +8,7 @@
     "../problems/groups-keepwith.json",
     "../problems/icons-composite.json",
     "../problems/leaders-angles.json",
+    "../problems/line-anchor.json",
     "../problems/long-names.json",
     "../problems/many-points.json",
     "../problems/minimal.json",

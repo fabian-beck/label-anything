@@ -1,0 +1,56 @@
+{
+  "kind": "place",
+  "name": "in a window, the label of a long line lies on the piece in view",
+  "$comment": "The view shows the line from x = 0 to 300: the label is centered on that piece, although the point halfway along the line lies far to the left.",
+  "problem": {
+    "canvas": {
+      "width": 400,
+      "height": 300,
+      "overscan": 0
+    },
+    "items": [
+      {
+        "id": "street",
+        "anchor": {
+          "type": "line",
+          "points": [
+            [
+              -2000,
+              150
+            ],
+            [
+              300,
+              150
+            ]
+          ]
+        },
+        "label": {
+          "type": "text",
+          "text": "Line",
+          "width": 60,
+          "height": 14,
+          "padding": 0
+        }
+      }
+    ]
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 1,
+    "model": {
+      "street": "internal"
+    },
+    "box": {
+      "street": {
+        "x": 120,
+        "y": 134.5,
+        "w": 60,
+        "h": 14,
+        "tol": 0.01
+      }
+    }
+  }
+}

@@ -229,6 +229,30 @@ problems["area-anchor"] = {
     ],
 }
 
+problems["line-anchor"] = {
+    "canvas": {"width": 400, "height": 300},
+    "preset": "graph",
+    "items": [
+        {"id": "a", "anchor": {"type": "point", "x": 60, "y": 60, "mark": {"shape": "circle", "r": 8}},
+         "label": {"type": "text", "text": "Alpha"}},
+        {"id": "b", "anchor": {"type": "point", "x": 340, "y": 90, "mark": {"shape": "circle", "r": 8}},
+         "label": {"type": "text", "text": "Beta"}},
+        {"id": "c", "anchor": {"type": "point", "x": 200, "y": 250, "mark": {"shape": "circle", "r": 8}},
+         "label": {"type": "text", "text": "Gamma"}},
+        {"id": "ab", "anchor": {"type": "line", "points": [[60, 60], [340, 90]]},
+         "label": {"type": "text", "text": "knows"}},
+        {"id": "bc", "anchor": {"type": "line", "points": [[340, 90], [200, 250]]},
+         "label": {"type": "text", "text": "works with"}},
+        {"id": "ca", "anchor": {"type": "line", "points": [[200, 250], [60, 60]], "width": 20},
+         "label": {"type": "text", "text": "Main Street"}},
+        {"id": "bend", "anchor": {"type": "line", "points": [[100, 285], [300, 285], [300, 200], [385, 200]]},
+         "label": {"type": "text", "text": "orthogonal edge"}},
+    ],
+    "obstacles": {"vector": [{"class": "lines", "width": 1,
+                              "polylines": [[[60, 60], [340, 90]], [[340, 90], [200, 250]],
+                                            [[100, 285], [300, 285], [300, 200], [385, 200]]]}]},
+}
+
 problems["y-up-transform"] = {
     "canvas": {"width": 400, "height": 300},
     "transform": [40, 0, 0, 30, 0, 0],
@@ -362,7 +386,10 @@ invalid = {
     "negative-length": ({"items": [], "placement": {"offset": -2}}, [("/placement/offset", "range")], []),
     "bad-enum": ({"items": [], "leaders": {"style": "zigzag"}}, [("/leaders/style", "enum")], []),
     "svg-source-and-path": ({"items": [], "obstacles": {"svg": {"source": "<svg/>", "path": "a.svg"}}}, [("/obstacles/svg", "exclusive")], []),
-    "line-anchor": ({"items": [{"anchor": {"type": "line", "points": [[0, 0], [1, 1]]}, "label": {"type": "text", "text": "A"}}]}, [("/items/0/anchor/type", "unsupported")], []),
+    "line-zero-length": ({"items": [{"anchor": {"type": "line", "points": [[3, 4], [3, 4], [3, 4]]}, "label": {"type": "text", "text": "A"}}]}, [("/items/0/anchor/points", "invalid_value")], []),
+    "line-one-point": ({"items": [{"anchor": {"type": "line", "points": [[0, 0]]}, "label": {"type": "text", "text": "A"}}]}, [("/items/0/anchor/points", "length")], []),
+    "line-width-range": ({"items": [{"anchor": {"type": "line", "points": [[0, 0], [9, 9]], "width": -1}, "label": {"type": "text", "text": "A"}}]}, [("/items/0/anchor/width", "range")], []),
+    "line-rotation-range": ({"items": [], "placement": {"line_rotation": 120}}, [("/placement/line_rotation", "range")], []),
     "keep-with-unknown": ({"items": [pt("a", 1, 1, "A", keep_with=["zz"])]}, [("/items/0/keep_with/0", "unknown_ref")], []),
     "type-error": ({"items": [{"anchor": {"type": "point", "x": "1", "y": 2}, "label": {"type": "text", "text": "A"}}]}, [("/items/0/anchor/x", "type")], []),
     "canvas-range": ({"canvas": {"width": 0, "height": 10}, "items": []}, [("/canvas/width", "range")], []),

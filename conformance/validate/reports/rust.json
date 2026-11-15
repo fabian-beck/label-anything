@@ -31,6 +31,11 @@
       "errors": [],
       "warnings": []
     },
+    "problems/line-anchor.json": {
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
     "problems/long-names.json": {
       "valid": true,
       "errors": [],
@@ -326,13 +331,46 @@
       ],
       "warnings": []
     },
-    "validate/line-anchor.json": {
+    "validate/line-one-point.json": {
       "valid": false,
       "errors": [
         {
-          "pointer": "/items/0/anchor/type",
-          "code": "unsupported",
-          "message": "anchor type 'line' is reserved for v2"
+          "pointer": "/items/0/anchor/points",
+          "code": "length",
+          "message": "must have at least 2 items"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/line-rotation-range.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/placement/line_rotation",
+          "code": "range",
+          "message": "must be <= 90"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/line-width-range.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/items/0/anchor/width",
+          "code": "range",
+          "message": "must be >= 0"
+        }
+      ],
+      "warnings": []
+    },
+    "validate/line-zero-length.json": {
+      "valid": false,
+      "errors": [
+        {
+          "pointer": "/items/0/anchor/points",
+          "code": "invalid_value",
+          "message": "line has zero length"
         }
       ],
       "warnings": []

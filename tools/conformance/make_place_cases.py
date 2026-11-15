@@ -467,6 +467,133 @@ CASES["area-upright-preferred"] = case(
     "Turning costs a quarter of weights.shape per 45°: a label that has 1 em of room around "
     "it upright gains nothing from it.")
 
+# --- line labels (spec §6.5a) -------------------------------------------------------------
+def _line(id_, points, text, **anchor):
+    return {"id": id_, "anchor": {"type": "line", "points": points, **anchor},
+            "label": {"type": "text", "text": text}}
+
+
+def _sized(id_, points, **anchor):
+    """A line with a label of 60 × 14 px."""
+    return {"id": id_, "anchor": {"type": "line", "points": points, **anchor},
+            "label": {"type": "text", "text": "Line", "width": 60, "height": 14, "padding": 0}}
+
+
+CASES["line-above"] = case(
+    "the label of a line stands above its middle",
+    {"canvas": {"width": 400, "height": 300}, "items": [_sized("edge", [[50, 150], [350, 150]])]},
+    {"placed": 1, "model": {"edge": "internal"}, "anchor_side": {"edge": "top"}, "rotation": {"edge": 0},
+     "has_leader": {"edge": False}, "box": {"edge": {"x": 170, "y": 134.5, "w": 60, "h": 14, "tol": 0.01}}},
+    "The label is centered on the point halfway along the line, its lower edge "
+    "placement.offset (1 px) above the stroke (1 px wide): y = 150 - 0.5 - 1 - 14 (spec §6.5a).")
+
+CASES["line-turned"] = case(
+    "the label of a slanted line is turned along it and reads from the left",
+    {"canvas": {"width": 400, "height": 300},
+     "items": [_sized("down", [[100, 60], [300, 160]]), _sized("back", [[300, 240], [100, 140]])]},
+    {"placed": 2, "model": {"down": "internal", "back": "internal"},
+     "rotation": {"down": 26.56505117707799, "back": 26.56505117707799},
+     "anchor_side": {"down": "top", "back": "top"}},
+    "Both lines fall by 1 in 2 to the right (atan(1/2) = 26.565°), one given from its right "
+    "end: the labels have the same rotation, and above is the same side.")
+
+CASES["line-vertical"] = case(
+    "the label of a vertical line reads upwards",
+    {"canvas": {"width": 400, "height": 300}, "items": [_sized("pole", [[200, 40], [200, 260]])]},
+    {"placed": 1, "model": {"pole": "internal"}, "rotation": {"pole": -90},
+     "box": {"pole": {"x": 161.5, "y": 143, "w": 60, "h": 14, "tol": 0.01}}},
+    "The box is the label before it is turned by -90° about its center (191.5, 150): 1.5 px "
+    "to the left of the line, the side above the text.")
+
+CASES["line-rotation-off"] = case(
+    "without rotation, the label of a slanted line is upright beside it",
+    {"canvas": {"width": 400, "height": 300}, "placement": {"line_rotation": 0},
+     "items": [_sized("down", [[100, 60], [300, 160]])]},
+    {"placed": 1, "model": {"down": "internal"}, "rotation": {"down": 0}, "anchor_side": {"down": "top"}})
+
+CASES["line-rotation-limit"] = case(
+    "a line steeper than placement.line_rotation gets an upright label",
+    {"canvas": {"width": 400, "height": 300}, "placement": {"line_rotation": 45},
+     "items": [_sized("steep", [[150, 40], [250, 260]]), _sized("flat", [[20, 250], [180, 200]])]},
+    {"placed": 2, "rotation": {"steep": 0, "flat": -17.354024636261322}})
+
+CASES["line-on-wide"] = case(
+    "a label goes on a line that is at least as wide as the label is high",
+    {"canvas": {"width": 400, "height": 300},
+     "items": [_sized("street", [[50, 100], [350, 100]], width=20),
+               _sized("lane", [[50, 200], [350, 200]], width=6)]},
+    {"placed": 2, "anchor_side": {"street": "internal", "lane": "top"},
+     "box": {"street": {"x": 170, "y": 93, "w": 60, "h": 14, "tol": 0.01},
+             "lane": {"x": 170, "y": 182, "w": 60, "h": 14, "tol": 0.01}}},
+    "placement.internal auto: the 14 px label lies on the 20 px street and above the 6 px "
+    "lane, 1 px clear of its stroke.")
+
+CASES["line-internal-policy"] = case(
+    "placement.internal puts a label on a thin line or keeps it off a wide one",
+    {"canvas": {"width": 400, "height": 300},
+     "items": [{**_sized("edge", [[50, 100], [350, 100]]), "placement": {"internal": "prefer"}},
+               {**_sized("street", [[50, 200], [350, 200]], width=20), "placement": {"internal": "never"}}]},
+    {"placed": 2, "anchor_side": {"edge": "internal", "street": "top"}})
+
+CASES["line-position-order"] = case(
+    "position_order chooses the side of the line",
+    {"canvas": {"width": 400, "height": 300}, "placement": {"position_order": ["bottom", "top"]},
+     "items": [_sized("edge", [[50, 150], [350, 150]])]},
+    {"placed": 1, "anchor_side": {"edge": "bottom"},
+     "box": {"edge": {"x": 170, "y": 151.5, "w": 60, "h": 14, "tol": 0.01}}})
+
+CASES["line-avoids-marks"] = case(
+    "a mark on the middle of a line moves the line's label along the line",
+    {"canvas": {"width": 400, "height": 300},
+     "items": [_sized("edge", [[20, 150], [380, 150]]),
+               {"id": "node", "anchor": {"type": "point", "x": 200, "y": 150, "mark": {"shape": "circle", "r": 12}},
+                "label": {"type": "text", "text": "N", "width": 8, "height": 8, "padding": 0}}]},
+    {"placed": 2, "model": {"edge": "internal"}, "anchor_side": {"edge": "top"},
+     "box": {"edge": {"x": 95, "y": 134.5, "w": 60, "h": 14, "tol": 0.01}}},
+    "The places lie 37.5 px apart along the line (nine from end to end). The mark of 12 px "
+    "radius reaches into the labels of the middle and of the places next to it on either "
+    "side: the label stands two places from the middle.")
+
+CASES["line-corner"] = case(
+    "a label lies along one leg of an orthogonal edge, clear of the corner",
+    {"canvas": {"width": 400, "height": 300},
+     "items": [_sized("edge", [[40, 200], [220, 200], [220, 60]])]},
+    {"placed": 1, "model": {"edge": "internal"}, "rotation": {"edge": 0}, "anchor_side": {"edge": "top"},
+     "box": {"edge": {"x": 137.5, "y": 184.5, "w": 60, "h": 14, "tol": 0.01}}},
+    "Halfway along the line the stretch under the label goes around the corner: a label "
+    "above it would lie across the vertical leg (no candidate), one below it pays for the "
+    "bend. The next place towards the start lies on the horizontal leg alone, its label "
+    "22.5 px short of the vertical leg.")
+
+CASES["line-bent"] = case(
+    "a line that bends everywhere under its label gets the label beside its middle",
+    {"canvas": {"width": 400, "height": 300},
+     "items": [_sized("zigzag", [[50 + 2 * k, 140 if k % 2 == 0 else 160] for k in range(151)])]},
+    {"placed": 1, "model": {"zigzag": "adjacent"}, "rotation": {"zigzag": 0}},
+    "Every 60 px of the zigzag bend by more than the label's 14 px or fold to a chord of a "
+    "third of their length: the item is point-like, a dot halfway along the line (spec §6.5a).")
+
+CASES["line-short"] = case(
+    "a line shorter than its label is labeled at its middle",
+    {"canvas": {"width": 400, "height": 300}, "items": [_sized("stub", [[190, 150], [210, 150]])]},
+    {"placed": 1, "model": {"stub": "internal"},
+     "box": {"stub": {"x": 170, "y": 134.5, "w": 60, "h": 14, "tol": 0.01}}})
+
+CASES["line-window"] = case(
+    "in a window, the label of a long line lies on the piece in view",
+    {"canvas": {"width": 400, "height": 300, "overscan": 0},
+     "items": [_sized("street", [[-2000, 150], [300, 150]])]},
+    {"placed": 1, "model": {"street": "internal"},
+     "box": {"street": {"x": 120, "y": 134.5, "w": 60, "h": 14, "tol": 0.01}}},
+    "The view shows the line from x = 0 to 300: the label is centered on that piece, "
+    "although the point halfway along the line lies far to the left.")
+
+CASES["line-graph"] = case(
+    "the edges and the nodes of a node-link diagram are labeled together",
+    {"problem_file": "../problems/line-anchor.json"},
+    {"placed": 7, "model": {"ab": "internal", "bc": "internal", "ca": "internal", "bend": "internal"},
+     "anchor_side": {"ca": "internal"}, "inside_canvas": True})
+
 CASES["area-avoids-marks"] = case(
     "the label of an area moves inside it, away from the marks in its middle",
     {"canvas": {"width": 400, "height": 300},
