@@ -13,7 +13,8 @@ or relative to the font.
   first SVG viewport; otherwise the problem is **unbounded**, with no `canvas_edge` and a
   grid over the content's bounding box grown by `max(max_distance, 20 em)`.
 - `transform` (SVG matrix order) applies first, then `y_axis: "up"` flips with the canvas
-  height. Lengths are never transformed.
+  height. Lengths are never transformed; the `rects` of a vector layer are geometry (both
+  corners are mapped), not lengths.
 - Units are `px`, `pt` (4/3 px) and `em` (the label's font size; lengths tied to no label
   use `defaults.font.size`), parsed in one function per implementation.
 - Mark rotations turn clockwise on screen, as in SVG. Leader angles turn

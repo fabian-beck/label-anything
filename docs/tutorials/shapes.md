@@ -26,7 +26,7 @@ enough holds its label inside.
 | `from_svg` | the outline of an SVG element (`svg_id` or `selector`) | the anchor as given |
 
 Sizes and offsets are in pixels and never transformed by `transform`; absolute polygon and
-path coordinates are.
+path coordinates are, and so are both corners of the `rects` of a vector layer.
 
 **Touching the true shape.** The eight adjacent positions put the label's corner (diagonal
 positions) or side midpoint (top, right, bottom, left) onto the outermost point of the mark

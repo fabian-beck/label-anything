@@ -1092,6 +1092,20 @@ CASES["regions-svg"] = case(
     {"placed": 1, "anchor_side": {"a": "right"}, "inside_canvas": True},
     "The point lies in the eastern path, 4 px from the western one: the label goes right.")
 
+CASES["transform-rect-obstacle"] = case(
+    "transform maps both corners of a rect obstacle: its width and height scale with it",
+    {"canvas": {"width": 400, "height": 300}, "transform": [2, 0, 0, 2, 200, 100],
+     "placement": ONE_SLOT, "degrade": ["omit"],
+     "obstacles": {"vector": [{"class": "blocker",
+                               "rects": [[-20, -3, 25, 6], [-20, 47, 12, 6]]}]},
+     "avoid": {"label": {"blocker": "hard"}},
+     "items": [pt("reached", 0, 0, "Alpha"), pt("clear", 0, 50, "Alpha")]},
+    {"placed_ids": ["clear"], "unplaced_ids": ["reached"],
+     "reasons": {"reached": "no_feasible_candidate"}},
+    comment="Both labels start right of x = 200 (canvas). The first rect spans x 160..210 "
+            "when its width is scaled (160..185 if it were not) and blocks its label; the "
+            "second spans 160..184 and does not.")
+
 CASES["y-up-transform"] = case(
     "y-up input coordinates",
     {"problem_file": "../problems/y-up-transform.json"},
