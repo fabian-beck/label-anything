@@ -1,0 +1,116 @@
+{
+  "kind": "place",
+  "name": "pin: a label whose placement says pin: false is placed like in a solve without the pin",
+  "$comment": "With warm_start.pin every label keeps its warm-start box, moved with its anchor, where the hard rules still allow it, whatever its priority; the solve only adds labels around the pinned ones. As in pin-outranks-priority, b may only stand below its point, where a's label was. a's placement says pin: false: a is warm-started but not pinned, b takes the place and a moves to the right. c, pinned, keeps its box left of its point, moved by 20 px with it.",
+  "problem": {
+    "canvas": {
+      "width": 300,
+      "height": 120
+    },
+    "degrade": [
+      "evict_lower",
+      "omit"
+    ],
+    "items": [
+      {
+        "id": "a",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Alpha"
+        },
+        "priority": 1
+      },
+      {
+        "id": "b",
+        "anchor": {
+          "type": "point",
+          "x": 100,
+          "y": 30
+        },
+        "label": {
+          "type": "text",
+          "text": "Beta"
+        },
+        "priority": 2,
+        "placement": {
+          "position_order": [
+            "bottom"
+          ]
+        }
+      },
+      {
+        "id": "c",
+        "anchor": {
+          "type": "point",
+          "x": 220,
+          "y": 60
+        },
+        "label": {
+          "type": "text",
+          "text": "Gamma"
+        },
+        "priority": 1
+      }
+    ],
+    "warm_start": {
+      "pin": true,
+      "placements": [
+        {
+          "id": "a",
+          "placed": true,
+          "box": {
+            "x": 82.054,
+            "y": 41.4,
+            "w": 35.892,
+            "h": 15.6
+          },
+          "anchor": [
+            100,
+            60
+          ],
+          "pin": false
+        },
+        {
+          "id": "c",
+          "placed": true,
+          "box": {
+            "x": 148.76,
+            "y": 53.796,
+            "w": 48.24,
+            "h": 12.408
+          },
+          "anchor": [
+            200,
+            60
+          ]
+        }
+      ]
+    }
+  },
+  "expect": {
+    "hard_violations": 0,
+    "leader_crossings": 0,
+    "priority_inversions": 0,
+    "deterministic": true,
+    "placed": 3,
+    "anchor_side": {
+      "a": "right",
+      "b": "bottom",
+      "c": "left"
+    },
+    "box": {
+      "c": {
+        "x": 168.76,
+        "y": 53.796,
+        "w": 48.24,
+        "h": 12.408,
+        "tol": 0.001
+      }
+    }
+  }
+}

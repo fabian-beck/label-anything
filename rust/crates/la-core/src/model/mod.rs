@@ -593,6 +593,11 @@ pub struct Model {
     /// `warm_start.pin`: labels keep their warm-start boxes exactly where they still can
     /// (spec §10.1).
     pub warm_pin: bool,
+    /// `warm_start.pin: "yield"`: pinned labels give way to more important items, and
+    /// the `regions` class applies to them (spec §10.1).
+    pub warm_yield: bool,
+    /// The items whose warm-start placement says `pin: false`: warm-started, not pinned.
+    pub warm_free: std::collections::BTreeSet<String>,
     /// The leader of each warm-start box, moved with it, for the `angles`, `elbow` and
     /// `orthogonal` leader styles (the entry's `leader` of the same style; spec §6.7).
     pub warm_leaders: BTreeMap<String, Vec<P>>,
@@ -617,6 +622,19 @@ impl Model {
     #[inline]
     pub fn is_beyond(&self, i: usize) -> bool {
         self.beyond.get(i).copied().unwrap_or(false)
+    }
+
+    /// Whether the warm start has a label for item `i`: a placed one, with its box.
+    #[inline]
+    pub fn had_label(&self, i: usize) -> bool {
+        matches!(self.warm.get(&self.items[i].id), Some(Some(_)))
+    }
+
+    /// Whether item `i` keeps its warm-start box in this solve (spec §10.1):
+    /// `warm_start.pin`, and its placement does not say `pin: false`.
+    #[inline]
+    pub fn pins(&self, i: usize) -> bool {
+        self.warm_pin && !self.warm_free.contains(&self.items[i].id)
     }
 
     /// In a window, the working extent: where the labels of areas are looked for (spec
@@ -1498,6 +1516,7 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
     let mut warm = BTreeMap::new();
     let mut warm_leaders = BTreeMap::new();
     let mut warm_rotation = BTreeMap::new();
+    let mut warm_free = std::collections::BTreeSet::new();
     for p in lookup(problem, "warm_start.placements")
         .and_then(|v| v.as_array())
         .into_iter()
@@ -1548,6 +1567,9 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
                 if r != 0.0 && r.abs() <= 90.0 {
                     warm_rotation.insert(id.to_string(), r);
                 }
+            }
+            if p.get("pin").and_then(|v| v.as_bool()) == Some(false) {
+                warm_free.insert(id.to_string());
             }
             warm.insert(id.to_string(), if placed { b } else { None });
         }
@@ -1616,8 +1638,9 @@ fn build_raw(problem: &Value, env: &dyn Env) -> Result<Model, BuildError> {
         shaping: o.string("text.shaping"),
         warm,
         warm_pin: lookup(problem, "warm_start.pin")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false),
+            .is_some_and(|v| v.as_bool() == Some(true) || v.as_str() == Some("yield")),
+        warm_yield: lookup(problem, "warm_start.pin").is_some_and(|v| v.as_str() == Some("yield")),
+        warm_free,
         warm_leaders,
         warm_rotation,
         warnings,

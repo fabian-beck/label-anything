@@ -182,7 +182,8 @@ pub fn place_validated(
     use model::opts::Strategy;
     let mut strategy = "greedy";
     // pinned labels (spec §10.1): the solve only adds labels around them, in the greedy
-    // pass; what follows it would move labels
+    // pass; what follows it would move labels, but for the first rule of the priority
+    // repair, kept from the pinned ones
     let pinned = s.pinned.iter().any(|&p| p);
     if !pinned
         && matches!(
@@ -224,6 +225,8 @@ pub fn place_validated(
         solver::repair::boundary_fill(&mut s);
         solver::repair::uncross(&mut s);
         solver::repair::priority_repair(&mut s);
+    } else {
+        solver::repair::pinned_repair(&mut s);
     }
     let t4 = env.now_ms();
     let ver = solver::verify::verify(&mut s);

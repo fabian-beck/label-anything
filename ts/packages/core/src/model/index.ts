@@ -520,6 +520,13 @@ export class Model {
   /** `warm_start.pin`: labels keep their warm-start boxes exactly where they still can (spec §10.1). */
   warmPin = false;
   /**
+   * `warm_start.pin: "yield"`: pinned labels give way to more important items, and the
+   * `regions` class applies to them (spec §10.1).
+   */
+  warmYield = false;
+  /** The items whose warm-start placement says `pin: false`: warm-started, not pinned. */
+  warmFree: Set<string> = new Set();
+  /**
    * The leader of each warm-start box, moved with it, for the `angles`, `elbow` and
    * `orthogonal` leader styles (the entry's `leader` of the same style; spec §6.7).
    */
@@ -546,6 +553,20 @@ export class Model {
    */
   isBeyond(i: number): boolean {
     return this.beyond[i] === true;
+  }
+
+  /** Whether the warm start has a label for item `i`: a placed one, with its box. */
+  hadLabel(i: number): boolean {
+    const b = this.warm.get(this.items[i]!.id);
+    return b !== undefined && b !== null;
+  }
+
+  /**
+   * Whether item `i` keeps its warm-start box in this solve (spec §10.1): `warm_start.pin`,
+   * and its placement does not say `pin: false`.
+   */
+  pins(i: number): boolean {
+    return this.warmPin && !this.warmFree.has(this.items[i]!.id);
   }
 
   /**
@@ -1204,6 +1225,7 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   const warm = new Map<string, Rect | null>();
   const warmLeaders = new Map<string, P[]>();
   const warmRotation = new Map<string, number>();
+  const warmFree = new Set<string>();
   for (const p of itemsOf(lookup(problem, "warm_start.placements"))) {
     const id = asStr(get(p, "id"));
     if (id === null) continue;
@@ -1247,6 +1269,7 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
     }
     const rot = asF64(get(p, "rotation"));
     if (placed && rect !== null && rot !== null && rot !== 0 && Math.abs(rot) <= 90.0) warmRotation.set(id, rot);
+    if (get(p, "pin") === false) warmFree.add(id);
     warm.set(id, placed ? rect : null);
   }
 
@@ -1297,9 +1320,12 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
     const b = warm.get(it.id);
     return !(b !== undefined && b !== null && canvas !== null && canvas.touches(b));
   });
-  m.warmPin = lookup(problem, "warm_start.pin") === true;
+  const pin = lookup(problem, "warm_start.pin");
+  m.warmPin = pin === true || pin === "yield";
+  m.warmYield = pin === "yield";
   m.warmLeaders = warmLeaders;
   m.warmRotation = warmRotation;
+  m.warmFree = warmFree;
   m.warnings = warnings;
   return m;
 }

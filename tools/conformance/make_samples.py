@@ -367,6 +367,10 @@ invalid = {
     "type-error": ({"items": [{"anchor": {"type": "point", "x": "1", "y": 2}, "label": {"type": "text", "text": "A"}}]}, [("/items/0/anchor/x", "type")], []),
     "canvas-range": ({"canvas": {"width": 0, "height": 10}, "items": []}, [("/canvas/width", "range")], []),
     "overscan-range": ({"canvas": {"width": 10, "height": 10, "overscan": -1}, "items": []}, [("/canvas/overscan", "range")], []),
+    # warm_start.pin is a boolean or "yield" (spec §10.1); a placement's own pin a boolean
+    "pin-values": ({"canvas": {"width": 10, "height": 10}, "items": [],
+                    "warm_start": {"pin": "always", "placements": [{"id": "a", "pin": "no"}]}},
+                   [("/warm_start/pin", "enum"), ("/warm_start/placements/0/pin", "type")], []),
     "unknown-class-warning": ({"items": [], "avoid": {"label": {"outlierz": "hard"}}}, [], [("/avoid/label/outlierz", "unknown_class")]),
     "unknown-attr-warning": ({"items": [pt("a", 1, 1, "A", attrs={"pop": 3})],
                               "priority": {"terms": [{"attr": "pop"}, {"attr": "poop"}]}},

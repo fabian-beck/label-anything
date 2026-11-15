@@ -559,18 +559,30 @@ export function priorityRepair(s: Solve): void {
   // a label moved aside may leave room for an item visited before: the pass without
   // moves, once more, leaves no inversion
   const freed: Rect[] = [];
-  priorityPass(s, true, freed);
-  if (freed.length > 0) priorityPass(s, false, freed);
+  priorityPass(s, true, true, freed);
+  if (freed.length > 0) priorityPass(s, false, false, freed);
+}
+
+/**
+ * The priority repair of a pinned solve (spec §10.1): its first rule alone, in one pass
+ * (over the pruned level-0 candidates too), and no pinned label is removed. An item the
+ * greedy pass left without a label takes a place that is free or that only unpinned labels
+ * of lower priority hold: a label a more important newcomer evicted comes back beside it.
+ * No label is moved aside.
+ */
+export function pinnedRepair(s: Solve): void {
+  if (s.model.omission !== Omission.Strict || s.cancelled) return;
+  priorityPass(s, true, false, []);
 }
 
 /**
  * One pass of the priority repair over the omitted items in total order. An item without a
- * candidate by the first rule tries its pruned level-0 candidates by that rule: in the
- * first pass every item, in the second those near a place in `freed`. With `relocate`, an
- * item without one may then move one label aside (ADR priority/repair), whose old place
- * joins `freed`.
+ * candidate by the first rule tries its pruned level-0 candidates by that rule: with
+ * `pruned` every item (the first pass), else those near a place in `freed` (the second).
+ * With `relocate`, an item without one may then move one label aside (ADR
+ * priority/repair), whose old place joins `freed`.
  */
-function priorityPass(s: Solve, relocate: boolean, freed: Rect[]): void {
+function priorityPass(s: Solve, pruned: boolean, relocate: boolean, freed: Rect[]): void {
   const softOk = s.model.ladder.some((x) => x.kind === "soft_overlap");
   const prio = s.pri.prio;
   const items = s.model.items;
@@ -596,7 +608,7 @@ function priorityPass(s: Solve, relocate: boolean, freed: Rect[]): void {
       cand = s.cands[c]!;
       if (!(cand.feasible || (softOk && cand.relaxed))) continue;
       s.state.conflicts(cand, s.cands, s.obs, h, confl);
-      if (!confl.every((j) => prio[j]!.key > keyH && !items[j]!.required)) continue;
+      if (!confl.every((j) => prio[j]!.key > keyH && !items[j]!.required && !s.holds(j))) continue;
       if (!s.budgetAllows(cand, confl)) continue;
       const relaxed = !cand.feasible;
       const cost = cand.relaxedCost();
@@ -618,6 +630,7 @@ function priorityPass(s: Solve, relocate: boolean, freed: Rect[]): void {
     }
     if (bestC >= 0) {
       for (const j of bestRemoved) {
+        s.pinned[j] = false;
         s.state.unplace(j, s.cands);
         s.reasons[j] = null;
       }
@@ -626,12 +639,12 @@ function priorityPass(s: Solve, relocate: boolean, freed: Rect[]): void {
       if (s.trace !== null) s.trace.pass("repair", "repair", [h, ...bestRemoved]);
       continue;
     }
-    if (!relocate && nearFreed(s, h, freed)) {
+    if (!pruned && nearFreed(s, h, freed)) {
       if (!placePruned(s, h, softOk) && s.reasons[h] === null) s.reasons[h] = explain(s, h);
       continue;
     }
     // an item whose only usable places the pruning dropped (spec §10.3)
-    if (relocate && placePruned(s, h, softOk)) continue;
+    if (pruned && placePruned(s, h, softOk)) continue;
     const m = relocate ? relocation(s, h, softOk) : null;
     if (m !== null) {
       if (m.removed >= 0) {
@@ -668,6 +681,7 @@ function placePruned(s: Solve, h: number, softOk: boolean): boolean {
   s.cands.push(pc.cand);
   s.byItem[h]!.push(id);
   for (const j of pc.removed) {
+    s.pinned[j] = false;
     s.state.unplace(j, s.cands);
     s.reasons[j] = null;
   }
@@ -722,7 +736,7 @@ function prunedChoice(s: Solve, h: number, softOk: boolean): { cand: Cand; remov
   for (let k = 0; k < fresh.length; k++) {
     const cand = fresh[k]!;
     s.state.conflicts(cand, s.cands, s.obs, h, confl);
-    if (!confl.every((j) => prio[j]!.key > keyH && !items[j]!.required)) continue;
+    if (!confl.every((j) => prio[j]!.key > keyH && !items[j]!.required && !s.holds(j))) continue;
     if (!s.budgetAllows(cand, confl)) continue;
     let gain = -0;
     for (const j of confl) gain += prio[j]!.gain;

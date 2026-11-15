@@ -1520,7 +1520,10 @@ Warm starts (`warm_start`, with `weights.stability` > 0; ADR motion/warm-starts)
   run only once per item (the ladder reuses their candidates).
 
 Pinned labels (`warm_start.pin`, whatever `weights.stability`; ADR motion/pinned-labels):
-for a view that only moved, as a map that was panned, where every label can stay.
+for a view that only moved, as a map that was panned, where every label can stay. After a
+zoom the labels that sit at their items can stay as well, their boxes moved with their
+anchors; the host marks the others (`pin: false` in their placements), which the changed
+scale gives a better place: a label on a leader, an area's label beside it.
 
 * Before the first band, the items (except `keep_with` members) take their warm-start
   candidate in total order, whatever their keys: the level-0 one (§6.7), else the one of
@@ -1530,10 +1533,26 @@ for a view that only moved, as a map that was panned, where every label can stay
   (§4.8) does not reject these two candidates of a pinned solve: the region map is a
   raster, its cells lie elsewhere on the drawing once the view has moved, and a box at
   the limit of `max_foreign` would lose its place to that. Their region costs count.
+  An item whose warm-start placement says `pin: false` takes no part in this: it is placed
+  in the bands like an item of a solve without the pin, with its warm-start candidates.
+* With `pin: "yield"` the labels give way to more important ones among them. The bands
+  run in two rounds: first those of the items the warm start has a label for, then those
+  of the other items; a band is the items of one key in a round. The items of a band take
+  their warm-start candidates when its turn comes (with `prefix` omission there are no
+  rounds: each item takes its own in its turn, in total order). So a label keeps its box
+  unless a more important label of before needs the place, and what is new comes after. `evict_lower` and the priority repair may remove a
+  pinned label like any label of lower priority (it is then no longer pinned, and is
+  placed again in its turn), and the `regions` class rejects its box like any other. The
+  surroundings of a label change with the scale: its box may no longer be good, and the
+  place a less important label had may be the best one of a more important label.
 * The bands then run for the other items as always. No ladder step removes a pinned
-  label: `evict_lower` takes no candidate that conflicts with one.
-* When a label is pinned, the solve ends with the greedy pass: no local search, no exact
-  search, no fans, no boundary columns, no repairs (§10.2, §10.3). It only adds labels
+  label (with `pin: true`): `evict_lower` takes no candidate that conflicts with one.
+* When a label is pinned, the solve ends after the greedy pass with the first rule of the
+  priority repair (§10.3) alone, in one pass over the omitted items (with their pruned
+  level-0 candidates), where no pinned label counts as removable (with `pin: true`): an
+  item left without a label takes a place that is free or that only unpinned labels of
+  lower priority hold. No local search, no exact search, no
+  fans, no boundary columns, no other repair (§10.2, §10.3). The solve only adds labels
   around the pinned ones; the verification still runs. `stats.strategy_used` is
   `greedy`, `stats.pinned` the number of pinned labels.
 

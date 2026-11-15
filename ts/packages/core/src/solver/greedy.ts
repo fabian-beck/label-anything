@@ -165,7 +165,9 @@ export function run(s: Solve): void {
       s.reasons[i] = Reason.Outside;
     }
   }
-  if (s.model.warmPin) pin(s, g);
+  // pinned labels (spec §10.1): all of them before any band; with `pin: "yield"` each in
+  // its turn, after every more important item has its label
+  if (s.model.warmPin && !s.model.warmYield) pin(s, g, s.pri.order.slice());
   // the guard runs from the start of this pass: preparation always completes, and its
   // time must not leave the most important bands unplaced (ADR solver/time-budget)
   const budgetGuard = s.model.solver.timeBudgetMs * 10;
@@ -179,6 +181,7 @@ export function run(s: Solve): void {
     let finish: number | null = null;
     for (let k = 0; k < order.length; k++) {
       const i = order[k]!;
+      if (s.model.warmYield) pin(s, g, [i]);
       if (g.done[i]) continue;
       if (!cut && k % 64 === 63) {
         if (finish === null) {
@@ -216,15 +219,17 @@ export function run(s: Solve): void {
     return;
   }
   // bands in key order
-  const order = s.pri.order.slice();
+  const [order, had] = bandOrder(s);
   let r = 0;
   while (r < order.length) {
     const key = s.pri.prio[order[r]!]!.key;
+    const end = r < had ? had : order.length;
     const band: number[] = [];
-    while (r < order.length && s.pri.prio[order[r]!]!.key === key) {
+    while (r < end && s.pri.prio[order[r]!]!.key === key) {
       band.push(order[r]!);
       r += 1;
     }
+    if (s.model.warmYield) pin(s, g, band);
     envProgress(s.env, "greedy", (r - band.length) / order.length);
     if (s.trace !== null) s.trace.band(key, band);
     const cancelled = s.pollCancel();
@@ -327,15 +332,29 @@ export function run(s: Solve): void {
 }
 
 /**
- * Pinned labels (`warm_start.pin`, spec §10.1): before any band, every item keeps its
- * warm-start box, in total order and whatever its key, where the box is statically
- * feasible, free of the labels pinned before it and within the label budgets. The box is
- * the level-0 warm-start candidate, else that of a ladder variant (a label the previous
- * solve degraded). Not for the members of `keep_with` sets.
+ * The items in the order of their bands, and how many of them come in a first round: all,
+ * in total order; with `pin: "yield"` (spec §10.1) the items that had a label, in total
+ * order, and then the others.
  */
-function pin(s: Solve, g: Greedy): void {
-  for (const i of s.pri.order.slice()) {
-    if (g.done[i] || g.sets[i]! >= 0) continue;
+function bandOrder(s: Solve): [number[], number] {
+  const order = s.pri.order.slice();
+  if (!s.model.warmYield) return [order, order.length];
+  const first = order.filter((i) => s.model.hadLabel(i));
+  const rest = order.filter((i) => !s.model.hadLabel(i));
+  return [first.concat(rest), first.length];
+}
+
+/**
+ * Pinned labels (`warm_start.pin`, spec §10.1): the `items`, in their order, keep their
+ * warm-start boxes where these are statically feasible, free of the labels placed before
+ * them and within the label budgets. Before any band every item, whatever its key; with
+ * `pin: "yield"` the items of a band when its turn comes. The box is the level-0
+ * warm-start candidate, else that of a ladder variant (a label the previous solve
+ * degraded). Not for the members of `keep_with` sets.
+ */
+function pin(s: Solve, g: Greedy, items: readonly number[]): void {
+  for (const i of items) {
+    if (g.done[i] || g.sets[i]! >= 0 || !s.model.pins(i)) continue;
     let c: number | null;
     const w = s.warmCand[i];
     if (w !== null && w !== undefined) {
@@ -769,7 +788,7 @@ function evictLower(s: Solve, g: Greedy, i: number): [number, boolean] | null {
     if (!cand.feasible) continue;
     s.state.conflicts(cand, s.cands, s.obs, i, confl);
     if (confl.length === 0) continue; // would have been chosen already
-    if (!confl.every((j) => s.pri.prio[j]!.key > keyI && !s.model.items[j]!.required && !s.pinned[j])) continue;
+    if (!confl.every((j) => s.pri.prio[j]!.key > keyI && !s.model.items[j]!.required && !s.holds(j))) continue;
     let gain = -0;
     for (const j of confl) gain += s.pri.prio[j]!.gain;
     const s0 = confl.length;
@@ -786,6 +805,7 @@ function evictLower(s: Solve, g: Greedy, i: number): [number, boolean] | null {
   if (best === null) return null;
   const c = best[3];
   for (const j of best[4]) {
+    s.pinned[j] = false;
     unplaceItem(s, g, j);
     // evicted items have strictly lower keys: they are processed again with their band
     g.done[j] = 0;

@@ -560,7 +560,7 @@ export class Solve {
     const c = warm(this.model, item, vi, v, b);
     if (c === null) return;
     c.warm = true;
-    c.pin = this.model.warmPin;
+    c.pin = this.model.pins(i) && !this.model.warmYield;
     c.level = 0;
     c.setLshape(v.shape);
     this.evaluator.eval(c, v, null);
@@ -672,6 +672,15 @@ export class Solve {
   }
 
   /**
+   * Whether the label of item `j` is pinned and holds its place against every other item
+   * (spec §10.1): not with `warm_start.pin: "yield"`, where a more important item may
+   * remove it.
+   */
+  holds(j: number): boolean {
+    return this.pinned[j] === true && !this.model.warmYield;
+  }
+
+  /**
    * The warm box of item `i` as a candidate of the ladder variant of its size, when no
    * level-0 variant has that size (the previous solve degraded the label): the ladder
    * steps run in order, as the ladder would run them, until one creates a variant of that
@@ -706,7 +715,7 @@ export class Solve {
       const c = warm(this.model, item, vi, v, b);
       if (c === null) return null;
       c.warm = true;
-      c.pin = this.model.warmPin;
+      c.pin = this.model.pins(i) && !this.model.warmYield;
       c.level = level;
       c.setLshape(v.shape);
       this.evaluator.eval(c, v, null);

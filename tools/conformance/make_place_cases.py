@@ -1231,6 +1231,36 @@ CASES["pin-outranks-priority"] = case(
     PIN_ABOUT + " b may only stand below its point, where a's label is. Without the pin, b takes that "
     "place first and a moves to the right; evict_lower would remove a for b, but not a pinned label.")
 
+CASES["pin-yield"] = case(
+    "pin yield: a pinned label gives way to a more important item that has no other place",
+    {"canvas": {"width": 300, "height": 120}, "degrade": ["evict_lower", "omit"],
+     "items": [pt("a", 100, 60, "Alpha", priority=1),
+               pt("b", 100, 30, "Beta", priority=2, placement={"position_order": ["bottom"]}),
+               pt("c", 220, 60, "Gamma", priority=1)],
+     "warm_start": {"pin": "yield", "placements": [
+         {"id": "a", "placed": True, "box": ALPHA_BOX, "anchor": [100, 60]},
+         {"id": "c", "placed": True, "box": {"x": 148.76, "y": 53.796, "w": 48.24, "h": 12.408}, "anchor": [200, 60]}]}},
+    {"placed": 3, "anchor_side": {"a": "right", "b": "bottom", "c": "left"},
+     "box": {"c": {"x": 168.76, "y": 53.796, "w": 48.24, "h": 12.408, "tol": 0.001}}},
+    PIN_ABOUT + " The items of pin-outranks-priority, and a third. With pin: yield, as after a zoom, b "
+    "evicts the pinned label of the less important a from the only place b has; a is placed again, "
+    "to the right. c, in nobody's way, keeps its box. With pin: true b would wait (pin-outranks-priority).")
+
+CASES["pin-not-this-label"] = case(
+    "pin: a label whose placement says pin: false is placed like in a solve without the pin",
+    {"canvas": {"width": 300, "height": 120}, "degrade": ["evict_lower", "omit"],
+     "items": [pt("a", 100, 60, "Alpha", priority=1),
+               pt("b", 100, 30, "Beta", priority=2, placement={"position_order": ["bottom"]}),
+               pt("c", 220, 60, "Gamma", priority=1)],
+     "warm_start": {"pin": True, "placements": [
+         {"id": "a", "placed": True, "box": ALPHA_BOX, "anchor": [100, 60], "pin": False},
+         {"id": "c", "placed": True, "box": {"x": 148.76, "y": 53.796, "w": 48.24, "h": 12.408}, "anchor": [200, 60]}]}},
+    {"placed": 3, "anchor_side": {"a": "right", "b": "bottom", "c": "left"},
+     "box": {"c": {"x": 168.76, "y": 53.796, "w": 48.24, "h": 12.408, "tol": 0.001}}},
+    PIN_ABOUT + " As in pin-outranks-priority, b may only stand below its point, where a's label was. "
+    "a's placement says pin: false: a is warm-started but not pinned, b takes the place and a moves to "
+    "the right. c, pinned, keeps its box left of its point, moved by 20 px with it.")
+
 CASES["pin-blocked-box"] = case(
     "pin: a label whose box a hard obstacle covers now is placed like any other",
     {"canvas": {"width": 300, "height": 120}, "items": [pt("a", 100, 60, "Alpha")],

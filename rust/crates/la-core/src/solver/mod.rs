@@ -610,6 +610,14 @@ impl<'a> Solve<'a> {
         }
     }
 
+    /// Whether the label of item `j` is pinned and holds its place against every other
+    /// item (spec §10.1): not with `warm_start.pin: "yield"`, where a more important item
+    /// may remove it.
+    #[inline]
+    pub fn holds(&self, j: usize) -> bool {
+        self.pinned[j] && !self.model.warm_yield
+    }
+
     /// The warm box of item `i` as a candidate of the ladder variant of its size, when no
     /// level-0 variant has that size (the previous solve degraded the label): the ladder
     /// steps run in order, as the ladder would run them, until one creates a variant of
@@ -656,7 +664,7 @@ impl<'a> Solve<'a> {
             let v = &self.variants[i][vi];
             let mut c = candidates::warm(self.model, item, vi, v, b)?;
             c.warm = true;
-            c.pin = self.model.warm_pin;
+            c.pin = self.model.pins(i) && !self.model.warm_yield;
             c.level = level;
             c.set_lshape(&v.shape);
             Evaluator::new(self.model, self.obs, self.env).eval(&mut c, v, None);
@@ -973,7 +981,7 @@ fn warm_candidate(
     let v = &variants[vi];
     let mut c = candidates::warm(model, item, vi, v, *b)?;
     c.warm = true;
-    c.pin = model.warm_pin;
+    c.pin = model.pins(item.index) && !model.warm_yield;
     c.level = 0;
     c.set_lshape(&v.shape);
     Evaluator::new(model, obs, env).eval(&mut c, v, None);

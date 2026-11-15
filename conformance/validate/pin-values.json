@@ -1,0 +1,34 @@
+{
+  "kind": "validate",
+  "name": "pin-values",
+  "problem": {
+    "canvas": {
+      "width": 10,
+      "height": 10
+    },
+    "items": [],
+    "warm_start": {
+      "pin": "always",
+      "placements": [
+        {
+          "id": "a",
+          "pin": "no"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "valid": false,
+    "errors": [
+      {
+        "pointer": "/warm_start/pin",
+        "code": "enum"
+      },
+      {
+        "pointer": "/warm_start/placements/0/pin",
+        "code": "type"
+      }
+    ],
+    "warnings": []
+  }
+}

@@ -95,8 +95,11 @@ pub fn run(s: &mut Solve) {
             s.reasons[i] = Some(Reason::Outside);
         }
     }
-    if s.model.warm_pin {
-        pin(s, &mut g);
+    // pinned labels (spec §10.1): all of them before any band; with `pin: "yield"` each
+    // in its turn, after every more important item has its label
+    if s.model.warm_pin && !s.model.warm_yield {
+        let order = s.pri.order.clone();
+        pin(s, &mut g, &order);
     }
     // the guard runs from the start of this pass: preparation always completes, and its
     // time must not leave the most important bands unplaced (ADR solver/time-budget)
@@ -110,6 +113,9 @@ pub fn run(s: &mut Solve) {
         // guard of that pass ends it as well
         let mut finish: Option<f64> = None;
         for (k, &i) in order.iter().enumerate() {
+            if s.model.warm_yield {
+                pin(s, &mut g, &[i]);
+            }
             if g.done[i] {
                 continue;
             }
@@ -153,15 +159,20 @@ pub fn run(s: &mut Solve) {
         }
         return;
     }
-    // bands in key order
-    let order = s.pri.order.clone();
+    // bands in key order; with `pin: "yield"` the bands of the items that had a label
+    // first: they settle among themselves, by priority, before a newcomer takes a place
+    let (order, had) = band_order(s);
     let mut r = 0;
     while r < order.len() {
         let key = s.pri.prio[order[r]].key;
+        let end = if r < had { had } else { order.len() };
         let mut band = Vec::new();
-        while r < order.len() && s.pri.prio[order[r]].key == key {
+        while r < end && s.pri.prio[order[r]].key == key {
             band.push(order[r]);
             r += 1;
+        }
+        if s.model.warm_yield {
+            pin(s, &mut g, &band);
         }
         s.env
             .progress("greedy", (r - band.len()) as f64 / order.len() as f64);
@@ -274,14 +285,31 @@ pub fn run(s: &mut Solve) {
     exhaust(s, &mut g, &all, true);
 }
 
-/// Pinned labels (`warm_start.pin`, spec §10.1): before any band, every item keeps its
-/// warm-start box, in total order and whatever its key, where the box is statically
-/// feasible, free of the labels pinned before it and within the label budgets. The box
-/// is the level-0 warm-start candidate, else that of a ladder variant (a label the
-/// previous solve degraded). Not for the members of `keep_with` sets.
-fn pin(s: &mut Solve, g: &mut Greedy) {
-    for i in s.pri.order.clone() {
-        if g.done[i] || g.sets[i].is_some() {
+/// The items in the order of their bands, and how many of them come in a first round:
+/// all, in total order; with `pin: "yield"` (spec §10.1) the items that had a label, in
+/// total order, and then the others.
+fn band_order(s: &Solve) -> (Vec<usize>, usize) {
+    let order = s.pri.order.clone();
+    if !s.model.warm_yield {
+        let n = order.len();
+        return (order, n);
+    }
+    let (mut first, rest): (Vec<usize>, Vec<usize>) =
+        order.into_iter().partition(|&i| s.model.had_label(i));
+    let had = first.len();
+    first.extend(rest);
+    (first, had)
+}
+
+/// Pinned labels (`warm_start.pin`, spec §10.1): the `items`, in their order, keep their
+/// warm-start boxes where these are statically feasible, free of the labels placed
+/// before them and within the label budgets. Before any band every item, whatever its
+/// key; with `pin: "yield"` the items of a band when its turn comes. The box is the
+/// level-0 warm-start candidate, else that of a ladder variant (a label the previous
+/// solve degraded). Not for the members of `keep_with` sets.
+fn pin(s: &mut Solve, g: &mut Greedy, items: &[usize]) {
+    for &i in items {
+        if g.done[i] || g.sets[i].is_some() || !s.model.pins(i) {
             continue;
         }
         let c = match s.warm_cand[i] {
@@ -782,7 +810,7 @@ fn evict_lower(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<(u32, bool)> {
         if !confl.iter().all(|&j| {
             s.pri.prio[j as usize].key > key_i
                 && !s.model.items[j as usize].required
-                && !s.pinned[j as usize]
+                && !s.holds(j as usize)
         }) {
             continue;
         }
@@ -804,6 +832,7 @@ fn evict_lower(s: &mut Solve, g: &mut Greedy, i: usize) -> Option<(u32, bool)> {
     let (_, c, evict) = best?;
     for j in evict {
         let j = j as usize;
+        s.pinned[j] = false;
         unplace_item(s, g, j);
         // evicted items have strictly lower keys: they are processed again with their band
         g.done[j] = false;

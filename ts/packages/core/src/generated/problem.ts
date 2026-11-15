@@ -456,9 +456,9 @@ export type DegradeStep = string;
  */
 export type WarmStart = {
   /**
-   * Labels keep their boxes exactly, moved with their anchors, where the hard rules still allow it, whatever their priority; the solve only adds labels around them (spec §10.1). For a view that only moved, as a map that was panned. Default false.
+   * true: labels keep their boxes exactly, moved with their anchors, where the hard rules still allow it, whatever their priority; the solve only adds labels around them (spec §10.1). For a view that only moved, as a map that was panned. "yield": they keep their boxes likewise, but give way to a more important item that has no other place, and the regions class applies to them. For a view that was zoomed or turned, where the surroundings of a label have changed. Default false.
    */
-  pin?: boolean;
+  pin?: boolean | "yield";
   placements: {
     id: string;
     placed?: boolean;
@@ -474,6 +474,10 @@ export type WarmStart = {
      * The rotation the box was placed with, as in a result (a turned area label).
      */
     rotation?: number;
+    /**
+     * false: this label is not pinned by `warm_start.pin`; its item is placed as without the pin, warm-started (spec §10.1). For a label that should find a new place in this solve, as one on a leader after a zoom. Default true.
+     */
+    pin?: boolean;
     box?: {
       x: number;
       y: number;
@@ -491,9 +495,9 @@ export type WarmStart = {
 export type Point3 = [number, number];
 export type WarmStart1 = {
   /**
-   * Labels keep their boxes exactly, moved with their anchors, where the hard rules still allow it, whatever their priority; the solve only adds labels around them (spec §10.1). For a view that only moved, as a map that was panned. Default false.
+   * true: labels keep their boxes exactly, moved with their anchors, where the hard rules still allow it, whatever their priority; the solve only adds labels around them (spec §10.1). For a view that only moved, as a map that was panned. "yield": they keep their boxes likewise, but give way to a more important item that has no other place, and the regions class applies to them. For a view that was zoomed or turned, where the surroundings of a label have changed. Default false.
    */
-  pin?: boolean;
+  pin?: boolean | "yield";
   placements: {
     id: string;
     placed?: boolean;
@@ -509,6 +513,10 @@ export type WarmStart1 = {
      * The rotation the box was placed with, as in a result (a turned area label).
      */
     rotation?: number;
+    /**
+     * false: this label is not pinned by `warm_start.pin`; its item is placed as without the pin, warm-started (spec §10.1). For a label that should find a new place in this solve, as one on a leader after a zoom. Default true.
+     */
+    pin?: boolean;
     box?: {
       x: number;
       y: number;

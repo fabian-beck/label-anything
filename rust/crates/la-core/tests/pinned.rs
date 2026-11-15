@@ -218,3 +218,81 @@ fn a_turned_label_is_pinned_with_its_rotation() {
         "{q}"
     );
 }
+
+/// The problem of a view of the map around (1000, 700) at zoom `k`.
+fn zoomed(all: &[(String, f64, f64, f64)], k: f64, warm: Option<Value>) -> Value {
+    let reach = OVERSCAN + MARKS;
+    let items: Vec<Value> = all
+        .iter()
+        .map(|(id, x, y, pop)| {
+            (
+                id,
+                (x - 1000.0) * k + W / 2.0,
+                (y - 700.0) * k + H / 2.0,
+                pop,
+            )
+        })
+        .filter(|(_, x, y, _)| *x >= -reach && *y >= -reach && *x <= W + reach && *y <= H + reach)
+        .map(|(id, x, y, pop)| {
+            json!({"id": id, "priority": pop,
+                   "anchor": {"type": "point", "x": x, "y": y, "mark": {"shape": "circle", "r": 3}},
+                   "label": {"type": "text", "text": id, "width": 46, "height": 14, "padding": 0}})
+        })
+        .collect();
+    let mut p = json!({"version": "1", "preset": "map", "items": items,
+        "canvas": {"width": W, "height": H, "overscan": OVERSCAN}});
+    if let Some(w) = warm {
+        p["warm_start"] = w;
+    }
+    p
+}
+
+/// Of the items labeled in both results: how many labels kept their place beside their
+/// point, and how many did not.
+fn kept(a: &Value, b: &Value) -> (usize, usize) {
+    let (mut same, mut moved) = (0, 0);
+    let after = offsets(b);
+    for (id, off, _) in offsets(a) {
+        let (Some(o), Some((_, Some(q), _))) = (off, after.iter().find(|l| l.0 == id)) else {
+            continue;
+        };
+        if (o.0 - q.0).abs() < 1e-6 && (o.1 - q.1).abs() < 1e-6 {
+            same += 1;
+        } else {
+            moved += 1;
+        }
+    }
+    (same, moved)
+}
+
+/// After a zoom the labels keep their places beside their points (`pin: "yield"`): all of
+/// them when the points move apart. When the points come together, a label whose place
+/// another point's mark or a more important label takes gives way; more stay than with
+/// the warm start alone.
+#[test]
+fn a_zoom_keeps_the_labels_beside_their_points() {
+    let all = places(1400);
+    let solve = |k: f64, from: Option<(&Value, Value)>| {
+        // (the placements of a result have their anchors: the engine moves the boxes along)
+        let warm = from.map(|(r, pin)| json!({"pin": pin, "placements": r["placements"]}));
+        place(&zoomed(&all, k, warm), &BasicEnv).unwrap()
+    };
+    let first = solve(1.0, None);
+    let zoom = |k: f64| {
+        let pinned = solve(k, Some((&first, json!("yield"))));
+        assert_eq!(pinned["stats"]["strategy_used"], "greedy");
+        let warm = solve(k, Some((&first, json!(false))));
+        (kept(&first, &pinned), kept(&first, &warm))
+    };
+    let (pinned, warm) = zoom(1.4);
+    assert!(
+        pinned.0 > 40 && pinned.1 == 0,
+        "zoomed in, pinned: {pinned:?}"
+    );
+    assert!(warm.1 > 0, "zoomed in, warm-started: {warm:?}");
+    let (pinned, warm) = zoom(1.0 / 1.4);
+    assert!(
+        pinned.0 > warm.0,
+        "zoomed out: {pinned:?} pinned, {warm:?} warm-started"
+    );
+}

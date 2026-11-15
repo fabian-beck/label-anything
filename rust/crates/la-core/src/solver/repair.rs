@@ -661,18 +661,30 @@ pub fn priority_repair(s: &mut Solve) {
     // a label moved aside may leave room for an item visited before: the pass without
     // moves, once more, leaves no inversion
     let mut freed = Vec::new();
-    priority_pass(s, true, &mut freed);
+    priority_pass(s, true, true, &mut freed);
     if !freed.is_empty() {
-        priority_pass(s, false, &mut freed);
+        priority_pass(s, false, false, &mut freed);
     }
 }
 
+/// The priority repair of a pinned solve (spec §10.1): its first rule alone, in one pass
+/// (over the pruned level-0 candidates too), and no pinned label is removed. An item the
+/// greedy pass left without a label takes a place that is free or that only unpinned
+/// labels of lower priority hold: a label a more important newcomer evicted comes back
+/// beside it. No label is moved aside.
+pub fn pinned_repair(s: &mut Solve) {
+    if s.model.omission != Omission::Strict || s.cancelled {
+        return;
+    }
+    priority_pass(s, true, false, &mut Vec::new());
+}
+
 /// One pass of the priority repair over the omitted items in total order. An item without a
-/// candidate by the first rule tries its pruned level-0 candidates by that rule: in the
-/// first pass every item, in the second those near a place in `freed`. With `relocate`, an
-/// item without one may then move one label aside (ADR priority/repair), whose old place
-/// joins `freed`.
-fn priority_pass(s: &mut Solve, relocate: bool, freed: &mut Vec<crate::geom::Rect>) {
+/// candidate by the first rule tries its pruned level-0 candidates by that rule: with
+/// `pruned` every item (the first pass), else those near a place in `freed` (the second).
+/// With `relocate`, an item without one may then move one label aside (ADR
+/// priority/repair), whose old place joins `freed`.
+fn priority_pass(s: &mut Solve, pruned: bool, relocate: bool, freed: &mut Vec<crate::geom::Rect>) {
     let soft_ok = s.model.ladder.contains(&Step::SoftOverlap);
     let keys: Vec<usize> = s.pri.prio.iter().map(|p| p.key).collect();
     let order = s.pri.order.clone();
@@ -709,10 +721,12 @@ fn priority_pass(s: &mut Solve, relocate: bool, freed: &mut Vec<crate::geom::Rec
                 continue;
             }
             s.state.conflicts(cand, &s.cands, s.obs, h, &mut confl);
-            if !confl
-                .iter()
-                .all(|&j| keys[j as usize] > key_h && !s.model.items[j as usize].required)
-            {
+            // (the labels to remove: of lower priority, not required, not pinned)
+            if !confl.iter().all(|&j| {
+                keys[j as usize] > key_h
+                    && !s.model.items[j as usize].required
+                    && !s.holds(j as usize)
+            }) {
                 continue;
             }
             if !s.budget_allows(cand, &confl) {
@@ -739,19 +753,20 @@ fn priority_pass(s: &mut Solve, relocate: bool, freed: &mut Vec<crate::geom::Rec
         match best {
             Some((_, c, removed, relaxed)) => {
                 for j in removed {
+                    s.pinned[j as usize] = false;
                     s.state.unplace(j as usize, &s.cands);
                     s.reasons[j as usize] = None;
                 }
                 s.state.place(h, c, &s.cands, relaxed);
                 s.reasons[h] = None;
             }
-            None if !relocate && near_freed(s, h, freed) => {
+            None if !pruned && near_freed(s, h, freed) => {
                 if !place_pruned(s, h, &keys, soft_ok) && s.reasons[h].is_none() {
                     s.reasons[h] = Some(explain(s, h));
                 }
             }
             // an item whose only usable places the pruning dropped (spec §10.3)
-            None if relocate && place_pruned(s, h, &keys, soft_ok) => {}
+            None if pruned && place_pruned(s, h, &keys, soft_ok) => {}
             None => match relocate.then(|| relocation(s, h, &keys, soft_ok)).flatten() {
                 Some(m) => {
                     if let Some(j) = m.removed {
@@ -794,6 +809,7 @@ fn place_pruned(s: &mut Solve, h: usize, keys: &[usize], soft_ok: bool) -> bool 
     s.cands.push(c);
     s.by_item[h].push(id);
     for j in removed {
+        s.pinned[j as usize] = false;
         s.state.unplace(j as usize, &s.cands);
         s.reasons[j as usize] = None;
     }
@@ -856,10 +872,9 @@ fn pruned_choice(
     let mut best: Option<Choice> = None;
     for (k, cand) in fresh.iter().enumerate() {
         s.state.conflicts(cand, &s.cands, s.obs, h, &mut confl);
-        if !confl
-            .iter()
-            .all(|&j| keys[j as usize] > key_h && !s.model.items[j as usize].required)
-        {
+        if !confl.iter().all(|&j| {
+            keys[j as usize] > key_h && !s.model.items[j as usize].required && !s.holds(j as usize)
+        }) {
             continue;
         }
         if !s.budget_allows(cand, &confl) {

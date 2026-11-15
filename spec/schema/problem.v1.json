@@ -1878,8 +1878,17 @@
       ],
       "properties": {
         "pin": {
-          "type": "boolean",
-          "description": "Labels keep their boxes exactly, moved with their anchors, where the hard rules still allow it, whatever their priority; the solve only adds labels around them (spec §10.1). For a view that only moved, as a map that was panned. Default false."
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "enum": [
+                "yield"
+              ]
+            }
+          ],
+          "description": "true: labels keep their boxes exactly, moved with their anchors, where the hard rules still allow it, whatever their priority; the solve only adds labels around them (spec §10.1). For a view that only moved, as a map that was panned. \"yield\": they keep their boxes likewise, but give way to a more important item that has no other place, and the regions class applies to them. For a view that was zoomed or turned, where the surroundings of a label have changed. Default false."
         },
         "placements": {
           "type": "array",
@@ -1920,6 +1929,10 @@
               "rotation": {
                 "type": "number",
                 "description": "The rotation the box was placed with, as in a result (a turned area label)."
+              },
+              "pin": {
+                "type": "boolean",
+                "description": "false: this label is not pinned by `warm_start.pin`; its item is placed as without the pin, warm-started (spec \u00a710.1). For a label that should find a new place in this solve, as one on a leader after a zoom. Default true."
               },
               "box": {
                 "type": "object",

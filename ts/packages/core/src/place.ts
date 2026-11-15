@@ -132,7 +132,8 @@ export function solveValidated(
   let strategy = "greedy";
   const st = m.solver.strategy;
   // pinned labels (spec §10.1): the solve only adds labels around them, in the greedy
-  // pass; what follows it would move labels
+  // pass; what follows it would move labels, but for the first rule of the priority
+  // repair, kept from the pinned ones
   const pinned = s.pinned.includes(true);
   if (!pinned && (st === Strategy.Local || st === Strategy.Auto || st === Strategy.Exact) && m.items.length > 1) {
     const budget = m.solver.timeBudgetMs;
@@ -168,6 +169,9 @@ export function solveValidated(
     repair.uncross(s);
     if (trace !== null) trace.phase("repair");
     repair.priorityRepair(s);
+  } else {
+    if (trace !== null) trace.phase("repair");
+    repair.pinnedRepair(s);
   }
   const t4 = envNow(env);
   if (trace !== null) trace.phase("verify");

@@ -161,4 +161,55 @@ describe("pinned labels (warm_start.pin)", () => {
     expect(upright.rotation).toBeUndefined();
     expect(upright.model).not.toBe("internal");
   });
+
+  /** The problem of a view of the map around (1000, 700) at zoom `k`. */
+  const zoomed = (all: Place[], k: number, warm?: Obj): Obj => {
+    const reach = OVERSCAN + MARKS;
+    const items = all
+      .map(([id, x, y, pop]) => [id, (x - 1000) * k + W / 2, (y - 700) * k + H / 2, pop] as Place)
+      .filter(([, x, y]) => x >= -reach && y >= -reach && x <= W + reach && y <= H + reach)
+      .map(([id, x, y, pop]) => ({
+        id,
+        priority: pop,
+        anchor: { type: "point", x, y, mark: { shape: "circle", r: 3 } },
+        label: { type: "text", text: id, width: 46, height: 14, padding: 0 },
+      }));
+    return { version: "1", preset: "map", items, canvas: { width: W, height: H, overscan: OVERSCAN }, ...(warm ? { warm_start: warm } : {}) };
+  };
+
+  /** Of the items labeled in both results: how many labels kept their place beside their point, how many did not. */
+  const kept = (a: Res, b: Res): [number, number] => {
+    let same = 0;
+    let moved = 0;
+    const after = new Map(b.placements.map((p) => [p.id, offset(p)]));
+    for (const p of a.placements) {
+      const o = offset(p);
+      const q = after.get(p.id);
+      if (!o || !q) continue;
+      if (Math.abs(o[0] - q[0]) < 1e-6 && Math.abs(o[1] - q[1]) < 1e-6) same++;
+      else moved++;
+    }
+    return [same, moved];
+  };
+
+  // all of them when the points move apart. When the points come together, a label whose
+  // place another point's mark or a more important label takes gives way; more stay than
+  // with the warm start alone
+  it("a zoom keeps the labels beside their points (pin: yield)", () => {
+    const all = places(1400);
+    // (the placements of a result have their anchors: the engine moves the boxes along)
+    const at = (k: number, from?: Res, pin?: unknown): Res => solve(zoomed(all, k, from ? { pin, placements: from.placements } : undefined));
+    const first = at(1.0);
+    const zoom = (k: number): [[number, number], [number, number]] => {
+      const pinned = at(k, first, "yield");
+      expect(pinned.stats.strategy_used).toBe("greedy");
+      return [kept(first, pinned), kept(first, at(k, first, false))];
+    };
+    const [pinnedIn, warmIn] = zoom(1.4);
+    expect(pinnedIn[0]).toBeGreaterThan(40);
+    expect(pinnedIn[1]).toBe(0);
+    expect(warmIn[1]).toBeGreaterThan(0);
+    const [pinnedOut, warmOut] = zoom(1.0 / 1.4);
+    expect(pinnedOut[0]).toBeGreaterThan(warmOut[0]);
+  });
 });
