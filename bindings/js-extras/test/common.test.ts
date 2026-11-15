@@ -168,8 +168,27 @@ describe("following anchors", () => {
     m.remember(result, new Map([["a", [0, 0] as const], ["c", [1, 1] as const]]));
     expect(m.warmStart(new Map([["a", [10, -5] as const], ["c", [2, 2] as const]]))).toEqual({
       placements: [
-        { id: "a", placed: true, box: { x: 20, y: 15, w: 30, h: 12 } },
+        { id: "a", placed: true, box: { x: 20, y: 15, w: 30, h: 12 }, leader: { points: [[10, -5], [15, 0], [20, 21]], style: "straight" } },
         { id: "c", placed: false },
+      ],
+    });
+  });
+
+  // (the engine pins a label, `warm_start.pin`, only as the box it was: turned, on its leader)
+  it("a warm start keeps a label's rotation and moves its leader along", () => {
+    const m = new LabelMemory();
+    const turned = {
+      ...result,
+      placements: [
+        { id: "t", placed: true, box: { x: 10, y: 20, w: 30, h: 12 }, rotation: -45 },
+        { id: "l", placed: true, box: { x: 60, y: 20, w: 30, h: 12 }, leader: { points: [[50, 50], [60, 32]], style: "straight", port: [60, 32] } },
+      ],
+    } as unknown as typeof result;
+    m.remember(turned, new Map([["t", [0, 0] as const], ["l", [50, 50] as const]]));
+    expect(m.warmStart(new Map([["t", [5, 5] as const], ["l", [40, 60] as const]]))).toEqual({
+      placements: [
+        { id: "t", placed: true, box: { x: 15, y: 25, w: 30, h: 12 }, rotation: -45 },
+        { id: "l", placed: true, box: { x: 50, y: 30, w: 30, h: 12 }, leader: { points: [[40, 60], [50, 42]], style: "straight" } },
       ],
     });
   });
