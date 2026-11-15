@@ -20,7 +20,7 @@ import {
   envReadFile,
   envSvg,
 } from "../env.js";
-import { Affine, P, Rect, bboxOf } from "../geom/index.js";
+import { Affine, P, Rect, bboxOf, clipSegRect, closestOnSeg, distSegRect } from "../geom/index.js";
 import { PathError, flatten } from "../geom/path.js";
 import { convexHull, mainAxis, orientHoles, polylabel } from "../geom/polygon.js";
 import { Shape } from "../geom/shape.js";
@@ -210,6 +210,139 @@ export function areaAngle(axis: number | null, max: number): number | null {
   return a > max ? max : a < -max ? -max : a;
 }
 
+/**
+ * A line anchor's polyline (spec §6.5a): an edge of a node-link diagram, a street, a
+ * river.
+ */
+export class Line {
+  /** The points in canvas px (consecutive duplicates dropped). */
+  pts: P[] = [];
+  /** The arc length up to each point. */
+  cum: number[] = [];
+  len: number;
+  /** The stroke width (px). */
+  width: number;
+  /** The point halfway along the line: the item's reference point. */
+  mid: P;
+  /** A label is turned along a stretch at most this far from the horizontal (degrees). */
+  maxRotation: number;
+
+  constructor(points: readonly P[], width: number, maxRotation: number) {
+    for (const q of points) {
+      const last = this.pts.length > 0 ? this.pts[this.pts.length - 1]! : null;
+      if (last === null || !(last.x === q.x && last.y === q.y)) this.pts.push(q);
+    }
+    for (let k = 0; k < this.pts.length; k++) this.cum.push(k === 0 ? 0.0 : this.cum[k - 1]! + this.pts[k - 1]!.dist(this.pts[k]!));
+    this.len = this.cum.length > 0 ? this.cum[this.cum.length - 1]! : 0.0;
+    this.width = Number.isFinite(width) && width > 0.0 ? width : 0.0;
+    this.maxRotation = maxRotation;
+    this.mid = new P(0.0, 0.0);
+    this.mid = this.at(0.5 * this.len)[1];
+  }
+
+  /**
+   * The point at arc length `s` (clamped to the line) and the index of its segment: the
+   * first whose end lies at `s` or beyond.
+   */
+  at(s: number): [number, P] {
+    const n = this.pts.length;
+    if (n < 2) return [0, n > 0 ? this.pts[0]! : new P(0.0, 0.0)];
+    let i = 0;
+    while (i + 2 < n && this.cum[i + 1]! < s) i += 1;
+    const l = this.cum[i + 1]! - this.cum[i]!;
+    const t = l > 0.0 ? clampf((s - this.cum[i]!) / l, 0.0, 1.0) : 0.0;
+    return [i, this.pts[i]!.lerp(this.pts[i + 1]!, t)];
+  }
+
+  /** The arc length of the point of the line nearest to `p` (the first on ties). */
+  project(p: P): number {
+    let bestD = Infinity;
+    let bestS = 0.0;
+    for (let k = 0; k + 1 < this.pts.length; k++) {
+      const a = this.pts[k]!;
+      const q = closestOnSeg(p, a, this.pts[k + 1]!);
+      const d = p.dist(q);
+      if (d < bestD) {
+        bestD = d;
+        bestS = this.cum[k]! + a.dist(q);
+      }
+    }
+    return bestS;
+  }
+
+  /**
+   * The least and the largest offset from `o` along `n` of the stretch between the arc
+   * lengths `s0` and `s1`: of its two ends and the points between them.
+   */
+  deviation(s0: number, s1: number, o: P, n: P): [number, number] {
+    const [ia, a] = this.at(s0);
+    const [ib, b] = this.at(s1);
+    const da = a.sub(o).dot(n);
+    const db = b.sub(o).dot(n);
+    let lo = minf(da, db);
+    let hi = maxf(da, db);
+    for (let k = ia + 1; k <= ib; k++) {
+      const d = this.pts[k]!.sub(o).dot(n);
+      lo = minf(lo, d);
+      hi = maxf(hi, d);
+    }
+    return [lo, hi];
+  }
+
+  /**
+   * The arc lengths between which the labels' places are spread (spec §6.5a): the whole
+   * line, or in a window (`view`) its longest piece inside the view (the first on ties;
+   * the whole line when none is).
+   */
+  range(view: Rect | null): [number, number] {
+    if (view === null) return [0.0, this.len];
+    let best: [number, number] | null = null;
+    let cur: [number, number] | null = null;
+    const longer = (c: [number, number] | null, b: [number, number] | null): [number, number] | null =>
+      c !== null && (b === null || c[1] - c[0] > b[1] - b[0]) ? c : b;
+    for (let k = 0; k + 1 < this.pts.length; k++) {
+      const l = this.cum[k + 1]! - this.cum[k]!;
+      const t = clipSegRect(this.pts[k]!, this.pts[k + 1]!, view);
+      if (t !== null) {
+        const x0 = this.cum[k]! + t[0] * l;
+        const x1 = this.cum[k]! + t[1] * l;
+        if (cur !== null && x0 <= cur[1] + 1e-9) cur = [cur[0], x1];
+        else {
+          best = longer(cur, best);
+          cur = [x0, x1];
+        }
+      } else {
+        best = longer(cur, best);
+        cur = null;
+      }
+    }
+    return longer(cur, best) ?? [0.0, this.len];
+  }
+
+  /**
+   * Whether the label box of half size (`hw`, `hh`) around `c`, turned by (`cos`, `sin`),
+   * keeps `need` px from the line.
+   */
+  clear(c: P, hw: number, hh: number, cos: number, sin: number, need: number): boolean {
+    if (this.pts.length === 0) return true;
+    const r = new Rect(-hw, -hh, hw, hh);
+    const rx = hw + need;
+    const ry = hh + need;
+    let a = this.pts[0]!.sub(c).unrotate(cos, sin);
+    for (let k = 1; k < this.pts.length; k++) {
+      const b = this.pts[k]!.sub(c).unrotate(cos, sin);
+      const away = (a.x < -rx && b.x < -rx) || (a.x > rx && b.x > rx) || (a.y < -ry && b.y < -ry) || (a.y > ry && b.y > ry);
+      if (!away && distSegRect(a, b, r) < need) return false;
+      a = b;
+    }
+    return true;
+  }
+
+  bbox(): Rect {
+    return bboxOf(this.pts);
+  }
+}
+
 /** Per-item resolved lengths (px). */
 export interface ItemLengths {
   padding: number;
@@ -352,9 +485,13 @@ export class Item {
     public id: string,
     /** Reference point in canvas px. */
     public anchor: P,
-    /** The labeled mark (for area anchors: the fallback dot at the pole). */
+    /**
+     * The labeled mark (for area anchors: the fallback dot at the pole; for line anchors:
+     * the one halfway along the line).
+     */
     public shape: Shape,
     public area: Area | null,
+    public line: Line | null,
     /** Leaders attach at the tip (icon marks). */
     public tip: boolean,
     public label: LabelSpec,
@@ -385,6 +522,14 @@ export class Item {
 
   em(): number {
     return this.font.size;
+  }
+
+  /**
+   * An area or a line anchor: the label belongs to a polygon or a polyline, and `shape` is
+   * only the dot of a label that fits nowhere in or along it.
+   */
+  extended(): boolean {
+    return this.area !== null || this.line !== null;
   }
 
   /**
@@ -1123,6 +1268,7 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
     for (const it of items) {
       bb = bb.union(it.shape.bbox());
       if (it.area !== null) bb = bb.union(it.area.shape.bbox());
+      if (it.line !== null) bb = bb.union(it.line.bbox());
     }
     for (const [, p] of vector) bb = bb.union(primBbox(p));
     if (bb.isEmpty()) bb = new Rect(0, 0, 1, 1);
@@ -1293,7 +1439,7 @@ function buildRaw(problem: unknown, env: Env, implementation: "ts" | "rust"): Mo
   // in a window, a point beyond the working extent is a mark only (spec §2.3), unless the
   // label it comes with still shows: that one is not taken away
   m.beyond = items.map((it) => {
-    if (overscan === null || it.area !== null || extent.touches(it.shape.bbox())) return false;
+    if (overscan === null || it.extended() || extent.touches(it.shape.bbox())) return false;
     const b = warm.get(it.id);
     return !(b !== undefined && b !== null && canvas !== null && canvas.touches(b));
   });
@@ -1581,6 +1727,7 @@ interface ItemDefaults {
   internal: string;
   positionOrder: unknown;
   areaRotation: number;
+  lineRotation: number;
 }
 
 function itemDefaults(o: Opts): ItemDefaults {
@@ -1611,6 +1758,7 @@ function itemDefaults(o: Opts): ItemDefaults {
     internal: o.string("placement.internal"),
     positionOrder: o.get("placement.position_order"),
     areaRotation: o.f64("placement.area_rotation"),
+    lineRotation: o.f64("placement.line_rotation"),
   };
 }
 
@@ -1646,6 +1794,7 @@ function buildItem(
   let anchor: P;
   let shape: Shape;
   let area: Area | null = null;
+  let line: Line | null = null;
   let tip = false;
   if (asStr(get(anchorV, "type")) === "area") {
     const pv = get(anchorV, "polygon");
@@ -1657,6 +1806,15 @@ function buildItem(
     const dotV = get(anchorV, "dot");
     const dot = dotV !== undefined ? markShape(dotV, pole, toPx, svgs, warnings, `${ptr}/anchor/dot`)[0] : Shape.circle(pole, 2);
     anchor = pole;
+    shape = dot;
+  } else if (asStr(get(anchorV, "type")) === "line") {
+    const pv = get(anchorV, "points");
+    const pts = pointsOf(pv === undefined ? null : pv).map((p) => toPx.apply(p));
+    line = new Line(pts, asF64(get(anchorV, "width")) ?? 1.0, defs.lineRotation);
+    const mid = line.mid;
+    const dotV = get(anchorV, "dot");
+    const dot = dotV !== undefined ? markShape(dotV, mid, toPx, svgs, warnings, `${ptr}/anchor/dot`)[0] : Shape.circle(mid, 2);
+    anchor = mid;
     shape = dot;
   } else {
     const atp = toPx.apply(new P(asF64(get(anchorV, "x")) ?? 0, asF64(get(anchorV, "y")) ?? 0));
@@ -1751,6 +1909,7 @@ function buildItem(
     anchor,
     shape,
     area,
+    line,
     tip,
     label,
     font,

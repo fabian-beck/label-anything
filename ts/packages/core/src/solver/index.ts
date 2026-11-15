@@ -14,6 +14,7 @@ import {
   adjacent,
   area,
   areaRank,
+  line,
   internal,
   internalRank,
   isRectShape,
@@ -237,7 +238,7 @@ export class Solve {
       const m = v.level === 0 ? level0 : models;
       if (m === 0) continue;
       const fresh: Cand[] = [];
-      if (item.area !== null) {
+      if (item.extended()) {
         this.areaCandidates(item, vi, v, m, fresh, adjKeep);
       } else {
         adjacent(item, vi, v, sliderPerGap, m, this.stubs, fresh, adjKeep);
@@ -267,8 +268,14 @@ export class Solve {
    */
   private areaCandidates(item: Item, vi: number, v: Variant, models: Models, fresh: Cand[], adjKeep: KeepFn | null): void {
     const inside: Cand[] = [];
-    const rank = areaRank(item);
-    if (rank !== null) area(item, vi, v, rank, this.model.areaView(), inside);
+    if (item.line !== null) {
+      // line anchors: places along the line; beside the dot halfway along it only when
+      // the label has none (spec §6.5a)
+      line(item, vi, v, this.model.areaView(), inside);
+    } else {
+      const rank = areaRank(item);
+      if (rank !== null) area(item, vi, v, rank, this.model.areaView(), inside);
+    }
     if (inside.length === 0) {
       adjacent(item, vi, v, this.model.placement.sliderPerGap, models, this.stubs, fresh, adjKeep);
     } else if (Models.has(models, Models.ADJACENT) || Models.has(models, Models.SLIDER) || Models.has(models, Models.INTERNAL)) {
@@ -308,7 +315,7 @@ export class Solve {
     const fresh: Cand[] = [];
     for (const vi of vis) {
       const v = variants[vi]!;
-      if (item.area !== null) {
+      if (item.extended()) {
         this.areaCandidates(item, vi, v, models, fresh, adjKeep);
       } else {
         adjacent(item, vi, v, sliderPerGap, models, this.stubs, fresh, adjKeep);
@@ -411,7 +418,7 @@ export class Solve {
     const circleRatio = model.placement.internalCircleRatio;
     for (const vi of vis) {
       const v = variants[vi]!;
-      if (item.area !== null) {
+      if (item.extended()) {
         this.areaCandidates(item, vi, v, models, fresh, adjKeep);
       } else {
         adjacent(item, vi, v, sliderPerGap, models, this.stubs, fresh, adjKeep);

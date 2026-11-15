@@ -686,6 +686,7 @@ function nearFreed(s: Solve, h: number, freed: readonly Rect[]): boolean {
   const item = s.model.items[h]!;
   let r = item.shape.bbox();
   if (item.area !== null) r = r.union(item.area.shape.bbox());
+  if (item.line !== null) r = r.union(item.line.bbox());
   let size = 0;
   for (const v of s.variants[h]!) if (v.level === 0) size = maxf(size, maxf(v.w, v.h));
   r = r.inflate(item.len.offset + size + s.state.marginMax());

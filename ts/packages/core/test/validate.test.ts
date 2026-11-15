@@ -60,7 +60,7 @@ describe("validate", () => {
     expect(c).toContainEqual(["/items/1/id", "duplicate_id"]);
     expect(c).toContainEqual(["/items/1/anchor/mark/w", "unknown_property"]);
     expect(c).toContainEqual(["/items/1/label/padding", "unit"]);
-    expect(c).toContainEqual(["/items/2/anchor/type", "unsupported"]);
+    expect(c).toContainEqual(["/items/2/anchor/points", "required"]);
     expect(c).toContainEqual(["/items/2/label/height", "required"]);
     expect(c).toContainEqual(["/frobnicate", "unknown_property"]);
     expect(r.warnings[0]!.code).toBe("unknown_class");

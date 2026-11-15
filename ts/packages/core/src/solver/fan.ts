@@ -90,7 +90,7 @@ export function fanPass(s: Solve): void {
       !leaders ||
         s.variants[i]!.length === 0 ||
         it.keepWith !== null ||
-        it.area !== null ||
+        it.extended() ||
         model.groupRep(i) !== null,
     );
   }

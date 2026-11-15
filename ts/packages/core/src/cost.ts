@@ -285,7 +285,7 @@ export class Evaluator {
       let sep = 0;
       if (clear > 0) {
         const need =
-          hard && side > clear && model.items[j]!.area === null
+          hard && side > clear && !model.items[j]!.extended()
             ? clear + (side - clear) * maxf(facing(r, sj.reference()) - ownFacing, 0)
             : clear;
         sep = minf(need, sj.reference().dist(item.shape.reference()));
@@ -320,7 +320,7 @@ export class Evaluator {
     if (!acc.relaxed) return finish(c, acc);
     // 3. static classes (an internal label of a mark covers only the mark, which hides what
     // lies under it: no soft coverage costs)
-    const onMark = c.kind === Kind.Internal && item.area === null;
+    const onMark = c.kind === Kind.Internal && !item.extended();
     let hardPrimsChecked = false;
     const classes = obs.classes;
     const grid = obs.grid;

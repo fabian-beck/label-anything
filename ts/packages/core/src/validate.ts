@@ -792,19 +792,6 @@ function semantic(p: unknown, errors: Issue[], warnings: Issue[]): void {
   const root = p;
   const itemsValue = get(root, "items");
   const items = Array.isArray(itemsValue) ? itemsValue : null;
-  // anchor type "line" is reserved for v2
-  if (items !== null) {
-    for (let i = 0; i < items.length; i++) {
-      if (getPath(items[i], "anchor", "type") === "line") {
-        const base = `/items/${i}/anchor`;
-        const below = `${base}/`;
-        let w = 0;
-        for (const e of errors) if (e.pointer !== base && !e.pointer.startsWith(below)) errors[w++] = e;
-        errors.length = w;
-        errors.push(new Issue(`${base}/type`, "unsupported", "anchor type 'line' is reserved for v2"));
-      }
-    }
-  }
   // ids
   const ids = new Map<string, number>();
   if (items !== null) {
@@ -859,6 +846,28 @@ function semantic(p: unknown, errors: Issue[], warnings: Issue[]): void {
           }
           if (n >= 3 && Math.abs(a) < 1e-12) {
             errors.push(new Issue(`/items/${i}/anchor/polygon`, "invalid_value", "area polygon has zero area"));
+          }
+        }
+      }
+      // line anchors must have a length
+      if (getPath(it, "anchor", "type") === "line") {
+        const line = getPath(it, "anchor", "points");
+        if (Array.isArray(line)) {
+          let n = 0;
+          let same = true;
+          let x0 = 0;
+          let y0 = 0;
+          for (const q of line) {
+            if (Array.isArray(q) && typeof q[0] === "number" && typeof q[1] === "number") {
+              if (n === 0) {
+                x0 = q[0];
+                y0 = q[1];
+              } else if (q[0] !== x0 || q[1] !== y0) same = false;
+              n++;
+            }
+          }
+          if (n >= 2 && n === line.length && same) {
+            errors.push(new Issue(`/items/${i}/anchor/points`, "invalid_value", "line has zero length"));
           }
         }
       }

@@ -6,6 +6,7 @@
  * @module
  */
 
+import { atan2Deg } from "./detmath.js";
 import { EPS, P, Rect, bboxOf, distPointSegXY } from "./geom/index.js";
 import { clipRing, containsRect, roomRectWithin } from "./geom/polygon.js";
 import { RoundRectShape, Shape, shapesOverlap } from "./geom/shape.js";
@@ -17,6 +18,7 @@ import {
   type Item,
   type LabelShape,
   type LeaderStyle,
+  type Line,
   type Model,
   Models,
   Pos,
@@ -135,7 +137,10 @@ export class Leader {
  */
 export const WARM_MARGIN = 0.5;
 
-/** A turned label (spec §6.5): the label of an area anchor along the polygon's main axis. */
+/**
+ * A turned label: the label of an area anchor along the polygon's main axis (spec §6.5) or
+ * of a line anchor along the line (spec §6.5a).
+ */
 export interface Turn {
   /** Degrees, clockwise on screen. */
   angle: number;
@@ -485,6 +490,16 @@ export function warm(model: Model, item: Item, vi: number, v: Variant, rect: Rec
     // inside the area: an internal candidate, turned as it was
     const c = areaWarm(model, item, item.area, vi, v, rect);
     if (c !== null) return c;
+  }
+  if (item.line !== null) {
+    // along the line: an internal candidate, turned as it was
+    const c = lineWarm(model, item, item.line, vi, v, rect);
+    if (c !== null) return c;
+    // a box that has left the line of a label that goes along it is no place: only the
+    // label beside the dot of a line without places keeps one
+    const places: Cand[] = [];
+    line(item, vi, v, model.areaView(), places);
+    if (places.length > 0) return null;
   }
   const gap = item.shape.distRect(rect);
   if (gap < -1e-6 || item.shape.overlapsRect(rect)) return null; // on the own mark: internal candidates cover that
@@ -1401,6 +1416,231 @@ function areaWarm(model: Model, item: Item, ar: Area, vi: number, v: Variant, re
   cd.inside = f.lack(c);
   cd.turn = turn;
   cd.lshape = shape;
+  return cd;
+}
+
+/**
+ * Most pairs of places on either side of the middle one that a line anchor's labels have
+ * along the line (spec §6.5a).
+ */
+const LINE_PAIRS = 4.0;
+
+/** The chord of a stretch under a label is at least this share of the stretch's length (spec §6.5a). */
+const LINE_CHORD = 0.9;
+
+/**
+ * The rank of a line anchor's label on the line (spec §6.5a; null: it has none): with
+ * `internal: auto`, a label goes on a line at least as wide as the label is high.
+ */
+export function lineOnRank(item: Item, ln: Line, v: Variant): number | null {
+  switch (item.internal) {
+    case InternalPolicy.Never:
+      return null;
+    case InternalPolicy.Allow:
+      return 0.0;
+    case InternalPolicy.Prefer:
+      return -1.0;
+    default:
+      return ln.width >= v.h ? -1.0 : null;
+  }
+}
+
+/**
+ * The sides of a line its labels may stand on (spec §6.5a), in the order of the item's
+ * positions: `top` (above the line as the label reads, −1) and `bottom` (+1), with their
+ * ranks 0 and 1, as `[position, rank, sign]`.
+ */
+function lineSides(item: Item): [Pos, number, number][] {
+  const out: [Pos, number, number][] = [];
+  for (const p of item.positions) {
+    if (p !== Pos.Top && p !== Pos.Bottom) continue;
+    if (out.every((s) => s[0] !== p)) out.push([p, out.length, p === Pos.Top ? -1.0 : 1.0]);
+  }
+  return out;
+}
+
+/** A stretch of a line under a label (spec §6.5a). */
+interface Stretch {
+  /** The middle of the chord between the stretch's ends. */
+  m: P;
+  /** The chord's direction as text reads: degrees clockwise on screen, in [−90°, 90°). */
+  angle: number;
+  cos: number;
+  sin: number;
+  /**
+   * The least and the largest offset of the stretch from the chord, along the normal
+   * (−sin, cos): below the line as the label reads.
+   */
+  lo: number;
+  hi: number;
+  /** The length of the stretch. */
+  span: number;
+  /** The length of the chord. */
+  chord: number;
+}
+
+/**
+ * The stretch of `ln` under a label of width `w` centered at arc length `s` (null: its
+ * ends coincide).
+ */
+function lineStretch(ln: Line, s: number, w: number): Stretch | null {
+  const s0 = maxf(s - 0.5 * w, 0.0);
+  const s1 = minf(s + 0.5 * w, ln.len);
+  const a = ln.at(s0)[1];
+  const b = ln.at(s1)[1];
+  const d = b.sub(a);
+  if (d.len() <= 1e-9) return null;
+  let u = d.norm();
+  // text reads from left to right, and upwards on a vertical stretch
+  if (u.x < 0.0 || (u.x === 0.0 && u.y > 0.0)) u = u.neg();
+  const angle = atan2Deg(u.y, u.x);
+  const [sin, cos] = sinCosDeg(angle);
+  const [lo, hi] = ln.deviation(s0, s1, a, new P(-sin, cos));
+  return { m: a.lerp(b, 0.5), angle, cos, sin, lo, hi, span: s1 - s0, chord: d.len() };
+}
+
+/**
+ * What a label of size `w` × `h` lacks at arc length `s` of a line whose places lie
+ * between `ra` and `rb` (spec §6.5a): its distance from the middle, the bend of the line
+ * under it and the length the line is shorter than the label.
+ */
+function lineLack(s: number, ra: number, rb: number, bend: number, span: number, w: number, h: number): number {
+  const off = rb > ra ? (2.0 * Math.abs(s - 0.5 * (ra + rb))) / (rb - ra) : 0.0;
+  const bent = h > 0.0 ? bend / h : 0.0;
+  const short = w > 0.0 ? maxf(0.0, 1.0 - span / w) : 0.0;
+  return off + bent + short;
+}
+
+/**
+ * The arc lengths of the places of a label of size `w` × `h` on a line of length `len`
+ * whose places lie between `ra` and `rb` (spec §6.5a): the middle, then pairs on either
+ * side of it, evenly spread, at least a label height apart.
+ */
+function linePositions(len: number, ra: number, rb: number, w: number, h: number): number[] {
+  const lo = ra + 0.5 * w;
+  const hi = rb - 0.5 * w;
+  if (hi <= lo || hi !== hi || lo !== lo) {
+    const mid = 0.5 * (ra + rb);
+    return [len >= w ? clampf(mid, 0.5 * w, len - 0.5 * w) : 0.5 * len];
+  }
+  const mid = 0.5 * (lo + hi);
+  const pairs = minf(floorFast((hi - lo) / (2.0 * maxf(h, 4.0))), LINE_PAIRS);
+  const out = [mid];
+  if (pairs >= 1.0) {
+    const d = (0.5 * (hi - lo)) / pairs;
+    for (let j = 1; j <= pairs; j++) {
+      out.push(mid + j * d);
+      out.push(mid - j * d);
+    }
+  }
+  return out;
+}
+
+/**
+ * Candidates of a line anchor for one variant (spec §6.5a): at places along the line, on
+ * it and beside it, turned along it. `view`: in a window, the working extent, on whose
+ * piece of the line the places lie.
+ */
+export function line(item: Item, vi: number, v: Variant, view: Rect | null, out: Cand[]): void {
+  const ln = item.line;
+  if (ln === null) return;
+  const on = lineOnRank(item, ln, v);
+  const sides = lineSides(item);
+  if ((on === null && sides.length === 0) || ln.pts.length < 2) return;
+  const hw = v.w * 0.5;
+  const hh = v.h * 0.5;
+  const it = item.index;
+  const turnable = canTurn(v);
+  const need = 0.5 * ln.width + item.len.offset;
+  const [ra, rb] = ln.range(view);
+  for (const s of linePositions(ln.len, ra, rb, v.w, v.h)) {
+    const st = lineStretch(ln, s, v.w);
+    if (st === null) continue;
+    const bend = st.hi - st.lo;
+    // a label is straight: not where the line leaves it or folds under it
+    if (bend > v.h + 1e-9 || st.chord < LINE_CHORD * st.span) continue;
+    const turned = turnable && st.angle !== 0.0 && Math.abs(st.angle) <= ln.maxRotation;
+    const n = new P(-st.sin, st.cos);
+    // how far the label reaches from its center towards the line
+    const e = turned ? hh : hw * Math.abs(n.x) + hh * Math.abs(n.y);
+    const cos = turned ? st.cos : 1.0;
+    const sin = turned ? st.sin : 0.0;
+    const lack = lineLack(s, ra, rb, bend, st.span, v.w, v.h);
+    const cand = (c: P, side: Side, rank: number): Cand => {
+      const cd = new Cand(it, vi, v.level, Kind.Internal, side, rank, Rect.fromCenter(c, hw, hh));
+      cd.inside = lack;
+      if (turned) {
+        const [bbox, turn, shape] = turnOf(c, hw, hh, st.angle, cos, sin);
+        cd.rect = bbox;
+        cd.turn = turn;
+        cd.lshape = shape;
+      }
+      return cd;
+    };
+    if (on !== null) out.push(cand(st.m.add(n.mul(0.5 * (st.lo + st.hi))), SIDE_INTERNAL, on));
+    for (const [p, rank, sign] of sides) {
+      const d = sign < 0.0 ? st.lo - need - e : st.hi + need + e;
+      const c = st.m.add(n.mul(d));
+      // not where the line comes back to the label beyond the stretch
+      if (ln.clear(c, hw, hh, cos, sin, need - 1e-6)) out.push(cand(c, p, rank));
+    }
+  }
+}
+
+/**
+ * The warm-start box of a line item as a candidate of variant `vi`, where it still lies on
+ * or beside the line as the labels of {@link line} do (within 1 px and a quarter of the
+ * label's height), turned by the rotation it came with.
+ */
+function lineWarm(model: Model, item: Item, ln: Line, vi: number, v: Variant, rect: Rect): Cand | null {
+  if (ln.pts.length < 2) return null;
+  const hw = v.w * 0.5;
+  const hh = v.h * 0.5;
+  const c = rect.center();
+  const angle = model.warmRotation.get(item.id) ?? 0.0;
+  const turned = angle !== 0.0;
+  if (turned && !canTurn(v)) return null;
+  const sp = ln.project(c);
+  const s = ln.len >= v.w ? clampf(sp, hw, ln.len - hw) : 0.5 * ln.len;
+  const st = lineStretch(ln, s, v.w);
+  if (st === null) return null;
+  // a turned label still goes along the line (within 5°, the same at ±90°)
+  const off = Math.abs(angle - st.angle);
+  if (turned && minf(off, 180.0 - off) > 5.0) return null;
+  let sin = 0.0;
+  let cos = 1.0;
+  if (turned) [sin, cos] = sinCosDeg(angle);
+  const n = turned ? new P(-sin, cos) : new P(-st.sin, st.cos);
+  const e = turned ? hh : hw * Math.abs(n.x) + hh * Math.abs(n.y);
+  const [lo, hi] = ln.deviation(maxf(s - hw, 0.0), minf(s + hw, ln.len), c, n);
+  const tol = 1.0 + 0.25 * v.h;
+  const bend = hi - lo;
+  if (bend > v.h + tol) return null;
+  const need = 0.5 * ln.width + item.len.offset;
+  const sides = lineSides(item);
+  let side: Side;
+  let rank: number | null;
+  if (Math.abs(0.5 * (lo + hi)) <= tol) {
+    side = SIDE_INTERNAL;
+    rank = lineOnRank(item, ln, v);
+  } else if (Math.abs(lo - (need + e)) <= tol) {
+    side = Pos.Top;
+    rank = sides.find((x) => x[0] === Pos.Top)?.[1] ?? null;
+  } else if (Math.abs(hi + need + e) <= tol) {
+    side = Pos.Bottom;
+    rank = sides.find((x) => x[0] === Pos.Bottom)?.[1] ?? null;
+  } else return null;
+  if (rank === null) return null;
+  if (side !== SIDE_INTERNAL && !ln.clear(c, hw, hh, cos, sin, maxf(need - tol, 0.0))) return null;
+  const cd = new Cand(item.index, vi, v.level, Kind.Internal, side, rank, Rect.fromCenter(c, hw, hh));
+  const [ra, rb] = ln.range(model.areaView());
+  cd.inside = lineLack(s, ra, rb, bend, st.span, v.w, v.h);
+  if (turned) {
+    const [bbox, turn, shape] = turnOf(c, hw, hh, angle, cos, sin);
+    cd.rect = bbox;
+    cd.turn = turn;
+    cd.lshape = shape;
+  }
   return cd;
 }
 

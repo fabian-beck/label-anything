@@ -221,6 +221,10 @@ export function debugSvg(model: Model | null, result: unknown, debug: DebugData 
       if (it.area !== null) {
         s += shapeSvg(it.area.shape, 'fill="#bbdefb" fill-opacity="0.5" stroke="#1565c0" stroke-width="0.75"');
       }
+      if (it.line !== null) {
+        const pts = it.line.pts.map((q) => `${f(q.x)},${f(q.y)}`).join(" ");
+        s += `<polyline points="${pts}" fill="none" stroke="#1565c0" stroke-opacity="0.5" stroke-width="${f(maxf(it.line.width, 0.75))}" stroke-linejoin="round"/>`;
+      }
       s += shapeSvg(it.shape, 'fill="#1565c0" fill-opacity="0.35" stroke="#0d47a1" stroke-width="0.75"');
     }
     s += "</g>";
