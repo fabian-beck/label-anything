@@ -26,12 +26,11 @@
     "build": "npm run build:wasm && tsc -b",
     "build:wasm": "node scripts/build-wasm.mjs",
     "build:ts": "tsc -b",
-    "prepack": "npm run build && node scripts/check-pack.mjs",
+    "prepack": "npm run build && node scripts/bundle-types.mjs && node scripts/check-pack.mjs",
     "test": "vitest run",
     "test:browser": "tsc -b && playwright test -c browser/playwright.config.mjs",
     "bench": "node scripts/bench.mjs",
     "bench:raster": "node scripts/bench-raster.mjs"
   },
-  "dependencies": { "@label-anything/core": "0.1.0" },
-  "devDependencies": { "@playwright/test": "1.56.1" }
+  "devDependencies": { "@label-anything/core": "0.1.0", "@playwright/test": "1.56.1" }
 }

@@ -28,6 +28,12 @@ be testable without I/O.
 - TypeScript mirrors this: `@label-anything/text`, `/svg` and `/raster` have no
   dependencies, `@label-anything/core` builds on them and offers `place`, `validate` and a
   lean `placeWith(env, problem)` for tree-shaking.
+- `@label-anything/wasm` has no dependencies. Its API is typed with the declarations of
+  `@label-anything/core` (the problem, the result, the options), which its tarball
+  carries as a copy made when it is packed: a host that wants the WebAssembly engine
+  installs one package, not the TypeScript engine, its three siblings and their font.
+  A types-only package would have served too, at the price of one more package to version
+  and publish for three declaration files.
 
 ## Consequences
 Bindings stay thin, heavy decoders are opt-in, and the core is tested in isolation. The

@@ -13,7 +13,10 @@ on the documentation site. This file is about building, measuring and testing it
 * Rust crate: `rust/crates/la-wasm` (wasm-bindgen, `wasm32-unknown-unknown`)
 * This package: the compiled module (`wasm/label_anything_bg.wasm`), the wasm-bindgen glue
   (`wasm/label_anything.js`, generated with `--target web`) and the TypeScript wrapper
-  (`dist/`). It depends on `@label-anything/core` for its type declarations only.
+  (`dist/`). It has no dependencies: the type declarations it shares with
+  `@label-anything/core` (the problem, the result, the options) are copied into
+  `dist/core-types/` when the package is packed (`scripts/bundle-types.mjs`), so the
+  tarball installs on its own.
 * Example: `examples/web/index.html` (labels SVG circles in the browser)
 
 ## Building from source

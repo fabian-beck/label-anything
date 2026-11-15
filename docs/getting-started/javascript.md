@@ -30,8 +30,15 @@ npm pack -w @label-anything/text -w @label-anything/svg -w @label-anything/raste
 cd ../my-project && npm install ../la-packages/*.tgz
 ```
 
-`@label-anything/wasm` also needs a Rust toolchain for WebAssembly
-([its README](gh:ts/packages/wasm-adapter/README.md#building-from-source)).
+`@label-anything/wasm` has no dependencies, so its tarball installs on its own, without
+`core` and its siblings. Building it also needs a Rust toolchain for WebAssembly
+([its README](gh:ts/packages/wasm-adapter/README.md#building-from-source)):
+
+```sh
+npm run build:wasm -w @label-anything/wasm
+npm pack -w @label-anything/wasm --pack-destination ../la-packages
+cd ../my-project && npm install ../la-packages/label-anything-wasm-*.tgz
+```
 
 ## Place labels
 
